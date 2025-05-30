@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps Templates - Azure Enterprise Toolkit</title>
+    <meta name="description" content="Enterprise CI/CD pipeline templates for .NET, Node.js, Python, Docker, Kubernetes, and Infrastructure as Code.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 1;
+        }
+
+        .breadcrumb .separator {
+            margin: 0 0.5rem;
+            opacity: 0.6;
+        }
+
+        main {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #007acc 0%, #004d7a 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .template-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .category-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+            color: #007acc;
+        }
+
+        .category-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .template-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .template-list li {
+            padding: 0.5rem 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .template-list li:last-child {
+            border-bottom: none;
+        }
+
+        .template-list li i {
+            color: #007acc;
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+
+        .template-badge {
+            background: #007acc;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: auto;
+            font-weight: 600;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #007acc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #005a9e;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .pipeline-features {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .pipeline-features h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .feature-item i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .getting-started {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .getting-started h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #007acc;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step h4 {
+            margin-top: 10px;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .step p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .code-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-example::before {
+            content: "YAML";
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #4a5568;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .code-example pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .best-practices {
+            background: linear-gradient(145deg, #28a745, #20c997);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .best-practices h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .practices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .practice-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .practice-item h4 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .practice-item h4 i {
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #007acc;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .template-categories {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-actions {
+                flex-direction: column;
+            }
+            
+            .setup-steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .tech-icon {
+            font-size: 1.2rem;
+            margin-right: 0.5rem;
+        }
+
+        .tech-dotnet { color: #512bd4; }
+        .tech-node { color: #339933; }
+        .tech-python { color: #3776ab; }
+        .tech-docker { color: #2496ed; }
+        .tech-k8s { color: #326ce5; }
+        .tech-terraform { color: #7b42bc; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <span class="separator">›</span>
+                <span>DevOps Templates</span>
+            </div>
+            
+            <div class="hero">
+                <h1><i class="fas fa-rocket"></i> DevOps Templates</h1>
+                <p>Enterprise-grade CI/CD pipeline templates for <span class="highlight">modern development workflows</span> and Infrastructure as Code</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="stats-bar">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">25+</div>
+                        <div class="stat-label">Pipeline Templates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">6</div>
+                        <div class="stat-label">Technology Stacks</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Deployment Patterns</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Production Ready</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="content">
+                <div class="template-categories">
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fab fa-microsoft tech-dotnet"></i></div>
+                            <div class="category-title">.NET Applications</div>
+                        </div>
+                        <div class="category-description">
+                            Comprehensive CI/CD pipelines for .NET Core, .NET Framework, and ASP.NET applications with automated testing and deployment.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-code"></i> ASP.NET Core Web Apps <span class="template-badge">NEW</span></li>
+                            <li><i class="fas fa-cubes"></i> .NET Microservices</li>
+                            <li><i class="fas fa-desktop"></i> WPF Desktop Apps</li>
+                            <li><i class="fas fa-cloud"></i> Azure Functions</li>
+                            <li><i class="fas fa-database"></i> Entity Framework Migrations</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/dotnet/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/dotnet" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fab fa-node-js tech-node"></i></div>
+                            <div class="category-title">Node.js Applications</div>
+                        </div>
+                        <div class="category-description">
+                            Modern JavaScript and TypeScript CI/CD pipelines with comprehensive testing, security scanning, and multi-environment deployment.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-code"></i> Express.js APIs <span class="template-badge">POPULAR</span></li>
+                            <li><i class="fas fa-layer-group"></i> TypeScript Applications</li>
+                            <li><i class="fas fa-mobile-alt"></i> React/Vue.js SPAs</li>
+                            <li><i class="fas fa-server"></i> GraphQL Services</li>
+                            <li><i class="fas fa-bolt"></i> Serverless Functions</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/nodejs/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/nodejs" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fab fa-python tech-python"></i></div>
+                            <div class="category-title">Python Applications</div>
+                        </div>
+                        <div class="category-description">
+                            Enterprise Python pipelines supporting Django, Flask, FastAPI, and data science workflows with automated testing and deployment.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-globe"></i> Django Web Applications</li>
+                            <li><i class="fas fa-rocket"></i> FastAPI Services <span class="template-badge">NEW</span></li>
+                            <li><i class="fas fa-chart-line"></i> Data Science Pipelines</li>
+                            <li><i class="fas fa-robot"></i> ML Model Deployment</li>
+                            <li><i class="fas fa-terminal"></i> CLI Tools & Scripts</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/python/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/python" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fab fa-docker tech-docker"></i></div>
+                            <div class="category-title">Container Workflows</div>
+                        </div>
+                        <div class="category-description">
+                            Docker and container orchestration pipelines with multi-stage builds, security scanning, and automated registry management.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-layer-group"></i> Multi-stage Docker Builds</li>
+                            <li><i class="fas fa-shield-alt"></i> Container Security Scanning</li>
+                            <li><i class="fas fa-warehouse"></i> Registry Management</li>
+                            <li><i class="fas fa-compress"></i> Image Optimization</li>
+                            <li><i class="fas fa-tags"></i> Automated Tagging</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/docker/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/docker" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-dharmachakra tech-k8s"></i></div>
+                            <div class="category-title">Kubernetes Deployment</div>
+                        </div>
+                        <div class="category-description">
+                            Enterprise Kubernetes deployment pipelines with Helm charts, GitOps workflows, and comprehensive monitoring integration.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-ship"></i> Helm Chart Deployment <span class="template-badge">POPULAR</span></li>
+                            <li><i class="fas fa-git-alt"></i> GitOps with ArgoCD</li>
+                            <li><i class="fas fa-chart-bar"></i> Monitoring & Observability</li>
+                            <li><i class="fas fa-shield-alt"></i> Security Policies</li>
+                            <li><i class="fas fa-expand-arrows-alt"></i> Auto-scaling Configuration</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/kubernetes/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/kubernetes" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-layer-group tech-terraform"></i></div>
+                            <div class="category-title">Infrastructure as Code</div>
+                        </div>
+                        <div class="category-description">
+                            Terraform, ARM templates, and Bicep pipelines for automated infrastructure provisioning with compliance and cost management.
+                        </div>
+                        <ul class="template-list">
+                            <li><i class="fas fa-code"></i> Terraform Modules</li>
+                            <li><i class="fas fa-cube"></i> ARM Template Deployment</li>
+                            <li><i class="fas fa-bicycle"></i> Bicep Infrastructure <span class="template-badge">NEW</span></li>
+                            <li><i class="fas fa-balance-scale"></i> Policy & Compliance</li>
+                            <li><i class="fas fa-dollar-sign"></i> Cost Optimization</li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="templates/infrastructure/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Templates
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/devops-templates/templates/infrastructure" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-features">
+                    <h3><i class="fas fa-cogs"></i> Enterprise Pipeline Features</h3>
+                    <p>Every template includes enterprise-grade features for production deployments</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <i class="fas fa-vial"></i>
+                            <h4>Automated Testing</h4>
+                            <p>Unit, integration, and end-to-end testing with coverage reporting</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <h4>Security Scanning</h4>
+                            <p>SAST, DAST, dependency scanning, and container vulnerability assessment</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-code-branch"></i>
+                            <h4>Multi-Environment</h4>
+                            <p>Dev, staging, and production deployment strategies with approval gates</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <h4>Monitoring Integration</h4>
+                            <p>Application Insights, log aggregation, and performance monitoring</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-undo"></i>
+                            <h4>Rollback Strategies</h4>
+                            <p>Blue-green deployments, canary releases, and automated rollback</p>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-file-alt"></i>
+                            <h4>Compliance Reporting</h4>
+                            <p>Audit trails, compliance dashboards, and regulatory reporting</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="getting-started">
+                    <h3><i class="fas fa-play"></i> Quick Start Guide</h3>
+                    <div class="setup-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h4>Choose Template</h4>
+                            <p>Select the appropriate template for your technology stack and deployment requirements</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h4>Configure Variables</h4>
+                            <p>Update pipeline variables, service connections, and environment-specific settings</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h4>Import Pipeline</h4>
+                            <p>Import the YAML pipeline into Azure DevOps and configure repository connections</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <h4>Deploy & Monitor</h4>
+                            <p>Execute the pipeline and monitor deployment progress with integrated dashboards</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="code-example">
+                    <pre>trigger:
+  branches:
+    include:
+    - main
+    - develop
+
+variables:
+  buildConfiguration: 'Release'
+  azureSubscription: 'your-service-connection'
+  webAppName: 'your-webapp-name'
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore packages'
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Build application'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+    
+    - task: DotNetCoreCLI@2
+      displayName: 'Run tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests.csproj'
+        arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
+
+- stage: Deploy
+  displayName: 'Deploy to Azure'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appName: '$(webAppName)'
+              package: '$(Pipeline.Workspace)/**/*.zip'</pre>
+                </div>
+
+                <div class="best-practices">
+                    <h3><i class="fas fa-star"></i> DevOps Best Practices</h3>
+                    <div class="practices-grid">
+                        <div class="practice-item">
+                            <h4><i class="fas fa-code-branch"></i> Branching Strategy</h4>
+                            <p>Implement GitFlow or GitHub Flow with protected branches and required reviews</p>
+                        </div>
+                        <div class="practice-item">
+                            <h4><i class="fas fa-lock"></i> Secret Management</h4>
+                            <p>Use Azure Key Vault integration and variable groups for secure credential handling</p>
+                        </div>
+                        <div class="practice-item">
+                            <h4><i class="fas fa-check-circle"></i> Quality Gates</h4>
+                            <p>Enforce code coverage thresholds, security scans, and automated testing requirements</p>
+                        </div>
+                        <div class="practice-item">
+                            <h4><i class="fas fa-clock"></i> Deployment Windows</h4>
+                            <p>Schedule deployments during maintenance windows with automated rollback triggers</p>
+                        </div>
+                        <div class="practice-item">
+                            <h4><i class="fas fa-chart-bar"></i> Monitoring & Alerts</h4>
+                            <p>Implement comprehensive monitoring with automated alerting and incident response</p>
+                        </div>
+                        <div class="practice-item">
+                            <h4><i class="fas fa-file-alt"></i> Documentation</h4>
+                            <p>Maintain up-to-date runbooks, deployment guides, and architecture documentation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
+                    <p>Professional Azure automation for enterprise environments</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add interactive hover effects
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add click animation to buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        stat.style.animation = 'countUp 1s ease-out forwards';
+                    });
+                }
+            });
+        }, observerOptions);
+
+        const statsSection = document.querySelector('.stats-bar');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+
+        // Add CSS animation for count up effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes countUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .code-example {
+                animation: slideInLeft 0.8s ease-out;
+            }
+            
+            @keyframes slideInLeft {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add syntax highlighting effect
+        document.querySelectorAll('.code-example pre').forEach(pre => {
+            const text = pre.textContent;
+            pre.innerHTML = text
+                .replace(/(trigger:|variables:|stages:|jobs:|steps:|task:)/g, '<span style="color: #ffd700; font-weight: bold;">$1</span>')
+                .replace(/(displayName:|inputs:|pool:|vmImage:|command:|projects:|arguments:)/g, '<span style="color: #a78bfa;">$1</span>')
+                .replace(/('.*?')/g, '<span style="color: #34d399;">$1</span>')
+                .replace(/(- )/g, '<span style="color: #f87171;">$1</span>');
+        });
+    </script>
+</body>
+</html>

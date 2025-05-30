@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Management - Azure Enterprise Toolkit</title>
+    <meta name="description" content="Azure cost management dashboards, analytics, budget monitoring, and AI-powered optimization recommendations.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 1;
+        }
+
+        .breadcrumb .separator {
+            margin: 0 0.5rem;
+            opacity: 0.6;
+        }
+
+        main {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+            color: #28a745;
+        }
+
+        .dashboard-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .dashboard-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .dashboard-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-features li {
+            padding: 0.5rem 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .dashboard-features li i {
+            color: #28a745;
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .cost-optimization {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .cost-optimization h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .optimization-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .optimization-feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .optimization-feature i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .getting-started {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .getting-started h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step h4 {
+            margin-top: 10px;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .step p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .tool-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .tool-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+            color: #28a745;
+        }
+
+        .tool-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-actions {
+                flex-direction: column;
+            }
+            
+            .setup-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            border: 2px dashed #90caf9;
+        }
+
+        .preview-placeholder {
+            color: #1976d2;
+            font-size: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <span class="separator">›</span>
+                <span>Cost Management</span>
+            </div>
+            
+            <div class="hero">
+                <h1><i class="fas fa-chart-line"></i> Cost Management Suite</h1>
+                <p>Comprehensive Azure cost management with <span class="highlight">interactive dashboards</span> and AI-powered optimization</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="stats-bar">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Dashboard Views</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Cost Reports</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">Real-time</div>
+                        <div class="stat-label">Monitoring</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">30%</div>
+                        <div class="stat-label">Avg. Savings</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="content">
+                <div class="dashboard-showcase">
+                    <div class="dashboard-card">
+                        <div class="dashboard-header">
+                            <div class="dashboard-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="dashboard-title">Executive Dashboard</div>
+                        </div>
+                        <div class="preview-image">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-chart-pie" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                Executive Cost Overview Dashboard
+                            </div>
+                        </div>
+                        <div class="dashboard-description">
+                            High-level cost overview with trend analysis, budget tracking, and executive-focused KPIs for leadership reporting.
+                        </div>
+                        <ul class="dashboard-features">
+                            <li><i class="fas fa-check"></i> Monthly cost trends</li>
+                            <li><i class="fas fa-check"></i> Budget vs. actual comparison</li>
+                            <li><i class="fas fa-check"></i> Service category breakdown</li>
+                            <li><i class="fas fa-check"></i> Automated alerts</li>
+                        </ul>
+                        <div class="dashboard-actions">
+                            <a href="dashboards/executive-dashboard.html" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> View Dashboard
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/cost-management/dashboards" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-header">
+                            <div class="dashboard-icon"><i class="fas fa-microscope"></i></div>
+                            <div class="dashboard-title">Detailed Analytics</div>
+                        </div>
+                        <div class="preview-image">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                Detailed Cost Analytics Dashboard
+                            </div>
+                        </div>
+                        <div class="dashboard-description">
+                            Granular cost analysis with resource-level details, usage patterns, and optimization recommendations.
+                        </div>
+                        <ul class="dashboard-features">
+                            <li><i class="fas fa-check"></i> Resource-level costs</li>
+                            <li><i class="fas fa-check"></i> Usage pattern analysis</li>
+                            <li><i class="fas fa-check"></i> Cost anomaly detection</li>
+                            <li><i class="fas fa-check"></i> Optimization insights</li>
+                        </ul>
+                        <div class="dashboard-actions">
+                            <a href="dashboards/analytics-dashboard.html" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> View Dashboard
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/cost-management/dashboards" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-header">
+                            <div class="dashboard-icon"><i class="fas fa-piggy-bank"></i></div>
+                            <div class="dashboard-title">Budget Monitor</div>
+                        </div>
+                        <div class="preview-image">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                Budget Monitoring Dashboard
+                            </div>
+                        </div>
+                        <div class="dashboard-description">
+                            Budget tracking with predictive analytics, threshold alerts, and spending forecast models.
+                        </div>
+                        <ul class="dashboard-features">
+                            <li><i class="fas fa-check"></i> Budget vs. actual tracking</li>
+                            <li><i class="fas fa-check"></i> Predictive forecasting</li>
+                            <li><i class="fas fa-check"></i> Threshold notifications</li>
+                            <li><i class="fas fa-check"></i> Variance analysis</li>
+                        </ul>
+                        <div class="dashboard-actions">
+                            <a href="dashboards/budget-dashboard.html" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> View Dashboard
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/cost-management/dashboards" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="dashboard-header">
+                            <div class="dashboard-icon"><i class="fas fa-robot"></i></div>
+                            <div class="dashboard-title">AI Optimizer</div>
+                        </div>
+                        <div class="preview-image">
+                            <div class="preview-placeholder">
+                                <i class="fas fa-brain" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                AI-Powered Optimization Dashboard
+                            </div>
+                        </div>
+                        <div class="dashboard-description">
+                            Machine learning-powered cost optimization with automated recommendations and impact analysis.
+                        </div>
+                        <ul class="dashboard-features">
+                            <li><i class="fas fa-check"></i> ML-based recommendations</li>
+                            <li><i class="fas fa-check"></i> Right-sizing analysis</li>
+                            <li><i class="fas fa-check"></i> Reserved instance planning</li>
+                            <li><i class="fas fa-check"></i> Automated reporting</li>
+                        </ul>
+                        <div class="dashboard-actions">
+                            <a href="dashboards/ai-optimizer.html" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> View Dashboard
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/cost-management/dashboards" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cost-optimization">
+                    <h3><i class="fas fa-lightbulb"></i> AI-Powered Cost Optimization</h3>
+                    <p>Leverage machine learning to automatically identify cost-saving opportunities and optimize your Azure spending</p>
+                    
+                    <div class="optimization-features">
+                        <div class="optimization-feature">
+                            <i class="fas fa-compress-arrows-alt"></i>
+                            <h4>Right-Sizing</h4>
+                            <p>Automatically identify oversized resources and recommend optimal configurations</p>
+                        </div>
+                        <div class="optimization-feature">
+                            <i class="fas fa-calendar-check"></i>
+                            <h4>Reserved Instances</h4>
+                            <p>AI analysis of usage patterns to recommend cost-effective reservation strategies</p>
+                        </div>
+                        <div class="optimization-feature">
+                            <i class="fas fa-clock"></i>
+                            <h4>Scheduling</h4>
+                            <p>Automated resource scheduling based on usage patterns and business hours</p>
+                        </div>
+                        <div class="optimization-feature">
+                            <i class="fas fa-trash-alt"></i>
+                            <h4>Waste Detection</h4>
+                            <p>Identify and eliminate unused or underutilized resources across your environment</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="getting-started">
+                    <h3><i class="fas fa-rocket"></i> Getting Started with Cost Management</h3>
+                    <div class="setup-steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h4>Prerequisites</h4>
+                            <p>Ensure you have Azure Cost Management API access and proper permissions for billing data</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h4>Deploy Dashboard</h4>
+                            <p>Use provided ARM templates to deploy Power BI dashboards and data connections</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h4>Configure Alerts</h4>
+                            <p>Set up budget thresholds and automated alert notifications for cost monitoring</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <h4>Enable Automation</h4>
+                            <p>Deploy AI optimization scripts and configure automated cost management workflows</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 2rem; color: #333;">Additional Tools & Scripts</h3>
+                <div class="tools-grid">
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-file-export"></i></div>
+                            <div class="tool-title">Cost Export Automation</div>
+                        </div>
+                        <p>Automated billing data export with custom formatting and scheduled delivery to stakeholders.</p>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-bell"></i></div>
+                            <div class="tool-title">Alert Management</div>
+                        </div>
+                        <p>Sophisticated alerting system with custom thresholds, escalation paths, and integration with Teams/Slack.</p>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-chart-area"></i></div>
+                            <div class="tool-title">Trend Analysis</div>
+                        </div>
+                        <p>Advanced analytics for cost trend prediction, seasonal adjustment, and variance analysis.</p>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-tags"></i></div>
+                            <div class="tool-title">Tag Management</div>
+                        </div>
+                        <p>Cost allocation and chargeback automation based on resource tagging and organizational structure.</p>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-calculator"></i></div>
+                            <div class="tool-title">ROI Calculator</div>
+                        </div>
+                        <p>Interactive tools for calculating return on investment for Azure projects and optimization initiatives.</p>
+                    </div>
+
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <div class="tool-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="tool-title">Governance Integration</div>
+                        </div>
+                        <p>Cost management policies, spending limits, and automated governance controls for budget compliance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
+                    <p>Professional Azure automation for enterprise environments</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add interactive hover effects
+        document.querySelectorAll('.dashboard-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add click animation to buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        stat.style.animation = 'countUp 1s ease-out forwards';
+                    });
+                }
+            });
+        }, observerOptions);
+
+        const statsSection = document.querySelector('.stats-bar');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+
+        // Add CSS animation for count up effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes countUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

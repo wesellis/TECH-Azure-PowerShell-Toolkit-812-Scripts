@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Hub - Azure Enterprise Toolkit</title>
+    <meta name="description" content="Comprehensive documentation, guides, and best practices for the Azure Enterprise Toolkit.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 1;
+        }
+
+        .breadcrumb .separator {
+            margin: 0 0.5rem;
+            opacity: 0.6;
+        }
+
+        main {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: linear-gradient(145deg, #6f42c1, #553d94);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .doc-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .category-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+            color: #17a2b8;
+        }
+
+        .category-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .category-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .doc-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .doc-list li {
+            padding: 0.5rem 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .doc-list li:last-child {
+            border-bottom: none;
+        }
+
+        .doc-list li i {
+            color: #17a2b8;
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+
+        .doc-list li a {
+            color: #555;
+            text-decoration: none;
+            flex: 1;
+        }
+
+        .doc-list li a:hover {
+            color: #17a2b8;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #138496;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #17a2b8;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .doc-categories {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-actions {
+                flex-direction: column;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <span class="separator">›</span>
+                <span>Documentation</span>
+            </div>
+            
+            <div class="hero">
+                <h1><i class="fas fa-book"></i> Documentation Hub</h1>
+                <p>Comprehensive guides and resources for the <span class="highlight">Azure Enterprise Toolkit</span></p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="stats-bar">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Documentation Pages</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">25</div>
+                        <div class="stat-label">How-To Guides</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">15</div>
+                        <div class="stat-label">Best Practices</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Coverage</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="content">
+                <div class="search-section">
+                    <h3><i class="fas fa-search"></i> Search Documentation</h3>
+                    <p>Find guides, tutorials, and best practices quickly</p>
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Search for guides, scripts, policies, or best practices...">
+                        <button class="search-btn"><i class="fas fa-search"></i> Search</button>
+                    </div>
+                </div>
+
+                <div class="doc-categories">
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-rocket"></i></div>
+                            <div class="category-title">Getting Started</div>
+                        </div>
+                        <div class="category-description">
+                            Essential guides to get you up and running with the Azure Enterprise Toolkit quickly and efficiently.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-play"></i> <a href="#">Quick Start Guide</a></li>
+                            <li><i class="fas fa-download"></i> <a href="#">Installation Instructions</a></li>
+                            <li><i class="fas fa-cog"></i> <a href="#">Initial Configuration</a></li>
+                            <li><i class="fas fa-key"></i> <a href="#">Authentication Setup</a></li>
+                            <li><i class="fas fa-check-circle"></i> <a href="#">Prerequisites Checklist</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="../README.md" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Guides
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/docs" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-tools"></i></div>
+                            <div class="category-title">User Guides</div>
+                        </div>
+                        <div class="category-description">
+                            Detailed documentation for using each component of the toolkit effectively in your environment.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-robot"></i> <a href="../automation-scripts/">Automation Scripts Guide</a></li>
+                            <li><i class="fas fa-chart-line"></i> <a href="../cost-management/">Cost Management Setup</a></li>
+                            <li><i class="fas fa-code-branch"></i> <a href="../devops-templates/">DevOps Templates Usage</a></li>
+                            <li><i class="fas fa-gavel"></i> <a href="../governance/">Governance Implementation</a></li>
+                            <li><i class="fas fa-bookmark"></i> <a href="../bookmarks/">Bookmarks Configuration</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="../README.md" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Guides
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/docs" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="category-title">Best Practices</div>
+                        </div>
+                        <div class="category-description">
+                            Industry best practices and recommendations for Azure enterprise environments and automation.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-shield-alt"></i> <a href="#">Security Best Practices</a></li>
+                            <li><i class="fas fa-dollar-sign"></i> <a href="#">Cost Optimization Strategies</a></li>
+                            <li><i class="fas fa-balance-scale"></i> <a href="#">Governance Guidelines</a></li>
+                            <li><i class="fas fa-code"></i> <a href="#">PowerShell Coding Standards</a></li>
+                            <li><i class="fas fa-chart-bar"></i> <a href="#">Monitoring & Alerting</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/docs" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Practices
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/docs" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-bug"></i></div>
+                            <div class="category-title">Troubleshooting</div>
+                        </div>
+                        <div class="category-description">
+                            Common issues, error messages, and step-by-step solutions for troubleshooting the toolkit.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-exclamation-triangle"></i> <a href="#">Common Issues</a></li>
+                            <li><i class="fas fa-first-aid"></i> <a href="#">Error Message Guide</a></li>
+                            <li><i class="fas fa-stethoscope"></i> <a href="#">Diagnostic Tools</a></li>
+                            <li><i class="fas fa-life-ring"></i> <a href="#">Getting Support</a></li>
+                            <li><i class="fas fa-comments"></i> <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/discussions">Community Forums</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/issues" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Solutions
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/issues" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Report Issue
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-hands-helping"></i></div>
+                            <div class="category-title">Contributing</div>
+                        </div>
+                        <div class="category-description">
+                            Guidelines for contributing to the project, including code standards, pull requests, and community guidelines.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-code-branch"></i> <a href="../CONTRIBUTING.md">Contribution Guidelines</a></li>
+                            <li><i class="fas fa-file-code"></i> <a href="#">Code Standards</a></li>
+                            <li><i class="fas fa-git-alt"></i> <a href="#">Pull Request Process</a></li>
+                            <li><i class="fas fa-users"></i> <a href="#">Community Guidelines</a></li>
+                            <li><i class="fas fa-award"></i> <a href="#">Recognition Program</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="../CONTRIBUTING.md" class="btn btn-primary">
+                                <i class="fas fa-file-alt"></i> Contributing Guide
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/pulls" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Pull Requests
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="category-card">
+                        <div class="category-header">
+                            <div class="category-icon"><i class="fas fa-history"></i></div>
+                            <div class="category-title">Changelog & Updates</div>
+                        </div>
+                        <div class="category-description">
+                            Stay up to date with the latest features, bug fixes, and improvements to the Azure Enterprise Toolkit.
+                        </div>
+                        <ul class="doc-list">
+                            <li><i class="fas fa-tag"></i> <a href="../CHANGELOG.md">Release Notes</a></li>
+                            <li><i class="fas fa-plus"></i> <a href="#">New Features</a></li>
+                            <li><i class="fas fa-bug"></i> <a href="#">Bug Fixes</a></li>
+                            <li><i class="fas fa-shield-alt"></i> <a href="#">Security Updates</a></li>
+                            <li><i class="fas fa-road"></i> <a href="#">Roadmap</a></li>
+                        </ul>
+                        <div class="category-actions">
+                            <a href="../CHANGELOG.md" class="btn btn-primary">
+                                <i class="fas fa-file-alt"></i> View Changelog
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/releases" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> Releases
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
+                    <p>Professional Azure automation for enterprise environments</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.category-card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('.category-title').textContent.toLowerCase();
+                const description = card.querySelector('.category-description').textContent.toLowerCase();
+                const links = card.querySelectorAll('.doc-list a');
+                let hasMatch = title.includes(searchTerm) || description.includes(searchTerm);
+                
+                links.forEach(link => {
+                    if (link.textContent.toLowerCase().includes(searchTerm)) {
+                        hasMatch = true;
+                    }
+                });
+                
+                if (hasMatch || searchTerm === '') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Add interactive hover effects
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add click animation to buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') {
+                    e.preventDefault();
+                }
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Search button functionality
+        document.querySelector('.search-btn').addEventListener('click', function() {
+            const searchTerm = document.querySelector('.search-input').value;
+            if (searchTerm.trim()) {
+                // Simulate search action
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-search"></i> Search';
+                    // In a real implementation, this would redirect to search results
+                    window.location.href = `https://github.com/wesellis/Azure-Enterprise-Toolkit/search?q=${encodeURIComponent(searchTerm)}`;
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

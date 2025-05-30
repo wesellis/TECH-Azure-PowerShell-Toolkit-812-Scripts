@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Governance Toolkit - Azure Enterprise Toolkit</title>
+    <meta name="description" content="Azure governance with policy management, compliance monitoring, RBAC automation, and security baseline implementations.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+
+        .breadcrumb a:hover {
+            opacity: 1;
+        }
+
+        .breadcrumb .separator {
+            margin: 0 0.5rem;
+            opacity: 0.6;
+        }
+
+        main {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .stats-bar {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .governance-areas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .area-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .area-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .area-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .area-icon {
+            font-size: 2.5rem;
+            margin-right: 1rem;
+            color: #dc3545;
+        }
+
+        .area-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .area-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li i {
+            color: #dc3545;
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+
+        .area-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .compliance-framework {
+            background: linear-gradient(135deg, #6f42c1 0%, #553d94 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .compliance-framework h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .frameworks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .framework-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .framework-item i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .policy-templates {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .policy-templates h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .template-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .template-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .template-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+            color: #dc3545;
+        }
+
+        .template-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .template-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .automation-workflow {
+            background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .workflow-step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step-content {
+            margin-top: 10px;
+        }
+
+        .security-baselines {
+            background: linear-gradient(145deg, #fd7e14, #e56b0c);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 3rem;
+        }
+
+        .security-baselines h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .baselines-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .baseline-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .baseline-item h4 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .baseline-item h4 i {
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .governance-areas {
+                grid-template-columns: 1fr;
+            }
+            
+            .area-actions {
+                flex-direction: column;
+            }
+            
+            .templates-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="../index.html"><i class="fas fa-home"></i> Home</a>
+                <span class="separator">›</span>
+                <span>Governance Toolkit</span>
+            </div>
+            
+            <div class="hero">
+                <h1><i class="fas fa-gavel"></i> Governance Toolkit</h1>
+                <p>Comprehensive Azure governance with <span class="highlight">policy management</span>, compliance monitoring, and security automation</p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="stats-bar">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Policy Templates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">Compliance Frameworks</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">25+</div>
+                        <div class="stat-label">RBAC Templates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">15</div>
+                        <div class="stat-label">Security Baselines</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <div class="content">
+                <div class="governance-areas">
+                    <div class="area-card">
+                        <div class="area-header">
+                            <div class="area-icon"><i class="fas fa-file-contract"></i></div>
+                            <div class="area-title">Policy Management</div>
+                        </div>
+                        <div class="area-description">
+                            Comprehensive Azure Policy templates for resource governance, compliance enforcement, and automated remediation across your environment.
+                        </div>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Resource tagging enforcement</li>
+                            <li><i class="fas fa-check"></i> Location restrictions</li>
+                            <li><i class="fas fa-check"></i> Security configurations</li>
+                            <li><i class="fas fa-check"></i> Cost management policies</li>
+                            <li><i class="fas fa-check"></i> Automated remediation</li>
+                        </ul>
+                        <div class="area-actions">
+                            <a href="templates/policies/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse Policies
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/governance/templates/policies" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="area-card">
+                        <div class="area-header">
+                            <div class="area-icon"><i class="fas fa-users-cog"></i></div>
+                            <div class="area-title">RBAC Automation</div>
+                        </div>
+                        <div class="area-description">
+                            Role-based access control templates and automation scripts for consistent permission management and security best practices.
+                        </div>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Custom role definitions</li>
+                            <li><i class="fas fa-check"></i> Assignment automation</li>
+                            <li><i class="fas fa-check"></i> Access reviews</li>
+                            <li><i class="fas fa-check"></i> Privilege escalation controls</li>
+                            <li><i class="fas fa-check"></i> Conditional access policies</li>
+                        </ul>
+                        <div class="area-actions">
+                            <a href="templates/rbac/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Browse RBAC
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/governance/templates/rbac" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="area-card">
+                        <div class="area-header">
+                            <div class="area-icon"><i class="fas fa-clipboard-check"></i></div>
+                            <div class="area-title">Compliance Monitoring</div>
+                        </div>
+                        <div class="area-description">
+                            Automated compliance monitoring and reporting for industry standards including SOC 2, ISO 27001, HIPAA, and PCI DSS.
+                        </div>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Compliance dashboards</li>
+                            <li><i class="fas fa-check"></i> Automated assessments</li>
+                            <li><i class="fas fa-check"></i> Regulatory reporting</li>
+                            <li><i class="fas fa-check"></i> Evidence collection</li>
+                            <li><i class="fas fa-check"></i> Audit trails</li>
+                        </ul>
+                        <div class="area-actions">
+                            <a href="templates/compliance/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> View Compliance
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/governance/templates/compliance" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="area-card">
+                        <div class="area-header">
+                            <div class="area-icon"><i class="fas fa-shield-alt"></i></div>
+                            <div class="area-title">Security Baselines</div>
+                        </div>
+                        <div class="area-description">
+                            Industry-standard security baseline configurations for Azure services with automated deployment and continuous monitoring.
+                        </div>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> CIS benchmarks</li>
+                            <li><i class="fas fa-check"></i> Microsoft security baselines</li>
+                            <li><i class="fas fa-check"></i> NIST frameworks</li>
+                            <li><i class="fas fa-check"></i> Custom security controls</li>
+                            <li><i class="fas fa-check"></i> Continuous assessment</li>
+                        </ul>
+                        <div class="area-actions">
+                            <a href="templates/security/" class="btn btn-primary">
+                                <i class="fas fa-folder-open"></i> Security Configs
+                            </a>
+                            <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/tree/main/governance/templates/security" class="btn btn-secondary">
+                                <i class="fab fa-github"></i> View Source
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compliance-framework">
+                    <h3><i class="fas fa-certificate"></i> Supported Compliance Frameworks</h3>
+                    <p>Pre-configured templates and monitoring for major industry compliance standards</p>
+                    
+                    <div class="frameworks-grid">
+                        <div class="framework-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <h4>SOC 2 Type II</h4>
+                            <p>Service Organization Control 2 compliance monitoring and reporting automation</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-globe"></i>
+                            <h4>ISO 27001</h4>
+                            <p>Information Security Management System implementation and assessment</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-user-md"></i>
+                            <h4>HIPAA</h4>
+                            <p>Healthcare compliance controls and protected health information safeguards</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-credit-card"></i>
+                            <h4>PCI DSS</h4>
+                            <p>Payment Card Industry Data Security Standard compliance automation</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-flag-usa"></i>
+                            <h4>NIST Cybersecurity</h4>
+                            <p>National Institute of Standards and Technology cybersecurity framework</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-balance-scale"></i>
+                            <h4>GDPR</h4>
+                            <p>General Data Protection Regulation compliance for EU data protection</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-building"></i>
+                            <h4>CIS Controls</h4>
+                            <p>Center for Internet Security critical security controls implementation</p>
+                        </div>
+                        <div class="framework-item">
+                            <i class="fas fa-university"></i>
+                            <h4>FedRAMP</h4>
+                            <p>Federal Risk and Authorization Management Program for government cloud</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-templates">
+                    <h3><i class="fas fa-file-alt"></i> Policy Template Library</h3>
+                    <div class="templates-grid">
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-tags"></i></div>
+                                <div class="template-title">Resource Tagging</div>
+                            </div>
+                            <div class="template-description">
+                                Enforce consistent resource tagging for cost allocation, ownership, and lifecycle management.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="template-title">Location Restrictions</div>
+                            </div>
+                            <div class="template-description">
+                                Control which Azure regions resources can be deployed to for compliance and latency requirements.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-lock"></i></div>
+                                <div class="template-title">Storage Encryption</div>
+                            </div>
+                            <div class="template-description">
+                                Mandate encryption at rest for all storage accounts and enforce secure transfer requirements.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-network-wired"></i></div>
+                                <div class="template-title">Network Security</div>
+                            </div>
+                            <div class="template-description">
+                                Enforce network security group rules and prevent public IP assignments on VMs.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-dollar-sign"></i></div>
+                                <div class="template-title">Cost Controls</div>
+                            </div>
+                            <div class="template-description">
+                                Implement cost management policies including VM SKU restrictions and resource limits.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+
+                        <div class="template-card">
+                            <div class="template-header">
+                                <div class="template-icon"><i class="fas fa-eye"></i></div>
+                                <div class="template-title">Monitoring Requirements</div>
+                            </div>
+                            <div class="template-description">
+                                Ensure diagnostic settings and monitoring are enabled for all critical resources.
+                            </div>
+                            <div class="template-actions">
+                                <a href="#" class="btn btn-primary btn-small">Deploy</a>
+                                <a href="#" class="btn btn-secondary btn-small">View</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="automation-workflow">
+                    <h3><i class="fas fa-robot"></i> Governance Automation Workflow</h3>
+                    <p>Streamlined implementation process for enterprise governance</p>
+                    
+                    <div class="workflow-steps">
+                        <div class="workflow-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Assessment</h4>
+                                <p>Analyze current environment and identify governance gaps</p>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Policy Design</h4>
+                                <p>Select and customize policy templates for your requirements</p>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Pilot Deployment</h4>
+                                <p>Deploy policies to test environment and validate effectiveness</p>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Production Rollout</h4>
+                                <p>Gradually deploy to production with monitoring and alerting</p>
+                            </div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4>Continuous Monitoring</h4>
+                                <p>Monitor compliance and adjust policies as needed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-baselines">
+                    <h3><i class="fas fa-shield-virus"></i> Security Baseline Implementations</h3>
+                    <div class="baselines-grid">
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-server"></i> Virtual Machine Security</h4>
+                            <p>Hardened VM configurations with security extensions and patch management</p>
+                        </div>
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-database"></i> Database Security</h4>
+                            <p>SQL database security configurations including TDE, firewall rules, and auditing</p>
+                        </div>
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-cloud"></i> Storage Security</h4>
+                            <p>Storage account hardening with encryption, access controls, and threat protection</p>
+                        </div>
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-network-wired"></i> Network Security</h4>
+                            <p>Network security group templates and Azure Firewall configurations</p>
+                        </div>
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-key"></i> Key Management</h4>
+                            <p>Azure Key Vault configurations with proper access policies and rotation</p>
+                        </div>
+                        <div class="baseline-item">
+                            <h4><i class="fas fa-user-shield"></i> Identity Security</h4>
+                            <p>Azure AD security configurations including MFA and conditional access</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
+                    <p>Professional Azure automation for enterprise environments</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add interactive hover effects
+        document.querySelectorAll('.area-card, .template-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add click animation to buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.getAttribute('href') === '#') {
+                    e.preventDefault();
+                }
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        stat.style.animation = 'countUp 1s ease-out forwards';
+                    });
+                }
+            });
+        }, observerOptions);
+
+        const statsSection = document.querySelector('.stats-bar');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+
+        // Add CSS animation for count up effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes countUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .workflow-step {
+                animation: slideInUp 0.6s ease-out forwards;
+                animation-delay: calc(var(--delay, 0) * 0.1s);
+            }
+            
+            @keyframes slideInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add staggered animation delays
+        document.querySelectorAll('.workflow-step').forEach((step, index) => {
+            step.style.setProperty('--delay', index);
+        });
+
+        // Template card interactions
+        document.querySelectorAll('.template-card').forEach(card => {
+            const deployBtn = card.querySelector('.btn-primary');
+            
+            if (deployBtn) {
+                deployBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Simulate deployment action
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deploying...';
+                    this.style.pointerEvents = 'none';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-check"></i> Deployed';
+                        this.style.background = '#28a745';
+                        
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-rocket"></i> Deploy';
+                            this.style.background = '#dc3545';
+                            this.style.pointerEvents = 'auto';
+                        }, 2000);
+                    }, 1500);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
