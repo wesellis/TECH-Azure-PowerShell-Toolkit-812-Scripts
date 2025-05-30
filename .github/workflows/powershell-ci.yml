@@ -1,0 +1,39 @@
+name: PowerShell CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install PowerShell modules
+      shell: pwsh
+      run: |
+        Set-PSRepository PSGallery -InstallationPolicy Trusted
+        Install-Module -Name PSScriptAnalyzer -Force
+        Install-Module -Name Pester -Force
+    
+    - name: Lint PowerShell scripts
+      shell: pwsh
+      run: |
+        $results = Invoke-ScriptAnalyzer -Path ./automation-scripts -Recurse -Settings PSGallery
+        if ($results) {
+          $results | Format-Table
+          Write-Error "PSScriptAnalyzer found issues"
+        }
+    
+    - name: Test PowerShell scripts
+      shell: pwsh
+      run: |
+        if (Test-Path ./tests) {
+          Invoke-Pester ./tests -OutputFormat NUnitXml -OutputFile TestResults.xml
+        } else {
+          Write-Host "No tests directory found, skipping tests"
+        }

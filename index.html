@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Enterprise Toolkit - Professional Azure Automation</title>
+    <meta name="description" content="Enterprise-grade Azure automation toolkit with 124+ PowerShell scripts, cost management dashboards, DevOps templates, and governance policies.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .badge:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #106ebe;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        main {
+            background: white;
+            margin: 2rem 0;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .features {
+            padding: 3rem 2rem;
+        }
+
+        .features h2 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            color: #333;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #0078d4;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .stats h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .quick-links {
+            padding: 3rem 2rem;
+            background: #f8f9fa;
+        }
+
+        .quick-links h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            color: #333;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .link-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+
+        .link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            color: #0078d4;
+        }
+
+        .link-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #0078d4;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        .highlight {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <h1><i class="fas fa-cloud"></i> Azure Enterprise Toolkit</h1>
+                <p>Enterprise-grade Azure automation with <span class="highlight">124+ PowerShell scripts</span>, cost management, DevOps templates, and governance policies</p>
+                
+                <div class="badges">
+                    <span class="badge"><i class="fab fa-microsoft"></i> Azure Compatible</span>
+                    <span class="badge"><i class="fas fa-code"></i> PowerShell 7.0+</span>
+                    <span class="badge"><i class="fas fa-shield-alt"></i> Enterprise Ready</span>
+                    <span class="badge"><i class="fas fa-balance-scale"></i> MIT License</span>
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit" class="btn btn-primary">
+                        <i class="fab fa-github"></i> View on GitHub
+                    </a>
+                    <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/archive/refs/heads/main.zip" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Download ZIP
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="features">
+                <h2>Enterprise-Grade Features</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3>124+ Automation Scripts</h3>
+                        <p>Production-ready PowerShell scripts covering compute, networking, storage, security, and monitoring across all Azure services.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Cost Management Suite</h3>
+                        <p>Interactive dashboards, automated reporting, budget monitoring, and AI-powered cost optimization recommendations.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3>DevOps Templates</h3>
+                        <p>Enterprise CI/CD pipeline templates for .NET, Node.js, Python, Docker, Kubernetes, and Infrastructure as Code.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Governance Toolkit</h3>
+                        <p>Policy management, compliance monitoring, RBAC automation, and security baseline implementations.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <h3>Essential Resources</h3>
+                        <p>Curated collection of Azure administrative resources with interactive web interface and browser import.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h3>Utility Tools</h3>
+                        <p>Administrative helpers, management scripts, and cross-platform tools for efficient Azure operations.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="stats">
+            <div class="container">
+                <h2>Project Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">124+</div>
+                        <div class="stat-label">PowerShell Scripts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">Component Categories</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">Consolidated Repositories</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">8,200+</div>
+                        <div class="stat-label">Devices Managed</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="container">
+            <section class="quick-links">
+                <h2>Quick Access</h2>
+                <div class="links-grid">
+                    <a href="automation-scripts/" class="link-card">
+                        <h3><i class="fas fa-cogs"></i> Automation Scripts</h3>
+                        <p>124+ PowerShell scripts organized by Azure service category</p>
+                    </a>
+                    
+                    <a href="cost-management/" class="link-card">
+                        <h3><i class="fas fa-dollar-sign"></i> Cost Management</h3>
+                        <p>Dashboards, analytics, and cost optimization tools</p>
+                    </a>
+                    
+                    <a href="devops-templates/" class="link-card">
+                        <h3><i class="fas fa-code-branch"></i> DevOps Templates</h3>
+                        <p>CI/CD pipeline templates for multiple technologies</p>
+                    </a>
+                    
+                    <a href="governance/" class="link-card">
+                        <h3><i class="fas fa-gavel"></i> Governance</h3>
+                        <p>Policies, compliance, and security automation</p>
+                    </a>
+                    
+                    <a href="bookmarks/" class="link-card">
+                        <h3><i class="fas fa-star"></i> Bookmarks</h3>
+                        <p>Essential Azure resources and quick-access tools</p>
+                    </a>
+                    
+                    <a href="docs/" class="link-card">
+                        <h3><i class="fas fa-book"></i> Documentation</h3>
+                        <p>Comprehensive guides and best practices</p>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
+                    <p>Professional Azure automation for enterprise environments</p>
+                </div>
+                
+                <div class="social-links">
+                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
+                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add loading animation to external links
+        document.querySelectorAll('a[href^="http"]').forEach(link => {
+            link.addEventListener('click', function() {
+                this.style.opacity = '0.7';
+                setTimeout(() => {
+                    this.style.opacity = '1';
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>
