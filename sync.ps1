@@ -1,25 +1,19 @@
-# Quick Sync Launcher for Azure Enterprise Toolkit
-# Runs the smart sync script from the parent directory
+# Azure Enterprise Toolkit - Simple Sync Launcher
+# Clean version without Unicode characters
 
-Write-Host "[LAUNCHER] Azure Enterprise Toolkit - Quick Sync" -ForegroundColor Green
+Write-Host "AZURE ENTERPRISE TOOLKIT - SYNC LAUNCHER" -ForegroundColor Green
 
-$smartSyncPath = "..\smart-sync.ps1"
 $currentRepo = (Get-Location).Path
+Write-Host "Working in: $currentRepo" -ForegroundColor Cyan
 
-if (Test-Path $smartSyncPath) {
-    Write-Host "Running smart sync for: $currentRepo" -ForegroundColor Cyan
-    Write-Host "Using script: $smartSyncPath" -ForegroundColor Gray
-    & $smartSyncPath -RepositoryPath $currentRepo -Verbose
+# Check if clean-sync.ps1 exists in current directory
+if (Test-Path ".\clean-sync.ps1") {
+    Write-Host "STATUS: Using local clean-sync.ps1" -ForegroundColor Green
+    & ".\clean-sync.ps1" -RepositoryPath $currentRepo -Verbose
+} elseif (Test-Path "..\smart-sync.ps1") {
+    Write-Host "STATUS: Using parent directory smart-sync.ps1" -ForegroundColor Yellow
+    & "..\smart-sync.ps1" -RepositoryPath $currentRepo -Verbose
 } else {
-    Write-Host "[ERROR] Smart sync script not found at: $smartSyncPath" -ForegroundColor Red
-    Write-Host "[TIP] Make sure smart-sync.ps1 is in the parent directory (A:\GITHUB\)" -ForegroundColor Yellow
-    
-    # Try alternative path
-    $altPath = "A:\GITHUB\smart-sync.ps1"
-    if (Test-Path $altPath) {
-        Write-Host "[FOUND] Using alternative path: $altPath" -ForegroundColor Green
-        & $altPath -RepositoryPath $currentRepo -Verbose
-    } else {
-        Write-Host "[ERROR] Script not found at alternative path either: $altPath" -ForegroundColor Red
-    }
+    Write-Host "ERROR: No sync script found" -ForegroundColor Red
+    Write-Host "TIP: Make sure clean-sync.ps1 exists in current directory" -ForegroundColor Yellow
 }
