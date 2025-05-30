@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Cost Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #718096;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .cost-value {
+            color: #e53e3e;
+        }
+        
+        .savings-value {
+            color: #38a169;
+        }
+        
+        .chart-placeholder {
+            height: 200px;
+            background: linear-gradient(45deg, #f7fafc, #edf2f7);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-style: italic;
+            margin-top: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-good { background-color: #38a169; }
+        .status-warning { background-color: #d69e2e; }
+        .status-danger { background-color: #e53e3e; }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Azure Cost Management Dashboard</h1>
+            <p>Real-time cost monitoring and optimization insights</p>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Cost Overview Card -->
+            <div class="card">
+                <h3>📊 Cost Overview</h3>
+                <div class="metric">
+                    <span class="metric-label">Current Month</span>
+                    <span class="metric-value cost-value">$12,450</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Previous Month</span>
+                    <span class="metric-value">$11,200</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Monthly Budget</span>
+                    <span class="metric-value">$15,000</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Budget Utilization</span>
+                    <span class="metric-value">83%</span>
+                </div>
+                <div class="chart-placeholder">
+                    Monthly Trend Chart
+                </div>
+            </div>
+            
+            <!-- Service Breakdown Card -->
+            <div class="card">
+                <h3>🔧 Service Breakdown</h3>
+                <div class="metric">
+                    <span class="metric-label">Compute</span>
+                    <span class="metric-value cost-value">$6,800</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Storage</span>
+                    <span class="metric-value cost-value">$2,100</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Networking</span>
+                    <span class="metric-value cost-value">$1,550</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Databases</span>
+                    <span class="metric-value cost-value">$1,200</span>
+                </div>
+                <div class="chart-placeholder">
+                    Service Distribution Chart
+                </div>
+            </div>
+            
+            <!-- Optimization Opportunities -->
+            <div class="card">
+                <h3>💡 Optimization Opportunities</h3>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-good"></span>
+                        Right-sized Resources
+                    </span>
+                    <span class="metric-value savings-value">$850/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-warning"></span>
+                        Unused Resources
+                    </span>
+                    <span class="metric-value savings-value">$420/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-good"></span>
+                        Reserved Instances
+                    </span>
+                    <span class="metric-value savings-value">$1,200/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Potential Savings</span>
+                    <span class="metric-value savings-value">$2,470/month</span>
+                </div>
+            </div>
+            
+            <!-- Resource Health -->
+            <div class="card">
+                <h3>🏥 Resource Health</h3>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-good"></span>
+                        Healthy Resources
+                    </span>
+                    <span class="metric-value">156</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-warning"></span>
+                        Warning Status
+                    </span>
+                    <span class="metric-value">8</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-danger"></span>
+                        Critical Issues
+                    </span>
+                    <span class="metric-value">2</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Overall Health Score</span>
+                    <span class="metric-value">94%</span>
+                </div>
+            </div>
+            
+            <!-- Budget Alerts -->
+            <div class="card">
+                <h3>🚨 Budget Alerts</h3>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-warning"></span>
+                        Development Environment
+                    </span>
+                    <span class="metric-value">85% of budget</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-good"></span>
+                        Production Environment
+                    </span>
+                    <span class="metric-value">72% of budget</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator status-good"></span>
+                        Testing Environment
+                    </span>
+                    <span class="metric-value">45% of budget</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Next Alert Threshold</span>
+                    <span class="metric-value">90%</span>
+                </div>
+            </div>
+            
+            <!-- Top Resources -->
+            <div class="card">
+                <h3>💎 Top Spending Resources</h3>
+                <div class="metric">
+                    <span class="metric-label">Production SQL Database</span>
+                    <span class="metric-value cost-value">$1,200/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Web App Service Plan</span>
+                    <span class="metric-value cost-value">$890/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Virtual Machine (D4s_v3)</span>
+                    <span class="metric-value cost-value">$650/month</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Storage Account (Premium)</span>
+                    <span class="metric-value cost-value">$420/month</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>📧 Contact: wes@wesellis.com | 🌐 Website: wesellis.com</p>
+            <p>Azure Cost Management Dashboard v1.0 - Real-time cost optimization</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simple JavaScript for future interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Azure Cost Management Dashboard loaded successfully');
+            
+            // Add click handlers for future API integration
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('click', function() {
+                    console.log('Card clicked:', card.querySelector('h3').textContent);
+                });
+            });
+        });
+        
+        // Simulate real-time updates (for demo purposes)
+        function updateCosts() {
+            const costValues = document.querySelectorAll('.cost-value');
+            costValues.forEach(value => {
+                // Add slight animation effect
+                value.style.transition = 'color 0.3s ease';
+                value.style.color = '#e53e3e';
+            });
+        }
+        
+        // Update every 30 seconds (commented out for static demo)
+        // setInterval(updateCosts, 30000);
+    </script>
+</body>
+</html>

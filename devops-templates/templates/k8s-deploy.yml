@@ -1,0 +1,161 @@
+# Kubernetes Deployment Template
+# This template deploys applications to Kubernetes clusters
+
+parameters:
+- name: kubernetesServiceConnection
+  type: string
+- name: namespace
+  type: string
+  default: 'default'
+- name: deploymentManifests
+  type: string
+  default: 'k8s/*.yml'
+- name: containerRegistry
+  type: string
+- name: repository
+  type: string
+- name: imageTag
+  type: string
+  default: '$(Build.BuildId)'
+- name: replicas
+  type: number
+  default: 3
+- name: strategy
+  type: string
+  default: 'rolling'
+- name: healthCheckPath
+  type: string
+  default: '/health'
+- name: environmentVariables
+  type: object
+  default: []
+- name: runSmokeTests
+  type: boolean
+  default: true
+
+stages:
+- stage: Deploy
+  displayName: 'Deploy to Kubernetes'
+  jobs:
+  - deployment: DeployToK8s
+    displayName: 'Deploy to Kubernetes Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'kubernetes'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: KubernetesManifest@0
+            displayName: 'Create/Update Namespace'
+            inputs:
+              action: 'deploy'
+              kubernetesServiceConnection: '${{ parameters.kubernetesServiceConnection }}'
+              namespace: '${{ parameters.namespace }}'
+              manifests: |
+                apiVersion: v1
+                kind: Namespace
+                metadata:
+                  name: ${{ parameters.namespace }}
+          
+          - task: KubernetesManifest@0
+            displayName: 'Create Image Pull Secret'
+            inputs:
+              action: 'createSecret'
+              kubernetesServiceConnection: '${{ parameters.kubernetesServiceConnection }}'
+              namespace: '${{ parameters.namespace }}'
+              secretType: 'dockerRegistry'
+              secretName: 'registry-secret'
+              dockerRegistryEndpoint: '${{ parameters.containerRegistry }}'
+          
+          - task: KubernetesManifest@0
+            displayName: 'Deploy to Kubernetes'
+            inputs:
+              action: 'deploy'
+              kubernetesServiceConnection: '${{ parameters.kubernetesServiceConnection }}'
+              namespace: '${{ parameters.namespace }}'
+              manifests: '${{ parameters.deploymentManifests }}'
+              containers: '${{ parameters.repository }}:${{ parameters.imageTag }}'
+              imagePullSecrets: 'registry-secret'
+          
+          - task: Kubernetes@1
+            displayName: 'Wait for Rollout'
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: '${{ parameters.kubernetesServiceConnection }}'
+              namespace: '${{ parameters.namespace }}'
+              command: 'rollout'
+              arguments: 'status deployment/$(Build.Repository.Name) --timeout=300s'
+          
+          - ${{ if eq(parameters.runSmokeTests, true) }}:
+            - task: Kubernetes@1
+              displayName: 'Get Service URL'
+              inputs:
+                connectionType: 'Kubernetes Service Connection'
+                kubernetesServiceEndpoint: '${{ parameters.kubernetesServiceConnection }}'
+                namespace: '${{ parameters.namespace }}'
+                command: 'get'
+                arguments: 'service $(Build.Repository.Name) -o jsonpath="{.status.loadBalancer.ingress[0].ip}"'
+              name: 'getServiceUrl'
+            
+            - script: |
+                SERVICE_IP=$(kubectl get service $(Build.Repository.Name) -n ${{ parameters.namespace }} -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+                if [ -z "$SERVICE_IP" ]; then
+                  SERVICE_IP=$(kubectl get service $(Build.Repository.Name) -n ${{ parameters.namespace }} -o jsonpath="{.spec.clusterIP}")
+                fi
+                
+                echo "Testing service at: http://$SERVICE_IP${{ parameters.healthCheckPath }}"
+                
+                # Wait for service to be ready
+                for i in {1..30}; do
+                  if curl -f "http://$SERVICE_IP${{ parameters.healthCheckPath }}"; then
+                    echo "Service is healthy!"
+                    exit 0
+                  fi
+                  echo "Attempt $i: Service not ready, waiting..."
+                  sleep 10
+                done
+                
+                echo "Service health check failed"
+                exit 1
+              displayName: 'Run Smoke Tests'
+              continueOnError: true
+
+- stage: Verify
+  displayName: 'Verify Deployment'
+  dependsOn: Deploy
+  condition: succeeded()
+  jobs:
+  - job: VerifyDeployment
+    displayName: 'Verify Deployment Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: Kubernetes@1
+      displayName: 'Get Deployment Status'
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: '${{ parameters.kubernetesServiceConnection }}'
+        namespace: '${{ parameters.namespace }}'
+        command: 'get'
+        arguments: 'deployment $(Build.Repository.Name) -o wide'
+    
+    - task: Kubernetes@1
+      displayName: 'Get Pod Status'
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: '${{ parameters.kubernetesServiceConnection }}'
+        namespace: '${{ parameters.namespace }}'
+        command: 'get'
+        arguments: 'pods -l app=$(Build.Repository.Name) -o wide'
+    
+    - task: Kubernetes@1
+      displayName: 'Describe Deployment'
+      inputs:
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: '${{ parameters.kubernetesServiceConnection }}'
+        namespace: '${{ parameters.namespace }}'
+        command: 'describe'
+        arguments: 'deployment $(Build.Repository.Name)'
+      condition: failed()

@@ -1,0 +1,166 @@
+# Python Build and Deploy Template
+# This template builds a Python application and deploys it to Azure
+
+parameters:
+- name: pythonVersion
+  type: string
+  default: '3.11'
+- name: packageManager
+  type: string
+  default: 'pip'
+- name: requirementsFile
+  type: string
+  default: 'requirements.txt'
+- name: testCommand
+  type: string
+  default: 'pytest'
+- name: azureSubscription
+  type: string
+- name: appServiceName
+  type: string
+- name: resourceGroupName
+  type: string
+- name: startupCommand
+  type: string
+  default: 'gunicorn --bind=0.0.0.0 --workers=4 app:app'
+- name: environmentVariables
+  type: object
+  default: []
+- name: runTests
+  type: boolean
+  default: true
+- name: runLinting
+  type: boolean
+  default: true
+- name: applicationPath
+  type: string
+  default: '.'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: Build
+    displayName: 'Build Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python ${{ parameters.pythonVersion }}'
+      inputs:
+        versionSpec: '${{ parameters.pythonVersion }}'
+        addToPath: true
+    
+    - script: |
+        python -m pip install --upgrade pip
+        ${{ if eq(parameters.packageManager, 'pip') }}:
+        pip install -r ${{ parameters.requirementsFile }}
+        ${{ if eq(parameters.packageManager, 'pipenv') }}:
+        pip install pipenv
+        pipenv install --dev
+        ${{ if eq(parameters.packageManager, 'poetry') }}:
+        pip install poetry
+        poetry install
+      displayName: 'Install dependencies'
+    
+    - ${{ if eq(parameters.runLinting, true) }}:
+      - script: |
+          pip install flake8 black
+          flake8 ${{ parameters.applicationPath }} --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 ${{ parameters.applicationPath }} --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          black --check ${{ parameters.applicationPath }}
+        displayName: 'Run linting'
+        continueOnError: true
+    
+    - ${{ if eq(parameters.runTests, true) }}:
+      - script: |
+          pip install pytest pytest-cov pytest-xdist
+          ${{ if eq(parameters.packageManager, 'pip') }}:
+          ${{ parameters.testCommand }} --junitxml=junit/test-results.xml --cov=${{ parameters.applicationPath }} --cov-report=xml --cov-report=html
+          ${{ if eq(parameters.packageManager, 'pipenv') }}:
+          pipenv run ${{ parameters.testCommand }} --junitxml=junit/test-results.xml --cov=${{ parameters.applicationPath }} --cov-report=xml --cov-report=html
+          ${{ if eq(parameters.packageManager, 'poetry') }}:
+          poetry run ${{ parameters.testCommand }} --junitxml=junit/test-results.xml --cov=${{ parameters.applicationPath }} --cov-report=xml --cov-report=html
+        displayName: 'Run tests'
+        
+      - task: PublishTestResults@2
+        displayName: 'Publish test results'
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/test-results.xml'
+          mergeTestResults: true
+        condition: succeededOrFailed()
+      
+      - task: PublishCodeCoverageResults@1
+        displayName: 'Publish code coverage'
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '**/coverage.xml'
+          reportDirectory: '**/htmlcov'
+        condition: succeededOrFailed()
+    
+    - script: |
+        pip freeze > frozen-requirements.txt
+      displayName: 'Freeze requirements'
+    
+    - task: ArchiveFiles@2
+      displayName: 'Archive application'
+      inputs:
+        rootFolderOrFile: '${{ parameters.applicationPath }}'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+        excludePaths: |
+          **/__pycache__/**
+          **/.pytest_cache/**
+          **/tests/**
+          **/.git/**
+          **/.github/**
+          **/*.md
+          **/venv/**
+          **/.venv/**
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: 'Deploy Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download artifacts'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure App Service'
+            inputs:
+              azureSubscription: '${{ parameters.azureSubscription }}'
+              appType: 'webAppLinux'
+              appName: '${{ parameters.appServiceName }}'
+              resourceGroupName: '${{ parameters.resourceGroupName }}'
+              package: '$(System.ArtifactsDirectory)/drop/$(Build.BuildId).zip'
+              runtimeStack: 'PYTHON|${{ parameters.pythonVersion }}'
+              startUpCommand: '${{ parameters.startupCommand }}'
+              ${{ if gt(length(parameters.environmentVariables), 0) }}:
+                appSettings: |
+                  ${{ each env in parameters.environmentVariables }}:
+                  ${{ env.name }}=${{ env.value }}

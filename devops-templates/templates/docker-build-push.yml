@@ -1,0 +1,96 @@
+# Docker Build and Push Template
+# This template builds a Docker image and pushes it to a container registry
+
+parameters:
+- name: dockerFile
+  type: string
+  default: 'Dockerfile'
+- name: buildContext
+  type: string
+  default: '.'
+- name: containerRegistry
+  type: string
+- name: repository
+  type: string
+- name: tag
+  type: string
+  default: '$(Build.BuildId)'
+- name: additionalTags
+  type: object
+  default: []
+- name: buildArgs
+  type: object
+  default: []
+- name: target
+  type: string
+  default: ''
+- name: scanImage
+  type: boolean
+  default: true
+
+stages:
+- stage: Build
+  displayName: 'Build and Push Docker Image'
+  jobs:
+  - job: DockerBuild
+    displayName: 'Docker Build Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: Docker@2
+      displayName: 'Login to Container Registry'
+      inputs:
+        command: 'login'
+        containerRegistry: '${{ parameters.containerRegistry }}'
+    
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: 'build'
+        dockerfile: '${{ parameters.dockerFile }}'
+        buildContext: '${{ parameters.buildContext }}'
+        repository: '${{ parameters.repository }}'
+        tags: |
+          ${{ parameters.tag }}
+          latest
+          ${{ each tag in parameters.additionalTags }}:
+          ${{ tag }}
+        ${{ if ne(parameters.target, '') }}:
+          arguments: '--target ${{ parameters.target }}'
+        ${{ if gt(length(parameters.buildArgs), 0) }}:
+          arguments: |
+            ${{ each arg in parameters.buildArgs }}:
+            --build-arg ${{ arg }}
+    
+    - ${{ if eq(parameters.scanImage, true) }}:
+      - task: AquaSecurityTrivy@0
+        displayName: 'Scan Docker Image for Vulnerabilities'
+        inputs:
+          image: '${{ parameters.repository }}:${{ parameters.tag }}'
+          exitCode: 1
+        continueOnError: true
+    
+    - task: Docker@2
+      displayName: 'Push Docker Image'
+      inputs:
+        command: 'push'
+        repository: '${{ parameters.repository }}'
+        tags: |
+          ${{ parameters.tag }}
+          latest
+          ${{ each tag in parameters.additionalTags }}:
+          ${{ tag }}
+    
+    - task: Docker@2
+      displayName: 'Logout from Container Registry'
+      inputs:
+        command: 'logout'
+        containerRegistry: '${{ parameters.containerRegistry }}'
+      condition: always()
+
+    - script: |
+        echo "##vso[task.setvariable variable=imageTag;isOutput=true]${{ parameters.tag }}"
+        echo "##vso[task.setvariable variable=fullImageName;isOutput=true]${{ parameters.repository }}:${{ parameters.tag }}"
+      name: 'setOutputs'
+      displayName: 'Set Output Variables'

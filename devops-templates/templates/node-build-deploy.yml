@@ -1,0 +1,162 @@
+# Node.js Build and Deploy Template
+# This template builds a Node.js application and deploys it to Azure
+
+parameters:
+- name: nodeVersion
+  type: string
+  default: '18.x'
+- name: buildScript
+  type: string
+  default: 'build'
+- name: testScript
+  type: string
+  default: 'test'
+- name: installCommand
+  type: string
+  default: 'npm ci'
+- name: azureSubscription
+  type: string
+- name: appServiceName
+  type: string
+- name: resourceGroupName
+  type: string
+- name: environmentVariables
+  type: object
+  default: []
+- name: runTests
+  type: boolean
+  default: true
+- name: runLinting
+  type: boolean
+  default: true
+- name: packageManager
+  type: string
+  default: 'npm'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: Build
+    displayName: 'Build Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    
+    steps:
+    - task: NodeTool@0
+      displayName: 'Use Node.js ${{ parameters.nodeVersion }}'
+      inputs:
+        versionSpec: '${{ parameters.nodeVersion }}'
+    
+    - script: |
+        ${{ if eq(parameters.packageManager, 'npm') }}:
+        ${{ parameters.installCommand }}
+        ${{ if eq(parameters.packageManager, 'yarn') }}:
+        yarn install --frozen-lockfile
+        ${{ if eq(parameters.packageManager, 'pnpm') }}:
+        pnpm install --frozen-lockfile
+      displayName: 'Install dependencies'
+    
+    - ${{ if eq(parameters.runLinting, true) }}:
+      - script: |
+          ${{ if eq(parameters.packageManager, 'npm') }}:
+          npm run lint
+          ${{ if eq(parameters.packageManager, 'yarn') }}:
+          yarn lint
+          ${{ if eq(parameters.packageManager, 'pnpm') }}:
+          pnpm lint
+        displayName: 'Run linting'
+        continueOnError: true
+    
+    - ${{ if eq(parameters.runTests, true) }}:
+      - script: |
+          ${{ if eq(parameters.packageManager, 'npm') }}:
+          npm run ${{ parameters.testScript }}
+          ${{ if eq(parameters.packageManager, 'yarn') }}:
+          yarn ${{ parameters.testScript }}
+          ${{ if eq(parameters.packageManager, 'pnpm') }}:
+          pnpm ${{ parameters.testScript }}
+        displayName: 'Run tests'
+      
+      - task: PublishTestResults@2
+        displayName: 'Publish test results'
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/test-results.xml'
+          mergeTestResults: true
+        condition: succeededOrFailed()
+      
+      - task: PublishCodeCoverageResults@1
+        displayName: 'Publish code coverage'
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '**/coverage/cobertura-coverage.xml'
+        condition: succeededOrFailed()
+    
+    - script: |
+        ${{ if eq(parameters.packageManager, 'npm') }}:
+        npm run ${{ parameters.buildScript }}
+        ${{ if eq(parameters.packageManager, 'yarn') }}:
+        yarn ${{ parameters.buildScript }}
+        ${{ if eq(parameters.packageManager, 'pnpm') }}:
+        pnpm ${{ parameters.buildScript }}
+      displayName: 'Build application'
+    
+    - task: ArchiveFiles@2
+      displayName: 'Archive application'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+        replaceExistingArchive: true
+        excludePaths: |
+          node_modules/**/*
+          .git/**/*
+          .github/**/*
+          tests/**/*
+          coverage/**/*
+          *.md
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+
+- stage: Deploy
+  displayName: 'Deploy Stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    displayName: 'Deploy Job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download artifacts'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+          
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure App Service'
+            inputs:
+              azureSubscription: '${{ parameters.azureSubscription }}'
+              appType: 'webAppLinux'
+              appName: '${{ parameters.appServiceName }}'
+              resourceGroupName: '${{ parameters.resourceGroupName }}'
+              package: '$(System.ArtifactsDirectory)/drop/$(Build.BuildId).zip'
+              runtimeStack: 'NODE|${{ parameters.nodeVersion }}'
+              startUpCommand: 'npm start'
+              ${{ if gt(length(parameters.environmentVariables), 0) }}:
+                appSettings: |
+                  ${{ each env in parameters.environmentVariables }}:
+                  ${{ env.name }}=${{ env.value }}
