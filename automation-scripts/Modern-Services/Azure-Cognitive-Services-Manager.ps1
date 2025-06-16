@@ -51,6 +51,8 @@ try {
         "RegenerateKey" {
             $newKeys = New-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName -KeyName Key1
             Write-Log "✓ Key regenerated successfully" -Level SUCCESS
+            Write-Host "New Key 1: $($newKeys.Key1)" -ForegroundColor Green
+            Write-Host "Key 2: $($newKeys.Key2)" -ForegroundColor Cyan
         }
         
         "ListUsage" {

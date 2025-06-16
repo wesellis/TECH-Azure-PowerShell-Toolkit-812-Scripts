@@ -41,7 +41,7 @@ try {
         
         "CreateSubscription" {
             $subscription = New-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName -EventSubscriptionName $SubscriptionName -Endpoint $EndpointUrl
-            Write-Log "✓ Event subscription created: $SubscriptionName" -Level SUCCESS
+            Write-Log "✓ Event subscription created: $($subscription.EventSubscriptionName)" -Level SUCCESS
         }
         
         "ListEvents" {

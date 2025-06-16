@@ -121,8 +121,12 @@ function Write-EnhancedLog {
 
 # Create Azure Digital Twins instance
 function New-DigitalTwinsInstance {
-    try {
-        Write-EnhancedLog "Creating Azure Digital Twins instance: $InstanceName" "Info"
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    if ($PSCmdlet.ShouldProcess("Digital Twins instance '$InstanceName'", "Create")) {
+        try {
+            Write-EnhancedLog "Creating Azure Digital Twins instance: $InstanceName" "Info"
         
         # Check if instance already exists
         $existingInstance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -ErrorAction SilentlyContinue
@@ -140,7 +144,7 @@ function New-DigitalTwinsInstance {
         }
         
         $digitalTwinsInstance = New-AzDigitalTwinsInstance @dtParams
-        Write-EnhancedLog "Successfully created Digital Twins instance: $InstanceName" "Success"
+        Write-EnhancedLog "Successfully created Digital Twins instance: $($digitalTwinsInstance.Name)" "Success"
         
         # Wait for instance to be ready
         do {
@@ -160,18 +164,22 @@ function New-DigitalTwinsInstance {
         Write-EnhancedLog "Failed to create Digital Twins instance: $($_.Exception.Message)" "Error"
         throw
     }
+    }
 }
 
 # Configure private endpoint
 function New-PrivateEndpoint {
+    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
-    try {
-        Write-EnhancedLog "Configuring private endpoint for Digital Twins instance" "Info"
+    if ($PSCmdlet.ShouldProcess("Private endpoint for '$InstanceName'", "Create")) {
+        try {
+            Write-EnhancedLog "Configuring private endpoint for Digital Twins instance" "Info"
         
         # Create private DNS zone
         $privateDnsZoneName = "privatelink.digitaltwins.azure.net"
         $privateDnsZone = New-AzPrivateDnsZone -ResourceGroupName $ResourceGroupName -Name $privateDnsZoneName
+        Write-EnhancedLog "Created private DNS zone: $($privateDnsZone.Name)" "Success"
         
         # Create private endpoint
         $privateEndpointName = "$InstanceName-pe"
@@ -195,14 +203,17 @@ function New-PrivateEndpoint {
     } catch {
         Write-EnhancedLog "Failed to configure private endpoint: $($_.Exception.Message)" "Error"
     }
+    }
 }
 
 # Configure event routing
 function Set-EventRouting {
+    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
-    try {
-        Write-EnhancedLog "Configuring event routing for Digital Twins instance" "Info"
+    if ($PSCmdlet.ShouldProcess("Event routing for '$InstanceName'", "Configure")) {
+        try {
+            Write-EnhancedLog "Configuring event routing for Digital Twins instance" "Info"
         
         # Create Event Hub namespace if not exists
         if (-not $EventHubNamespace) {
@@ -246,10 +257,11 @@ function Set-EventRouting {
     } catch {
         Write-EnhancedLog "Failed to configure event routing: $($_.Exception.Message)" "Error"
     }
+    }
 }
 
-# Deploy Digital Twins models
-function Deploy-DigitalTwinsModels {
+# Deploy Digital Twins model
+function Deploy-DigitalTwinsModel {
     param(
         [object]$DigitalTwinsInstance,
         [string]$ModelsPath
@@ -326,7 +338,6 @@ function Deploy-DigitalTwinsModels {
             $productionLineModelJson | Out-File -FilePath ".\production-line-model.json" -Encoding UTF8
             
             # Use Azure CLI to upload models
-            $dtInstanceUrl = "https://$($DigitalTwinsInstance.HostName)"
             
             az dt model create --dt-name $InstanceName --models ".\factory-model.json" ".\production-line-model.json"
             
@@ -379,12 +390,14 @@ function Deploy-DigitalTwinsModels {
     }
 }
 
-# Configure diagnostics
-function Set-DiagnosticSettings {
+# Configure diagnostic setting
+function Set-DiagnosticSetting {
+    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
-    try {
-        Write-EnhancedLog "Configuring diagnostic settings for Digital Twins instance" "Info"
+    if ($PSCmdlet.ShouldProcess("Diagnostic settings for '$InstanceName'", "Configure")) {
+        try {
+            Write-EnhancedLog "Configuring diagnostic settings for Digital Twins instance" "Info"
         
         # Create Log Analytics workspace
         $workspaceName = "law-$ResourceGroupName-dt"
@@ -450,14 +463,17 @@ function Set-DiagnosticSettings {
     } catch {
         Write-EnhancedLog "Failed to configure diagnostic settings: $($_.Exception.Message)" "Error"
     }
+    }
 }
 
-# Assign RBAC roles
-function Set-RoleAssignments {
+# Assign RBAC role
+function Set-RoleAssignment {
+    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
-    try {
-        Write-EnhancedLog "Configuring RBAC roles for Digital Twins instance" "Info"
+    if ($PSCmdlet.ShouldProcess("RBAC roles for '$InstanceName'", "Configure")) {
+        try {
+            Write-EnhancedLog "Configuring RBAC roles for Digital Twins instance" "Info"
         
         # Get current user
         $currentUser = Get-AzContext
@@ -469,6 +485,7 @@ function Set-RoleAssignments {
         
     } catch {
         Write-EnhancedLog "Failed to assign RBAC roles: $($_.Exception.Message)" "Error"
+    }
     }
 }
 
@@ -532,17 +549,17 @@ try {
             }
             
             if ($EnableDiagnostics) {
-                Set-DiagnosticSettings -DigitalTwinsInstance $instance
+                Set-DiagnosticSetting -DigitalTwinsInstance $instance
             }
             
             if ($AssignRoles) {
-                Set-RoleAssignments -DigitalTwinsInstance $instance
+                Set-RoleAssignment -DigitalTwinsInstance $instance
             }
         }
         
         "Deploy" {
             $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
-            Deploy-DigitalTwinsModels -DigitalTwinsInstance $instance -ModelsPath $ModelDefinitions
+            Deploy-DigitalTwinsModel -DigitalTwinsInstance $instance -ModelsPath $ModelDefinitions
         }
         
         "Monitor" {
@@ -558,7 +575,7 @@ try {
             }
             
             if ($EnableDiagnostics) {
-                Set-DiagnosticSettings -DigitalTwinsInstance $instance
+                Set-DiagnosticSetting -DigitalTwinsInstance $instance
             }
         }
         
