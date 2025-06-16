@@ -145,6 +145,7 @@ function Connect-ToAzure {
 
 # Generate Arc onboarding script
 function New-ArcOnboardingScript {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ServerName,
         [string]$OperatingSystem
@@ -229,7 +230,8 @@ echo "Azure Arc onboarding completed for $ServerName"
 }
 
 # Install Arc extensions
-function Install-ArcExtensions {
+function Install-ArcExtension {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ServerName,
         [string[]]$Extensions
@@ -302,6 +304,7 @@ function Enable-ArcMonitoring {
 
 # Configure compliance policies
 function Set-ComplianceConfiguration {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$ServerName)
     
     try {
@@ -332,6 +335,7 @@ function Set-ComplianceConfiguration {
 
 # Process bulk server onboarding
 function Start-BulkOnboarding {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$CsvPath)
     
     try {
@@ -351,7 +355,7 @@ function Start-BulkOnboarding {
             if ($success) {
                 # Install extensions if specified
                 if ($InstallExtensions.Count -gt 0) {
-                    Install-ArcExtensions -ServerName $server.ServerName -Extensions $InstallExtensions
+                    Install-ArcExtension -ServerName $server.ServerName -Extensions $InstallExtensions
                 }
                 
                 # Configure monitoring if enabled
@@ -405,7 +409,7 @@ try {
         if ($success) {
             # Install extensions if specified
             if ($InstallExtensions.Count -gt 0) {
-                Install-ArcExtensions -ServerName $ServerName -Extensions $InstallExtensions
+                Install-ArcExtension -ServerName $ServerName -Extensions $InstallExtensions
             }
             
             # Configure monitoring if enabled

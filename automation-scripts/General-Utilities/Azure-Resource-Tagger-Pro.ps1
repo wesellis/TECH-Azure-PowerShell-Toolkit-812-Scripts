@@ -94,15 +94,19 @@ try {
     
     if ($Parallel -and $operations.Count -gt 10) {
         # Parallel execution for large operations
-        $operations | ForEach-Object -Parallel {
+        $results = $operations | ForEach-Object -Parallel {
             try {
                 Set-AzResource -ResourceId $_.Resource.ResourceId -Tag $_.NewTags -Force:$using:Force
-                $using:successCount++
+                return @{ Success = $true; ResourceName = $_.Resource.Name }
             } catch {
                 Write-Warning "Failed to tag $($_.Resource.Name): $($_.Exception.Message)"
-                $using:errorCount++
+                return @{ Success = $false; ResourceName = $_.Resource.Name; Error = $_.Exception.Message }
             }
         } -ThrottleLimit 10
+        
+        # Count results
+        $successCount = ($results | Where-Object { $_.Success }).Count
+        $errorCount = ($results | Where-Object { -not $_.Success }).Count
     } else {
         # Sequential execution
         foreach ($operation in $operations) {
@@ -110,11 +114,11 @@ try {
                 Invoke-AzureOperation -Operation {
                     Set-AzResource -ResourceId $operation.Resource.ResourceId -Tag $operation.NewTags -Force:$Force
                 } -OperationName "Tag Resource: $($operation.Resource.Name)" -MaxRetries 2
-                $successCount++
+                $successCount = $successCount + 1
                 Write-Log "✓ Tagged: $($operation.Resource.Name)" -Level SUCCESS
             } catch {
                 Write-Log "✗ Failed: $($operation.Resource.Name) - $($_.Exception.Message)" -Level ERROR
-                $errorCount++
+                $errorCount = $errorCount + 1
             }
         }
     }

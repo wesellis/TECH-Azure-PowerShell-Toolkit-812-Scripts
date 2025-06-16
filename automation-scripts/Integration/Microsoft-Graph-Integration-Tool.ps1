@@ -357,7 +357,7 @@ try {
         Disconnect-MgGraph -ErrorAction SilentlyContinue
         Write-Log "Graph session disconnected" -Level INFO
     } catch {
-        # Ignore disconnect errors
+        Write-Warning "Graph disconnect failed: $($_.Exception.Message)"
     }
 }
 

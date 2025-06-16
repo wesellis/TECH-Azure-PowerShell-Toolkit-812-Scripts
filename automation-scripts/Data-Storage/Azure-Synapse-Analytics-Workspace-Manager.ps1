@@ -27,7 +27,7 @@ param(
     [string]$SQLAdminUsername = "sqladmin",
     
     [Parameter(Mandatory=$false)]
-    [string]$SQLAdminPassword,
+    [SecureString]$SQLAdminPassword,
     
     [Parameter(Mandatory=$false)]
     [string]$SQLPoolName = "DataWarehouse",
@@ -131,7 +131,8 @@ try {
 
             # Generate secure password if not provided
             if (-not $SQLAdminPassword) {
-                $SQLAdminPassword = -join ((65..90) + (97..122) + (48..57) + @(33,35,36,37,38,42,43,45,61,63,64) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+                $passwordText = -join ((65..90) + (97..122) + (48..57) + @(33,35,36,37,38,42,43,45,61,63,64) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+                $SQLAdminPassword = ConvertTo-SecureString $passwordText -AsPlainText -Force
                 Write-Log "Generated secure SQL admin password" -Level INFO
             }
 
@@ -144,7 +145,7 @@ try {
                 Location = $Location
                 DefaultDataLakeStorageAccountName = $StorageAccountName
                 DefaultDataLakeStorageFilesystem = $FileSystemName
-                SqlAdministratorLoginCredential = (New-Object System.Management.Automation.PSCredential($SQLAdminUsername, (ConvertTo-SecureString $SQLAdminPassword -AsPlainText -Force)))
+                SqlAdministratorLoginCredential = (New-Object System.Management.Automation.PSCredential($SQLAdminUsername, $SQLAdminPassword))
                 ManagedVirtualNetwork = $EnableManagedVNet
                 PreventDataExfiltration = $EnableDataExfiltrationProtection
             }
@@ -464,7 +465,7 @@ try {
             Write-Host ""
             Write-Host "🔑 SQL Admin Credentials:" -ForegroundColor Yellow
             Write-Host "   • Username: $SQLAdminUsername" -ForegroundColor Yellow
-            Write-Host "   • Password: $SQLAdminPassword" -ForegroundColor Yellow
+            Write-Host "   • Password: [SecureString - Store in Key Vault]" -ForegroundColor Yellow
             Write-Host "   ⚠️  Store these credentials securely in Azure Key Vault!" -ForegroundColor Red
         }
         

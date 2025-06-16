@@ -21,7 +21,7 @@ param (
     [int]$Tail = 50
 )
 
-Write-Host "Retrieving logs for container group: $ContainerGroupName"
+Write-Host -Object "Retrieving logs for container group: $ContainerGroupName"
 
 if ($ContainerName) {
     $Logs = Get-AzContainerInstanceLog -ResourceGroupName $ResourceGroupName -ContainerGroupName $ContainerGroupName -ContainerName $ContainerName -Tail $Tail
@@ -29,6 +29,6 @@ if ($ContainerName) {
     $Logs = Get-AzContainerInstanceLog -ResourceGroupName $ResourceGroupName -ContainerGroupName $ContainerGroupName -Tail $Tail
 }
 
-Write-Host "`nContainer Logs (Last $Tail lines):"
-Write-Host "=" * 50
-Write-Host $Logs
+Write-Host -Object "`nContainer Logs (Last $Tail lines):"
+Write-Host -Object ("=" * 50)
+Write-Host -Object $Logs
