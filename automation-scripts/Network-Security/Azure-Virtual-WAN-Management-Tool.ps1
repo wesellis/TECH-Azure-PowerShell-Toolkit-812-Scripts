@@ -148,6 +148,8 @@ function Write-EnhancedLog {
 
 # Create Virtual WAN instance
 function New-VirtualWAN {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Creating Virtual WAN: $VirtualWANName" "Info"
         
@@ -172,6 +174,7 @@ function New-VirtualWAN {
 
 # Create Virtual Hub
 function New-VirtualHub {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$WANName,
         [string]$HubName,
@@ -223,6 +226,7 @@ function New-VirtualHub {
 
 # Create VPN Gateway in hub
 function New-VpnGateway {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
     try {
@@ -244,6 +248,7 @@ function New-VpnGateway {
 
 # Create ExpressRoute Gateway in hub
 function New-ExpressRouteGateway {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
     try {
@@ -265,6 +270,7 @@ function New-ExpressRouteGateway {
 
 # Create Azure Firewall in hub
 function New-AzureFirewall {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
     try {
@@ -289,7 +295,8 @@ function New-AzureFirewall {
 }
 
 # Create VPN sites
-function New-VpnSites {
+function New-VpnSite {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$WANName,
         [string[]]$SiteNames
@@ -320,6 +327,7 @@ function New-VpnSites {
 
 # Configure Point-to-Site VPN
 function Set-P2SVpnConfiguration {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
     try {
@@ -327,6 +335,9 @@ function Set-P2SVpnConfiguration {
         
         # Create P2S VPN Gateway
         $p2sGatewayName = "$HubName-p2s-gw"
+        
+        # Get virtual hub
+        $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
         
         # Configure address pool for P2S clients
         $p2sConnectionConfig = New-AzP2sVpnGateway -ResourceGroupName $ResourceGroupName -Name $p2sGatewayName -VirtualHubId $virtualHub.Id -VpnClientAddressPool @("172.16.0.0/24") -Tag $Tags
@@ -341,6 +352,7 @@ function Set-P2SVpnConfiguration {
 
 # Create custom route table
 function New-HubRouteTable {
+    [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$HubName,
         [string]$RouteTableName
@@ -426,6 +438,8 @@ function Get-VirtualWANStatus {
 
 # Configure monitoring and diagnostics
 function Set-VirtualWANMonitoring {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Configuring Virtual WAN monitoring..." "Info"
         
@@ -491,6 +505,8 @@ function Set-VirtualWANMonitoring {
 
 # Apply security baseline
 function Set-SecurityBaseline {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Applying security baseline configurations..." "Info"
         
@@ -512,6 +528,7 @@ function Set-SecurityBaseline {
 
 # Remove Virtual Hub
 function Remove-VirtualHub {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
     try {
@@ -564,7 +581,7 @@ try {
             $virtualWAN = New-VirtualWAN
             
             if ($VpnSiteNames.Count -gt 0) {
-                New-VpnSites -WANName $VirtualWANName -SiteNames $VpnSiteNames
+                New-VpnSite -WANName $VirtualWANName -SiteNames $VpnSiteNames
             }
             
             if ($EnableMonitoring) {
