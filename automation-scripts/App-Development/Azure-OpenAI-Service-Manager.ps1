@@ -100,7 +100,7 @@ try {
             Invoke-AzureOperation -Operation {
                 # Using REST API call as PowerShell module may not have latest deployment cmdlets
                 $subscriptionId = (Get-AzContext).Subscription.Id
-                $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName"
+                $deployUri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName"
                 
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -121,7 +121,7 @@ try {
                     }
                 } | ConvertTo-Json -Depth 5
                 
-                Invoke-RestMethod -Uri "$uri?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
+                Invoke-RestMethod -Uri "$deployUri?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
             } -OperationName "Deploy AI Model" | Out-Null
             
             Write-Log "✓ Model deployed: $ModelName ($ModelVersion) as $DeploymentName" -Level SUCCESS
@@ -132,14 +132,14 @@ try {
             
             $models = Invoke-AzureOperation -Operation {
                 $subscriptionId = (Get-AzContext).Subscription.Id
-                $modelUri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models"
+                $modelsApiUri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models"
                 
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
                 
-                Invoke-RestMethod -Uri "$modelUri?api-version=2023-05-01" -Method GET -Headers $headers
+                Invoke-RestMethod -Uri "$modelsApiUri?api-version=2023-05-01" -Method GET -Headers $headers
             } -OperationName "List Available Models"
             
             Write-Host ""

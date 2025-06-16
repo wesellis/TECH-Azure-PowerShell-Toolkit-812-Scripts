@@ -32,16 +32,6 @@ param (
 
 Write-Host "Creating Static Web App: $Name"
 
-# Prepare deployment properties
-$Properties = @{
-    repositoryUrl = $RepositoryUrl
-    branch = $Branch
-    buildProperties = @{
-        appLocation = $AppLocation
-        outputLocation = $OutputLocation
-    }
-}
-
 # Create Static Web App
 $StaticWebApp = New-AzStaticWebApp `
     -ResourceGroupName $ResourceGroupName `

@@ -117,7 +117,7 @@ try {
             $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
             $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName
             
-            $models = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Ocp-Apim-Subscription-Key' = $keys.Key1
                     'Content-Type' = 'application/json'
@@ -125,7 +125,7 @@ try {
                 
                 $uri = "$endpoint/formrecognizer/info?api-version=2023-07-31"
                 Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
-            } -OperationName "List Available Models"
+            } -OperationName "List Available Models" | Out-Null
             
             Write-Host ""
             Write-Host "📋 Available Document Intelligence Models" -ForegroundColor Cyan
@@ -271,10 +271,10 @@ try {
             'DataClassification' = 'Confidential'
         }
         
-        $taggedResource = Invoke-AzureOperation -Operation {
+        Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ServiceName -ResourceType "Microsoft.CognitiveServices/accounts"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-        } -OperationName "Apply Enterprise Tags"
+        } -OperationName "Apply Enterprise Tags" | Out-Null
     }
 
     # Security assessment

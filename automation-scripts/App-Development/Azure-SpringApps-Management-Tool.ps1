@@ -170,7 +170,11 @@ function Initialize-SpringCLI {
 
 # Create Azure Spring Apps instance
 function New-SpringAppsInstance {
-    try {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    if ($PSCmdlet.ShouldProcess("Spring Apps instance '$SpringAppsName'", "Create")) {
+        try {
         Write-EnhancedLog "Creating Azure Spring Apps instance: $SpringAppsName" "Info"
         
         # Check if instance already exists
@@ -208,7 +212,7 @@ function New-SpringAppsInstance {
         }
         
         # Execute creation
-        $result = & $createCmd
+        & $createCmd | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-EnhancedLog "Successfully created Spring Apps instance: $SpringAppsName" "Success"
         } else {
@@ -229,14 +233,19 @@ function New-SpringAppsInstance {
         }
         
     } catch {
-        Write-EnhancedLog "Failed to create Spring Apps instance: $($_.Exception.Message)" "Error"
-        throw
+            Write-EnhancedLog "Failed to create Spring Apps instance: $($_.Exception.Message)" "Error"
+            throw
+        }
     }
 }
 
 # Configure Spring Cloud services
 function Set-SpringCloudService {
-    try {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    if ($PSCmdlet.ShouldProcess("Spring Cloud services for '$SpringAppsName'", "Configure")) {
+        try {
         Write-EnhancedLog "Configuring Spring Cloud services..." "Info"
         
         # Configure Config Server
@@ -291,7 +300,8 @@ function Set-SpringCloudService {
         }
         
     } catch {
-        Write-EnhancedLog "Failed to configure Spring Cloud services: $($_.Exception.Message)" "Error"
+            Write-EnhancedLog "Failed to configure Spring Cloud services: $($_.Exception.Message)" "Error"
+        }
     }
 }
 
@@ -324,7 +334,7 @@ function Deploy-SpringApplication {
                 $deployCmd += "--deployment", $DeploymentName
             }
             
-            $result = & $deployCmd
+            & $deployCmd | Out-Null
             if ($LASTEXITCODE -eq 0) {
                 Write-EnhancedLog "Successfully deployed application: $AppName" "Success"
             } else {
@@ -351,7 +361,11 @@ function Deploy-SpringApplication {
 
 # Scale Spring application
 function Set-SpringAppScale {
-    try {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    if ($PSCmdlet.ShouldProcess("Spring application '$AppName'", "Scale")) {
+        try {
         Write-EnhancedLog "Scaling Spring application: $AppName" "Info"
         Write-EnhancedLog "Target instances: $InstanceCount, CPU: $CpuCount, Memory: $($MemoryInGB)Gi" "Info"
         
@@ -364,8 +378,9 @@ function Set-SpringAppScale {
         }
         
     } catch {
-        Write-EnhancedLog "Failed to scale Spring application: $($_.Exception.Message)" "Error"
-        throw
+            Write-EnhancedLog "Failed to scale Spring application: $($_.Exception.Message)" "Error"
+            throw
+        }
     }
 }
 
@@ -451,7 +466,8 @@ function Set-SpringMonitoring {
         Write-EnhancedLog "Successfully configured comprehensive monitoring" "Success"
         
     } catch {
-        Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
+            Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
+        }
     }
 }
 
