@@ -375,8 +375,6 @@ function New-HubRouteTable {
         try {
             Write-EnhancedLog "Creating custom route table: $RouteTableName" "Info"
             
-            $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
-            
             # Create custom route table
             $routeTable = New-AzVHubRouteTable -ResourceGroupName $ResourceGroupName -VirtualHubName $HubName -Name $RouteTableName
             
@@ -675,8 +673,8 @@ try {
             Write-EnhancedLog "Deleting Virtual WAN: $VirtualWANName" "Warning"
             
             # Remove all hubs first
-            $virtualHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName
-            foreach ($hub in $virtualHubs) {
+            $allHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName
+            foreach ($hub in $allHubs) {
                 Remove-VirtualHub -HubName $hub.Name
             }
             

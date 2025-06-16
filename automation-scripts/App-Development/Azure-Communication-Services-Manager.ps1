@@ -128,7 +128,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName "Domain Configuration" -Status "Configuring email domain"
             
             # Configure email domain using REST API
-            $domainConfig = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $subscriptionId = (Get-AzContext).Subscription.Id
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -147,7 +147,7 @@ try {
                 $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Communication/CommunicationServices/$CommunicationServiceName/domains/$DomainName" + "?api-version=2023-04-01"
                 
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
-            } -OperationName "Configure Email Domain"
+            } -OperationName "Configure Email Domain" | Out-Null
             
             Write-Log "✓ Email domain configured: $DomainName" -Level SUCCESS
             Write-Log "✓ Domain management: $DomainManagement" -Level INFO
@@ -207,7 +207,7 @@ try {
                 
                 # Purchase the first available number
                 if ($availableNumbers.phoneNumbers.Count -gt 0) {
-                    $purchaseResult = Invoke-AzureOperation -Operation {
+                    Invoke-AzureOperation -Operation {
                         $headers = @{
                             'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                             'Content-Type' = 'application/json'
@@ -220,7 +220,7 @@ try {
                         $uri = "https://management.azure.com/subscriptions/$subscriptionId/providers/Microsoft.Communication/phoneNumberOrders/purchase" + "?api-version=2022-12-01"
                         
                         Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
-                    } -OperationName "Purchase Phone Numbers"
+                    } -OperationName "Purchase Phone Numbers" | Out-Null
                     
                     Write-Log "✓ Phone number purchase initiated" -Level SUCCESS
                     Write-Log "✓ Search ID: $($availableNumbers.searchId)" -Level INFO
@@ -277,7 +277,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName "Email Sending" -Status "Sending email message"
             
             # Send email using REST API
-            $emailResult = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $subscriptionId = (Get-AzContext).Subscription.Id
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -306,7 +306,7 @@ try {
                 $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Communication/CommunicationServices/$CommunicationServiceName/sendEmail" + "?api-version=2023-04-01"
                 
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
-            } -OperationName "Send Email"
+            } -OperationName "Send Email" | Out-Null
             
             Write-Log "✓ Email sent successfully" -Level SUCCESS
             Write-Log "✓ From: $EmailFrom" -Level INFO
@@ -436,10 +436,10 @@ try {
     if ($EnableEventGrid -and $Action.ToLower() -eq "create") {
         Write-ProgressStep -StepNumber 4 -TotalSteps 10 -StepName "Event Grid Setup" -Status "Configuring Event Grid integration"
         
-        $eventGridTopic = Invoke-AzureOperation -Operation {
+        Invoke-AzureOperation -Operation {
             $topicName = "$CommunicationServiceName-events"
             New-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $topicName -Location $resourceGroup.Location
-        } -OperationName "Create Event Grid Topic"
+        } -OperationName "Create Event Grid Topic" | Out-Null
         
         Write-Log "✓ Event Grid topic created for communication events" -Level SUCCESS
     }
@@ -490,10 +490,10 @@ try {
             'Compliance' = 'GDPR-Ready'
         }
         
-        $taggedResource = Invoke-AzureOperation -Operation {
+        Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $CommunicationServiceName -ResourceType "Microsoft.Communication/CommunicationServices"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-        } -OperationName "Apply Enterprise Tags"
+        } -OperationName "Apply Enterprise Tags" | Out-Null
     }
 
     # Communication capabilities analysis

@@ -78,7 +78,7 @@ try {
         $environmentParams.LogAnalyticsWorkspace = $LogAnalyticsWorkspace
     }
     
-    $environment = Invoke-AzureOperation -Operation {
+    Invoke-AzureOperation -Operation {
         # Note: Using Azure CLI as Az.ContainerApps module is still in preview
         $envJson = az containerapp env create `
             --name $EnvironmentName `
@@ -91,7 +91,7 @@ try {
         }
         
         return ($envJson | ConvertFrom-Json)
-    } -OperationName "Create Container Apps Environment"
+    } -OperationName "Create Container Apps Environment" | Out-Null
     
     Write-Log "✓ Container Apps Environment created: $EnvironmentName" -Level SUCCESS
 

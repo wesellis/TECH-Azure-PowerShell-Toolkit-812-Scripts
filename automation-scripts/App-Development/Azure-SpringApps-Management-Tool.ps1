@@ -235,7 +235,7 @@ function New-SpringAppsInstance {
 }
 
 # Configure Spring Cloud services
-function Set-SpringCloudServices {
+function Set-SpringCloudService {
     try {
         Write-EnhancedLog "Configuring Spring Cloud services..." "Info"
         
@@ -371,6 +371,8 @@ function Set-SpringAppScale {
 
 # Configure monitoring
 function Set-SpringMonitoring {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Configuring monitoring for Spring Apps..." "Info"
         
@@ -552,10 +554,12 @@ try {
     switch ($Action) {
         "Create" {
             New-SpringAppsInstance
-            Set-SpringCloudServices
+            Set-SpringCloudService
             
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                Set-SpringMonitoring
+                if ($PSCmdlet.ShouldProcess("Spring Apps Monitoring Configuration", "Configure")) {
+                    Set-SpringMonitoring
+                }
             }
         }
         
@@ -578,9 +582,11 @@ try {
         }
         
         "Configure" {
-            Set-SpringCloudServices
+            Set-SpringCloudService
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                Set-SpringMonitoring
+                if ($PSCmdlet.ShouldProcess("Spring Apps Monitoring Configuration", "Configure")) {
+                    Set-SpringMonitoring
+                }
             }
         }
         

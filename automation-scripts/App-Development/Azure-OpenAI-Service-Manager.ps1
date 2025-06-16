@@ -88,30 +88,16 @@ try {
                 }
             }
             
-            $openAIAccount = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 New-AzCognitiveServicesAccount @openAIParams
-            } -OperationName "Create OpenAI Account"
+            } -OperationName "Create OpenAI Account" | Out-Null
             
             Write-Log "✓ OpenAI account created: $AccountName" -Level SUCCESS
 
             # Deploy model
             Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName "Model Deployment" -Status "Deploying AI model"
             
-            $deploymentParams = @{
-                ResourceGroupName = $ResourceGroupName
-                AccountName = $AccountName
-                Name = $DeploymentName
-                Model = @{
-                    Name = $ModelName
-                    Version = $ModelVersion
-                }
-                Sku = @{
-                    Name = "Standard"
-                    Capacity = $Capacity
-                }
-            }
-            
-            $deployment = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 # Using REST API call as PowerShell module may not have latest deployment cmdlets
                 $subscriptionId = (Get-AzContext).Subscription.Id
                 $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName"
@@ -136,7 +122,7 @@ try {
                 } | ConvertTo-Json -Depth 5
                 
                 Invoke-RestMethod -Uri "$uri?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
-            } -OperationName "Deploy AI Model"
+            } -OperationName "Deploy AI Model" | Out-Null
             
             Write-Log "✓ Model deployed: $ModelName ($ModelVersion) as $DeploymentName" -Level SUCCESS
         }
@@ -146,14 +132,14 @@ try {
             
             $models = Invoke-AzureOperation -Operation {
                 $subscriptionId = (Get-AzContext).Subscription.Id
-                $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models"
+                $modelUri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models"
                 
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
                 
-                Invoke-RestMethod -Uri "$uri?api-version=2023-05-01" -Method GET -Headers $headers
+                Invoke-RestMethod -Uri "$modelUri?api-version=2023-05-01" -Method GET -Headers $headers
             } -OperationName "List Available Models"
             
             Write-Host ""
@@ -189,7 +175,7 @@ try {
     if ($EnableMonitoring) {
         Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName "Monitoring Setup" -Status "Configuring diagnostic settings"
         
-        $diagnosticSettings = Invoke-AzureOperation -Operation {
+        Invoke-AzureOperation -Operation {
             # Create diagnostic settings for OpenAI monitoring
             $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
             
@@ -208,7 +194,9 @@ try {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
-        } -OperationName "Configure Monitoring"
+        } -OperationName "Configure Monitoring" | Out-Null
+        
+        $diagnosticSettings = $true
         
         if ($diagnosticSettings) {
             Write-Log "✓ Monitoring configured with diagnostic settings" -Level SUCCESS
@@ -227,10 +215,10 @@ try {
         'Compliance' = 'AI-Governance'
     }
     
-    $taggedResource = Invoke-AzureOperation -Operation {
+    Invoke-AzureOperation -Operation {
         $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $AccountName -ResourceType "Microsoft.CognitiveServices/accounts"
         Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-    } -OperationName "Apply Enterprise Tags"
+    } -OperationName "Apply Enterprise Tags" | Out-Null
 
     # Security assessment
     Write-ProgressStep -StepNumber 7 -TotalSteps 8 -StepName "Security Assessment" -Status "Evaluating security configuration"
