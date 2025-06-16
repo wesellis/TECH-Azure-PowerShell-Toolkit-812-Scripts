@@ -10,13 +10,13 @@ param (
     [Parameter(Mandatory=$false)][switch]$ExportMetrics
 )
 
-$modulePath = Join-Path $PSScriptRoot ".." ".." "modules" "AzureAutomationCommon"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "..", "modules", "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName "Azure Real-time Monitor" -Description "Live monitoring with web dashboard and alerts"
 
-# Global monitoring state
-$global:MonitoringState = @{
+# Script-level monitoring state (avoiding global variables)
+$script:MonitoringState = @{
     Running = $false
     Resources = @{}
     Metrics = @()
@@ -25,10 +25,13 @@ $global:MonitoringState = @{
 }
 
 function Start-ResourceMonitoring {
-    $global:MonitoringState.Running = $true
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    $script:MonitoringState.Running = $true
     Write-Log "🔴 Starting real-time monitoring..." -Level SUCCESS
     
-    while ($global:MonitoringState.Running) {
+    while ($script:MonitoringState.Running) {
         try {
             $timestamp = Get-Date
             Write-Log "📊 Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
@@ -52,13 +55,13 @@ function Start-ResourceMonitoring {
                 
                 # Check for alerts
                 if ($EnableAlerts) {
-                    Check-ResourceAlerts -Metric $metric
+                    Test-ResourceAlert -Metric $metric
                 }
             }
             
-            # Update global state
-            $global:MonitoringState.Metrics = $currentMetrics
-            $global:MonitoringState.LastUpdate = $timestamp
+            # Update script state
+            $script:MonitoringState.Metrics = $currentMetrics
+            $script:MonitoringState.LastUpdate = $timestamp
             
             # Display summary
             $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq "Healthy" }).Count
@@ -138,7 +141,8 @@ function Get-ResourceHealthMetric {
     return $metric
 }
 
-function Check-ResourceAlerts {
+function Test-ResourceAlert {
+    [CmdletBinding()]
     param($Metric)
     
     $alertTriggered = $false
@@ -164,7 +168,7 @@ function Check-ResourceAlerts {
             Severity = "Warning"
         }
         
-        $global:MonitoringState.Alerts += $alert
+        $script:MonitoringState.Alerts += $alert
         Write-Log "🚨 ALERT: $alertMessage" -Level WARN
         
         # Send webhook notification if configured
@@ -231,6 +235,6 @@ try {
     Write-Log "Monitor failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     throw
 } finally {
-    $global:MonitoringState.Running = $false
+    $script:MonitoringState.Running = $false
     Write-Log "🛑 Monitoring stopped" -Level INFO
 }

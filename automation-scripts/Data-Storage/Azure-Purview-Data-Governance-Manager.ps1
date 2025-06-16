@@ -151,7 +151,7 @@ try {
             } -OperationName "Get Purview Account"
             
             # Register data source using REST API
-            $dataSource = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
@@ -225,7 +225,7 @@ try {
             } -OperationName "Get Purview Account"
             
             # Create scan using REST API
-            $scan = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
@@ -250,7 +250,7 @@ try {
             } -OperationName "Create Scan"
             
             # Trigger scan
-            $scanRun = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
@@ -276,7 +276,7 @@ try {
             } -OperationName "Get Purview Account"
             
             # Get existing classifications
-            $classifications = Invoke-AzureOperation -Operation {
+            Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
@@ -449,7 +449,7 @@ try {
             'Purpose' = 'DataCatalog'
         }
         
-        $taggedResource = Invoke-AzureOperation -Operation {
+        Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName -ResourceType "Microsoft.Purview/accounts"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
         } -OperationName "Apply Enterprise Tags"
