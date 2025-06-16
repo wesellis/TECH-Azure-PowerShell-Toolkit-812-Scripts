@@ -1,0 +1,352 @@
+name: Azure Infrastructure Deployment
+# Enterprise-grade Azure infrastructure deployment workflow with security scanning
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+      resource_group:
+        description: 'Resource Group Name'
+        required: true
+        type: string
+      location:
+        description: 'Azure Region'
+        required: true
+        default: 'East US'
+        type: choice
+        options:
+        - East US
+        - West US 2
+        - West Europe
+        - East Asia
+      enable_monitoring:
+        description: 'Enable monitoring and diagnostics'
+        required: false
+        default: true
+        type: boolean
+      deploy_security_baseline:
+        description: 'Deploy security baseline'
+        required: false
+        default: true
+        type: boolean
+
+  push:
+    branches: [main, develop]
+    paths:
+      - 'iac-templates/**'
+      - '.github/workflows/azure-infrastructure.yml'
+  
+  pull_request:
+    branches: [main]
+    paths:
+      - 'iac-templates/**'
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Checkov Static Code Analysis
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ./iac-templates
+          framework: bicep,terraform
+          output_format: sarif
+          output_file_path: reports/checkov-results.sarif
+
+      - name: Upload Checkov scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: reports/checkov-results.sarif
+
+  validate-bicep:
+    name: Validate Bicep Templates
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Azure CLI
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Bicep CLI
+        run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          sudo mv ./bicep /usr/local/bin/bicep
+
+      - name: Validate Bicep templates
+        run: |
+          for file in $(find ./iac-templates/bicep -name "*.bicep"); do
+            echo "Validating $file"
+            bicep build $file --stdout > /dev/null
+            if [ $? -eq 0 ]; then
+              echo "✅ $file is valid"
+            else
+              echo "❌ $file validation failed"
+              exit 1
+            fi
+          done
+
+      - name: Bicep What-If Analysis
+        if: github.event_name == 'pull_request'
+        run: |
+          az deployment group what-if \
+            --resource-group ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --template-file ./iac-templates/bicep/container-apps-enterprise.bicep \
+            --parameters namePrefix=toolkit environment=dev
+
+  validate-terraform:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    needs: security-scan
+    if: github.event.inputs.environment != 'dev' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Format Check
+        run: |
+          cd iac-templates/terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: |
+          cd iac-templates/terraform
+          terraform init -backend=false
+
+      - name: Terraform Validate
+        run: |
+          cd iac-templates/terraform
+          terraform validate
+
+  powershell-tests:
+    name: PowerShell Script Tests
+    runs-on: self-hosted  # Use self-hosted runner for enterprise scripts
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Az -Force -AllowClobber
+          Install-Module Pester -Force
+
+      - name: Run PowerShell tests
+        shell: pwsh
+        run: |
+          # Run the comprehensive test framework
+          ./tests/Azure-Toolkit-Test-Framework.ps1 -TestScope "Unit" -OutputFormat "JUnit" -OutputPath "./test-results"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: powershell-test-results
+          path: ./test-results/
+
+  deploy-infrastructure:
+    name: Deploy Infrastructure
+    runs-on: self-hosted
+    needs: [validate-bicep, validate-terraform, powershell-tests]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --location "${{ github.event.inputs.location || 'East US' }}" \
+            --tags Environment=${{ github.event.inputs.environment || 'dev' }} \
+                   ManagedBy=GitHubActions \
+                   Repository=${{ github.repository }}
+
+      - name: Deploy Container Apps Infrastructure
+        run: |
+          az deployment group create \
+            --resource-group ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --template-file ./iac-templates/bicep/container-apps-enterprise.bicep \
+            --parameters namePrefix=toolkit \
+                         environment=${{ github.event.inputs.environment || 'dev' }} \
+                         enableApplicationGateway=true \
+                         enablePrivateNetworking=true \
+                         enableApplicationInsights=${{ github.event.inputs.enable_monitoring || 'true' }}
+
+      - name: Deploy OpenAI Infrastructure
+        if: github.event.inputs.environment == 'prod'
+        run: |
+          az deployment group create \
+            --resource-group ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --template-file ./iac-templates/bicep/openai-enterprise.bicep \
+            --parameters namePrefix=toolkit \
+                         environment=${{ github.event.inputs.environment || 'dev' }} \
+                         enablePrivateEndpoint=true \
+                         enableCustomerManagedKeys=true
+
+      - name: Run PowerShell Configuration Scripts
+        shell: pwsh
+        run: |
+          # Configure monitoring if enabled
+          if ('${{ github.event.inputs.enable_monitoring }}' -eq 'true') {
+            ./automation-scripts/Monitoring-Operations/Azure-LogAnalytics-Workspace-Creator.ps1 `
+              -ResourceGroupName "${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }}" `
+              -WorkspaceName "law-toolkit-${{ github.event.inputs.environment || 'dev' }}" `
+              -Location "${{ github.event.inputs.location || 'East US' }}"
+          }
+          
+          # Deploy security baseline if enabled
+          if ('${{ github.event.inputs.deploy_security_baseline }}' -eq 'true') {
+            ./automation-scripts/Identity-Governance/Azure-Policy-Assignment-Creator.ps1 `
+              -ResourceGroupName "${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }}" `
+              -PolicyName "Azure Security Benchmark" `
+              -AssignmentName "Security-Baseline-${{ github.event.inputs.environment || 'dev' }}"
+          }
+
+      - name: Run Integration Tests
+        shell: pwsh
+        run: |
+          ./tests/Azure-Toolkit-Test-Framework.ps1 `
+            -TestScope "Integration" `
+            -ResourceGroupName "${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }}" `
+            -Location "${{ github.event.inputs.location || 'East US' }}" `
+            -OutputFormat "JUnit"
+
+      - name: Upload deployment artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployment-artifacts-${{ github.event.inputs.environment || 'dev' }}
+          path: |
+            ./test-results/
+            ./deployment-logs/
+
+  post-deployment:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    if: always() && needs.deploy-infrastructure.result == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Generate Deployment Report
+        run: |
+          echo "# Deployment Report" > deployment-report.md
+          echo "## Environment: ${{ github.event.inputs.environment || 'dev' }}" >> deployment-report.md
+          echo "## Resource Group: ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }}" >> deployment-report.md
+          echo "## Location: ${{ github.event.inputs.location || 'East US' }}" >> deployment-report.md
+          echo "## Deployment Time: $(date)" >> deployment-report.md
+          echo "" >> deployment-report.md
+          
+          # Get resource information
+          echo "## Deployed Resources" >> deployment-report.md
+          az resource list --resource-group ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --query '[].{Name:name, Type:type, Location:location}' \
+            --output table >> deployment-report.md
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'prod'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: deploy-${{ github.run_number }}
+          release_name: Production Deployment ${{ github.run_number }}
+          body_path: deployment-report.md
+          draft: false
+          prerelease: false
+
+      - name: Notify Teams
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#azure-deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  cleanup:
+    name: Cleanup Resources
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'dev' && github.event_name == 'workflow_dispatch'
+    environment: cleanup
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Delete Development Resources
+        run: |
+          echo "Cleaning up development environment resources..."
+          az group delete \
+            --name ${{ github.event.inputs.resource_group || 'rg-toolkit-dev' }} \
+            --yes --no-wait
