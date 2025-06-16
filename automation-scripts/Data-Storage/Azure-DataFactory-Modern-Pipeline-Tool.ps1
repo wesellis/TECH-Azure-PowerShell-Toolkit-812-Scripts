@@ -168,19 +168,19 @@ function Set-DataFactoryGitConfiguration {
         if ($PSCmdlet.ShouldProcess($DataFactoryName, "Configure Git integration for Data Factory")) {
             Write-EnhancedLog "Configuring Git integration for Data Factory..." "Info"
         
-        if ($GitConfiguration.ContainsKey("RepoUrl") -and $GitConfiguration.ContainsKey("BranchName")) {
-            $gitConfig = @{
-                ResourceGroupName = $ResourceGroupName
-                DataFactoryName = $DataFactoryName
-                RepositoryUrl = $GitConfiguration.RepoUrl
-                BranchName = $GitConfiguration.BranchName
-                RootFolder = $GitConfiguration.RootFolder ?? "/"
-                CollaborationBranch = $GitConfiguration.CollaborationBranch ?? "main"
+            if ($GitConfiguration.ContainsKey("RepoUrl") -and $GitConfiguration.ContainsKey("BranchName")) {
+                $gitConfig = @{
+                    ResourceGroupName = $ResourceGroupName
+                    DataFactoryName = $DataFactoryName
+                    RepositoryUrl = $GitConfiguration.RepoUrl
+                    BranchName = $GitConfiguration.BranchName
+                    RootFolder = $GitConfiguration.RootFolder ?? "/"
+                    CollaborationBranch = $GitConfiguration.CollaborationBranch ?? "main"
+                }
+                
+                Set-AzDataFactoryV2GitIntegration @gitConfig
+                Write-EnhancedLog "Successfully configured Git integration" "Success"
             }
-            
-            Set-AzDataFactoryV2GitIntegration @gitConfig
-            Write-EnhancedLog "Successfully configured Git integration" "Success"
-        }
         }
         
     } catch {
