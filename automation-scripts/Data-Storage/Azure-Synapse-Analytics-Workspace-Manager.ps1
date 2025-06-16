@@ -118,11 +118,13 @@ try {
             
             # Create file system
             $ctx = $storageAccount.Context
-            $fileSystem = Invoke-AzureOperation -Operation {
+            $null = Invoke-AzureOperation -Operation {
                 $existing = Get-AzDataLakeGen2FileSystem -Context $ctx -Name $FileSystemName -ErrorAction SilentlyContinue
                 if (-not $existing) {
                     New-AzDataLakeGen2FileSystem -Context $ctx -Name $FileSystemName
+                    Write-Log "✓ Created file system: $FileSystemName" -Level SUCCESS
                 } else {
+                    Write-Log "✓ Using existing file system: $FileSystemName" -Level INFO
                     return $existing
                 }
             } -OperationName "Create File System"
@@ -186,7 +188,7 @@ try {
                 PerformanceLevel = $SQLPoolSKU
             }
             
-            $sqlPool = Invoke-AzureOperation -Operation {
+            $null = Invoke-AzureOperation -Operation {
                 New-AzSynapseSqlPool @sqlPoolParams
             } -OperationName "Create SQL Pool"
             
@@ -209,7 +211,7 @@ try {
                 SparkVersion = "3.3"
             }
             
-            $sparkPool = Invoke-AzureOperation -Operation {
+            $null = Invoke-AzureOperation -Operation {
                 New-AzSynapseSparkPool @sparkPoolParams
             } -OperationName "Create Spark Pool"
             
@@ -363,9 +365,10 @@ try {
             'BackupRequired' = 'Yes'
         }
         
-        $taggedResource = Invoke-AzureOperation -Operation {
+        $null = Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ResourceType "Microsoft.Synapse/workspaces"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
+            Write-Log "✓ Applied enterprise tags to workspace" -Level SUCCESS
         } -OperationName "Apply Enterprise Tags"
     }
 

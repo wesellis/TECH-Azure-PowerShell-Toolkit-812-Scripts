@@ -182,8 +182,6 @@ function Set-DataFactoryGitConfiguration {
         }
         
     } catch {
-        
-    } catch {
         Write-EnhancedLog "Failed to configure Git integration: $($_.Exception.Message)" "Error"
     }
 }
@@ -209,8 +207,6 @@ function New-ModernDataPipeline {
         }
         
     } catch {
-        
-    } catch {
         Write-EnhancedLog "Failed to create pipeline templates: $($_.Exception.Message)" "Error"
     }
 }
@@ -219,6 +215,11 @@ function New-ModernDataPipeline {
 function New-SampleLinkedService {
     [CmdletBinding(SupportsShouldProcess)]
     param()
+    
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample linked services")) {
+        return
+    }
+    
     try {
         # Azure SQL Database Linked Service
         $sqlLinkedService = @{
@@ -287,6 +288,11 @@ function New-SampleLinkedService {
 function New-SampleDataset {
     [CmdletBinding(SupportsShouldProcess)]
     param()
+    
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample datasets")) {
+        return
+    }
+    
     try {
         # Source SQL Dataset
         $sourceDataset = @{
@@ -351,6 +357,11 @@ function New-SampleDataset {
 function New-SamplePipeline {
     [CmdletBinding(SupportsShouldProcess)]
     param()
+    
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample pipelines")) {
+        return
+    }
+    
     try {
         # Modern ETL Pipeline
         $etlPipeline = @{
@@ -531,6 +542,11 @@ function Deploy-PipelineFromFile {
 function New-DataFactoryTrigger {
     [CmdletBinding(SupportsShouldProcess)]
     param()
+    
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create Data Factory triggers")) {
+        return
+    }
+    
     try {
         Write-EnhancedLog "Creating Data Factory triggers..." "Info"
         
@@ -655,6 +671,11 @@ function Get-DataFactoryMonitoring {
 function Set-DataFactoryMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
+    
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Configure Data Factory monitoring")) {
+        return
+    }
+    
     try {
         Write-EnhancedLog "Configuring Data Factory monitoring..." "Info"
         
