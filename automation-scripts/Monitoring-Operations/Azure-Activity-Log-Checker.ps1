@@ -37,10 +37,10 @@ Write-Host "`nRecent Activity (Last $MaxEvents events):"
 Write-Host "=" * 60
 
 foreach ($Log in $RecentLogs) {
-    Write-Host "Time: $($Log.EventTimestamp)"
-    Write-Host "Operation: $($Log.OperationName.Value)"
-    Write-Host "Status: $($Log.Status.Value)"
-    Write-Host "Resource: $($Log.ResourceId.Split('/')[-1])"
-    Write-Host "Caller: $($Log.Caller)"
-    Write-Host "-" * 40
+    Write-Host -Object "Time: $($Log.EventTimestamp)"
+    Write-Host -Object "Operation: $($Log.OperationName.Value)"
+    Write-Host -Object "Status: $($Log.Status.Value)"
+    Write-Host -Object "Resource: $($Log.ResourceId.Split('/')[-1])"
+    Write-Host -Object "Caller: $($Log.Caller)"
+    Write-Host -Object ("-" * 40)
 }

@@ -48,9 +48,6 @@ try {
         AssignableScopes = @("/subscriptions/$SubscriptionId")
     }
     
-    # Convert to JSON for role creation
-    $RoleJson = $RoleDefinition | ConvertTo-Json -Depth 10
-    
     # Create the custom role
     $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
     

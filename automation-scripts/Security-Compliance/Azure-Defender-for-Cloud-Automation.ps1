@@ -70,9 +70,9 @@ try {
             
             foreach ($plan in $DefenderPlans) {
                 try {
-                    $pricing = Invoke-AzureOperation -Operation {
+                    Invoke-AzureOperation -Operation {
                         Set-AzSecurityPricing -Name $plan -PricingTier $PricingTier
-                    } -OperationName "Enable Defender for $plan"
+                    } -OperationName "Enable Defender for $plan" | Out-Null
                     
                     Write-Log "✓ Defender enabled for $plan ($PricingTier tier)" -Level SUCCESS
                 } catch {

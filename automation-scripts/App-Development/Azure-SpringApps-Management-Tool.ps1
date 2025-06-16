@@ -386,88 +386,85 @@ function Set-SpringAppScale {
 
 # Configure monitoring
 function Set-SpringMonitoring {
-    [CmdletBinding(SupportsShouldProcess)]
-    param()
     try {
         Write-EnhancedLog "Configuring monitoring for Spring Apps..." "Info"
         
-        # Create Application Insights if enabled
-        if ($EnableApplicationInsights) {
-            $appInsightsName = "$SpringAppsName-insights"
-            
-            # Check if Application Insights exists
-            $existingInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -ErrorAction SilentlyContinue
-            if (-not $existingInsights) {
-                Write-EnhancedLog "Creating Application Insights: $appInsightsName" "Info"
-                $appInsights = New-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -Location $Location -Kind "java"
-                Write-EnhancedLog "Successfully created Application Insights" "Success"
-            } else {
-                $appInsights = $existingInsights
+            # Create Application Insights if enabled
+            if ($EnableApplicationInsights) {
+                $appInsightsName = "$SpringAppsName-insights"
+                
+                # Check if Application Insights exists
+                $existingInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -ErrorAction SilentlyContinue
+                if (-not $existingInsights) {
+                    Write-EnhancedLog "Creating Application Insights: $appInsightsName" "Info"
+                    $appInsights = New-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -Location $Location -Kind "java"
+                    Write-EnhancedLog "Successfully created Application Insights" "Success"
+                } else {
+                    $appInsights = $existingInsights
+                }
+                
+                # Configure Application Insights for Spring Apps
+                az spring build-service builder buildpack-binding create --name "default" --builder-name "default" --service $SpringAppsName --resource-group $ResourceGroupName --type "ApplicationInsights" --properties "connection-string=$($appInsights.ConnectionString)"
+                Write-EnhancedLog "Successfully integrated Application Insights" "Success"
             }
             
-            # Configure Application Insights for Spring Apps
-            az spring build-service builder buildpack-binding create --name "default" --builder-name "default" --service $SpringAppsName --resource-group $ResourceGroupName --type "ApplicationInsights" --properties "connection-string=$($appInsights.ConnectionString)"
-            Write-EnhancedLog "Successfully integrated Application Insights" "Success"
-        }
-        
-        # Create Log Analytics workspace
-        $workspaceName = "law-$ResourceGroupName-spring"
-        $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
-        
-        if (-not $workspace) {
-            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
-            Write-EnhancedLog "Created Log Analytics workspace: $workspaceName" "Success"
-        }
-        
-        # Configure diagnostic settings
-        $springAppsId = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query "id" -o tsv
-        
-        $diagnosticSettings = @{
-            logs = @(
-                @{
-                    category = "ApplicationConsole"
-                    enabled = $true
-                    retentionPolicy = @{
+            # Create Log Analytics workspace
+            $workspaceName = "law-$ResourceGroupName-spring"
+            $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
+            
+            if (-not $workspace) {
+                $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
+                Write-EnhancedLog "Created Log Analytics workspace: $workspaceName" "Success"
+            }
+            
+            # Configure diagnostic settings
+            $springAppsId = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query "id" -o tsv
+            
+            $diagnosticSettings = @{
+                logs = @(
+                    @{
+                        category = "ApplicationConsole"
                         enabled = $true
-                        days = 90
-                    }
-                },
-                @{
-                    category = "SystemLogs" 
-                    enabled = $true
-                    retentionPolicy = @{
+                        retentionPolicy = @{
+                            enabled = $true
+                            days = 90
+                        }
+                    },
+                    @{
+                        category = "SystemLogs" 
                         enabled = $true
-                        days = 90
-                    }
-                },
-                @{
-                    category = "IngressLogs"
-                    enabled = $true
-                    retentionPolicy = @{
+                        retentionPolicy = @{
+                            enabled = $true
+                            days = 90
+                        }
+                    },
+                    @{
+                        category = "IngressLogs"
                         enabled = $true
-                        days = 90
+                        retentionPolicy = @{
+                            enabled = $true
+                            days = 90
+                        }
                     }
-                }
-            )
-            metrics = @(
-                @{
-                    category = "AllMetrics"
-                    enabled = $true
-                    retentionPolicy = @{
+                )
+                metrics = @(
+                    @{
+                        category = "AllMetrics"
                         enabled = $true
-                        days = 90
+                        retentionPolicy = @{
+                            enabled = $true
+                            days = 90
+                        }
                     }
-                }
-            )
-        }
-        
-        Set-AzDiagnosticSetting -ResourceId $springAppsId -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name "$SpringAppsName-diagnostics"
-        
-        Write-EnhancedLog "Successfully configured comprehensive monitoring" "Success"
-        
+                )
+            }
+            
+            Set-AzDiagnosticSetting -ResourceId $springAppsId -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name "$SpringAppsName-diagnostics"
+            
+            Write-EnhancedLog "Successfully configured comprehensive monitoring" "Success"
+            
     } catch {
-            Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
-        }
+        Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
     }
 }
 
@@ -573,9 +570,7 @@ try {
             Set-SpringCloudService
             
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                if ($PSCmdlet.ShouldProcess("Spring Apps Monitoring Configuration", "Configure")) {
-                    Set-SpringMonitoring
-                }
+                Set-SpringMonitoring
             }
         }
         
@@ -600,9 +595,7 @@ try {
         "Configure" {
             Set-SpringCloudService
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                if ($PSCmdlet.ShouldProcess("Spring Apps Monitoring Configuration", "Configure")) {
-                    Set-SpringMonitoring
-                }
+                Set-SpringMonitoring
             }
         }
         

@@ -63,5 +63,5 @@ foreach ($Health in $HealthStatus) {
         default { "⚠️" }
     }
     
-    Write-Host "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
+    Write-Host -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
 }

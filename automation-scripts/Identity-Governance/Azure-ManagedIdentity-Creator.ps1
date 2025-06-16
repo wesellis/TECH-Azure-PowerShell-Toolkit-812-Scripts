@@ -52,6 +52,7 @@ try {
             -Scope $Scope
         
         Write-Host "✅ Role assignment completed:"
+        Write-Host "  Assignment ID: $($RoleAssignment.RoleAssignmentId)"
         Write-Host "  Role: $Role"
         Write-Host "  Scope: $Scope"
     }

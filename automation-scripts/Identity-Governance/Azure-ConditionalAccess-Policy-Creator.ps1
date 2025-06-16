@@ -44,26 +44,6 @@ try {
     
     Write-Host "✅ Connected to Microsoft Graph"
     
-    # Policy template structure
-    $PolicyTemplate = @{
-        displayName = $PolicyName
-        description = $Description
-        state = $State
-        conditions = @{
-            users = @{
-                includeUsers = $IncludeUsers
-                excludeUsers = $ExcludeUsers
-            }
-            applications = @{
-                includeApplications = $IncludeApplications
-            }
-        }
-        grantControls = @{
-            operator = "OR"
-            builtInControls = $RequireMFA
-        }
-    }
-    
     Write-Host "🔐 Conditional Access Policy Configuration:"
     Write-Host "  Name: $PolicyName"
     Write-Host "  Description: $Description"
