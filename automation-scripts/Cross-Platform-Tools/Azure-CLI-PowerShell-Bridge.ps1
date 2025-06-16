@@ -48,9 +48,9 @@ if (-not $Command) {
 Write-Host "`nExecuting: $Command --output $OutputFormat" -ForegroundColor Yellow
 
 try {
-    # Execute Azure CLI command
-    $fullCommand = "$Command --output $OutputFormat"
-    $result = Invoke-Expression $fullCommand
+    # Execute Azure CLI command safely without Invoke-Expression
+    $commandParts = $Command.Split(' ') + @('--output', $OutputFormat)
+    $result = & $commandParts[0] @commandParts[1..($commandParts.Length-1)]
     
     if ($OutputFormat -eq "json" -and -not $PassThru) {
         # Parse JSON and return as PowerShell objects

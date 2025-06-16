@@ -111,7 +111,7 @@ try {
     Write-Host "                              SUBSCRIPTION USAGE REPORT" -ForegroundColor Green  
     Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-Host ""
-    Write-Host "📊 Usage Summary for $Location:" -ForegroundColor Cyan
+    Write-Host "📊 Usage Summary for $($Location):" -ForegroundColor Cyan
     Write-Host "   • Critical Items: $($criticalItems.Count)" -ForegroundColor Red
     Write-Host "   • Warning Items: $($warningItems.Count)" -ForegroundColor Yellow
     Write-Host "   • Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)" -ForegroundColor White

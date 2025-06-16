@@ -30,12 +30,13 @@ try {
     if (-not $TargetLocation) { $TargetLocation = $sourceRG.Location }
 
     Write-Log "📤 Exporting resource group template..." -Level INFO
-    $template = Export-AzResourceGroup -ResourceGroupName $SourceResourceGroupName -Path $ExportPath
+    $null = Export-AzResourceGroup -ResourceGroupName $SourceResourceGroupName -Path $ExportPath
     Write-Log "✓ Template exported to: $ExportPath" -Level SUCCESS
 
     if (-not $ExportOnly) {
         Write-Log "🏗️ Creating target resource group..." -Level INFO
-        $targetRG = New-AzResourceGroup -Name $TargetResourceGroupName -Location $TargetLocation -Tag $sourceRG.Tags
+        $null = New-AzResourceGroup -Name $TargetResourceGroupName -Location $TargetLocation -Tag $sourceRG.Tags
+        Write-Log "✓ Target resource group created: $TargetResourceGroupName" -Level SUCCESS
         
         Write-Log "🚀 Deploying resources to target..." -Level INFO
         $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath

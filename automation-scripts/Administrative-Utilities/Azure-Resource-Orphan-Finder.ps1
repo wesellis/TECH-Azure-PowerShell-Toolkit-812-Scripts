@@ -30,7 +30,7 @@ param(
     [switch]$IncludeCostAnalysis,
     
     [Parameter(Mandatory=$false)]
-    [switch]$DryRun = $true
+    [switch]$DryRun
 )
 
 # Import common functions
@@ -189,8 +189,11 @@ try {
         Write-Log "✓ Orphaned resources report saved to: $OutputPath" -Level SUCCESS
     }
 
-    # Remove orphans if requested
-    if ($RemoveOrphans -and -not $DryRun) {
+    # Remove orphans if requested and explicitly disabled dry run mode  
+    # Default behavior is safe (dry run mode) unless user explicitly disables it
+    $isDryRunMode = if ($PSBoundParameters.ContainsKey('DryRun')) { $DryRun } else { $true }
+    
+    if ($RemoveOrphans -and -not $isDryRunMode) {
         Write-Log "🗑️ Removing orphaned resources..." -Level WARNING
         
         foreach ($resource in $orphanedResources) {
@@ -237,7 +240,7 @@ try {
     Write-Host "   • Total Monthly Savings Potential: $${totalSavings:F2}" -ForegroundColor Green
     Write-Host "   • Annual Savings Potential: $${($totalSavings * 12):F2}" -ForegroundColor Green
     
-    if ($DryRun) {
+    if ($isDryRunMode) {
         Write-Host ""
         Write-Host "🔒 DRY RUN MODE:" -ForegroundColor Yellow
         Write-Host "   • No resources were deleted" -ForegroundColor White

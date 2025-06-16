@@ -17,7 +17,7 @@ param(
     [string]$TargetSubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [switch]$ValidateOnly = $true
+    [switch]$ValidateOnly
 )
 
 Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force

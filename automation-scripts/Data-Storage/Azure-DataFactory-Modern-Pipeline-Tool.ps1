@@ -135,23 +135,24 @@ function New-DataFactoryInstance {
         if ($PSCmdlet.ShouldProcess($DataFactoryName, "Create Azure Data Factory instance")) {
             Write-EnhancedLog "Creating Azure Data Factory instance: $DataFactoryName" "Info"
         
-        # Check if Data Factory already exists
-        $existingDataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -ErrorAction SilentlyContinue
-        if ($existingDataFactory) {
-            Write-EnhancedLog "Data Factory already exists: $DataFactoryName" "Warning"
-            return $existingDataFactory
+            # Check if Data Factory already exists
+            $existingDataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -ErrorAction SilentlyContinue
+            if ($existingDataFactory) {
+                Write-EnhancedLog "Data Factory already exists: $DataFactoryName" "Warning"
+                return $existingDataFactory
+            }
+            
+            # Create Data Factory
+            $dataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -Location $Location -Tag $Tags
+            Write-EnhancedLog "Successfully created Data Factory: $DataFactoryName" "Success"
+            
+            # Configure Git integration if provided
+            if ($GitConfiguration.Keys.Count -gt 0) {
+                Set-DataFactoryGitConfiguration
+            }
+            
+            return $dataFactory
         }
-        
-        # Create Data Factory
-        $dataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -Location $Location -Tag $Tags
-        Write-EnhancedLog "Successfully created Data Factory: $DataFactoryName" "Success"
-        
-        # Configure Git integration if provided
-        if ($GitConfiguration.Keys.Count -gt 0) {
-            Set-DataFactoryGitConfiguration
-        }
-        
-        return $dataFactory
         
     } catch {
         Write-EnhancedLog "Failed to create Data Factory: $($_.Exception.Message)" "Error"
