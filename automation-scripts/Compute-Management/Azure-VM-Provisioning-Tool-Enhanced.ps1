@@ -16,7 +16,7 @@ param (
 )
 
 # Import enhanced functions
-$modulePath = Join-Path $PSScriptRoot ".." "modules" "AzureAutomationCommon"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "modules", "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"

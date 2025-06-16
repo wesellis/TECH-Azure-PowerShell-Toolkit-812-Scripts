@@ -129,6 +129,8 @@ function Write-EnhancedLog {
 
 # Create Azure Data Factory instance
 function New-DataFactoryInstance {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Creating Azure Data Factory instance: $DataFactoryName" "Info"
         
@@ -158,6 +160,8 @@ function New-DataFactoryInstance {
 
 # Configure Git integration
 function Set-DataFactoryGitConfiguration {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Configuring Git integration for Data Factory..." "Info"
         
@@ -181,18 +185,20 @@ function Set-DataFactoryGitConfiguration {
 }
 
 # Create modern data pipeline templates
-function New-ModernDataPipelines {
+function New-ModernDataPipeline {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Creating modern data pipeline templates..." "Info"
         
         # Create sample linked services
-        New-SampleLinkedServices
+        New-SampleLinkedService
         
         # Create sample datasets
-        New-SampleDatasets
+        New-SampleDataset
         
         # Create sample pipelines
-        New-SamplePipelines
+        New-SamplePipeline
         
         Write-EnhancedLog "Successfully created modern data pipeline templates" "Success"
         
@@ -202,7 +208,9 @@ function New-ModernDataPipelines {
 }
 
 # Create sample linked services
-function New-SampleLinkedServices {
+function New-SampleLinkedService {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         # Azure SQL Database Linked Service
         $sqlLinkedService = @{
@@ -268,7 +276,9 @@ function New-SampleLinkedServices {
 }
 
 # Create sample datasets
-function New-SampleDatasets {
+function New-SampleDataset {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         # Source SQL Dataset
         $sourceDataset = @{
@@ -330,7 +340,9 @@ function New-SampleDatasets {
 }
 
 # Create sample pipelines
-function New-SamplePipelines {
+function New-SamplePipeline {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         # Modern ETL Pipeline
         $etlPipeline = @{
@@ -508,7 +520,9 @@ function Deploy-PipelineFromFile {
 }
 
 # Create and configure triggers
-function New-DataFactoryTriggers {
+function New-DataFactoryTrigger {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Creating Data Factory triggers..." "Info"
         
@@ -631,6 +645,8 @@ function Get-DataFactoryMonitoring {
 
 # Configure monitoring and alerting
 function Set-DataFactoryMonitoring {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     try {
         Write-EnhancedLog "Configuring Data Factory monitoring..." "Info"
         
@@ -755,8 +771,8 @@ try {
     switch ($Action) {
         "Create" {
             $dataFactory = New-DataFactoryInstance
-            New-ModernDataPipelines
-            New-DataFactoryTriggers
+            New-ModernDataPipeline
+            New-DataFactoryTrigger
             
             if ($EnableMonitoring) {
                 Set-DataFactoryMonitoring
@@ -771,7 +787,7 @@ try {
             if ($PipelineDefinitionPath) {
                 Deploy-PipelineFromFile -PipelineName $PipelineName -DefinitionPath $PipelineDefinitionPath
             } else {
-                New-ModernDataPipelines
+                New-ModernDataPipeline
             }
         }
         
@@ -790,7 +806,7 @@ try {
         }
         
         "Configure" {
-            New-DataFactoryTriggers
+            New-DataFactoryTrigger
             if ($EnableMonitoring) {
                 Set-DataFactoryMonitoring
             }

@@ -24,7 +24,6 @@ $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 
 if ($StorageAccountName) {
     $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
-    $StorageUri = $StorageAccount.PrimaryEndpoints.Blob
     
     Set-AzVMBootDiagnostic -VM $VM -Enable -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
     Write-Host "Using storage account: $StorageAccountName"

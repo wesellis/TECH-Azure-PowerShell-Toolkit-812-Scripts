@@ -14,15 +14,15 @@ param (
 
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId
-    Write-Host "Connected to subscription: $SubscriptionId"
+    Write-Host -Object "Connected to subscription: $SubscriptionId"
 }
 
-Write-Host "Retrieving all VMs across subscription..."
+Write-Host -Object "Retrieving all VMs across subscription..."
 
 $VMs = Get-AzVM -Status
-Write-Host "`nFound $($VMs.Count) Virtual Machines:"
-Write-Host "=" * 60
+Write-Host -Object "`nFound $($VMs.Count) Virtual Machines:"
+Write-Host -Object ("=" * 60)
 
 foreach ($VM in $VMs) {
-    Write-Host "VM: $($VM.Name) | RG: $($VM.ResourceGroupName) | State: $($VM.PowerState) | Size: $($VM.HardwareProfile.VmSize)"
+    Write-Host -Object "VM: $($VM.Name) | RG: $($VM.ResourceGroupName) | State: $($VM.PowerState) | Size: $($VM.HardwareProfile.VmSize)"
 }
