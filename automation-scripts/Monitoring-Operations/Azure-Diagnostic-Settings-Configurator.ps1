@@ -79,6 +79,7 @@ $DiagnosticParams.Metric = $MetricSettings
 $DiagnosticSetting = Set-AzDiagnosticSetting @DiagnosticParams
 
 Write-Host "✅ Diagnostic settings configured successfully:"
+Write-Host "  Setting ID: $($DiagnosticSetting.Id)"
 Write-Host "  Name: $DiagnosticSettingName"
 Write-Host "  Resource: $($ResourceId.Split('/')[-1])"
 Write-Host "  Log Categories: $($LogCategories -join ', ')"

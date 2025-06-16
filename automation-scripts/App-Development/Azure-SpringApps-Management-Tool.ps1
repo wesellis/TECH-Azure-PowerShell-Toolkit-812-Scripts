@@ -386,8 +386,12 @@ function Set-SpringAppScale {
 
 # Configure monitoring
 function Set-SpringMonitoring {
-    try {
-        Write-EnhancedLog "Configuring monitoring for Spring Apps..." "Info"
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
+    
+    if ($PSCmdlet.ShouldProcess("Spring Apps monitoring configuration for '$SpringAppsName'", "Configure")) {
+        try {
+            Write-EnhancedLog "Configuring monitoring for Spring Apps..." "Info"
         
             # Create Application Insights if enabled
             if ($EnableApplicationInsights) {
@@ -463,8 +467,9 @@ function Set-SpringMonitoring {
             
             Write-EnhancedLog "Successfully configured comprehensive monitoring" "Success"
             
-    } catch {
-        Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
+        } catch {
+            Write-EnhancedLog "Failed to configure monitoring: $($_.Exception.Message)" "Error"
+        }
     }
 }
 

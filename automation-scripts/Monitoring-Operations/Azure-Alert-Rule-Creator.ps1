@@ -67,6 +67,8 @@ $AlertRule = Add-AzMetricAlertRuleV2 `
     -WindowSize "PT5M" `
     -Frequency "PT1M"
 
+Write-Host "Alert Rule ID: $($AlertRule.Id)"
+
 if ($ActionGroup) {
     # Associate action group with alert rule
     Add-AzMetricAlertRuleV2 `

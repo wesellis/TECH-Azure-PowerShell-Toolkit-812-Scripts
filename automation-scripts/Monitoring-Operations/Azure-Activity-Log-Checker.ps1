@@ -18,23 +18,23 @@ param (
     [int]$MaxEvents = 20
 )
 
-Write-Host "Retrieving Activity Log events (last $HoursBack hours)"
+Write-Host -Object "Retrieving Activity Log events (last $HoursBack hours)"
 
 $StartTime = (Get-Date).AddHours(-$HoursBack)
 $EndTime = Get-Date
 
 if ($ResourceGroupName) {
     $ActivityLogs = Get-AzActivityLog -ResourceGroupName $ResourceGroupName -StartTime $StartTime -EndTime $EndTime
-    Write-Host "Resource Group: $ResourceGroupName"
+    Write-Host -Object "Resource Group: $ResourceGroupName"
 } else {
     $ActivityLogs = Get-AzActivityLog -StartTime $StartTime -EndTime $EndTime
-    Write-Host "Subscription-wide activity"
+    Write-Host -Object "Subscription-wide activity"
 }
 
 $RecentLogs = $ActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $MaxEvents
 
-Write-Host "`nRecent Activity (Last $MaxEvents events):"
-Write-Host "=" * 60
+Write-Host -Object "`nRecent Activity (Last $MaxEvents events):"
+Write-Host -Object ("=" * 60)
 
 foreach ($Log in $RecentLogs) {
     Write-Host -Object "Time: $($Log.EventTimestamp)"

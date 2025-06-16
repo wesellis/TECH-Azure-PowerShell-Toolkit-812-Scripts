@@ -12,7 +12,7 @@ param (
     [string]$ResourceGroupName
 )
 
-Write-Host "Checking health status for resources in: $ResourceGroupName"
+Write-Host -Object "Checking health status for resources in: $ResourceGroupName"
 
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
 $HealthStatus = @()
@@ -52,8 +52,8 @@ foreach ($Resource in $Resources) {
     }
 }
 
-Write-Host "`nResource Health Status:"
-Write-Host "=" * 60
+Write-Host -Object "`nResource Health Status:"
+Write-Host -Object ("=" * 60)
 
 foreach ($Health in $HealthStatus) {
     $StatusColor = switch ($Health.Status) {

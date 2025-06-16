@@ -9,7 +9,7 @@ param (
     [Parameter(Mandatory=$false)][switch]$GenerateReport
 )
 
-$modulePath = Join-Path $PSScriptRoot ".." ".." "modules" "AzureAutomationCommon"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName "Azure Cost Optimization Analyzer" -Description "AI-powered cost analysis with optimization recommendations"
@@ -326,7 +326,7 @@ try {
     
     if ($costData.Recommendations.Count -gt 0) {
         $totalSavings = ($costData.Recommendations | Measure-Object PotentialSavings -Sum).Sum
-        Write-Log "  Potential Monthly Savings: $$totalSavings" -Level SUCCESS
+        Write-Log "  Potential Monthly Savings: $($totalSavings)" -Level SUCCESS
     }
     
 } catch {

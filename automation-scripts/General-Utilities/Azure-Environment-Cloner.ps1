@@ -11,7 +11,7 @@ param (
     [Parameter(Mandatory=$false)][switch]$Force
 )
 
-$modulePath = Join-Path $PSScriptRoot ".." ".." "modules" "AzureAutomationCommon"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName "Azure Environment Cloner" -Description "Clone entire Azure environments with intelligent mapping"
@@ -38,7 +38,6 @@ try {
     
     # Map resource dependencies
     $dependencyMap = @{}
-    $resourceGroups = @{}
     
     foreach ($resource in $filteredResources) {
         $newName = $NamingConvention.Replace("{OriginalName}", $resource.Name)

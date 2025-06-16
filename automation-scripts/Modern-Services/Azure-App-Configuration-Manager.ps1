@@ -64,7 +64,7 @@ try {
                 -Sku $Sku `
                 -Tag $Tags
             
-            Write-Log "✓ App Configuration store created: $ConfigStoreName" -Level SUCCESS
+            Write-Log "✓ App Configuration store created: $($configStore.Name)" -Level SUCCESS
         }
         
         "AddKey" {
