@@ -1,0 +1,342 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Azure Security Posture Dashboard\n\nThis workbook provides comprehensive security monitoring for your Azure environment, including Security Center recommendations, compliance status, and security alerts.\n\n---"
+      },
+      "name": "text - security-title"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "security-timerange-param",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 604800000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2592000000
+                }
+              ]
+            }
+          },
+          {
+            "id": "security-subscription-param",
+            "version": "KqlParameterItem/1.0",
+            "name": "Subscriptions",
+            "type": 6,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "SecurityResources\n| distinct subscriptionId\n| project value = subscriptionId, label = subscriptionId",
+            "crossComponentResources": [
+              "value::selected"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*"
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "security-parameters"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Security Score Overview"
+      },
+      "name": "text - security-score-title"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/securescores\"\n| where subscriptionId in ({Subscriptions})\n| extend currentScore = properties.score.current\n| extend maxScore = properties.score.max\n| extend percentage = round((currentScore/maxScore) * 100, 2)\n| project subscriptionId, currentScore, maxScore, percentage\n| summarize avgScore = avg(percentage), totalCurrent = sum(currentScore), totalMax = sum(maxScore) by subscriptionId",
+        "size": 0,
+        "title": "Security Score by Subscription",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "barchart"
+      },
+      "customWidth": "50",
+      "name": "query - security-score"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/assessments\"\n| where subscriptionId in ({Subscriptions})\n| extend severity = properties.metadata.severity\n| extend status = properties.status.code\n| summarize Count = count() by severity, status\n| order by severity asc",
+        "size": 0,
+        "title": "Security Assessments by Severity and Status",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "categoricalbar"
+      },
+      "customWidth": "50",
+      "name": "query - security-assessments"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Critical Security Recommendations"
+      },
+      "name": "text - critical-recommendations"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/assessments\"\n| where subscriptionId in ({Subscriptions})\n| where properties.status.code == \"Unhealthy\"\n| where properties.metadata.severity == \"High\"\n| extend assessmentName = properties.displayName\n| extend resourceId = properties.resourceDetails.id\n| extend description = properties.metadata.description\n| project assessmentName, resourceId, description\n| limit 20",
+        "size": 0,
+        "title": "High Severity Unhealthy Assessments",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "assessmentName",
+              "formatter": 1,
+              "formatOptions": {
+                "linkTarget": null,
+                "showIcon": true
+              }
+            },
+            {
+              "columnMatch": "resourceId",
+              "formatter": 13,
+              "formatOptions": {
+                "linkTarget": "Resource",
+                "showIcon": true
+              }
+            }
+          ]
+        }
+      },
+      "name": "query - critical-recommendations"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Security Alerts"
+      },
+      "name": "text - security-alerts"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityAlert\n| where TimeGenerated >= ago(7d)\n| summarize Count = count() by AlertSeverity, bin(TimeGenerated, 1d)\n| order by TimeGenerated asc",
+        "size": 0,
+        "title": "Security Alerts Trend (Last 7 Days)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "areachart"
+      },
+      "customWidth": "50",
+      "name": "query - alerts-trend"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityAlert\n| where TimeGenerated >= ago(7d)\n| summarize Count = count() by AlertSeverity\n| order by Count desc",
+        "size": 0,
+        "title": "Alert Severity Distribution",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "query - alert-severity"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Compliance Dashboard"
+      },
+      "name": "text - compliance"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/regulatorycompliancestandards\"\n| where subscriptionId in ({Subscriptions})\n| extend complianceState = properties.state\n| extend standardName = name\n| project standardName, complianceState\n| summarize Count = count() by complianceState",
+        "size": 0,
+        "title": "Regulatory Compliance Status",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "query - compliance-status"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/assessments\"\n| where subscriptionId in ({Subscriptions})\n| extend category = properties.metadata.categories[0]\n| summarize Healthy = countif(properties.status.code == \"Healthy\"), Unhealthy = countif(properties.status.code == \"Unhealthy\"), NotApplicable = countif(properties.status.code == \"NotApplicable\") by category\n| project category, Healthy, Unhealthy, NotApplicable, Total = Healthy + Unhealthy + NotApplicable\n| order by Total desc",
+        "size": 0,
+        "title": "Assessment Status by Category",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "query - assessment-category"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Identity and Access Management"
+      },
+      "name": "text - iam"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/assessments\"\n| where subscriptionId in ({Subscriptions})\n| where properties.metadata.categories contains \"IdentityAndAccess\"\n| extend assessmentName = properties.displayName\n| extend status = properties.status.code\n| extend severity = properties.metadata.severity\n| project assessmentName, status, severity\n| summarize Count = count() by status, severity\n| order by severity asc",
+        "size": 0,
+        "title": "Identity and Access Management Assessments",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "categoricalbar"
+      },
+      "name": "query - iam-assessments"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Network Security"
+      },
+      "name": "text - network-security"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityResources\n| where type == \"microsoft.security/assessments\"\n| where subscriptionId in ({Subscriptions})\n| where properties.metadata.categories contains \"Networking\"\n| extend assessmentName = properties.displayName\n| extend status = properties.status.code\n| extend resourceType = properties.resourceDetails.resourceType\n| project assessmentName, status, resourceType\n| summarize Count = count() by resourceType, status\n| order by Count desc",
+        "size": 0,
+        "title": "Network Security Assessments by Resource Type",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "categoricalbar"
+      },
+      "name": "query - network-security"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Security Center"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

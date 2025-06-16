@@ -1,0 +1,212 @@
+{
+  "properties": {
+    "displayName": "Network Security Baseline Requirements",
+    "description": "This policy enforces network security baseline requirements including NSG rules, DDoS protection, and secure network configurations.",
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Network",
+      "author": "Azure Enterprise Toolkit"
+    },
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/networkSecurityGroups"
+              },
+              {
+                "count": {
+                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]",
+                  "where": {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].access",
+                        "equals": "Allow"
+                      },
+                      {
+                        "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].direction",
+                        "equals": "Inbound"
+                      },
+                      {
+                        "anyOf": [
+                          {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                            "equals": "*"
+                          },
+                          {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                            "equals": "Internet"
+                          },
+                          {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                            "equals": "0.0.0.0/0"
+                          }
+                        ]
+                      },
+                      {
+                        "anyOf": [
+                          {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                            "in": [
+                              "22",
+                              "3389",
+                              "1433",
+                              "3306",
+                              "5432",
+                              "27017"
+                            ]
+                          },
+                          {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                            "equals": "*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "greater": 0
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/virtualNetworks"
+              },
+              {
+                "field": "Microsoft.Network/virtualNetworks/enableDdosProtection",
+                "notEquals": "true"
+              },
+              {
+                "value": "[parameters('requireDdosProtection')]",
+                "equals": "true"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/publicIPAddresses"
+              },
+              {
+                "field": "Microsoft.Network/publicIPAddresses/ddosSettings.protectionMode",
+                "notEquals": "Enabled"
+              },
+              {
+                "value": "[parameters('requireDdosProtection')]",
+                "equals": "true"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Network/virtualNetworks/subnets"
+              },
+              {
+                "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup",
+                "exists": "false"
+              },
+              {
+                "value": "[parameters('requireNsgOnSubnets')]",
+                "equals": "true"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of the policy"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit"
+      },
+      "requireDdosProtection": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Require DDoS Protection",
+          "description": "Whether to require DDoS protection on virtual networks"
+        },
+        "allowedValues": [
+          "true",
+          "false"
+        ],
+        "defaultValue": "true"
+      },
+      "requireNsgOnSubnets": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Require NSG on Subnets",
+          "description": "Whether to require Network Security Groups on all subnets"
+        },
+        "allowedValues": [
+          "true",
+          "false"
+        ],
+        "defaultValue": "true"
+      },
+      "allowedSourceAddressPrefixes": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Allowed Source Address Prefixes",
+          "description": "List of allowed source address prefixes for inbound rules"
+        },
+        "defaultValue": []
+      },
+      "blockedPorts": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Blocked Ports",
+          "description": "List of ports that should not be open to the internet"
+        },
+        "defaultValue": [
+          "22",
+          "3389",
+          "1433",
+          "3306",
+          "5432",
+          "27017"
+        ]
+      },
+      "exemptResourceGroups": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Exempt Resource Groups",
+          "description": "Resource groups that are exempt from network security baseline requirements"
+        },
+        "defaultValue": []
+      }
+    }
+  },
+  "policyType": "Custom",
+  "id": "/providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Authorization/policyDefinitions/network-security-baseline",
+  "type": "Microsoft.Authorization/policyDefinitions",
+  "name": "network-security-baseline",
+  "systemData": {
+    "createdBy": "Azure Enterprise Toolkit",
+    "createdByType": "Application",
+    "createdAt": "2025-06-16T00:00:00.0000000Z",
+    "lastModifiedBy": "Azure Enterprise Toolkit",
+    "lastModifiedByType": "Application",
+    "lastModifiedAt": "2025-06-16T00:00:00.0000000Z"
+  }
+}

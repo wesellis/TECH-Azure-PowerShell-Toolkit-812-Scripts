@@ -1,0 +1,480 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ARM template for deploying critical infrastructure alert rules in Azure Monitor",
+    "author": "Azure Enterprise Toolkit"
+  },
+  "parameters": {
+    "actionGroupName": {
+      "type": "string",
+      "defaultValue": "CriticalInfrastructureAlerts",
+      "metadata": {
+        "description": "Name of the action group for notifications"
+      }
+    },
+    "emailAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address for alert notifications"
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the Log Analytics workspace"
+      }
+    },
+    "alertRulePrefix": {
+      "type": "string",
+      "defaultValue": "CriticalInfra",
+      "metadata": {
+        "description": "Prefix for alert rule names"
+      }
+    }
+  },
+  "variables": {
+    "actionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('actionGroupName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('actionGroupName')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "CritInfra",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "AdminEmail",
+            "emailAddress": "[parameters('emailAddress')]",
+            "useCommonAlertSchema": true
+          }
+        ],
+        "webhookReceivers": [],
+        "smsReceivers": [],
+        "azureAppPushReceivers": [],
+        "itsmReceivers": []
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-HighCPUUtilization')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - High CPU Utilization",
+        "description": "Alert when VM CPU utilization exceeds 90% for 15 minutes",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "Perf | where ObjectName == \"Processor\" and CounterName == \"% Processor Time\" and InstanceName == \"_Total\" | where CounterValue > 90 | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 5m), Computer",
+              "timeAggregation": "Average",
+              "metricMeasureColumn": "AggregatedValue",
+              "operator": "GreaterThan",
+              "threshold": 90,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 3,
+                "minFailingPeriodsToAlert": 3
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-LowMemory')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Low Available Memory",
+        "description": "Alert when available memory is less than 1GB for 10 minutes",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "Perf | where ObjectName == \"Memory\" and CounterName == \"Available MBytes\" | where CounterValue < 1024 | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 5m), Computer",
+              "timeAggregation": "Average",
+              "metricMeasureColumn": "AggregatedValue",
+              "operator": "LessThan",
+              "threshold": 1024,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 2,
+                "minFailingPeriodsToAlert": 2
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-HighDiskUsage')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Warning - High Disk Usage",
+        "description": "Alert when disk usage exceeds 85% for 20 minutes",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "PT10M",
+        "windowSize": "PT20M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "Perf | where ObjectName == \"LogicalDisk\" and CounterName == \"% Free Space\" and InstanceName != \"_Total\" | where CounterValue < 15 | summarize AggregatedValue = avg(CounterValue) by bin(TimeGenerated, 10m), Computer, InstanceName",
+              "timeAggregation": "Average",
+              "metricMeasureColumn": "AggregatedValue",
+              "operator": "LessThan",
+              "threshold": 15,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 2,
+                "minFailingPeriodsToAlert": 2
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-HeartbeatFailure')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - VM Heartbeat Failure",
+        "description": "Alert when VM heartbeat is missing for 10 minutes",
+        "severity": 0,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "Heartbeat | summarize LastHeartbeat = max(TimeGenerated) by Computer | where LastHeartbeat < ago(10m)",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-ApplicationErrors')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - High Application Error Rate",
+        "description": "Alert when HTTP 5xx errors exceed 10 in 5 minutes",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AppServiceHTTPLogs | where ScStatus >= 500 | summarize ErrorCount = count() by bin(TimeGenerated, 5m)",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "ErrorCount",
+              "operator": "GreaterThan",
+              "threshold": 10,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-DatabaseConnectionFailures')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Database Connection Failures",
+        "description": "Alert when database connection failures exceed 5 in 5 minutes",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AzureDiagnostics | where ResourceProvider == \"MICROSOFT.SQL\" | where Category == \"DatabaseWaitStatistics\" or Category == \"Errors\" | where Level == \"Error\" | summarize ErrorCount = count() by bin(TimeGenerated, 5m)",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "ErrorCount",
+              "operator": "GreaterThan",
+              "threshold": 5,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-StorageAvailability')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Warning - Storage Account Low Availability",
+        "description": "Alert when storage account availability drops below 99%",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "PT15M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AzureMetrics | where ResourceProvider == \"MICROSOFT.STORAGE\" | where MetricName == \"Availability\" | where Average < 99 | summarize AggregatedValue = avg(Average) by bin(TimeGenerated, 15m), Resource",
+              "timeAggregation": "Average",
+              "metricMeasureColumn": "AggregatedValue",
+              "operator": "LessThan",
+              "threshold": 99,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-NetworkLatency')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Warning - High Network Latency",
+        "description": "Alert when network latency exceeds 100ms average for 10 minutes",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AzureMetrics | where ResourceProvider == \"MICROSOFT.NETWORK\" | where MetricName == \"RoundTripTime\" | where Average > 100 | summarize AggregatedValue = avg(Average) by bin(TimeGenerated, 5m), Resource",
+              "timeAggregation": "Average",
+              "metricMeasureColumn": "AggregatedValue",
+              "operator": "GreaterThan",
+              "threshold": 100,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 2,
+                "minFailingPeriodsToAlert": 2
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-AzureServiceHealth')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Informational - Azure Service Health Issues",
+        "description": "Alert on Azure service health incidents affecting resources",
+        "severity": 3,
+        "enabled": true,
+        "evaluationFrequency": "PT15M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "ServiceHealthLogs | where EventType == \"ServiceIssue\" and Status == \"Active\" | summarize count() by bin(TimeGenerated, 15m)",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-BackupFailures')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('actionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Backup Failures",
+        "description": "Alert when Azure backup jobs fail",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT30M",
+        "windowSize": "PT30M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AddonAzureBackupJobs | where JobOperation == \"Backup\" and JobStatus == \"Failed\" | summarize count() by bin(TimeGenerated, 30m)",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('actionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "actionGroupId": {
+      "type": "string",
+      "value": "[variables('actionGroupId')]"
+    },
+    "alertRules": {
+      "type": "array",
+      "value": [
+        "[concat(parameters('alertRulePrefix'), '-HighCPUUtilization')]",
+        "[concat(parameters('alertRulePrefix'), '-LowMemory')]",
+        "[concat(parameters('alertRulePrefix'), '-HighDiskUsage')]",
+        "[concat(parameters('alertRulePrefix'), '-HeartbeatFailure')]",
+        "[concat(parameters('alertRulePrefix'), '-ApplicationErrors')]",
+        "[concat(parameters('alertRulePrefix'), '-DatabaseConnectionFailures')]",
+        "[concat(parameters('alertRulePrefix'), '-StorageAvailability')]",
+        "[concat(parameters('alertRulePrefix'), '-NetworkLatency')]",
+        "[concat(parameters('alertRulePrefix'), '-AzureServiceHealth')]",
+        "[concat(parameters('alertRulePrefix'), '-BackupFailures')]"
+      ]
+    }
+  }
+}

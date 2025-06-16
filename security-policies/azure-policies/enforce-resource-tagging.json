@@ -1,0 +1,111 @@
+{
+  "properties": {
+    "displayName": "Enforce Resource Tagging Standards",
+    "description": "This policy enforces required tags on Azure resources to ensure proper governance, cost allocation, and resource management.",
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Tags",
+      "author": "Azure Enterprise Toolkit"
+    },
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "notIn": [
+              "Microsoft.Resources/subscriptions/resourceGroups",
+              "Microsoft.Resources/deployments",
+              "Microsoft.Storage/storageAccounts/blobServices",
+              "Microsoft.Storage/storageAccounts/fileServices",
+              "Microsoft.Storage/storageAccounts/queueServices",
+              "Microsoft.Storage/storageAccounts/tableServices",
+              "Microsoft.Network/networkSecurityGroups/securityRules"
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "field": "tags['Environment']",
+                "exists": "false"
+              },
+              {
+                "field": "tags['Owner']",
+                "exists": "false"
+              },
+              {
+                "field": "tags['CostCenter']",
+                "exists": "false"
+              },
+              {
+                "field": "tags['Project']",
+                "exists": "false"
+              },
+              {
+                "field": "tags['BusinessUnit']",
+                "exists": "false"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of the policy"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit"
+      },
+      "requiredTags": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Required Tags",
+          "description": "List of required tag names"
+        },
+        "defaultValue": [
+          "Environment",
+          "Owner",
+          "CostCenter",
+          "Project",
+          "BusinessUnit"
+        ]
+      },
+      "environmentValues": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Allowed Environment Values",
+          "description": "Allowed values for Environment tag"
+        },
+        "defaultValue": [
+          "Production",
+          "Staging",
+          "Development",
+          "Testing",
+          "Sandbox"
+        ]
+      }
+    }
+  },
+  "id": "/providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Authorization/policyDefinitions/enforce-resource-tagging",
+  "type": "Microsoft.Authorization/policyDefinitions",
+  "name": "enforce-resource-tagging",
+  "systemData": {
+    "createdBy": "Azure Enterprise Toolkit",
+    "createdByType": "Application",
+    "createdAt": "2025-06-16T00:00:00.0000000Z",
+    "lastModifiedBy": "Azure Enterprise Toolkit",
+    "lastModifiedByType": "Application",
+    "lastModifiedAt": "2025-06-16T00:00:00.0000000Z"
+  }
+}

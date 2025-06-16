@@ -1,0 +1,534 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ARM template for deploying security incident alert rules in Azure Monitor",
+    "author": "Azure Enterprise Toolkit"
+  },
+  "parameters": {
+    "securityActionGroupName": {
+      "type": "string",
+      "defaultValue": "SecurityIncidentAlerts",
+      "metadata": {
+        "description": "Name of the action group for security notifications"
+      }
+    },
+    "securityEmailAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address for security alert notifications"
+      }
+    },
+    "securityPhoneNumber": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Phone number for critical security alerts (optional)"
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the Log Analytics workspace"
+      }
+    },
+    "sentinelWorkspaceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource ID of the Azure Sentinel workspace (optional)"
+      }
+    },
+    "alertRulePrefix": {
+      "type": "string",
+      "defaultValue": "Security",
+      "metadata": {
+        "description": "Prefix for security alert rule names"
+      }
+    }
+  },
+  "variables": {
+    "securityActionGroupId": "[resourceId('Microsoft.Insights/actionGroups', parameters('securityActionGroupName'))]",
+    "hasSentinel": "[not(empty(parameters('sentinelWorkspaceId')))]",
+    "workspaceId": "[if(variables('hasSentinel'), parameters('sentinelWorkspaceId'), parameters('logAnalyticsWorkspaceId'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('securityActionGroupName')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "SecAlert",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "SecurityTeamEmail",
+            "emailAddress": "[parameters('securityEmailAddress')]",
+            "useCommonAlertSchema": true
+          }
+        ],
+        "smsReceivers": "[if(empty(parameters('securityPhoneNumber')), createArray(), createArray(createObject('name', 'SecurityTeamSMS', 'countryCode', '1', 'phoneNumber', parameters('securityPhoneNumber'))))]",
+        "webhookReceivers": [],
+        "azureAppPushReceivers": [],
+        "itsmReceivers": []
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-BruteForceAttack')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Brute Force Attack Detected",
+        "description": "Alert when multiple failed login attempts are detected from same IP",
+        "severity": 0,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "SigninLogs | where ResultType != \"0\" | summarize FailedAttempts = count() by IPAddress, bin(TimeGenerated, 5m) | where FailedAttempts > 20",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "FailedAttempts",
+              "operator": "GreaterThan",
+              "threshold": 20,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-ImpossibleTravel')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Impossible Travel Detected",
+        "description": "Alert when user login locations suggest impossible travel",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT15M",
+        "windowSize": "PT4H",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "SigninLogs | where ResultType == \"0\" | extend Country = Location.countryOrRegion | where isnotempty(Country) | partition by UserPrincipalName ( order by TimeGenerated asc | extend PrevCountry = prev(Country, 1) | extend PrevTime = prev(TimeGenerated, 1) | extend TimeDiffHours = datetime_diff('hour', TimeGenerated, PrevTime) | where Country != PrevCountry and TimeDiffHours < 4 ) | summarize count()",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-PrivilegedRoleChanges')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Privileged Role Assignment Changes",
+        "description": "Alert when privileged roles are assigned or removed",
+        "severity": 0,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AuditLogs | where Category == \"RoleManagement\" | where OperationName contains \"Add member to role\" or OperationName contains \"Remove member from role\" | where TargetResources has \"Admin\" or TargetResources has \"Owner\" | summarize count()",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-MaliciousIPActivity')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Communication with Known Malicious IPs",
+        "description": "Alert when network traffic to/from known malicious IPs is detected",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT10M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "CommonSecurityLog | where DeviceVendor == \"Microsoft\" | where DeviceProduct == \"Azure Firewall\" | where Activity == \"Deny\" | where SourceIP in (\"1.2.3.4\", \"5.6.7.8\") or DestinationIP in (\"1.2.3.4\", \"5.6.7.8\") | summarize count()",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-SuspiciousProcessExecution')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Suspicious Process Execution",
+        "description": "Alert when suspicious command line activities are detected",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "SecurityEvent | where EventID == 4688 | where CommandLine contains \"powershell\" and (CommandLine contains \"downloadstring\" or CommandLine contains \"invoke-expression\" or CommandLine contains \"bypass\") | summarize count()",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-UnauthorizedKeyVaultAccess')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Unauthorized Key Vault Access",
+        "description": "Alert when failed Key Vault access attempts are detected",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "KeyVaultLogs | where ResultType != \"Success\" | summarize FailedAttempts = count() by CallerIPAddress, bin(TimeGenerated, 5m) | where FailedAttempts > 5",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "FailedAttempts",
+              "operator": "GreaterThan",
+              "threshold": 5,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-DataExfiltration')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Critical - Potential Data Exfiltration",
+        "description": "Alert when unusually large outbound data transfers are detected",
+        "severity": 0,
+        "enabled": true,
+        "evaluationFrequency": "PT15M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AzureNetworkAnalytics_CL | where FlowDirection_s == \"O\" | summarize TotalBytes = sum(BytesSent_d) by SrcIP_s, bin(TimeGenerated, 15m) | where TotalBytes > 1000000000",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "TotalBytes",
+              "operator": "GreaterThan",
+              "threshold": 1000000000,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-LateralMovement')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Lateral Movement Detected",
+        "description": "Alert when user account accesses multiple systems rapidly",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT10M",
+        "windowSize": "PT30M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "SecurityEvent | where EventID == 4624 and LogonType == 3 | summarize UniqueComputers = dcount(Computer) by Account, bin(TimeGenerated, 10m) | where UniqueComputers > 10",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "UniqueComputers",
+              "operator": "GreaterThan",
+              "threshold": 10,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-DNSTunneling')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Medium - Potential DNS Tunneling",
+        "description": "Alert when unusual DNS query patterns are detected",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "PT15M",
+        "windowSize": "PT15M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "DnsEvents | where QueryType == \"TXT\" and strlen(Query) > 50 | summarize count() by ClientIP | where count_ > 20",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-ResourceDeletion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "Medium - Bulk Resource Deletion",
+        "description": "Alert when multiple Azure resources are deleted in short timeframe",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "PT10M",
+        "windowSize": "PT10M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "AzureActivity | where OperationNameValue contains \"delete\" and ActivityStatusValue == \"Success\" | summarize DeletionCount = count() by Caller, bin(TimeGenerated, 10m) | where DeletionCount > 5",
+              "timeAggregation": "Count",
+              "metricMeasureColumn": "DeletionCount",
+              "operator": "GreaterThan",
+              "threshold": 5,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[concat(parameters('alertRulePrefix'), '-SecurityCenterHighSeverity')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('securityActionGroupId')]"
+      ],
+      "properties": {
+        "displayName": "High - Security Center High Severity Alert",
+        "description": "Alert when Azure Security Center generates high severity security alerts",
+        "severity": 1,
+        "enabled": true,
+        "evaluationFrequency": "PT5M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "SecurityAlert | where AlertSeverity == \"High\" | summarize count()",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[variables('securityActionGroupId')]"
+          ]
+        },
+        "scopes": [
+          "[variables('workspaceId')]"
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "securityActionGroupId": {
+      "type": "string",
+      "value": "[variables('securityActionGroupId')]"
+    },
+    "securityAlertRules": {
+      "type": "array",
+      "value": [
+        "[concat(parameters('alertRulePrefix'), '-BruteForceAttack')]",
+        "[concat(parameters('alertRulePrefix'), '-ImpossibleTravel')]",
+        "[concat(parameters('alertRulePrefix'), '-PrivilegedRoleChanges')]",
+        "[concat(parameters('alertRulePrefix'), '-MaliciousIPActivity')]",
+        "[concat(parameters('alertRulePrefix'), '-SuspiciousProcessExecution')]",
+        "[concat(parameters('alertRulePrefix'), '-UnauthorizedKeyVaultAccess')]",
+        "[concat(parameters('alertRulePrefix'), '-DataExfiltration')]",
+        "[concat(parameters('alertRulePrefix'), '-LateralMovement')]",
+        "[concat(parameters('alertRulePrefix'), '-DNSTunneling')]",
+        "[concat(parameters('alertRulePrefix'), '-ResourceDeletion')]",
+        "[concat(parameters('alertRulePrefix'), '-SecurityCenterHighSeverity')]"
+      ]
+    }
+  }
+}

@@ -1,0 +1,886 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Comprehensive application health monitoring for Azure App Services and Function Apps",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1624467700000,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5000
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites",
+            "value": "microsoft.web/sites"
+          },
+          "metricName": {
+            "text": "AverageResponseTime",
+            "value": "AverageResponseTime"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites",
+            "value": "Microsoft.Web/sites"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$appService",
+            "value": "$appService"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "App Service Response Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Total",
+            "value": "Total"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites",
+            "value": "microsoft.web/sites"
+          },
+          "metricName": {
+            "text": "Requests",
+            "value": "Requests"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites",
+            "value": "Microsoft.Web/sites"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$appService",
+            "value": "$appService"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Http4xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Http5xx"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Total",
+            "value": "Total"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites",
+            "value": "microsoft.web/sites"
+          },
+          "metricName": {
+            "text": "Http4xx",
+            "value": "Http4xx"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites",
+            "value": "Microsoft.Web/sites"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$appService",
+            "value": "$appService"
+          },
+          "timeGrain": "auto"
+        },
+        {
+          "aggregation": {
+            "text": "Total",
+            "value": "Total"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites",
+            "value": "microsoft.web/sites"
+          },
+          "metricName": {
+            "text": "Http5xx",
+            "value": "Http5xx"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites",
+            "value": "Microsoft.Web/sites"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$appService",
+            "value": "$appService"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "HTTP Error Rates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites",
+            "value": "microsoft.web/sites"
+          },
+          "metricName": {
+            "text": "CpuPercentage",
+            "value": "CpuPercentage"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites",
+            "value": "Microsoft.Web/sites"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$appService",
+            "value": "$appService"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "App Service CPU Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Total",
+            "value": "Total"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites/functions",
+            "value": "microsoft.web/sites/functions"
+          },
+          "metricName": {
+            "text": "FunctionExecutionCount",
+            "value": "FunctionExecutionCount"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites/functions",
+            "value": "Microsoft.Web/sites/functions"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$functionApp",
+            "value": "$functionApp"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Function Execution Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 30000
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.web/sites/functions",
+            "value": "microsoft.web/sites/functions"
+          },
+          "metricName": {
+            "text": "FunctionExecutionUnits",
+            "value": "FunctionExecutionUnits"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Web/sites/functions",
+            "value": "Microsoft.Web/sites/functions"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$functionApp",
+            "value": "$functionApp"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Function Execution Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Application Insights",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "appInsights": {
+            "dimension": [],
+            "metricName": "select",
+            "timeGrain": "auto"
+          },
+          "azureLogAnalytics": {
+            "query": "exceptions\n| where timestamp >= ago(1h)\n| summarize count() by bin(timestamp, 5m)\n| order by timestamp asc",
+            "resultFormat": "time_series"
+          },
+          "datasource": "Application Insights",
+          "queryType": "Azure Log Analytics",
+          "refId": "A"
+        }
+      ],
+      "title": "Application Exceptions",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": [
+    "azure",
+    "application",
+    "health",
+    "monitoring",
+    "enterprise"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Resource Group",
+        "multi": true,
+        "name": "resourceGroup",
+        "options": [],
+        "query": "ResourceGroups()",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "App Service",
+        "multi": true,
+        "name": "appService",
+        "options": [],
+        "query": "AppServices($resourceGroup)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Function App",
+        "multi": true,
+        "name": "functionApp",
+        "options": [],
+        "query": "FunctionApps($resourceGroup)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Azure Application Health Dashboard",
+  "uid": "azure-app-health-enterprise",
+  "version": 1
+}

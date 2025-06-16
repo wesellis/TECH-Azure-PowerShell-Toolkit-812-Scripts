@@ -1,0 +1,144 @@
+This is a Power BI Template (.pbit) file for the Azure Security Scorecard.
+
+IMPORTANT: This template requires the following:
+1. Azure Security Center/Microsoft Defender for Cloud access
+2. Power BI Pro or Premium license
+3. Azure Security Graph API permissions
+4. Log Analytics workspace access
+
+=== TEMPLATE CONFIGURATION ===
+
+Data Sources:
+- Microsoft Defender for Cloud API
+- Azure Security Graph
+- Azure Policy Compliance API
+- Log Analytics (SecurityEvent table)
+- Azure Sentinel (if configured)
+
+Key Security Metrics:
+1. Overall Security Score
+2. Security Recommendations by Severity
+3. Policy Compliance Status
+4. Active Security Alerts
+5. Vulnerability Assessment Results
+6. Identity and Access Management Score
+7. Network Security Posture
+8. Data Protection Compliance
+
+Executive KPIs:
+- Security Score Percentage
+- Critical Vulnerabilities Count
+- Days to Remediation (Average)
+- Compliance Percentage
+- Security Incidents (Open/Closed)
+- Risk Reduction Trend
+- Security Investment ROI
+
+Detailed Visualizations:
+- Security Score Trend (6-month view)
+- Recommendation Heatmap by Resource Type
+- Top 10 Security Risks
+- Compliance Dashboard by Framework (SOC2, ISO27001, etc.)
+- Security Alert Distribution
+- Remediation Timeline Analysis
+- Network Security Topology
+- Identity Risk Assessment
+
+Report Sections:
+1. Executive Summary (1-page overview)
+2. Security Posture Details
+3. Compliance Status
+4. Risk Analysis
+5. Remediation Tracking
+6. Trend Analysis
+
+Setup Instructions:
+1. Open template in Power BI Desktop
+2. Configure Azure AD authentication
+3. Grant Security Reader permissions
+4. Set up Log Analytics connections
+5. Configure refresh schedules
+6. Set up email alerts for critical findings
+7. Deploy to Power BI Service
+8. Configure row-level security
+
+Parameters to Configure:
+- Subscription IDs
+- Resource Group Filters
+- Severity Thresholds
+- Compliance Frameworks
+- Alert Notification Settings
+- Reporting Frequency
+
+Security Features:
+- Role-based access control
+- Data classification labels
+- Audit logging
+- Secure data refresh
+- Encrypted data transmission
+
+Compliance Frameworks Supported:
+- CIS Microsoft Azure Foundations Benchmark
+- NIST Cybersecurity Framework
+- ISO 27001:2013
+- SOC 2 Type II
+- PCI DSS
+- HIPAA
+- GDPR
+
+Alert Thresholds:
+- Critical: Security Score < 70%
+- High: > 10 High-severity recommendations
+- Medium: Compliance < 85%
+- Low: Trend declining for 30+ days
+
+Automated Actions:
+- Email alerts for score drops
+- Teams notifications for critical issues
+- ServiceNow ticket creation
+- Weekly executive reports
+
+Dashboard Refresh Schedule:
+- Real-time: Security alerts
+- Hourly: Security score
+- Daily: Compliance status
+- Weekly: Trend analysis
+
+User Roles:
+- Security Admin: Full access
+- Security Analyst: Read-only access
+- Executive: Summary view only
+- Auditor: Compliance data only
+
+Data Retention:
+- Security events: 2 years
+- Compliance data: 7 years
+- Trend analysis: 3 years
+- Audit logs: 10 years
+
+Performance Optimization:
+- Incremental data refresh
+- Aggregated measures
+- Partitioned tables
+- Compressed storage
+
+Business Impact Tracking:
+- Risk reduction metrics
+- Cost avoidance calculations
+- Productivity improvements
+- Compliance cost savings
+
+Integration Points:
+- Azure Sentinel for advanced analytics
+- ServiceNow for incident management
+- Splunk for log correlation
+- Microsoft 365 for identity data
+
+To implement this template:
+1. Download from Power BI marketplace or
+2. Create custom using Power BI Desktop with Azure connectors
+3. Import security data models
+4. Configure DAX measures for security calculations
+5. Set up automated refresh and alerting
+
+For technical support, contact Security Operations Center (SOC).

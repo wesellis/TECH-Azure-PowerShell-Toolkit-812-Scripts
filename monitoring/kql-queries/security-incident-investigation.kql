@@ -1,0 +1,260 @@
+// =====================================================
+// Azure Security Incident Investigation KQL Library
+// =====================================================
+// Use these queries in Azure Sentinel, Azure Monitor, or Log Analytics
+// Adjust time ranges and parameters based on your investigation scope
+
+// =====================================================
+// AUTHENTICATION & IDENTITY SECURITY
+// =====================================================
+
+// 1. Failed Login Attempts (Brute Force Detection)
+SigninLogs
+| where TimeGenerated > ago(24h)
+| where ResultType != "0"  // Failed sign-ins
+| summarize FailedAttempts = count(), 
+    UniqueIPs = dcount(IPAddress),
+    Applications = make_set(AppDisplayName),
+    Locations = make_set(Location)
+    by UserPrincipalName, bin(TimeGenerated, 1h)
+| where FailedAttempts > 10  // Threshold for suspicious activity
+| order by FailedAttempts desc
+
+// 2. Successful Logins After Failed Attempts (Potential Breach)
+let FailedLogins = SigninLogs
+    | where TimeGenerated > ago(24h)
+    | where ResultType != "0"
+    | summarize LastFailure = max(TimeGenerated) by UserPrincipalName, IPAddress;
+SigninLogs
+| where TimeGenerated > ago(24h)
+| where ResultType == "0"  // Successful sign-ins
+| join kind=inner FailedLogins on UserPrincipalName, IPAddress
+| where TimeGenerated > LastFailure
+| project TimeGenerated, UserPrincipalName, IPAddress, Location, AppDisplayName, DeviceDetail
+| order by TimeGenerated desc
+
+// 3. Impossible Travel Detection
+SigninLogs
+| where TimeGenerated > ago(7d)
+| where ResultType == "0"
+| extend Country = Location.countryOrRegion
+| where isnotempty(Country)
+| partition by UserPrincipalName (
+    order by TimeGenerated asc
+    | extend PrevCountry = prev(Country, 1)
+    | extend PrevTime = prev(TimeGenerated, 1)
+    | extend TimeDiffHours = datetime_diff('hour', TimeGenerated, PrevTime)
+    | where Country != PrevCountry and TimeDiffHours < 4  // Different countries within 4 hours
+)
+| project TimeGenerated, UserPrincipalName, Country, PrevCountry, TimeDiffHours, IPAddress
+| order by TimeGenerated desc
+
+// 4. Privileged Account Activities
+AuditLogs
+| where TimeGenerated > ago(24h)
+| where Category == "RoleManagement"
+| where OperationName contains "Add member to role" or OperationName contains "Remove member from role"
+| extend TargetUser = tostring(TargetResources[0].userPrincipalName)
+| extend Role = tostring(TargetResources[0].displayName)
+| extend Actor = tostring(InitiatedBy.user.userPrincipalName)
+| project TimeGenerated, OperationName, Actor, TargetUser, Role, Result
+| order by TimeGenerated desc
+
+// =====================================================
+// NETWORK SECURITY INVESTIGATIONS
+// =====================================================
+
+// 5. Malicious IP Communications
+let MaliciousIPs = externaldata(IPAddress: string)[@"https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/malwaredomainlist.netset"];
+AzureNetworkAnalytics_CL
+| where TimeGenerated > ago(24h)
+| where SrcIP_s in (MaliciousIPs) or DestIP_s in (MaliciousIPs)
+| project TimeGenerated, SrcIP_s, DestIP_s, DestPort_d, FlowStatus_s
+| order by TimeGenerated desc
+
+// 6. Unusual Network Traffic Patterns
+AzureNetworkAnalytics_CL
+| where TimeGenerated > ago(24h)
+| summarize TotalBytes = sum(BytesSent_d + BytesReceived_d),
+    ConnectionCount = count()
+    by SrcIP_s, DestIP_s, bin(TimeGenerated, 1h)
+| where TotalBytes > 1000000000  // Over 1GB transferred
+| order by TotalBytes desc
+
+// 7. DNS Tunneling Detection (Unusual DNS Queries)
+DnsEvents
+| where TimeGenerated > ago(24h)
+| where QueryType == "TXT" or QueryType == "NULL" or QueryType == "CNAME"
+| where strlen(Query) > 50  // Unusually long DNS queries
+| summarize count() by ClientIP, QueryType, Query
+| where count_ > 10
+| order by count_ desc
+
+// =====================================================
+// ENDPOINT SECURITY INVESTIGATIONS
+// =====================================================
+
+// 8. Process Execution Anomalies
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4688  // Process creation
+| where Process contains "powershell" or Process contains "cmd" or Process contains "wscript"
+| where CommandLine contains "downloadstring" or CommandLine contains "invoke-expression" 
+    or CommandLine contains "base64" or CommandLine contains "bypass"
+| project TimeGenerated, Computer, Account, Process, CommandLine
+| order by TimeGenerated desc
+
+// 9. File System Modifications (Potential Malware)
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4663  // File access
+| where ObjectType == "File"
+| where AccessMask == "0x2" or AccessMask == "0x40" or AccessMask == "0x4"  // Write access
+| where ObjectName contains ".exe" or ObjectName contains ".dll" or ObjectName contains ".bat"
+| summarize count() by Computer, SubjectUserName, ObjectName, bin(TimeGenerated, 1h)
+| where count_ > 10  // High frequency of file modifications
+| order by count_ desc
+
+// 10. Registry Modifications (Persistence Mechanisms)
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4657  // Registry modification
+| where ObjectName contains "\\Run\\" or ObjectName contains "\\Winlogon\\" 
+    or ObjectName contains "\\Services\\" or ObjectName contains "\\Policies\\"
+| project TimeGenerated, Computer, SubjectUserName, ObjectName, NewValue
+| order by TimeGenerated desc
+
+// =====================================================
+// CLOUD RESOURCE SECURITY
+// =====================================================
+
+// 11. Suspicious Azure Resource Activities
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where ActivityStatusValue != "Success"
+| where OperationNameValue contains "delete" or OperationNameValue contains "create"
+| summarize count() by Caller, OperationNameValue, ResourceGroup, bin(TimeGenerated, 1h)
+| where count_ > 5  // High frequency of operations
+| order by count_ desc
+
+// 12. Unauthorized Storage Access
+StorageBlobLogs
+| where TimeGenerated > ago(24h)
+| where StatusCode >= 400  // Failed access attempts
+| summarize FailedAttempts = count() by CallerIpAddress, Uri, bin(TimeGenerated, 1h)
+| where FailedAttempts > 10
+| order by FailedAttempts desc
+
+// 13. Key Vault Access Anomalies
+KeyVaultLogs
+| where TimeGenerated > ago(24h)
+| where ResultType != "Success"
+| summarize count() by CallerIPAddress, OperationName, bin(TimeGenerated, 1h)
+| where count_ > 5
+| order by count_ desc
+
+// =====================================================
+// ADVANCED THREAT HUNTING
+// =====================================================
+
+// 14. Lateral Movement Detection
+SecurityEvent
+| where TimeGenerated > ago(24h)
+| where EventID == 4624  // Successful logon
+| where LogonType == 3  // Network logon
+| summarize UniqueComputers = dcount(Computer), 
+    Computers = make_set(Computer)
+    by Account, bin(TimeGenerated, 1h)
+| where UniqueComputers > 5  // Account accessing multiple systems
+| order by UniqueComputers desc
+
+// 15. Data Exfiltration Indicators
+AzureNetworkAnalytics_CL
+| where TimeGenerated > ago(24h)
+| where FlowDirection_s == "O"  // Outbound traffic
+| summarize TotalBytes = sum(BytesSent_d) by SrcIP_s, DestIP_s, bin(TimeGenerated, 1h)
+| where TotalBytes > 100000000  // Over 100MB outbound
+| order by TotalBytes desc
+
+// 16. Command and Control Communication
+DnsEvents
+| where TimeGenerated > ago(24h)
+| where Query matches regex @"([a-z]{10,}\.){2,}[a-z]{2,}"  // Suspicious domain patterns
+| where Query !contains "microsoft" and Query !contains "windows" and Query !contains "azure"
+| summarize count() by ClientIP, Query
+| where count_ > 20  // High frequency queries to suspicious domains
+| order by count_ desc
+
+// =====================================================
+// INCIDENT RESPONSE QUERIES
+// =====================================================
+
+// 17. Timeline Analysis for Specific User
+let TargetUser = "user@domain.com";  // Replace with actual user
+union SigninLogs, AuditLogs, SecurityEvent
+| where TimeGenerated > ago(7d)
+| where UserPrincipalName == TargetUser or Account == TargetUser or Caller == TargetUser
+| project TimeGenerated, Type, OperationName, Result, IPAddress, Location
+| order by TimeGenerated asc
+
+// 18. Asset Inventory for Compromised System
+let CompromisedIP = "192.168.1.100";  // Replace with actual IP
+union SecurityEvent, AzureNetworkAnalytics_CL, SigninLogs
+| where TimeGenerated > ago(7d)
+| where Computer contains CompromisedIP or SrcIP_s == CompromisedIP or IPAddress == CompromisedIP
+| summarize EventTypes = make_set(Type), 
+    FirstSeen = min(TimeGenerated),
+    LastSeen = max(TimeGenerated),
+    EventCount = count()
+    by Computer, IPAddress
+| order by EventCount desc
+
+// =====================================================
+// SECURITY METRICS & REPORTING
+// =====================================================
+
+// 19. Security Alert Summary
+SecurityAlert
+| where TimeGenerated > ago(7d)
+| summarize AlertCount = count() by AlertSeverity, ProductName, bin(TimeGenerated, 1d)
+| order by TimeGenerated desc, AlertSeverity asc
+
+// 20. Compliance Monitoring
+SecurityRecommendation
+| where TimeGenerated > ago(30d)
+| where RecommendationState == "Unhealthy"
+| summarize count() by RecommendationName, ResourceType
+| order by count_ desc
+
+// =====================================================
+// USAGE INSTRUCTIONS
+// =====================================================
+// 1. Replace placeholder values (IPs, usernames) with actual investigation targets
+// 2. Adjust time ranges based on incident timeline
+// 3. Combine queries for comprehensive investigation
+// 4. Save frequently used queries as hunting rules
+// 5. Set up automated alerts for critical patterns
+// 6. Document findings using query results
+
+// =====================================================
+// INVESTIGATION WORKFLOW
+// =====================================================
+// 1. Start with timeline analysis
+// 2. Identify initial compromise vector
+// 3. Track lateral movement
+// 4. Assess data exposure
+// 5. Determine persistence mechanisms
+// 6. Calculate impact scope
+// 7. Develop remediation plan
+
+// =====================================================
+// RECOMMENDED ALERTS
+// =====================================================
+// Set up real-time alerts for:
+// - Failed login attempts > 20 in 1 hour
+// - Impossible travel detections
+// - Privileged role modifications
+// - Malicious IP communications
+// - Unusual process executions
+// - High-volume data transfers
+// - Suspicious DNS queries

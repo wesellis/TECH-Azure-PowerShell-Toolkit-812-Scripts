@@ -1,0 +1,80 @@
+This is a Power BI Template (.pbit) file for the Executive Azure Dashboard.
+
+IMPORTANT: This template requires the following:
+1. Azure subscription access
+2. Power BI Pro or Premium license
+3. Azure Cost Management API permissions
+4. Azure Resource Graph permissions
+
+=== TEMPLATE CONFIGURATION ===
+
+Data Sources:
+- Azure Cost Management API
+- Azure Resource Graph
+- Azure Monitor Metrics
+
+Key Metrics Included:
+1. Total Azure Spend (Monthly/Quarterly/Yearly)
+2. Top Resource Groups by Cost
+3. Cost Trends and Forecasting
+4. Resource Count by Service Type
+5. Budget vs Actual Spend
+6. Cost per Business Unit/Department
+7. Reserved Instance Utilization
+8. Savings Opportunities
+
+Visualizations:
+- Executive Summary KPI Cards
+- Cost Trend Line Charts
+- Service Distribution Pie Charts
+- Budget Performance Gauges
+- Top Spending Resources Table
+- Monthly Cost Breakdown
+- Forecast vs Actual Analysis
+
+Setup Instructions:
+1. Open in Power BI Desktop
+2. Configure Azure authentication
+3. Set subscription and resource group filters
+4. Refresh data connections
+5. Customize branding and colors
+6. Publish to Power BI Service
+7. Set up scheduled refresh
+
+Parameters to Configure:
+- Subscription IDs
+- Cost Center Mappings
+- Budget Thresholds
+- Currency Settings
+- Time Period Defaults
+
+Security Considerations:
+- Row-level security by department
+- Sensitive cost data protection
+- Audit trail requirements
+- Data retention policies
+
+Business Value:
+- Executive cost visibility
+- Budget accountability
+- Trend identification
+- Optimization opportunities
+- Financial governance
+
+Maintenance:
+- Monthly template updates
+- Quarterly metric reviews
+- Annual budget reconciliation
+- User access reviews
+
+For technical implementation, this .pbit file would contain:
+- Data model relationships
+- DAX measures and calculated columns
+- Power Query M code for data transformation
+- Report layout and formatting
+- Parameter definitions
+- Security role definitions
+
+To create the actual .pbit file, use Power BI Desktop with the Azure connectors and export as template.
+
+Contact IT Department for Azure permissions and Power BI licensing.

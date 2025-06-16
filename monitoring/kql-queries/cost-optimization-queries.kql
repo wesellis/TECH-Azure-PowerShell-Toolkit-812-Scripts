@@ -1,0 +1,310 @@
+// =====================================================
+// Azure Cost Optimization KQL Query Library
+// =====================================================
+// Use these queries in Azure Monitor Log Analytics for cost analysis and optimization
+// Requires Azure Resource Graph and Cost Management data connections
+
+// =====================================================
+// RESOURCE UTILIZATION ANALYSIS
+// =====================================================
+
+// 1. Underutilized Virtual Machines (Low CPU Usage)
+Perf
+| where TimeGenerated > ago(7d)
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| where InstanceName == "_Total"
+| summarize AvgCPU = avg(CounterValue), MaxCPU = max(CounterValue) by Computer
+| where AvgCPU < 20 and MaxCPU < 50  // Low utilization thresholds
+| join kind=inner (
+    Heartbeat
+    | where TimeGenerated > ago(1d)
+    | distinct Computer, ComputerIP, OSType
+) on Computer
+| project Computer, ComputerIP, OSType, AvgCPU, MaxCPU
+| order by AvgCPU asc
+
+// 2. Memory Underutilization Analysis
+Perf
+| where TimeGenerated > ago(7d)
+| where ObjectName == "Memory" and CounterName == "% Committed Bytes In Use"
+| summarize AvgMemoryUsage = avg(CounterValue), MaxMemoryUsage = max(CounterValue) by Computer
+| where AvgMemoryUsage < 40 and MaxMemoryUsage < 70  // Low memory utilization
+| join kind=inner (
+    Heartbeat
+    | where TimeGenerated > ago(1d)
+    | distinct Computer, ComputerIP
+) on Computer
+| project Computer, ComputerIP, AvgMemoryUsage, MaxMemoryUsage
+| order by AvgMemoryUsage asc
+
+// 3. Storage Account Usage Efficiency
+StorageFileLogs
+| where TimeGenerated > ago(30d)
+| summarize TotalOperations = count(), 
+    AvgResponseTime = avg(DurationMs),
+    TotalBandwidth = sum(ResponseBodySize + RequestBodySize)
+    by AccountName, bin(TimeGenerated, 1d)
+| summarize DailyAvgOps = avg(TotalOperations), 
+    DailyAvgBandwidth = avg(TotalBandwidth)
+    by AccountName
+| where DailyAvgOps < 100  // Low usage storage accounts
+| order by DailyAvgOps asc
+
+// =====================================================
+// COST ANOMALY DETECTION
+// =====================================================
+
+// 4. Unusual Resource Creation Patterns
+AzureActivity
+| where TimeGenerated > ago(30d)
+| where OperationNameValue contains "Create" or OperationNameValue contains "Deploy"
+| where ActivityStatusValue == "Success"
+| summarize ResourceCreations = count() by Caller, ResourceGroup, bin(TimeGenerated, 1d)
+| summarize DailyAvg = avg(ResourceCreations), 
+    MaxDaily = max(ResourceCreations),
+    StdDev = stdev(ResourceCreations)
+    by Caller, ResourceGroup
+| extend AnomalyThreshold = DailyAvg + (2 * StdDev)
+| where MaxDaily > AnomalyThreshold and MaxDaily > 10
+| project Caller, ResourceGroup, DailyAvg, MaxDaily, AnomalyScore = MaxDaily / DailyAvg
+| order by AnomalyScore desc
+
+// 5. High-Cost Resource Types Trend Analysis
+AzureMetrics
+| where TimeGenerated > ago(90d)
+| where MetricName == "BillingCost" or MetricName == "Cost"
+| summarize MonthlyCost = sum(Total) by ResourceId, ResourceGroup, bin(TimeGenerated, 30d)
+| summarize CostTrend = percentile_cont(MonthlyCost, 75) - percentile_cont(MonthlyCost, 25),
+    AvgMonthlyCost = avg(MonthlyCost),
+    MaxMonthlyCost = max(MonthlyCost)
+    by ResourceId, ResourceGroup
+| where AvgMonthlyCost > 1000  // Focus on higher-cost resources
+| extend CostVolatility = CostTrend / AvgMonthlyCost
+| order by CostVolatility desc
+
+// =====================================================
+// RIGHTSIZING RECOMMENDATIONS
+// =====================================================
+
+// 6. VM Rightsizing Based on Performance Data
+let VMPerformance = Perf
+| where TimeGenerated > ago(30d)
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| where InstanceName == "_Total"
+| summarize AvgCPU = avg(CounterValue), P95CPU = percentile(CounterValue, 95) by Computer;
+let VMMemory = Perf
+| where TimeGenerated > ago(30d)
+| where ObjectName == "Memory" and CounterName == "% Committed Bytes In Use"
+| summarize AvgMemory = avg(CounterValue), P95Memory = percentile(CounterValue, 95) by Computer;
+VMPerformance
+| join kind=inner VMMemory on Computer
+| extend RightsizingRecommendation = case(
+    AvgCPU < 20 and AvgMemory < 40, "Downsize significantly",
+    AvgCPU < 40 and AvgMemory < 60, "Consider downsizing",
+    P95CPU > 80 or P95Memory > 85, "Consider upsizing",
+    "Current size appropriate"
+)
+| project Computer, AvgCPU, P95CPU, AvgMemory, P95Memory, RightsizingRecommendation
+| where RightsizingRecommendation != "Current size appropriate"
+| order by AvgCPU asc
+
+// 7. Database Rightsizing Analysis (SQL Database DTU Usage)
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL"
+| where Category == "Basic"
+| where MetricName == "dtu_consumption_percent"
+| where TimeGenerated > ago(30d)
+| summarize AvgDTU = avg(Average), MaxDTU = max(Average), P95DTU = percentile(Average, 95) by Resource
+| extend DTURightsizing = case(
+    AvgDTU < 30 and P95DTU < 60, "Overprovisioned - consider lower tier",
+    AvgDTU < 50 and P95DTU < 80, "Slightly overprovisioned",
+    P95DTU > 90, "Underprovisioned - consider higher tier",
+    "Appropriately sized"
+)
+| project Resource, AvgDTU, MaxDTU, P95DTU, DTURightsizing
+| where DTURightsizing != "Appropriately sized"
+| order by AvgDTU asc
+
+// =====================================================
+// WASTE IDENTIFICATION
+// =====================================================
+
+// 8. Orphaned Resources Detection
+let ActiveVMs = Heartbeat
+| where TimeGenerated > ago(7d)
+| distinct Computer;
+let AllVMResources = AzureActivity
+| where TimeGenerated > ago(90d)
+| where ResourceProvider == "Microsoft.Compute"
+| where ResourceType == "virtualMachines"
+| distinct Resource;
+AllVMResources
+| where Resource !in (ActiveVMs)
+| project OrphanedVM = Resource
+| extend CostOptimizationAction = "Investigate for deletion - no recent heartbeat"
+
+// 9. Unattached Managed Disks Cost Analysis
+AzureActivity
+| where TimeGenerated > ago(30d)
+| where ResourceProvider == "Microsoft.Compute"
+| where ResourceType == "disks"
+| where OperationNameValue == "Microsoft.Compute/disks/read"
+| extend DiskName = tostring(split(Resource, "/")[8])
+| summarize LastAccessed = max(TimeGenerated) by Resource, DiskName
+| where LastAccessed < ago(7d)  // Not accessed in last 7 days
+| project Resource, DiskName, LastAccessed, CostSavingOpportunity = "Unattached disk - consider deletion"
+| order by LastAccessed asc
+
+// 10. Idle Load Balancers and Application Gateways
+AzureMetrics
+| where TimeGenerated > ago(30d)
+| where ResourceProvider == "Microsoft.Network"
+| where MetricName == "ByteCount" or MetricName == "PacketCount"
+| summarize TotalTraffic = sum(Total) by ResourceId, ResourceGroup
+| where TotalTraffic < 1000000  // Very low traffic
+| project ResourceId, ResourceGroup, TotalTraffic, Recommendation = "Low utilization - review necessity"
+| order by TotalTraffic asc
+
+// =====================================================
+// RESERVED INSTANCE OPTIMIZATION
+// =====================================================
+
+// 11. Reserved Instance Coverage Analysis
+let VMRuntime = Perf
+| where TimeGenerated > ago(30d)
+| where ObjectName == "Processor"
+| summarize RuntimeHours = count() / 12 by Computer  // Assuming 5-minute intervals
+| where RuntimeHours > 500;  // VMs running most of the time
+VMRuntime
+| join kind=inner (
+    Heartbeat
+    | where TimeGenerated > ago(1d)
+    | distinct Computer, ResourceGroup, SubscriptionId
+) on Computer
+| extend RIRecommendation = "Consider Reserved Instance for cost savings"
+| project Computer, ResourceGroup, SubscriptionId, RuntimeHours, RIRecommendation
+| order by RuntimeHours desc
+
+// =====================================================
+// SCALING OPTIMIZATION
+// =====================================================
+
+// 12. Auto-Scaling Effectiveness Analysis
+AzureMetrics
+| where TimeGenerated > ago(30d)
+| where ResourceProvider == "Microsoft.Compute"
+| where MetricName == "Percentage CPU"
+| summarize AvgCPU = avg(Average), 
+    ScalingEvents = countif(Average > 80 or Average < 20)  // Potential scaling triggers
+    by ResourceId, bin(TimeGenerated, 1d)
+| summarize DailyAvgCPU = avg(AvgCPU), 
+    TotalScalingOpportunities = sum(ScalingEvents)
+    by ResourceId
+| where TotalScalingOpportunities > 10  // Resources with frequent scaling opportunities
+| project ResourceId, DailyAvgCPU, TotalScalingOpportunities, 
+    Recommendation = "Consider implementing auto-scaling"
+| order by TotalScalingOpportunities desc
+
+// 13. Storage Tier Optimization
+StorageBlobLogs
+| where TimeGenerated > ago(90d)
+| summarize LastAccessed = max(TimeGenerated), 
+    AccessCount = count()
+    by AccountName, ContainerName, BlobName
+| extend DaysSinceLastAccess = datetime_diff('day', now(), LastAccessed)
+| extend TierRecommendation = case(
+    DaysSinceLastAccess > 180 and AccessCount < 5, "Archive Tier",
+    DaysSinceLastAccess > 30 and AccessCount < 20, "Cool Tier",
+    "Hot Tier"
+)
+| where TierRecommendation != "Hot Tier"
+| project AccountName, ContainerName, BlobName, DaysSinceLastAccess, 
+    AccessCount, TierRecommendation
+| order by DaysSinceLastAccess desc
+
+// =====================================================
+// COST FORECASTING QUERIES
+// =====================================================
+
+// 14. Monthly Cost Trend and Projection
+AzureMetrics
+| where TimeGenerated > ago(180d)
+| where MetricName contains "Cost" or MetricName contains "Billing"
+| summarize MonthlyCost = sum(Total) by bin(TimeGenerated, 30d), ResourceGroup
+| sort by TimeGenerated asc
+| extend MonthNumber = row_number()
+| summarize CostTrend = (max(MonthlyCost) - min(MonthlyCost)) / count(), 
+    CurrentCost = arg_max(TimeGenerated, MonthlyCost)
+    by ResourceGroup
+| extend ProjectedNextMonth = CurrentCost + CostTrend
+| project ResourceGroup, CurrentCost, CostTrend, ProjectedNextMonth
+| order by ProjectedNextMonth desc
+
+// 15. Resource Lifecycle Cost Analysis
+AzureActivity
+| where TimeGenerated > ago(90d)
+| where OperationNameValue contains "Create" or OperationNameValue contains "Delete"
+| extend Action = iff(OperationNameValue contains "Create", "Created", "Deleted")
+| summarize ResourceActions = count() by ResourceGroup, Action, bin(TimeGenerated, 7d)
+| summarize CreatedResources = sumif(ResourceActions, Action == "Created"),
+    DeletedResources = sumif(ResourceActions, Action == "Deleted")
+    by ResourceGroup
+| extend ResourceGrowthRate = CreatedResources - DeletedResources
+| extend CostGrowthImpact = case(
+    ResourceGrowthRate > 10, "High cost growth expected",
+    ResourceGrowthRate > 5, "Moderate cost growth",
+    ResourceGrowthRate < 0, "Cost reduction opportunity",
+    "Stable cost pattern"
+)
+| project ResourceGroup, CreatedResources, DeletedResources, 
+    ResourceGrowthRate, CostGrowthImpact
+| order by ResourceGrowthRate desc
+
+// =====================================================
+// BUDGET AND SPENDING ALERTS
+// =====================================================
+
+// 16. Budget Variance Analysis
+let BudgetData = datatable(ResourceGroup: string, MonthlyBudget: real) [
+    "Production-RG", 10000,
+    "Development-RG", 3000,
+    "Testing-RG", 2000
+    // Add your actual budget data here
+];
+AzureMetrics
+| where TimeGenerated > ago(30d)
+| where MetricName contains "Cost"
+| summarize ActualSpend = sum(Total) by ResourceGroup
+| join kind=inner BudgetData on ResourceGroup
+| extend BudgetVariance = ActualSpend - MonthlyBudget
+| extend VariancePercentage = (BudgetVariance / MonthlyBudget) * 100
+| extend AlertLevel = case(
+    VariancePercentage > 20, "Critical - Over Budget",
+    VariancePercentage > 10, "Warning - Approaching Budget",
+    VariancePercentage < -20, "Under Budget - Review Allocation",
+    "Within Budget"
+)
+| project ResourceGroup, MonthlyBudget, ActualSpend, BudgetVariance, 
+    VariancePercentage, AlertLevel
+| order by VariancePercentage desc
+
+// =====================================================
+// USAGE INSTRUCTIONS
+// =====================================================
+// 1. Customize budget data in query 16 with actual budget allocations
+// 2. Adjust utilization thresholds based on your organization's standards
+// 3. Schedule these queries to run weekly for regular cost reviews
+// 4. Create dashboards using these queries for management reporting
+// 5. Set up automated alerts for budget variances and high-cost anomalies
+// 6. Combine with Azure Cost Management APIs for comprehensive analysis
+
+// =====================================================
+// COST OPTIMIZATION ACTIONS
+// =====================================================
+// Based on query results, consider:
+// 1. Implement auto-shutdown for development VMs
+// 2. Set up Azure Automation for resource lifecycle management
+// 3. Configure Azure Advisor recommendations
+// 4. Implement resource tagging for better cost allocation
+// 5. Set up Azure Cost Management budgets and alerts
+// 6. Regular review cycles for rightsizing recommendations

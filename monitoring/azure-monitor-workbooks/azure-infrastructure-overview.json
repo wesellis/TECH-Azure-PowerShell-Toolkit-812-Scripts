@@ -1,0 +1,301 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Azure Infrastructure Overview Dashboard\n\nThis workbook provides a comprehensive overview of your Azure infrastructure including Virtual Machines, Storage Accounts, and Network resources.\n\n---"
+      },
+      "name": "text - 2"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "1f40a3c9-6e4b-45db-8b2e-1bbf54b5b7c4",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 2592000000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 300000
+                },
+                {
+                  "durationMs": 900000
+                },
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            }
+          },
+          {
+            "id": "c7b2b5e4-c0a4-4c0a-8b0a-2b5b2b5b2b5b",
+            "version": "KqlParameterItem/1.0",
+            "name": "Subscriptions",
+            "type": 6,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "Resources\n| distinct subscriptionId\n| project value = subscriptionId, label = subscriptionId",
+            "crossComponentResources": [
+              "value::selected"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "selectAllValue": "*"
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resourcegraph/resources",
+            "value": [
+              "value::all"
+            ]
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources"
+      },
+      "name": "parameters - 1"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Resource Overview"
+      },
+      "name": "text - 3"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| summarize Count = count() by type\n| order by Count desc\n| take 10",
+        "size": 0,
+        "title": "Top 10 Resource Types",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "piechart"
+      },
+      "customWidth": "50",
+      "name": "query - 4"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| summarize Count = count() by location\n| order by Count desc\n| take 10",
+        "size": 0,
+        "title": "Resources by Location",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "barchart"
+      },
+      "customWidth": "50",
+      "name": "query - 5"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Virtual Machine Status"
+      },
+      "name": "text - 6"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.compute/virtualmachines\"\n| extend powerState = properties.extended.instanceView.powerState.code\n| summarize Count = count() by powerState",
+        "size": 0,
+        "title": "VM Power States",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "piechart"
+      },
+      "customWidth": "33",
+      "name": "query - 7"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.compute/virtualmachines\"\n| extend vmSize = properties.hardwareProfile.vmSize\n| summarize Count = count() by vmSize\n| order by Count desc\n| take 10",
+        "size": 0,
+        "title": "VM Sizes Distribution",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "barchart"
+      },
+      "customWidth": "33",
+      "name": "query - 8"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.compute/virtualmachines\"\n| extend osType = properties.storageProfile.osDisk.osType\n| summarize Count = count() by osType",
+        "size": 0,
+        "title": "Operating System Types",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "piechart"
+      },
+      "customWidth": "34",
+      "name": "query - 9"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Storage Account Analysis"
+      },
+      "name": "text - 10"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.storage/storageaccounts\"\n| extend accountKind = properties.kind\n| extend accessTier = properties.accessTier\n| extend replication = properties.replication.type\n| project name, resourceGroup, location, accountKind, accessTier, replication",
+        "size": 0,
+        "title": "Storage Account Details",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "table"
+      },
+      "name": "query - 11"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Network Infrastructure"
+      },
+      "name": "text - 12"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.network/virtualnetworks\"\n| extend addressSpace = properties.addressSpace.addressPrefixes\n| project name, resourceGroup, location, addressSpace",
+        "size": 0,
+        "title": "Virtual Networks",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "query - 13"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| where type == \"microsoft.network/networksecuritygroups\"\n| extend securityRules = array_length(properties.securityRules)\n| project name, resourceGroup, location, securityRules\n| order by securityRules desc",
+        "size": 0,
+        "title": "Network Security Groups",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "table"
+      },
+      "customWidth": "50",
+      "name": "query - 14"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Resource Health Summary"
+      },
+      "name": "text - 15"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Resources\n| where subscriptionId in ({Subscriptions})\n| extend createdDate = todatetime(properties.createdTime)\n| where createdDate >= now(-30d)\n| summarize Count = count() by bin(createdDate, 1d)\n| order by createdDate asc",
+        "size": 0,
+        "title": "Resources Created in Last 30 Days",
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "value::selected"
+        ],
+        "visualization": "areachart"
+      },
+      "name": "query - 16"
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Monitor"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

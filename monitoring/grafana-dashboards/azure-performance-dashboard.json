@@ -1,0 +1,686 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Comprehensive Azure performance monitoring dashboard for enterprise environments",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1624467600000,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Percentage CPU",
+            "value": "Percentage CPU"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Virtual Machine CPU Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Available Memory Bytes",
+            "value": "Available Memory Bytes"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Available Memory",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Disk Read Bytes/sec",
+            "value": "Disk Read Bytes/sec"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        },
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Disk Write Bytes/sec",
+            "value": "Disk Write Bytes/sec"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Disk I/O Performance",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Network In Total",
+            "value": "Network In Total"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        },
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.compute/virtualmachines",
+            "value": "microsoft.compute/virtualmachines"
+          },
+          "metricName": {
+            "text": "Network Out Total",
+            "value": "Network Out Total"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Compute/virtualMachines",
+            "value": "Microsoft.Compute/virtualMachines"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$vmName",
+            "value": "$vmName"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Network Traffic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Azure Monitor",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "aggregation": {
+            "text": "Average",
+            "value": "Average"
+          },
+          "dimensionFilters": [],
+          "metricDefinition": {
+            "text": "microsoft.storage/storageaccounts",
+            "value": "microsoft.storage/storageaccounts"
+          },
+          "metricName": {
+            "text": "Availability",
+            "value": "Availability"
+          },
+          "metricNamespace": {
+            "text": "Microsoft.Storage/storageAccounts",
+            "value": "Microsoft.Storage/storageAccounts"
+          },
+          "resourceGroup": {
+            "text": "$resourceGroup",
+            "value": "$resourceGroup"
+          },
+          "resourceName": {
+            "text": "$storageAccount",
+            "value": "$storageAccount"
+          },
+          "timeGrain": "auto"
+        }
+      ],
+      "title": "Storage Account Availability",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": [
+    "azure",
+    "performance",
+    "monitoring",
+    "enterprise"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Resource Group",
+        "multi": true,
+        "name": "resourceGroup",
+        "options": [],
+        "query": "ResourceGroups()",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Virtual Machine",
+        "multi": true,
+        "name": "vmName",
+        "options": [],
+        "query": "VirtualMachines($resourceGroup)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Azure Monitor",
+        "definition": "",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Storage Account",
+        "multi": true,
+        "name": "storageAccount",
+        "options": [],
+        "query": "StorageAccounts($resourceGroup)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Azure Performance Dashboard - Enterprise",
+  "uid": "azure-performance-enterprise",
+  "version": 1
+}

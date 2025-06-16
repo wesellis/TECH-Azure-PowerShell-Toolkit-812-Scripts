@@ -1,0 +1,137 @@
+{
+  "properties": {
+    "displayName": "Require HTTPS/SSL Only for Web Applications",
+    "description": "This policy ensures that web applications and APIs only accept HTTPS connections, enforcing encryption in transit for data security.",
+    "metadata": {
+      "version": "1.0.0",
+      "category": "Security",
+      "author": "Azure Enterprise Toolkit"
+    },
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Web/sites"
+              },
+              {
+                "field": "Microsoft.Web/sites/httpsOnly",
+                "notEquals": "true"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Web/sites/slots"
+              },
+              {
+                "field": "Microsoft.Web/sites/slots/httpsOnly",
+                "notEquals": "true"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Storage/storageAccounts"
+              },
+              {
+                "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+                "notEquals": "true"
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.ApiManagement/service"
+              },
+              {
+                "count": {
+                  "field": "Microsoft.ApiManagement/service/protocols[*]",
+                  "where": {
+                    "field": "Microsoft.ApiManagement/service/protocols[*]",
+                    "equals": "Http"
+                  }
+                },
+                "greater": 0
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.Sql/servers"
+              },
+              {
+                "field": "Microsoft.Sql/servers/minimalTlsVersion",
+                "notEquals": "1.2"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of the policy"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "DeployIfNotExists",
+          "Disabled"
+        ],
+        "defaultValue": "Audit"
+      },
+      "minimumTlsVersion": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Minimum TLS Version",
+          "description": "Minimum TLS version required"
+        },
+        "allowedValues": [
+          "1.0",
+          "1.1",
+          "1.2",
+          "1.3"
+        ],
+        "defaultValue": "1.2"
+      },
+      "excludedResourceTypes": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Excluded Resource Types",
+          "description": "Resource types to exclude from this policy"
+        },
+        "defaultValue": []
+      }
+    }
+  },
+  "policyType": "Custom",
+  "id": "/providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Authorization/policyDefinitions/require-ssl-only",
+  "type": "Microsoft.Authorization/policyDefinitions",
+  "name": "require-ssl-only",
+  "systemData": {
+    "createdBy": "Azure Enterprise Toolkit",
+    "createdByType": "Application",
+    "createdAt": "2025-06-16T00:00:00.0000000Z",
+    "lastModifiedBy": "Azure Enterprise Toolkit",
+    "lastModifiedByType": "Application",
+    "lastModifiedAt": "2025-06-16T00:00:00.0000000Z"
+  }
+}

@@ -1,0 +1,318 @@
+{
+  "cisAzureBenchmark": {
+    "version": "2.0.0",
+    "description": "CIS Microsoft Azure Foundations Benchmark implementation for enterprise environments",
+    "lastUpdated": "2025-06-16",
+    "sections": [
+      {
+        "section": "1",
+        "title": "Identity and Access Management",
+        "controls": [
+          {
+            "control": "1.1",
+            "title": "Ensure that multi-factor authentication is enabled for all privileged users",
+            "level": 1,
+            "automated": true,
+            "description": "Multi-factor authentication (MFA) should be enabled for all users with administrative privileges.",
+            "rationale": "MFA provides an additional layer of security beyond passwords.",
+            "azurePolicy": {
+              "policyName": "Require MFA for privileged users",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/9297c21d-2ed6-4474-b48f-163f75654ce3",
+              "parameters": {}
+            },
+            "remediation": {
+              "manual": [
+                "1. Sign in to the Azure portal as a Global Administrator",
+                "2. Navigate to Azure Active Directory > Security > Conditional Access",
+                "3. Create a new policy requiring MFA for administrative roles",
+                "4. Assign to appropriate user groups and enable the policy"
+              ],
+              "automated": {
+                "script": "Enable-MfaForPrivilegedUsers.ps1",
+                "description": "PowerShell script to enable MFA for all privileged users"
+              }
+            },
+            "compliance": {
+              "query": "SecurityRecommendation | where RecommendationName contains 'multi-factor authentication' | where RecommendationState == 'Unhealthy'",
+              "acceptableValue": 0
+            }
+          },
+          {
+            "control": "1.2",
+            "title": "Ensure that multi-factor authentication is enabled for all non-privileged users",
+            "level": 2,
+            "automated": true,
+            "description": "MFA should be enabled for all Azure Active Directory users.",
+            "rationale": "Enabling MFA for all users significantly reduces the risk of account compromise.",
+            "azurePolicy": {
+              "policyName": "Require MFA for all users",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/0961003e-5a0a-4549-abde-af6a37f2724d",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "1.3",
+            "title": "Ensure that there are no guest users",
+            "level": 1,
+            "automated": true,
+            "description": "Azure Active Directory guest users should be reviewed and removed if not required.",
+            "rationale": "Guest users represent external entities that may pose security risks.",
+            "compliance": {
+              "query": "AuditLogs | where Category == 'UserManagement' | where OperationName == 'Invite external user' | summarize count()",
+              "acceptableValue": 0
+            }
+          }
+        ]
+      },
+      {
+        "section": "2",
+        "title": "Security Center",
+        "controls": [
+          {
+            "control": "2.1",
+            "title": "Ensure that Azure Defender is set to On for Servers",
+            "level": 1,
+            "automated": true,
+            "description": "Azure Defender for Servers should be enabled to provide advanced threat protection.",
+            "azurePolicy": {
+              "policyName": "Enable Azure Defender for servers",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/4da35fc9-c9e7-4960-aec9-797fe7d9051d",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "2.2",
+            "title": "Ensure that Azure Defender is set to On for Storage",
+            "level": 1,
+            "automated": true,
+            "description": "Azure Defender for Storage should be enabled to detect suspicious activities.",
+            "azurePolicy": {
+              "policyName": "Enable Azure Defender for storage",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/4da35fc9-c9e7-4960-aec9-797fe7d9051d",
+              "parameters": {}
+            }
+          }
+        ]
+      },
+      {
+        "section": "3",
+        "title": "Storage Accounts",
+        "controls": [
+          {
+            "control": "3.1",
+            "title": "Ensure that 'Secure transfer required' is set to 'Enabled'",
+            "level": 1,
+            "automated": true,
+            "description": "Secure transfer should be required for all storage account operations.",
+            "azurePolicy": {
+              "policyName": "Secure transfer to storage accounts should be enabled",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/404c3081-a854-4457-ae30-26a93ef643f9",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "3.2",
+            "title": "Ensure that storage account access keys are periodically regenerated",
+            "level": 1,
+            "automated": false,
+            "description": "Storage account access keys should be regenerated periodically.",
+            "rationale": "Regular key rotation reduces the risk of unauthorized access."
+          }
+        ]
+      },
+      {
+        "section": "4",
+        "title": "Database Services",
+        "controls": [
+          {
+            "control": "4.1",
+            "title": "Ensure that 'Auditing' is set to 'On' for SQL servers",
+            "level": 1,
+            "automated": true,
+            "description": "SQL server auditing should be enabled to track database activities.",
+            "azurePolicy": {
+              "policyName": "Auditing on SQL server should be enabled",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/a6fb4358-5bf4-4ad7-ba82-2cd2f41ce5e9",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "4.2",
+            "title": "Ensure that 'Advanced Data Security' is set to 'On' on a SQL Database",
+            "level": 1,
+            "automated": true,
+            "description": "Advanced Data Security should be enabled on SQL databases.",
+            "azurePolicy": {
+              "policyName": "Advanced data security should be enabled on SQL databases",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/7fe3b40f-802b-4cdd-8bd4-fd799c948cc2",
+              "parameters": {}
+            }
+          }
+        ]
+      },
+      {
+        "section": "5",
+        "title": "Logging and Monitoring",
+        "controls": [
+          {
+            "control": "5.1",
+            "title": "Ensure that a Log Profile exists",
+            "level": 1,
+            "automated": true,
+            "description": "A log profile should exist to collect activity logs.",
+            "compliance": {
+              "query": "AzureActivity | summarize count() by bin(TimeGenerated, 1d) | where count_ > 0",
+              "acceptableValue": "> 0"
+            }
+          },
+          {
+            "control": "5.2",
+            "title": "Ensure that Activity Log Retention is set 365 days or greater",
+            "level": 1,
+            "automated": true,
+            "description": "Activity logs should be retained for at least 365 days.",
+            "azurePolicy": {
+              "policyName": "Activity log should be retained for at least one year",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/b02aacc0-b073-424e-8298-42b22829ee0a",
+              "parameters": {
+                "requiredRetentionDays": "365"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "section": "6",
+        "title": "Networking",
+        "controls": [
+          {
+            "control": "6.1",
+            "title": "Ensure that RDP access is restricted from the internet",
+            "level": 1,
+            "automated": true,
+            "description": "RDP access should not be allowed from the internet.",
+            "azurePolicy": {
+              "policyName": "Internet-facing virtual machines should be protected with network security groups",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/f6de0be7-9a8a-4b8a-b349-43cf02d22f7c",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "6.2",
+            "title": "Ensure that SSH access is restricted from the internet",
+            "level": 1,
+            "automated": true,
+            "description": "SSH access should not be allowed from the internet.",
+            "azurePolicy": {
+              "policyName": "Internet-facing virtual machines should be protected with network security groups",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/f6de0be7-9a8a-4b8a-b349-43cf02d22f7c",
+              "parameters": {}
+            }
+          }
+        ]
+      },
+      {
+        "section": "7",
+        "title": "Virtual Machines",
+        "controls": [
+          {
+            "control": "7.1",
+            "title": "Ensure that OS disk are encrypted",
+            "level": 1,
+            "automated": true,
+            "description": "Virtual machine OS disks should be encrypted.",
+            "azurePolicy": {
+              "policyName": "Virtual machines should encrypt temp disks, caches, and data flows between Compute and Storage resources",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/0961003e-5a0a-4549-abde-af6a37f2724d",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "7.2",
+            "title": "Ensure that data disks are encrypted",
+            "level": 1,
+            "automated": true,
+            "description": "Virtual machine data disks should be encrypted.",
+            "azurePolicy": {
+              "policyName": "Disk encryption should be applied on virtual machines",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/0961003e-5a0a-4549-abde-af6a37f2724d",
+              "parameters": {}
+            }
+          }
+        ]
+      },
+      {
+        "section": "8",
+        "title": "Key Vault",
+        "controls": [
+          {
+            "control": "8.1",
+            "title": "Ensure that the expiration date is set on all keys",
+            "level": 1,
+            "automated": true,
+            "description": "All keys in Key Vault should have an expiration date.",
+            "azurePolicy": {
+              "policyName": "Keys should have an expiration date",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/152b15f7-8e1f-4c1f-ab71-8c010ba5dbc0",
+              "parameters": {}
+            }
+          },
+          {
+            "control": "8.2",
+            "title": "Ensure that the expiration date is set on all Secrets",
+            "level": 1,
+            "automated": true,
+            "description": "All secrets in Key Vault should have an expiration date.",
+            "azurePolicy": {
+              "policyName": "Secrets should have an expiration date",
+              "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/98728c90-32c7-4049-8429-847dc0f4fe37",
+              "parameters": {}
+            }
+          }
+        ]
+      }
+    ],
+    "implementation": {
+      "policyInitiative": {
+        "name": "CIS Azure Benchmark v2.0.0",
+        "description": "This initiative includes policies that address a subset of CIS Microsoft Azure Foundations Benchmark recommendations.",
+        "policies": [
+          "/providers/Microsoft.Authorization/policyDefinitions/9297c21d-2ed6-4474-b48f-163f75654ce3",
+          "/providers/Microsoft.Authorization/policyDefinitions/0961003e-5a0a-4549-abde-af6a37f2724d",
+          "/providers/Microsoft.Authorization/policyDefinitions/4da35fc9-c9e7-4960-aec9-797fe7d9051d",
+          "/providers/Microsoft.Authorization/policyDefinitions/404c3081-a854-4457-ae30-26a93ef643f9",
+          "/providers/Microsoft.Authorization/policyDefinitions/a6fb4358-5bf4-4ad7-ba82-2cd2f41ce5e9",
+          "/providers/Microsoft.Authorization/policyDefinitions/7fe3b40f-802b-4cdd-8bd4-fd799c948cc2",
+          "/providers/Microsoft.Authorization/policyDefinitions/b02aacc0-b073-424e-8298-42b22829ee0a",
+          "/providers/Microsoft.Authorization/policyDefinitions/f6de0be7-9a8a-4b8a-b349-43cf02d22f7c",
+          "/providers/Microsoft.Authorization/policyDefinitions/152b15f7-8e1f-4c1f-ab71-8c010ba5dbc0",
+          "/providers/Microsoft.Authorization/policyDefinitions/98728c90-32c7-4049-8429-847dc0f4fe37"
+        ]
+      },
+      "complianceReporting": {
+        "schedule": "Daily",
+        "recipients": [
+          "security-team@company.com",
+          "compliance-team@company.com"
+        ],
+        "dashboard": "Azure Security Center Regulatory Compliance"
+      },
+      "remediation": {
+        "automated": true,
+        "manual": false,
+        "notifications": true
+      }
+    },
+    "exemptions": {
+      "allowedResourceGroups": [
+        "sandbox-rg",
+        "dev-test-rg"
+      ],
+      "exemptionReasons": [
+        "Development environment",
+        "Testing purposes",
+        "Business requirement"
+      ]
+    }
+  }
+}

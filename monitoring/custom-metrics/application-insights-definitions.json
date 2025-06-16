@@ -1,0 +1,476 @@
+{
+  "customMetricsDefinitions": {
+    "description": "Custom telemetry definitions for Application Insights in enterprise environments",
+    "version": "1.0.0",
+    "lastUpdated": "2025-06-16",
+    "categories": [
+      {
+        "name": "Business Metrics",
+        "description": "Business-specific KPIs and performance indicators",
+        "metrics": [
+          {
+            "name": "BusinessTransaction.Count",
+            "displayName": "Business Transactions",
+            "description": "Number of completed business transactions",
+            "unit": "Count",
+            "aggregationType": "Sum",
+            "dimensions": [
+              "TransactionType",
+              "BusinessUnit",
+              "Region",
+              "CustomerSegment"
+            ],
+            "thresholds": {
+              "warning": 1000,
+              "critical": 500
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"BusinessTransaction.Count\", 1, new Dictionary<string, string> {{ \"TransactionType\", transactionType }, { \"BusinessUnit\", businessUnit }});"
+            }
+          },
+          {
+            "name": "Revenue.Amount",
+            "displayName": "Revenue Generated",
+            "description": "Revenue amount from transactions",
+            "unit": "Currency",
+            "aggregationType": "Sum",
+            "dimensions": [
+              "Currency",
+              "ProductCategory",
+              "SalesChannel",
+              "CustomerTier"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Revenue.Amount\", revenueAmount, new Dictionary<string, string> {{ \"Currency\", currency }, { \"ProductCategory\", category }});"
+            }
+          },
+          {
+            "name": "UserEngagement.SessionDuration",
+            "displayName": "User Session Duration",
+            "description": "Duration of user sessions in minutes",
+            "unit": "Minutes",
+            "aggregationType": "Average",
+            "dimensions": [
+              "UserRole",
+              "DeviceType",
+              "GeographicRegion"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"UserEngagement.SessionDuration\", sessionDurationMinutes, new Dictionary<string, string> {{ \"UserRole\", userRole }});"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Performance Metrics",
+        "description": "Application performance and efficiency metrics",
+        "metrics": [
+          {
+            "name": "Database.QueryPerformance",
+            "displayName": "Database Query Performance",
+            "description": "Database query execution time in milliseconds",
+            "unit": "Milliseconds",
+            "aggregationType": "Average",
+            "dimensions": [
+              "QueryType",
+              "DatabaseName",
+              "TableName",
+              "Environment"
+            ],
+            "thresholds": {
+              "warning": 1000,
+              "critical": 5000
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Database.QueryPerformance\", queryTimeMs, new Dictionary<string, string> {{ \"QueryType\", queryType }, { \"DatabaseName\", dbName }});"
+            }
+          },
+          {
+            "name": "API.ResponseTime",
+            "displayName": "API Response Time",
+            "description": "API endpoint response time in milliseconds",
+            "unit": "Milliseconds",
+            "aggregationType": "Average",
+            "dimensions": [
+              "Endpoint",
+              "HttpMethod",
+              "StatusCode",
+              "ApiVersion"
+            ],
+            "thresholds": {
+              "warning": 2000,
+              "critical": 10000
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"API.ResponseTime\", responseTimeMs, new Dictionary<string, string> {{ \"Endpoint\", endpoint }, { \"HttpMethod\", method }});"
+            }
+          },
+          {
+            "name": "Cache.HitRatio",
+            "displayName": "Cache Hit Ratio",
+            "description": "Cache hit ratio percentage",
+            "unit": "Percentage",
+            "aggregationType": "Average",
+            "dimensions": [
+              "CacheType",
+              "CacheKey",
+              "Application"
+            ],
+            "thresholds": {
+              "warning": 80,
+              "critical": 60
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Cache.HitRatio\", hitRatioPercentage, new Dictionary<string, string> {{ \"CacheType\", cacheType }});"
+            }
+          },
+          {
+            "name": "Queue.ProcessingTime",
+            "displayName": "Queue Message Processing Time",
+            "description": "Time to process queue messages in milliseconds",
+            "unit": "Milliseconds",
+            "aggregationType": "Average",
+            "dimensions": [
+              "QueueName",
+              "MessageType",
+              "Priority",
+              "Environment"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Queue.ProcessingTime\", processingTimeMs, new Dictionary<string, string> {{ \"QueueName\", queueName }, { \"MessageType\", messageType }});"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Resource Utilization",
+        "description": "Application resource usage and capacity metrics",
+        "metrics": [
+          {
+            "name": "Memory.Usage",
+            "displayName": "Application Memory Usage",
+            "description": "Memory usage by application components",
+            "unit": "Megabytes",
+            "aggregationType": "Average",
+            "dimensions": [
+              "ComponentName",
+              "InstanceId",
+              "Environment"
+            ],
+            "thresholds": {
+              "warning": 1024,
+              "critical": 2048
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Memory.Usage\", memoryUsageMB, new Dictionary<string, string> {{ \"ComponentName\", componentName }});"
+            }
+          },
+          {
+            "name": "ConnectionPool.Usage",
+            "displayName": "Connection Pool Usage",
+            "description": "Database connection pool utilization percentage",
+            "unit": "Percentage",
+            "aggregationType": "Average",
+            "dimensions": [
+              "ConnectionString",
+              "PoolName",
+              "Environment"
+            ],
+            "thresholds": {
+              "warning": 80,
+              "critical": 95
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"ConnectionPool.Usage\", poolUsagePercentage, new Dictionary<string, string> {{ \"PoolName\", poolName }});"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Security Metrics",
+        "description": "Security-related application metrics",
+        "metrics": [
+          {
+            "name": "Authentication.FailureRate",
+            "displayName": "Authentication Failure Rate",
+            "description": "Rate of authentication failures per minute",
+            "unit": "Count/Minute",
+            "aggregationType": "Sum",
+            "dimensions": [
+              "AuthMethod",
+              "SourceIP",
+              "UserAgent",
+              "GeographicLocation"
+            ],
+            "thresholds": {
+              "warning": 10,
+              "critical": 50
+            },
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Authentication.FailureRate\", 1, new Dictionary<string, string> {{ \"AuthMethod\", authMethod }, { \"SourceIP\", sourceIP }});"
+            }
+          },
+          {
+            "name": "AccessControl.ViolationAttempts",
+            "displayName": "Access Control Violations",
+            "description": "Number of access control violation attempts",
+            "unit": "Count",
+            "aggregationType": "Sum",
+            "dimensions": [
+              "ResourceType",
+              "ViolationType",
+              "UserId",
+              "RoleName"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"AccessControl.ViolationAttempts\", 1, new Dictionary<string, string> {{ \"ResourceType\", resourceType }, { \"ViolationType\", violationType }});"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Error Tracking",
+        "description": "Application error and exception tracking metrics",
+        "metrics": [
+          {
+            "name": "Error.RecoveryTime",
+            "displayName": "Error Recovery Time",
+            "description": "Time to recover from errors in milliseconds",
+            "unit": "Milliseconds",
+            "aggregationType": "Average",
+            "dimensions": [
+              "ErrorType",
+              "Component",
+              "Severity",
+              "RecoveryMethod"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"Error.RecoveryTime\", recoveryTimeMs, new Dictionary<string, string> {{ \"ErrorType\", errorType }, { \"Component\", component }});"
+            }
+          },
+          {
+            "name": "CircuitBreaker.State",
+            "displayName": "Circuit Breaker State",
+            "description": "Circuit breaker state changes",
+            "unit": "Count",
+            "aggregationType": "Sum",
+            "dimensions": [
+              "ServiceName",
+              "State",
+              "Environment"
+            ],
+            "implementation": {
+              "code": "telemetryClient.TrackMetric(\"CircuitBreaker.State\", 1, new Dictionary<string, string> {{ \"ServiceName\", serviceName }, { \"State\", state }});"
+            }
+          }
+        ]
+      }
+    ],
+    "customEvents": [
+      {
+        "name": "BusinessProcess.Completed",
+        "description": "Business process completion event",
+        "properties": [
+          "ProcessId",
+          "ProcessType",
+          "Duration",
+          "Status",
+          "UserId",
+          "BusinessUnit"
+        ],
+        "implementation": {
+          "code": "telemetryClient.TrackEvent(\"BusinessProcess.Completed\", new Dictionary<string, string> {{ \"ProcessId\", processId }, { \"ProcessType\", processType }, { \"Status\", status }});"
+        }
+      },
+      {
+        "name": "Security.PolicyViolation",
+        "description": "Security policy violation event",
+        "properties": [
+          "PolicyName",
+          "ViolationType",
+          "UserId",
+          "ResourceId",
+          "Severity",
+          "Action"
+        ],
+        "implementation": {
+          "code": "telemetryClient.TrackEvent(\"Security.PolicyViolation\", new Dictionary<string, string> {{ \"PolicyName\", policyName }, { \"ViolationType\", violationType }});"
+        }
+      },
+      {
+        "name": "DataProcess.LargeDataset",
+        "description": "Large dataset processing event",
+        "properties": [
+          "DatasetSize",
+          "ProcessingTime",
+          "RecordCount",
+          "DataSource",
+          "ProcessingMethod"
+        ],
+        "implementation": {
+          "code": "telemetryClient.TrackEvent(\"DataProcess.LargeDataset\", new Dictionary<string, string> {{ \"DatasetSize\", datasetSize.ToString() }, { \"RecordCount\", recordCount.ToString() }});"
+        }
+      }
+    ],
+    "customDependencies": [
+      {
+        "name": "ExternalAPI.Call",
+        "description": "External API dependency tracking",
+        "properties": [
+          "ApiProvider",
+          "Endpoint",
+          "Method",
+          "ResponseTime",
+          "StatusCode",
+          "DataTransferred"
+        ],
+        "implementation": {
+          "code": "telemetryClient.TrackDependency(\"HTTP\", \"ExternalAPI.Call\", endpoint, startTime, duration, success);"
+        }
+      },
+      {
+        "name": "MessageQueue.Send",
+        "description": "Message queue dependency tracking",
+        "properties": [
+          "QueueProvider",
+          "QueueName",
+          "MessageSize",
+          "DeliveryTime",
+          "MessageType"
+        ],
+        "implementation": {
+          "code": "telemetryClient.TrackDependency(\"Queue\", \"MessageQueue.Send\", queueName, startTime, duration, success);"
+        }
+      }
+    ],
+    "alertingRules": [
+      {
+        "name": "High Business Transaction Failure Rate",
+        "description": "Alert when business transaction success rate drops below 95%",
+        "metric": "BusinessTransaction.Count",
+        "condition": "SuccessRate < 95%",
+        "severity": "High",
+        "frequency": "5 minutes"
+      },
+      {
+        "name": "Slow Database Queries",
+        "description": "Alert when average database query time exceeds 2 seconds",
+        "metric": "Database.QueryPerformance",
+        "condition": "Average > 2000ms",
+        "severity": "Medium",
+        "frequency": "10 minutes"
+      },
+      {
+        "name": "High Memory Usage",
+        "description": "Alert when application memory usage exceeds 1.5GB",
+        "metric": "Memory.Usage",
+        "condition": "Average > 1536MB",
+        "severity": "Medium",
+        "frequency": "15 minutes"
+      },
+      {
+        "name": "Authentication Failures Spike",
+        "description": "Alert when authentication failures exceed 20 per minute",
+        "metric": "Authentication.FailureRate",
+        "condition": "Rate > 20/minute",
+        "severity": "High",
+        "frequency": "1 minute"
+      }
+    ],
+    "dashboardConfiguration": {
+      "defaultTimeRange": "Last 24 hours",
+      "refreshInterval": "5 minutes",
+      "tiles": [
+        {
+          "title": "Business Metrics Overview",
+          "type": "KPI",
+          "metrics": [
+            "BusinessTransaction.Count",
+            "Revenue.Amount",
+            "UserEngagement.SessionDuration"
+          ]
+        },
+        {
+          "title": "Performance Trends",
+          "type": "LineChart",
+          "metrics": [
+            "API.ResponseTime",
+            "Database.QueryPerformance",
+            "Queue.ProcessingTime"
+          ]
+        },
+        {
+          "title": "Resource Utilization",
+          "type": "Gauge",
+          "metrics": [
+            "Memory.Usage",
+            "ConnectionPool.Usage",
+            "Cache.HitRatio"
+          ]
+        },
+        {
+          "title": "Security Monitoring",
+          "type": "Table",
+          "metrics": [
+            "Authentication.FailureRate",
+            "AccessControl.ViolationAttempts"
+          ]
+        }
+      ]
+    },
+    "samplingConfiguration": {
+      "defaultSamplingRate": 100,
+      "adaptiveSampling": {
+        "enabled": true,
+        "maxSamplesPerSecond": 5,
+        "targetTelemetryItemsPerSecond": 20
+      },
+      "excludedTypes": [
+        "Trace"
+      ],
+      "includedTypes": [
+        "Request",
+        "Dependency",
+        "Exception",
+        "Event",
+        "Metric"
+      ]
+    },
+    "retentionPolicy": {
+      "defaultRetention": "90 days",
+      "extendedRetention": {
+        "businessMetrics": "2 years",
+        "securityEvents": "7 years",
+        "performanceData": "1 year"
+      }
+    },
+    "exportConfiguration": {
+      "continuousExport": {
+        "enabled": true,
+        "destinations": [
+          {
+            "type": "StorageAccount",
+            "connectionString": "[Secure Connection String]",
+            "containerName": "telemetry-export"
+          },
+          {
+            "type": "EventHub",
+            "connectionString": "[Secure Connection String]",
+            "eventHubName": "telemetry-stream"
+          }
+        ]
+      },
+      "scheduledExports": [
+        {
+          "name": "Daily Business Report",
+          "schedule": "0 0 * * *",
+          "format": "CSV",
+          "metrics": [
+            "BusinessTransaction.Count",
+            "Revenue.Amount"
+          ]
+        }
+      ]
+    }
+  }
+}

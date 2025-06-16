@@ -1,0 +1,488 @@
+{
+  "nistCybersecurityFramework": {
+    "version": "1.1",
+    "description": "NIST Cybersecurity Framework implementation mapping for Azure environments",
+    "lastUpdated": "2025-06-16",
+    "framework": {
+      "identify": {
+        "description": "Develop an organizational understanding to manage cybersecurity risk",
+        "categories": [
+          {
+            "category": "ID.AM",
+            "name": "Asset Management",
+            "subcategories": [
+              {
+                "id": "ID.AM-1",
+                "description": "Physical devices and systems within the organization are inventoried",
+                "azureImplementation": {
+                  "services": ["Azure Resource Graph", "Azure Inventory"],
+                  "policies": [
+                    "Require resource tagging for asset tracking",
+                    "Audit untagged resources"
+                  ],
+                  "kqlQuery": "Resources | summarize count() by type, location, resourceGroup | order by count_ desc"
+                }
+              },
+              {
+                "id": "ID.AM-2", 
+                "description": "Software platforms and applications within the organization are inventoried",
+                "azureImplementation": {
+                  "services": ["Application Insights", "Azure Monitor"],
+                  "policies": [
+                    "Require application registration in service catalog",
+                    "Monitor application dependencies"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "category": "ID.BE",
+            "name": "Business Environment",
+            "subcategories": [
+              {
+                "id": "ID.BE-1",
+                "description": "The organization's role in the supply chain is identified and communicated",
+                "azureImplementation": {
+                  "services": ["Azure Governance", "Management Groups"],
+                  "documentation": "Business continuity and supplier management documentation"
+                }
+              }
+            ]
+          },
+          {
+            "category": "ID.GV",
+            "name": "Governance",
+            "subcategories": [
+              {
+                "id": "ID.GV-1",
+                "description": "Organizational cybersecurity policy is established and communicated",
+                "azureImplementation": {
+                  "services": ["Azure Policy", "Azure Blueprints"],
+                  "policies": [
+                    "Enforce organizational security policies",
+                    "Require security baseline compliance"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "category": "ID.RA",
+            "name": "Risk Assessment",
+            "subcategories": [
+              {
+                "id": "ID.RA-1",
+                "description": "Asset vulnerabilities are identified and documented",
+                "azureImplementation": {
+                  "services": ["Azure Security Center", "Azure Sentinel"],
+                  "automatedScanning": true,
+                  "reportingFrequency": "Weekly"
+                }
+              }
+            ]
+          },
+          {
+            "category": "ID.RM",
+            "name": "Risk Management Strategy",
+            "subcategories": [
+              {
+                "id": "ID.RM-1",
+                "description": "Risk management processes are established, managed, and agreed to by organizational stakeholders",
+                "azureImplementation": {
+                  "services": ["Azure Governance", "Azure Risk Management"],
+                  "framework": "Enterprise Risk Management (ERM)"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "protect": {
+        "description": "Develop and implement appropriate safeguards to ensure delivery of critical services",
+        "categories": [
+          {
+            "category": "PR.AC",
+            "name": "Access Control",
+            "subcategories": [
+              {
+                "id": "PR.AC-1",
+                "description": "Identities and credentials are issued, managed, verified, revoked, and audited",
+                "azureImplementation": {
+                  "services": ["Azure Active Directory", "Azure AD Identity Protection"],
+                  "policies": [
+                    "Require MFA for all users",
+                    "Enforce strong password policies",
+                    "Regular access reviews"
+                  ],
+                  "monitoring": "Sign-in and audit logs in Azure AD"
+                }
+              },
+              {
+                "id": "PR.AC-3",
+                "description": "Remote access is managed",
+                "azureImplementation": {
+                  "services": ["Azure Bastion", "Azure VPN Gateway", "Conditional Access"],
+                  "policies": [
+                    "Require VPN for remote access",
+                    "Conditional access policies for remote users"
+                  ]
+                }
+              },
+              {
+                "id": "PR.AC-4",
+                "description": "Access permissions and authorizations are managed",
+                "azureImplementation": {
+                  "services": ["Azure RBAC", "Azure PIM"],
+                  "policies": [
+                    "Least privilege access",
+                    "Just-in-time access for administrative roles"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "category": "PR.AT",
+            "name": "Awareness and Training",
+            "subcategories": [
+              {
+                "id": "PR.AT-1",
+                "description": "All users are informed and trained",
+                "azureImplementation": {
+                  "training": [
+                    "Azure security best practices training",
+                    "Phishing awareness training",
+                    "Data protection training"
+                  ],
+                  "frequency": "Quarterly"
+                }
+              }
+            ]
+          },
+          {
+            "category": "PR.DS",
+            "name": "Data Security",
+            "subcategories": [
+              {
+                "id": "PR.DS-1",
+                "description": "Data-at-rest is protected",
+                "azureImplementation": {
+                  "services": ["Azure Storage Service Encryption", "Azure Disk Encryption", "Azure SQL TDE"],
+                  "policies": [
+                    "Require encryption for all storage accounts",
+                    "Require disk encryption for VMs"
+                  ]
+                }
+              },
+              {
+                "id": "PR.DS-2",
+                "description": "Data-in-transit is protected",
+                "azureImplementation": {
+                  "services": ["Azure VPN", "Azure Application Gateway SSL", "Azure Front Door"],
+                  "policies": [
+                    "Require HTTPS for all web applications",
+                    "Require TLS 1.2 minimum"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "category": "PR.IP",
+            "name": "Information Protection Processes and Procedures",
+            "subcategories": [
+              {
+                "id": "PR.IP-1",
+                "description": "A baseline configuration of information technology/industrial control systems is created and maintained",
+                "azureImplementation": {
+                  "services": ["Azure Security Center", "Azure Automation State Configuration"],
+                  "baselines": [
+                    "CIS Azure Benchmark",
+                    "Azure Security Baseline"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "category": "PR.MA",
+            "name": "Maintenance",
+            "subcategories": [
+              {
+                "id": "PR.MA-1",
+                "description": "Maintenance and repair of organizational assets are performed and logged",
+                "azureImplementation": {
+                  "services": ["Azure Update Management", "Azure Automation"],
+                  "scheduling": "Automated patch management"
+                }
+              }
+            ]
+          },
+          {
+            "category": "PR.PT",
+            "name": "Protective Technology",
+            "subcategories": [
+              {
+                "id": "PR.PT-1",
+                "description": "Audit/log records are determined, documented, implemented, and reviewed",
+                "azureImplementation": {
+                  "services": ["Azure Monitor", "Azure Log Analytics", "Azure Sentinel"],
+                  "retention": "2 years minimum for security logs"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "detect": {
+        "description": "Develop and implement appropriate activities to identify the occurrence of a cybersecurity event",
+        "categories": [
+          {
+            "category": "DE.AE",
+            "name": "Anomalies and Events",
+            "subcategories": [
+              {
+                "id": "DE.AE-1",
+                "description": "A baseline of network operations and expected data flows is established",
+                "azureImplementation": {
+                  "services": ["Azure Network Watcher", "Azure Monitor"],
+                  "monitoring": "Network traffic baselines and anomaly detection"
+                }
+              }
+            ]
+          },
+          {
+            "category": "DE.CM",
+            "name": "Security Continuous Monitoring",
+            "subcategories": [
+              {
+                "id": "DE.CM-1",
+                "description": "The network is monitored to detect potential cybersecurity events",
+                "azureImplementation": {
+                  "services": ["Azure Sentinel", "Azure Security Center", "Azure DDoS Protection"],
+                  "monitoring": "24/7 automated monitoring with alerting"
+                }
+              }
+            ]
+          },
+          {
+            "category": "DE.DP",
+            "name": "Detection Processes",
+            "subcategories": [
+              {
+                "id": "DE.DP-1",
+                "description": "Roles and responsibilities for detection are well defined",
+                "azureImplementation": {
+                  "team": "Security Operations Center (SOC)",
+                  "responsibilities": "Incident detection, analysis, and escalation"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "respond": {
+        "description": "Develop and implement appropriate activities to take action regarding a detected cybersecurity incident",
+        "categories": [
+          {
+            "category": "RS.RP",
+            "name": "Response Planning",
+            "subcategories": [
+              {
+                "id": "RS.RP-1",
+                "description": "Response plan is executed during or after an incident",
+                "azureImplementation": {
+                  "services": ["Azure Logic Apps", "Azure Automation"],
+                  "playbooks": "Automated incident response playbooks",
+                  "procedures": "NIST 800-61 incident response procedures"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RS.CO",
+            "name": "Communications",
+            "subcategories": [
+              {
+                "id": "RS.CO-1",
+                "description": "Personnel know their roles and order of operations when a response is needed",
+                "azureImplementation": {
+                  "notifications": ["Email", "SMS", "Teams integration"],
+                  "escalation": "Defined escalation matrix"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RS.AN",
+            "name": "Analysis",
+            "subcategories": [
+              {
+                "id": "RS.AN-1",
+                "description": "Notifications from detection systems are investigated",
+                "azureImplementation": {
+                  "services": ["Azure Sentinel", "Azure Security Center"],
+                  "sla": "15 minutes for critical alerts"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RS.MI",
+            "name": "Mitigation",
+            "subcategories": [
+              {
+                "id": "RS.MI-1",
+                "description": "Incidents are contained",
+                "azureImplementation": {
+                  "automation": "Automated containment through Azure Logic Apps",
+                  "manual": "Manual procedures for complex incidents"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RS.IM",
+            "name": "Improvements",
+            "subcategories": [
+              {
+                "id": "RS.IM-1",
+                "description": "Response plans incorporate lessons learned",
+                "azureImplementation": {
+                  "review": "Monthly incident review meetings",
+                  "updates": "Quarterly playbook updates"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "recover": {
+        "description": "Develop and implement appropriate activities to maintain plans for resilience and to restore any capabilities or services that were impaired due to a cybersecurity incident",
+        "categories": [
+          {
+            "category": "RC.RP",
+            "name": "Recovery Planning",
+            "subcategories": [
+              {
+                "id": "RC.RP-1",
+                "description": "Recovery plan is executed during or after a cybersecurity incident",
+                "azureImplementation": {
+                  "services": ["Azure Site Recovery", "Azure Backup"],
+                  "rto": "4 hours for critical systems",
+                  "rpo": "1 hour for critical data"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RC.IM",
+            "name": "Improvements",
+            "subcategories": [
+              {
+                "id": "RC.IM-1",
+                "description": "Recovery plans incorporate lessons learned",
+                "azureImplementation": {
+                  "testing": "Quarterly disaster recovery testing",
+                  "documentation": "Lessons learned repository"
+                }
+              }
+            ]
+          },
+          {
+            "category": "RC.CO",
+            "name": "Communications",
+            "subcategories": [
+              {
+                "id": "RC.CO-1",
+                "description": "Public relations are managed",
+                "azureImplementation": {
+                  "team": "Communications team with predefined templates",
+                  "channels": "Website, email, social media"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "implementation": {
+      "maturityLevels": {
+        "partial": "Some security measures in place",
+        "riskInformed": "Security measures tailored to risk",
+        "repeatable": "Consistent security practices",
+        "adaptive": "Dynamic security posture"
+      },
+      "assessmentSchedule": "Annual with quarterly reviews",
+      "complianceReporting": {
+        "dashboard": "NIST Framework Compliance Dashboard",
+        "frequency": "Monthly",
+        "stakeholders": [
+          "CISO",
+          "Compliance Team",
+          "Executive Leadership"
+        ]
+      },
+      "metrics": [
+        {
+          "category": "Identify",
+          "kpi": "Asset inventory completeness",
+          "target": "100%",
+          "measurement": "Percentage of assets with complete metadata"
+        },
+        {
+          "category": "Protect", 
+          "kpi": "MFA adoption rate",
+          "target": "100%",
+          "measurement": "Percentage of users with MFA enabled"
+        },
+        {
+          "category": "Detect",
+          "kpi": "Mean time to detection",
+          "target": "< 15 minutes",
+          "measurement": "Average time from event to detection"
+        },
+        {
+          "category": "Respond",
+          "kpi": "Mean time to response",
+          "target": "< 1 hour",
+          "measurement": "Average time from detection to response"
+        },
+        {
+          "category": "Recover",
+          "kpi": "Recovery time objective",
+          "target": "< 4 hours",
+          "measurement": "Time to restore critical services"
+        }
+      ]
+    },
+    "azurePolicyMapping": [
+      {
+        "nistControl": "ID.AM-1",
+        "azurePolicy": "Require resource tagging",
+        "policyId": "/providers/Microsoft.Authorization/policyDefinitions/enforce-resource-tagging"
+      },
+      {
+        "nistControl": "PR.AC-1",
+        "azurePolicy": "Require MFA for privileged users",
+        "policyId": "/providers/Microsoft.Authorization/policyDefinitions/9297c21d-2ed6-4474-b48f-163f75654ce3"
+      },
+      {
+        "nistControl": "PR.DS-1",
+        "azurePolicy": "Require disk encryption",
+        "policyId": "/providers/Microsoft.Authorization/policyDefinitions/require-disk-encryption"
+      },
+      {
+        "nistControl": "PR.DS-2",
+        "azurePolicy": "Require HTTPS only",
+        "policyId": "/providers/Microsoft.Authorization/policyDefinitions/require-ssl-only"
+      },
+      {
+        "nistControl": "DE.CM-1",
+        "azurePolicy": "Enable Azure Defender",
+        "policyId": "/providers/Microsoft.Authorization/policyDefinitions/4da35fc9-c9e7-4960-aec9-797fe7d9051d"
+      }
+    ]
+  }
+}

@@ -1,0 +1,306 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ARM template for automated SSL certificate deployment and management in Azure",
+    "author": "Azure Enterprise Toolkit"
+  },
+  "parameters": {
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure Key Vault to store certificates"
+      }
+    },
+    "certificateName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the certificate in Key Vault"
+      }
+    },
+    "domainName": {
+      "type": "string",
+      "metadata": {
+        "description": "Domain name for the SSL certificate"
+      }
+    },
+    "certificateIssuer": {
+      "type": "string",
+      "defaultValue": "LetsEncrypt",
+      "allowedValues": [
+        "LetsEncrypt",
+        "DigiCert",
+        "GlobalSign"
+      ],
+      "metadata": {
+        "description": "Certificate issuer"
+      }
+    },
+    "appServiceName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "App Service name to bind certificate (optional)"
+      }
+    },
+    "applicationGatewayName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Application Gateway name to bind certificate (optional)"
+      }
+    },
+    "automationAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure Automation Account for certificate renewal"
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Log Analytics workspace for monitoring"
+      }
+    },
+    "notificationEmail": {
+      "type": "string",
+      "metadata": {
+        "description": "Email address for certificate renewal notifications"
+      }
+    },
+    "renewalDaysBefore": {
+      "type": "int",
+      "defaultValue": 30,
+      "metadata": {
+        "description": "Number of days before expiration to renew certificate"
+      }
+    }
+  },
+  "variables": {
+    "keyVaultResourceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+    "automationAccountResourceId": "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]",
+    "runbookName": "RenewSSLCertificate",
+    "actionGroupName": "[concat('ssl-cert-alerts-', parameters('certificateName'))]",
+    "alertRuleName": "[concat('ssl-cert-expiry-', parameters('certificateName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults/certificates",
+      "apiVersion": "2021-10-01",
+      "name": "[concat(parameters('keyVaultName'), '/', parameters('certificateName'))]",
+      "properties": {
+        "certificatePolicy": {
+          "keyProperties": {
+            "exportable": true,
+            "keyType": "RSA",
+            "keySize": 2048,
+            "reuseKey": false
+          },
+          "secretProperties": {
+            "contentType": "application/x-pkcs12"
+          },
+          "x509CertificateProperties": {
+            "subject": "[concat('CN=', parameters('domainName'))]",
+            "subjectAlternativeNames": {
+              "dnsNames": [
+                "[parameters('domainName')]"
+              ]
+            },
+            "keyUsage": [
+              "cRLSign",
+              "dataEncipherment",
+              "digitalSignature",
+              "keyEncipherment",
+              "keyAgreement",
+              "keyCertSign"
+            ],
+            "ekus": [
+              "1.3.6.1.5.5.7.3.1",
+              "1.3.6.1.5.5.7.3.2"
+            ],
+            "validityInMonths": 12
+          },
+          "lifetimeActions": [
+            {
+              "trigger": {
+                "daysBeforeExpiry": "[parameters('renewalDaysBefore')]"
+              },
+              "action": {
+                "actionType": "AutoRenew"
+              }
+            },
+            {
+              "trigger": {
+                "daysBeforeExpiry": "[add(parameters('renewalDaysBefore'), 10)]"
+              },
+              "action": {
+                "actionType": "EmailContacts"
+              }
+            }
+          ],
+          "issuerParameters": {
+            "name": "[parameters('certificateIssuer')]",
+            "certificateType": "OV-SSL"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts/runbooks",
+      "apiVersion": "2020-01-13-preview",
+      "name": "[concat(parameters('automationAccountName'), '/', variables('runbookName'))]",
+      "properties": {
+        "runbookType": "PowerShell",
+        "logProgress": true,
+        "logVerbose": true,
+        "description": "Automated SSL certificate renewal runbook",
+        "publishContentLink": {
+          "uri": "https://raw.githubusercontent.com/Azure-Enterprise-Toolkit/ssl-automation/main/RenewSSLCertificate.ps1",
+          "version": "1.0.0.0"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts/schedules",
+      "apiVersion": "2020-01-13-preview",
+      "name": "[concat(parameters('automationAccountName'), '/ssl-cert-check-', parameters('certificateName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'), '/runbooks/', variables('runbookName'))]"
+      ],
+      "properties": {
+        "description": "Daily check for SSL certificate renewal",
+        "startTime": "[dateTimeAdd(utcNow(), 'PT1H')]",
+        "frequency": "Day",
+        "interval": 1,
+        "timeZone": "UTC"
+      }
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+      "apiVersion": "2020-01-13-preview",
+      "name": "[concat(parameters('automationAccountName'), '/', guid(parameters('certificateName'), 'jobschedule'))]",
+      "dependsOn": [
+        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'), '/runbooks/', variables('runbookName'))]",
+        "[concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'), '/schedules/ssl-cert-check-', parameters('certificateName'))]"
+      ],
+      "properties": {
+        "runbook": {
+          "name": "[variables('runbookName')]"
+        },
+        "schedule": {
+          "name": "[concat('ssl-cert-check-', parameters('certificateName'))]"
+        },
+        "parameters": {
+          "KeyVaultName": "[parameters('keyVaultName')]",
+          "CertificateName": "[parameters('certificateName')]",
+          "DomainName": "[parameters('domainName')]",
+          "RenewalDays": "[string(parameters('renewalDaysBefore'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/actionGroups",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('actionGroupName')]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "SSLCertAlert",
+        "enabled": true,
+        "emailReceivers": [
+          {
+            "name": "SSLNotification",
+            "emailAddress": "[parameters('notificationEmail')]",
+            "useCommonAlertSchema": true
+          }
+        ],
+        "webhookReceivers": [],
+        "smsReceivers": [],
+        "azureAppPushReceivers": [],
+        "itsmReceivers": []
+      }
+    },
+    {
+      "type": "Microsoft.Insights/scheduledQueryRules",
+      "apiVersion": "2023-03-15-preview",
+      "name": "[variables('alertRuleName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+      ],
+      "properties": {
+        "displayName": "[concat('SSL Certificate Expiry Alert - ', parameters('certificateName'))]",
+        "description": "[concat('Alert when SSL certificate ', parameters('certificateName'), ' is approaching expiration')]",
+        "severity": 2,
+        "enabled": true,
+        "evaluationFrequency": "P1D",
+        "windowSize": "P1D",
+        "criteria": {
+          "allOf": [
+            {
+              "query": "[concat('KeyVaultLogs | where KeyVaultName == \"', parameters('keyVaultName'), '\" | where OperationName == \"CertificateNearExpiry\" | where Properties contains \"', parameters('certificateName'), '\"')]",
+              "timeAggregation": "Count",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "failingPeriods": {
+                "numberOfEvaluationPeriods": 1,
+                "minFailingPeriodsToAlert": 1
+              }
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+          ]
+        },
+        "scopes": [
+          "[parameters('logAnalyticsWorkspaceId')]"
+        ]
+      }
+    },
+    {
+      "condition": "[not(empty(parameters('appServiceName')))]",
+      "type": "Microsoft.Web/sites/hostNameBindings",
+      "apiVersion": "2022-03-01",
+      "name": "[concat(parameters('appServiceName'), '/', parameters('domainName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'), '/certificates/', parameters('certificateName'))]"
+      ],
+      "properties": {
+        "sslState": "SniEnabled",
+        "keyVaultId": "[variables('keyVaultResourceId')]",
+        "keyVaultSecretName": "[parameters('certificateName')]"
+      }
+    },
+    {
+      "condition": "[not(empty(parameters('applicationGatewayName')))]",
+      "type": "Microsoft.Network/applicationGateways/sslCertificates",
+      "apiVersion": "2023-02-01",
+      "name": "[concat(parameters('applicationGatewayName'), '/', parameters('certificateName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'), '/certificates/', parameters('certificateName'))]"
+      ],
+      "properties": {
+        "keyVaultSecretId": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net/secrets/', parameters('certificateName'))]"
+      }
+    }
+  ],
+  "outputs": {
+    "certificateThumbprint": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'), '/certificates/', parameters('certificateName'))).thumbprint]"
+    },
+    "certificateSecretId": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'), '/certificates/', parameters('certificateName'))).secretId]"
+    },
+    "runbookId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Automation/automationAccounts/runbooks', parameters('automationAccountName'), variables('runbookName'))]"
+    },
+    "actionGroupId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/actionGroups', variables('actionGroupName'))]"
+    }
+  }
+}

@@ -1,0 +1,214 @@
+// =====================================================
+// Azure Performance Troubleshooting KQL Query Library
+// =====================================================
+// Use these queries in Azure Monitor Log Analytics or Azure Sentinel
+// Time range: Adjust the time range in the Azure portal or modify the "ago()" functions
+
+// =====================================================
+// VIRTUAL MACHINE PERFORMANCE QUERIES
+// =====================================================
+
+// 1. High CPU Utilization (>80%) in last 4 hours
+Perf
+| where TimeGenerated > ago(4h)
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| where InstanceName == "_Total"
+| where CounterValue > 80
+| summarize avg(CounterValue), max(CounterValue), min(CounterValue) by Computer, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 2. Memory Pressure Analysis
+Perf
+| where TimeGenerated > ago(4h)
+| where ObjectName == "Memory" and CounterName == "Available MBytes"
+| extend AvailableMemoryGB = CounterValue / 1024
+| where AvailableMemoryGB < 2  // Less than 2GB available
+| summarize avg(AvailableMemoryGB), min(AvailableMemoryGB) by Computer, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 3. Disk I/O Performance Issues
+Perf
+| where TimeGenerated > ago(4h)
+| where ObjectName == "LogicalDisk" and CounterName == "% Disk Time"
+| where InstanceName != "_Total"
+| where CounterValue > 85  // High disk utilization
+| summarize avg(CounterValue), max(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 4. Network Utilization Spikes
+Perf
+| where TimeGenerated > ago(4h)
+| where ObjectName == "Network Interface" and CounterName == "Bytes Total/sec"
+| where InstanceName !contains "Loopback"
+| summarize avg(CounterValue), max(CounterValue) by Computer, InstanceName, bin(TimeGenerated, 5m)
+| extend NetworkUtilizationMbps = max_CounterValue * 8 / 1000000  // Convert to Mbps
+| where NetworkUtilizationMbps > 100  // High network utilization
+| order by TimeGenerated desc
+
+// =====================================================
+// APPLICATION PERFORMANCE QUERIES
+// =====================================================
+
+// 5. Slow Application Requests (App Service)
+AppServiceHTTPLogs
+| where TimeGenerated > ago(2h)
+| where TimeTaken > 5000  // Requests taking more than 5 seconds
+| summarize count(), avg(TimeTaken), percentile(TimeTaken, 95) by CsHost, CsUriStem, bin(TimeGenerated, 10m)
+| order by avg_TimeTaken desc
+
+// 6. High Error Rate Analysis
+AppServiceHTTPLogs
+| where TimeGenerated > ago(2h)
+| where ScStatus >= 400  // HTTP 4xx and 5xx errors
+| summarize ErrorCount = count() by CsHost, ScStatus, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc, ErrorCount desc
+
+// 7. Application Dependencies Performance
+AppDependencies
+| where TimeGenerated > ago(2h)
+| where Duration > 5000  // Dependencies taking more than 5 seconds
+| summarize count(), avg(Duration), percentile(Duration, 95) by DependencyType, Target, bin(TimeGenerated, 10m)
+| order by avg_Duration desc
+
+// =====================================================
+// DATABASE PERFORMANCE QUERIES
+// =====================================================
+
+// 8. SQL Database Blocking Queries
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL"
+| where Category == "Blocks"
+| where TimeGenerated > ago(2h)
+| project TimeGenerated, Resource, blocked_process_report_s
+| order by TimeGenerated desc
+
+// 9. SQL Database High DTU Utilization
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL"
+| where Category == "Basic"
+| where MetricName == "dtu_consumption_percent"
+| where TimeGenerated > ago(2h)
+| where Maximum > 80  // DTU usage over 80%
+| summarize avg(Maximum), max(Maximum) by Resource, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 10. Long Running SQL Queries
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL"
+| where Category == "QueryStoreRuntimeStatistics"
+| where TimeGenerated > ago(2h)
+| where avg_duration_d > 10000  // Queries running longer than 10 seconds
+| summarize count(), avg(avg_duration_d), max(avg_duration_d) by Resource, query_hash_s, bin(TimeGenerated, 10m)
+| order by max_avg_duration_d desc
+
+// =====================================================
+// STORAGE PERFORMANCE QUERIES
+// =====================================================
+
+// 11. Storage Account High Latency
+AzureMetrics
+| where ResourceProvider == "MICROSOFT.STORAGE"
+| where MetricName == "SuccessE2ELatency"
+| where TimeGenerated > ago(2h)
+| where Average > 1000  // Latency over 1 second
+| summarize avg(Average), max(Average) by Resource, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 12. Storage Throttling Events
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.STORAGE"
+| where Category == "StorageWrite" or Category == "StorageRead"
+| where TimeGenerated > ago(2h)
+| where statusCode_d == 503  // Throttling status code
+| summarize count() by Resource, operationName_s, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// =====================================================
+// KUBERNETES/AKS PERFORMANCE QUERIES
+// =====================================================
+
+// 13. Pod CPU and Memory Usage
+Perf
+| where TimeGenerated > ago(2h)
+| where ObjectName == "K8SContainer"
+| where CounterName == "cpuUsageNanoCores" or CounterName == "memoryWorkingSetBytes"
+| summarize avg(CounterValue) by Computer, InstanceName, CounterName, bin(TimeGenerated, 5m)
+| order by TimeGenerated desc
+
+// 14. Kubernetes Node Resource Pressure
+KubeNodeInventory
+| where TimeGenerated > ago(1h)
+| where Status contains "Pressure"
+| project TimeGenerated, Computer, Status
+| order by TimeGenerated desc
+
+// =====================================================
+// NETWORK PERFORMANCE QUERIES
+// =====================================================
+
+// 15. Network Security Group Blocked Traffic
+AzureNetworkAnalytics_CL
+| where TimeGenerated > ago(2h)
+| where FlowStatus_s == "D"  // Denied traffic
+| summarize count() by SrcIP_s, DestIP_s, DestPort_d, bin(TimeGenerated, 10m)
+| order by count_ desc
+
+// 16. Application Gateway Backend Health
+AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.NETWORK"
+| where Category == "ApplicationGatewayBackendHealth"
+| where TimeGenerated > ago(2h)
+| where backendSettingName_s != ""
+| project TimeGenerated, Resource, backendSettingName_s, server_s, serverStatus_s
+| order by TimeGenerated desc
+
+// =====================================================
+// PERFORMANCE CORRELATION QUERIES
+// =====================================================
+
+// 17. Cross-Service Performance Impact Analysis
+let TimeWindow = 2h;
+let HighCPUVMs = 
+    Perf
+    | where TimeGenerated > ago(TimeWindow)
+    | where ObjectName == "Processor" and CounterName == "% Processor Time"
+    | where CounterValue > 80
+    | distinct Computer;
+AppServiceHTTPLogs
+| where TimeGenerated > ago(TimeWindow)
+| where CsHost in (HighCPUVMs)
+| summarize avg(TimeTaken), count() by CsHost, bin(TimeGenerated, 10m)
+| order by TimeGenerated desc
+
+// 18. Performance Trend Analysis (24-hour comparison)
+Perf
+| where TimeGenerated > ago(25h)
+| where ObjectName == "Processor" and CounterName == "% Processor Time"
+| where InstanceName == "_Total"
+| extend TimeCategory = iff(TimeGenerated > ago(1h), "Current", "Previous")
+| summarize avg(CounterValue) by Computer, TimeCategory
+| pivot(TimeCategory, any(avg_CounterValue))
+| extend PerformanceChange = Current - Previous
+| where abs(PerformanceChange) > 10  // Significant change
+| order by PerformanceChange desc
+
+// =====================================================
+// USAGE INSTRUCTIONS
+// =====================================================
+// 1. Copy and paste queries into Azure Monitor Log Analytics
+// 2. Adjust time ranges as needed using ago() function
+// 3. Modify thresholds based on your environment
+// 4. Save useful queries as functions for reuse
+// 5. Set up alerts based on these queries
+// 6. Create custom dashboards using these queries
+
+// =====================================================
+// RECOMMENDED ALERTS
+// =====================================================
+// Create alerts for:
+// - CPU usage > 80% for 5+ minutes
+// - Memory < 2GB available for 3+ minutes
+// - Disk usage > 85% for 10+ minutes
+// - HTTP error rate > 5% for 2+ minutes
+// - Response time > 5 seconds for 5+ minutes
+// - SQL DTU > 80% for 15+ minutes
