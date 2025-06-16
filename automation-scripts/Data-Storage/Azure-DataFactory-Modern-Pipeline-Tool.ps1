@@ -181,6 +181,7 @@ function Set-DataFactoryGitConfiguration {
             Set-AzDataFactoryV2GitIntegration @gitConfig
             Write-EnhancedLog "Successfully configured Git integration" "Success"
         }
+        }
         
     } catch {
         Write-EnhancedLog "Failed to configure Git integration: $($_.Exception.Message)" "Error"
