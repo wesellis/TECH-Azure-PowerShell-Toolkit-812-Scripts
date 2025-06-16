@@ -132,7 +132,8 @@ function New-DataFactoryInstance {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        Write-EnhancedLog "Creating Azure Data Factory instance: $DataFactoryName" "Info"
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Create Azure Data Factory instance")) {
+            Write-EnhancedLog "Creating Azure Data Factory instance: $DataFactoryName" "Info"
         
         # Check if Data Factory already exists
         $existingDataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -ErrorAction SilentlyContinue
@@ -163,7 +164,8 @@ function Set-DataFactoryGitConfiguration {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        Write-EnhancedLog "Configuring Git integration for Data Factory..." "Info"
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Configure Git integration for Data Factory")) {
+            Write-EnhancedLog "Configuring Git integration for Data Factory..." "Info"
         
         if ($GitConfiguration.ContainsKey("RepoUrl") -and $GitConfiguration.ContainsKey("BranchName")) {
             $gitConfig = @{
@@ -180,6 +182,8 @@ function Set-DataFactoryGitConfiguration {
         }
         
     } catch {
+        
+    } catch {
         Write-EnhancedLog "Failed to configure Git integration: $($_.Exception.Message)" "Error"
     }
 }
@@ -189,7 +193,8 @@ function New-ModernDataPipeline {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        Write-EnhancedLog "Creating modern data pipeline templates..." "Info"
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Create modern data pipeline templates")) {
+            Write-EnhancedLog "Creating modern data pipeline templates..." "Info"
         
         # Create sample linked services
         New-SampleLinkedService
@@ -201,6 +206,9 @@ function New-ModernDataPipeline {
         New-SamplePipeline
         
         Write-EnhancedLog "Successfully created modern data pipeline templates" "Success"
+        }
+        
+    } catch {
         
     } catch {
         Write-EnhancedLog "Failed to create pipeline templates: $($_.Exception.Message)" "Error"
