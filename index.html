@@ -4,9 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Enterprise Toolkit - Professional Azure Automation</title>
-    <meta name="description" content="Enterprise-grade Azure automation toolkit with 124+ PowerShell scripts, cost management dashboards, DevOps templates, and governance policies.">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="description" content="Comprehensive Azure automation toolkit with 124+ PowerShell scripts, enterprise-ready solutions, and modern cloud infrastructure management tools.">
+    <meta name="keywords" content="Azure, PowerShell, Automation, Enterprise, Cloud, Infrastructure, DevOps, Scripts">
+    <meta name="author" content="Wesley Ellis">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wesellis.github.io/Azure-Enterprise-Toolkit/">
+    <meta property="og:title" content="Azure Enterprise Toolkit">
+    <meta property="og:description" content="Professional Azure automation with 124+ PowerShell scripts for enterprise cloud management">
+    <meta property="og:image" content="https://wesellis.github.io/Azure-Enterprise-Toolkit/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://wesellis.github.io/Azure-Enterprise-Toolkit/">
+    <meta property="twitter:title" content="Azure Enterprise Toolkit">
+    <meta property="twitter:description" content="Professional Azure automation with 124+ PowerShell scripts for enterprise cloud management">
+    <meta property="twitter:image" content="https://wesellis.github.io/Azure-Enterprise-Toolkit/assets/og-image.png">
+
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-color: #0078d4;
+            --primary-dark: #106ebe;
+            --secondary-color: #1ba1e2;
+            --accent-color: #00bcf2;
+            --success-color: #107c10;
+            --warning-color: #ff8c00;
+            --error-color: #d13438;
+            --text-primary: #323130;
+            --text-secondary: #605e5c;
+            --text-light: #8a8886;
+            --background-light: #faf9f8;
+            --background-white: #ffffff;
+            --border-light: #edebe9;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-heavy: 0 8px 32px rgba(0,0,0,0.16);
+            --gradient-primary: linear-gradient(135deg, #0078d4 0%, #1ba1e2 100%);
+            --gradient-secondary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-hero: linear-gradient(135deg, #0078d4 0%, #1ba1e2 50%, #00bcf2 100%);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,11 +56,11 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            color: var(--text-primary);
+            background-color: var(--background-white);
+            overflow-x: hidden;
         }
 
         .container {
@@ -27,243 +69,472 @@
             padding: 0 20px;
         }
 
-        header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 2rem 0;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
 
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: var(--shadow-light);
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-cta {
+            background: var(--gradient-primary);
+            color: white !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            color: white !important;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* Hero Section */
         .hero {
+            background: var(--gradient-hero);
             color: white;
-            margin-bottom: 3rem;
+            padding: 120px 0 80px;
+            position: relative;
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 700;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .hero p {
-            font-size: 1.3rem;
+        .hero-subtitle {
+            font-size: 1.25rem;
             margin-bottom: 2rem;
             opacity: 0.9;
+            line-height: 1.6;
         }
 
-        .badges {
+        .hero-stats {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 3rem;
+            margin: 3rem 0;
             flex-wrap: wrap;
-            margin-bottom: 2rem;
         }
 
-        .badge {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
+        .stat-item {
+            text-align: center;
         }
 
-        .badge:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .cta-buttons {
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .hero-actions {
             display: flex;
-            justify-content: center;
             gap: 1rem;
+            justify-content: center;
             flex-wrap: wrap;
+            margin-top: 2rem;
         }
 
         .btn {
-            padding: 12px 30px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .btn-primary {
-            background: #0078d4;
-            color: white;
+            background: white;
+            color: var(--primary-color);
+            border-color: white;
         }
 
         .btn-primary:hover {
-            background: #106ebe;
+            background: var(--background-light);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
+            background: transparent;
             color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-color: rgba(255,255,255,0.3);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255,255,255,0.1);
+            border-color: white;
             transform: translateY(-2px);
         }
 
-        main {
-            background: white;
-            margin: 2rem 0;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
+        /* Features Section */
         .features {
-            padding: 3rem 2rem;
+            padding: 80px 0;
+            background: var(--background-light);
         }
 
-        .features h2 {
+        .section-header {
             text-align: center;
-            margin-bottom: 3rem;
-            font-size: 2.5rem;
-            color: #333;
+            margin-bottom: 4rem;
         }
 
-        .feature-grid {
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
-            margin-bottom: 3rem;
+            margin-top: 3rem;
         }
 
         .feature-card {
-            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
             transition: all 0.3s ease;
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--border-light);
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-heavy);
         }
 
         .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #0078d4;
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
         }
 
-        .feature-card h3 {
+        .feature-icon i {
             font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: #333;
+            color: white;
         }
 
-        .feature-card p {
-            color: #666;
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
-        .stats {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 3rem 2rem;
-            text-align: center;
-        }
-
-        .stats h2 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stat-number {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .quick-links {
-            padding: 3rem 2rem;
-            background: #f8f9fa;
-        }
-
-        .quick-links h2 {
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-            color: #333;
-        }
-
-        .links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .link-card {
+        /* Categories Section */
+        .categories {
+            padding: 80px 0;
             background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #333;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .category-card {
+            background: white;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 2rem;
             transition: all 0.3s ease;
-            border: 1px solid #dee2e6;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .link-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            color: #0078d4;
+        .category-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+            text-decoration: none;
+            color: inherit;
         }
 
-        .link-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .category-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .category-count {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .category-description {
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .category-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .category-link {
+            color: var(--primary-color);
+            font-weight: 500;
+            text-decoration: none;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        footer {
-            background: #333;
+        .category-link:hover {
+            text-decoration: none;
+            color: var(--primary-dark);
+        }
+
+        /* Quick Start Section */
+        .quick-start {
+            padding: 80px 0;
+            background: var(--background-light);
+        }
+
+        .quick-start-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .quick-start-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
             color: white;
-            text-align: center;
-            padding: 2rem 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .code-preview {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 2rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #6a9955;
+        }
+
+        .code-preview .keyword {
+            color: #569cd6;
+        }
+
+        .code-preview .string {
+            color: #ce9178;
+        }
+
+        /* Footer */
+        .footer {
+            background: #2d2d30;
+            color: white;
+            padding: 60px 0 30px;
         }
 
         .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-brand h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .footer-brand p {
+            color: #b3b3b3;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
         }
 
         .social-links {
@@ -272,225 +543,597 @@
         }
 
         .social-links a {
+            width: 40px;
+            height: 40px;
+            background: #3d3d40;
             color: white;
-            font-size: 1.5rem;
-            transition: color 0.3s ease;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
         .social-links a:hover {
-            color: #0078d4;
+            background: var(--primary-color);
+            transform: translateY(-2px);
         }
 
+        .footer-section h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: #b3b3b3;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #404040;
+            padding-top: 2rem;
+            text-align: center;
+            color: #b3b3b3;
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
             .hero h1 {
                 font-size: 2.5rem;
             }
-            
-            .hero p {
-                font-size: 1.1rem;
+
+            .hero-stats {
+                gap: 2rem;
             }
-            
-            .cta-buttons {
+
+            .hero-actions {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-start-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
             .footer-content {
-                flex-direction: column;
-                text-align: center;
+                grid-template-columns: 1fr;
+                gap: 2rem;
             }
         }
 
-        .highlight {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            color: #333;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-weight: 600;
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Scroll animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <header>
+    <!-- Navigation -->
+    <nav class="navbar">
         <div class="container">
-            <div class="hero">
-                <h1><i class="fas fa-cloud"></i> Azure Enterprise Toolkit</h1>
-                <p>Enterprise-grade Azure automation with <span class="highlight">124+ PowerShell scripts</span>, cost management, DevOps templates, and governance policies</p>
+            <div class="nav-content">
+                <a href="#" class="logo">
+                    <i class="fas fa-cloud"></i>
+                    Azure Enterprise Toolkit
+                </a>
                 
-                <div class="badges">
-                    <span class="badge"><i class="fab fa-microsoft"></i> Azure Compatible</span>
-                    <span class="badge"><i class="fas fa-code"></i> PowerShell 7.0+</span>
-                    <span class="badge"><i class="fas fa-shield-alt"></i> Enterprise Ready</span>
-                    <span class="badge"><i class="fas fa-balance-scale"></i> MIT License</span>
-                </div>
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#categories">Scripts</a></li>
+                    <li><a href="#quick-start">Quick Start</a></li>
+                    <li><a href="./docs/">Documentation</a></li>
+                    <li><a href="https://github.com/wesellis/Azure-Enterprise-Toolkit" target="_blank">GitHub</a></li>
+                    <li><a href="./automation-scripts/" class="nav-cta">Browse Scripts</a></li>
+                </ul>
+                
+                <button class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-                <div class="cta-buttons">
-                    <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit" class="btn btn-primary">
-                        <i class="fab fa-github"></i> View on GitHub
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content fade-in-up">
+                <h1>Azure Enterprise Toolkit</h1>
+                <p class="hero-subtitle">
+                    Professional-grade PowerShell automation for Azure cloud infrastructure. 
+                    Streamline your enterprise operations with battle-tested scripts and modern DevOps practices.
+                </p>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">124+</span>
+                        <span class="stat-label">PowerShell Scripts</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">15+</span>
+                        <span class="stat-label">Azure Services</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">8</span>
+                        <span class="stat-label">Categories</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Enterprise Ready</span>
+                    </div>
+                </div>
+                
+                <div class="hero-actions">
+                    <a href="./automation-scripts/" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Browse Scripts
                     </a>
-                    <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/archive/refs/heads/main.zip" class="btn btn-secondary">
-                        <i class="fas fa-download"></i> Download ZIP
+                    <a href="#quick-start" class="btn btn-secondary">
+                        <i class="fas fa-play"></i>
+                        Quick Start
                     </a>
                 </div>
             </div>
         </div>
-    </header>
+    </section>
 
-    <main>
+    <!-- Features Section -->
+    <section id="features" class="features">
         <div class="container">
-            <section class="features">
-                <h2>Enterprise-Grade Features</h2>
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <h3>124+ Automation Scripts</h3>
-                        <p>Production-ready PowerShell scripts covering compute, networking, storage, security, and monitoring across all Azure services.</p>
+            <div class="section-header scroll-reveal">
+                <h2 class="section-title">Enterprise-Grade Azure Automation</h2>
+                <p class="section-subtitle">
+                    Comprehensive PowerShell scripts designed for large-scale Azure environments with enterprise security, compliance, and operational excellence.
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Cost Management Suite</h3>
-                        <p>Interactive dashboards, automated reporting, budget monitoring, and AI-powered cost optimization recommendations.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <h3>DevOps Templates</h3>
-                        <p>Enterprise CI/CD pipeline templates for .NET, Node.js, Python, Docker, Kubernetes, and Infrastructure as Code.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Governance Toolkit</h3>
-                        <p>Policy management, compliance monitoring, RBAC automation, and security baseline implementations.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-bookmark"></i>
-                        </div>
-                        <h3>Essential Resources</h3>
-                        <p>Curated collection of Azure administrative resources with interactive web interface and browser import.</p>
-                    </div>
-                    
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-tools"></i>
-                        </div>
-                        <h3>Utility Tools</h3>
-                        <p>Administrative helpers, management scripts, and cross-platform tools for efficient Azure operations.</p>
-                    </div>
+                    <h3 class="feature-title">Security First</h3>
+                    <p class="feature-description">
+                        Built with enterprise security standards, including RBAC integration, Key Vault support, and compliance with Azure security best practices.
+                    </p>
                 </div>
-            </section>
-        </div>
-
-        <section class="stats">
-            <div class="container">
-                <h2>Project Statistics</h2>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-number">124+</div>
-                        <div class="stat-label">PowerShell Scripts</div>
+                
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-cogs"></i>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">7</div>
-                        <div class="stat-label">Component Categories</div>
+                    <h3 class="feature-title">Production Ready</h3>
+                    <p class="feature-description">
+                        Battle-tested scripts with comprehensive error handling, logging, and validation suitable for production enterprise environments.
+                    </p>
+                </div>
+                
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-layer-group"></i>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">5</div>
-                        <div class="stat-label">Consolidated Repositories</div>
+                    <h3 class="feature-title">Modular Design</h3>
+                    <p class="feature-description">
+                        Organized by service categories with reusable modules and functions that can be easily integrated into existing automation workflows.
+                    </p>
+                </div>
+                
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">8,200+</div>
-                        <div class="stat-label">Devices Managed</div>
+                    <h3 class="feature-title">Comprehensive Monitoring</h3>
+                    <p class="feature-description">
+                        Advanced monitoring and alerting scripts with Azure Monitor integration, custom dashboards, and automated reporting capabilities.
+                    </p>
+                </div>
+                
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-code-branch"></i>
                     </div>
+                    <h3 class="feature-title">CI/CD Ready</h3>
+                    <p class="feature-description">
+                        Integration with Azure DevOps, GitHub Actions, and modern CI/CD pipelines with automated testing and deployment workflows.
+                    </p>
+                </div>
+                
+                <div class="feature-card scroll-reveal">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="feature-title">Cross-Platform</h3>
+                    <p class="feature-description">
+                        PowerShell 7+ compatibility across Windows, macOS, and Linux with cloud shell support for maximum flexibility.
+                    </p>
                 </div>
             </div>
-        </section>
-
-        <div class="container">
-            <section class="quick-links">
-                <h2>Quick Access</h2>
-                <div class="links-grid">
-                    <a href="automation-scripts/" class="link-card">
-                        <h3><i class="fas fa-cogs"></i> Automation Scripts</h3>
-                        <p>124+ PowerShell scripts organized by Azure service category</p>
-                    </a>
-                    
-                    <a href="cost-management/" class="link-card">
-                        <h3><i class="fas fa-dollar-sign"></i> Cost Management</h3>
-                        <p>Dashboards, analytics, and cost optimization tools</p>
-                    </a>
-                    
-                    <a href="devops-templates/" class="link-card">
-                        <h3><i class="fas fa-code-branch"></i> DevOps Templates</h3>
-                        <p>CI/CD pipeline templates for multiple technologies</p>
-                    </a>
-                    
-                    <a href="governance/" class="link-card">
-                        <h3><i class="fas fa-gavel"></i> Governance</h3>
-                        <p>Policies, compliance, and security automation</p>
-                    </a>
-                    
-                    <a href="bookmarks/" class="link-card">
-                        <h3><i class="fas fa-star"></i> Bookmarks</h3>
-                        <p>Essential Azure resources and quick-access tools</p>
-                    </a>
-                    
-                    <a href="docs/" class="link-card">
-                        <h3><i class="fas fa-book"></i> Documentation</h3>
-                        <p>Comprehensive guides and best practices</p>
-                    </a>
-                </div>
-            </section>
         </div>
-    </main>
+    </section>
 
-    <footer>
+    <!-- Categories Section -->
+    <section id="categories" class="categories">
+        <div class="container">
+            <div class="section-header scroll-reveal">
+                <h2 class="section-title">Script Categories</h2>
+                <p class="section-subtitle">
+                    Organized automation scripts covering all major Azure services and enterprise scenarios.
+                </p>
+            </div>
+            
+            <div class="categories-grid">
+                <a href="./automation-scripts/Compute-Management/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">Compute Management</div>
+                            <div class="category-count">18 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        Virtual machines, scale sets, container instances, and compute resource automation for enterprise workloads.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+                
+                <a href="./automation-scripts/Network-Security/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">Network & Security</div>
+                            <div class="category-count">22 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        Virtual networks, security groups, firewalls, load balancers, and comprehensive network security automation.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+                
+                <a href="./automation-scripts/Data-Storage/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">Data & Storage</div>
+                            <div class="category-count">16 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        Storage accounts, databases, backup solutions, and modern data pipeline automation with enterprise features.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+                
+                <a href="./automation-scripts/Monitoring-Operations/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">Monitoring & Operations</div>
+                            <div class="category-count">14 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        Azure Monitor, Log Analytics, alerts, diagnostics, and comprehensive operational monitoring automation.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+                
+                <a href="./automation-scripts/Identity-Governance/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">Identity & Governance</div>
+                            <div class="category-count">12 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        Azure AD, RBAC, conditional access, identity protection, and enterprise governance automation.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+                
+                <a href="./automation-scripts/App-Development/" class="category-card scroll-reveal">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div>
+                            <div class="category-title">App Development</div>
+                            <div class="category-count">15 Scripts</div>
+                        </div>
+                    </div>
+                    <p class="category-description">
+                        App Services, Function Apps, API Management, and modern application deployment automation.
+                    </p>
+                    <div class="category-footer">
+                        <span class="category-link">
+                            Explore Scripts <i class="fas fa-arrow-right"></i>
+                        </span>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">
+                            <i class="fas fa-clock"></i> Updated Daily
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quick-start" class="quick-start">
+        <div class="container">
+            <div class="section-header scroll-reveal">
+                <h2 class="section-title">Quick Start Guide</h2>
+                <p class="section-subtitle">
+                    Get started with Azure automation in under 5 minutes with our step-by-step guide.
+                </p>
+            </div>
+            
+            <div class="quick-start-content">
+                <div class="quick-start-steps scroll-reveal">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Install Prerequisites</h4>
+                            <p>Install PowerShell 7.0+ and the Azure PowerShell module on your system.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Authenticate to Azure</h4>
+                            <p>Connect to your Azure subscription using Connect-AzAccount or service principal authentication.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Clone Repository</h4>
+                            <p>Download the toolkit from GitHub and explore the organized script categories.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Run Your First Script</h4>
+                            <p>Execute scripts with proper parameters and customize for your environment needs.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-preview scroll-reveal">
+<span class="comment"># Install Azure PowerShell</span>
+<span class="keyword">Install-Module</span> -Name Az -Repository PSGallery -Force
+
+<span class="comment"># Connect to Azure</span>
+<span class="keyword">Connect-AzAccount</span>
+
+<span class="comment"># Clone the repository</span>
+<span class="keyword">git clone</span> <span class="string">https://github.com/wesellis/Azure-Enterprise-Toolkit.git</span>
+
+<span class="comment"># Navigate to scripts</span>
+<span class="keyword">cd</span> Azure-Enterprise-Toolkit/automation-scripts
+
+<span class="comment"># Run a sample script</span>
+<span class="keyword">.\Compute-Management\Azure-VM-Management-Tool.ps1</span> `
+    -ResourceGroupName <span class="string">"my-rg"</span> `
+    -Action <span class="string">"List"</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div>
-                    <p>&copy; 2025 Wesley Ellis - Azure Enterprise Toolkit</p>
-                    <p>Professional Azure automation for enterprise environments</p>
+                <div class="footer-brand">
+                    <h3>Azure Enterprise Toolkit</h3>
+                    <p>
+                        Professional Azure automation scripts for enterprise cloud infrastructure. 
+                        Built by cloud engineers, for cloud engineers.
+                    </p>
+                    <div class="social-links">
+                        <a href="https://github.com/wesellis" target="_blank" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://linkedin.com/in/wesleyellis" target="_blank" title="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="mailto:wes@wesellis.com" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://wesellis.com" target="_blank" title="Website">
+                            <i class="fas fa-globe"></i>
+                        </a>
+                    </div>
                 </div>
                 
-                <div class="social-links">
-                    <a href="https://github.com/wesellis" title="GitHub"><i class="fab fa-github"></i></a>
-                    <a href="https://linkedin.com/in/wesleyellis" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    <a href="mailto:wes@wesellis.com" title="Email"><i class="fas fa-envelope"></i></a>
-                    <a href="https://wesellis.com" title="Website"><i class="fas fa-globe"></i></a>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="./docs/">Documentation</a></li>
+                        <li><a href="./automation-scripts/">Browse Scripts</a></li>
+                        <li><a href="./docs/getting-started/">Getting Started</a></li>
+                        <li><a href="./docs/examples/">Examples</a></li>
+                    </ul>
                 </div>
+                
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/issues" target="_blank">Report Issues</a></li>
+                        <li><a href="https://github.com/wesellis/Azure-Enterprise-Toolkit/discussions" target="_blank">Discussions</a></li>
+                        <li><a href="./CONTRIBUTING.md">Contributing</a></li>
+                        <li><a href="./CHANGELOG.md">Changelog</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="./LICENSE">License</a></li>
+                        <li><a href="./docs/security/">Security Policy</a></li>
+                        <li><a href="./docs/privacy/">Privacy</a></li>
+                        <li><a href="./docs/support/">Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Wesley Ellis. Licensed under MIT License. Built with ❤️ for the Azure community.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Add smooth scrolling for anchor links
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
 
-        // Add loading animation to external links
-        document.querySelectorAll('a[href^="http"]').forEach(link => {
-            link.addEventListener('click', function() {
-                this.style.opacity = '0.7';
-                setTimeout(() => {
-                    this.style.opacity = '1';
-                }, 1000);
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
             });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Mobile menu toggle (for future implementation)
+        document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
+            // Mobile menu implementation
+            console.log('Mobile menu toggle clicked');
         });
     </script>
 </body>

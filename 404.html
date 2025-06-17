@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Azure Enterprise Toolkit</title>
+    <meta name="description" content="The page you're looking for could not be found. Return to Azure Enterprise Toolkit documentation.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0078d4;
+            --primary-dark: #106ebe;
+            --text-primary: #323130;
+            --text-secondary: #605e5c;
+            --text-light: #8a8886;
+            --background-light: #faf9f8;
+            --background-white: #ffffff;
+            --border-light: #edebe9;
+            --shadow-light: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 16px rgba(0,0,0,0.12);
+            --gradient-primary: linear-gradient(135deg, #0078d4 0%, #1ba1e2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .error-container {
+            background: var(--background-white);
+            border-radius: 20px;
+            box-shadow: var(--shadow-medium);
+            padding: 3rem;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--gradient-primary);
+        }
+
+        .error-icon {
+            font-size: 5rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .error-code {
+            font-size: 6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .search-box {
+            background: var(--background-light);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text-primary);
+            background: transparent;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .search-button {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+        .popular-links {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .popular-links h3 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .link-card {
+            background: var(--background-light);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .link-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+            border-color: var(--primary-color);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .link-icon {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .link-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .link-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .error-details {
+            background: var(--background-light);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: left;
+        }
+
+        .error-details h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-details ul {
+            margin-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .error-details li {
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container fade-in">
+        <div class="error-icon">
+            <i class="fas fa-cloud-exclamation"></i>
+        </div>
+        
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+            Oops! The page you're looking for seems to have wandered off into the Azure cloud. 
+            Don't worry though - let's help you find what you need.
+        </p>
+
+        <div class="search-box">
+            <i class="fas fa-search" style="color: var(--text-light);"></i>
+            <input type="text" class="search-input" placeholder="Search for scripts, documentation, or examples..." id="searchInput">
+            <button class="search-button" onclick="performSearch()">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+
+        <div class="action-buttons">
+            <a href="./" class="btn btn-primary">
+                <i class="fas fa-home"></i>
+                Back to Home
+            </a>
+            <a href="./automation-scripts/" class="btn btn-secondary">
+                <i class="fas fa-code"></i>
+                Browse Scripts
+            </a>
+        </div>
+
+        <div class="popular-links">
+            <h3>Popular Destinations</h3>
+            <div class="links-grid">
+                <a href="./docs/" class="link-card">
+                    <div class="link-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="link-title">Documentation</div>
+                    <div class="link-description">Complete guides and API reference</div>
+                </a>
+                
+                <a href="./docs/getting-started/" class="link-card">
+                    <div class="link-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="link-title">Getting Started</div>
+                    <div class="link-description">Quick setup and first script</div>
+                </a>
+                
+                <a href="./automation-scripts/Compute-Management/" class="link-card">
+                    <div class="link-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="link-title">Compute Scripts</div>
+                    <div class="link-description">VM and container automation</div>
+                </a>
+                
+                <a href="./automation-scripts/Network-Security/" class="link-card">
+                    <div class="link-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="link-title">Network Scripts</div>
+                    <div class="link-description">Networking and security automation</div>
+                </a>
+                
+                <a href="./docs/examples/" class="link-card">
+                    <div class="link-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="link-title">Examples</div>
+                    <div class="link-description">Real-world automation scenarios</div>
+                </a>
+                
+                <a href="https://github.com/wesellis/Azure-Enterprise-Toolkit" target="_blank" class="link-card">
+                    <div class="link-icon">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="link-title">GitHub Repository</div>
+                    <div class="link-description">Source code and contributions</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="error-details">
+            <h4><i class="fas fa-info-circle"></i> What might have happened?</h4>
+            <ul>
+                <li>The page URL might have been mistyped</li>
+                <li>The page may have been moved or renamed</li>
+                <li>You might have followed an outdated link</li>
+                <li>The page might be temporarily unavailable</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            if (searchTerm) {
+                // For now, redirect to GitHub search
+                // In a real implementation, you might have a custom search page
+                const searchUrl = `https://github.com/wesellis/Azure-Enterprise-Toolkit/search?q=${encodeURIComponent(searchTerm)}`;
+                window.open(searchUrl, '_blank');
+            }
+        }
+
+        // Allow search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Auto-focus search input
+        document.getElementById('searchInput').focus();
+
+        // Add some interactive feedback
+        document.querySelectorAll('.link-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+        });
+
+        // Track 404 errors (you could send this to analytics)
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'page_view', {
+                page_title: '404 - Page Not Found',
+                page_location: window.location.href,
+                custom_parameter: '404_error'
+            });
+        }
+    </script>
+</body>
+</html>
