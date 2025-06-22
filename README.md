@@ -692,3 +692,36 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 **Latest Update**: Major expansion with cutting-edge Azure services including Azure Arc server management, Digital Twins for IoT, Spring Apps for Java applications, Data Factory modern pipelines, AI-powered cost optimization, GitHub Actions self-hosted runners, enhanced Bicep templates for Container Apps and OpenAI, plus comprehensive testing framework for next-generation enterprise automation. **June 2025**: Added 4 unique enterprise scripts: Zero Trust Network Analyzer, FinOps Automation Engine, Industrial IoT Orchestrator, and Chaos Engineering Platform. Achieved 100% PSScriptAnalyzer compliance across all 174+ scripts with enhanced error handling, improved ShouldProcess support, optimized variable usage, and automated CI/CD quality gates ensuring enterprise-grade code standards.
 
 ---
+
+
+## 💰 Support This Project
+
+### PowerShell Gallery
+All modules are free to use from the PowerShell Gallery:
+```powershell
+Install-Module -Name Az.Accounts.Enterprise
+Install-Module -Name Az.Resources.Enterprise
+Install-Module -Name Az.Storage.Enterprise
+Install-Module -Name Az.KeyVault.Enterprise
+Install-Module -Name Az.Monitoring.Enterprise
+Install-Module -Name Az.Security.Enterprise
+```
+
+### Ways to Support
+- ⭐ Star this repository
+- 📦 Download modules from [PowerShell Gallery](https://www.powershellgallery.com/profiles/WesEllis)
+- 💬 Share with your team and community
+- 🐛 Report bugs and request features
+- 💖 [Sponsor on GitHub](https://github.com/sponsors/wesellis)
+- ☕ [Buy me a coffee](https://buymeacoffee.com/wesellis)
+
+### Enterprise Support
+For organizations requiring dedicated support, custom modules, or training:
+- 📧 Contact: enterprise@azuretoolkit.com
+- 💼 Custom module development
+- 🎓 Team training sessions
+- 🔧 Implementation assistance
+- 📊 Architecture reviews
+
+### Why Support?
+Your support helps maintain and improve these enterprise-grade tools that save organizations thousands of hours in Azure management and automation.
