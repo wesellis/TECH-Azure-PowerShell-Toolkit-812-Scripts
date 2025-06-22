@@ -78,6 +78,11 @@ We're building the future of enterprise cloud automation! See our comprehensive 
 - 🏭 **Industrial IoT Orchestrator** - Complete Industrial IoT platform for Digital Twins and predictive maintenance
 - ⚡ **Chaos Engineering Platform** - Enterprise resilience testing with automated safety controls
 
+### **📦 New Enterprise PowerShell Modules - December 2025**
+- 🔐 **Az.Accounts.Enterprise v2.0** - Multi-tenant authentication, service principal automation, managed identity integration
+- 🏷️ **Az.Resources.Enterprise v2.0** - Advanced tagging, compliance enforcement, bulk operations, dependency mapping
+- 💾 **Az.Storage.Enterprise v2.0** - Lifecycle automation, security hardening, cost optimization, backup/DR configuration
+
 ### **📊 Build Status**
 - 🟢 **PowerShell CI**: Passing (All PSScriptAnalyzer rules)
 - 🟢 **Code Quality**: Excellent (Zero warnings or errors)
@@ -98,6 +103,10 @@ Azure-Enterprise-Toolkit/
 │   ├── Identity-Governance/   # RBAC, Policy, Compliance (15 scripts)
 │   ├── Monitoring-Operations/ # Monitoring, Alerts, Analytics (22 scripts)
 │   ├── App-Development/       # Apps, Functions, AI, Communications, Spring Apps (19 scripts)
+│   ├── modules/              # Enterprise PowerShell modules (3 modules)
+│   │   ├── accounts/         # Az.Accounts.Enterprise v2.0
+│   │   ├── resources/        # Az.Resources.Enterprise v2.0
+│   │   └── storage/          # Az.Storage.Enterprise v2.0
 │   ├── Integration/           # M365, Graph API, Cross-platform (8 scripts)  
 │   ├── General-Utilities/     # Enterprise tools and helpers (12 scripts)
 │   ├── Hybrid-MultiCloud/     # Azure Arc, cross-cloud management (5 scripts)
