@@ -20,7 +20,7 @@
 
 This comprehensive toolkit has been significantly expanded and modernized for 2025, consolidating multiple specialized Azure repositories into one enterprise-grade solution with cutting-edge capabilities:
 
-- 🔥 **170+ Production-Ready Scripts** - Complete Azure infrastructure automation with cutting-edge services
+- 🔥 **174+ Production-Ready Scripts** - Complete Azure infrastructure automation with cutting-edge services
 - 🤖 **AI & Modern Services** - OpenAI, Container Apps, Digital Twins, Spring Apps, and latest Azure capabilities  
 - 🌐 **Hybrid & Multi-Cloud** - Azure Arc, cross-cloud integration, and hybrid management
 - 🏭 **IoT & Analytics** - Digital Twins, Data Factory, and modern analytics platforms
@@ -67,12 +67,16 @@ We're building the future of enterprise cloud automation! See our comprehensive 
 - ✅ **GitHub Actions CI/CD** - Automated quality checks with every commit
 - ✅ **Automated Testing** - Continuous integration pipeline ensures reliability
 
-### **🚀 Latest Script Enhancements**
+### **🚀 Latest Script Enhancements - June 2025**
 - 🔄 **Spring Apps Management** - Enhanced enterprise Java application platform automation
 - 📦 **Container Apps Provisioning** - Improved serverless container deployment with monitoring
 - 🤖 **OpenAI Service Manager** - Advanced AI service management with security controls
 - 📡 **Communication Services** - Modern communication platform automation
 - 🌐 **Virtual WAN Management** - Enterprise SD-WAN and hub networking automation
+- 🛡️ **Zero Trust Network Analyzer** - Comprehensive Zero Trust compliance assessment and remediation
+- 💰 **FinOps Automation Engine** - AI-powered cost optimization with predictive analytics
+- 🏭 **Industrial IoT Orchestrator** - Complete Industrial IoT platform for Digital Twins and predictive maintenance
+- ⚡ **Chaos Engineering Platform** - Enterprise resilience testing with automated safety controls
 
 ### **📊 Build Status**
 - 🟢 **PowerShell CI**: Passing (All PSScriptAnalyzer rules)
@@ -87,7 +91,7 @@ We're building the future of enterprise cloud automation! See our comprehensive 
 
 ```
 Azure-Enterprise-Toolkit/
-├── 🤖 automation-scripts/     # 170+ PowerShell automation scripts  
+├── 🤖 automation-scripts/     # 174+ PowerShell automation scripts  
 │   ├── Compute-Management/    # VM, AKS, Container Apps (32 scripts)
 │   ├── Network-Security/      # VNet, NSG, Key Vault, Virtual WAN (25 scripts)
 │   ├── Data-Storage/          # SQL, Storage, Cosmos, Synapse, Purview, Data Factory (21 scripts)
@@ -97,7 +101,8 @@ Azure-Enterprise-Toolkit/
 │   ├── Integration/           # M365, Graph API, Cross-platform (8 scripts)  
 │   ├── General-Utilities/     # Enterprise tools and helpers (12 scripts)
 │   ├── Hybrid-MultiCloud/     # Azure Arc, cross-cloud management (5 scripts)
-│   ├── IoT-Analytics/         # Digital Twins, IoT Hub, analytics (8 scripts)
+│   ├── IoT-Analytics/         # Digital Twins, Industrial IoT, analytics (9 scripts)
+│   ├── Modern-Services/        # Chaos Engineering, advanced cloud services (8 scripts)
 │   └── modules/               # Shared PowerShell modules
 ├── 🏗️ iac-templates/          # Modern Infrastructure as Code
 │   ├── bicep/                 # Enhanced Azure Bicep templates (Container Apps, OpenAI, Enterprise)
@@ -575,7 +580,7 @@ We welcome contributions from the global Azure community! This enhanced toolkit 
 
 ## 📊 **Enhanced Project Statistics - 2025**
 
-- **170+** Production-ready PowerShell scripts (significant expansion)
+- **174+** Production-ready PowerShell scripts (significant expansion)
 - **100%** PSScriptAnalyzer compliance (all scripts pass quality analysis)
 - **10** Major component categories with enhanced capabilities
 - **4** Infrastructure as Code platforms with enhanced Bicep templates
@@ -675,6 +680,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Azure Enterprise Toolkit 2025** - *Transforming Azure administration from complex to simple, from manual to intelligent*
 
-**Latest Update**: Major expansion with cutting-edge Azure services including Azure Arc server management, Digital Twins for IoT, Spring Apps for Java applications, Data Factory modern pipelines, AI-powered cost optimization, GitHub Actions self-hosted runners, enhanced Bicep templates for Container Apps and OpenAI, plus comprehensive testing framework for next-generation enterprise automation. **June 2025**: Achieved 100% PSScriptAnalyzer compliance across all 170+ scripts with enhanced error handling, improved ShouldProcess support, optimized variable usage, and automated CI/CD quality gates ensuring enterprise-grade code standards.
+**Latest Update**: Major expansion with cutting-edge Azure services including Azure Arc server management, Digital Twins for IoT, Spring Apps for Java applications, Data Factory modern pipelines, AI-powered cost optimization, GitHub Actions self-hosted runners, enhanced Bicep templates for Container Apps and OpenAI, plus comprehensive testing framework for next-generation enterprise automation. **June 2025**: Added 4 unique enterprise scripts: Zero Trust Network Analyzer, FinOps Automation Engine, Industrial IoT Orchestrator, and Chaos Engineering Platform. Achieved 100% PSScriptAnalyzer compliance across all 174+ scripts with enhanced error handling, improved ShouldProcess support, optimized variable usage, and automated CI/CD quality gates ensuring enterprise-grade code standards.
 
 ---
