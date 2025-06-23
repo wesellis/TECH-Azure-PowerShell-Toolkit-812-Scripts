@@ -82,6 +82,9 @@ We're building the future of enterprise cloud automation! See our comprehensive 
 - 🔐 **Az.Accounts.Enterprise v2.0** - Multi-tenant authentication, service principal automation, managed identity integration
 - 🏷️ **Az.Resources.Enterprise v2.0** - Advanced tagging, compliance enforcement, bulk operations, dependency mapping
 - 💾 **Az.Storage.Enterprise v2.0** - Lifecycle automation, security hardening, cost optimization, backup/DR configuration
+- 🔑 **Az.KeyVault.Enterprise v1.0** - Automated secret rotation, certificate lifecycle management, access policy automation
+- 📊 **Az.Monitoring.Enterprise v1.0** - Log Analytics workspaces, custom metrics, alert automation, dashboard deployment
+- 🛡️ **Az.Security.Enterprise v1.0** - Security Center automation, Defender plans, vulnerability assessment, compliance tracking
 
 ### **📊 Build Status**
 - 🟢 **PowerShell CI**: Passing (All PSScriptAnalyzer rules)
@@ -103,10 +106,13 @@ Azure-Enterprise-Toolkit/
 │   ├── Identity-Governance/   # RBAC, Policy, Compliance (15 scripts)
 │   ├── Monitoring-Operations/ # Monitoring, Alerts, Analytics (22 scripts)
 │   ├── App-Development/       # Apps, Functions, AI, Communications, Spring Apps (19 scripts)
-│   ├── modules/              # Enterprise PowerShell modules (3 modules)
+│   ├── modules/              # Enterprise PowerShell modules (6 modules)
 │   │   ├── accounts/         # Az.Accounts.Enterprise v2.0
 │   │   ├── resources/        # Az.Resources.Enterprise v2.0
-│   │   └── storage/          # Az.Storage.Enterprise v2.0
+│   │   ├── storage/          # Az.Storage.Enterprise v2.0
+│   │   ├── keyvault/         # Az.KeyVault.Enterprise v1.0 (NEW)
+│   │   ├── monitoring/       # Az.Monitoring.Enterprise v1.0 (NEW)
+│   │   └── security/         # Az.Security.Enterprise v1.0 (NEW)
 │   ├── Integration/           # M365, Graph API, Cross-platform (8 scripts)  
 │   ├── General-Utilities/     # Enterprise tools and helpers (12 scripts)
 │   ├── Hybrid-MultiCloud/     # Azure Arc, cross-cloud management (5 scripts)
@@ -199,6 +205,76 @@ Connect-AzAccount
 ---
 
 ## 💡 **Featured Capabilities - 2025 Edition**
+
+### **🚀 New Enterprise PowerShell Modules**
+
+**Az.KeyVault.Enterprise - Advanced Key Vault Management**
+```powershell
+# Automated secret rotation with notifications
+Start-AzKeyVaultSecretRotation -VaultName "ProdVault" `
+    -SecretName "DatabasePassword" `
+    -RotationDays 90 `
+    -NotificationEmail "security@company.com" `
+    -EnableRollback
+
+# Certificate lifecycle management
+Start-AzKeyVaultCertificateLifecycle -VaultName "ProdVault" `
+    -CertificateName "WebSSL" `
+    -RenewalThresholdDays 30 `
+    -AutoRenew
+
+# Bulk access policy management
+Set-AzKeyVaultAccessPolicyBulk -VaultNames @("Vault1", "Vault2") `
+    -ObjectIds @("user-guid", "app-guid") `
+    -PermissionsToSecrets @('Get', 'List')
+```
+
+**Az.Monitoring.Enterprise - Advanced Monitoring & Observability**
+```powershell
+# Create enterprise Log Analytics workspace
+New-AzLogAnalyticsWorkspaceAdvanced -WorkspaceName "Enterprise-LAW" `
+    -ResourceGroupName "Monitoring-RG" `
+    -Location "eastus" `
+    -RetentionInDays 180 `
+    -Solutions @('Security', 'Updates', 'VMInsights')
+
+# Deploy monitoring dashboard
+Deploy-AzMonitorDashboard -DashboardName "Operations" `
+    -ResourceGroupName "RG" `
+    -TemplateFile "dashboard.json"
+
+# Create complex alert rules
+New-AzMetricAlertRuleV2Advanced -AlertName "High-CPU" `
+    -ResourceGroupName "RG" `
+    -TargetResourceId $vmId `
+    -Criteria @(
+        @{MetricName="CPU"; Threshold=80},
+        @{MetricName="Memory"; Threshold=90}
+    )
+```
+
+**Az.Security.Enterprise - Comprehensive Security Automation**
+```powershell
+# Enable Security Center with enterprise settings
+Enable-AzSecurityCenterAdvanced -SubscriptionId $subId `
+    -Tier "Standard" `
+    -EnableAutoProvisioning `
+    -SecurityContactEmails @("security@company.com")
+
+# Deploy compliance framework
+New-AzSecurityPolicySet -PolicySetName "CIS-Baseline" `
+    -Framework "CIS" `
+    -EnforcementMode "Default"
+
+# Start vulnerability assessment
+Start-AzVulnerabilityAssessment -ResourceType "VirtualMachines" `
+    -ResourceGroupName "Production-RG" `
+    -EnableAutoRemediation
+
+# Get security recommendations
+Get-AzSecurityRecommendations -Category "QuickWins" `
+    -IncludeImplementationSteps
+```
 
 ### **🤖 Modern Azure Services Automation**
 
@@ -556,6 +632,11 @@ module "azure_webapp" {
 - **[DevOps Templates Guide](devops-templates/README.md)** - CI/CD implementation
 - **[Integration Guide](automation-scripts/Integration/README.md)** - M365 and external systems
 
+### **📦 Enterprise Module Documentation**
+- **[Az.KeyVault.Enterprise](modules/keyvault/README.md)** - Advanced Key Vault management
+- **[Az.Monitoring.Enterprise](modules/monitoring/README.md)** - Enterprise monitoring solutions
+- **[Az.Security.Enterprise](modules/security/README.md)** - Security automation and compliance
+
 ### **🔧 Technical References**
 - **[API Documentation](docs/api-reference/)** - Technical specifications
 - **[PowerShell Module Reference](automation-scripts/modules/)** - Shared functionality
@@ -699,12 +780,15 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ### PowerShell Gallery
 All modules are free to use from the PowerShell Gallery:
 ```powershell
+# Core Enterprise Modules
 Install-Module -Name Az.Accounts.Enterprise
 Install-Module -Name Az.Resources.Enterprise
 Install-Module -Name Az.Storage.Enterprise
-Install-Module -Name Az.KeyVault.Enterprise
-Install-Module -Name Az.Monitoring.Enterprise
-Install-Module -Name Az.Security.Enterprise
+
+# New Advanced Enterprise Modules (2025)
+Install-Module -Name Az.KeyVault.Enterprise    # Secret rotation, certificate lifecycle
+Install-Module -Name Az.Monitoring.Enterprise  # Log Analytics, alerts, dashboards
+Install-Module -Name Az.Security.Enterprise    # Defender, compliance, vulnerability
 ```
 
 ### Ways to Support
