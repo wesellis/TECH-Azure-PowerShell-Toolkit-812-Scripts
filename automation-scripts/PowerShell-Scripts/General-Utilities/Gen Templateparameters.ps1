@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Gen Templateparameters
 
@@ -35,9 +35,9 @@
 
 
 <#
-This script will process the parameter files than contain GEN values and GET-PREREQ values.
+This script will process the parameter files than contain GEN values and GET-PREREQ -ErrorAction Stop values.
 The configuration for GEN values can come from a location config.json file or a url.
-The GET-PREREQ values come from a parameter file written by the prereq step in the deployment and written to the location specified by the prereqOutputsFileName param
+The GET-PREREQ -ErrorAction Stop values come from a parameter file written by the prereq step in the deployment and written to the location specified by the prereqOutputsFileName param
 
 
 [CmdletBinding()
@@ -87,7 +87,7 @@ if (!(Test-Path $WETemplateParametersFile)) {
     Write-Output " Param file not found, using: $WETemplateParametersFile"
 }
 
-$txt = Get-Content $WETemplateParametersFile -Raw
+$txt = Get-Content -ErrorAction Stop $WETemplateParametersFile -Raw
 
 
 
@@ -106,7 +106,7 @@ foreach($p in $WEPreReqConfig.psobject.properties){
 
 
 While($txt.Contains(" `" GEN-GUID`"" )){
-    $v = New-Guid
+    $v = New-Guid -ErrorAction Stop
     [regex]$r = " GEN-GUID"
     $txt = $r.Replace($txt, $v, 1)
 }

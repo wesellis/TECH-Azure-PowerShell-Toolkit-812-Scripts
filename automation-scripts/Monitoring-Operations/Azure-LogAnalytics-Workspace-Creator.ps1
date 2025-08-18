@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Log Analytics Workspace Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,47 +24,47 @@ param (
     [int]$RetentionInDays = 30
 )
 
-Write-Host "Creating Log Analytics Workspace: $WorkspaceName"
+Write-Information "Creating Log Analytics Workspace: $WorkspaceName"
 
-$Workspace = New-AzOperationalInsightsWorkspace `
+$Workspace = New-AzOperationalInsightsWorkspace -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $WorkspaceName `
     -Location $Location `
     -Sku $Sku `
     -RetentionInDays $RetentionInDays
 
-Write-Host "✅ Log Analytics Workspace created successfully:"
-Write-Host "  Name: $($Workspace.Name)"
-Write-Host "  Location: $($Workspace.Location)"
-Write-Host "  SKU: $($Workspace.Sku)"
-Write-Host "  Retention: $RetentionInDays days"
-Write-Host "  Workspace ID: $($Workspace.CustomerId)"
+Write-Information "✅ Log Analytics Workspace created successfully:"
+Write-Information "  Name: $($Workspace.Name)"
+Write-Information "  Location: $($Workspace.Location)"
+Write-Information "  SKU: $($Workspace.Sku)"
+Write-Information "  Retention: $RetentionInDays days"
+Write-Information "  Workspace ID: $($Workspace.CustomerId)"
 
 # Get workspace keys
 $Keys = Get-AzOperationalInsightsWorkspaceSharedKey -ResourceGroupName $ResourceGroupName -Name $WorkspaceName
 
-Write-Host "`nWorkspace Keys:"
-Write-Host "  Primary Key: $($Keys.PrimarySharedKey.Substring(0,8))..."
-Write-Host "  Secondary Key: $($Keys.SecondarySharedKey.Substring(0,8))..."
+Write-Information "`nWorkspace Keys:"
+Write-Information "  Primary Key: $($Keys.PrimarySharedKey.Substring(0,8))..."
+Write-Information "  Secondary Key: $($Keys.SecondarySharedKey.Substring(0,8))..."
 
-Write-Host "`nLog Analytics Features:"
-Write-Host "• Centralized log collection"
-Write-Host "• KQL (Kusto Query Language)"
-Write-Host "• Custom dashboards and workbooks"
-Write-Host "• Integration with Azure Monitor"
-Write-Host "• Machine learning insights"
-Write-Host "• Security and compliance monitoring"
+Write-Information "`nLog Analytics Features:"
+Write-Information "• Centralized log collection"
+Write-Information "• KQL (Kusto Query Language)"
+Write-Information "• Custom dashboards and workbooks"
+Write-Information "• Integration with Azure Monitor"
+Write-Information "• Machine learning insights"
+Write-Information "• Security and compliance monitoring"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Configure data sources"
-Write-Host "2. Install agents on VMs"
-Write-Host "3. Create custom queries"
-Write-Host "4. Set up dashboards"
-Write-Host "5. Configure alerts"
+Write-Information "`nNext Steps:"
+Write-Information "1. Configure data sources"
+Write-Information "2. Install agents on VMs"
+Write-Information "3. Create custom queries"
+Write-Information "4. Set up dashboards"
+Write-Information "5. Configure alerts"
 
-Write-Host "`nCommon Data Sources:"
-Write-Host "• Azure Activity Logs"
-Write-Host "• VM Performance Counters"
-Write-Host "• Application Insights"
-Write-Host "• Security Events"
-Write-Host "• Custom Applications"
+Write-Information "`nCommon Data Sources:"
+Write-Information "• Azure Activity Logs"
+Write-Information "• VM Performance Counters"
+Write-Information "• Application Insights"
+Write-Information "• Security Events"
+Write-Information "• Custom Applications"

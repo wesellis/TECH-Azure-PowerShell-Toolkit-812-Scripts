@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     7 Get Azrecoveryservicesbackupprotectionpolicy
 
@@ -105,7 +105,7 @@ $getAzRecoveryServicesBackupProtectionPolicySplat = @{
     VaultId = $targetVault.ID
 }
 
-Get-AzRecoveryServicesBackupProtectionPolicy @getAzRecoveryServicesBackupProtectionPolicySplat
+Get-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop @getAzRecoveryServicesBackupProtectionPolicySplat
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

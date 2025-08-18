@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Visualstudiocode Extension.Tests
 
@@ -38,7 +38,7 @@ $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 BeforeAll {
-    $global:IsUnderTest = $true
+    $script:IsUnderTest = $true
     $retryModuleName = 'windows-retry-utils'
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
 try {
@@ -54,6 +54,7 @@ try {
     $script:sleepTimes = @()
     Mock -CommandName Start-Sleep -ModuleName $retryModuleName -MockWith { 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -73,12 +74,12 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds seconds" " INFO" }
 
-    Mock Write-Host {}
+    Mock Write-Information {}
 }
 
 Describe " Confirm-UserRequest Tests" {
@@ -112,7 +113,8 @@ Describe " Import-ExtensionToLocalPath Tests" {
         Mock Get-VisualStudioExtension -MockWith {
             return " C:\\Temp\\mocked-extension.vsix"
         }
-        function WE-Copy-Item {}
+        [CmdletBinding()]
+function WE-Copy-Item {}
         Mock Copy-Item -MockWith {}
     }
 
@@ -140,14 +142,14 @@ Describe " Import-ExtensionToLocalPath Tests" {
         { Import-ExtensionToLocalPath -extensionVsixPath " C:\\NonExistent\\test.vsix" -downloadLocation " C:\\Temp" } | Should -Throw
     }
 
-    It " Should call Get-VisualStudioExtension for ExtensionName" {
+    It " Should call Get-VisualStudioExtension -ErrorAction Stop for ExtensionName" {
        ;  $result = Import-ExtensionToLocalPath -extensionName " test-name" -extensionVersion " 1.0.0" -downloadLocation " C:\\Temp"
 
         $result | Should -Be " C:\\Temp\\mocked-extension.vsix"
         Assert-MockCalled Get-VisualStudioExtension -Exactly 1 -Scope It
     }
 
-    It " Should call Get-VisualStudioExtension for ExtensionId" {
+    It " Should call Get-VisualStudioExtension -ErrorAction Stop for ExtensionId" {
        ;  $result = Import-ExtensionToLocalPath -extensionId " test-id" -extensionVersion " 1.0.0" -downloadLocation " C:\\Temp"
 
         $result | Should -Be " C:\\Temp\\mocked-extension.vsix"
@@ -165,7 +167,8 @@ Describe " Main Function Tests" {
         Mock Resolve-VisualStudioCodeBootstrapPath -MockWith {
             return " C:\\Program Files\\VSCode\\extensions"
         }
-        function WE-Get-ChildItem {}
+        [CmdletBinding()]
+function WE-Get-ChildItem -ErrorAction Stop {}
         Mock Get-ChildItem -MockWith {
             return @(" mocked-extension1" , " mocked-extension2" )
         }

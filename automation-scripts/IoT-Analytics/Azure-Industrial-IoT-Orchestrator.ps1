@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Enterprise Industrial IoT orchestration platform for Azure Digital Twins and IoT Hub management.
 
@@ -99,7 +99,7 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]InitializeIndustryModels() {
-        Write-Host "Initializing $($this.IndustryType) industry models..." -ForegroundColor Yellow
+        Write-Information "Initializing $($this.IndustryType) industry models..."
         
         switch ($this.IndustryType) {
             "Manufacturing" {
@@ -299,12 +299,12 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]DeployInfrastructure([string]$DigitalTwinName, [string]$IoTHubName) {
-        Write-Host "Deploying Industrial IoT infrastructure..." -ForegroundColor Green
+        Write-Information "Deploying Industrial IoT infrastructure..."
         
         # Create Resource Group
         $rg = Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
         if (!$rg) {
-            Write-Host "Creating resource group: $($this.ResourceGroupName)" -ForegroundColor Yellow
+            Write-Information "Creating resource group: $($this.ResourceGroupName)"
             New-AzResourceGroup -Name $this.ResourceGroupName -Location $this.Location
         }
         
@@ -323,11 +323,11 @@ class IndustrialIoTOrchestrator {
         # Deploy Storage Account for data lake
         $this.DeployDataLake()
         
-        Write-Host "Infrastructure deployment completed!" -ForegroundColor Green
+        Write-Information "Infrastructure deployment completed!"
     }
     
     [void]DeployIoTHub([string]$IoTHubName) {
-        Write-Host "Deploying IoT Hub: $IoTHubName" -ForegroundColor Yellow
+        Write-Information "Deploying IoT Hub: $IoTHubName"
         
         # Check if IoT Hub exists
         $iotHub = Get-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -ErrorAction SilentlyContinue
@@ -342,7 +342,7 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]DeployDigitalTwins([string]$DigitalTwinName) {
-        Write-Host "Deploying Digital Twins instance: $DigitalTwinName" -ForegroundColor Yellow
+        Write-Information "Deploying Digital Twins instance: $DigitalTwinName"
         
         # Use ARM template deployment since Az.DigitalTwins may not be available
         $templateContent = $this.GetDigitalTwinsARMTemplate($DigitalTwinName)
@@ -351,7 +351,7 @@ class IndustrialIoTOrchestrator {
         
         try {
             New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $templatePath -Verbose
-            Remove-Item $templatePath -ErrorAction SilentlyContinue
+            Remove-Item -ErrorAction Stop $templatePath -ErrorAction SilentlyContinue
         } catch {
             Write-Warning "Digital Twins deployment failed: $_"
         }
@@ -380,7 +380,7 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]ConfigureIoTHubRouting([string]$IoTHubName) {
-        Write-Host "Configuring IoT Hub message routing..." -ForegroundColor Yellow
+        Write-Information "Configuring IoT Hub message routing..."
         
         # Create custom endpoints for different message types
         $endpoints = @{
@@ -390,31 +390,31 @@ class IndustrialIoTOrchestrator {
         }
         
         foreach ($endpoint in $endpoints.GetEnumerator()) {
-            Write-Host "Creating endpoint: $($endpoint.Value)" -ForegroundColor Cyan
+            Write-Information "Creating endpoint: $($endpoint.Value)"
             # Implementation would create actual endpoints
         }
     }
     
     [void]DeployTimeSeriesInsights() {
-        Write-Host "Deploying Time Series Insights environment..." -ForegroundColor Yellow
+        Write-Information "Deploying Time Series Insights environment..."
         
         $tsiName = "tsi-$($this.ResourceGroupName)"
         
         # TSI deployment would go here
-        Write-Host "Time Series Insights: $tsiName configured" -ForegroundColor Cyan
+        Write-Information "Time Series Insights: $tsiName configured"
     }
     
     [void]DeployEventGrid() {
-        Write-Host "Deploying Event Grid for real-time events..." -ForegroundColor Yellow
+        Write-Information "Deploying Event Grid for real-time events..."
         
         $eventGridName = "eg-industrial-iot"
         
         # Event Grid deployment would go here
-        Write-Host "Event Grid: $eventGridName configured" -ForegroundColor Cyan
+        Write-Information "Event Grid: $eventGridName configured"
     }
     
     [void]DeployDataLake() {
-        Write-Host "Deploying Data Lake for analytics..." -ForegroundColor Yellow
+        Write-Information "Deploying Data Lake for analytics..."
         
         $storageAccountName = "sa$($this.ResourceGroupName -replace '-', '')"
         
@@ -422,27 +422,27 @@ class IndustrialIoTOrchestrator {
             $storage = New-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -Name $storageAccountName `
                 -Location $this.Location -SkuName "Standard_LRS" -Kind "StorageV2" -EnableHierarchicalNamespace $true
             
-            Write-Host "Data Lake storage account created: $storageAccountName" -ForegroundColor Green
+            Write-Information "Data Lake storage account created: $storageAccountName"
         } catch {
             Write-Warning "Storage account creation failed: $_"
         }
     }
     
     [void]CreateDigitalTwinModels() {
-        Write-Host "Creating Digital Twin models for $($this.IndustryType)..." -ForegroundColor Yellow
+        Write-Information "Creating Digital Twin models for $($this.IndustryType)..."
         
         foreach ($modelName in $this.DigitalTwinModels.Keys) {
             $model = $this.DigitalTwinModels[$modelName]
-            Write-Host "Creating model: $modelName" -ForegroundColor Cyan
+            Write-Information "Creating model: $modelName"
             
             # In a real implementation, this would upload to Digital Twins
             $modelJson = $model | ConvertTo-Json -Depth 10
-            Write-Host "Model JSON created for: $modelName" -ForegroundColor Green
+            Write-Information "Model JSON created for: $modelName"
         }
     }
     
     [void]SimulateDevices([int]$DeviceCount = 10) {
-        Write-Host "Simulating $DeviceCount Industrial IoT devices..." -ForegroundColor Yellow
+        Write-Information "Simulating $DeviceCount Industrial IoT devices..."
         
         for ($i = 1; $i -le $DeviceCount; $i++) {
             $deviceType = ($this.DigitalTwinModels.Keys | Get-Random)
@@ -451,12 +451,12 @@ class IndustrialIoTOrchestrator {
                 DeviceType = $deviceType
                 Location = "Floor-$([math]::Ceiling($i / 3))"
                 Status = "Online"
-                LastTelemetry = Get-Date
+                LastTelemetry = Get-Date -ErrorAction Stop
                 TelemetryData = $this.GenerateTelemetryData($deviceType)
             }
             
             $this.Devices += $device
-            Write-Host "Device created: $($device.DeviceId)" -ForegroundColor Cyan
+            Write-Information "Device created: $($device.DeviceId)"
         }
     }
     
@@ -500,7 +500,7 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]AnalyzePredictiveMaintenance() {
-        Write-Host "Analyzing predictive maintenance requirements..." -ForegroundColor Yellow
+        Write-Information "Analyzing predictive maintenance requirements..."
         
         foreach ($device in $this.Devices) {
             $maintenanceScore = $this.CalculateMaintenanceScore($device)
@@ -512,11 +512,11 @@ class IndustrialIoTOrchestrator {
                     Severity = "High"
                     Message = "Device requires immediate maintenance"
                     Score = $maintenanceScore
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                 }
                 
                 $this.Alerts += $alert
-                Write-Host "ALERT: $($device.DeviceId) - Maintenance score: $maintenanceScore" -ForegroundColor Red
+                Write-Information "ALERT: $($device.DeviceId) - Maintenance score: $maintenanceScore"
             }
         }
     }
@@ -536,7 +536,7 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]GenerateIoTDashboard() {
-        Write-Host "Generating IoT Dashboard..." -ForegroundColor Green
+        Write-Information "Generating IoT Dashboard..."
         
         $dashboardData = @{
             IndustryType = $this.IndustryType
@@ -544,14 +544,14 @@ class IndustrialIoTOrchestrator {
             OnlineDevices = ($this.Devices | Where-Object { $_.Status -eq "Online" }).Count
             ActiveAlerts = $this.Alerts.Count
             HighPriorityAlerts = ($this.Alerts | Where-Object { $_.Severity -eq "High" }).Count
-            LastUpdated = Get-Date
+            LastUpdated = Get-Date -ErrorAction Stop
         }
         
         $html = $this.GenerateDashboardHTML($dashboardData)
         $dashboardPath = ".\IoT-Dashboard-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
         $html | Out-File -FilePath $dashboardPath -Encoding UTF8
         
-        Write-Host "Dashboard saved to: $dashboardPath" -ForegroundColor Green
+        Write-Information "Dashboard saved to: $dashboardPath"
     }
     
     [string]GenerateDashboardHTML([hashtable]$Data) {
@@ -626,13 +626,13 @@ class IndustrialIoTOrchestrator {
 
 # Main execution
 try {
-    Write-Host "Azure Industrial IoT Orchestrator v1.0" -ForegroundColor Cyan
-    Write-Host "======================================" -ForegroundColor Cyan
+    Write-Information "Azure Industrial IoT Orchestrator v1.0"
+    Write-Information "======================================"
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Information "Connecting to Azure..."
         Connect-AzAccount
     }
     
@@ -641,45 +641,45 @@ try {
     
     switch ($OperationMode) {
         "Deploy" {
-            Write-Host "`n=== Deployment Mode ===" -ForegroundColor Green
+            Write-Information "`n=== Deployment Mode ==="
             $orchestrator.DeployInfrastructure($DigitalTwinInstanceName, $IoTHubName)
             $orchestrator.CreateDigitalTwinModels()
-            Write-Host "Deployment completed successfully!" -ForegroundColor Green
+            Write-Information "Deployment completed successfully!"
         }
         
         "Monitor" {
-            Write-Host "`n=== Monitoring Mode ===" -ForegroundColor Green
+            Write-Information "`n=== Monitoring Mode ==="
             $orchestrator.SimulateDevices(15)
             $orchestrator.GenerateIoTDashboard()
-            Write-Host "Monitoring dashboard generated!" -ForegroundColor Green
+            Write-Information "Monitoring dashboard generated!"
         }
         
         "Analyze" {
-            Write-Host "`n=== Analysis Mode ===" -ForegroundColor Green
+            Write-Information "`n=== Analysis Mode ==="
             $orchestrator.SimulateDevices(20)
             
             if ($EnablePredictiveMaintenance) {
                 $orchestrator.AnalyzePredictiveMaintenance()
-                Write-Host "Predictive maintenance analysis completed!" -ForegroundColor Green
-                Write-Host "Alerts generated: $($orchestrator.Alerts.Count)" -ForegroundColor Yellow
+                Write-Information "Predictive maintenance analysis completed!"
+                Write-Information "Alerts generated: $($orchestrator.Alerts.Count)"
             }
         }
         
         "Predict" {
-            Write-Host "`n=== Prediction Mode ===" -ForegroundColor Green
+            Write-Information "`n=== Prediction Mode ==="
             $orchestrator.SimulateDevices(25)
             $orchestrator.AnalyzePredictiveMaintenance()
             
-            Write-Host "`nPredictive Maintenance Results:" -ForegroundColor Yellow
+            Write-Information "`nPredictive Maintenance Results:"
             foreach ($alert in $orchestrator.Alerts) {
-                Write-Host "Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)" -ForegroundColor Red
+                Write-Information "Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)"
             }
             
             $orchestrator.GenerateIoTDashboard()
         }
     }
     
-    Write-Host "`nIndustrial IoT orchestration completed for $IndustryType industry!" -ForegroundColor Green
+    Write-Information "`nIndustrial IoT orchestration completed for $IndustryType industry!"
     
 } catch {
     Write-Error "An error occurred: $_"

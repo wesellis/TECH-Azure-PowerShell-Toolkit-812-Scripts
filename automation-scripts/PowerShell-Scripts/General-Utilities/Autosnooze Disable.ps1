@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Autosnooze Disable
 
@@ -97,13 +97,13 @@ try
     $WEAzureVMListTemp = $null
     $WEAzureVMList=@()
     ##Getting VM Details based on RG List or Subscription
-    if($WEVMRGList -ne $null)
+    if($null -ne $WEVMRGList)
     {
         foreach($WEResource in $WEVMRGList)
         {
             Write-Output " Validating the resource group name ($($WEResource.Trim()))" 
-            $checkRGname = Get-AzureRmResourceGroup  $WEResource.Trim() -ev notPresent -ea 0  
-            if ($checkRGname -eq $null)
+            $checkRGname = Get-AzureRmResourceGroup -ErrorAction Stop  $WEResource.Trim() -ev notPresent -ea 0  
+            if ($null -eq $checkRGname)
             {
                 Write-Warning " $($WEResource) is not a valid Resource Group Name. Please Verify!"
 				Write-Output " $($WEResource) is not a valid Resource Group Name. Please Verify!"
@@ -111,7 +111,7 @@ try
             else
             {                   
 				$WEAzureVMListTemp = Get-AzureRmVM -ResourceGroupName $WEResource -ErrorAction SilentlyContinue
-				if($WEAzureVMListTemp -ne $null)
+				if($null -ne $WEAzureVMListTemp)
 				{
 					$WEAzureVMList = $WEAzureVMList + $WEAzureVMListTemp
 				}

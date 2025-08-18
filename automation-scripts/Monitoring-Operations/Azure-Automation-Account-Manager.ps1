@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Automation Account Management Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -15,9 +15,9 @@ param (
 # Get automation account details
 $AutomationAccount = Get-AzAutomationAccount -ResourceGroupName $ResourceGroupName -Name $AccountName
 
-Write-Host "Automation Account: $($AutomationAccount.AutomationAccountName)"
-Write-Host "Resource Group: $($AutomationAccount.ResourceGroupName)"
-Write-Host "Location: $($AutomationAccount.Location)"
-Write-Host "State: $($AutomationAccount.State)"
-Write-Host "Creation Time: $($AutomationAccount.CreationTime)"
-Write-Host "Last Modified: $($AutomationAccount.LastModifiedTime)"
+Write-Information "Automation Account: $($AutomationAccount.AutomationAccountName)"
+Write-Information "Resource Group: $($AutomationAccount.ResourceGroupName)"
+Write-Information "Location: $($AutomationAccount.Location)"
+Write-Information "State: $($AutomationAccount.State)"
+Write-Information "Creation Time: $($AutomationAccount.CreationTime)"
+Write-Information "Last Modified: $($AutomationAccount.LastModifiedTime)"

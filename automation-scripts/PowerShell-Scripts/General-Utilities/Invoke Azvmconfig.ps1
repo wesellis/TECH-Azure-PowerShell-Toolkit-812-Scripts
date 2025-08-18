@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmconfig
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVMConfig {
 }
 
@@ -41,9 +42,10 @@ function WE-Invoke-AzVMConfig {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVMConfig {
  
-    #Region func New-AzVMConfig
+    #Region func New-AzVMConfig -ErrorAction Stop
     #Creating the VM Config Object for the VM
    ;  $newAzVMConfigSplat = @{
         VMName       = $WEVMName
@@ -51,8 +53,8 @@ function WE-Invoke-AzVMConfig {
         Tags         = $WETags
         IdentityType = 'SystemAssigned'
     }
-   ;  $WEVirtualMachine = New-AzVMConfig @newAzVMConfigSplat
-    #endRegion func New-AzVMConfig
+   ;  $WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
+    #endRegion func New-AzVMConfig -ErrorAction Stop
 }
 
 

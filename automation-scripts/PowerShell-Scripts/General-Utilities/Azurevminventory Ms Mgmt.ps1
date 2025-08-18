@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azurevminventory Ms Mgmt
 
@@ -278,8 +278,8 @@ do
 
 IF ($mycert)
 {
-		$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-	$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+		$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+	$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 	$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert)
 ; 	$header = " Bearer " + $result.AccessToken
 ; 	$headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -314,7 +314,7 @@ Else
 
 
 
-Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
+function New-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
 {
     $stringToHash = $method + " `n" + " `n" + " `n" +$date+" `n" +" /" +$resource+$uri.AbsolutePath
 	Add-Type -AssemblyName System.Web
@@ -322,7 +322,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resou
 	$querystr=''
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -331,7 +331,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resou
 }
 
 
-Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+function New-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
 
@@ -361,7 +361,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
 
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -402,7 +402,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
 
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -443,7 +443,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -531,13 +531,13 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 
 
 
-Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
 	$xHeaders = " x-ms-date:" + $date
 	$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -586,7 +586,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	Write-error $error[0]
 }
 
-function WE-Get-BlobSize ($bloburi,$storageaccount,$rg,$type)
+function WE-Get-BlobSize -ErrorAction Stop ($bloburi,$storageaccount,$rg,$type)
 {
 
 	If($type -eq 'ARM')
@@ -690,7 +690,7 @@ foreach($sa in $saArmList)
 {
 	$rg=$sa.id.Split('/')[4]
 ; 	$cu=$null
-; 	$cu = New-Object PSObject -Property @{
+; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory';
 		InventoryType='StorageAccount'
@@ -722,7 +722,7 @@ foreach($sa in $saAsmList)
 	$cu=$iotype=$null
 	IF($sa.properties.accountType -like 'Standard*')
 	{$iotype='Standard'}Else{{$iotype='Premium'}}
-	$cu = New-Object PSObject -Property @{
+	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory'
 		InventoryType='StorageAccount'
@@ -765,7 +765,7 @@ $remaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads" ]
 
 " API reads remaining: $remaining"
 
-;  $apidatafirst = New-Object PSObject -Property @{
+;  $apidatafirst = New-Object -ErrorAction Stop PSObject -Property @{
                              MetricName = 'ARMAPILimits';
                             APIReadsRemaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads" ]
                                                    
@@ -813,7 +813,7 @@ $properties = @{'ID'=$item.id;
                 'namespace'=$item.namespace;
                 'Resourcetype'=$rgobj.resourceType;
                 'Apiversion'=$rgobj.apiVersions[0]}
-$object = New-Object –TypeName PSObject –Prop $properties
+$object = New-Object -ErrorAction Stop –TypeName PSObject –Prop $properties
 
 $providers = $providers + $object
 }
@@ -874,7 +874,7 @@ $invendpoints=@()
 $invnsg=@()
 $invnic=@() 
 $invextensions=@(); 
-$colltime=get-date
+$colltime=get-date -ErrorAction Stop
 
 
 " {0}  VM found " -f $vmlist.count
@@ -889,7 +889,7 @@ Foreach ($vm in $vmsclassic)
 $extlist=$null
 $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
 
-  $cuvm = New-Object PSObject -Property @{
+  $cuvm = New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMInventory';
                             ResourceGroup=$vm.id.Split('/')[4]
@@ -928,7 +928,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
     Foreach ($extobj in $vm.properties.extensions)
         {
 
-       ;  $invextensions = $invextensions + New-Object PSObject -Property @{
+       ;  $invextensions = $invextensions + New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMExtensions';
                            VmName=$vm.Name
@@ -958,7 +958,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
         Foreach($ep in $vm.properties.networkProfile.inputEndpoints)
         {
             
-            ;  $invendpoints = $invendpoints + New-Object PSObject -Property @{
+            ;  $invendpoints = $invendpoints + New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMEndpoint';
                            VmName=$vm.Name
@@ -1003,7 +1003,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
 
 
 
-	        ;  $cudisk = New-Object PSObject -Property @{
+	        ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		MetricName = 'VMDisk';
         DiskType='Unmanaged'
@@ -1062,7 +1062,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
 			        $safordisk=$WESAInventory|where {$_ -match $disk.storageAccount.Name}
 			       ;  $WEIOtype=$safordisk.Tier
 
-			       ;  $cudisk = New-Object PSObject -Property @{
+			       ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 				        Timestamp = $timestamp
 				        MetricName = 'VMDisk';
                         DiskType='Unmanaged'
@@ -1121,7 +1121,7 @@ Foreach ($vm in $vmsarm)
  #vm inv
  
         
-       ;  $cuvm = New-Object PSObject -Property @{
+       ;  $cuvm = New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMInventory';
                             ResourceGroup=$vm.id.split('/')[4]
@@ -1167,7 +1167,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
         
        ;  $cunic=$null
      
-      ;  $cuNic= New-Object PSObject -Property @{
+      ;  $cuNic= New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMNIC';
                             VmName=$vm.Name
@@ -1221,7 +1221,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
                     foreach($rule in $WENsg.properties.securityRules)
                     {
 
-                     ;  $invnsg = $invnsg + New-Object PSObject -Property @{
+                     ;  $invnsg = $invnsg + New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMNSGrule';
                             VmName=$vm.Name
@@ -1260,7 +1260,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
                     {
                         if($extobj.id.Split('/')[9] -eq 'extensions')
                         {
-                            $invextensions = $invextensions + New-Object PSObject -Property @{
+                            $invextensions = $invextensions + New-Object -ErrorAction Stop PSObject -Property @{
                                         Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                                         MetricName = 'VMExtensions';
                            VmName=$vm.Name
@@ -1297,7 +1297,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
                 
                     Write-Verbose     " Adding tag $name : $value to $($WEVM.name)"
                     $cutag=$null
-                    $cutag=New-Object PSObject
+                    $cutag=New-Object -ErrorAction Stop PSObject
                     $cuVM.psobject.Properties|foreach-object  {
                       $cutag|Add-Member -MemberType NoteProperty -Name  $_.Name   -Value $_.value -Force
                 }
@@ -1333,7 +1333,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 	    $sizeingb=$null
        ;  $sizeingb=Get-BlobSize -bloburi $([uri]$vm.properties.storageProfile.osDisk.vhd.uri) -storageaccount $saforvm.StorageAccount -rg $saforVm.ResourceGroup -type ARM
 
-	    ;  $cudisk = New-Object PSObject -Property @{
+	    ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 		        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		        MetricName = 'VMDisk';
 		        DiskType='Unmanaged'
@@ -1379,7 +1379,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
     {
    ;  $cudisk=$null
 
-       ;  $cudisk = New-Object PSObject -Property @{
+       ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 		    Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		    MetricName = 'VMDisk';
 		    DiskType='Unmanaged'
@@ -1426,7 +1426,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 			        $diskuri=[uri]$disk.vhd.uri
 			        $safordisk=$WESAInventory|where {$_ -match $diskuri.host.Substring(0,$diskuri.host.IndexOf('.')) }
 			       ;  $WEIOtype=$safordisk.Tier
-			       ;  $cudisk = New-Object PSObject -Property @{
+			       ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 				        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 				        MetricName = 'VMDisk';
 				        DiskType='Unmanaged'
@@ -1469,7 +1469,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
     		}
             Else
             {
-                ;  $cudisk = New-Object PSObject -Property @{
+                ;  $cudisk = New-Object -ErrorAction Stop PSObject -Property @{
 		            Timestamp = $timestamp
 		            MetricName = 'Inventory';
 		            DiskType='Managed'
@@ -1552,7 +1552,7 @@ Foreach($usgdata in $usagecontent.value)
 {
 
 
-;  $cu= New-Object PSObject -Property @{
+;  $cu= New-Object -ErrorAction Stop PSObject -Property @{
                               Timestamp = $timestamp
                              MetricName = 'ARMVMUsageStats';
                             Location = $loc

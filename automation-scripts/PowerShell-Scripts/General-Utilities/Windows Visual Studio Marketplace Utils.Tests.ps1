@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Visual Studio Marketplace Utils.Tests
 
@@ -38,7 +38,7 @@ $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 BeforeAll {
-    $global:IsUnderTest = $true
+    $script:IsUnderTest = $true
     $retryModuleName = 'windows-retry-utils'
     Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
 try {
@@ -49,8 +49,9 @@ try {
     Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1" )
     
     # Mock a x64 processor by default
-    function WE-Get-CimInstance { }
-    Mock Get-CimInstance {
+    [CmdletBinding()]
+function WE-Get-CimInstance -ErrorAction Stop { }
+    Mock Get-CimInstance -ErrorAction Stop {
         [pscustomobject]@{ Architecture = 9 }
     } -Verifiable -ModuleName $marketplaceModuleName
 
@@ -59,6 +60,7 @@ try {
     Mock -CommandName Start-Sleep -ModuleName $retryModuleName `
         -MockWith { 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -78,18 +80,18 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($seconds) $script:sleepTimes += $seconds; }
 
-    Mock Write-Host {} -ModuleName $marketplaceModuleName
-    Mock Write-Host {} -ModuleName $retryModuleName
+    Mock Write-Information {} -ModuleName $marketplaceModuleName
+    Mock Write-Information {} -ModuleName $retryModuleName
 }
 
-Describe " Get-ApiHeaders Tests" {
+Describe " Get-ApiHeaders -ErrorAction Stop Tests" {
     It " Should return the correct headers" {
-        $headers = Get-ApiHeaders
+        $headers = Get-ApiHeaders -ErrorAction Stop
 
         $headers | Should -Not -BeNullOrEmpty
         $headers[" Accept" ] | Should -Be " application/json;api-version=3.0-preview.1"
@@ -97,7 +99,7 @@ Describe " Get-ApiHeaders Tests" {
     }
 }
 
-Describe " Get-ApiFlags Tests" {
+Describe " Get-ApiFlags -ErrorAction Stop Tests" {
     It " Should be 402" {
         $flags = Get-ApiFlags -VersionNumber $null
 
@@ -105,7 +107,7 @@ Describe " Get-ApiFlags Tests" {
     }
 }
 
-Describe " Get-RequestBody Tests" {
+Describe " Get-RequestBody -ErrorAction Stop Tests" {
     It " Should create a valid request body" {
         $body = Get-RequestBody -ExtensionReference " test.extension" -Flags 402
         $jsonBody = $body | ConvertFrom-Json
@@ -228,11 +230,12 @@ param($WEVsixUrl, $WELocalFilePath)
 
 Describe " Get-ExtensionMetadata" {
     BeforeEach {
-        Mock Get-ApiHeaders { return @{} } -ModuleName $marketplaceModuleName
-        Mock Get-ApiFlags { return 100 } -ModuleName $marketplaceModuleName
-        Mock Get-RequestBody {
+        Mock Get-ApiHeaders -ErrorAction Stop { return @{} } -ModuleName $marketplaceModuleName
+        Mock Get-ApiFlags -ErrorAction Stop { return 100 } -ModuleName $marketplaceModuleName
+        Mock Get-RequestBody -ErrorAction Stop {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -252,7 +255,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEExtensionReference, $WEFlags)
@@ -261,6 +264,7 @@ param ($WEExtensionReference, $WEFlags)
         Mock Invoke-MarketplaceApi {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -280,7 +284,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -327,6 +331,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             Mock Invoke-MarketplaceApi {
                 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -346,7 +351,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -388,6 +393,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             Mock Invoke-MarketplaceApi {
                 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -407,7 +413,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -457,6 +463,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             Mock Invoke-MarketplaceApi {
                 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -476,7 +483,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -499,6 +506,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             Mock Invoke-MarketplaceApi {
                 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -518,7 +526,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -549,6 +557,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             Mock Invoke-MarketplaceApi {
                 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -568,7 +577,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEApiUrl, $WEHeaders, $WEBody)
@@ -609,11 +618,11 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 Describe 'Get-CurrentPlatform' {
     It 'Should return win32-arm64 when processor is ARM64' {
         # Simulate an ARM64 processor
-        Mock Get-CimInstance {
+        Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 12 }
         } -Verifiable -ModuleName $marketplaceModuleName
 
-        $result = Get-CurrentPlatform
+        $result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-arm64'
 
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
@@ -621,11 +630,11 @@ Describe 'Get-CurrentPlatform' {
 
     It 'Should return win32-x64 when processor is x64' {
         # Simulate an x64 processor
-        Mock Get-CimInstance {
+        Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 9 }
         } -Verifiable -ModuleName $marketplaceModuleName
 
-       ;  $result = Get-CurrentPlatform
+       ;  $result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-x64'
 
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
@@ -633,11 +642,11 @@ Describe 'Get-CurrentPlatform' {
 
     It 'Should default to win32-x64 when processor architecture is unknown' {
         # Simulate an unknown processor architecture
-        Mock Get-CimInstance {
+        Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 99 }
         } -Verifiable -ModuleName $marketplaceModuleName
 
-       ;  $result = Get-CurrentPlatform
+       ;  $result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-x64'
 
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Appdsc
 
@@ -180,7 +180,7 @@ Node $nodeName
 					New-WebBinding -Name " Default Web Site" -IP " *" -Port 443 -Protocol https					
 				; 	$certWThumb = $certPath + '\' + $certObj.Thumbprint 
 					cd IIS:\SSLBindings
-					get-item $certWThumb | new-item 0.0.0.0!443
+					get-item -ErrorAction Stop $certWThumb | new-item -ErrorAction Stop 0.0.0.0!443
 
 					# Create URL Rewrite Rules
 					cd c:
@@ -201,7 +201,7 @@ Node $nodeName
 		#	#Adds rewrite allowedServerVariables to applicationHost.config
 		#	DependsOn = " [Package]UrlRewrite"
 		#	SetScript = {
-		#		$current = Get-WebConfiguration /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection | ?{$_.ElementTagName -eq " add" } | select -ExpandProperty name
+		#		$current = Get-WebConfiguration -ErrorAction Stop /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection | ?{$_.ElementTagName -eq " add" } | select -ExpandProperty name
 		#		$expected = @(" HTTPS" , " HTTP_X_FORWARDED_FOR" , " HTTP_X_FORWARDED_PROTO" , " REMOTE_ADDR" )
 		#		$missing = $expected | where {$current -notcontains $_}
 		#		try
@@ -216,13 +216,13 @@ Node $nodeName
 		#		}
 		#	}
 		#	TestScript = {
-		#		$current = Get-WebConfiguration /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection | select -ExpandProperty name
+		#		$current = Get-WebConfiguration -ErrorAction Stop /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection | select -ExpandProperty name
 		#		$expected = @(" HTTPS" , " HTTP_X_FORWARDED_FOR" , " HTTP_X_FORWARDED_PROTO" , " REMOTE_ADDR" )
 		#	; 	$result = -not @($expected| where {$current -notcontains $_}| select -first 1).Count
 		#		return $result
 		#	}
 		#	GetScript = {
-		#	; 	$allowedServerVariables = Get-WebConfiguration /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection
+		#	; 	$allowedServerVariables = Get-WebConfiguration -ErrorAction Stop /system.webServer/rewrite/allowedServerVariables | select -ExpandProperty collection
 		#		return $allowedServerVariables
 		#	}
 		#}
@@ -233,9 +233,9 @@ Node $nodeName
   #          SetScript =  {
 		#	Import-PfxCertificate -FilePath \\XXXdemoad01\source\certs\MyWebAppCert.pfx -CertStoreLocation Cert:\LocalMachine\WebHosting
 		#	}
-  #          TestScript = " try { (Get-Item Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction Stop).HasPrivateKey} catch { `$WEFalse }"
+  #          TestScript = " try { (Get-Item -ErrorAction Stop Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction Stop).HasPrivateKey} catch { `$WEFalse }"
   #          GetScript = {
-		#		@{Ensure = if ((Get-Item Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction SilentlyContinue).HasPrivateKey) 
+		#		@{Ensure = if ((Get-Item -ErrorAction Stop Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction SilentlyContinue).HasPrivateKey) 
   #            {'Present'} 
   #            else {'Absent'}}
 		#	  }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Release Ttk
 
@@ -66,7 +66,7 @@ Copy-Item " ..\..\arm-ttk\arm-ttk" -Destination " .\template-tests" -Recurse
 $releaseFiles = $releaseFiles + " .\template-tests"
 $releaseFiles = $releaseFiles -ne " ..\..\arm-ttk/arm-ttk"
 Compress-Archive -DestinationPath " AzTemplateToolkit.zip" -Path $releaseFiles -Force
-Remove-Item " -Force .\template-tests" -Recurse -Force
+Remove-Item -ErrorAction Stop " -Force .\template-tests" -Recurse -Force
 
 ; 
 $WETarget = " Target: storage account $WEStorageAccountName, container $containerName, folder $folderName"

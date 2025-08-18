@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installpsforhierarchy
 
@@ -114,10 +114,10 @@ SysCenterId=
 CCARSiteServer=%CASMachineFQDN%
 
 '@
-$inst = (get-itemproperty 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
-$p = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
+$inst = (get-itemproperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
+$p = (Get-ItemProperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
 
-$sqlinfo = Get-ItemProperty " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
+$sqlinfo = Get-ItemProperty -ErrorAction Stop " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
 
 " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
 $cmini = $cmini.Replace('%InstallDir%',$WESMSInstallDir)
@@ -132,7 +132,7 @@ $cmini = $cmini.Replace('%REdistPath%'," $cmsourcepath\REdist" )
 
 if(!(Test-Path C:\$WECM\Redist))
 {
-    New-Item C:\$WECM\Redist -ItemType directory | Out-Null
+    New-Item -ErrorAction Stop C:\$WECM\Redist -ItemType directory | Out-Null
 }
     
 if($inst.ToUpper() -eq " MSSQLSERVER" )
@@ -156,7 +156,7 @@ Start-Process -Filepath ($WECMInstallationFile) -ArgumentList ('/NOUSERINPUT /sc
 
 " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
 
-Remove-Item $WECMINIPat -Forceh -Force
+Remove-Item -ErrorAction Stop $WECMINIPat -Forceh -Force
 
 ; 
 $WECSConfiguration = Get-Content -Path $WECSConfigurationFile -ErrorAction Ignore | ConvertFrom-Json

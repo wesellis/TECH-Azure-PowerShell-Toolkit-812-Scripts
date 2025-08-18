@@ -1,4 +1,4 @@
-# Azure Resource Orphan Finder Tool
+﻿# Azure Resource Orphan Finder Tool
 # Professional Azure utility script for identifying unused and orphaned resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Advanced resource cleanup and cost optimization
@@ -62,14 +62,14 @@ try {
     $resourceFilter = @{}
     if ($ResourceGroupName) { $resourceFilter.ResourceGroupName = $ResourceGroupName }
     
-    $allResources = Get-AzResource @resourceFilter
+    $allResources = Get-AzResource -ErrorAction Stop @resourceFilter
     Write-Log "Found $($allResources.Count) total resources to analyze" -Level INFO
 
     # Analyze orphaned Network Interfaces
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName "Network Analysis" -Status "Finding orphaned network interfaces"
     
     if ($ResourceType -eq "All" -or $ResourceType -eq "NetworkInterfaces") {
-        $networkInterfaces = Get-AzNetworkInterface
+        $networkInterfaces = Get-AzNetworkInterface -ErrorAction Stop
         foreach ($nic in $networkInterfaces) {
             if (-not $nic.VirtualMachine -and -not $nic.LoadBalancerBackendAddressPools) {
                 $orphanedResources += [PSCustomObject]@{
@@ -87,7 +87,7 @@ try {
 
     # Analyze orphaned Public IPs
     if ($ResourceType -eq "All" -or $ResourceType -eq "PublicIPs") {
-        $publicIPs = Get-AzPublicIpAddress
+        $publicIPs = Get-AzPublicIpAddress -ErrorAction Stop
         foreach ($pip in $publicIPs) {
             if (-not $pip.IpConfiguration -and $pip.PublicIpAllocationMethod -eq "Static") {
                 $orphanedResources += [PSCustomObject]@{
@@ -107,7 +107,7 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName "Storage Analysis" -Status "Finding orphaned disks and snapshots"
     
     if ($ResourceType -eq "All" -or $ResourceType -eq "Disks") {
-        $disks = Get-AzDisk
+        $disks = Get-AzDisk -ErrorAction Stop
         foreach ($disk in $disks) {
             if (-not $disk.ManagedBy) {
                 $sizeGB = $disk.DiskSizeGB
@@ -134,7 +134,7 @@ try {
 
     # Analyze old Snapshots
     if ($ResourceType -eq "All" -or $ResourceType -eq "Snapshots") {
-        $snapshots = Get-AzSnapshot
+        $snapshots = Get-AzSnapshot -ErrorAction Stop
         $cutoffDate = (Get-Date).AddDays(-$DaysUnused)
         
         foreach ($snapshot in $snapshots) {
@@ -160,7 +160,7 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName "Security Analysis" -Status "Finding orphaned security groups"
     
     if ($ResourceType -eq "All" -or $ResourceType -eq "NetworkSecurityGroups") {
-        $nsgs = Get-AzNetworkSecurityGroup
+        $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
         foreach ($nsg in $nsgs) {
             if (-not $nsg.Subnets -and -not $nsg.NetworkInterfaces) {
                 $orphanedResources += [PSCustomObject]@{
@@ -223,33 +223,33 @@ try {
     }
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              ORPHANED RESOURCES ANALYSIS COMPLETE" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "📊 Orphaned Resources Found:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              ORPHANED RESOURCES ANALYSIS COMPLETE"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "📊 Orphaned Resources Found:"
     
     $resourceTypeCounts = $orphanedResources | Group-Object ResourceType
     foreach ($type in $resourceTypeCounts) {
-        Write-Host "   • $($type.Name): $($type.Count) resources" -ForegroundColor White
+        Write-Information "   • $($type.Name): $($type.Count) resources"
     }
     
-    Write-Host ""
-    Write-Host "💰 Cost Analysis:" -ForegroundColor Cyan
-    Write-Host "   • Total Monthly Savings Potential: $${totalSavings:F2}" -ForegroundColor Green
-    Write-Host "   • Annual Savings Potential: $${($totalSavings * 12):F2}" -ForegroundColor Green
+    Write-Information ""
+    Write-Information "💰 Cost Analysis:"
+    Write-Information "   • Total Monthly Savings Potential: $${totalSavings:F2}"
+    Write-Information "   • Annual Savings Potential: $${($totalSavings * 12):F2}"
     
     if ($isDryRunMode) {
-        Write-Host ""
-        Write-Host "🔒 DRY RUN MODE:" -ForegroundColor Yellow
-        Write-Host "   • No resources were deleted" -ForegroundColor White
-        Write-Host "   • Use -DryRun:`$false -RemoveOrphans to actually delete" -ForegroundColor White
+        Write-Information ""
+        Write-Information "🔒 DRY RUN MODE:"
+        Write-Information "   • No resources were deleted"
+        Write-Information "   • Use -DryRun:`$false -RemoveOrphans to actually delete"
     }
     
-    Write-Host ""
-    Write-Host "📋 Report Location: $OutputPath" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Information ""
+    Write-Information "📋 Report Location: $OutputPath"
+    Write-Information ""
 
     Write-Log "✅ Orphaned resources analysis completed successfully!" -Level SUCCESS
 

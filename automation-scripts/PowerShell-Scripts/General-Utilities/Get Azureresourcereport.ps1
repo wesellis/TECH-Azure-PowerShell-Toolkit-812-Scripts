@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Get Azureresourcereport
 
@@ -44,7 +44,8 @@ if (-not (Get-Module -ListAvailable -Name PSWriteHTML)) {
 
 Import-Module PSWriteHTML
 
-function WE-Get-DetailedResourceReport {
+[CmdletBinding()]
+function WE-Get-DetailedResourceReport -ErrorAction Stop {
     $reportData = @{
         Subscriptions = @()
         TotalStats = @{
@@ -57,15 +58,15 @@ function WE-Get-DetailedResourceReport {
     Write-WELog " Gathering detailed statistics across all subscriptions..." " INFO" -ForegroundColor Yellow
     
     # Get all subscriptions
-    $subscriptions = Get-AzSubscription
+    $subscriptions = Get-AzSubscription -ErrorAction Stop
     $reportData.TotalStats.SubscriptionCount = $subscriptions.Count
     
     foreach ($sub in $subscriptions) {
         Write-WELog " Processing subscription: $($sub.Name)" " INFO" -ForegroundColor Cyan
         Set-AzContext -Subscription $sub.Id | Out-Null
         
-        $rgs = Get-AzResourceGroup
-        $resources = Get-AzResource
+        $rgs = Get-AzResourceGroup -ErrorAction Stop
+        $resources = Get-AzResource -ErrorAction Stop
         
         $subData = @{
             Name = $sub.Name
@@ -106,9 +107,11 @@ function WE-Get-DetailedResourceReport {
     return $reportData
 }
 
+[CmdletBinding()]
 function WE-Export-ResourceReportToHtml {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -128,7 +131,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -227,14 +230,14 @@ param(
 
 try {
     # Check if already connected to Azure
-   ;  $context = Get-AzContext
+   ;  $context = Get-AzContext -ErrorAction Stop
     if (-not $context) {
         Write-WELog " Please connect to Azure first using Connect-AzAccount" " INFO" -ForegroundColor Yellow
         Connect-AzAccount
     }
     
     # Get detailed report data
-   ;  $reportData = Get-DetailedResourceReport
+   ;  $reportData = Get-DetailedResourceReport -ErrorAction Stop
     
     # Generate HTML report
     Export-ResourceReportToHtml -ReportData $reportData

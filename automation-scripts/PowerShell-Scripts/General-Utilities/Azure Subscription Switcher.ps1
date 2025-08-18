@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Subscription Switcher
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -83,7 +84,7 @@ Write-WELog " ===========================" " INFO" -ForegroundColor Cyan
 
 
 if ($WECurrent) {
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if ($context) {
         Write-WELog " Current Subscription:" " INFO" -ForegroundColor Green
         Write-WELog "  Name: $($context.Subscription.Name)" " INFO" -ForegroundColor White
@@ -98,7 +99,7 @@ if ($WECurrent) {
 
 if ($WEList) {
     Write-WELog " Available Subscriptions:" " INFO" -ForegroundColor Green
-    $subscriptions = Get-AzSubscription
+    $subscriptions = Get-AzSubscription -ErrorAction Stop
     foreach ($sub in $subscriptions) {
         $status = if ($sub.State -eq " Enabled" ) { " ✓" } else { " ✗" }
         Write-WELog "  $status $($sub.Name) ($($sub.Id))" " INFO" -ForegroundColor White

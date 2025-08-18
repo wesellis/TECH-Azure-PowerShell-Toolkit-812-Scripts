@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Compute, Az.Resources, Az.Network
 
 # Enhanced Azure VM Provisioning Tool with enterprise features
@@ -63,7 +63,7 @@ try {
             Tag = $defaultTags
         }
         
-        $vm = Invoke-AzureOperation -Operation { New-AzVM @vmParams } -OperationName "Create VM" -MaxRetries 2
+        $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } -OperationName "Create VM" -MaxRetries 2
         Write-Log "✓ VM created successfully: $($vm.Name)" -Level SUCCESS
     }
     

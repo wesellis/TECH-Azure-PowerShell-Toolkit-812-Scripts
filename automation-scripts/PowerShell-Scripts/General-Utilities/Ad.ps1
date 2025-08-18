@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ad
 
@@ -55,7 +55,7 @@ for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
         $domainShort = $domainFqdn.Split(" ." )[0]
-        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" , $secpasswd
+        $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" , $secpasswd
         
         if ($authType -eq " CredSSP" ) {
             try {
@@ -89,7 +89,7 @@ for ($count = 0; $count -lt 6; $count++) {
             
         }
        ;  $deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
-       ;  $lcmCred = New-Object System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
+       ;  $lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
         Invoke-Command -Session $session -ScriptBlock {
             echo " Install Nuget Provider"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false

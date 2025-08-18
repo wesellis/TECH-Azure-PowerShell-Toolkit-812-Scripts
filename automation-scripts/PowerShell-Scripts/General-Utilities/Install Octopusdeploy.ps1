@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Install Octopusdeploy
 
@@ -57,6 +57,7 @@ $installerLogPath = $installBasePath + 'Install-OctopusDeploy.ps1.log'
 $octopusLicenseUrl = " https://octopusdeploy.com/api/licenses/trial"
 $WEOFS = " `r`n"
 
+[CmdletBinding()]
 function WE-Write-Log
 {
   [CmdletBinding()]
@@ -69,6 +70,7 @@ param(
   Write-Output " [$timestamp] $message"
 }
 
+[CmdletBinding()]
 function WE-Write-CommandOutput 
 {
   [CmdletBinding()]
@@ -84,7 +86,8 @@ param(
   Write-Output ""
 }
 
-function WE-Get-Config
+[CmdletBinding()]
+function WE-Get-Config -ErrorAction Stop
 {
   Write-Log " ======================================"
   Write-Log " Get Config"
@@ -102,6 +105,7 @@ function WE-Get-Config
   Write-Log ""
 }
 
+[CmdletBinding()]
 function WE-Create-InstallLocation
 {
   Write-Log " ======================================"
@@ -122,6 +126,7 @@ function WE-Create-InstallLocation
   Write-Log ""
 }
 
+[CmdletBinding()]
 function WE-Install-OctopusDeploy
 {
   Write-Log " ======================================"
@@ -129,7 +134,7 @@ function WE-Install-OctopusDeploy
   Write-Log ""
     
   Write-Log " Downloading Octopus Deploy installer '$downloadUrl' to '$msiPath' ..."
-  (New-Object Net.WebClient).DownloadFile($downloadUrl, $msiPath)
+  (New-Object -ErrorAction Stop Net.WebClient).DownloadFile($downloadUrl, $msiPath)
   Write-Log " done."
   
   Write-Log " Installing via '$msiPath' ..."
@@ -146,6 +151,7 @@ function WE-Install-OctopusDeploy
   Write-Log ""
 }
 
+[CmdletBinding()]
 function WE-Configure-OctopusDeploy
 {
   Write-Log " ======================================"
@@ -228,7 +234,7 @@ function WE-Configure-OctopusDeploy
   Write-Log " Obtaining a trial license for Full Name: $($config.licenseFullName), Organisation Name: $($config.licenseOrganisationName), Email Address: $($config.licenseEmailAddress) ..."
  ;  $postParams = @{ FullName=" $($config.licenseFullName)" ;Organization=" $($config.licenseOrganisationName)" ;EmailAddress=" $($config.licenseEmailAddress)" }
   $response = Invoke-WebRequest -UseBasicParsing -Uri " $octopusLicenseUrl" -Method POST -Body $postParams
-  $utf8NoBOM = New-Object System.Text.UTF8Encoding($false)
+  $utf8NoBOM = New-Object -ErrorAction Stop System.Text.UTF8Encoding($false)
   $bytes  = $utf8NoBOM.GetBytes($response.Content)
   $licenseBase64 = [System.Convert]::ToBase64String($bytes)
   Write-Log " done."
@@ -260,6 +266,7 @@ function WE-Configure-OctopusDeploy
   Write-Log ""
 } 
 
+[CmdletBinding()]
 function WE-Configure-Firewall
 {
   Write-Log " ======================================"
@@ -282,7 +289,7 @@ function WE-Configure-Firewall
       Profile='Any'
       Action='Allow'
     }
-   ;  $output = (New-NetFirewallRule @firewallRule | Out-String)
+   ;  $output = (New-NetFirewallRule -ErrorAction Stop @firewallRule | Out-String)
     Write-CommandOutput $output
     Write-Log " done."
   }
@@ -301,7 +308,7 @@ try
   Write-Log " ======================================"
   Write-Log ""
   
-  Get-Config
+  Get-Config -ErrorAction Stop
   Create-InstallLocation
   Install-OctopusDeploy
   Configure-OctopusDeploy

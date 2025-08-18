@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Bastion Host Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,7 +21,7 @@ param (
     [string]$Location
 )
 
-Write-Host "Creating Azure Bastion: $BastionName"
+Write-Information "Creating Azure Bastion: $BastionName"
 
 # Get VNet
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
@@ -29,7 +29,7 @@ $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetNa
 # Create AzureBastionSubnet if it doesn't exist
 $BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet" -ErrorAction SilentlyContinue
 if (-not $BastionSubnet) {
-    Write-Host "Creating AzureBastionSubnet..."
+    Write-Information "Creating AzureBastionSubnet..."
     Add-AzVirtualNetworkSubnetConfig -Name "AzureBastionSubnet" -VirtualNetwork $VNet -AddressPrefix "10.0.1.0/24"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
     $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
@@ -38,7 +38,7 @@ if (-not $BastionSubnet) {
 
 # Create public IP for Bastion
 $BastionIpName = "$BastionName-pip"
-$BastionIp = New-AzPublicIpAddress `
+$BastionIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $BastionIpName `
     -Location $Location `
@@ -46,21 +46,21 @@ $BastionIp = New-AzPublicIpAddress `
     -Sku Standard
 
 # Create Bastion
-Write-Host "Creating Bastion host (this may take 10-15 minutes)..."
-$Bastion = New-AzBastion `
+Write-Information "Creating Bastion host (this may take 10-15 minutes)..."
+$Bastion = New-AzBastion -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $BastionName `
     -PublicIpAddress $BastionIp `
     -VirtualNetwork $VNet
 
-Write-Host "✅ Azure Bastion created successfully:"
-Write-Host "  Name: $($Bastion.Name)"
-Write-Host "  Location: $($Bastion.Location)"
-Write-Host "  Public IP: $($BastionIp.IpAddress)"
-Write-Host "  DNS Name: $($BastionIp.DnsSettings.Fqdn)"
+Write-Information "✅ Azure Bastion created successfully:"
+Write-Information "  Name: $($Bastion.Name)"
+Write-Information "  Location: $($Bastion.Location)"
+Write-Information "  Public IP: $($BastionIp.IpAddress)"
+Write-Information "  DNS Name: $($BastionIp.DnsSettings.Fqdn)"
 
-Write-Host "`nBastion Usage:"
-Write-Host "• Connect to VMs via Azure Portal"
-Write-Host "• No need for public IPs on VMs"
-Write-Host "• Secure RDP/SSH access"
-Write-Host "• No VPN client required"
+Write-Information "`nBastion Usage:"
+Write-Information "• Connect to VMs via Azure Portal"
+Write-Information "• No need for public IPs on VMs"
+Write-Information "• Secure RDP/SSH access"
+Write-Information "• No VPN client required"

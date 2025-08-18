@@ -1,4 +1,4 @@
-#Requires -Module PowerShellGet
+﻿#Requires -Module PowerShellGet
 <#
 .SYNOPSIS
     Publishes Azure Enterprise Toolkit modules to PowerShell Gallery
@@ -42,12 +42,12 @@ $Modules = @(
     'security\Az.Security.Enterprise'
 )
 
-Write-Host "Azure Enterprise Toolkit - PowerShell Gallery Publisher" -ForegroundColor Cyan
-Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host ""
+Write-Information "Azure Enterprise Toolkit - PowerShell Gallery Publisher"
+Write-Information "======================================================"
+Write-Information ""
 
 # Verify modules exist
-Write-Host "Verifying modules..." -ForegroundColor Yellow
+Write-Information "Verifying modules..."
 $modulesToPublish = @()
 
 foreach ($module in $Modules) {
@@ -63,7 +63,7 @@ foreach ($module in $Modules) {
             Description = $manifest.Description
         }
         $modulesToPublish += $moduleInfo
-        Write-Host "  ✓ $($moduleInfo.Name) v$($moduleInfo.Version)" -ForegroundColor Green
+        Write-Information "  ✓ $($moduleInfo.Name) v$($moduleInfo.Version)"
     } else {
         Write-Warning "  ✗ Module not found: $module"
     }
@@ -74,22 +74,22 @@ if ($modulesToPublish.Count -eq 0) {
     return
 }
 
-Write-Host ""
-Write-Host "Found $($modulesToPublish.Count) modules to publish" -ForegroundColor Green
-Write-Host ""
+Write-Information ""
+Write-Information "Found $($modulesToPublish.Count) modules to publish"
+Write-Information ""
 
 # Confirm before publishing
 if (-not $Force -and -not $WhatIf) {
     $confirm = Read-Host "Do you want to publish these modules to $Repository? (Y/N)"
     if ($confirm -ne 'Y') {
-        Write-Host "Publishing cancelled" -ForegroundColor Yellow
+        Write-Information "Publishing cancelled"
         return
     }
 }
 
 # Publish each module
 foreach ($module in $modulesToPublish) {
-    Write-Host "Publishing $($module.Name) v$($module.Version)..." -ForegroundColor Cyan
+    Write-Information "Publishing $($module.Name) v$($module.Version)..."
     
     if ($PSCmdlet.ShouldProcess($module.Name, "Publish to $Repository")) {
         try {
@@ -104,42 +104,42 @@ foreach ($module in $modulesToPublish) {
                           -Verbose:$VerbosePreference `
                           -ErrorAction Stop
             
-            Write-Host "  ✓ Successfully published $($module.Name)" -ForegroundColor Green
+            Write-Information "  ✓ Successfully published $($module.Name)"
             
             # Display module URL
             $moduleUrl = "https://www.powershellgallery.com/packages/$($module.Name)"
-            Write-Host "  📦 View at: $moduleUrl" -ForegroundColor Cyan
+            Write-Information "  📦 View at: $moduleUrl"
             
         } catch {
             Write-Error "  ✗ Failed to publish $($module.Name): $_"
         }
     } else {
-        Write-Host "  [WhatIf] Would publish $($module.Name) to $Repository" -ForegroundColor Yellow
+        Write-Information "  [WhatIf] Would publish $($module.Name) to $Repository"
     }
     
-    Write-Host ""
+    Write-Information ""
 }
 
 # Summary
-Write-Host "Publishing Summary" -ForegroundColor Cyan
-Write-Host "==================" -ForegroundColor Cyan
-Write-Host ""
+Write-Information "Publishing Summary"
+Write-Information "=================="
+Write-Information ""
 
 if ($WhatIf) {
-    Write-Host "WhatIf mode - no modules were actually published" -ForegroundColor Yellow
+    Write-Information "WhatIf mode - no modules were actually published"
 } else {
-    Write-Host "Publishing complete!" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Next steps:" -ForegroundColor Yellow
-    Write-Host "1. Verify modules at https://www.powershellgallery.com/profiles/WesEllis" -ForegroundColor White
-    Write-Host "2. Test installation: Install-Module -Name Az.Accounts.Enterprise" -ForegroundColor White
-    Write-Host "3. Share on social media and PowerShell communities" -ForegroundColor White
-    Write-Host "4. Monitor download statistics" -ForegroundColor White
+    Write-Information "Publishing complete!"
+    Write-Information ""
+    Write-Information "Next steps:"
+    Write-Information "1. Verify modules at https://www.powershellgallery.com/profiles/WesEllis"
+    Write-Information "2. Test installation: Install-Module -Name Az.Accounts.Enterprise"
+    Write-Information "3. Share on social media and PowerShell communities"
+    Write-Information "4. Monitor download statistics"
 }
 
 # Create a simple tracking file
 $publishLog = @{
-    PublishDate = Get-Date
+    PublishDate = Get-Date -ErrorAction Stop
     ModulesPublished = $modulesToPublish
     Repository = $Repository
     Publisher = $env:USERNAME
@@ -148,5 +148,5 @@ $publishLog = @{
 $logPath = Join-Path $PSScriptRoot "last-publish.json"
 $publishLog | ConvertTo-Json -Depth 3 | Out-File $logPath -Force
 
-Write-Host ""
-Write-Host "Publish log saved to: $logPath" -ForegroundColor Gray
+Write-Information ""
+Write-Information "Publish log saved to: $logPath"

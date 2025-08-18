@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Finops Automation Engine
 
@@ -129,7 +129,7 @@ class FinOpsEngine {
         Write-WELog " Analyzing costs for subscription: $WESubscriptionId" " INFO" -ForegroundColor Yellow
         
         # Get cost data for last 30 days
-        $endDate = Get-Date
+        $endDate = Get-Date -ErrorAction Stop
         $startDate = $endDate.AddDays(-30)
         
         $query = @{
@@ -194,7 +194,7 @@ class FinOpsEngine {
         $unusedResources = @()
         
         # Check for unused disks
-        $disks = Get-AzDisk
+        $disks = Get-AzDisk -ErrorAction Stop
         foreach ($disk in $disks) {
             if ($disk.DiskState -eq " Unattached" ) {
                 $unusedResources = $unusedResources + @{
@@ -209,7 +209,7 @@ class FinOpsEngine {
         }
         
         # Check for unused public IPs
-        $publicIps = Get-AzPublicIpAddress
+        $publicIps = Get-AzPublicIpAddress -ErrorAction Stop
         foreach ($ip in $publicIps) {
             if (!$ip.IpConfiguration) {
                 $unusedResources = $unusedResources + @{
@@ -248,10 +248,10 @@ class FinOpsEngine {
         $rightSizingRecommendations = @()
         
         # Analyze VM performance metrics
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         foreach ($vm in $vms) {
             # Get CPU metrics for last 7 days
-            $endTime = Get-Date
+            $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddDays(-7)
             
             $metrics = Get-AzMetric -ResourceId $vm.Id -MetricName " Percentage CPU" `
@@ -308,7 +308,7 @@ class FinOpsEngine {
         $riRecommendations = @()
         
         # Analyze steady-state workloads
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         $vmsBySize = $vms | Group-Object -Property { $_.HardwareProfile.VmSize }
         
         foreach ($group in $vmsBySize) {
@@ -334,7 +334,7 @@ class FinOpsEngine {
     [string]$WESubscriptionId) {
         $shutdownCandidates = @()
         
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         foreach ($vm in $vms) {
             $tags = $vm.Tags
             
@@ -365,7 +365,7 @@ class FinOpsEngine {
         $storageOptimizations = @()
         
         # Analyze storage accounts
-        $storageAccounts = Get-AzStorageAccount
+        $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
         foreach ($storage in $storageAccounts) {
             # Check for lifecycle management
             $lifecycle = Get-AzStorageAccountManagementPolicy -ResourceGroupName $storage.ResourceGroupName `
@@ -407,7 +407,7 @@ class FinOpsEngine {
         $networkOptimizations = @()
         
         # Check for unused Application Gateways
-        $appGateways = Get-AzApplicationGateway
+        $appGateways = Get-AzApplicationGateway -ErrorAction Stop
         foreach ($gw in $appGateways) {
             if ($gw.BackendAddressPools.Count -eq 0 -or 
                 $gw.BackendAddressPools[0].BackendAddresses.Count -eq 0) {
@@ -423,7 +423,7 @@ class FinOpsEngine {
         }
         
         # Check for ExpressRoute circuits utilization
-        $circuits = Get-AzExpressRouteCircuit
+        $circuits = Get-AzExpressRouteCircuit -ErrorAction Stop
         foreach ($circuit in $circuits) {
             # This is a placeholder - actual utilization check would be more complex
             $networkOptimizations = $networkOptimizations + @{
@@ -483,7 +483,7 @@ class FinOpsEngine {
         # In a real implementation, this would use Azure ML or more sophisticated algorithms
         
        ;  $predictions = @()
-       ;  $currentDate = Get-Date
+       ;  $currentDate = Get-Date -ErrorAction Stop
         
         for ($i = 1; $i -le $WEDaysAhead; $i++) {
             $predictedDate = $currentDate.AddDays($i)
@@ -500,6 +500,7 @@ class FinOpsEngine {
     }
 }
 
+[CmdletBinding()]
 function WE-Generate-FinOpsReport {
     [CmdletBinding()]; 
 $ErrorActionPreference = " Stop"
@@ -662,7 +663,7 @@ try {
     Write-WELog " ===================================" " INFO" -ForegroundColor Cyan
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
         Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
         Connect-AzAccount
@@ -670,7 +671,7 @@ try {
     
     # Get subscriptions to analyze
     if (!$WESubscriptionId) {
-        $subscriptions = Get-AzSubscription | Where-Object { $_.State -eq " Enabled" }
+        $subscriptions = Get-AzSubscription -ErrorAction Stop | Where-Object { $_.State -eq " Enabled" }
         $WESubscriptionId = $subscriptions.Id
     }
     

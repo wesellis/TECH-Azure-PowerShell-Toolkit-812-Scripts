@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Remap Code Drive
 
@@ -63,8 +63,8 @@ function WE-RemapCodeDrive($WETaskParams) {
     }
 
     # FileSystemType ReFS applies to Dev Drive as well, which is a special " Trusted" mode of ReFS.
-    Write-WELog " `nStarted with volumes:$(Get-Volume | Out-String)" " INFO"
-   ;  $WEFirstReFSVolume = (Get-Volume | Where-Object { $_.FileSystemType -eq " ReFS" } | Select-Object -First 1)
+    Write-WELog " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
+   ;  $WEFirstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq " ReFS" } | Select-Object -First 1)
     if (!$WEFirstReFSVolume) {
         throw " No ReFS drive found" ;
     }
@@ -82,11 +82,11 @@ function WE-RemapCodeDrive($WETaskParams) {
         Set-Partition -DriveLetter $WEFromDriveLetter -NewDriveLetter $WEToDriveLetter
     }
 
-    Write-WELog " `nEnded with volumes:$(Get-Volume | Out-String)" " INFO"
+    Write-WELog " `nEnded with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
 
     # This will mount the drive and open a handle to it.
     Write-WELog " Checking dir contents of ${ToDriveLetter}: drive" " INFO"
-    Get-ChildItem ${ToDriveLetter}:
+    Get-ChildItem -ErrorAction Stop ${ToDriveLetter}:
 }
 
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {

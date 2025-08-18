@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Openai Service Manager
 
@@ -133,7 +133,7 @@ try {
             }
             
             Invoke-AzureOperation -Operation {
-                New-AzCognitiveServicesAccount @openAIParams
+                New-AzCognitiveServicesAccount -ErrorAction Stop @openAIParams
             } -OperationName " Create OpenAI Account" | Out-Null
             
             Write-Log " ✓ OpenAI account created: $WEAccountName" -Level SUCCESS
@@ -231,7 +231,7 @@ try {
                     MetricCategory = @(" AllMetrics" )
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null

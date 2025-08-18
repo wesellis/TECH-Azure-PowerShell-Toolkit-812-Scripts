@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2.1 List Backup Vaults And Monitor Backup Job
 
@@ -34,10 +34,11 @@
     Requires appropriate permissions and modules
 
 
-function WE-Get-AzureBackupVaultDetails {
+[CmdletBinding()]
+function WE-Get-AzureBackupVaultDetails -ErrorAction Stop {
     try {
         Write-WELog "Retrieving Recovery Services vaults..." " INFO" -ForegroundColor Yellow
-        $vaults = Get-AzRecoveryServicesVault
+        $vaults = Get-AzRecoveryServicesVault -ErrorAction Stop
         
         $vaultDetails = @()
         $menuOptions = @{}
@@ -69,9 +70,11 @@ function WE-Get-AzureBackupVaultDetails {
 }
 
 
-function WE-Get-BackupJobsList {
+[CmdletBinding()]
+function WE-Get-BackupJobsList -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
@@ -89,7 +92,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -139,9 +142,11 @@ param(
 }
 
 
+[CmdletBinding()]
 function WE-Select-BackupJob {
     
 
+[CmdletBinding()]
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
@@ -159,7 +164,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -201,6 +206,7 @@ param(
 
 
 
+[CmdletBinding()]
 function WE-Watch-AzureBackupJob {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -223,7 +229,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -247,7 +253,7 @@ param(
 
         $jobHistory = @()
         $completed = $false
-        $startTime = Get-Date
+        $startTime = Get-Date -ErrorAction Stop
         
         while (-not $completed) {
             Clear-Host
@@ -303,7 +309,7 @@ param(
             
             # Update job history
            ;  $jobHistory = $jobHistory + [PSCustomObject]@{
-                TimeStamp = Get-Date
+                TimeStamp = Get-Date -ErrorAction Stop
                 Status = $job.Status
                 WorkloadName = $job.WorkloadName
                 Operation = $job.Operation
@@ -345,7 +351,7 @@ param(
 
 try {
     Write-WELog " Getting Recovery Services vault details..." " INFO" -ForegroundColor Cyan
-    $vaultInfo = Get-AzureBackupVaultDetails
+    $vaultInfo = Get-AzureBackupVaultDetails -ErrorAction Stop
     $menuOptions = $vaultInfo.MenuOptions
     
     Write-WELog " `nPlease select a vault:" " INFO" -ForegroundColor Yellow

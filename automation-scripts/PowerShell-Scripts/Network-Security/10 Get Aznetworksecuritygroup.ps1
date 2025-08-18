@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     10 Get Aznetworksecuritygroup
 
@@ -55,7 +55,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
     General notes
 
 
-Get-AzNetworkSecurityGroup | Select-Object -Property Name
+Get-AzNetworkSecurityGroup -ErrorAction Stop | Select-Object -Property Name
 
 Get-AzNetworkSecurityGroup -Name 'FAX1-nsg' -ResourceGroupName " FAX1_GROUP"
 

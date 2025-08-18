@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Stop Azurev2Vmrunbook
 
@@ -115,7 +115,7 @@ if ($WEResourceGroupName)
 }
 else 
 { 
-	$WEVMs = Get-AzureRmVM
+	$WEVMs = Get-AzureRmVM -ErrorAction Stop
 }
 
 

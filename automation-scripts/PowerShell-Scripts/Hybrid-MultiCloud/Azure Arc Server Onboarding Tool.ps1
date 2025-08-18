@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Arc Server Onboarding Tool
 
@@ -169,6 +169,7 @@ try {
 }
 
 
+[CmdletBinding()]
 function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
@@ -197,6 +198,7 @@ function WE-Write-EnhancedLog {
 }
 
 
+[CmdletBinding()]
 function WE-Connect-ToAzure {
     try {
         if ($WESubscriptionId) {
@@ -205,7 +207,7 @@ function WE-Connect-ToAzure {
             Connect-AzAccount
         }
         
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         Write-EnhancedLog " Successfully connected to Azure subscription: $($context.Subscription.Name)" " Success"
         return $true
     } catch {
@@ -215,7 +217,8 @@ function WE-Connect-ToAzure {
 }
 
 
-function WE-New-ArcOnboardingScript {
+[CmdletBinding()]
+function WE-New-ArcOnboardingScript -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory=$false)]
@@ -303,6 +306,7 @@ echo " Azure Arc onboarding completed for $WEServerName"
 }
 
 
+[CmdletBinding()]
 function WE-Install-ArcExtension {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -331,7 +335,7 @@ function WE-Install-ArcExtension {
                 Type = $extension
             }
             
-            New-AzConnectedMachineExtension @extensionParams
+            New-AzConnectedMachineExtension -ErrorAction Stop @extensionParams
             Write-EnhancedLog " Successfully installed extension '$extension'" " Success"
             
         } catch {
@@ -341,6 +345,7 @@ function WE-Install-ArcExtension {
 }
 
 
+[CmdletBinding()]
 function WE-Enable-ArcMonitoring {
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -375,7 +380,7 @@ function WE-Enable-ArcMonitoring {
             }
         }
         
-        New-AzConnectedMachineExtension @monitoringExtension
+        New-AzConnectedMachineExtension -ErrorAction Stop @monitoringExtension
         Write-EnhancedLog " Successfully configured monitoring for '$WEServerName'" " Success"
         
     } catch {
@@ -384,7 +389,8 @@ function WE-Enable-ArcMonitoring {
 }
 
 
-function WE-Set-ComplianceConfiguration {
+[CmdletBinding()]
+function WE-Set-ComplianceConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -419,6 +425,7 @@ function WE-Set-ComplianceConfiguration {
 }
 
 
+[CmdletBinding()]
 function WE-Start-BulkOnboarding {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Resource Group Cost Calculator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -12,7 +12,7 @@ param (
     [string]$ResourceGroupName
 )
 
-Write-Host "Calculating estimated costs for Resource Group: $ResourceGroupName"
+Write-Information "Calculating estimated costs for Resource Group: $ResourceGroupName"
 
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
 
@@ -40,10 +40,10 @@ foreach ($Resource in $Resources) {
     $TotalEstimatedCost += $EstimatedMonthlyCost
 }
 
-Write-Host "`nCost Breakdown:"
+Write-Information "`nCost Breakdown:"
 foreach ($Item in $CostBreakdown) {
-    Write-Host "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
+    Write-Information "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
 }
 
-Write-Host "`nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
-Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
+Write-Information "`nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
+Write-Information "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"

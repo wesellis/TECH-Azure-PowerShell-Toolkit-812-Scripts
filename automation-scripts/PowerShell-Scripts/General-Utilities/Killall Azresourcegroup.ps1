@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Killall Azresourcegroup
 
@@ -39,13 +39,13 @@
 This script recursively calls the Kill-AzResourceGroup.ps1 script to remove any resourceGroups that failed deletion previous.
 Some resource cannot be deleted until hours after they are created
 
-$x = Get-AzResourceGroup | Select ResourceGroupName
+$x = Get-AzResourceGroup -ErrorAction Stop | Select ResourceGroupName
 foreach($rg in $x)
 try {
     # Main script execution
 {
 $o = "'" + $rg.ResourceGroupName + " ',"
-Write-Host $o
+Write-Information $o
 }
 
 $rgs = @( ... )
@@ -65,7 +65,7 @@ param(
 $azdoResourceGroups = @()
 
 
-Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings " true"
+Set-Item -ErrorAction Stop Env:\SuppressAzurePowerShellBreakingChangeWarnings " true"
 
 if ($WEResourceGroupNames.count -ne 0) {
     foreach ($rgName in $WEResourceGroupNames) {
@@ -79,7 +79,7 @@ elseif (![string]::IsNullOrWhiteSpace($WEResourceGroupName)) {
 }
 else {
     #if a RG name was not passed remove all with the CI pattern
-    $azdoResourceGroups = get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like $WEPattern }
+    $azdoResourceGroups = get-AzResourceGroup -ErrorAction Stop | Where-Object { $_.ResourceGroupName -like $WEPattern }
    ;  $WESecondErrorAction = " SilentlyContinue"
 }
 

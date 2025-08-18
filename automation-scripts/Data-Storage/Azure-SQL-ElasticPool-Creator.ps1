@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure SQL Elastic Pool Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -30,9 +30,9 @@ param (
     [int]$DatabaseDtuMax = 100
 )
 
-Write-Host "Creating SQL Elastic Pool: $ElasticPoolName"
+Write-Information "Creating SQL Elastic Pool: $ElasticPoolName"
 
-$ElasticPool = New-AzSqlElasticPool `
+$ElasticPool = New-AzSqlElasticPool -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -ServerName $ServerName `
     -ElasticPoolName $ElasticPoolName `
@@ -41,22 +41,22 @@ $ElasticPool = New-AzSqlElasticPool `
     -DatabaseDtuMin $DatabaseDtuMin `
     -DatabaseDtuMax $DatabaseDtuMax
 
-Write-Host "✅ SQL Elastic Pool created successfully:"
-Write-Host "  Name: $($ElasticPool.ElasticPoolName)"
-Write-Host "  Server: $($ElasticPool.ServerName)"
-Write-Host "  Edition: $($ElasticPool.Edition)"
-Write-Host "  Pool DTU: $($ElasticPool.Dtu)"
-Write-Host "  Database DTU Min: $($ElasticPool.DatabaseDtuMin)"
-Write-Host "  Database DTU Max: $($ElasticPool.DatabaseDtuMax)"
-Write-Host "  State: $($ElasticPool.State)"
+Write-Information "✅ SQL Elastic Pool created successfully:"
+Write-Information "  Name: $($ElasticPool.ElasticPoolName)"
+Write-Information "  Server: $($ElasticPool.ServerName)"
+Write-Information "  Edition: $($ElasticPool.Edition)"
+Write-Information "  Pool DTU: $($ElasticPool.Dtu)"
+Write-Information "  Database DTU Min: $($ElasticPool.DatabaseDtuMin)"
+Write-Information "  Database DTU Max: $($ElasticPool.DatabaseDtuMax)"
+Write-Information "  State: $($ElasticPool.State)"
 
-Write-Host "`nElastic Pool Benefits:"
-Write-Host "• Cost optimization for multiple databases"
-Write-Host "• Automatic resource balancing"
-Write-Host "• Simplified management"
-Write-Host "• Predictable pricing model"
+Write-Information "`nElastic Pool Benefits:"
+Write-Information "• Cost optimization for multiple databases"
+Write-Information "• Automatic resource balancing"
+Write-Information "• Simplified management"
+Write-Information "• Predictable pricing model"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Move existing databases to the pool"
-Write-Host "2. Create new databases in the pool"
-Write-Host "3. Monitor resource utilization"
+Write-Information "`nNext Steps:"
+Write-Information "1. Move existing databases to the pool"
+Write-Information "2. Create new databases in the pool"
+Write-Information "3. Monitor resource utilization"

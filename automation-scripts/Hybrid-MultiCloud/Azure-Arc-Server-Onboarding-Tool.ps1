@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.ConnectedMachine
 
 <#
@@ -95,13 +95,14 @@ try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.ConnectedMachine -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -117,7 +118,7 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
     
     # Log to file if specified
     if ($script:LogPath) {
@@ -126,6 +127,7 @@ function Write-EnhancedLog {
 }
 
 # Azure Authentication
+[CmdletBinding()]
 function Connect-ToAzure {
     try {
         if ($SubscriptionId) {
@@ -134,7 +136,7 @@ function Connect-ToAzure {
             Connect-AzAccount
         }
         
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         Write-EnhancedLog "Successfully connected to Azure subscription: $($context.Subscription.Name)" "Success"
         return $true
     } catch {
@@ -144,7 +146,8 @@ function Connect-ToAzure {
 }
 
 # Generate Arc onboarding script
-function New-ArcOnboardingScript {
+[CmdletBinding()]
+function New-ArcOnboardingScript -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$ServerName,
@@ -188,7 +191,7 @@ msiexec /i AzureConnectedMachineAgent.msi /l*v installationlog.txt /qn
     --resource-name "$ServerName" ``
     --tags "$(($Tags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ',')"
 
-Write-Host "Azure Arc onboarding completed for $ServerName"
+Write-Information "Azure Arc onboarding completed for $ServerName"
 "@
             $windowsScript | Out-File -FilePath ".\Arc-Onboarding-Windows-$ServerName.ps1" -Encoding UTF8
             Write-EnhancedLog "Generated Windows onboarding script: Arc-Onboarding-Windows-$ServerName.ps1" "Success"
@@ -230,6 +233,7 @@ echo "Azure Arc onboarding completed for $ServerName"
 }
 
 # Install Arc extensions
+[CmdletBinding()]
 function Install-ArcExtension {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -254,7 +258,7 @@ function Install-ArcExtension {
                 Type = $extension
             }
             
-            New-AzConnectedMachineExtension @extensionParams
+            New-AzConnectedMachineExtension -ErrorAction Stop @extensionParams
             Write-EnhancedLog "Successfully installed extension '$extension'" "Success"
             
         } catch {
@@ -264,6 +268,7 @@ function Install-ArcExtension {
 }
 
 # Configure monitoring for Arc servers
+[CmdletBinding()]
 function Enable-ArcMonitoring {
     param([string]$ServerName)
     
@@ -294,7 +299,7 @@ function Enable-ArcMonitoring {
             }
         }
         
-        New-AzConnectedMachineExtension @monitoringExtension
+        New-AzConnectedMachineExtension -ErrorAction Stop @monitoringExtension
         Write-EnhancedLog "Successfully configured monitoring for '$ServerName'" "Success"
         
     } catch {
@@ -303,7 +308,8 @@ function Enable-ArcMonitoring {
 }
 
 # Configure compliance policies
-function Set-ComplianceConfiguration {
+[CmdletBinding()]
+function Set-ComplianceConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$ServerName)
     
@@ -334,6 +340,7 @@ function Set-ComplianceConfiguration {
 }
 
 # Process bulk server onboarding
+[CmdletBinding()]
 function Start-BulkOnboarding {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$CsvPath)

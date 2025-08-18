@@ -1,12 +1,12 @@
-# Stuff I Need You to Do - Azure Enterprise Toolkit
+﻿# Stuff I Need You to Do - Azure Enterprise Toolkit
 # Human tasks that require manual intervention
 
-Write-Host "Azure Enterprise Toolkit - Human Tasks Required" -ForegroundColor Cyan
-Write-Host "=" * 50 -ForegroundColor Cyan
+Write-Information "Azure Enterprise Toolkit - Human Tasks Required"
+Write-Information "=" * 50 -ForegroundColor Cyan
 
 # Task 1: GitHub Repository Settings
-Write-Host "`n📋 Task 1: Update GitHub Repository Settings" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 1: Update GitHub Repository Settings"
+Write-Information @"
 Please update the following in the GitHub repository settings:
 
 1. Repository Description:
@@ -29,8 +29,8 @@ Please update the following in the GitHub repository settings:
 "@
 
 # Task 2: Module Publishing
-Write-Host "`n📋 Task 2: PowerShell Gallery Publishing (Optional)" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 2: PowerShell Gallery Publishing (Optional)"
+Write-Information @"
 If you want to publish the enterprise modules to PowerShell Gallery:
 
 1. Create API key at: https://www.powershellgallery.com/account/apikeys
@@ -53,8 +53,8 @@ If you want to publish the enterprise modules to PowerShell Gallery:
 "@
 
 # Task 3: Azure Resource Setup
-Write-Host "`n📋 Task 3: Azure Resources for Testing" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 3: Azure Resources for Testing"
+Write-Information @"
 To fully test the enterprise modules, you'll need:
 
 1. Azure Subscription with appropriate permissions
@@ -70,8 +70,8 @@ Run this to create test service principal:
 "@
 
 # Task 4: Documentation Site
-Write-Host "`n📋 Task 4: GitHub Pages Documentation" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 4: GitHub Pages Documentation"
+Write-Information @"
 Update the documentation site with new module information:
 
 1. Add module documentation pages
@@ -81,8 +81,8 @@ Update the documentation site with new module information:
 "@
 
 # Task 5: CI/CD Pipeline
-Write-Host "`n📋 Task 5: Update GitHub Actions Workflow" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 5: Update GitHub Actions Workflow"
+Write-Information @"
 Consider adding module-specific tests to .github/workflows/powershell-ci.yml:
 
 - Test module imports
@@ -92,8 +92,8 @@ Consider adding module-specific tests to .github/workflows/powershell-ci.yml:
 "@
 
 # Task 6: Security Review
-Write-Host "`n📋 Task 6: Security Considerations" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 6: Security Considerations"
+Write-Information @"
 Review and implement:
 
 1. Secure credential storage examples
@@ -104,8 +104,8 @@ Review and implement:
 "@
 
 # Task 7: MONETIZATION - PRIORITY #1
-Write-Host "`n💰 Task 7: MONETIZATION SETUP (DO THIS FIRST!)" -ForegroundColor Green -BackgroundColor DarkGreen
-Write-Host @"
+Write-Information "`n💰 Task 7: MONETIZATION SETUP (DO THIS FIRST!)" -BackgroundColor DarkGreen
+Write-Information @"
 IMMEDIATE REVENUE OPPORTUNITIES:
 
 1. PowerShell Gallery Premium Modules:
@@ -142,8 +142,8 @@ TOTAL POTENTIAL: `$4,600 - `$23,000/month!
 "@
 
 # Task 8: Next Development Priorities
-Write-Host "`n📋 Task 8: Continue Development (AFTER monetization)" -ForegroundColor Yellow
-Write-Host @"
+Write-Information "`n📋 Task 8: Continue Development (AFTER monetization)"
+Write-Information @"
 Based on the action list, next priorities are:
 
 1. Complete Az.KeyVault module
@@ -153,6 +153,6 @@ Based on the action list, next priorities are:
 5. Create comprehensive documentation
 "@
 
-Write-Host "`n" + ("=" * 50) -ForegroundColor Cyan
-Write-Host "Run this script later to see pending human tasks" -ForegroundColor Green
-Write-Host "Some tasks are optional but recommended for production use" -ForegroundColor Green
+Write-Information "`n" + ("=" * 50) -ForegroundColor Cyan
+Write-Information "Run this script later to see pending human tasks"
+Write-Information "Some tasks are optional but recommended for production use"

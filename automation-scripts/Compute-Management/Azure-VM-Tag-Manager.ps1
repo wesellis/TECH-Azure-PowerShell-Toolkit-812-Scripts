@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Tag Manager
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,7 +18,7 @@ param (
     [hashtable]$Tags
 )
 
-Write-Host "Updating tags for VM: $VmName"
+Write-Information "Updating tags for VM: $VmName"
 
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 
@@ -28,8 +28,8 @@ if (-not $ExistingTags) { $ExistingTags = @{} }
 
 foreach ($Tag in $Tags.GetEnumerator()) {
     $ExistingTags[$Tag.Key] = $Tag.Value
-    Write-Host "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
+    Write-Information "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
 }
 
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
-Write-Host "Tags updated successfully for VM: $VmName"
+Write-Information "Tags updated successfully for VM: $VmName"

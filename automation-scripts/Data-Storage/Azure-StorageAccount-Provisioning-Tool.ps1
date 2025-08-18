@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Storage Account Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -16,15 +16,15 @@ param (
     [string]$AccessTier = "Hot"
 )
 
-Write-Host "Provisioning Storage Account: $StorageAccountName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
-Write-Host "Kind: $Kind"
-Write-Host "Access Tier: $AccessTier"
+Write-Information "Provisioning Storage Account: $StorageAccountName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "SKU: $SkuName"
+Write-Information "Kind: $Kind"
+Write-Information "Access Tier: $AccessTier"
 
 # Create the storage account
-$StorageAccount = New-AzStorageAccount `
+$StorageAccount = New-AzStorageAccount -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $StorageAccountName `
     -Location $Location `
@@ -33,5 +33,5 @@ $StorageAccount = New-AzStorageAccount `
     -AccessTier $AccessTier `
     -EnableHttpsTrafficOnly $true
 
-Write-Host "Storage Account $StorageAccountName provisioned successfully"
-Write-Host "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)"
+Write-Information "Storage Account $StorageAccountName provisioned successfully"
+Write-Information "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)"

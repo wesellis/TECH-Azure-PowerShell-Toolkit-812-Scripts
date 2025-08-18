@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Python 311
 
@@ -34,7 +34,8 @@
     Requires appropriate permissions and modules
 
 
-Function Get-Python {
+[CmdletBinding()]
+Function Get-Python -ErrorAction Stop {
     $url = 'https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe'
    ;  $python = "$env:Temp\python-3.11.0-amd64.exe"
 
@@ -57,7 +58,7 @@ Function Get-Python {
     }
 }
 
-Get-Python
+Get-Python -ErrorAction Stop
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

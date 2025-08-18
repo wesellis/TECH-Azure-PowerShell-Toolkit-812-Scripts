@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Psconfiguration
 
@@ -77,7 +77,7 @@ param(
    ;  $WEDPMPComputerAccount = " $WEDName\$WEDPMPName$"
    ;  $WEClients = [system.String]::Join(" ," , $WEClientName)
     
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node LOCALHOST
     {

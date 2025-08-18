@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.3 New Azvirtualnetwork
 
@@ -74,7 +74,7 @@ $newAzVirtualNetworkSplat = @{
     Subnet = $subnet
 }
 ; 
-$vnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+$vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 
 
 

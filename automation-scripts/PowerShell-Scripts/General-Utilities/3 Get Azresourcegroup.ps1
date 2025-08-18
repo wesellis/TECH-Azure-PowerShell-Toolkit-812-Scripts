@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     3 Get Azresourcegroup
 
@@ -34,14 +34,14 @@
     Requires appropriate permissions and modules
 
 
-Get-AzResourceGroup | Select-Object -Property ResourceGroupName, Location
-Get-AzResourceGroup | Select-Object -Property ResourceGroupName, Location
+Get-AzResourceGroup -ErrorAction Stop | Select-Object -Property ResourceGroupName, Location
+Get-AzResourceGroup -ErrorAction Stop | Select-Object -Property ResourceGroupName, Location
 
 
 $WEErrorActionPreference = "Stop" ; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-Get-AzResourceGroup | Select-Object -Property ResourceGroupName, Location
+Get-AzResourceGroup -ErrorAction Stop | Select-Object -Property ResourceGroupName, Location
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

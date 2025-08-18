@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Fix Readme.Tests
 
@@ -84,11 +84,11 @@
 
         function WE-Test([string] $WEReadmeBaseName, [string] $WEMarkdown) {
             $readmeName = " $dataFolder/$WEReadmeBaseName.md" 
-            $readme = Get-Content $readmeName -Raw
+            $readme = Get-Content -ErrorAction Stop $readmeName -Raw
             $readmeExpectedName = " $dataFolder/$WEReadmeBaseName.expected.md"
-           ;  $readmeExpected = Get-Content $readmeExpectedName -Raw
+           ;  $readmeExpected = Get-Content -ErrorAction Stop $readmeExpectedName -Raw
 
-           ;  $result = Get-FixedReadMe $readme $markdown
+           ;  $result = Get-FixedReadMe -ErrorAction Stop $readme $markdown
             $result | Should -Be $readmeExpected
         }
     }

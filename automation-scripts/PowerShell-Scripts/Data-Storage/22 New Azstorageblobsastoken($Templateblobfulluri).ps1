@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     22 New Azstorageblobsastoken($Templateblobfulluri)
 
@@ -43,7 +43,7 @@ $setAzCurrentStorageAccountSplat = @{
     ResourceGroupName = $WEStorageAccountResourceGroupName
 }
 
-Set-AzCurrentStorageAccount @setAzCurrentStorageAccountSplat
+Set-AzCurrentStorageAccount -ErrorAction Stop @setAzCurrentStorageAccountSplat
 
 ; 
 $newAzStorageBlobSASTokenSplat = @{
@@ -53,7 +53,7 @@ $newAzStorageBlobSASTokenSplat = @{
     Blob = $WETemplatename
 }
 ; 
-$templateBlobFullURI = New-AzStorageBlobSASToken @newAzStorageBlobSASTokenSplat
+$templateBlobFullURI = New-AzStorageBlobSASToken -ErrorAction Stop @newAzStorageBlobSASTokenSplat
 $templateBlobFullURI
 
 # Wesley Ellis Enterprise PowerShell Toolkit

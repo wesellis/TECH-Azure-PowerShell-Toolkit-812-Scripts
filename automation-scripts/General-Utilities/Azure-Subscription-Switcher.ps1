@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Subscription Switcher
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -14,30 +14,30 @@ param (
     [switch]$Current
 )
 
-Write-Host "Azure Subscription Switcher" -ForegroundColor Cyan
-Write-Host "===========================" -ForegroundColor Cyan
+Write-Information "Azure Subscription Switcher"
+Write-Information "==========================="
 
 # Show current subscription
 if ($Current) {
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if ($context) {
-        Write-Host "Current Subscription:" -ForegroundColor Green
-        Write-Host "  Name: $($context.Subscription.Name)" -ForegroundColor White
-        Write-Host "  ID: $($context.Subscription.Id)" -ForegroundColor White
-        Write-Host "  Tenant: $($context.Tenant.Id)" -ForegroundColor White
+        Write-Information "Current Subscription:"
+        Write-Information "  Name: $($context.Subscription.Name)"
+        Write-Information "  ID: $($context.Subscription.Id)"
+        Write-Information "  Tenant: $($context.Tenant.Id)"
     } else {
-        Write-Host "No active Azure context. Please run Connect-AzAccount first." -ForegroundColor Red
+        Write-Information "No active Azure context. Please run Connect-AzAccount first."
     }
     return
 }
 
 # List available subscriptions
 if ($List) {
-    Write-Host "Available Subscriptions:" -ForegroundColor Green
-    $subscriptions = Get-AzSubscription
+    Write-Information "Available Subscriptions:"
+    $subscriptions = Get-AzSubscription -ErrorAction Stop
     foreach ($sub in $subscriptions) {
         $status = if ($sub.State -eq "Enabled") { "✓" } else { "✗" }
-        Write-Host "  $status $($sub.Name) ($($sub.Id))" -ForegroundColor White
+        Write-Information "  $status $($sub.Name) ($($sub.Id))"
     }
     return
 }
@@ -47,7 +47,7 @@ if ($SubscriptionName) {
     try {
         $subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
         Set-AzContext -SubscriptionId $subscription.Id
-        Write-Host "✓ Switched to subscription: $($subscription.Name)" -ForegroundColor Green
+        Write-Information "✓ Switched to subscription: $($subscription.Name)"
     } catch {
         Write-Error "Failed to switch to subscription '$SubscriptionName': $($_.Exception.Message)"
     }
@@ -55,16 +55,16 @@ if ($SubscriptionName) {
     try {
         Set-AzContext -SubscriptionId $SubscriptionId
         $subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
-        Write-Host "✓ Switched to subscription: $($subscription.Name)" -ForegroundColor Green
+        Write-Information "✓ Switched to subscription: $($subscription.Name)"
     } catch {
         Write-Error "Failed to switch to subscription '$SubscriptionId': $($_.Exception.Message)"
     }
 } else {
-    Write-Host "Usage Examples:" -ForegroundColor Yellow
-    Write-Host "  .\Azure-Subscription-Switcher.ps1 -List" -ForegroundColor White
-    Write-Host "  .\Azure-Subscription-Switcher.ps1 -Current" -ForegroundColor White
-    Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionName 'Production'" -ForegroundColor White
-    Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'" -ForegroundColor White
+    Write-Information "Usage Examples:"
+    Write-Information "  .\Azure-Subscription-Switcher.ps1 -List"
+    Write-Information "  .\Azure-Subscription-Switcher.ps1 -Current"
+    Write-Information "  .\Azure-Subscription-Switcher.ps1 -SubscriptionName 'Production'"
+    Write-Information "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'"
 }
 
-Write-Host "`nSubscription switching completed at $(Get-Date)" -ForegroundColor Cyan
+Write-Information "`nSubscription switching completed at $(Get-Date)"

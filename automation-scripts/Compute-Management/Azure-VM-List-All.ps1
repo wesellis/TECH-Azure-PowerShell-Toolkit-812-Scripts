@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM List All Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -14,15 +14,15 @@ param (
 
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId
-    Write-Host -Object "Connected to subscription: $SubscriptionId"
+    Write-Information -Object "Connected to subscription: $SubscriptionId"
 }
 
-Write-Host -Object "Retrieving all VMs across subscription..."
+Write-Information -Object "Retrieving all VMs across subscription..."
 
 $VMs = Get-AzVM -Status
-Write-Host -Object "`nFound $($VMs.Count) Virtual Machines:"
-Write-Host -Object ("=" * 60)
+Write-Information -Object "`nFound $($VMs.Count) Virtual Machines:"
+Write-Information -Object ("=" * 60)
 
 foreach ($VM in $VMs) {
-    Write-Host -Object "VM: $($VM.Name) | RG: $($VM.ResourceGroupName) | State: $($VM.PowerState) | Size: $($VM.HardwareProfile.VmSize)"
+    Write-Information -Object "VM: $($VM.Name) | RG: $($VM.ResourceGroupName) | State: $($VM.PowerState) | Size: $($VM.HardwareProfile.VmSize)"
 }

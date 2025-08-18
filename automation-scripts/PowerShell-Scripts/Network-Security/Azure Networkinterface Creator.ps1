@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Networkinterface Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -102,14 +103,14 @@ param(
 Write-WELog " Creating Network Interface: $WENicName" " INFO"
 
 if ($WEPublicIpId) {
-   ;  $WENic = New-AzNetworkInterface `
+   ;  $WENic = New-AzNetworkInterface -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WENicName `
         -Location $WELocation `
         -SubnetId $WESubnetId `
         -PublicIpAddressId $WEPublicIpId
 } else {
-   ;  $WENic = New-AzNetworkInterface `
+   ;  $WENic = New-AzNetworkInterface -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WENicName `
         -Location $WELocation `

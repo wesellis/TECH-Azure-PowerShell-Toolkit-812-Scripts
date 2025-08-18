@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     11.1 New Applicationsecuritygroup
 
@@ -35,7 +35,7 @@
 
 
 $newAzApplicationSecurityGroupSplat = @{
-New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 
 
 $WEErrorActionPreference = "Stop"; 
@@ -48,7 +48,7 @@ $newAzApplicationSecurityGroupSplat = @{
     Tag = '' 
 }
 
-New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

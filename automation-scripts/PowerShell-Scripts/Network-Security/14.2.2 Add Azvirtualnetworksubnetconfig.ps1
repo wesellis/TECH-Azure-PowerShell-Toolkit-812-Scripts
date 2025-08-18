@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.2.2 Add Azvirtualnetworksubnetconfig
 
@@ -34,7 +34,7 @@
     Requires appropriate permissions and modules
 
 
-$vnet | Set-AzVirtualNetwork
+$vnet | Set-AzVirtualNetwork -ErrorAction Stop
 
 
 $WEErrorActionPreference = "Stop"
@@ -52,7 +52,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
         # AddressPrefix = " 10.0.1.0/24"
     # }
 
-    # $frontendSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+    # $frontendSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
     # $newAzVirtualNetworkSplat = @{
     #     Name = 'MyVirtualNetwork'
     #     ResourceGroupName = 'TestResourceGroup'
@@ -61,13 +61,13 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
     #     Subnet = $frontendSubnet
     # }
 
-    # $WEVnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+    # $WEVnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 
     $getAzVirtualNetworkSplat = @{
         Name = 'ProductionVNET'
     }
     
-   ;  $vnet = Get-AzVirtualNetwork @getAzVirtualNetworkSplat
+   ;  $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
 
    ;  $addAzVirtualNetworkSubnetConfigSplat = @{
         Name = 'AzureBastionSubnet'
@@ -76,7 +76,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
     }
 
     Add-AzVirtualNetworkSubnetConfig @addAzVirtualNetworkSubnetConfigSplat
-    $vnet | Set-AzVirtualNetwork
+    $vnet | Set-AzVirtualNetwork -ErrorAction Stop
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

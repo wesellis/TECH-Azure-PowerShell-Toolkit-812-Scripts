@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Enable Storage Static Website
 
@@ -53,12 +53,12 @@ $storageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -
 $ctx = $storageAccount.Context
 Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $WEIndexDocument -ErrorDocument404Path $WEErrorDocument404Path
 
-New-Item $WEIndexDocument -Force
-Set-Content $WEIndexDocument '<h1>Welcome</h1>'
+New-Item -ErrorAction Stop $WEIndexDocument -Force
+Set-Content -ErrorAction Stop $WEIndexDocument '<h1>Welcome</h1>'
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $WEIndexDocument -Blob $WEIndexDocument -Properties @{'ContentType' = 'text/html'}
 
-New-Item $WEErrorDocument404Path -Force
-Set-Content $WEErrorDocument404Path '<h1>Error: 404 Not Found</h1>'
+New-Item -ErrorAction Stop $WEErrorDocument404Path -Force
+Set-Content -ErrorAction Stop $WEErrorDocument404Path '<h1>Error: 404 Not Found</h1>'
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $WEErrorDocument404Path -Blob $WEErrorDocument404Path -Properties @{'ContentType' = 'text/html'}
 
 

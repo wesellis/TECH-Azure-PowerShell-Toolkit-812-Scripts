@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure AKS Credentials Configurator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,16 +18,16 @@ param (
     [switch]$Admin
 )
 
-Write-Host "Configuring kubectl credentials for AKS cluster: $ClusterName"
+Write-Information "Configuring kubectl credentials for AKS cluster: $ClusterName"
 
 if ($Admin) {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Admin -Force
-    Write-Host "Admin credentials configured for cluster: $ClusterName"
+    Write-Information "Admin credentials configured for cluster: $ClusterName"
 } else {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Force
-    Write-Host "User credentials configured for cluster: $ClusterName"
+    Write-Information "User credentials configured for cluster: $ClusterName"
 }
 
-Write-Host "`nTesting connection..."
+Write-Information "`nTesting connection..."
 kubectl get nodes
-Write-Host "`nKubectl is now configured for cluster: $ClusterName"
+Write-Information "`nKubectl is now configured for cluster: $ClusterName"

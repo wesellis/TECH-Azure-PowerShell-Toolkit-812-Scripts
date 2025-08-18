@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     1 Get Azrecoveryservicesvault
 
@@ -64,7 +64,7 @@ SubscriptionId    : 408a6c03-bd25-471b-ae84-cf82b3dff420
 Properties        : Microsoft.Azure.Commands.RecoveryServices.ARSVaultProperties
 
 
-Get-AzRecoveryServicesVault
+Get-AzRecoveryServicesVault -ErrorAction Stop
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

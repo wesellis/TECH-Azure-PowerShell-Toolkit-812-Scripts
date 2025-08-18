@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmsourceimage
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVMSourceImage {
 }
 
@@ -41,8 +42,9 @@ function WE-Invoke-AzVMSourceImage {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVMSourceImage {
-    #Region func Set-AzVMSourceImage 
+    #Region func Set-AzVMSourceImage -ErrorAction Stop 
    ;  $setAzVMSourceImageSplat = @{
         VM            = $WEVirtualMachine
         # PublisherName = " Canonical"
@@ -66,8 +68,8 @@ function WE-Invoke-AzVMSourceImage {
     }
 
 
-   ;  $WEVirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
-    #endRegion func Set-AzVMSourceImage
+   ;  $WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
+    #endRegion func Set-AzVMSourceImage -ErrorAction Stop
     
 }
 

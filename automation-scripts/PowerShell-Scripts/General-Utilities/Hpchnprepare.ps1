@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Hpchnprepare
 
@@ -104,6 +104,7 @@ if(Test-Path -Path $WEScript:LogFilePath -PathType Leaf)
     Remove-Item -Path $WEScript:LogFilePath -Force
 }
 
+[CmdletBinding()]
 function WE-WriteLog
 {
     [CmdletBinding()]
@@ -132,8 +133,7 @@ param(
         # Write to both the log file and the console
         $WENewMessage = " [$WELogLevel]$timestr - $WEMessage"
         Add-Content $WEScript:LogFilePath $WENewMessage -ErrorAction SilentlyContinue
-        $WENewMessage | Write-Host
-    }
+        $WENewMessage | Write-Information }
     catch
     {
         #Ignore the error
@@ -143,7 +143,7 @@ param(
 try
 {
     # 0 for Standalone Workstation, 1 for Member Workstation, 2 for Standalone Server, 3 for Member Server, 4 for Backup Domain Controller, 5 for Primary Domain Controller
-    $computeInfo = Get-CimInstance Win32_ComputerSystem
+    $computeInfo = Get-CimInstance -ErrorAction Stop Win32_ComputerSystem
     $domainRole = $computeInfo.DomainRole
     if($domainRole -lt 3)
     {
@@ -186,7 +186,7 @@ try
             WriteLog (" Configuring Database " + $WEDBDic[$db])
             $dbNameVar = $db + " DBName"
             $sqlfilename = $db + " DB.sql"
-            Get-Content " $WEHPCBinPath\$sqlfilename" | %{$_.Replace(" `$($dbNameVar)" , $WEDBDic[$db])} | Set-Content " $env:temp\$sqlfilename" -Force
+            Get-Content -ErrorAction Stop " $WEHPCBinPath\$sqlfilename" | %{$_.Replace(" `$($dbNameVar)" , $WEDBDic[$db])} | Set-Content -ErrorAction Stop " $env:temp\$sqlfilename" -Force
             Invoke-Sqlcmd -ServerInstance $WEDBServerInstance -Database $WEDBDic[$db] -InputFile " $env:temp\$sqlfilename" -QueryTimeout 300 -ErrorAction SilentlyContinue
             Invoke-Sqlcmd -ServerInstance $WEDBServerInstance -Database $WEDBDic[$db] -InputFile " $WEHPCBinPath\AddDbUserForHpcService.sql" -Variable " TargetAccount=$machineAccount" -QueryTimeout 300
         }
@@ -229,7 +229,7 @@ try
     foreach($svcname in $WEHNServiceList)
     {
         $service = Get-Service -Name $svcname -ErrorAction SilentlyContinue
-        if($service -eq $null)
+        if($null -eq $service)
         {
             throw " The service $svcname doesn't exist"
         }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuredcvm
 
@@ -62,13 +62,13 @@ param(
 
     # Init
     [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content env:computername
+    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
     [String] $WEAdditionalUsersPath = " OU=AdditionalUsers,DC={0},DC={1}" -f $WEDomainFQDN.Split('.')[0], $WEDomainFQDN.Split('.')[1]
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainCredsNetbios = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential] $WEAdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdfsSvcCreds.UserName)" , $WEAdfsSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainCredsNetbios = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential] $WEAdfsSvcCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdfsSvcCreds.UserName)" , $WEAdfsSvcCreds.Password)
 
     [String] $WESetupPath = " C:\DSC Data"
 
@@ -506,7 +506,7 @@ param(
                 $adfsSigningCertName = " ADFS Signing.cer"
                ;  $adfsSigningIssuerCertName = " ADFS Signing issuer.cer"
                 Write-Verbose -Verbose -Message " Exporting public key of ADFS signing / signing issuer certificates..."
-                New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
+                New-Item -ErrorAction Stop $destinationPath -Type directory -ErrorAction SilentlyContinue
                ;  $signingCert = Get-ChildItem -Path " cert:\LocalMachine\My\" -DnsName " $using:ADFSSiteName.Signing"
                 $signingCert | Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertName))
                 Get-ChildItem -Path " cert:\LocalMachine\Root\" | Where-Object { $_.Subject -eq $signingCert.Issuer } | Select-Object -First 1 | Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertName))
@@ -741,7 +741,8 @@ param(
     }
 }
 
-function WE-Get-NetBIOSName {
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop {
     [OutputType([string])]
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"

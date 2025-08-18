@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Lock Manager
 
@@ -114,7 +114,7 @@ try {
             if ($WEResourceGroupName) {
                 $locks = Get-AzResourceLock -ResourceGroupName $WEResourceGroupName
             } else {
-                $locks = Get-AzResourceLock
+                $locks = Get-AzResourceLock -ErrorAction Stop
             }
             
             Write-WELog " Found $($locks.Count) resource locks:" " INFO" -ForegroundColor Cyan
@@ -133,7 +133,7 @@ try {
         }
         
         " Audit" {
-           ;  $allLocks = Get-AzResourceLock
+           ;  $allLocks = Get-AzResourceLock -ErrorAction Stop
            ;  $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name

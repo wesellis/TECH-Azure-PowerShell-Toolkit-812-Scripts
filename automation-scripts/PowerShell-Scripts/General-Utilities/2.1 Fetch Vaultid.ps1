@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2.1 Fetch Vaultid
 
@@ -79,7 +79,7 @@ $getAzRecoveryServicesVaultSplat = @{
     Name = $WEVaultname
 }
 ; 
-$targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
+$targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
 $targetVault.ID
 $targetVault
 

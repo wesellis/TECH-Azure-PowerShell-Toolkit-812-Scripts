@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Omsasrmonitoring
 
@@ -67,24 +67,24 @@ Write-Output " Found the following vaults:" $WEVaults.name
 foreach ($WEVault in $WEVaults)
 {
     # Setting Vault context
-    $WEVaultSettings = Get-AzureRmRecoveryServicesVault `
+    $WEVaultSettings = Get-AzureRmRecoveryServicesVault -ErrorAction Stop `
                                                      -Name $WEVault.Name `
                                                      -ResourceGroupName $WEVault.ResourceGroupName
     Write-Output $WEVaultSettings
 
     $WELocation = $WEVault.Location
 
-    Set-AzureRmSiteRecoveryVaultSettings `
+    Set-AzureRmSiteRecoveryVaultSettings -ErrorAction Stop `
                                         -ARSVault $WEVaultSettings
     # Ingesting ASRJobs into OMS
 
     $WEASRLogs = @()
-    $WELogData = New-Object psobject -Property @{}
+    $WELogData = New-Object -ErrorAction Stop psobject -Property @{}
 
-    $WEASRJobs = Get-AzureRmSiteRecoveryJob `
+    $WEASRJobs = Get-AzureRmSiteRecoveryJob -ErrorAction Stop `
                                          -StartTime (Get-Date).AddHours(((-1)))
 
-    if ($WEASRJobs -eq $null)
+    if ($null -eq $WEASRJobs)
     {
         Write-output " No new logs to collect"
     } 
@@ -133,7 +133,7 @@ foreach ($WEVault in $WEVaults)
 
     # Get all Protection Containers for the Recovery Vault
 
-    $WEContainers = Get-AzureRmSiteRecoveryProtectionContainer
+    $WEContainers = Get-AzureRmSiteRecoveryProtectionContainer -ErrorAction Stop
 
     If ([string]::IsNullOrEmpty($WEContainers) -eq $true)
     {
@@ -147,19 +147,19 @@ foreach ($WEVault in $WEVaults)
         foreach ($WEContainer in $WEContainers)
         {
             
-            $WEVMSize = Get-AzureRmVMSize `
+            $WEVMSize = Get-AzureRmVMSize -ErrorAction Stop `
                                        -Location $WELocation
 
-            $WECurrentVMUsage = Get-AzureRmVMUsage `
+            $WECurrentVMUsage = Get-AzureRmVMUsage -ErrorAction Stop `
                                        -Location $WELocation
 
-            $WECurrentStorageUsage = Get-AzureRmStorageUsage
+            $WECurrentStorageUsage = Get-AzureRmStorageUsage -ErrorAction Stop
 
-            $WEAllVms = Get-AzureRmVm
+            $WEAllVms = Get-AzureRmVm -ErrorAction Stop
 
-            $WEDRServer = Get-AzureRmSiteRecoveryServer
+            $WEDRServer = Get-AzureRmSiteRecoveryServer -ErrorAction Stop
 
-            $WERecoveryVms = Get-AzureRmSiteRecoveryVM `
+            $WERecoveryVms = Get-AzureRmSiteRecoveryVM -ErrorAction Stop `
                                        -ProtectionContainer $WEContainer
             
             Write-Output $WERecoveryVms.FriendlyName
@@ -167,7 +167,7 @@ foreach ($WEVault in $WEVaults)
             # Getting VM Details
             foreach ($WERecoveryVm in $WERecoveryVms)
             {
-                $WEVMSize = Get-AzureRmVMSize `
+                $WEVMSize = Get-AzureRmVMSize -ErrorAction Stop `
                                            -Location $WELocation | Where-Object {$_.Name -eq $WERecoveryVm.RecoveryAzureVMSize}
                 
                 # Detect VMs protected by InMageAzureV2 Replication Provider
@@ -239,7 +239,7 @@ foreach ($WEVault in $WEVaults)
             #Constructing the data log for OMS Log Analytics
 
            ;  $WEASRVMs = @()
-               ;  $WEData = New-Object psobject -Property @{
+               ;  $WEData = New-Object -ErrorAction Stop psobject -Property @{
                     LogType = 'VM';
                     ASRResourceGroupName = $WEVault.ResourceGroupName;
                     ASRVaultName = $vault.Name;

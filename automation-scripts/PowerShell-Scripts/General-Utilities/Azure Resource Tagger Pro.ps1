@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Tagger Pro
 
@@ -79,9 +79,9 @@ try {
         Get-AzResource -ResourceGroupName $WEResourceGroupName
     } elseif ($WESubscriptionId) {
         Set-AzContext -SubscriptionId $WESubscriptionId
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     # Filter by resource types if specified

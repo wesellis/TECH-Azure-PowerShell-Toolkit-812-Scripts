@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Synapse Analytics Workspace Manager
 
@@ -160,7 +160,7 @@ try {
                         EnableHttpsTrafficOnly = $true
                         MinimumTlsVersion = " TLS1_2"
                     }
-                    New-AzStorageAccount @storageParams
+                    New-AzStorageAccount -ErrorAction Stop @storageParams
                 }
             } -OperationName " Create/Get Storage Account"
             
@@ -195,13 +195,13 @@ try {
                 Location = $WELocation
                 DefaultDataLakeStorageAccountName = $WEStorageAccountName
                 DefaultDataLakeStorageFilesystem = $WEFileSystemName
-                SqlAdministratorLoginCredential = (New-Object System.Management.Automation.PSCredential($WESQLAdminUsername, $WESQLAdminPassword))
+                SqlAdministratorLoginCredential = (New-Object -ErrorAction Stop System.Management.Automation.PSCredential($WESQLAdminUsername, $WESQLAdminPassword))
                 ManagedVirtualNetwork = $WEEnableManagedVNet
                 PreventDataExfiltration = $WEEnableDataExfiltrationProtection
             }
             
             $workspace = Invoke-AzureOperation -Operation {
-                New-AzSynapseWorkspace @workspaceParams
+                New-AzSynapseWorkspace -ErrorAction Stop @workspaceParams
             } -OperationName " Create Synapse Workspace"
             
             Write-Log " ✓ Synapse workspace created: $WEWorkspaceName" -Level SUCCESS
@@ -237,7 +237,7 @@ try {
             }
             
             $null = Invoke-AzureOperation -Operation {
-                New-AzSynapseSqlPool @sqlPoolParams
+                New-AzSynapseSqlPool -ErrorAction Stop @sqlPoolParams
             } -OperationName " Create SQL Pool"
             
             Write-Log " ✓ Dedicated SQL Pool created: $WESQLPoolName ($WESQLPoolSKU)" -Level SUCCESS
@@ -260,7 +260,7 @@ try {
             }
             
             $null = Invoke-AzureOperation -Operation {
-                New-AzSynapseSparkPool @sparkPoolParams
+                New-AzSynapseSparkPool -ErrorAction Stop @sparkPoolParams
             } -OperationName " Create Spark Pool"
             
             Write-Log " ✓ Apache Spark Pool created: $WESparkPoolName ($WESparkPoolSize)" -Level SUCCESS
@@ -386,7 +386,7 @@ try {
                     MetricCategory = @(" AllMetrics" )
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     10 Backup Azrecoveryservicesbackupitem
 
@@ -75,14 +75,14 @@ $getAzRecoveryServicesBackupContainerSplat = @{
     FriendlyName = $WEVMName
     VaultId = $targetVault.ID
 }
-$namedContainer = Get-AzRecoveryServicesBackupContainer @getAzRecoveryServicesBackupContainerSplat
+$namedContainer = Get-AzRecoveryServicesBackupContainer -ErrorAction Stop @getAzRecoveryServicesBackupContainerSplat
 
 $getAzRecoveryServicesBackupItemSplat = @{
     Container = $namedContainer
     WorkloadType = " AzureVM"
     VaultId = $targetVault.ID
 }
-$item = Get-AzRecoveryServicesBackupItem @getAzRecoveryServicesBackupItemSplat
+$item = Get-AzRecoveryServicesBackupItem -ErrorAction Stop @getAzRecoveryServicesBackupItemSplat
 
 $endDate = (Get-Date).AddDays(60).ToUniversalTime()
 ; 

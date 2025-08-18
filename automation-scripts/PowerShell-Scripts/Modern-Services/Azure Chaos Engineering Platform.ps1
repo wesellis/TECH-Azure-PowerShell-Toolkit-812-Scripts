@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Chaos Engineering Platform
 
@@ -210,11 +210,11 @@ class ChaosEngineeringPlatform {
                 $this.TargetResources = Get-AzResource -ResourceGroupName $WEResourceGroupName
             }
             " Subscription" {
-                $this.TargetResources = Get-AzResource
+                $this.TargetResources = Get-AzResource -ErrorAction Stop
             }
             " Region" {
                 # Filter by region - would need region parameter
-                $this.TargetResources = Get-AzResource | Where-Object { $_.Location -eq " East US" }
+                $this.TargetResources = Get-AzResource -ErrorAction Stop | Where-Object { $_.Location -eq " East US" }
             }
         }
         
@@ -285,7 +285,7 @@ class ChaosEngineeringPlatform {
         $metrics = @{
             ResourceId = $WEResource.ResourceId
             ResourceType = $WEResource.ResourceType
-            Timestamp = Get-Date
+            Timestamp = Get-Date -ErrorAction Stop
             CPUUtilization = $null
             MemoryUtilization = $null
             NetworkLatency = $null
@@ -317,7 +317,7 @@ class ChaosEngineeringPlatform {
     
     [double]GetVMCPUMetrics([object]$WEVM) {
         try {
-            $endTime = Get-Date
+            $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddMinutes(-5)
             
             $metrics = Get-AzMetric -ResourceId $WEVM.ResourceId -MetricName " Percentage CPU" `
@@ -359,7 +359,7 @@ class ChaosEngineeringPlatform {
             Write-WELog " `n*** DRY RUN MODE - No actual changes will be made ***" " INFO" -ForegroundColor Yellow
         }
         
-        $startTime = Get-Date
+        $startTime = Get-Date -ErrorAction Stop
         $endTime = $startTime.AddMinutes($this.Duration)
         
         # Pre-experiment safety check
@@ -406,7 +406,7 @@ class ChaosEngineeringPlatform {
                         ResourceId = $resource.ResourceId
                         Action = " NetworkLatency"
                         Parameters = @{ Latency = " 200ms" }
-                        Timestamp = Get-Date
+                        Timestamp = Get-Date -ErrorAction Stop
                         Success = $true
                     }
                     
@@ -442,7 +442,7 @@ class ChaosEngineeringPlatform {
                     ResourceId = $resource.ResourceId
                     Action = " ResourceFailure"
                     Parameters = @{ Type = " Stop" }
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                     Success = $true
                 }
                 
@@ -466,7 +466,7 @@ class ChaosEngineeringPlatform {
                         ResourceId = $resource.ResourceId
                         Action = " ApplicationStress"
                         Parameters = @{ CPULoad = " 80%" ; MemoryLoad = " 70%" }
-                        Timestamp = Get-Date
+                        Timestamp = Get-Date -ErrorAction Stop
                         Success = $true
                     }
                     
@@ -491,7 +491,7 @@ class ChaosEngineeringPlatform {
                     ResourceId = $db.ResourceId
                     Action = " DatabaseFailover"
                     Parameters = @{ Type = " Automatic" }
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                     Success = $true
                 }
                 
@@ -575,7 +575,7 @@ class ChaosEngineeringPlatform {
                 $metrics = $WECurrentMetrics[$resourceId]
                ;  $metricValue = $metrics[$breaker.MetricName]
                 
-                if ($metricValue -ne $null) {
+                if ($null -ne $metricValue) {
                    ;  $thresholdBreached = switch ($breaker.MetricName) {
                         " ErrorRate" { $metricValue -gt $breaker.Threshold }
                         " Availability" { $metricValue -lt $breaker.Threshold }
@@ -779,7 +779,7 @@ try {
     }
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
         Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
         Connect-AzAccount

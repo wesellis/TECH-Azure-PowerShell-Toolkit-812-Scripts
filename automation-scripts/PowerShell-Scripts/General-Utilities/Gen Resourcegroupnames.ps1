@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Gen Resourcegroupnames
 
@@ -58,7 +58,7 @@ $settingsFilePath = " $sampleFolder\prereqs\.settings.json"
 if(Test-Path " $settingsFilePath" ){
     Write-WELog " Found settings file... $settingsFilePath" " INFO"
     $settings = Get-Content -Path " $settingsFilePath" -Raw | ConvertFrom-Json
-    Write-Host $settings
+    Write-Information $settings
 }
 
 

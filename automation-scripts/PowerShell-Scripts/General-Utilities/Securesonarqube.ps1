@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Securesonarqube
 
@@ -70,20 +70,20 @@ if($installationType -eq 'Secure')
     #Create Web Site
      
     #Install ARR
-    Invoke-Expression ((new-object net.webclient).DownloadString(" https://chocolatey.org/install.ps1" ))
+    Invoke-Expression ((new-object -ErrorAction Stop net.webclient).DownloadString(" https://chocolatey.org/install.ps1" ))
     cinst urlrewrite -y --force
     cinst iis-arr -y --force
     #Update web site binding
-   ;  $existingCertificate =Get-ChildItem cert:\LocalMachine\CA | Where-Object subject -eq 'CN=$serverName'
-    if($existingCertificate -eq $null)
+   ;  $existingCertificate =Get-ChildItem -ErrorAction Stop cert:\LocalMachine\CA | Where-Object subject -eq 'CN=$serverName'
+    if($null -eq $existingCertificate)
         {
             Import-Module WebAdministration
-            Set-Location IIS:\SslBindings
+            Set-Location -ErrorAction Stop IIS:\SslBindings
             New-WebBinding -Name $websiteName -IP " *" -Port 443 -Protocol https
            ;  $c = New-SelfSignedCertificate -DnsName " $serverName" -CertStoreLocation " cert:\LocalMachine\My"
-            $c | New-Item 0.0.0.0!443
+            $c | New-Item -ErrorAction Stop 0.0.0.0!443
             #Remove HTTP binding 
-            Get-WebBinding -Port 8080 -Name $websiteName | Remove-WebBinding
+            Get-WebBinding -Port 8080 -Name $websiteName | Remove-WebBinding -ErrorAction Stop
             #Remove HTTP firewall
             netsh advfirewall firewall delete rule name=" SonarQube (TCP-In)"
             #Enable ARR Porxy

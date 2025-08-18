@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configure Winget Pwsh7
 
@@ -56,7 +56,7 @@ catch {
 }
 
 if ($isFailed) {
-    Get-InstalledModule Microsoft.WinGet.Client | Format-List
+    Get-InstalledModule -ErrorAction Stop Microsoft.WinGet.Client | Format-List
 
     LogWithTimestamp " === Attempt to repair WinGet Client module"
     Uninstall-Module Microsoft.WinGet.Client -AllowPrerelease -AllVersions -Force -ErrorAction Continue

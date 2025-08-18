@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     1 Get Azstorageaccount
 
@@ -76,7 +76,7 @@ microfgcheaprod121322330 FGCHealth_Prod-Nifi1_RG canadacentral   Standard_GRS St
     General notes
 
 
-Get-AzStorageAccount
+Get-AzStorageAccount -ErrorAction Stop
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

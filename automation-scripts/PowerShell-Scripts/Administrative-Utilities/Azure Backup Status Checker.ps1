@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Backup Status Checker
 
@@ -66,7 +66,7 @@ try {
     $vaults = if ($WEVaultName) {
         Get-AzRecoveryServicesVault -Name $WEVaultName
     } else {
-        Get-AzRecoveryServicesVault
+        Get-AzRecoveryServicesVault -ErrorAction Stop
     }
 
     $backupReport = @()
@@ -84,7 +84,7 @@ try {
     }
 
     if ($WEShowUnprotected) {
-        $allVMs = Get-AzVM
+        $allVMs = Get-AzVM -ErrorAction Stop
        ;  $protectedVMs = $vaults | ForEach-Object {
             Set-AzRecoveryServicesVaultContext -Vault $_
             Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM

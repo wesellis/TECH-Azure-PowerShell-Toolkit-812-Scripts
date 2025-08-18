@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installcsforhierarchy
 
@@ -101,10 +101,10 @@ SysCenterId=
 
 [HierarchyExpansionOption]
 '@
-$inst = (get-itemproperty 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
-$p = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
+$inst = (get-itemproperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
+$p = (Get-ItemProperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
 
-$sqlinfo = Get-ItemProperty " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
+$sqlinfo = Get-ItemProperty -ErrorAction Stop " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
 
 " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
 $cmini = $cmini.Replace('%InstallDir%',$WESMSInstallDir)
@@ -118,7 +118,7 @@ $cmini = $cmini.Replace('%cmsourcepath%',$cmsourcepath)
 
 if(!(Test-Path $cmsourcepath\Redist))
 {
-    New-Item $cmsourcepath\Redist -ItemType directory | Out-Null
+    New-Item -ErrorAction Stop $cmsourcepath\Redist -ItemType directory | Out-Null
 }
     
 if($inst.ToUpper() -eq " MSSQLSERVER" )
@@ -137,7 +137,7 @@ Start-Process -Filepath ($WECMInstallationFile) -ArgumentList ('/NOUSERINPUT /sc
 
 " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
 
-Remove-Item $WECMINIPat -Forceh -Force
+Remove-Item -ErrorAction Stop $WECMINIPat -Forceh -Force
 
 $WEConfiguration.InstallSCCM.Status = 'Completed'
 $WEConfiguration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
@@ -162,7 +162,7 @@ if($WEENV:SMS_ADMIN_UI_PATH -eq $null)
 }
 
 
-if((Get-Module ConfigurationManager) -eq $null) {
+if((Get-Module -ErrorAction Stop ConfigurationManager) -eq $null) {
     Import-Module " $($WEENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams
 }
 
@@ -178,7 +178,7 @@ while((Get-PSDrive -Name $WESiteCode -PSProvider CMSite -ErrorAction SilentlyCon
 }
 
 
-Set-Location " $($WESiteCode):\" @initParams
+Set-Location -ErrorAction Stop " $($WESiteCode):\" @initParams
 
 
 " Setting $WECMUser as CM administrative user." | Out-File -Append $logpath
@@ -253,7 +253,7 @@ function getupdate()
         Invoke-CMSiteUpdateCheck -ErrorAction Ignore
         Start-Sleep 120
 
-        $updatepacklist= Get-CMSiteUpdate | ?{$_.State -ne 196612}
+        $updatepacklist= Get-CMSiteUpdate -ErrorAction Stop | ?{$_.State -ne 196612}
     }
 
     $updatepack=""
@@ -323,8 +323,8 @@ $state=@{
     196629 = 'INSTALL_UPDATEADMINCONSOLE'
 }
 
-$starttime= Get-Date
-$sites= Get-CMSite
+$starttime= Get-Date -ErrorAction Stop
+$sites= Get-CMSite -ErrorAction Stop
 if($originalbuildnumber -eq "" )
 {
     if($sites.count -eq 1)
@@ -364,7 +364,7 @@ while($updatepack -ne "" )
             Invoke-CMSiteUpdateDownload -Name $updatepack.Name -Force -WarningAction SilentlyContinue
             Start-Sleep 120
             $updatepack = Get-CMSiteUpdate -Name $updatepack.Name -Fast
-            $downloadstarttime = get-date
+            $downloadstarttime = get-date -ErrorAction Stop
             while($updatepack.State -eq 327682)
             {
                 " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package start to download, sleep 2 min..." | Out-File -Append $logpath
@@ -375,12 +375,12 @@ while($updatepack -ne "" )
                 {
                     Restart-Service -DisplayName " SMS_Executive"
                     Start-Sleep 120
-                    $downloadstarttime = get-date
+                    $downloadstarttime = get-date -ErrorAction Stop
                 }
             }
         }
         #waiting package downloaded
-        $downloadstarttime = get-date
+        $downloadstarttime = get-date -ErrorAction Stop
         while($updatepack.State -eq 262145)
         {
             " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package download, sleep 2 min..." | Out-File -Append $logpath
@@ -391,7 +391,7 @@ while($updatepack -ne "" )
             {
                 Restart-Service -DisplayName " SMS_Executive"
                 Start-Sleep 120
-                $downloadstarttime = get-date
+                $downloadstarttime = get-date -ErrorAction Stop
             }
         }
 
@@ -429,16 +429,16 @@ while($updatepack -ne "" )
     {
         (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] SCCM Upgrade Complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) ) | Out-File -Append $logpath
         #we need waiting the copying files finished if there is only one site
-        $toplevelsite =  Get-CMSite |where {$_.ReportingSiteCode -eq "" }
+        $toplevelsite =  Get-CMSite -ErrorAction Stop |where {$_.ReportingSiteCode -eq "" }
         if((Get-CMSite).count -eq 1)
         {
             $path= Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\SMS\Setup' -Name 'Installation Directory'
 
-            $fileversion=(Get-Item ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
+            $fileversion=(Get-Item -ErrorAction Stop ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
             while($fileversion -ne $toplevelsite.BuildNumber)
             {
                 Start-Sleep 120
-                $fileversion=(Get-Item ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
+                $fileversion=(Get-Item -ErrorAction Stop ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
             }
             #Wait for copying files finished
             Start-Sleep 600
@@ -465,10 +465,10 @@ if($upgradingfailed -eq $true)
 }
 
 
-$WEAcl = Get-Acl $WESMSInstallDir
-$WENewAccessRule = New-Object system.security.accesscontrol.filesystemaccessrule($WEPSComputerAccount," FullControl" ," ContainerInherit,ObjectInherit" ," None" ," Allow" )
+$WEAcl = Get-Acl -ErrorAction Stop $WESMSInstallDir
+$WENewAccessRule = New-Object -ErrorAction Stop system.security.accesscontrol.filesystemaccessrule($WEPSComputerAccount," FullControl" ," ContainerInherit,ObjectInherit" ," None" ," Allow" )
 $WEAcl.SetAccessRule($WENewAccessRule)
-Set-Acl $WESMSInstallDir $WEAcl
+Set-Acl -ErrorAction Stop $WESMSInstallDir $WEAcl
 
 $WEConfiguration.UpgradeSCCM.Status = 'Completed'
 $WEConfiguration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
@@ -490,13 +490,13 @@ while(!$WEPSSystemServer)
 }
 
 ; 
-$replicationStatus = Get-CMDatabaseReplicationStatus
+$replicationStatus = Get-CMDatabaseReplicationStatus -ErrorAction Stop
 
 while($replicationStatus.LinkStatus -ne 2 -or $replicationStatus.Site1ToSite2GlobalState -ne 2 -or $replicationStatus.Site2ToSite1GlobalState -ne 2 -or $replicationStatus.Site2ToSite1SiteState -ne 2 )
 {
     " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Wait for PS ready for use, will try 60 seconds later..." | Out-File -Append $logpath
     Start-Sleep -Seconds 60
-   ;  $replicationStatus = Get-CMDatabaseReplicationStatus
+   ;  $replicationStatus = Get-CMDatabaseReplicationStatus -ErrorAction Stop
 }
 
 $WEConfiguration.PSReadyToUse.Status = 'Completed'

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvirtualnetworksubnetconfig
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVirtualNetworkSubnetConfig  {
 
 
@@ -41,13 +42,14 @@ function WE-Invoke-AzVirtualNetworkSubnetConfig  {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVirtualNetworkSubnetConfig  {
 ; 
 $newAzVirtualNetworkSubnetConfigSplat = @{
     Name          = $WESubnetName
     AddressPrefix = $WESubnetAddressPrefix
 }; 
-$WESingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+$WESingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 
     
 }

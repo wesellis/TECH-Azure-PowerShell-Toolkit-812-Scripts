@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Functionapp Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -99,7 +100,7 @@ Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
 
 ; 
-$WEFunctionApp = New-AzFunctionApp `
+$WEFunctionApp = New-AzFunctionApp -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEAppName `
     -AppServicePlan $WEPlanName `

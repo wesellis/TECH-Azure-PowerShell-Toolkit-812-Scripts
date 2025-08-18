@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installcluster
 
@@ -49,6 +49,7 @@ param(
 
 $targetDir = " ."
 
+[CmdletBinding()]
 function WE-Log {
 	[CmdletBinding()]; 
 $ErrorActionPreference = " Stop"

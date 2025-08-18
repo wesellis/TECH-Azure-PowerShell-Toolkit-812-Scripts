@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azpublicipaddress
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzPublicIpAddress {
 
 
@@ -41,8 +42,9 @@ function WE-Invoke-AzPublicIpAddress {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzPublicIpAddress {
- #Region func New-AzPublicIpAddress
+ #Region func New-AzPublicIpAddress -ErrorAction Stop
 ; 
 $newAzPublicIpAddressSplat = @{
     Name              = $WEPublicIPAddressName
@@ -54,7 +56,7 @@ $newAzPublicIpAddressSplat = @{
     # IpTag             = $ipTag
     Tag               = $WETags
 }; 
-$WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+$WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 
     
 }

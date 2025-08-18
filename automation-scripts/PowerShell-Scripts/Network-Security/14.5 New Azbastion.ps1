@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.5 New Azbastion
 
@@ -92,7 +92,7 @@ $newAzBastionSplat = @{
     Tag               = $WETags
 }
 ; 
-$bastion = New-AzBastion @newAzBastionSplat
+$bastion = New-AzBastion -ErrorAction Stop @newAzBastionSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

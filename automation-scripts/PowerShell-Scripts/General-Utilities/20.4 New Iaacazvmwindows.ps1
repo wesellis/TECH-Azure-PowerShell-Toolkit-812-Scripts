@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     20.4 New Iaacazvmwindows
 
@@ -40,7 +40,8 @@ try {
     # Main script execution
 ) { " Continue" } else { " SilentlyContinue" }
 
-function WE-New-IaaCAzVMWindows {
+[CmdletBinding()]
+function WE-New-IaaCAzVMWindows -ErrorAction Stop {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
     
@@ -62,7 +63,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -348,7 +349,7 @@ param(
         Tag      = $WETags
     }
 
-    New-AzResourceGroup @newAzResourceGroupSplat
+    New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
 
 
     #Creating the Subnet for the VM
@@ -356,7 +357,7 @@ param(
         Name          = $WESubnetName
         AddressPrefix = $WESubnetAddressPrefix
     }
-    $WESingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+    $WESingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 
     #Creating the VNET for the VM
     $newAzVirtualNetworkSplat = @{
@@ -367,7 +368,7 @@ param(
         Subnet            = $WESingleSubnet
         Tag               = $WETags
     }
-    $WEVnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+    $WEVnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 
 
     $getAzVirtualNetworkSubnetConfigSplat = @{
@@ -375,7 +376,7 @@ param(
         VirtualNetwork = $vnet
     }
     
-    $WESubnet = Get-AzVirtualNetworkSubnetConfig @getAzVirtualNetworkSubnetConfigSplat
+    $WESubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
 
 
     $newAzNetworkInterfaceIpConfigSplat = @{
@@ -386,7 +387,7 @@ param(
         Primary                  = $true
     }
     
-    $WEIPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+    $WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 
     #Creating the PublicIP for the VM
     $newAzPublicIpAddressSplat = @{
@@ -397,7 +398,7 @@ param(
         AllocationMethod  = $WEPublicIPAllocation
         Tag               = $WETags
     }
-    $WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+    $WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 
     #Creating the Application Security Group
     $newAzApplicationSecurityGroupSplat = @{
@@ -406,7 +407,7 @@ param(
         Location          = " $WELocationName"
         Tag               = $WETags
     }
-    $WEASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+    $WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 
 
     $newAzNetworkSecurityRuleConfigSplat = @{
@@ -424,7 +425,7 @@ param(
         DestinationPortRange                = '3389'
         DestinationApplicationSecurityGroup = $WEASG
     }
-    $rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+    $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 
     #Create a new NSG based on Rules #1 & #2
     $newAzNetworkSecurityGroupSplat = @{
@@ -435,7 +436,7 @@ param(
         SecurityRules     = $rule1
         Tag               = $WETags
     }
-    $WENSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+    $WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 
 
     #Creating the NIC for the VM
@@ -449,14 +450,14 @@ param(
         Tag                    = $WETags
     
     }
-    $WENIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+    $WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
 
 
     #Define a credential object to store the username and password for the VM
     $WEVMLocalAdminPassword = Generate-Password -length $WEPassWordLength
    ;  $WEVMLocalAdminSecurePassword = $WEVMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
-   ;  $WECredential = New-Object PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
-    $WECredential = Get-Credential
+   ;  $WECredential = New-Object -ErrorAction Stop PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
+    $WECredential = Get-Credential -ErrorAction Stop
 
     #Creating the VM Config Object for the VM
     $newAzVMConfigSplat = @{
@@ -464,7 +465,7 @@ param(
         VMSize = $WEVMSize
         Tags   = $WETags
     }
-    $WEVirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+    $WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 
     #Creating the OS Object for the VM
     $setAzVMOperatingSystemSplat = @{
@@ -473,7 +474,7 @@ param(
         ComputerName = $WEComputerName
         Credential   = $WECredential
     }
-    $WEVirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    $WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 
     #Adding the NIC to the VM
     $addAzVMNetworkInterfaceSplat = @{
@@ -490,7 +491,7 @@ param(
         Version       = $WEVersion
     
     }
-    $WEVirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+    $WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 
     #Setting the VM OS Disk to the VM
     $setAzVMOSDiskSplat = @{
@@ -500,7 +501,7 @@ param(
         CreateOption = $WEOSCreateOption
         DiskSizeInGB = $WEDiskSizeInGB
     }
-    $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+    $WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
 
     #Creating the VM
     $newAzVMSplat = @{
@@ -510,7 +511,7 @@ param(
         Verbose           = $true
         Tag               = $WETags
     }
-    New-AzVM @newAzVMSplat
+    New-AzVM -ErrorAction Stop @newAzVMSplat
     
     #Post Deployment Configuration #1
     $setAzVMExtensionSplat = @{
@@ -523,7 +524,7 @@ param(
         TypeHandlerVersion = $WETypeHandlerVersion
         # SettingString = $WESettingsString
     }
-    Set-AzVMExtension @setAzVMExtensionSplat
+    Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
 
 
     #Post Deployment Configuration #2
@@ -541,7 +542,7 @@ param(
         ResourceName       = $WEVMName
         ResourceType       = $vmtype
     }
-    New-AzRoleAssignment @NewAzRoleAssignmentParams
+    New-AzRoleAssignment -ErrorAction Stop @NewAzRoleAssignmentParams
 
 
 
@@ -561,7 +562,7 @@ param(
         ResourceName       = $WEVMName
         ResourceType       = $vmtype
     }
-    New-AzRoleAssignment @NewAzRoleAssignmentParams
+    New-AzRoleAssignment -ErrorAction Stop @NewAzRoleAssignmentParams
 
 
     #Post Deployment Configuration #4
@@ -574,15 +575,15 @@ param(
         Email             = $WEEmail
     }
 
-    Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
+    Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 
 
 
     #Give the user their VM Login Details
-    Write-Host 'The VM is now ready.... here is your login details'
-    Write-Host 'username:' $WEVMLocalAdminUser
-    Write-Host 'Password:' $WEVMLocalAdminPassword
-    Write-Host 'DNSName:' $WEDNSNameLabel
+    Write-Information \'The VM is now ready.... here is your login details\'
+    Write-Information \'username:\' $WEVMLocalAdminUser
+    Write-Information \'Password:\' $WEVMLocalAdminPassword
+    Write-Information \'DNSName:\' $WEDNSNameLabel
         
 
 }

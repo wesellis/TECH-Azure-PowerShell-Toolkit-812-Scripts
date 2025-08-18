@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Function App Setting Manager
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,7 +18,7 @@ param (
     [hashtable]$AppSettings
 )
 
-Write-Host "Updating Function App settings: $FunctionAppName"
+Write-Information "Updating Function App settings: $FunctionAppName"
 
 $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName
 
@@ -29,10 +29,10 @@ if (-not $ExistingSettings) { $ExistingSettings = @{} }
 # Add new settings
 foreach ($Setting in $AppSettings.GetEnumerator()) {
     $ExistingSettings[$Setting.Key] = $Setting.Value
-    Write-Host "  Added/Updated: $($Setting.Key)"
+    Write-Information "  Added/Updated: $($Setting.Key)"
 }
 
 # Update Function App
 Update-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -AppSetting $ExistingSettings
 
-Write-Host "✅ Function App settings updated successfully!"
+Write-Information "✅ Function App settings updated successfully!"

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Storage Account Lifecycle Manager
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,7 +24,7 @@ param (
     [int]$DaysToDelete = 365
 )
 
-Write-Host "Configuring lifecycle management for: $StorageAccountName"
+Write-Information "Configuring lifecycle management for: $StorageAccountName"
 
 # Create lifecycle policy rule
 $LifecycleRule = @{
@@ -55,19 +55,19 @@ $LifecycleRule = @{
 $PolicyJson = $LifecycleRule | ConvertTo-Json -Depth 10
 
 # Apply lifecycle policy
-Set-AzStorageAccountManagementPolicy `
+Set-AzStorageAccountManagementPolicy -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -StorageAccountName $StorageAccountName `
     -Policy $PolicyJson
 
-Write-Host "✅ Lifecycle management configured successfully:"
-Write-Host "  Storage Account: $StorageAccountName"
-Write-Host "  Tier to Cool: After $DaysToTierCool days"
-Write-Host "  Tier to Archive: After $DaysToTierArchive days"
-Write-Host "  Delete: After $DaysToDelete days"
+Write-Information "✅ Lifecycle management configured successfully:"
+Write-Information "  Storage Account: $StorageAccountName"
+Write-Information "  Tier to Cool: After $DaysToTierCool days"
+Write-Information "  Tier to Archive: After $DaysToTierArchive days"
+Write-Information "  Delete: After $DaysToDelete days"
 
-Write-Host "`nLifecycle Benefits:"
-Write-Host "• Automatic cost optimization"
-Write-Host "• Compliance with retention policies"
-Write-Host "• Reduced management overhead"
-Write-Host "• Environmental efficiency"
+Write-Information "`nLifecycle Benefits:"
+Write-Information "• Automatic cost optimization"
+Write-Information "• Compliance with retention policies"
+Write-Information "• Reduced management overhead"
+Write-Information "• Environmental efficiency"

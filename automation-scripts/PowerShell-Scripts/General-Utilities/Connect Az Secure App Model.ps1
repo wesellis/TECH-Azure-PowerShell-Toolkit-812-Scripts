@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Connect Az Secure App Model
 
@@ -59,7 +59,7 @@ $WEAccountId_3001 = $null
 $WEAccountId_3001 = 'Abdullah@canadacomputing.ca'
 
 $WEAppcredential_3001 = $null
-$WEAppcredential_3001 = Get-Credential
+$WEAppcredential_3001 = Get-Credential -ErrorAction Stop
 
 
 
@@ -75,7 +75,7 @@ $newPartnerAccessTokenSplat_azureToken_3001 = @{
 }
 
 $azuretoken_3001 = $null
-$azuretoken_3001 = New-PartnerAccessToken @newPartnerAccessTokenSplat_azureToken_3001
+$azuretoken_3001 = New-PartnerAccessToken -ErrorAction Stop @newPartnerAccessTokenSplat_azureToken_3001
 
 
 $newPartnerAccessTokenSplat_graphToken_3001 = $null
@@ -90,7 +90,7 @@ $newPartnerAccessTokenSplat_graphToken_3001 = @{
 }
 
 $graphToken_3001 = $null
-$graphToken_3001 = New-PartnerAccessToken @newPartnerAccessTokenSplat_graphToken_3001
+$graphToken_3001 = New-PartnerAccessToken -ErrorAction Stop @newPartnerAccessTokenSplat_graphToken_3001
 
 ; 
 $connectAzAccountSplat_3001 = $null; 

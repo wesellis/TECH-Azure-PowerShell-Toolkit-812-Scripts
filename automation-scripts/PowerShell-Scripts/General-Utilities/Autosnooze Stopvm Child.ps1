@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Autosnooze Stopvm Child
 
@@ -51,7 +51,7 @@ param(
     [object]$WEWebhookData
 )
 
-if ($WEWebhookData -ne $null) {  
+if ($null -ne $WEWebhookData) {  
     # Collect properties of WebhookData.
     $WEWebhookName    =   $WEWebhookData.WebhookName
     $WEWebhookBody    =   $WEWebhookData.RequestBody
@@ -107,7 +107,7 @@ if ($WEWebhookData -ne $null) {
           
    ;  $WEStatus = Stop-AzureRmVM -Name $WEAlertContext.resourceName -ResourceGroupName $WEAlertContext.resourceGroupName -Force
     
-    if($WEStatus -eq $null)
+    if($null -eq $WEStatus)
     {
         Write-Output " Error occured while stopping the Virtual Machine. $WEAlertContext.resourceName"
     }

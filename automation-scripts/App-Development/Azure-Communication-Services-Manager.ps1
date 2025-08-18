@@ -1,4 +1,4 @@
-# Azure Communication Services Manager
+﻿# Azure Communication Services Manager
 # Professional Azure communications automation script
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise communication platform automation
@@ -105,7 +105,7 @@ try {
             }
             
             $communicationService = Invoke-AzureOperation -Operation {
-                New-AzCommunicationService @communicationParams
+                New-AzCommunicationService -ErrorAction Stop @communicationParams
             } -OperationName "Create Communication Service"
             
             Write-Log "✓ Communication Service created: $CommunicationServiceName" -Level SUCCESS
@@ -153,15 +153,15 @@ try {
             Write-Log "✓ Domain management: $DomainManagement" -Level INFO
             
             if ($DomainManagement -eq "CustomerManaged") {
-                Write-Host ""
-                Write-Host "📋 DNS Configuration Required" -ForegroundColor Yellow
-                Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-                Write-Host "For customer-managed domains, add these DNS records:" -ForegroundColor White
-                Write-Host "• TXT record: verification code (check Azure portal)" -ForegroundColor White
-                Write-Host "• MX record: inbound email routing" -ForegroundColor White
-                Write-Host "• SPF record: sender policy framework" -ForegroundColor White
-                Write-Host "• DKIM records: domain key identified mail" -ForegroundColor White
-                Write-Host ""
+                Write-Information ""
+                Write-Information "📋 DNS Configuration Required"
+                Write-Information "════════════════════════════════════════════════════════════════════"
+                Write-Information "For customer-managed domains, add these DNS records:"
+                Write-Information "• TXT record: verification code (check Azure portal)"
+                Write-Information "• MX record: inbound email routing"
+                Write-Information "• SPF record: sender policy framework"
+                Write-Information "• DKIM records: domain key identified mail"
+                Write-Information ""
             }
         }
         
@@ -193,16 +193,16 @@ try {
                 return $searchResponse
             } -OperationName "Search Phone Numbers"
             
-            Write-Host ""
-            Write-Host "📞 Available Phone Numbers" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "📞 Available Phone Numbers"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             if ($availableNumbers.phoneNumbers) {
                 foreach ($number in $availableNumbers.phoneNumbers) {
-                    Write-Host "• $($number.phoneNumber)" -ForegroundColor White
-                    Write-Host "  Cost: $($number.cost.amount) $($number.cost.currencyCode)/month" -ForegroundColor Gray
-                    Write-Host "  Capabilities: $($number.capabilities.calling), $($number.capabilities.sms)" -ForegroundColor Gray
-                    Write-Host ""
+                    Write-Information "• $($number.phoneNumber)"
+                    Write-Information "  Cost: $($number.cost.amount) $($number.cost.currencyCode)/month"
+                    Write-Information "  Capabilities: $($number.capabilities.calling), $($number.capabilities.sms)"
+                    Write-Information ""
                 }
                 
                 # Purchase the first available number
@@ -338,14 +338,14 @@ try {
             Write-Log "✓ Identity ID: $($userIdentity.identity.id)" -Level INFO
             Write-Log "✓ Access token generated with chat and VoIP scopes" -Level INFO
             
-            Write-Host ""
-            Write-Host "🆔 User Identity Details" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Identity ID: $($userIdentity.identity.id)" -ForegroundColor White
-            Write-Host "Access Token: $($userIdentity.accessToken.token)" -ForegroundColor Yellow
-            Write-Host "Token Expires: $($userIdentity.accessToken.expiresOn)" -ForegroundColor White
-            Write-Host ""
-            Write-Host "⚠️  Store the access token securely - it's needed for client authentication" -ForegroundColor Red
+            Write-Information ""
+            Write-Information "🆔 User Identity Details"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Identity ID: $($userIdentity.identity.id)"
+            Write-Information "Access Token: $($userIdentity.accessToken.token)"
+            Write-Information "Token Expires: $($userIdentity.accessToken.expiresOn)"
+            Write-Information ""
+            Write-Information "⚠️  Store the access token securely - it's needed for client authentication"
         }
         
         "getinfo" {
@@ -384,33 +384,33 @@ try {
                 return $response.value
             } -OperationName "Get Email Domains"
             
-            Write-Host ""
-            Write-Host "📡 Communication Services Information" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Service Name: $($communicationService.Name)" -ForegroundColor White
-            Write-Host "Data Location: $($communicationService.DataLocation)" -ForegroundColor White
-            Write-Host "Status: $($communicationService.ProvisioningState)" -ForegroundColor Green
-            Write-Host "Resource ID: $($communicationService.Id)" -ForegroundColor White
+            Write-Information ""
+            Write-Information "📡 Communication Services Information"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Service Name: $($communicationService.Name)"
+            Write-Information "Data Location: $($communicationService.DataLocation)"
+            Write-Information "Status: $($communicationService.ProvisioningState)"
+            Write-Information "Resource ID: $($communicationService.Id)"
             
             if ($phoneNumbers.Count -gt 0) {
-                Write-Host ""
-                Write-Host "📞 Phone Numbers ($($phoneNumbers.Count)):" -ForegroundColor Cyan
+                Write-Information ""
+                Write-Information "📞 Phone Numbers ($($phoneNumbers.Count)):"
                 foreach ($number in $phoneNumbers) {
-                    Write-Host "• $($number.phoneNumber)" -ForegroundColor White
-                    Write-Host "  Type: $($number.phoneNumberType)" -ForegroundColor Gray
-                    Write-Host "  Assignment: $($number.assignmentType)" -ForegroundColor Gray
-                    Write-Host "  Capabilities: SMS=$($number.capabilities.sms), Calling=$($number.capabilities.calling)" -ForegroundColor Gray
-                    Write-Host ""
+                    Write-Information "• $($number.phoneNumber)"
+                    Write-Information "  Type: $($number.phoneNumberType)"
+                    Write-Information "  Assignment: $($number.assignmentType)"
+                    Write-Information "  Capabilities: SMS=$($number.capabilities.sms), Calling=$($number.capabilities.calling)"
+                    Write-Information ""
                 }
             }
             
             if ($domains.Count -gt 0) {
-                Write-Host "📧 Email Domains ($($domains.Count)):" -ForegroundColor Cyan
+                Write-Information "📧 Email Domains ($($domains.Count)):"
                 foreach ($domain in $domains) {
-                    Write-Host "• $($domain.name)" -ForegroundColor White
-                    Write-Host "  Management: $($domain.properties.domainManagement)" -ForegroundColor Gray
-                    Write-Host "  Status: $($domain.properties.verificationStates.domain)" -ForegroundColor Gray
-                    Write-Host ""
+                    Write-Information "• $($domain.name)"
+                    Write-Information "  Management: $($domain.properties.domainManagement)"
+                    Write-Information "  Status: $($domain.properties.verificationStates.domain)"
+                    Write-Information ""
                 }
             }
         }
@@ -463,7 +463,7 @@ try {
                     MetricCategory = @("AllMetrics")
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
@@ -575,62 +575,62 @@ try {
     }
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                      AZURE COMMUNICATION SERVICES READY" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                      AZURE COMMUNICATION SERVICES READY"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Host "📡 Communication Service Details:" -ForegroundColor Cyan
-        Write-Host "   • Service Name: $CommunicationServiceName" -ForegroundColor White
-        Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-        Write-Host "   • Data Location: $Location" -ForegroundColor White
-        Write-Host "   • Status: $($serviceStatus.ProvisioningState)" -ForegroundColor Green
-        Write-Host "   • Resource ID: $($serviceStatus.Id)" -ForegroundColor White
+        Write-Information "📡 Communication Service Details:"
+        Write-Information "   • Service Name: $CommunicationServiceName"
+        Write-Information "   • Resource Group: $ResourceGroupName"
+        Write-Information "   • Data Location: $Location"
+        Write-Information "   • Status: $($serviceStatus.ProvisioningState)"
+        Write-Information "   • Resource ID: $($serviceStatus.Id)"
         
-        Write-Host ""
-        Write-Host "🔒 Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
-            Write-Host "   $finding" -ForegroundColor White
+            Write-Information "   $finding"
         }
         
-        Write-Host ""
-        Write-Host "💰 Pricing (Approximate):" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "💰 Pricing (Approximate):"
         foreach ($cost in $costComponents.GetEnumerator()) {
-            Write-Host "   • $($cost.Key): $($cost.Value)" -ForegroundColor White
+            Write-Information "   • $($cost.Key): $($cost.Value)"
         }
     }
     
-    Write-Host ""
-    Write-Host "🚀 Communication Capabilities:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "🚀 Communication Capabilities:"
     foreach ($capability in $capabilities) {
-        Write-Host "   $capability" -ForegroundColor White
+        Write-Information "   $capability"
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Configure email domains using ConfigureDomain action" -ForegroundColor White
-    Write-Host "   • Purchase phone numbers using ManagePhoneNumbers action" -ForegroundColor White
-    Write-Host "   • Create user identities for chat and calling features" -ForegroundColor White
-    Write-Host "   • Integrate with your applications using SDKs" -ForegroundColor White
-    Write-Host "   • Set up monitoring and alerting for usage tracking" -ForegroundColor White
-    Write-Host "   • Configure compliance settings for your region" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Configure email domains using ConfigureDomain action"
+    Write-Information "   • Purchase phone numbers using ManagePhoneNumbers action"
+    Write-Information "   • Create user identities for chat and calling features"
+    Write-Information "   • Integrate with your applications using SDKs"
+    Write-Information "   • Set up monitoring and alerting for usage tracking"
+    Write-Information "   • Configure compliance settings for your region"
+    Write-Information ""
 
     Write-Log "✅ Azure Communication Services operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Communication Services operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Communication Services availability in your region" -ForegroundColor White
-    Write-Host "   • Check subscription quotas and limits" -ForegroundColor White
-    Write-Host "   • Ensure proper permissions for resource creation" -ForegroundColor White
-    Write-Host "   • Validate phone number availability for your country" -ForegroundColor White
-    Write-Host "   • Check domain ownership for email configuration" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Communication Services availability in your region"
+    Write-Information "   • Check subscription quotas and limits"
+    Write-Information "   • Ensure proper permissions for resource creation"
+    Write-Information "   • Validate phone number availability for your country"
+    Write-Information "   • Check domain ownership for email configuration"
+    Write-Information ""
     
     exit 1
 }

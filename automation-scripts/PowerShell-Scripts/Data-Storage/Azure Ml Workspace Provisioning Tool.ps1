@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Ml Workspace Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -118,7 +119,7 @@ if ($WEStorageAccountName) {
     $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName -ErrorAction SilentlyContinue
     if (-not $WEStorageAccount) {
         Write-WELog " Creating Storage Account: $WEStorageAccountName" " INFO"
-        $WEStorageAccount = New-AzStorageAccount `
+        $WEStorageAccount = New-AzStorageAccount -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -Name $WEStorageAccountName `
             -Location $WELocation `
@@ -133,7 +134,7 @@ if ($WEKeyVaultName) {
     $WEKeyVault = Get-AzKeyVault -ResourceGroupName $WEResourceGroupName -VaultName $WEKeyVaultName -ErrorAction SilentlyContinue
     if (-not $WEKeyVault) {
         Write-WELog " Creating Key Vault: $WEKeyVaultName" " INFO"
-        $WEKeyVault = New-AzKeyVault `
+        $WEKeyVault = New-AzKeyVault -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -VaultName $WEKeyVaultName `
             -Location $WELocation `
@@ -147,7 +148,7 @@ if ($WEApplicationInsightsName) {
     $WEAppInsights = Get-AzApplicationInsights -ResourceGroupName $WEResourceGroupName -Name $WEApplicationInsightsName -ErrorAction SilentlyContinue
     if (-not $WEAppInsights) {
         Write-WELog " Creating Application Insights: $WEApplicationInsightsName" " INFO"
-        $WEAppInsights = New-AzApplicationInsights `
+        $WEAppInsights = New-AzApplicationInsights -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -Name $WEApplicationInsightsName `
             -Location $WELocation `
@@ -161,7 +162,7 @@ if ($WEContainerRegistryName) {
     $WEContainerRegistry = Get-AzContainerRegistry -ResourceGroupName $WEResourceGroupName -Name $WEContainerRegistryName -ErrorAction SilentlyContinue
     if (-not $WEContainerRegistry) {
         Write-WELog " Creating Container Registry: $WEContainerRegistryName" " INFO"
-        $WEContainerRegistry = New-AzContainerRegistry `
+        $WEContainerRegistry = New-AzContainerRegistry -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -Name $WEContainerRegistryName `
             -Location $WELocation `
@@ -193,7 +194,7 @@ if ($WEContainerRegistry) {
     $WEMLWorkspaceParams.ContainerRegistry = $WEContainerRegistry.Id
 }
 ; 
-$WEMLWorkspace = New-AzMLWorkspace @MLWorkspaceParams
+$WEMLWorkspace = New-AzMLWorkspace -ErrorAction Stop @MLWorkspaceParams
 
 Write-WELog " `nML Workspace $WEWorkspaceName provisioned successfully" " INFO"
 Write-WELog " Workspace ID: $($WEMLWorkspace.Id)" " INFO"

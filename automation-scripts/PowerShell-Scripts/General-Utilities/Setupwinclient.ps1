@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setupwinclient
 
@@ -35,7 +35,7 @@
 
 
 mkdir c:\temp -Force
-Get-Date > c:\temp\hello.txt
+Get-Date -ErrorAction Stop > c:\temp\hello.txt
 
 
 REG add "HKLM\SOFTWARE\Policies\Microsoft\System\DNSClient" /v " PrimaryDnsSuffix" /t REG_SZ /d $args[0] /f           # for now

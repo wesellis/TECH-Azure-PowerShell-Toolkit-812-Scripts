@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm Scaleset Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -102,7 +103,7 @@ param(
 Write-WELog " Creating VM Scale Set: $WEScaleSetName" " INFO"
 
 
-$WEVmssConfig = New-AzVmssConfig `
+$WEVmssConfig = New-AzVmssConfig -ErrorAction Stop `
     -Location $WELocation `
     -SkuCapacity $WEInstanceCount `
     -SkuName $WEVmSize `
@@ -117,13 +118,13 @@ $WEVmssConfig = Add-AzVmssNetworkInterfaceConfiguration `
     -CreatePublicIPAddress $false
 
 
-$WEVmssConfig = Set-AzVmssOsProfile `
+$WEVmssConfig = Set-AzVmssOsProfile -ErrorAction Stop `
     -VirtualMachineScaleSet $WEVmssConfig `
     -ComputerNamePrefix " vmss" `
     -AdminUsername " azureuser"
 
 ; 
-$WEVmssConfig = Set-AzVmssStorageProfile `
+$WEVmssConfig = Set-AzVmssStorageProfile -ErrorAction Stop `
     -VirtualMachineScaleSet $WEVmssConfig `
     -OsDiskCreateOption " FromImage" `
     -ImageReferencePublisher " MicrosoftWindowsServer" `
@@ -132,7 +133,7 @@ $WEVmssConfig = Set-AzVmssStorageProfile `
     -ImageReferenceVersion " latest"
 
 ; 
-$WEVmss = New-AzVmss `
+$WEVmss = New-AzVmss -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEScaleSetName `
     -VirtualMachineScaleSet $WEVmssConfig

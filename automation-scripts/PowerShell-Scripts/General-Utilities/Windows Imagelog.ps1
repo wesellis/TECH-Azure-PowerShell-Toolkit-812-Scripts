@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Imagelog
 
@@ -79,10 +79,10 @@ Set-StrictMode -Version Latest
 Write-WELog " Starting log file write to desktop and DRI report location" " INFO"
 
 
-$global:varLogArray = New-Object -TypeName " PSCustomObject"
+$script:varLogArray = New-Object -TypeName " PSCustomObject"
 $newLine = [Environment]::NewLine
 $logBreak = $newLine + '=============================================================================' + $newLine
-$currentTime = Get-Date
+$currentTime = Get-Date -ErrorAction Stop
 $usefulTags = $WEUsefulTagsList.Split(" ," )
 $imageInfoJsonDir = " C:\.tools\Setup"
 $imageInfoJsonFile = " $imageInfoJsonDir\ImageInfo.json"
@@ -125,7 +125,7 @@ try {
     # Write JSON file
     Write-WELog " Write json output file to " " INFO" $imageInfoJsonFile
     $global:varLogArray | ConvertTo-Json -Depth 10 | Out-File -FilePath $imageInfoJsonFile
-    Get-Content $imageInfoJsonFile
+    Get-Content -ErrorAction Stop $imageInfoJsonFile
 
     # Build and write customer image info text file
     Write-WELog " Write text output file to " " INFO" $imageInfoTextFile
@@ -138,10 +138,10 @@ try {
        ;  $tagsDetail = $global:varLogArray.VMTags 
     }
     $reportHeader, $logBreak, " Bicep Parameters : " , $($global:varLogArray.BicepParameters | ConvertTo-Json -Depth 10), $logBreak, " VM Image Tags : " , $tagsDetail, $logBreak, " Repos : " , $repoDetail | Out-File -FilePath $imageInfoTextFile
-    Get-Content $imageInfoTextFile
+    Get-Content -ErrorAction Stop $imageInfoTextFile
 
     Write-WELog " Delete RepoLog directory now that it is no longer needed." " INFO"
-    Remove-Item $repoLogFilePat -Forceh -Force -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -ErrorAction Stop $repoLogFilePat -Forceh -Force -Recurse -Force -ErrorAction SilentlyContinue
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop

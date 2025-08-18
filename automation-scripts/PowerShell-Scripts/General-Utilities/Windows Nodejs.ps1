@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Nodejs
 
@@ -45,7 +45,7 @@ function WE-Uninstall-ExistingNode {
     if ($WEUninstallExistingNodeVersion) {
         Write-WELog " Checking for existing Node.js installations..." " INFO"
         $node = Get-CimInstance -Class Win32_Product | Where-Object { $_.Name -match " Node.js" }
-        if ($node -ne $null) {
+        if ($null -ne $node) {
             Write-WELog " Existing Node.js installation found: $($node.Name), Version: $($node.Version). Uninstalling..." " INFO"
             $uninstallResult = $node.Uninstall()
             if ($uninstallResult.ReturnValue -eq 0) {

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     16 Get Azrecoveryservicesbackuprecoverypoint
 
@@ -63,7 +63,7 @@ $getAzRecoveryServicesBackupRecoveryPointSplat = @{
     VaultId = $targetVault.ID
 }
 ; 
-$rp = Get-AzRecoveryServicesBackupRecoveryPoint @getAzRecoveryServicesBackupRecoveryPointSplat
+$rp = Get-AzRecoveryServicesBackupRecoveryPoint -ErrorAction Stop @getAzRecoveryServicesBackupRecoveryPointSplat
 
 $rp
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setupcertificate
 
@@ -43,11 +43,11 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
 
     $certificatePfxFile = Join-Path $myPath " certificate.pfx"
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    (New-Object System.Net.WebClient).DownloadFile($certificatePfxUrl, $certificatePfxFile)
-    $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certificatePfxFile, $certificatePfxPassword)
+    (New-Object -ErrorAction Stop System.Net.WebClient).DownloadFile($certificatePfxUrl, $certificatePfxFile)
+    $cert = New-Object -ErrorAction Stop System.Security.Cryptography.X509Certificates.X509Certificate2($certificatePfxFile, $certificatePfxPassword)
     $certificateThumbprint = $cert.Thumbprint
     Write-WELog " Certificate File Thumbprint $certificateThumbprint" " INFO"
-    if (!(Get-Item Cert:\LocalMachine\my\$certificateThumbprint -ErrorAction SilentlyContinue)) {
+    if (!(Get-Item -ErrorAction Stop Cert:\LocalMachine\my\$certificateThumbprint -ErrorAction SilentlyContinue)) {
         Write-WELog " Importing Certificate to LocalMachine\my" " INFO"
         Import-PfxCertificate -FilePath $certificatePfxFile -CertStoreLocation cert:\localMachine\my -Password (ConvertTo-SecureString -String $certificatePfxPassword -AsPlainText -Force) | Out-Null
     }
@@ -61,7 +61,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
 
     try {
         Write-WELog " Stopping Web Sites" " INFO"
-        Get-Website | Stop-Website
+        Get-Website -ErrorAction Stop | Stop-Website
  
         Write-WELog " Using LetsEncrypt to create SSL Certificate" " INFO"
 
@@ -98,7 +98,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         New-ACMEAccount -state $stateDir -EmailAddresses $WEContactEMailForLetsEncrypt -AcceptTOS | Out-Null
 
         Write-WELog " Creating new dns Identifier" " INFO"
-        $identifier = New-ACMEIdentifier $publicDnsName
+        $identifier = New-ACMEIdentifier -ErrorAction Stop $publicDnsName
     
         Write-WELog " Creating ACME Order" " INFO"
        ;  $order = New-ACMEOrder -state $stateDir -Identifiers $identifier
@@ -108,7 +108,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
 
         Write-WELog " Creating Challenge WebSite" " INFO"
         $challengeLocalPath = 'c:\inetpub\wwwroot\challenge'
-        New-Item $challengeLocalPath -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+        New-Item -ErrorAction Stop $challengeLocalPath -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
         New-Website -Name challenge -Port 80 -PhysicalPath $challengeLocalPath | Out-Null
 
 '<configuration>
@@ -127,7 +127,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
     </system.webServer>
   </location>
 </configuration>
-' | Set-Content (Join-Path $challengeLocalPath 'web.config')
+' | Set-Content -ErrorAction Stop (Join-Path $challengeLocalPath 'web.config')
 
         Write-WELog " Starting Challenge WebSite" " INFO"
         Start-Website -Name challenge
@@ -139,7 +139,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
     
             # Create the file requested by the challenge
             $fileName = Join-Path $challengeLocalPath $challenge.Data.RelativeUrl
-            Write-Host $filename
+            Write-Information $filename
            ;  $challengePath = [System.IO.Path]::GetDirectoryName($filename);
 
             if(-not (Test-Path $challengePath)) {
@@ -189,7 +189,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         Write-WELog " Exporting certificate to $certificatePfxFile" " INFO"
         Export-ACMECertificate -state $stateDir -Order $order -CertificateKey $certKey -Path $certificatePfxFile -Password (ConvertTo-SecureString -String $certificatePfxPassword -AsPlainText -Force)
     
-        $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certificatePfxFile, $certificatePfxPassword)
+        $cert = New-Object -ErrorAction Stop System.Security.Cryptography.X509Certificates.X509Certificate2($certificatePfxFile, $certificatePfxPassword)
         $certificateThumbprint = $cert.Thumbprint
         
         Write-WELog " Importing Certificate to LocalMachine\my" " INFO"
@@ -209,13 +209,13 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
     }
 
     Write-WELog " Removing Challenge WebSite" " INFO"
-    Get-Website | Where-Object { $_.Name -eq 'challenge' } | % {
+    Get-Website -ErrorAction Stop | Where-Object { $_.Name -eq 'challenge' } | % {
         Stop-Website -Name $_.Name
         Remove-Website -Name $_.Name
     }
 
     Write-WELog " Starting Web Sites" " INFO"
-    Get-Website | Where-Object { $_.Name -ne 'challenge' } | Start-Website
+    Get-Website -ErrorAction Stop | Where-Object { $_.Name -ne 'challenge' } | Start-Website
 
 } else {
     . (Join-Path $runPath $WEMyInvocation.MyCommand.Name)

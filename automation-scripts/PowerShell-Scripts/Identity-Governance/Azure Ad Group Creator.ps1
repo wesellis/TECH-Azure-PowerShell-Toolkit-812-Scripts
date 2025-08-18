@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Ad Group Creator
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -103,7 +104,7 @@ try {
         $WEGroupParams.MailNickname = ($WEGroupName -replace '\s', '').ToLower()
     }
     
-   ;  $WEGroup = New-AzADGroup @GroupParams
+   ;  $WEGroup = New-AzADGroup -ErrorAction Stop @GroupParams
     
     Write-WELog " ✅ Azure AD Group created successfully:" " INFO"
     Write-WELog "  Group Name: $($WEGroup.DisplayName)" " INFO"

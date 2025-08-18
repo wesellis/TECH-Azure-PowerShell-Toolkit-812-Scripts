@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Environment Cloner
 
@@ -199,7 +199,7 @@ try {
     
     # Cleanup temporary files
     $templates.Values | ForEach-Object {
-        if (Test-Path $_) { Remove-Item $ -Force_ -Force }
+        if (Test-Path $_) { Remove-Item -ErrorAction Stop $ -Force_ -Force }
     }
     
     Write-Progress -Activity " Environment Cloning" -Completed

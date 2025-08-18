@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Storagepool
 
@@ -42,7 +42,7 @@ Configuration StoragePool
   {
 	Script ConfigureStoragePool { 
 		SetScript = { 
-			$disks = Get-PhysicalDisk –CanPool $true
+			$disks = Get-PhysicalDisk -ErrorAction Stop –CanPool $true
 			New-StoragePool -FriendlyName "DataPool" -StorageSubsystemFriendlyName " Windows Storage*" -PhysicalDisks $disks | New-VirtualDisk -FriendlyName " DataDisk" -UseMaximumSize -NumberOfColumns $disks.Count -ResiliencySettingName " Simple" -ProvisioningType Fixed -Interleave 65536 | Initialize-Disk -Confirm:$WEFalse -PassThru | New-Partition -DriveLetter H –UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel " DATA" -Confirm:$false			
 		} 
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Create Gen Artifacts
 
@@ -77,9 +77,9 @@ if ((Get-AzureRMResourceGroup -Name $WEResourceGroupName -Location $WELocation -
 
 
 $WEStorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.Id).Replace('-', '').substring(0, 19)
-$WEStorageAccount = (Get-AzureRmStorageAccount | Where-Object { $_.StorageAccountName -eq $WEStorageAccountName })
+$WEStorageAccount = (Get-AzureRmStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $WEStorageAccountName })
 
-if ($WEStorageAccount -eq $null) {
+if ($null -eq $WEStorageAccount) {
     $WEStorageResourceGroupName = 'ARM_Deploy_Staging'
     New-AzureRmResourceGroup -Location " $WELocation" -Name $WEStorageResourceGroupName -Force
     $WEStorageAccount = New-AzureRmStorageAccount -StorageAccountName $WEStorageAccountName -Type 'Standard_LRS' -ResourceGroupName $WEStorageResourceGroupName -Location " $WELocation"
@@ -108,7 +108,7 @@ $subnet1 = New-AzureRMVirtualNetworkSubnetConfig -Name 'azbot-subnet-1' -Address
 $subnet2 = New-AzureRMVirtualNetworkSubnetConfig -Name 'azbot-subnet-2' -AddressPrefix '10.0.2.0/24'
 $vNet = New-AzureRMVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name 'azbot-vnet' -AddressPrefix '10.0.0.0/16' -Location $location -Subnet $subnet1, $subnet2 -Verbose -Force
 
-$json = New-Object System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable
+$json = New-Object -ErrorAction Stop System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable
 $json.Add(" VNET-RESOURCEGROUP-NAME" , $vNet.ResourceGroupName)
 $json.Add(" VNET-NAME" , $vNet.Name)
 $json.Add(" VNET-SUBNET1-NAME" , $vNet.Subnets[0].Name)
@@ -125,7 +125,7 @@ Creat a KeyVault and add:
 
 
 $vault = Get-AzureRMKeyVault -VaultName $WEKeyVaultName -verbose -ErrorAction SilentlyContinue
-if ($vault -eq $null) {
+if ($null -eq $vault) {
     $vault = New-AzureRMKeyVault -VaultName $WEKeyVaultName `
                                  -ResourceGroupName $WEResourceGroupName `
                                  -Location $WELocation `
@@ -146,7 +146,7 @@ if ($WEServicePrincipalObjectId) {
     # See if the roleDef already exists
     $role = Get-AzureRmRoleDefinition -Name " KeyVault Deployment Action"
 
-    if ($role -eq $null) {
+    if ($null -eq $role) {
         $roleDef = New-Object -TypeName " Microsoft.Azure.Commands.Resources.Models.Authorization.PSRoleDefinition"
 
         $roleDef.Id = $null
@@ -167,7 +167,7 @@ if ($WEServicePrincipalObjectId) {
     # See if the roleDef already exists
     $role = Get-AzureRmRoleDefinition -Name " Join Subnets"
 
-    if ($role -eq $null) {
+    if ($null -eq $role) {
         $roleDef.Id = $null
         $roleDef.Name = " Join Subnets"
         $roleDef.Description = " Join a VM to a subnet"
@@ -266,7 +266,7 @@ $json.Add(" KEYVAULT-PASSWORD-REFERENCE" , (ConvertFrom-Json $refParam))
 $WESecurePassword = ConvertTo-SecureString -String $WECertPass -AsPlainText -Force
 $WECertFileFullPath = $(Join-Path (Split-Path -Parent $WEMyInvocation.MyCommand.Definition) " \$WECertDNSName.pfx" )
 
-if ($(Get-Module 'PKI') -eq $null) { Import-Module " PKI" -SkipEditionCheck -Verbose }
+if ($(Get-Module -ErrorAction Stop 'PKI') -eq $null) { Import-Module " PKI" -SkipEditionCheck -Verbose }
 $WENewCert = New-SelfSignedCertificate -CertStoreLocation Cert:\CurrentUser\My -DnsName $WECertDNSName -NotAfter (Get-Date).AddYears(10)
 Export-PfxCertificate -FilePath $WECertFileFullPath -Password $WESecurePassword -Cert $WENewCert
 

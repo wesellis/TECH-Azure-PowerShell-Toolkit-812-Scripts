@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Containerinstance Logs
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -92,7 +93,7 @@ param(
     [int]$WETail = 50
 )
 
-Write-Host -Object " Retrieving logs for container group: $WEContainerGroupName"
+Write-Information -Object " Retrieving logs for container group: $WEContainerGroupName"
 
 if ($WEContainerName) {
    ;  $WELogs = Get-AzContainerInstanceLog -ResourceGroupName $WEResourceGroupName -ContainerGroupName $WEContainerGroupName -ContainerName $WEContainerName -Tail $WETail
@@ -100,9 +101,9 @@ if ($WEContainerName) {
    ;  $WELogs = Get-AzContainerInstanceLog -ResourceGroupName $WEResourceGroupName -ContainerGroupName $WEContainerGroupName -Tail $WETail
 }
 
-Write-Host -Object " `nContainer Logs (Last $WETail lines):"
-Write-Host -Object (" =" * 50)
-Write-Host -Object $WELogs
+Write-Information -Object " `nContainer Logs (Last $WETail lines):"
+Write-Information -Object (" =" * 50)
+Write-Information -Object $WELogs
 
 
 

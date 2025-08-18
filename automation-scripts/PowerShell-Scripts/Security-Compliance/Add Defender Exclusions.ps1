@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Add Defender Exclusions
 
@@ -70,8 +70,8 @@ try {
 }
 catch {
     Write-WELog " !!! [WARN] Unhandled exception (will be ignored):" " INFO"
-    Write-Host -Object $_
-    Write-Host -Object $_.ScriptStackTrace
+    Write-Information -Object $_
+    Write-Information -Object $_.ScriptStackTrace
 }
 
 

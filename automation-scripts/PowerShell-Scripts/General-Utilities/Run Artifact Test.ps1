@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Artifact Test
 
@@ -50,7 +50,7 @@ $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 
 Write-WELog " -- Received params: StrParam=$WEStrParam, IntParam=$WEIntParam, BoolParam=$WEBoolParam" " INFO"
-$global:TestResults = @{
+$script:TestResults = @{
     StrParam  = $WEStrParam
     IntParam  = $WEIntParam
     BoolParam = $WEBoolParam

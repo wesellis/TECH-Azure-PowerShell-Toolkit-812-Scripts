@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Clone Azurermresourcegroup
 
@@ -148,8 +148,8 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 6.7" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 6.7 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 6.7" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 6.7 required. Run Update-Module AzureRM"
    BREAK
 }
 
@@ -158,7 +158,8 @@ if ((Get-Module AzureRM).Version -lt " 6.7" ) {
 <###############################
  Get Storage Context function
 
-function WE-Get-StorageObject 
+[CmdletBinding()]
+function WE-Get-StorageObject -ErrorAction Stop 
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI, $srcName) 
@@ -202,14 +203,15 @@ param($resourceGroupName, $srcURI, $srcName)
     
     return $WEPSobjSourceStorage
 
-} # end of Get-StorageObject function
+} # end of Get-StorageObject -ErrorAction Stop function
 
 
 
 <###############################
   get available resources function
 
-function WE-Get-AvailableResources
+[CmdletBinding()]
+function WE-Get-AvailableResources -ErrorAction Stop
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($resourceType, $location)
@@ -223,7 +225,8 @@ param($resourceType, $location)
 <###############################
   get blob copy status
 
-function WE-Get-BlobCopyStatus
+[CmdletBinding()]
+function WE-Get-BlobCopyStatus -ErrorAction Stop
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($context, $containerName, $blobName)
@@ -241,7 +244,7 @@ param($context, $containerName, $blobName)
 
     do
     {
-        $rtn = $blob | Get-AzureStorageBlobCopyState
+        $rtn = $blob | Get-AzureStorageBlobCopyState -ErrorAction Stop
         $rtn | Select-Object Source, Status, BytesCopied, TotalBytes | Format-List
         if($rtn.status  -ne 'Success')
         {
@@ -264,6 +267,7 @@ param($context, $containerName, $blobName)
 <###############################
   Copy blob function
 
+[CmdletBinding()]
 function copy-azureBlob 
 {  [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -343,11 +347,11 @@ param($srcUri, $srcContext, $destContext, $containerName)
 if($WEEnvironment -and (Get-AzureRMEnvironment -Name $WEEnvironment) -eq $null)
 {
    write-warning " The specified -Environment could not be found. Specify one of these valid environments."
-   $WEEnvironment = (Get-AzureRMEnvironment | Select-Object Name, ManagementPortalUrl | Out-GridView -title " Select a valid Azure environment for your subscription" -OutputMode Single).Name
+   $WEEnvironment = (Get-AzureRMEnvironment -ErrorAction Stop | Select-Object Name, ManagementPortalUrl | Out-GridView -title " Select a valid Azure environment for your subscription" -OutputMode Single).Name
 }
 
 
-write-host " Enter credentials for your Azure Subscription..." -f Yellow
+Write-Information " Enter credentials for your Azure Subscription..." -f Yellow
 if($WEEnvironment)
 {
    $login= Connect-AzureRmAccount -EnvironmentName $WEEnvironment
@@ -357,14 +361,14 @@ else
    $login= Connect-AzureRmAccount 
 } 
 $loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription 
+$sub = Get-AzureRmSubscription -ErrorAction Stop 
 $WESubscriptionId = $sub.Id
 
 
 
 if($sub.count -gt 1) 
 {
-    $WESubscriptionId = (Get-AzureRmSubscription | Select-Object * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
+    $WESubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | Select-Object * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId | Out-Null
     $sub = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
 }
@@ -380,10 +384,10 @@ if(! $WESubscriptionId)
 
 $WESubscriptionName = $sub.Name
 
-write-host " Logged into $WESubscriptionName with subscriptionID $WESubscriptionId as $loginID" -f Green
+Write-Information " Logged into $WESubscriptionName with subscriptionID $WESubscriptionId as $loginID" -f Green
 
 
-if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $resourceGroupName)) 
+if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $resourceGroupName)) 
 {
    write-warning " The provided resource group $resourceGroupName could not be found. Exiting the script."
    break
@@ -409,19 +413,19 @@ if(! $resume)
     if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName" ; break}
 
     # display what we found
-    write-host " The following items will be copied:" -f DarkGreen
-    write-host " Storage Accounts:" -f DarkGreen
+    Write-Information " The following items will be copied:" -f DarkGreen
+    Write-Information " Storage Accounts:" -f DarkGreen
     $resourceGroupStorageAccounts.StorageAccountName
-    write-host " Managed Disks:" -f DarkGreen
+    Write-Information " Managed Disks:" -f DarkGreen
     $resourceGroupManagedDisks.Name
-    write-host " Virtual Machines:" -f DarkGreen
+    Write-Information " Virtual Machines:" -f DarkGreen
     $resourceGroupVMs.name
-    write-host " Operating system disks:" -f DarkGreen
+    Write-Information " Operating system disks:" -f DarkGreen
     $resourceGroupVMs.storageProfile.osdisk.name
-    write-host " Data disks:" -f DarkGreen
+    Write-Information " Data disks:" -f DarkGreen
     $resourceGroupVMs.datadisknames
     # check to make sure VMs are not running
-    write-host " Current status of VMs:" -f DarkGreen
+    Write-Information " Current status of VMs:" -f DarkGreen
     $resourceGroupVMs | %{
         $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|Where-Object{$_.Code -like 'PowerState*'}).DisplayStatus
         write-output " $($_.name) status is $status" 
@@ -432,13 +436,13 @@ if(! $resume)
         }
     }
 
-    write-host " Virtual networks:" -f DarkGreen
+    Write-Information " Virtual networks:" -f DarkGreen
     $resourceGroupVirtualNetworks.name
-    write-host " Network Security Groups:" -f DarkGreen
+    Write-Information " Network Security Groups:" -f DarkGreen
     $resourceGroupNSGs.name
-    write-host " Load Balancers:" -f DarkGreen
+    Write-Information " Load Balancers:" -f DarkGreen
     $resourceGroupLBs.name
-    write-host " Public IPs:" -f DarkGreen
+    Write-Information " Public IPs:" -f DarkGreen
     $resourceGroupPIPs.name
 
 
@@ -502,7 +506,7 @@ if(! $resume)
         }
     }
 
-    write-host " Additional storage blobs:" -f DarkGreen
+    Write-Information " Additional storage blobs:" -f DarkGreen
     $sourceStorageObjects.srcURI
 
 
@@ -527,11 +531,11 @@ if(! $resume)
     
         Write-Output " Verifying specified location: $location ..."
         # Prompt for location if provided location doesn't exist in current environment.
-        $location = (Get-AzureRMlocation | Where-Object { $_.Providers -eq 'Microsoft.Compute' -and ( $_.DisplayName -like $location -or $_.location -like $location)}).location
+        $location = (Get-AzureRMlocation -ErrorAction Stop | Where-Object { $_.Providers -eq 'Microsoft.Compute' -and ( $_.DisplayName -like $location -or $_.location -like $location)}).location
         if(! $location) 
         {
             write-warning " $WENewLocation is an invalid Azure Resource Group location for this environment.  Please select a valid location and click OK"
-            $location = (Get-AzureRMlocation | Where-Object { $_.Providers -eq 'Microsoft.Compute'} | Select-Object DisplayName, Providers | Out-GridView -Title " Select Azure Resource Group Location" -OutputMode Single).location
+            $location = (Get-AzureRMlocation -ErrorAction Stop | Where-Object { $_.Providers -eq 'Microsoft.Compute'} | Select-Object DisplayName, Providers | Out-GridView -Title " Select Azure Resource Group Location" -OutputMode Single).location
         }
     }
 
@@ -571,7 +575,10 @@ if(! $resume)
         {
             $WERGexists = Get-AzureRmResourceGroup -Name $WEResourceGroupName -ea stop
         }
-        catch{}
+        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
         
         if($WERGexists) 
         {
@@ -681,7 +688,7 @@ if(! $resume)
             {
                 # create new storage account
                 write-verbose " Creating storage account $WEDeststorageAccountName in resource group $resourceGroupName at location $location" -verbose
-                $newStorageAccount = New-AzureRmStorageAccount @storageParams -ea Stop -wa SilentlyContinue 
+                $newStorageAccount = New-AzureRmStorageAccount -ErrorAction Stop @storageParams -ea Stop -wa SilentlyContinue 
                 write-output " The storage account $WEDeststorageAccountName was created"
             }
             catch
@@ -765,7 +772,7 @@ if(! $resume)
             {
                 # create new storage account
                 write-verbose " Creating temmporary storage account $tempstorageAccountName in resource group $resourceGroupName at location $location" -verbose
-                $newStorageAccount = New-AzureRmStorageAccount @storageParams -ea Stop -wa SilentlyContinue 
+                $newStorageAccount = New-AzureRmStorageAccount -ErrorAction Stop @storageParams -ea Stop -wa SilentlyContinue 
                 write-output " The storage account $tempstorageAccountName was created"
             }
             catch
@@ -872,7 +879,7 @@ if(! $resume)
                 $nsgRuleParams.Add(" Description" , $nsgRule.Description)
             }
 
-           $nsgRules = $nsgRules + New-AzureRmNetworkSecurityRuleConfig @nsgRuleParams
+           $nsgRules = $nsgRules + New-AzureRmNetworkSecurityRuleConfig -ErrorAction Stop @nsgRuleParams
         }
     
 
@@ -917,7 +924,7 @@ if(! $resume)
                     $WENSGsplit = $destSub.Subnets.NetworkSecurityGroup.id.split('/')
                     $srcNSGname = $WENSGsplit[$WENSGsplit.Length -1]
                     $WENSG = Get-AzureRmNetworkSecurityGroup -Name $srcNSGname -ResourceGroupName $WEResourceGroupName -ea Stop
-                    $subnet = $newVirtualNetwork | Get-AzureRmVirtualNetworkSubnetConfig  -Name $destSub.Name -ea Stop -wa SilentlyContinue
+                    $subnet = $newVirtualNetwork | Get-AzureRmVirtualNetworkSubnetConfig -ErrorAction Stop  -Name $destSub.Name -ea Stop -wa SilentlyContinue
                     Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $newVirtualNetwork -Name $destSub.Name -AddressPrefix $subnet.AddressPrefix -NetworkSecurityGroup $WENSG | Set-AzureRmVirtualNetwork -ea Stop | out-null
                 }
                 catch
@@ -957,7 +964,7 @@ if(! $resume)
          try
         {
         write-verbose " Creating availability set $WEAVname in resource group $resourceGroupName at location $location" -verbose
-        $WENewAvailabilitySet = New-AzureRmAvailabilitySet @avParams 
+        $WENewAvailabilitySet = New-AzureRmAvailabilitySet -ErrorAction Stop @avParams 
         Write-Output " Availability Set $WEAVname was created"
         }
         catch
@@ -996,7 +1003,7 @@ if(! $resume)
         try
         {
             write-verbose " Creating public IP $pipName in resource group $resourceGroupName at location $location" -verbose
-            $WEPIP = New-AzureRmPublicIpAddress @pipParams
+            $WEPIP = New-AzureRmPublicIpAddress -ErrorAction Stop @pipParams
             Write-Output " Public IP $pipName was created with DomainName Label $WENewPipDomainNameLabel"
         }
         catch
@@ -1042,9 +1049,12 @@ if(! $resume)
                 try
                 {
                   $vnet = Get-AzureRmVirtualNetwork -name $vnetName -ResourceGroupName $resourceGroupName -ea Stop -wa SilentlyContinue
-                  $subnet = $vnet | Get-AzureRmVirtualNetworkSubnetConfig  -Name $subnetName -ea Stop -wa SilentlyContinue
+                  $subnet = $vnet | Get-AzureRmVirtualNetworkSubnetConfig -ErrorAction Stop  -Name $subnetName -ea Stop -wa SilentlyContinue
                 }
-                catch{}
+                catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 
                 $lbConfigParams.Add(" SubnetId" , $subnet.id)
             }
@@ -1059,7 +1069,10 @@ if(! $resume)
                 {
                   $lbPubIP = Get-AzureRmPublicIpAddress -Name $lbPubIPName -ResourceGroupName $resourceGroupName -ea Stop -wa SilentlyContinue
                 }
-                catch{}
+                catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
                 
                 if($lbPubIP)
                 {
@@ -1077,7 +1090,7 @@ if(! $resume)
             try
               {
                 write-verbose " Adding IP config $WELBipConfigName to load balancer $lbName" -verbose
-                $newLBipConfig = New-AzureRmLoadBalancerFrontendIpConfig @lbConfigParams -ea Stop -wa SilentlyContinue 
+                $newLBipConfig = New-AzureRmLoadBalancerFrontendIpConfig -ErrorAction Stop @lbConfigParams -ea Stop -wa SilentlyContinue 
                 Write-Output " IP config $WELBipConfigName for $lbName was added"
               }
               catch
@@ -1113,7 +1126,7 @@ if(! $resume)
                         $inboundNatRuleParams.Add(" EnableFloatingIP" , $null)
                     }
                     
-                    $newNatRuleConfig = New-AzureRmLoadBalancerInboundNatRuleConfig @inboundNatRuleParams  
+                    $newNatRuleConfig = New-AzureRmLoadBalancerInboundNatRuleConfig -ErrorAction Stop @inboundNatRuleParams  
                         
                     if($newNatRuleConfig)
                     {
@@ -1150,7 +1163,7 @@ if(! $resume)
         try
         {
             write-verbose " Creating load balancer $WELBName in resource group $resourceGroupName at location $location" -verbose
-            $WENewLB = New-AzureRmLoadBalancer @LBparams -ea Stop -wa SilentlyContinue
+            $WENewLB = New-AzureRmLoadBalancer -ErrorAction Stop @LBparams -ea Stop -wa SilentlyContinue
             Write-Output " Load balancer $WELBName was created"
         }
         catch
@@ -1229,9 +1242,12 @@ if(! $resume)
                 try
                 {
                     $vnet = Get-AzureRmVirtualNetwork -name $vnetName -ResourceGroupName $resourceGroupName -ea Stop -wa SilentlyContinue
-                    $subnet = $vnet | Get-AzureRmVirtualNetworkSubnetConfig  -Name $subnetName -ea Stop -wa SilentlyContinue
+                    $subnet = $vnet | Get-AzureRmVirtualNetworkSubnetConfig -ErrorAction Stop  -Name $subnetName -ea Stop -wa SilentlyContinue
                 }
-                catch{}
+                catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
             }
 
             $ipConfigParams = @{
@@ -1266,7 +1282,10 @@ if(! $resume)
                 $lb = Get-AzureRmLoadBalancer -name $lbName -ResourceGroupName $resourceGroupName -ea Stop -wa SilentlyContinue
                     $lbbe = $lb | Get-AzureRmLoadBalancerBackendAddressPoolConfig -Name $lbbeName -ea Stop -wa SilentlyContinue
                 }
-                catch{}
+                catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
                 
                 if($lbbe){ $ipConfigParams.Add(" LoadBalancerBackendAddressPool" , $lbbe) }
             }
@@ -1282,7 +1301,10 @@ if(! $resume)
                     $lb = Get-AzureRmLoadBalancer -name $lbName -ResourceGroupName $resourceGroupName -ea Stop -wa SilentlyContinue
                     $lbINR = $lb | Get-AzureRmLoadBalancerInboundNatRuleConfig -Name $lbINRName -ea Stop -wa SilentlyContinue
                 }
-                catch{}
+                catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
             
                 if($lbINR){$ipConfigParams.Add(" LoadBalancerInboundNatRule" , $lbINR)}
             }
@@ -1299,7 +1321,7 @@ if(! $resume)
             try
             {
                 write-verbose " Adding IP config $ipConfigName to network interface $WENicName" -verbose
-                $WENewIpConfig = New-AzureRmNetworkInterfaceIpConfig @ipConfigParams -ea Stop -wa SilentlyContinue 
+                $WENewIpConfig = New-AzureRmNetworkInterfaceIpConfig -ErrorAction Stop @ipConfigParams -ea Stop -wa SilentlyContinue 
                 [array]$WENewIpConfigs = $WENewIpConfigs + $WENewIpConfig                
                 Write-Output " IP config $ipConfigName for $WENicName was added"
             }
@@ -1357,7 +1379,7 @@ if(! $resume)
         try
         {
             write-verbose " Creating network interface $WENicName in resource group $resourceGroupName at location $location" -verbose
-            $WENewNIC = New-AzureRmNetworkInterface @NICparams -ea Stop -wa SilentlyContinue
+            $WENewNIC = New-AzureRmNetworkInterface -ErrorAction Stop @NICparams -ea Stop -wa SilentlyContinue
             Write-Output " Network interface $WENicName was created"
         }
         catch
@@ -1408,7 +1430,7 @@ else # if  resume
 {
 
     # check for valid source resource group
-    if(-not ($targetResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $WENewResourceGroupName)) 
+    if(-not ($targetResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $WENewResourceGroupName)) 
     {
        write-warning " The provided resource group $WENewResourceGroupName could not be found. Exiting the script."
        break
@@ -1421,8 +1443,8 @@ else # if  resume
     
     try
     {
-        $resourceGroupVMs = (get-content $resourceGroupVMresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
-        $resourceGroupVMSizes = (get-content $resourceGroupVMSizeresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
+        $resourceGroupVMs = (get-content -ErrorAction Stop $resourceGroupVMresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
+        $resourceGroupVMSizes = (get-content -ErrorAction Stop $resourceGroupVMSizeresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
     } 
     catch
     {
@@ -1431,7 +1453,7 @@ else # if  resume
     }
 
   
-    $WEVHDstorageObjects = (get-content $WEVHDstorageObjectsResumePath -ea SilentlyContinue) -Join " `n" | ConvertFrom-Json 
+    $WEVHDstorageObjects = (get-content -ErrorAction Stop $WEVHDstorageObjectsResumePath -ea SilentlyContinue) -Join " `n" | ConvertFrom-Json 
     
 }
 
@@ -1461,7 +1483,7 @@ if($resourceGroupVMs.storageprofile.osdisk.manageddisk -and $newLocation -and $l
         Get-BlobCopyStatus -Context $tempStorageContext -containerName $mdTempContainerName -BlobName $srcMDname
         
         #remove the SAS access on the original
-        Get-AzureRmDisk | Where-Object{$_.Name -eq $srcMDname} | Revoke-AzureRmDiskAccess | Out-Null
+        Get-AzureRmDisk -ErrorAction Stop | Where-Object{$_.Name -eq $srcMDname} | Revoke-AzureRmDiskAccess | Out-Null
 
         write-verbose " Creating new managed disk $srcMDname in $location" -Verbose
         try
@@ -1647,7 +1669,7 @@ foreach($srcVM in $resourceGroupVMs)
             {
                 
                 $mdDataDisk = Get-AzureRmDisk -ResourceGroupName $resourceGroupName -DiskName $dataDiskName
-                # Write-Host ('Disk Provisioning State -> [ ' + ($mdDataDisk.ProvisioningState) + ' ]')
+                # Write-Information ('Disk Provisioning State -> [ ' + ($mdDataDisk.ProvisioningState) + ' ]')
                ;  $dataDiskId = $mdDataDisk.id
                ;  $dataDiskSku = $mdDataDisk.sku.Name
                 Add-AzureRmVMDataDisk -VM $WEVirtualMachine -Name $dataDiskName -Lun $dataDiskLUN -ManagedDiskId $dataDiskId -StorageAccountType $dataDiskSku -Caching $diskCaching -CreateOption $WECreateOption | out-null

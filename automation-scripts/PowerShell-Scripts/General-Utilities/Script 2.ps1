@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Script 2
 
@@ -46,8 +46,8 @@ param(
 
 
 
-Write-Host 'this is what we got from the previous script:'
-Write-Host $WEData
+Write-Information \'this is what we got from the previous script:\'
+Write-Information $WEData
 
 
 

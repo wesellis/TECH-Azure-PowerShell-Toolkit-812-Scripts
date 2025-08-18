@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configurefelegacy
 
@@ -66,13 +66,13 @@ param(
 
     # Init
     [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content env:computername
+    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
 
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
@@ -107,7 +107,7 @@ param(
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
 
-        # cChocoInstaller fails with this error: Get-FileDownload for 'https://chocolatey.org/install.ps1' failed on attempt 1 with this error: .NET Framework 4.8 was installed, but a reboot is required.  Please reboot the system and try to install/upgrade Chocolatey again.
+        # cChocoInstaller fails with this error: Get-FileDownload -ErrorAction Stop for 'https://chocolatey.org/install.ps1' failed on attempt 1 with this error: .NET Framework 4.8 was installed, but a reboot is required.  Please reboot the system and try to install/upgrade Chocolatey again.
         # But running it right at the beginning eventually works, and somehow it does not propagate the error to the Azure DSC extension (and doing a reboot juste before has no effect)
         cChocoInstaller InstallChoco             { InstallDir = " C:\Chocolatey" ; }
 
@@ -299,7 +299,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                # if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -312,7 +312,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 } else {
                     return $true
@@ -785,7 +785,8 @@ param(
     }
 }
 
-function WE-Get-NetBIOSName
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop
 {
     [OutputType([string])]
     [CmdletBinding()]
@@ -811,11 +812,12 @@ param(
     }
 }
 
-function WE-Get-SPDSCInstalledProductVersion
+[CmdletBinding()]
+function WE-Get-SPDSCInstalledProductVersion -ErrorAction Stop
 {
     $pathToSearch = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\*\ISAPI\Microsoft.SharePoint.dll"
-    $fullPath = Get-Item $pathToSearch | Sort-Object { $_.Directory } -Descending | Select-Object -First 1
-    return (Get-Command $fullPath).FileVersionInfo
+    $fullPath = Get-Item -ErrorAction Stop $pathToSearch | Sort-Object { $_.Directory } -Descending | Select-Object -First 1
+    return (Get-Command -ErrorAction Stop $fullPath).FileVersionInfo
 }
 
 <#

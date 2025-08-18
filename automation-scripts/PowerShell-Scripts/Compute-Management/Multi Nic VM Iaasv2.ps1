@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Multi Nic Vm Iaasv2
 
@@ -98,7 +98,7 @@ $vm = Set-AzureVMOSDisk -VM $vm -Name $osDiskName -VhdUri $osDiskVhdUri -Caching
     
 
 $securePassword = ConvertTo-SecureString $password -AsPlainText -Force;
-$cred = New-Object System.Management.Automation.PSCredential ($user, $securePassword);   
+$cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($user, $securePassword);   
 $vm = Set-AzureVMOperatingSystem -VM $vm -Windows -ComputerName $vmname -Credential $cred;
 
 

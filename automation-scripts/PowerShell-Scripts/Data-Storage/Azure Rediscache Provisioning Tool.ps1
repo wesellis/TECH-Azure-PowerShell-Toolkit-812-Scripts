@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Rediscache Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -96,7 +97,7 @@ Write-WELog " SKU: $WESkuName $WESkuFamily$WESkuCapacity" " INFO"
 Write-WELog " Non-SSL Port Enabled: $WEEnableNonSslPort" " INFO"
 
 ; 
-$WERedisCache = New-AzRedisCache `
+$WERedisCache = New-AzRedisCache -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WECacheName `
     -Location $WELocation `
@@ -119,7 +120,7 @@ Write-WELog " SSL Port: $($WERedisCache.SslPort)" " INFO"
 Write-WELog " Provisioning State: $($WERedisCache.ProvisioningState)" " INFO"
 
 
-Write-WELog " `nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey cmdlet" " INFO"
+Write-WELog " `nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet" " INFO"
 
 Write-WELog " `nRedis Cache provisioning completed at $(Get-Date)" " INFO"
 

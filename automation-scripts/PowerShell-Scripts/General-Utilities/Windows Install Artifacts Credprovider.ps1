@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Artifacts Credprovider
 
@@ -127,8 +127,7 @@ try {
             exit 1
         }
 
-        Write-Host
-        Write-WELog " Copying NuGet plugins from '$nugetPluginDirectory' to '$targetDirectory'." " INFO"
+        Write-Information Write-WELog " Copying NuGet plugins from '$nugetPluginDirectory' to '$targetDirectory'." " INFO"
         Copy-Item -Path " $nugetPluginDirectory\*" -Destination " $targetDirectory\" -Recurse -Force
     }
 

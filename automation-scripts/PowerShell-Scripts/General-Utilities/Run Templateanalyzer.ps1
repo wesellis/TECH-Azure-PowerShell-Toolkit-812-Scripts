@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Templateanalyzer
 
@@ -68,9 +68,11 @@ if (Test-Path $ttkFolderInsideTemplateAnalyzer) {
 }
 
 $templateAnalyzer = " $templateAnalyzerFolderPath\TemplateAnalyzer.exe"
+[CmdletBinding()]
 function WE-Analyze-Template {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -90,7 +92,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -109,7 +111,7 @@ param(
     }
     $testOutput = $testOutput -join " `n"
 
-    Write-Host $testOutput
+    Write-Information $testOutput
     $testOutput >> $templateAnalyzerOutputFilePath
 
     if($WELASTEXITCODE -eq 0)
@@ -127,8 +129,8 @@ $passed = $true
 $preReqsFolder = " $sampleFolder\prereqs"
 $preReqsParamsFilePath = " $preReqsFolder\$prereqParametersFilename"
 $mainParamsFilePath = " $sampleFolder\$mainParametersFilename"
-Get-ChildItem $sampleFolder -Recurse -Filter *.json |
-    Where-Object { (Get-Content $_.FullName) -like " *deploymentTemplate.json#*" } |
+Get-ChildItem -ErrorAction Stop $sampleFolder -Recurse -Filter *.json |
+    Where-Object { (Get-Content -ErrorAction Stop $_.FullName) -like " *deploymentTemplate.json#*" } |
         ForEach-Object {
             if (@($preReqsParamsFilePath, $mainParamsFilePath).Contains($_.FullName)) {
                 continue

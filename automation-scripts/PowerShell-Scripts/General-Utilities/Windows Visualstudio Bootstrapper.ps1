@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Visualstudio Bootstrapper
 
@@ -46,6 +46,7 @@ param(
     [bool] $WESkipNgenAfterInstall = $false
 )
 
+[CmdletBinding()]
 function WE-Configure-WorkLoads {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -79,6 +80,7 @@ $ErrorActionPreference = " Stop"
 
 $WEErrorActionPreference = 'Stop'
 
+[CmdletBinding()]
 function WE-Run-WindowedApplication {
     param(
         [Parameter(Position = 0)][String]$command,
@@ -113,13 +115,13 @@ function WE-Run-WindowedApplication {
         $proc = Start-Process @startArgs
 
         if (Test-Path $outLog) {
-            Get-Content $outLog | Out-Host
-            Remove-Item $outLo -Forceg -Force -ErrorAction SilentlyContinue
+            Get-Content -ErrorAction Stop $outLog | Out-Host
+            Remove-Item -ErrorAction Stop $outLo -Forceg -Force -ErrorAction SilentlyContinue
         }
 
         if (Test-Path $errLog) {
-            Get-Content $errLog | Out-Host
-            Remove-Item $errLo -Forceg -Force -ErrorAction SilentlyContinue
+            Get-Content -ErrorAction Stop $errLog | Out-Host
+            Remove-Item -ErrorAction Stop $errLo -Forceg -Force -ErrorAction SilentlyContinue
         }
 
         if ($WERetryableExitStatuses.Contains($proc.ExitCode)) {
@@ -157,7 +159,7 @@ Write-WELog " downloading $sku bootstrapper complete" " INFO"
 
 Write-WELog " Configuring workloads" " INFO"
 $WEWorkLoads = Configure-WorkLoads -WorkLoads $WEWorkLoads
-Write-Host $WEWorkLoads
+Write-Information $WEWorkLoads
 
 
 if ($WEWorkLoads -eq "" ) {
@@ -175,7 +177,7 @@ if (![System.String]::IsNullOrWhiteSpace($WEInstallationDirectory)) {
 
 Run-WindowedApplication -AllowableExitStatuses @(0, 3010) -RetryableExitStatuses 1618 $vsSetupPath $WEArguments
 
-$item = Get-ChildItem 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like " Visual Studio 20*" -and $_.Attributes -like '*Archive*' }
+$item = Get-ChildItem -ErrorAction Stop 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like " Visual Studio 20*" -and $_.Attributes -like '*Archive*' }
 if ($null -ne $item) {
     Copy-Item $item.FullName -Destination '${env:SystemDrive}\Users\Public\Desktop' -Force -ErrorAction SilentlyContinue
 }

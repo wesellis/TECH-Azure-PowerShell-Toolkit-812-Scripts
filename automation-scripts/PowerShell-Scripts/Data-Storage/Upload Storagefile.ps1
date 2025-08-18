@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Upload Storagefile
 
@@ -47,7 +47,7 @@ $files.PSObject.Properties | ForEach-Object {
    ;  $tempPath = " ./$($filePath -replace " /" , " _" )"
     Write-Output "  Uploading $filePath..."
     $_.Value | Out-File $tempPath
-    Set-AzStorageBlobContent @storageContext -File $tempPath -Blob $filePath -Force | Out-Null
+    Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $tempPath -Blob $filePath -Force | Out-Null
 }
 
 

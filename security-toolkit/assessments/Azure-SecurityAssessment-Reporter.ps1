@@ -1,4 +1,4 @@
-# Azure Security Assessment Reporter
+﻿# Azure Security Assessment Reporter
 # Professional Azure automation script for comprehensive security analysis
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise security governance
@@ -81,9 +81,9 @@ try {
     
     $securityAssessments = Invoke-AzureOperation -Operation {
         if ($ResourceGroupName) {
-            Get-AzSecurityAssessment | Where-Object { $_.Id -like "*$ResourceGroupName*" }
+            Get-AzSecurityAssessment -ErrorAction Stop | Where-Object { $_.Id -like "*$ResourceGroupName*" }
         } else {
-            Get-AzSecurityAssessment
+            Get-AzSecurityAssessment -ErrorAction Stop
         }
     } -OperationName "Get Security Assessments" -MaxRetries 2
 
@@ -109,7 +109,7 @@ try {
         $nsgs = if ($ResourceGroupName) {
             Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzNetworkSecurityGroup
+            Get-AzNetworkSecurityGroup -ErrorAction Stop
         }
         
         $findings = @()
@@ -145,7 +145,7 @@ try {
         $keyVaults = if ($ResourceGroupName) {
             Get-AzKeyVault -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzKeyVault
+            Get-AzKeyVault -ErrorAction Stop
         }
         
         $findings = @()
@@ -189,7 +189,7 @@ try {
         $resources = if ($ResourceGroupName) {
             Get-AzResource -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzResource
+            Get-AzResource -ErrorAction Stop
         }
         
         $compliance = @{
@@ -229,7 +229,7 @@ try {
     $policyStates = Invoke-AzureOperation -Operation {
         # Get policy states (requires Az.PolicyInsights module)
         try {
-            if (Get-Module Az.PolicyInsights -ListAvailable) {
+            if (Get-Module -ErrorAction Stop Az.PolicyInsights -ListAvailable) {
                 Import-Module Az.PolicyInsights
                 $filter = if ($ResourceGroupName) { "ResourceGroup eq '$ResourceGroupName'" } else { $null }
                 Get-AzPolicyState -Filter $filter | Select-Object -First 100
@@ -349,31 +349,31 @@ try {
     }
 
     # Display Summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              SECURITY ASSESSMENT COMPLETED" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "🛡️  Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
-    Write-Host ""
-    Write-Host "📊 Assessment Summary:" -ForegroundColor Cyan
-    Write-Host "   • Total Resources: $($complianceResults.TotalResources)" -ForegroundColor White
-    Write-Host "   • Security Findings: $($assessmentResults.Summary.TotalFindings)" -ForegroundColor White
-    Write-Host "   • Critical Issues: $($assessmentResults.Summary.CriticalFindings)" -ForegroundColor Red
-    Write-Host "   • Medium Issues: $($assessmentResults.Summary.MediumFindings)" -ForegroundColor Yellow
-    Write-Host "   • Low Issues: $($assessmentResults.Summary.LowFindings)" -ForegroundColor Gray
-    Write-Host "   • Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%" -ForegroundColor White
-    Write-Host ""
-    Write-Host "📂 Output Files:" -ForegroundColor Cyan
-    Write-Host "   • JSON Report: $OutputPath" -ForegroundColor White
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              SECURITY ASSESSMENT COMPLETED"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "🛡️  Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
+    Write-Information ""
+    Write-Information "📊 Assessment Summary:"
+    Write-Information "   • Total Resources: $($complianceResults.TotalResources)"
+    Write-Information "   • Security Findings: $($assessmentResults.Summary.TotalFindings)"
+    Write-Information "   • Critical Issues: $($assessmentResults.Summary.CriticalFindings)"
+    Write-Information "   • Medium Issues: $($assessmentResults.Summary.MediumFindings)"
+    Write-Information "   • Low Issues: $($assessmentResults.Summary.LowFindings)"
+    Write-Information "   • Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%"
+    Write-Information ""
+    Write-Information "📂 Output Files:"
+    Write-Information "   • JSON Report: $OutputPath"
     if ($ExportToCSV) {
-        Write-Host "   • CSV Export: $csvPath" -ForegroundColor White
+        Write-Information "   • CSV Export: $csvPath"
     }
-    Write-Host ""
+    Write-Information ""
     
     if ($assessmentResults.Summary.CriticalFindings -gt 0) {
-        Write-Host "⚠️  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!" -ForegroundColor Red
-        Write-Host ""
+        Write-Information "⚠️  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
+        Write-Information ""
     }
 
     Write-Log "✅ Security assessment completed successfully!" -Level SUCCESS
@@ -381,13 +381,13 @@ try {
 } catch {
     Write-Log "❌ Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Security Center is enabled on the subscription" -ForegroundColor White
-    Write-Host "   • Check permissions for Security Reader role" -ForegroundColor White
-    Write-Host "   • Ensure Az.Security module is installed and updated" -ForegroundColor White
-    Write-Host "   • Validate subscription and resource group access" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Security Center is enabled on the subscription"
+    Write-Information "   • Check permissions for Security Reader role"
+    Write-Information "   • Ensure Az.Security module is installed and updated"
+    Write-Information "   • Validate subscription and resource group access"
+    Write-Information ""
     
     exit 1
 }

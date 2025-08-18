@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Custom Build Env Invokecommand
 
@@ -60,7 +60,7 @@ try {
    ;  $WEErrorActionPreference = " Stop"
     Set-StrictMode -Version Latest
 
-    Set-Location $WERepoRoot
+    Set-Location -ErrorAction Stop $WERepoRoot
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-build-environment-utils.psm1')
 
     SetPackagesRestoreEnvironmentAndRunScript -RepoRoot $WERepoRoot -RepoKind Custom -Script $WEScript `

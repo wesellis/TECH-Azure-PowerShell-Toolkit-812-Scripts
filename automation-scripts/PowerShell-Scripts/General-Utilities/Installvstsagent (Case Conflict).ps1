@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installvstsagent (Case Conflict)
 
@@ -185,7 +185,7 @@ $WEDefaultModules = " PowerShellGet" , " PackageManagement" ," Pester"
 
 Foreach ($WEModule in $WEDefaultModules)
 {
-	if ($tmp = Get-Module $WEModule -ErrorAction SilentlyContinue) {	Remove-Module $WEModule -Force	}
+	if ($tmp = Get-Module -ErrorAction Stop $WEModule -ErrorAction SilentlyContinue) {	Remove-Module -ErrorAction Stop $WEModule -Force	}
 	Find-Module -Name $WEModule -Repository PSGallery -Verbose | Install-Module -Force -Confirm:$false -SkipPublisherCheck -Verbose
 }
 

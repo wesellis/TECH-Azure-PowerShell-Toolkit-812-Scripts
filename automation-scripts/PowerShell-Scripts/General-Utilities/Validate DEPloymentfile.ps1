@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Validate Deploymentfile
 
@@ -50,6 +50,7 @@ try {
 $ErrorActionPreference = "Stop" # Cmdlet binding needed to enable using -ErrorAction, -ErrorVariable etc from testing
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 param(
@@ -68,7 +69,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -94,11 +95,11 @@ if ($bicepSupported) {
     $WECompiledJsonFilename = " $($WEMainTemplateFilenameBicep).temp.json"
     $WECompiledJsonPath = " $($WESampleFolder)/$($WECompiledJsonFilename)"
     $errorFile = Join-Path $WESampleFolder " errors.txt"
-    Write-host " BUILDING: $WEBicepPath build $WEMainTemplatePathBicep --outfile $WECompiledJsonPath"
+    Write-Information " BUILDING: $WEBicepPath build $WEMainTemplatePathBicep --outfile $WECompiledJsonPath"
     Start-Process $WEBicepPath -ArgumentList @('build', $WEMainTemplatePathBicep, '--outfile', $WECompiledJsonPath) -RedirectStandardError $errorFile -Wait
-    $errorOutput = [string[]](Get-Content $errorFile)
+    $errorOutput = [string[]](Get-Content -ErrorAction Stop $errorFile)
 
-    Remove-Item $errorFil -Forcee -Force
+    Remove-Item -ErrorAction Stop $errorFil -Forcee -Force
     
     $warnings = 0
     $errors = 0
@@ -161,7 +162,7 @@ if ($bicepSupported) {
     #$fileToDeploy = $WEMainTemplateFilenameJson
 
     # Delete the temporary built JSON file
-    Remove-Item $WECompiledJsonPat -Forceh -Force
+    Remove-Item -ErrorAction Stop $WECompiledJsonPat -Forceh -Force
 }
 
     # Just deploy the JSON file included in the sample

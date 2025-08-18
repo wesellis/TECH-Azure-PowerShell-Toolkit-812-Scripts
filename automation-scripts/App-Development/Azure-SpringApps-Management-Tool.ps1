@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources
 
 <#
@@ -127,6 +127,7 @@ param(
 )
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -142,10 +143,11 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Check and install Azure CLI Spring extension
+[CmdletBinding()]
 function Initialize-SpringCLI {
     try {
         Write-EnhancedLog "Checking Azure CLI Spring extension..." "Info"
@@ -169,7 +171,8 @@ function Initialize-SpringCLI {
 }
 
 # Create Azure Spring Apps instance
-function New-SpringAppsInstance {
+[CmdletBinding()]
+function New-SpringAppsInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -240,7 +243,8 @@ function New-SpringAppsInstance {
 }
 
 # Configure Spring Cloud services
-function Set-SpringCloudService {
+[CmdletBinding()]
+function Set-SpringCloudService -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -306,7 +310,8 @@ function Set-SpringCloudService {
 }
 
 # Deploy Spring application
-function Deploy-SpringApplication {
+[CmdletBinding()]
+function Install-SpringApplication {
     try {
         Write-EnhancedLog "Deploying Spring application: $AppName" "Info"
         
@@ -360,7 +365,8 @@ function Deploy-SpringApplication {
 }
 
 # Scale Spring application
-function Set-SpringAppScale {
+[CmdletBinding()]
+function Set-SpringAppScale -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -385,7 +391,8 @@ function Set-SpringAppScale {
 }
 
 # Configure monitoring
-function Set-SpringMonitoring {
+[CmdletBinding()]
+function Set-SpringMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -474,7 +481,8 @@ function Set-SpringMonitoring {
 }
 
 # Monitor Spring Apps status
-function Get-SpringAppsStatus {
+[CmdletBinding()]
+function Get-SpringAppsStatus -ErrorAction Stop {
     try {
         Write-EnhancedLog "Monitoring Spring Apps instance status..." "Info"
         
@@ -518,6 +526,7 @@ function Get-SpringAppsStatus {
 }
 
 # Application lifecycle management
+[CmdletBinding()]
 function Invoke-AppLifecycleAction {
     param(
         [ValidateSet("Start", "Stop", "Restart")]
@@ -571,11 +580,11 @@ try {
     
     switch ($Action) {
         "Create" {
-            New-SpringAppsInstance
+            New-SpringAppsInstance -ErrorAction Stop
             Set-SpringCloudService
             
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                Set-SpringMonitoring
+                Set-SpringMonitoring -ErrorAction Stop
             }
         }
         
@@ -590,17 +599,17 @@ try {
             if (-not $AppName) {
                 throw "AppName parameter is required for Scale action"
             }
-            Set-SpringAppScale
+            Set-SpringAppScale -ErrorAction Stop
         }
         
         "Monitor" {
-            Get-SpringAppsStatus
+            Get-SpringAppsStatus -ErrorAction Stop
         }
         
         "Configure" {
-            Set-SpringCloudService
+            Set-SpringCloudService -ErrorAction Stop
             if ($EnableMonitoring -or $EnableApplicationInsights) {
-                Set-SpringMonitoring
+                Set-SpringMonitoring -ErrorAction Stop
             }
         }
         

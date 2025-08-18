@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Configure User Tasks
 
@@ -51,6 +51,7 @@ Set-StrictMode -Version Latest
 function WE-GetTaskID {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -70,7 +71,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -96,7 +97,7 @@ try {
 
     if (Test-Path -Path $setupScriptsDir) {
         Write-WELog " === To avoid scripts versioning issues remove $setupScriptsDir in case it was created by the base image build" " INFO"
-        Remove-Item $setupScriptsDi -Forcer -Force -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item -ErrorAction Stop $setupScriptsDi -Forcer -Force -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     Write-WELog " === Create $setupScriptsDir before copying scripts there" " INFO"
@@ -140,8 +141,8 @@ try {
         $baseImageLogonTasks = @()
         if (Test-Path -Path $firstLogonTasksFile -PathType Leaf) {
             Write-WELog " === Found following logon tasks configured for the base image in $firstLogonTasksFile" " INFO"
-            Get-Content $firstLogonTasksFile
-            $baseImageLogonTasks = Get-Content $firstLogonTasksFile -Raw | ConvertFrom-Json
+            Get-Content -ErrorAction Stop $firstLogonTasksFile
+            $baseImageLogonTasks = Get-Content -ErrorAction Stop $firstLogonTasksFile -Raw | ConvertFrom-Json
         }
 
         # Only keep unique tasks that were configured for the base image
@@ -160,7 +161,7 @@ try {
         # Always use -Depth with ConvertTo-Json to preserve object structure (otherwise arrays fo example are turned into space separated strings)
         $firstLogonTasks | ConvertTo-Json -Depth 10 | Out-File -FilePath $firstLogonTasksFile
         Write-WELog " === Saved following tasks to run on user first logon to $firstLogonTasksFile" " INFO"
-        Get-Content $firstLogonTasksFile
+        Get-Content -ErrorAction Stop $firstLogonTasksFile
     }
 }
 catch {

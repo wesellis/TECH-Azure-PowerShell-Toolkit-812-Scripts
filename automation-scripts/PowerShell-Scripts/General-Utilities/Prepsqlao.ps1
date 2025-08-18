@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Prepsqlao
 
@@ -67,9 +67,9 @@ param(
     )
 
     Import-DscResource -ModuleName xComputerManagement,CDisk,xActiveDirectory,XDisk,xSql,xNetworking
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServicecreds.UserName)" , $WESQLServicecreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServicecreds.UserName)" , $WESQLServicecreds.Password)
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
     $WERebootVirtualMachine = $false
@@ -261,7 +261,8 @@ param(
 
     }
 }
-function WE-Get-NetBIOSName
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop
 { 
     [OutputType([string])]
     [CmdletBinding()]
@@ -286,6 +287,7 @@ param(
         }
     }
 }
+[CmdletBinding()]
 function WE-WaitForSqlSetup
 {
     # Wait for SQL Server Setup to finish before proceeding.
@@ -293,7 +295,7 @@ function WE-WaitForSqlSetup
     {
         try
         {
-            Get-ScheduledTaskInfo " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+            Get-ScheduledTaskInfo -ErrorAction Stop " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
             Start-Sleep -Seconds 5
         }
         catch

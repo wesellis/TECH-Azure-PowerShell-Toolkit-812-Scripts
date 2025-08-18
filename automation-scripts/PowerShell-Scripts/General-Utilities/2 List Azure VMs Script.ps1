@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2 List Azure Vms Script
 
@@ -37,9 +37,11 @@
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-function WE-Get-AzureVMDetails {
+[CmdletBinding()]
+function WE-Get-AzureVMDetails -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -59,7 +61,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -85,7 +87,7 @@ param(
             $vmParams.ResourceGroupName = $WEResourceGroupName
         }
 
-        $vms = Get-AzVM @vmParams
+        $vms = Get-AzVM -ErrorAction Stop @vmParams
 
         $vmDetails = foreach ($vm in $vms) {
             $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
@@ -135,7 +137,7 @@ try {
     
     # Get all VMs
     Write-WELog " `nRetrieving VM details..." " INFO" -ForegroundColor Yellow
-   ;  $vms = Get-AzureVMDetails
+   ;  $vms = Get-AzureVMDetails -ErrorAction Stop
     
     Write-WELog " `nInventory completed successfully!" " INFO" -ForegroundColor Green
     Write-WELog " Total VMs found: $($vms.Count)" " INFO" -ForegroundColor Green

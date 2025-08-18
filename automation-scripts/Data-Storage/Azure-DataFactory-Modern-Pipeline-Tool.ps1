@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.DataFactory
 
 <#
@@ -102,13 +102,14 @@ try {
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.DataFactory -Force -ErrorAction Stop
     Import-Module Az.Storage -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -124,11 +125,12 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Create Azure Data Factory instance
-function New-DataFactoryInstance {
+[CmdletBinding()]
+function New-DataFactoryInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -148,7 +150,7 @@ function New-DataFactoryInstance {
             
             # Configure Git integration if provided
             if ($GitConfiguration.Keys.Count -gt 0) {
-                Set-DataFactoryGitConfiguration
+                Set-DataFactoryGitConfiguration -ErrorAction Stop
             }
             
             return $dataFactory
@@ -161,7 +163,8 @@ function New-DataFactoryInstance {
 }
 
 # Configure Git integration
-function Set-DataFactoryGitConfiguration {
+[CmdletBinding()]
+function Set-DataFactoryGitConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -178,7 +181,7 @@ function Set-DataFactoryGitConfiguration {
                     CollaborationBranch = $GitConfiguration.CollaborationBranch ?? "main"
                 }
                 
-                Set-AzDataFactoryV2GitIntegration @gitConfig
+                Set-AzDataFactoryV2GitIntegration -ErrorAction Stop @gitConfig
                 Write-EnhancedLog "Successfully configured Git integration" "Success"
             }
         }
@@ -189,7 +192,8 @@ function Set-DataFactoryGitConfiguration {
 }
 
 # Create modern data pipeline templates
-function New-ModernDataPipeline {
+[CmdletBinding()]
+function New-ModernDataPipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -197,13 +201,13 @@ function New-ModernDataPipeline {
             Write-EnhancedLog "Creating modern data pipeline templates..." "Info"
         
         # Create sample linked services
-        New-SampleLinkedService
+        New-SampleLinkedService -ErrorAction Stop
         
         # Create sample datasets
-        New-SampleDataset
+        New-SampleDataset -ErrorAction Stop
         
         # Create sample pipelines
-        New-SamplePipeline
+        New-SamplePipeline -ErrorAction Stop
         
         Write-EnhancedLog "Successfully created modern data pipeline templates" "Success"
         }
@@ -214,7 +218,8 @@ function New-ModernDataPipeline {
 }
 
 # Create sample linked services
-function New-SampleLinkedService {
+[CmdletBinding()]
+function New-SampleLinkedService -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -287,7 +292,8 @@ function New-SampleLinkedService {
 }
 
 # Create sample datasets
-function New-SampleDataset {
+[CmdletBinding()]
+function New-SampleDataset -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -356,7 +362,8 @@ function New-SampleDataset {
 }
 
 # Create sample pipelines
-function New-SamplePipeline {
+[CmdletBinding()]
+function New-SamplePipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -515,7 +522,8 @@ function New-SamplePipeline {
 }
 
 # Deploy pipeline from definition file
-function Deploy-PipelineFromFile {
+[CmdletBinding()]
+function Install-PipelineFromFile {
     param(
         [string]$PipelineName,
         [string]$DefinitionPath
@@ -528,7 +536,7 @@ function Deploy-PipelineFromFile {
             throw "Pipeline definition file not found: $DefinitionPath"
         }
         
-        $pipelineDefinition = Get-Content $DefinitionPath -Raw | ConvertFrom-Json
+        $pipelineDefinition = Get-Content -ErrorAction Stop $DefinitionPath -Raw | ConvertFrom-Json
         
         Set-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $PipelineName -DefinitionObject $pipelineDefinition
         
@@ -541,7 +549,8 @@ function Deploy-PipelineFromFile {
 }
 
 # Create and configure triggers
-function New-DataFactoryTrigger {
+[CmdletBinding()]
+function New-DataFactoryTrigger -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -612,13 +621,14 @@ function New-DataFactoryTrigger {
 }
 
 # Monitor Data Factory pipelines
-function Get-DataFactoryMonitoring {
+[CmdletBinding()]
+function Get-DataFactoryMonitoring -ErrorAction Stop {
     try {
         Write-EnhancedLog "Monitoring Data Factory pipelines..." "Info"
         
         # Get pipeline runs from last 24 hours
         $startTime = (Get-Date).AddDays(-1)
-        $endTime = Get-Date
+        $endTime = Get-Date -ErrorAction Stop
         
         $pipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
         
@@ -670,7 +680,8 @@ function Get-DataFactoryMonitoring {
 }
 
 # Configure monitoring and alerting
-function Set-DataFactoryMonitoring {
+[CmdletBinding()]
+function Set-DataFactoryMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -742,6 +753,7 @@ function Set-DataFactoryMonitoring {
 }
 
 # Export Data Factory configuration
+[CmdletBinding()]
 function Export-DataFactoryConfiguration {
     try {
         Write-EnhancedLog "Exporting Data Factory configuration..." "Info"
@@ -801,12 +813,12 @@ try {
     
     switch ($Action) {
         "Create" {
-            $dataFactory = New-DataFactoryInstance
+            $dataFactory = New-DataFactoryInstance -ErrorAction Stop
             New-ModernDataPipeline
-            New-DataFactoryTrigger
+            New-DataFactoryTrigger -ErrorAction Stop
             
             if ($EnableMonitoring) {
-                Set-DataFactoryMonitoring
+                Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
         
@@ -818,12 +830,12 @@ try {
             if ($PipelineDefinitionPath) {
                 Deploy-PipelineFromFile -PipelineName $PipelineName -DefinitionPath $PipelineDefinitionPath
             } else {
-                New-ModernDataPipeline
+                New-ModernDataPipeline -ErrorAction Stop
             }
         }
         
         "Monitor" {
-            Get-DataFactoryMonitoring
+            Get-DataFactoryMonitoring -ErrorAction Stop
         }
         
         "Trigger" {
@@ -837,9 +849,9 @@ try {
         }
         
         "Configure" {
-            New-DataFactoryTrigger
+            New-DataFactoryTrigger -ErrorAction Stop
             if ($EnableMonitoring) {
-                Set-DataFactoryMonitoring
+                Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
         

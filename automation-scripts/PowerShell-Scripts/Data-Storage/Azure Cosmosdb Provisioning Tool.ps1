@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Cosmosdb Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -95,7 +96,7 @@ Write-WELog " Consistency Level: $WEDefaultConsistencyLevel" " INFO"
 Write-WELog " Account Kind: $WEKind" " INFO"
 
 ; 
-$WECosmosDB = New-AzCosmosDBAccount `
+$WECosmosDB = New-AzCosmosDBAccount -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEAccountName `
     -Location $WELocation `

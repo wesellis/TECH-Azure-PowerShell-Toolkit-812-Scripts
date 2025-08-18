@@ -1,15 +1,15 @@
-# Commit PSScriptAnalyzer fixes for Virtual WAN Management Tool
-Write-Host "🔧 Committing PSScriptAnalyzer fixes..." -ForegroundColor Green
+﻿# Commit PSScriptAnalyzer fixes for Virtual WAN Management Tool
+Write-Information "🔧 Committing PSScriptAnalyzer fixes..."
 
 # Change to repository directory
-Set-Location "A:\GITHUB\Azure-Enterprise-Toolkit"
+Set-Location -ErrorAction Stop "A:\GITHUB\Azure-Enterprise-Toolkit"
 
 # Check git status
-Write-Host "📋 Checking git status..." -ForegroundColor Yellow
+Write-Information "📋 Checking git status..."
 git status --porcelain
 
 # Add the specific file that was fixed
-Write-Host "✅ Adding fixed file to staging..." -ForegroundColor Green
+Write-Information "✅ Adding fixed file to staging..."
 git add "automation-scripts/Network-Security/Azure-Virtual-WAN-Management-Tool.ps1"
 
 # Commit with specific message about the fixes
@@ -19,27 +19,27 @@ $commitMessage = @"
 - Fixed 8 functions with ShouldProcess attribute but missing ShouldProcess calls
 - Added proper ShouldProcess calls to all creation/modification functions  
 - Added ShouldContinue calls for destructive operations in Remove-VirtualHub
-- Removed ShouldProcess attribute from read-only Get-VirtualWANStatus function
+- Removed ShouldProcess attribute from read-only Get-VirtualWANStatus -ErrorAction Stop function
 - All PSScriptAnalyzer warnings resolved for CI pipeline
 
 Functions fixed:
 - New-ExpressRouteGateway
 - New-AzureFirewall
-- New-VpnSite  
+- New-VpnSite -ErrorAction Stop  
 - Set-P2SVpnConfiguration
 - New-HubRouteTable
 - Set-VirtualWANMonitoring
 - Set-SecurityBaseline
-- Remove-VirtualHub
+- Remove-VirtualHub -ErrorAction Stop
 "@
 
-Write-Host "✅ Committing fixes with detailed message..." -ForegroundColor Green
+Write-Information "✅ Committing fixes with detailed message..."
 git commit -m $commitMessage
 
 # Push to GitHub
-Write-Host "🚀 Pushing to GitHub..." -ForegroundColor Green
+Write-Information "🚀 Pushing to GitHub..."
 git push
 
-Write-Host "`n🎉 PSScriptAnalyzer fixes deployed!" -ForegroundColor Cyan
-Write-Host "⏱️  CI pipeline should now pass on next run" -ForegroundColor Yellow
-Write-Host "🌐 View CI status at: https://github.com/wesellis/Azure-Enterprise-Toolkit/actions" -ForegroundColor Blue
+Write-Information "`n🎉 PSScriptAnalyzer fixes deployed!"
+Write-Information "⏱️  CI pipeline should now pass on next run"
+Write-Information "🌐 View CI status at: https://github.com/wesellis/Azure-Enterprise-Toolkit/actions"

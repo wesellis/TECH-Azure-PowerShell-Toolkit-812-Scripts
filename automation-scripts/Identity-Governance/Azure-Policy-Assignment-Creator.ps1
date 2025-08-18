@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Policy Assignment Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -27,7 +27,7 @@ param (
     [string]$EnforcementMode = "Default"
 )
 
-Write-Host "Creating Policy Assignment: $AssignmentName"
+Write-Information "Creating Policy Assignment: $AssignmentName"
 
 # Prepare assignment parameters
 $AssignmentParams = @{
@@ -46,40 +46,40 @@ if ($Parameters.Count -gt 0) {
 }
 
 # Create policy assignment
-$Assignment = New-AzPolicyAssignment @AssignmentParams
+$Assignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
 
-Write-Host "✅ Policy Assignment created successfully:"
-Write-Host "  Name: $($Assignment.Name)"
-Write-Host "  Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
-Write-Host "  Scope: $Scope"
-Write-Host "  Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
+Write-Information "✅ Policy Assignment created successfully:"
+Write-Information "  Name: $($Assignment.Name)"
+Write-Information "  Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
+Write-Information "  Scope: $Scope"
+Write-Information "  Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
 
 if ($Description) {
-    Write-Host "  Description: $Description"
+    Write-Information "  Description: $Description"
 }
 
 if ($Parameters.Count -gt 0) {
-    Write-Host "`nPolicy Parameters:"
+    Write-Information "`nPolicy Parameters:"
     foreach ($Param in $Parameters.GetEnumerator()) {
-        Write-Host "  $($Param.Key): $($Param.Value)"
+        Write-Information "  $($Param.Key): $($Param.Value)"
     }
 }
 
-Write-Host "`nPolicy Assignment Benefits:"
-Write-Host "• Automated compliance enforcement"
-Write-Host "• Consistent governance across resources"
-Write-Host "• Audit and reporting capabilities"
-Write-Host "• Cost and security optimization"
+Write-Information "`nPolicy Assignment Benefits:"
+Write-Information "• Automated compliance enforcement"
+Write-Information "• Consistent governance across resources"
+Write-Information "• Audit and reporting capabilities"
+Write-Information "• Cost and security optimization"
 
-Write-Host "`nCommon Policy Types:"
-Write-Host "• Resource tagging requirements"
-Write-Host "• Location restrictions"
-Write-Host "• SKU limitations"
-Write-Host "• Security configurations"
-Write-Host "• Naming conventions"
+Write-Information "`nCommon Policy Types:"
+Write-Information "• Resource tagging requirements"
+Write-Information "• Location restrictions"
+Write-Information "• SKU limitations"
+Write-Information "• Security configurations"
+Write-Information "• Naming conventions"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Monitor compliance status"
-Write-Host "2. Review policy effects"
-Write-Host "3. Adjust parameters if needed"
-Write-Host "4. Create exemptions if required"
+Write-Information "`nNext Steps:"
+Write-Information "1. Monitor compliance status"
+Write-Information "2. Review policy effects"
+Write-Information "3. Adjust parameters if needed"
+Write-Information "4. Create exemptions if required"

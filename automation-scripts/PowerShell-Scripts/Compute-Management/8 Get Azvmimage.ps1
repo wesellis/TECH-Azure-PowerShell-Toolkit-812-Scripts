@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     8 Get Azvmimage
 
@@ -714,21 +714,21 @@ Version         FilterExpression Skus                         Offer             
 
 
 
-$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku
-$WEImageSkus | Get-AzVMImage | Sort-Object -Property Version -Descending | Where-Object {$_.Skus -like 'LTS'}
+$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku -ErrorAction Stop
+$WEImageSkus | Get-AzVMImage -ErrorAction Stop | Sort-Object -Property Version -Descending | Where-Object {$_.Skus -like 'LTS'}
 
 
-$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku
-$WEImageSkus | Get-AzVMImage | Where-Object {$_.Skus -like '*LTS*'} | Sort-Object -Property Version -Descending
+$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku -ErrorAction Stop
+$WEImageSkus | Get-AzVMImage -ErrorAction Stop | Where-Object {$_.Skus -like '*LTS*'} | Sort-Object -Property Version -Descending
 
 
-$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Get-AzVMImageSku
-$WEImageSkus | Get-AzVMImage | Where-Object {$_.Skus -like '*gen2*'} | Sort-Object -Property Version -Descending
+$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Get-AzVMImageSku -ErrorAction Stop
+$WEImageSkus | Get-AzVMImage -ErrorAction Stop | Where-Object {$_.Skus -like '*gen2*'} | Sort-Object -Property Version -Descending
 
 
 
-$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'microsoftwindowsdesktop' | Get-AzVMImageSku
-$WEImageSkus | Get-AzVMImage | Where-Object {$_.Skus -like '*'} | Sort-Object -Property Version -Descending
+$WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'microsoftwindowsdesktop' | Get-AzVMImageSku -ErrorAction Stop
+$WEImageSkus | Get-AzVMImage -ErrorAction Stop | Where-Object {$_.Skus -like '*'} | Sort-Object -Property Version -Descending
 
 
 ; 
@@ -739,7 +739,7 @@ $getAzVMImageSplat = @{
     Skus = '19_10-daily-gen2'
 }
 
-Get-AzVMImage @getAzVMImageSplat
+Get-AzVMImage -ErrorAction Stop @getAzVMImageSplat
 
 ; 
 $getAzVMImageSplat = @{
@@ -749,7 +749,7 @@ $getAzVMImageSplat = @{
     Skus = '20_04-lts-gen2'
 }
 
-Get-AzVMImage @getAzVMImageSplat
+Get-AzVMImage -ErrorAction Stop @getAzVMImageSplat
 
 
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Get Templatehash
 
@@ -50,8 +50,8 @@ if ($bearerToken -eq "" ) {
     Write-WELog " Getting token..." " INFO"
     Import-Module Az.Accounts
     $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-    $azContext = Get-AzContext
-    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
+    $azContext = Get-AzContext -ErrorAction Stop
+    $profileClient = New-Object -ErrorAction Stop Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
     $bearerToken = ($profileClient.AcquireAccessToken($azContext.Tenant.TenantId)).AccessToken
     if (!$bearerToken) {
         Write-Error " Could not retrieve token"
@@ -66,7 +66,7 @@ $WEHeaders = @{
 
 $raw = Get-Content -Path $templateFilePath -Raw -ErrorAction Stop
 if ($WERemoveGeneratorMetadata) {
-    $withoutGeneratorMetadata = Remove-GeneratorMetadata $raw
+    $withoutGeneratorMetadata = Remove-GeneratorMetadata -ErrorAction Stop $raw
 }
 else {
     $withoutGeneratorMetadata = $raw

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Orphan Finder
 
@@ -106,14 +106,14 @@ try {
     $resourceFilter = @{}
     if ($WEResourceGroupName) { $resourceFilter.ResourceGroupName = $WEResourceGroupName }
     
-    $allResources = Get-AzResource @resourceFilter
+    $allResources = Get-AzResource -ErrorAction Stop @resourceFilter
     Write-Log " Found $($allResources.Count) total resources to analyze" -Level INFO
 
     # Analyze orphaned Network Interfaces
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Network Analysis" -Status " Finding orphaned network interfaces"
     
     if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkInterfaces" ) {
-        $networkInterfaces = Get-AzNetworkInterface
+        $networkInterfaces = Get-AzNetworkInterface -ErrorAction Stop
         foreach ($nic in $networkInterfaces) {
             if (-not $nic.VirtualMachine -and -not $nic.LoadBalancerBackendAddressPools) {
                 $orphanedResources = $orphanedResources + [PSCustomObject]@{
@@ -131,7 +131,7 @@ try {
 
     # Analyze orphaned Public IPs
     if ($WEResourceType -eq " All" -or $WEResourceType -eq " PublicIPs" ) {
-        $publicIPs = Get-AzPublicIpAddress
+        $publicIPs = Get-AzPublicIpAddress -ErrorAction Stop
         foreach ($pip in $publicIPs) {
             if (-not $pip.IpConfiguration -and $pip.PublicIpAllocationMethod -eq " Static" ) {
                 $orphanedResources = $orphanedResources + [PSCustomObject]@{
@@ -151,7 +151,7 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Storage Analysis" -Status " Finding orphaned disks and snapshots"
     
     if ($WEResourceType -eq " All" -or $WEResourceType -eq " Disks" ) {
-        $disks = Get-AzDisk
+        $disks = Get-AzDisk -ErrorAction Stop
         foreach ($disk in $disks) {
             if (-not $disk.ManagedBy) {
                 $sizeGB = $disk.DiskSizeGB
@@ -178,7 +178,7 @@ try {
 
     # Analyze old Snapshots
     if ($WEResourceType -eq " All" -or $WEResourceType -eq " Snapshots" ) {
-        $snapshots = Get-AzSnapshot
+        $snapshots = Get-AzSnapshot -ErrorAction Stop
         $cutoffDate = (Get-Date).AddDays(-$WEDaysUnused)
         
         foreach ($snapshot in $snapshots) {
@@ -204,7 +204,7 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName " Security Analysis" -Status " Finding orphaned security groups"
     
     if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkSecurityGroups" ) {
-        $nsgs = Get-AzNetworkSecurityGroup
+        $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
         foreach ($nsg in $nsgs) {
             if (-not $nsg.Subnets -and -not $nsg.NetworkInterfaces) {
                 $orphanedResources = $orphanedResources + [PSCustomObject]@{

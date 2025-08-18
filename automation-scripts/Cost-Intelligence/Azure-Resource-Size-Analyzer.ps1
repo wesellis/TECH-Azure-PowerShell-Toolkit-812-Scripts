@@ -1,4 +1,4 @@
-# Azure Resource Size Analyzer
+﻿# Azure Resource Size Analyzer
 # Analyze and recommend right-sizing for Azure resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -23,7 +23,7 @@ try {
     $vms = if ($ResourceGroupName) {
         Get-AzVM -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzVM
+        Get-AzVM -ErrorAction Stop
     }
 
     $sizeAnalysis = @()
@@ -46,16 +46,16 @@ try {
         $sizeAnalysis += $analysis
     }
 
-    Write-Host "VM Size Analysis:" -ForegroundColor Cyan
+    Write-Information "VM Size Analysis:"
     $sizeAnalysis | Format-Table VMName, CurrentSize, Cores, MemoryMB, PowerState, Recommendation
 
     $totalVMs = $sizeAnalysis.Count
     $runningVMs = ($sizeAnalysis | Where-Object { $_.PowerState -eq "VM running" }).Count
     
-    Write-Host "Summary:" -ForegroundColor Green
-    Write-Host "  Total VMs: $totalVMs" -ForegroundColor White
-    Write-Host "  Running VMs: $runningVMs" -ForegroundColor White
-    Write-Host "  Stopped VMs: $($totalVMs - $runningVMs)" -ForegroundColor Yellow
+    Write-Information "Summary:"
+    Write-Information "  Total VMs: $totalVMs"
+    Write-Information "  Running VMs: $runningVMs"
+    Write-Information "  Stopped VMs: $($totalVMs - $runningVMs)"
 
 } catch {
     Write-Log "❌ Resource size analysis failed: $($_.Exception.Message)" -Level ERROR

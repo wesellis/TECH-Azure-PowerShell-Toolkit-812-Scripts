@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     23 New Azvm Windowsserver 2022 Workgroup With New Vnet
 
@@ -82,7 +82,7 @@ $newAzResourceGroupSplat = @{
 }
 
 
-New-AzResourceGroup @newAzResourceGroupSplat
+New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
 
 
 
@@ -139,7 +139,7 @@ $newAzVirtualNetworkSubnetConfigSplat = @{
     Name          = $WESubnetName
     AddressPrefix = $WESubnetAddressPrefix
 }
-$WESingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+$WESingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 
 
 
@@ -152,7 +152,7 @@ $newAzVirtualNetworkSplat = @{
     Subnet            = $WESingleSubnet
     Tag               = $WETags
 }
-$WEVnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+$WEVnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 
 
 
@@ -171,7 +171,7 @@ $newAzPublicIpAddressSplat = @{
     # IpTag             = $ipTag
     Tag               = $WETags
 }
-$WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+$WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 
 
 
@@ -192,7 +192,7 @@ $newAzApplicationSecurityGroupSplat = @{
     Location          = " $WELocationName"
     Tag               = $WETags
 }
-$WEASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+$WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 
 
 
@@ -201,7 +201,7 @@ $getAzVirtualNetworkSubnetConfigSplat = @{
     VirtualNetwork = $vnet
 }
 
-$WESubnet = Get-AzVirtualNetworkSubnetConfig @getAzVirtualNetworkSubnetConfigSplat
+$WESubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
 
 
 
@@ -216,7 +216,7 @@ $newAzNetworkInterfaceIpConfigSplat = @{
     Primary                  = $true
 }
 
-$WEIPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+$WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 
 
 
@@ -238,7 +238,7 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationPortRange                = '3389'
     DestinationApplicationSecurityGroup = $WEASG
 }
-$rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+$rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 
 
 
@@ -251,7 +251,7 @@ $newAzNetworkSecurityGroupSplat = @{
     SecurityRules     = $rule1
     Tag               = $WETags
 }
-$WENSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+$WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 
 
 
@@ -268,7 +268,7 @@ $newAzNetworkInterfaceSplat = @{
     Tag                    = $WETags
     
 }
-$WENIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+$WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
 
 
 
@@ -277,7 +277,7 @@ $WEVMLocalAdminUser = Read-Host -Prompt 'Please enter a username to be created'
 $WEVMLocalAdminPassword = Generate-Password -length 16; 
 $WEVMLocalAdminSecurePassword = $WEVMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
 ; 
-$WECredential = New-Object PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
+$WECredential = New-Object -ErrorAction Stop PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
 
 
 
@@ -289,7 +289,7 @@ $newAzVMConfigSplat = @{
     Tags         = $WETags
     IdentityType = 'SystemAssigned'
 }
-$WEVirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+$WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 
 
 
@@ -304,7 +304,7 @@ $setAzVMOperatingSystemSplat = @{
     # EnableAutoUpdate = $true
     
 }
-$WEVirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+$WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 
 
 
@@ -345,7 +345,7 @@ $setAzVMSourceImageSplat = @{
 }
 
 
-$WEVirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+$WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 
 
 
@@ -361,7 +361,7 @@ $setAzVMOSDiskSplat = @{
     # DiskSizeInGB = '128'
     # StorageAccountType = 'Standard_LRS' //For HDD
 }
-$WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+$WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
 
 
 
@@ -374,7 +374,7 @@ $newAzVMSplat = @{
     Verbose           = $true
     Tag               = $WETags
 }
-New-AzVM @newAzVMSplat
+New-AzVM -ErrorAction Stop @newAzVMSplat
 
 
 
@@ -399,15 +399,15 @@ $setAzVMAutoShutdownSplat = @{
     Email             = " abdullah@canadacomputing.ca"
 }
 
-Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
+Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 
 
 
 
 
-Write-Host 'The VM is now ready.... here is your login details'
-Write-Host 'username:' $WEVMLocalAdminUser
-Write-Host 'Password:' $WEVMLocalAdminPassword
+Write-Information \'The VM is now ready.... here is your login details\'
+Write-Information \'username:\' $WEVMLocalAdminUser
+Write-Information \'Password:\' $WEVMLocalAdminPassword
 
 Write-WELog " DNSName:' $WEDNSNameLabel'.$WELocationName.cloudapp.azure.com" " INFO"
 

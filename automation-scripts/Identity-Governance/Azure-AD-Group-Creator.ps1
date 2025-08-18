@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure AD Group Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,7 +21,7 @@ param (
     [array]$MemberEmails = @()
 )
 
-Write-Host "Creating Azure AD Group: $GroupName"
+Write-Information "Creating Azure AD Group: $GroupName"
 
 try {
     # Create the group
@@ -39,47 +39,47 @@ try {
         $GroupParams.MailNickname = ($GroupName -replace '\s', '').ToLower()
     }
     
-    $Group = New-AzADGroup @GroupParams
+    $Group = New-AzADGroup -ErrorAction Stop @GroupParams
     
-    Write-Host "✅ Azure AD Group created successfully:"
-    Write-Host "  Group Name: $($Group.DisplayName)"
-    Write-Host "  Object ID: $($Group.Id)"
-    Write-Host "  Group Type: $GroupType"
+    Write-Information "✅ Azure AD Group created successfully:"
+    Write-Information "  Group Name: $($Group.DisplayName)"
+    Write-Information "  Object ID: $($Group.Id)"
+    Write-Information "  Group Type: $GroupType"
     
     if ($Description) {
-        Write-Host "  Description: $Description"
+        Write-Information "  Description: $Description"
     }
     
     # Add members if provided
     if ($MemberEmails.Count -gt 0) {
-        Write-Host "`nAdding members to group..."
+        Write-Information "`nAdding members to group..."
         
         foreach ($Email in $MemberEmails) {
             try {
                 $User = Get-AzADUser -UserPrincipalName $Email
                 if ($User) {
                     Add-AzADGroupMember -GroupObject $Group -MemberObjectId $User.Id
-                    Write-Host "  ✅ Added: $Email"
+                    Write-Information "  ✅ Added: $Email"
                 } else {
-                    Write-Host "  ❌ User not found: $Email"
+                    Write-Information "  ❌ User not found: $Email"
                 }
             } catch {
-                Write-Host "  ❌ Failed to add $Email : $($_.Exception.Message)"
+                Write-Information "  ❌ Failed to add $Email : $($_.Exception.Message)"
             }
         }
     }
     
-    Write-Host "`nGroup Management:"
-    Write-Host "• Use this group for role assignments"
-    Write-Host "• Assign Azure resource permissions"
-    Write-Host "• Manage application access"
-    Write-Host "• Control subscription access"
+    Write-Information "`nGroup Management:"
+    Write-Information "• Use this group for role assignments"
+    Write-Information "• Assign Azure resource permissions"
+    Write-Information "• Manage application access"
+    Write-Information "• Control subscription access"
     
-    Write-Host "`nNext Steps:"
-    Write-Host "1. Assign Azure roles to this group"
-    Write-Host "2. Add/remove members as needed"
-    Write-Host "3. Configure conditional access policies"
-    Write-Host "4. Set up group-based licensing"
+    Write-Information "`nNext Steps:"
+    Write-Information "1. Assign Azure roles to this group"
+    Write-Information "2. Add/remove members as needed"
+    Write-Information "3. Configure conditional access policies"
+    Write-Information "4. Set up group-based licensing"
     
 } catch {
     Write-Error "Failed to create Azure AD group: $($_.Exception.Message)"

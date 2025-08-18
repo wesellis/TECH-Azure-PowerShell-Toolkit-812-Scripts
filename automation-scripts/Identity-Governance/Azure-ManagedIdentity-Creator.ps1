@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Managed Identity Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,65 +24,65 @@ param (
     [string]$Scope
 )
 
-Write-Host "Creating Managed Identity: $IdentityName"
+Write-Information "Creating Managed Identity: $IdentityName"
 
 try {
     # Create user-assigned managed identity
-    $Identity = New-AzUserAssignedIdentity `
+    $Identity = New-AzUserAssignedIdentity -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -Name $IdentityName `
         -Location $Location
     
-    Write-Host "✅ Managed Identity created successfully:"
-    Write-Host "  Name: $($Identity.Name)"
-    Write-Host "  Client ID: $($Identity.ClientId)"
-    Write-Host "  Principal ID: $($Identity.PrincipalId)"
-    Write-Host "  Resource ID: $($Identity.Id)"
-    Write-Host "  Location: $($Identity.Location)"
+    Write-Information "✅ Managed Identity created successfully:"
+    Write-Information "  Name: $($Identity.Name)"
+    Write-Information "  Client ID: $($Identity.ClientId)"
+    Write-Information "  Principal ID: $($Identity.PrincipalId)"
+    Write-Information "  Resource ID: $($Identity.Id)"
+    Write-Information "  Location: $($Identity.Location)"
     
     # Assign role if specified
     if ($Role -and $Scope) {
-        Write-Host "`nAssigning role to managed identity..."
+        Write-Information "`nAssigning role to managed identity..."
         
         Start-Sleep -Seconds 10  # Wait for identity propagation
         
-        $RoleAssignment = New-AzRoleAssignment `
+        $RoleAssignment = New-AzRoleAssignment -ErrorAction Stop `
             -ObjectId $Identity.PrincipalId `
             -RoleDefinitionName $Role `
             -Scope $Scope
         
-        Write-Host "✅ Role assignment completed:"
-        Write-Host "  Assignment ID: $($RoleAssignment.RoleAssignmentId)"
-        Write-Host "  Role: $Role"
-        Write-Host "  Scope: $Scope"
+        Write-Information "✅ Role assignment completed:"
+        Write-Information "  Assignment ID: $($RoleAssignment.RoleAssignmentId)"
+        Write-Information "  Role: $Role"
+        Write-Information "  Scope: $Scope"
     }
     
-    Write-Host "`nManaged Identity Benefits:"
-    Write-Host "• No credential management required"
-    Write-Host "• Automatic credential rotation"
-    Write-Host "• Azure AD authentication"
-    Write-Host "• No secrets in code or config"
-    Write-Host "• Built-in Azure integration"
+    Write-Information "`nManaged Identity Benefits:"
+    Write-Information "• No credential management required"
+    Write-Information "• Automatic credential rotation"
+    Write-Information "• Azure AD authentication"
+    Write-Information "• No secrets in code or config"
+    Write-Information "• Built-in Azure integration"
     
-    Write-Host "`nUsage Examples:"
-    Write-Host "Virtual Machines:"
-    Write-Host "  - Assign identity to VM"
-    Write-Host "  - Access Azure resources securely"
-    Write-Host "  - No need to store credentials"
+    Write-Information "`nUsage Examples:"
+    Write-Information "Virtual Machines:"
+    Write-Information "  - Assign identity to VM"
+    Write-Information "  - Access Azure resources securely"
+    Write-Information "  - No need to store credentials"
     
-    Write-Host "`nApp Services:"
-    Write-Host "  - Enable managed identity"
-    Write-Host "  - Access Key Vault secrets"
-    Write-Host "  - Connect to databases"
+    Write-Information "`nApp Services:"
+    Write-Information "  - Enable managed identity"
+    Write-Information "  - Access Key Vault secrets"
+    Write-Information "  - Connect to databases"
     
-    Write-Host "`nPowerShell Usage:"
-    Write-Host "  Connect-AzAccount -Identity -AccountId $($Identity.ClientId)"
+    Write-Information "`nPowerShell Usage:"
+    Write-Information "  Connect-AzAccount -Identity -AccountId $($Identity.ClientId)"
     
-    Write-Host "`nNext Steps:"
-    Write-Host "1. Assign identity to Azure resources (VM, App Service, etc.)"
-    Write-Host "2. Grant necessary permissions"
-    Write-Host "3. Update application code to use managed identity"
-    Write-Host "4. Test secure resource access"
+    Write-Information "`nNext Steps:"
+    Write-Information "1. Assign identity to Azure resources (VM, App Service, etc.)"
+    Write-Information "2. Grant necessary permissions"
+    Write-Information "3. Update application code to use managed identity"
+    Write-Information "4. Test secure resource access"
     
 } catch {
     Write-Error "Failed to create managed identity: $($_.Exception.Message)"

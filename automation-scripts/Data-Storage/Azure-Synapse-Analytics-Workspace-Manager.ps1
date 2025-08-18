@@ -1,4 +1,4 @@
-# Azure Synapse Analytics Workspace Manager
+﻿# Azure Synapse Analytics Workspace Manager
 # Professional Azure automation script for enterprise data analytics
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise data warehouse and analytics automation
@@ -112,7 +112,7 @@ try {
                         EnableHttpsTrafficOnly = $true
                         MinimumTlsVersion = "TLS1_2"
                     }
-                    New-AzStorageAccount @storageParams
+                    New-AzStorageAccount -ErrorAction Stop @storageParams
                 }
             } -OperationName "Create/Get Storage Account"
             
@@ -147,13 +147,13 @@ try {
                 Location = $Location
                 DefaultDataLakeStorageAccountName = $StorageAccountName
                 DefaultDataLakeStorageFilesystem = $FileSystemName
-                SqlAdministratorLoginCredential = (New-Object System.Management.Automation.PSCredential($SQLAdminUsername, $SQLAdminPassword))
+                SqlAdministratorLoginCredential = (New-Object -ErrorAction Stop System.Management.Automation.PSCredential($SQLAdminUsername, $SQLAdminPassword))
                 ManagedVirtualNetwork = $EnableManagedVNet
                 PreventDataExfiltration = $EnableDataExfiltrationProtection
             }
             
             $workspace = Invoke-AzureOperation -Operation {
-                New-AzSynapseWorkspace @workspaceParams
+                New-AzSynapseWorkspace -ErrorAction Stop @workspaceParams
             } -OperationName "Create Synapse Workspace"
             
             Write-Log "✓ Synapse workspace created: $WorkspaceName" -Level SUCCESS
@@ -189,7 +189,7 @@ try {
             }
             
             $null = Invoke-AzureOperation -Operation {
-                New-AzSynapseSqlPool @sqlPoolParams
+                New-AzSynapseSqlPool -ErrorAction Stop @sqlPoolParams
             } -OperationName "Create SQL Pool"
             
             Write-Log "✓ Dedicated SQL Pool created: $SQLPoolName ($SQLPoolSKU)" -Level SUCCESS
@@ -212,7 +212,7 @@ try {
             }
             
             $null = Invoke-AzureOperation -Operation {
-                New-AzSynapseSparkPool @sparkPoolParams
+                New-AzSynapseSparkPool -ErrorAction Stop @sparkPoolParams
             } -OperationName "Create Spark Pool"
             
             Write-Log "✓ Apache Spark Pool created: $SparkPoolName ($SparkPoolSize)" -Level SUCCESS
@@ -225,12 +225,12 @@ try {
                 Get-AzSynapseFirewallRule -WorkspaceName $WorkspaceName
             } -OperationName "Get Firewall Rules"
             
-            Write-Host ""
-            Write-Host "🔥 Current Firewall Rules for $WorkspaceName" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "🔥 Current Firewall Rules for $WorkspaceName"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             foreach ($rule in $existingRules) {
-                Write-Host "• $($rule.Name): $($rule.StartIpAddress) - $($rule.EndIpAddress)" -ForegroundColor White
+                Write-Information "• $($rule.Name): $($rule.StartIpAddress) - $($rule.EndIpAddress)"
             }
             
             # Add new rules if specified
@@ -261,28 +261,28 @@ try {
                 Get-AzSynapseSparkPool -WorkspaceName $WorkspaceName
             } -OperationName "Get Spark Pools"
             
-            Write-Host ""
-            Write-Host "📊 Synapse Workspace Information" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Workspace Name: $($workspace.Name)" -ForegroundColor White
-            Write-Host "Location: $($workspace.Location)" -ForegroundColor White
-            Write-Host "Workspace URL: $($workspace.WebUrl)" -ForegroundColor White
-            Write-Host "SQL Endpoint: $($workspace.SqlAdministratorLogin)" -ForegroundColor White
-            Write-Host "Provisioning State: $($workspace.ProvisioningState)" -ForegroundColor Green
+            Write-Information ""
+            Write-Information "📊 Synapse Workspace Information"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Workspace Name: $($workspace.Name)"
+            Write-Information "Location: $($workspace.Location)"
+            Write-Information "Workspace URL: $($workspace.WebUrl)"
+            Write-Information "SQL Endpoint: $($workspace.SqlAdministratorLogin)"
+            Write-Information "Provisioning State: $($workspace.ProvisioningState)"
             
             if ($sqlPools.Count -gt 0) {
-                Write-Host ""
-                Write-Host "🗄️  SQL Pools:" -ForegroundColor Cyan
+                Write-Information ""
+                Write-Information "🗄️  SQL Pools:"
                 foreach ($pool in $sqlPools) {
-                    Write-Host "• $($pool.Name) - $($pool.Sku.Name) - $($pool.Status)" -ForegroundColor White
+                    Write-Information "• $($pool.Name) - $($pool.Sku.Name) - $($pool.Status)"
                 }
             }
             
             if ($sparkPools.Count -gt 0) {
-                Write-Host ""
-                Write-Host "⚡ Spark Pools:" -ForegroundColor Cyan
+                Write-Information ""
+                Write-Information "⚡ Spark Pools:"
                 foreach ($pool in $sparkPools) {
-                    Write-Host "• $($pool.Name) - $($pool.NodeSize) - Nodes: $($pool.NodeCount)" -ForegroundColor White
+                    Write-Information "• $($pool.Name) - $($pool.NodeSize) - Nodes: $($pool.NodeCount)"
                 }
             }
         }
@@ -338,7 +338,7 @@ try {
                     MetricCategory = @("AllMetrics")
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
@@ -448,66 +448,66 @@ try {
     }
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                      AZURE SYNAPSE ANALYTICS WORKSPACE READY" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                      AZURE SYNAPSE ANALYTICS WORKSPACE READY"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Host "📊 Synapse Workspace Details:" -ForegroundColor Cyan
-        Write-Host "   • Workspace Name: $WorkspaceName" -ForegroundColor White
-        Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-        Write-Host "   • Location: $Location" -ForegroundColor White
-        Write-Host "   • Workspace URL: https://$WorkspaceName.dev.azuresynapse.net" -ForegroundColor White
-        Write-Host "   • SQL Admin: $SQLAdminUsername" -ForegroundColor White
-        Write-Host "   • Storage Account: $StorageAccountName" -ForegroundColor White
-        Write-Host "   • Status: $($workspaceStatus.ProvisioningState)" -ForegroundColor Green
+        Write-Information "📊 Synapse Workspace Details:"
+        Write-Information "   • Workspace Name: $WorkspaceName"
+        Write-Information "   • Resource Group: $ResourceGroupName"
+        Write-Information "   • Location: $Location"
+        Write-Information "   • Workspace URL: https://$WorkspaceName.dev.azuresynapse.net"
+        Write-Information "   • SQL Admin: $SQLAdminUsername"
+        Write-Information "   • Storage Account: $StorageAccountName"
+        Write-Information "   • Status: $($workspaceStatus.ProvisioningState)"
         
         if ($SQLAdminPassword) {
-            Write-Host ""
-            Write-Host "🔑 SQL Admin Credentials:" -ForegroundColor Yellow
-            Write-Host "   • Username: $SQLAdminUsername" -ForegroundColor Yellow
-            Write-Host "   • Password: [SecureString - Store in Key Vault]" -ForegroundColor Yellow
-            Write-Host "   ⚠️  Store these credentials securely in Azure Key Vault!" -ForegroundColor Red
+            Write-Information ""
+            Write-Information "🔑 SQL Admin Credentials:"
+            Write-Information "   • Username: $SQLAdminUsername"
+            Write-Information "   • Password: [SecureString - Store in Key Vault]"
+            Write-Information "   ⚠️  Store these credentials securely in Azure Key Vault!"
         }
         
-        Write-Host ""
-        Write-Host "🔒 Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
-            Write-Host "   $finding" -ForegroundColor White
+            Write-Information "   $finding"
         }
         
-        Write-Host ""
-        Write-Host "💰 Cost Optimization:" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "💰 Cost Optimization:"
         foreach ($recommendation in $costRecommendations) {
-            Write-Host "   $recommendation" -ForegroundColor White
+            Write-Information "   $recommendation"
         }
         
-        Write-Host ""
-        Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-        Write-Host "   • Create SQL and Spark pools using CreateSQLPool/CreateSparkPool actions" -ForegroundColor White
-        Write-Host "   • Import data using Azure Data Factory integration" -ForegroundColor White
-        Write-Host "   • Configure Git integration for version control" -ForegroundColor White
-        Write-Host "   • Set up monitoring alerts and dashboards" -ForegroundColor White
-        Write-Host "   • Configure private endpoints for enhanced security" -ForegroundColor White
+        Write-Information ""
+        Write-Information "💡 Next Steps:"
+        Write-Information "   • Create SQL and Spark pools using CreateSQLPool/CreateSparkPool actions"
+        Write-Information "   • Import data using Azure Data Factory integration"
+        Write-Information "   • Configure Git integration for version control"
+        Write-Information "   • Set up monitoring alerts and dashboards"
+        Write-Information "   • Configure private endpoints for enhanced security"
     }
     
-    Write-Host ""
+    Write-Information ""
 
     Write-Log "✅ Azure Synapse Analytics workspace '$WorkspaceName' operation completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Synapse Analytics operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Synapse Analytics service availability in your region" -ForegroundColor White
-    Write-Host "   • Check subscription quotas and limits" -ForegroundColor White
-    Write-Host "   • Ensure proper permissions for resource creation" -ForegroundColor White
-    Write-Host "   • Validate storage account configuration" -ForegroundColor White
-    Write-Host "   • Check firewall rules and network connectivity" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Synapse Analytics service availability in your region"
+    Write-Information "   • Check subscription quotas and limits"
+    Write-Information "   • Ensure proper permissions for resource creation"
+    Write-Information "   • Validate storage account configuration"
+    Write-Information "   • Check firewall rules and network connectivity"
+    Write-Information ""
     
     exit 1
 }

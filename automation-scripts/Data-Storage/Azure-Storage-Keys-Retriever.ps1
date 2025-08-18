@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Storage Account Key Retriever
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -15,14 +15,14 @@ param (
     [string]$StorageAccountName
 )
 
-Write-Host "Retrieving access keys for Storage Account: $StorageAccountName"
+Write-Information "Retrieving access keys for Storage Account: $StorageAccountName"
 
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 
-Write-Host "`nStorage Account Keys:"
-Write-Host "  Primary Key: $($Keys[0].Value)"
-Write-Host "  Secondary Key: $($Keys[1].Value)"
+Write-Information "`nStorage Account Keys:"
+Write-Information "  Primary Key: $($Keys[0].Value)"
+Write-Information "  Secondary Key: $($Keys[1].Value)"
 
-Write-Host "`nConnection Strings:"
-Write-Host "  Primary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[0].Value);EndpointSuffix=core.windows.net"
-Write-Host "  Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[1].Value);EndpointSuffix=core.windows.net"
+Write-Information "`nConnection Strings:"
+Write-Information "  Primary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[0].Value);EndpointSuffix=core.windows.net"
+Write-Information "  Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[1].Value);EndpointSuffix=core.windows.net"

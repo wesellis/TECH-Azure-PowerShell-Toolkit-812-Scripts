@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Aznetworkinterface
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkInterface {
 }
 
@@ -41,11 +42,12 @@ function WE-Invoke-AzNetworkInterface {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkInterface {
 
 
 
-    #Region func New-AzNetworkInterface
+    #Region func New-AzNetworkInterface -ErrorAction Stop
     #Creating the NIC for the VM
    ;  $newAzNetworkInterfaceSplat = @{
         Name                   = $WENICName
@@ -59,8 +61,8 @@ function WE-Invoke-AzNetworkInterface {
         Tag                    = $WETags
     
     }
-   ;  $WENIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
-    #endRegion func New-AzNetworkInterface
+   ;  $WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
+    #endRegion func New-AzNetworkInterface -ErrorAction Stop
     
 }
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configurefese
 
@@ -68,13 +68,13 @@ param(
 
     # Init
     [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content env:computername
+    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
     
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
@@ -400,7 +400,7 @@ param(
                         Write-Verbose -Verbose -Message " Finished installation of SharePoint build '$WESharePointBuildLabel'. needReboot: $needReboot"
 
                         if ($true -eq $needReboot) {
-                            $global:DSCMachineStatus = 1
+                            $script:DSCMachineStatus = 1
                         }
                     }
                     TestScript = {
@@ -449,7 +449,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                # if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -462,7 +462,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 } else {
                     return $true
@@ -813,13 +813,13 @@ param(
                 $cert = Import-PfxCertificate -FilePath $cookieCertificateFilePath -CertStoreLocation Cert:\localMachine\My -Exportable
 
                 # Grant the application pool access to the private key of the cookie certificate
-                $wa = Get-SPWebApplication " http://$spTrustedSitesName"
+                $wa = Get-SPWebApplication -ErrorAction Stop " http://$spTrustedSitesName"
                 $apppoolUserName = $wa.ApplicationPool.Username
                 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
                 $fileName = $rsaCert.key.UniqueName
                 $path = " $env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
                 $permissions = Get-Acl -Path $path
-                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
+                $access_rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
                 $permissions.AddAccessRule($access_rule)
                 Set-Acl -Path $path -AclObject $permissions
             }
@@ -832,7 +832,7 @@ param(
             {
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 # Import-Module SharePointServer | Out-Null
-                # $f = Get-SPFarm
+                # $f = Get-SPFarm -ErrorAction Stop
                 # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
                 if ((Get-ChildItem -Path " cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq " CN=SharePoint Cookie Cert" }) -eq $null) {
                     return $false
@@ -928,7 +928,8 @@ param(
     }
 }
 
-function WE-Get-NetBIOSName {
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop {
     [OutputType([string])]
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"

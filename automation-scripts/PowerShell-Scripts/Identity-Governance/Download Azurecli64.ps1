@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Download Azurecli64
 
@@ -37,7 +37,7 @@
 $WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 ; 
-$WEProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindowsx64 -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item .\AzureCLI.ms -Forcei -Force
+$WEProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindowsx64 -OutFile .\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; Remove-Item -ErrorAction Stop .\AzureCLI.ms -Forcei -Force
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

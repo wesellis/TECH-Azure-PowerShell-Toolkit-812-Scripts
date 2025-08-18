@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Key Vault Secret Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,14 +18,14 @@ param (
     [string]$SecretValue
 )
 
-Write-Host "Adding secret to Key Vault: $VaultName"
+Write-Information "Adding secret to Key Vault: $VaultName"
 
 $SecureString = ConvertTo-SecureString $SecretValue -AsPlainText -Force
 
 $Secret = Set-AzKeyVaultSecret -VaultName $VaultName -Name $SecretName -SecretValue $SecureString
 
-Write-Host "Secret added successfully:"
-Write-Host "  Name: $($Secret.Name)"
-Write-Host "  Version: $($Secret.Version)"
-Write-Host "  Vault: $VaultName"
-Write-Host "  Created: $($Secret.Created)"
+Write-Information "Secret added successfully:"
+Write-Information "  Name: $($Secret.Name)"
+Write-Information "  Version: $($Secret.Version)"
+Write-Information "  Vault: $VaultName"
+Write-Information "  Created: $($Secret.Created)"

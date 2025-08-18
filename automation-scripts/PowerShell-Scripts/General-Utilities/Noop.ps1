@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Noop
 
@@ -50,6 +50,7 @@ param(
 ; 
 $WEErrorActionPreference = " Stop" ;
 
+[CmdletBinding()]
 function WE-Log
 {
 	[CmdletBinding()]
@@ -58,7 +59,7 @@ param(
 		[string] $message
 	)
 ; 	$message = (Get-Date).ToString() + " : " + $message;
-	Write-Host $message;
+	Write-Information $message;
 	if (-not (Test-Path (" c:" + [char]92 + " sapcd" )))
 	{
 		$nul = mkdir (" c:" + [char]92 + " sapcd" );

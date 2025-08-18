@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     22 Attach Azvmdisk
 
@@ -85,21 +85,21 @@ $newAzDiskConfigSplat = @{
     Tag = $WETags
 }
 
-$diskconfig = New-AzDiskConfig @newAzDiskConfigSplat
+$diskconfig = New-AzDiskConfig -ErrorAction Stop @newAzDiskConfigSplat
 
 $newAzDiskSplat = @{
     ResourceGroupName = $WEResourceGroupName
     DiskName = $WEAttachedDiskName
     Disk = $diskconfig
 }
-$WEDataDisk = New-AzDisk @newAzDiskSplat
+$WEDataDisk = New-AzDisk -ErrorAction Stop @newAzDiskSplat
 
 
 $getAzVMSplat = @{
     ResourceGroupName = $WEResourceGroupName
     Name = $WEVMName
 }
-$WEVirtualMachine = Get-AzVM @getAzVMSplat; 
+$WEVirtualMachine = Get-AzVM -ErrorAction Stop @getAzVMSplat; 
 $addAzVMDataDiskSplat = @{
     VM = $WEVirtualMachine
     Name = $WEAttachedDiskName

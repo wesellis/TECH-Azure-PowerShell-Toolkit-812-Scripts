@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deployscaleset
 
@@ -91,6 +91,7 @@ param(
     [string]$scaleSetTemplate='azuredeploy.json'
 )
 
+[CmdletBinding()]
 function WE-Switch-AzureResourceManagement
 {
     if ($switchMode)
@@ -99,6 +100,7 @@ function WE-Switch-AzureResourceManagement
     }
 }
 
+[CmdletBinding()]
 function WE-Switch-AzureServiceManagement
 {
     if ($switchMode)
@@ -149,7 +151,7 @@ try
 
    ;  $scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
 
-    if (-not (Get-AzurePublicIpAddress  -ResourceGroupName $resourceGroupName|where Location -eq $location).DnsSettings.DomainNameLabel -eq  $scaleSetDNSPrefix)
+    if (-not (Get-AzurePublicIpAddress -ErrorAction Stop  -ResourceGroupName $resourceGroupName|where Location -eq $location).DnsSettings.DomainNameLabel -eq  $scaleSetDNSPrefix)
     {
         if (-not (Test-AzureDnsAvailability -DomainQualifiedName $scaleSetDNSPrefix -Location $location -ErrorAction Stop))
         {
@@ -175,7 +177,7 @@ try
 
     $destcontainer=Get-AzureStorageContainer -Context $destcontext -Name $newImageContainer -ErrorAction SilentlyContinue
 
-    if ($destcontainer -eq $null){
+    if ($null -eq $destcontainer){
 	    New-AzureStorageContainer -Context $destcontext -Name $newImageContainer
     }
     

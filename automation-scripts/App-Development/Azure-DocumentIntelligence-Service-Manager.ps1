@@ -1,4 +1,4 @@
-# Azure AI Document Intelligence Service Manager
+﻿# Azure AI Document Intelligence Service Manager
 # Professional Azure automation script for AI document processing
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise document AI automation
@@ -104,7 +104,7 @@ try {
             }
             
             $docIntelligenceService = Invoke-AzureOperation -Operation {
-                New-AzCognitiveServicesAccount @serviceParams
+                New-AzCognitiveServicesAccount -ErrorAction Stop @serviceParams
             } -OperationName "Create Document Intelligence Service"
             
             Write-Log "✓ Document Intelligence service created: $ServiceName" -Level SUCCESS
@@ -127,9 +127,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
             } -OperationName "List Available Models" | Out-Null
             
-            Write-Host ""
-            Write-Host "📋 Available Document Intelligence Models" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "📋 Available Document Intelligence Models"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             $prebuiltModels = @(
                 "prebuilt-document", "prebuilt-layout", "prebuilt-receipt", 
@@ -138,7 +138,7 @@ try {
             )
             
             foreach ($model in $prebuiltModels) {
-                Write-Host "• $model" -ForegroundColor White
+                Write-Information "• $model"
             }
         }
         
@@ -178,15 +178,15 @@ try {
                 return $result
             } -OperationName "Analyze Document"
             
-            Write-Host ""
-            Write-Host "📄 Document Analysis Results" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Status: $($analysisResult.status)" -ForegroundColor Green
-            Write-Host "Model ID: $ModelId" -ForegroundColor White
-            Write-Host "Pages: $($analysisResult.analyzeResult.pages.Count)" -ForegroundColor White
+            Write-Information ""
+            Write-Information "📄 Document Analysis Results"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Status: $($analysisResult.status)"
+            Write-Information "Model ID: $ModelId"
+            Write-Information "Pages: $($analysisResult.analyzeResult.pages.Count)"
             
             if ($analysisResult.analyzeResult.keyValuePairs) {
-                Write-Host "Key-Value Pairs: $($analysisResult.analyzeResult.keyValuePairs.Count)" -ForegroundColor White
+                Write-Information "Key-Value Pairs: $($analysisResult.analyzeResult.keyValuePairs.Count)"
             }
         }
         
@@ -199,14 +199,14 @@ try {
             
             $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
             
-            Write-Host ""
-            Write-Host "🔑 Document Intelligence Service Details" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Endpoint: $endpoint" -ForegroundColor White
-            Write-Host "Key 1: $($keys.Key1)" -ForegroundColor Yellow
-            Write-Host "Key 2: $($keys.Key2)" -ForegroundColor Yellow
-            Write-Host ""
-            Write-Host "⚠️  Store these keys securely! Consider using Azure Key Vault." -ForegroundColor Red
+            Write-Information ""
+            Write-Information "🔑 Document Intelligence Service Details"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Endpoint: $endpoint"
+            Write-Information "Key 1: $($keys.Key1)"
+            Write-Information "Key 2: $($keys.Key2)"
+            Write-Information ""
+            Write-Information "⚠️  Store these keys securely! Consider using Azure Key Vault."
         }
         
         "delete" {
@@ -245,7 +245,7 @@ try {
                     MetricCategory = @("AllMetrics")
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
@@ -338,54 +338,54 @@ try {
     # Success summary
     Write-ProgressStep -StepNumber 8 -TotalSteps 8 -StepName "Completion" -Status "Finalizing operation"
     
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                    AZURE AI DOCUMENT INTELLIGENCE SERVICE READY" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                    AZURE AI DOCUMENT INTELLIGENCE SERVICE READY"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Host "🤖 Document Intelligence Service Details:" -ForegroundColor Cyan
-        Write-Host "   • Service Name: $ServiceName" -ForegroundColor White
-        Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-        Write-Host "   • Location: $Location" -ForegroundColor White
-        Write-Host "   • SKU: $SkuName" -ForegroundColor White
-        Write-Host "   • Endpoint: $($serviceStatus.Endpoint)" -ForegroundColor White
-        Write-Host "   • Status: $($serviceStatus.ProvisioningState)" -ForegroundColor Green
+        Write-Information "🤖 Document Intelligence Service Details:"
+        Write-Information "   • Service Name: $ServiceName"
+        Write-Information "   • Resource Group: $ResourceGroupName"
+        Write-Information "   • Location: $Location"
+        Write-Information "   • SKU: $SkuName"
+        Write-Information "   • Endpoint: $($serviceStatus.Endpoint)"
+        Write-Information "   • Status: $($serviceStatus.ProvisioningState)"
         
-        Write-Host ""
-        Write-Host "🔒 Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
-            Write-Host "   $finding" -ForegroundColor White
+            Write-Information "   $finding"
         }
         
-        Write-Host ""
-        Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-        Write-Host "   • Test with sample documents using TestService action" -ForegroundColor White
-        Write-Host "   • Configure custom models for specific document types" -ForegroundColor White
-        Write-Host "   • Set up cost alerts for API usage monitoring" -ForegroundColor White
-        Write-Host "   • Integrate with your applications using the endpoint and keys" -ForegroundColor White
+        Write-Information ""
+        Write-Information "💡 Next Steps:"
+        Write-Information "   • Test with sample documents using TestService action"
+        Write-Information "   • Configure custom models for specific document types"
+        Write-Information "   • Set up cost alerts for API usage monitoring"
+        Write-Information "   • Integrate with your applications using the endpoint and keys"
     }
     
-    Write-Host ""
-    Write-Host "📚 Supported Document Types:" -ForegroundColor Cyan
-    Write-Host "   • General documents, invoices, receipts, business cards" -ForegroundColor White
-    Write-Host "   • Identity documents, tax forms (W-2, 1098, 1099)" -ForegroundColor White
-    Write-Host "   • Custom models for specific document types" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "📚 Supported Document Types:"
+    Write-Information "   • General documents, invoices, receipts, business cards"
+    Write-Information "   • Identity documents, tax forms (W-2, 1098, 1099)"
+    Write-Information "   • Custom models for specific document types"
+    Write-Information ""
 
     Write-Log "✅ Azure AI Document Intelligence service '$ServiceName' operation completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Document Intelligence service availability in your region" -ForegroundColor White
-    Write-Host "   • Check subscription quotas for Cognitive Services" -ForegroundColor White
-    Write-Host "   • Ensure proper permissions for AI service creation" -ForegroundColor White
-    Write-Host "   • Validate document URL accessibility for testing" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Document Intelligence service availability in your region"
+    Write-Information "   • Check subscription quotas for Cognitive Services"
+    Write-Information "   • Ensure proper permissions for AI service creation"
+    Write-Information "   • Validate document URL accessibility for testing"
+    Write-Information ""
     
     exit 1
 }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Aznetworkinterfaceipconfig
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkInterfaceIpConfig {
 }
 
@@ -41,6 +42,7 @@ function WE-Invoke-AzNetworkInterfaceIpConfig {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkInterfaceIpConfig {
  
 
@@ -55,7 +57,7 @@ $newAzNetworkInterfaceIpConfigSplat = @{
     Primary                  = $true
 }
 ; 
-$WEIPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+$WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 
     
 }

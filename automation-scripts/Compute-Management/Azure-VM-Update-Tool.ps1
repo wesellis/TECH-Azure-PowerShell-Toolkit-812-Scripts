@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Virtual Machine Update Automation Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -14,4 +14,4 @@ param (
 
 # Add your VM update logic here
 # Example: Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
-Write-Host "Update VM functionality to be implemented for $VmName in $ResourceGroupName"
+Write-Information "Update VM functionality to be implemented for $VmName in $ResourceGroupName"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Communication Services Manager
 
@@ -185,7 +185,7 @@ try {
             }
             
             $communicationService = Invoke-AzureOperation -Operation {
-                New-AzCommunicationService @communicationParams
+                New-AzCommunicationService -ErrorAction Stop @communicationParams
             } -OperationName " Create Communication Service"
             
             Write-Log " ✓ Communication Service created: $WECommunicationServiceName" -Level SUCCESS
@@ -543,7 +543,7 @@ try {
                     MetricCategory = @(" AllMetrics" )
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null

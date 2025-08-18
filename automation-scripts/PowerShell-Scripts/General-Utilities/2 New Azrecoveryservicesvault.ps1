@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2 New Azrecoveryservicesvault
 
@@ -67,11 +67,11 @@ Properties        : Microsoft.Azure.Commands.RecoveryServices.ARSVaultProperties
 
     You will get the vague error below if you have any illegel or imporper or invalid characters in any of your variables specifially the ARS Vault name like under score _ will throw the following error
 
-    New-AzRecoveryServicesVault : Operation failed.
+    New-AzRecoveryServicesVault -ErrorAction Stop : Operation failed.
 ClientRequestId: 7441125a-cac5-4a2d-92a0-05e3cd327b24-2020-12-12 06:08:34Z-P
 One or more errors occurred.
 At C:\Users\Abdullah.Ollivierre\AzureRepos2\Azure\Migrating_VM_VNETA-to_VNETB\2-New-AzRecoveryServicesVault.ps1:16 char:1
-+ New-AzRecoveryServicesVault @newAzRecoveryServicesVaultSplat
++ New-AzRecoveryServicesVault -ErrorAction Stop @newAzRecoveryServicesVaultSplat
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : CloseError: (:) [New-AzRecoveryServicesVault], Exception
     + FullyQualifiedErrorId : Microsoft.Azure.Commands.RecoveryServices.NewAzureRmRecoveryServicesVault
@@ -96,7 +96,7 @@ $newAzRecoveryServicesVaultSplat = @{
 
 }
 
-New-AzRecoveryServicesVault @newAzRecoveryServicesVaultSplat
+New-AzRecoveryServicesVault -ErrorAction Stop @newAzRecoveryServicesVaultSplat
 
 
 

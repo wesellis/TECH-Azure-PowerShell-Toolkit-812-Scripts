@@ -1,4 +1,4 @@
-# Microsoft Graph Integration Tool
+﻿# Microsoft Graph Integration Tool
 # Professional Azure automation script for Microsoft 365 connectivity
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise M365 integration
@@ -56,7 +56,7 @@ try {
     Write-ProgressStep -StepNumber 1 -TotalSteps 6 -StepName "Graph Connection" -Status "Validating Microsoft Graph connectivity"
     
     # Check if Microsoft.Graph module is available
-    if (-not (Get-Module Microsoft.Graph -ListAvailable)) {
+    if (-not (Get-Module -ErrorAction Stop Microsoft.Graph -ListAvailable)) {
         Write-Log "Installing Microsoft.Graph module..." -Level INFO
         Install-Module Microsoft.Graph -Force -AllowClobber -Scope CurrentUser
     }
@@ -71,14 +71,14 @@ try {
     if ($ClientId -and $ClientSecret -and $TenantId) {
         Write-Log "Connecting using service principal authentication..." -Level INFO
         $secureSecret = ConvertTo-SecureString $ClientSecret -AsPlainText -Force
-        $credential = New-Object System.Management.Automation.PSCredential($ClientId, $secureSecret)
+        $credential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential($ClientId, $secureSecret)
         Connect-MgGraph -TenantId $TenantId -ClientSecretCredential $credential
     } else {
         Write-Log "Connecting using interactive authentication..." -Level INFO
         Connect-MgGraph -Scopes "User.Read.All", "Group.Read.All", "Sites.Read.All", "TeamMember.Read.All"
     }
     
-    $context = Get-MgContext
+    $context = Get-MgContext -ErrorAction Stop
     Write-Log "✓ Connected to Microsoft Graph - Tenant: $($context.TenantId)" -Level SUCCESS
 
     # Execute operations based on parameter
@@ -108,7 +108,7 @@ try {
                     $params.Property = @("id", "displayName", "userPrincipalName", "mail", "department", "jobTitle", "accountEnabled", "createdDateTime", "lastSignInDateTime")
                 }
                 
-                Get-MgUser @params
+                Get-MgUser -ErrorAction Stop @params
             } -OperationName "Get Users"
             
             $results = $users | ForEach-Object {
@@ -138,7 +138,7 @@ try {
                     $params.Property = @("id", "displayName", "description", "mailEnabled", "securityEnabled", "createdDateTime", "membershipRule")
                 }
                 
-                Get-MgGroup @params
+                Get-MgGroup -ErrorAction Stop @params
             } -OperationName "Get Groups"
             
             $results = $groups | ForEach-Object {
@@ -225,7 +225,7 @@ try {
             if ($JobTitle) { $userParams.JobTitle = $JobTitle }
             
             $newUser = Invoke-AzureOperation -Operation {
-                New-MgUser @userParams
+                New-MgUser -ErrorAction Stop @userParams
             } -OperationName "Create User"
             
             $results = @([PSCustomObject]@{
@@ -244,9 +244,9 @@ try {
     Write-ProgressStep -StepNumber 3 -TotalSteps 6 -StepName "Data Processing" -Status "Formatting results"
     
     if ($results.Count -gt 0) {
-        Write-Host ""
-        Write-Host "📊 $Operation Results ($($results.Count) items)" -ForegroundColor Cyan
-        Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "📊 $Operation Results ($($results.Count) items)"
+        Write-Information "════════════════════════════════════════════════════════════════════"
         
         switch ($OutputFormat.ToLower()) {
             "table" {
@@ -302,53 +302,53 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName "Cleanup" -Status "Finalizing operation"
     
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              MICROSOFT GRAPH OPERATION SUCCESSFUL" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "📈 Operation Summary:" -ForegroundColor Cyan
-    Write-Host "   • Operation: $Operation" -ForegroundColor White
-    Write-Host "   • Records Retrieved: $($stats.TotalRecords)" -ForegroundColor White
-    Write-Host "   • Tenant: $($stats.TenantId)" -ForegroundColor White
-    Write-Host "   • Executed: $($stats.ExecutedAt)" -ForegroundColor White
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              MICROSOFT GRAPH OPERATION SUCCESSFUL"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "📈 Operation Summary:"
+    Write-Information "   • Operation: $Operation"
+    Write-Information "   • Records Retrieved: $($stats.TotalRecords)"
+    Write-Information "   • Tenant: $($stats.TenantId)"
+    Write-Information "   • Executed: $($stats.ExecutedAt)"
     
     if ($stats.ContainsKey("EnabledUsers")) {
-        Write-Host ""
-        Write-Host "👥 User Statistics:" -ForegroundColor Cyan
-        Write-Host "   • Enabled Users: $($stats.EnabledUsers)" -ForegroundColor Green
-        Write-Host "   • Disabled Users: $($stats.DisabledUsers)" -ForegroundColor Yellow
+        Write-Information ""
+        Write-Information "👥 User Statistics:"
+        Write-Information "   • Enabled Users: $($stats.EnabledUsers)"
+        Write-Information "   • Disabled Users: $($stats.DisabledUsers)"
         if ($stats.TopDepartments) {
-            Write-Host "   • Top Departments: $($stats.TopDepartments)" -ForegroundColor White
+            Write-Information "   • Top Departments: $($stats.TopDepartments)"
         }
     }
     
     if ($ExportPath) {
-        Write-Host ""
-        Write-Host "📁 Export Information:" -ForegroundColor Cyan
-        Write-Host "   • Export Path: $exportFile" -ForegroundColor White
-        Write-Host "   • Format: CSV" -ForegroundColor White
+        Write-Information ""
+        Write-Information "📁 Export Information:"
+        Write-Information "   • Export Path: $exportFile"
+        Write-Information "   • Format: CSV"
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Review the results for compliance and security" -ForegroundColor White
-    Write-Host "   • Set up automated reporting for regular monitoring" -ForegroundColor White
-    Write-Host "   • Consider implementing governance policies" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Review the results for compliance and security"
+    Write-Information "   • Set up automated reporting for regular monitoring"
+    Write-Information "   • Consider implementing governance policies"
+    Write-Information ""
 
     Write-Log "✅ Microsoft Graph operation '$Operation' completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Microsoft Graph operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Microsoft.Graph PowerShell module is installed" -ForegroundColor White
-    Write-Host "   • Check application permissions in Azure AD" -ForegroundColor White
-    Write-Host "   • Ensure proper Graph API scopes are granted" -ForegroundColor White
-    Write-Host "   • Validate tenant ID and credentials" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Microsoft.Graph PowerShell module is installed"
+    Write-Information "   • Check application permissions in Azure AD"
+    Write-Information "   • Ensure proper Graph API scopes are granted"
+    Write-Information "   • Validate tenant ID and credentials"
+    Write-Information ""
     
     exit 1
 } finally {

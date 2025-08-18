@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmosdisk
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-FunctionName {
 
 
@@ -41,8 +42,9 @@ function WE-FunctionName {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-FunctionName {
-    #Region func Set-AzVMOSDisk
+    #Region func Set-AzVMOSDisk -ErrorAction Stop
     #Setting the VM OS Disk to the VM
    ;  $setAzVMOSDiskSplat = @{
         VM           = $WEVirtualMachine
@@ -54,8 +56,8 @@ function WE-FunctionName {
         # Windows = $true
         DiskSizeInGB = '128'
     }
-   ;  $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
-    #endRegion func Set-AzVMOSDisk
+   ;  $WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
+    #endRegion func Set-AzVMOSDisk -ErrorAction Stop
 
     
 }

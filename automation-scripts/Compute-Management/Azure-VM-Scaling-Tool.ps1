@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Virtual Machine Scaling Automation Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -22,4 +22,4 @@ $VM.HardwareProfile.VmSize = $NewVmSize
 # Apply the changes
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 
-Write-Host "VM $VmName has been scaled to size: $NewVmSize"
+Write-Information "VM $VmName has been scaled to size: $NewVmSize"

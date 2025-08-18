@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Refresh Quickstartstable
 
@@ -70,7 +70,7 @@ $badges = @{
 }
 
 
-$WEArtifactFilePaths = Get-ChildItem $WEBuildSourcesDirectory\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
+$WEArtifactFilePaths = Get-ChildItem -ErrorAction Stop $WEBuildSourcesDirectory\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
 
 if ($WEArtifactFilePaths.Count -eq 0) {
     Write-Error " No metadata.json files found in $WEBuildSourcesDirectory"
@@ -90,12 +90,12 @@ Write-WELog " Checking table to see if this is a new sample (does the row exist?
 foreach ($WESourcePath in $WEArtifactFilePaths) {
     
     if ($WESourcePath -like " *\test\*" ) {
-        Write-host " Skipping..."
+        Write-Information " Skipping..."
         continue
     }
 
     Write-WELog " Reading: $WESourcePath" " INFO"
-    $WEMetadataJson = Get-Content $WESourcePath -Raw | ConvertFrom-Json
+    $WEMetadataJson = Get-Content -ErrorAction Stop $WESourcePath -Raw | ConvertFrom-Json
 
     # Get the sample's path off of the root, replace any path chars with " @" since the rowkey for table storage does not allow / or \ (among other things)
     $WERowKey = (Split-Path $WESourcePath -Parent).Replace(" $(Resolve-Path $WEBuildSourcesDirectory)\" , "" ).Replace(" \" , " @" ).Replace(" /" , " @" )
@@ -127,12 +127,15 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
 
         $badges.GetEnumerator() | ForEach-Object {
             $uri = $($_.Value).replace(" %sample.folder%" , $WERowKey.Replace(" @" , " /" ))
-            #Write-Host $uri
+            #Write-Information $uri
             $svg = $null
-            try { $svg = (Invoke-WebRequest -Uri $uri -ErrorAction SilentlyContinue) } catch { }
+            try { $svg = (Invoke-WebRequest -Uri $uri -ErrorAction SilentlyContinue) } catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
             if ($svg) {
                 $xml = $svg.content.replace('xmlns=" http://www.w3.org/2000/svg" ', '')
-                #Write-Host $xml
+                #Write-Information $xml
                 $t = Select-XML -Content $xml -XPath " //text"
                 #$t | Out-string                
                 #$v = $($t[$t.length - 1])
@@ -166,7 +169,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                     #;  $v = $WEMetadataJson.dateUpdated
                    ;  $v = $v.Replace(" ." , " -" )
                 }
-                if ($v -ne $null) {
+                if ($null -ne $v) {
                     $p.Add($_.Key, $v)
                 }
                 Write-WELog " $($_.Key) = $v" " INFO"

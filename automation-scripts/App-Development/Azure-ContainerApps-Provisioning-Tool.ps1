@@ -1,4 +1,4 @@
-# Azure Container Apps Provisioning Tool
+﻿# Azure Container Apps Provisioning Tool
 # Professional Azure automation script for modern serverless containers
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise environments
@@ -176,47 +176,47 @@ try {
     } -OperationName "Validate Container App"
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              CONTAINER APP DEPLOYMENT SUCCESSFUL" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "📦 Container App Details:" -ForegroundColor Cyan
-    Write-Host "   • Name: $ContainerAppName" -ForegroundColor White
-    Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-    Write-Host "   • Environment: $EnvironmentName" -ForegroundColor White
-    Write-Host "   • Image: $ContainerImage" -ForegroundColor White
-    Write-Host "   • CPU: $CpuCores cores" -ForegroundColor White
-    Write-Host "   • Memory: $Memory" -ForegroundColor White
-    Write-Host "   • Replicas: $MinReplicas - $MaxReplicas" -ForegroundColor White
-    Write-Host "   • Status: $($finalApp.properties.provisioningState)" -ForegroundColor Green
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              CONTAINER APP DEPLOYMENT SUCCESSFUL"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "📦 Container App Details:"
+    Write-Information "   • Name: $ContainerAppName"
+    Write-Information "   • Resource Group: $ResourceGroupName"
+    Write-Information "   • Environment: $EnvironmentName"
+    Write-Information "   • Image: $ContainerImage"
+    Write-Information "   • CPU: $CpuCores cores"
+    Write-Information "   • Memory: $Memory"
+    Write-Information "   • Replicas: $MinReplicas - $MaxReplicas"
+    Write-Information "   • Status: $($finalApp.properties.provisioningState)"
     
     if ($EnableExternalIngress -and $finalApp.properties.configuration.ingress.fqdn) {
-        Write-Host ""
-        Write-Host "🌐 Access Information:" -ForegroundColor Cyan
-        Write-Host "   • External URL: https://$($finalApp.properties.configuration.ingress.fqdn)" -ForegroundColor Yellow
-        Write-Host "   • Port: $Port" -ForegroundColor White
+        Write-Information ""
+        Write-Information "🌐 Access Information:"
+        Write-Information "   • External URL: https://$($finalApp.properties.configuration.ingress.fqdn)"
+        Write-Information "   • Port: $Port"
     }
     
-    Write-Host ""
-    Write-Host "💡 Management Commands:" -ForegroundColor Cyan
-    Write-Host "   • View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName" -ForegroundColor White
-    Write-Host "   • Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y" -ForegroundColor White
-    Write-Host "   • Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Management Commands:"
+    Write-Information "   • View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName"
+    Write-Information "   • Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y"
+    Write-Information "   • Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE"
+    Write-Information ""
 
     Write-Log "✅ Container App '$ContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Azure CLI is installed: az --version" -ForegroundColor White
-    Write-Host "   • Check Container Apps extension: az extension add --name containerapp" -ForegroundColor White
-    Write-Host "   • Validate image accessibility: docker pull $ContainerImage" -ForegroundColor White
-    Write-Host "   • Check resource group permissions" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Azure CLI is installed: az --version"
+    Write-Information "   • Check Container Apps extension: az extension add --name containerapp"
+    Write-Information "   • Validate image accessibility: docker pull $ContainerImage"
+    Write-Information "   • Check resource group permissions"
+    Write-Information ""
     
     exit 1
 }

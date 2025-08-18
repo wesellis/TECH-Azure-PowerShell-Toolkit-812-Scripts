@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installmp
 
@@ -51,7 +51,7 @@ $subKey =  $key.OpenSubKey(" SOFTWARE\Microsoft\ConfigMgr10\Setup" )
 $uiInstallPath = $subKey.GetValue(" UI Installation Directory" )
 $modulePath = $uiInstallPath+" bin\ConfigurationManager.psd1"
 
-if((Get-Module ConfigurationManager) -eq $null) {
+if((Get-Module -ErrorAction Stop ConfigurationManager) -eq $null) {
     Import-Module $modulePath
 }
 $key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
@@ -72,7 +72,7 @@ while((Get-PSDrive -Name $WESiteCode -PSProvider CMSite -ErrorAction SilentlyCon
     New-PSDrive -Name $WESiteCode -PSProvider CMSite -Root $WEProviderMachineName @initParams
 }
 
-Set-Location " $($WESiteCode):\" @initParams
+Set-Location -ErrorAction Stop " $($WESiteCode):\" @initParams
 
 
 $WEDatabaseValue='Database Name'
@@ -103,10 +103,10 @@ if((Get-CMManagementPoint -SiteSystemServerName $WEMachineName).count -ne 1)
     {
         $connectionString = " Data Source=.\$WEInstanceName; Integrated Security=SSPI; Initial Catalog=$WEDatabaseName"
     }
-    $connection = new-object system.data.SqlClient.SQLConnection($connectionString)
+    $connection = new-object -ErrorAction Stop system.data.SqlClient.SQLConnection($connectionString)
    ;  $sqlCommand = " INSERT INTO [Feature_EC] (FeatureID,Exposed) values (N'49E3EF35-718B-4D93-A427-E743228F4855',0)"
     $connection.Open() | Out-Null
-   ;  $command = new-object system.data.sqlclient.sqlcommand($sqlCommand,$connection)
+   ;  $command = new-object -ErrorAction Stop system.data.sqlclient.sqlcommand($sqlCommand,$connection)
     $command.ExecuteNonQuery() | Out-Null
 
     if((Get-CMManagementPoint -SiteSystemServerName $WEMachineName).count -eq 1)

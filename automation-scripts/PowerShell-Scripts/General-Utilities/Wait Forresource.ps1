@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Wait Forresource
 
@@ -48,7 +48,7 @@ param(
     $timeOutSeconds = 60
 )
 
-$token = Get-AzAccessToken
+$token = Get-AzAccessToken -ErrorAction Stop
 
 $headers = @{
     'Content-Type'  = 'application/json'
@@ -61,7 +61,7 @@ $azureLocations = ((Invoke-AzRestMethod -Method GET -Path " /locations?api-versi
 foreach($l in $azureLocations){
     if($l.metadata.RegionType -eq " Physical" ){
         $locations = $locations + $l.name
-        #Write-Host $l.name + $l.metadata.RegionType
+        #Write-Information $l.name + $l.metadata.RegionType
     }
 }
 
@@ -99,14 +99,17 @@ $locations | ForEach-Object -Parallel {
     $r = $null
     $stopTime = (Get-Date).AddSeconds($using:timeOutSeconds)
 
-    While ($r -eq $null -and $(Get-Date) -lt $stopTime) {
+    While ($null -eq $r -and $(Get-Date) -lt $stopTime) {
         try {
-            Write-Host $uri
+            Write-Information $uri
            ;  $r = Invoke-RestMethod -Headers $using:headers -Method " GET" $uri
         }
-        catch {}
+        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 
-        if ($r -eq $null) {
+        if ($null -eq $r) {
             Write-Warning " Not found in $_"
             Start-Sleep 3
         }
@@ -116,7 +119,7 @@ $locations | ForEach-Object -Parallel {
 
     }
 
-    if($r -eq $null){
+    if($null -eq $r){
         $env:FOUND = $false
     }
     
@@ -124,7 +127,7 @@ $locations | ForEach-Object -Parallel {
 ; 
 $WEDeploymentScriptOutputs = @{}
 $WEDeploymentScriptOutputs['ResourceFound'] = $env:FOUND
-Write-Host $WEDeploymentScriptOutputs['ResourceFound']
+Write-Information $WEDeploymentScriptOutputs['ResourceFound']
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

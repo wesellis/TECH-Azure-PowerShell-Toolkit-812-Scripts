@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Hvhostsetup
 
@@ -65,13 +65,13 @@ Install-Module Subnet -Force
 
 New-VMSwitch -Name " NestedSwitch" -SwitchType Internal
 
-$WENIC1IP = Get-NetIPAddress | Where-Object -Property AddressFamily -EQ IPv4 | Where-Object -Property IPAddress -EQ $WENIC1IPAddress
-$WENIC2IP = Get-NetIPAddress | Where-Object -Property AddressFamily -EQ IPv4 | Where-Object -Property IPAddress -EQ $WENIC2IPAddress
+$WENIC1IP = Get-NetIPAddress -ErrorAction Stop | Where-Object -Property AddressFamily -EQ IPv4 | Where-Object -Property IPAddress -EQ $WENIC1IPAddress
+$WENIC2IP = Get-NetIPAddress -ErrorAction Stop | Where-Object -Property AddressFamily -EQ IPv4 | Where-Object -Property IPAddress -EQ $WENIC2IPAddress
 
 $WENATSubnet = Get-Subnet -IP $WENIC1IP.IPAddress -MaskBits $WENIC1IP.PrefixLength
 $WEHyperVSubnet = Get-Subnet -IP $WENIC2IP.IPAddress -MaskBits $WENIC2IP.PrefixLength; 
-$WENestedSubnet = Get-Subnet $WEGhostedSubnetPrefix; 
-$WEVirtualNetwork = Get-Subnet $WEVirtualNetworkPrefix
+$WENestedSubnet = Get-Subnet -ErrorAction Stop $WEGhostedSubnetPrefix; 
+$WEVirtualNetwork = Get-Subnet -ErrorAction Stop $WEVirtualNetworkPrefix
 
 New-NetIPAddress -IPAddress $WENestedSubnet.HostAddresses[0] -PrefixLength $WENestedSubnet.MaskBits -InterfaceAlias " vEthernet (NestedSwitch)"
 New-NetNat -Name " NestedSwitch" -InternalIPInterfaceAddressPrefix " $WEGhostedSubnetPrefix"
@@ -85,7 +85,7 @@ cmd.exe /c " netsh routing ip nat add interface "" $($WENIC1IP.InterfaceAlias)""
 cmd.exe /c " netsh routing ip add persistentroute dest=$($WENatSubnet.NetworkAddress) mask=$($WENATSubnet.SubnetMask) name="" $($WENIC1IP.InterfaceAlias)"" nhop=$($WENATSubnet.HostAddresses[0])"
 cmd.exe /c " netsh routing ip add persistentroute dest=$($WEVirtualNetwork.NetworkAddress) mask=$($WEVirtualNetwork.SubnetMask) name="" $($WENIC2IP.InterfaceAlias)"" nhop=$($WEHyperVSubnet.HostAddresses[0])"
 
-Get-Disk | Where-Object -Property PartitionStyle -EQ " RAW" | Initialize-Disk -PartitionStyle GPT -PassThru | New-Volume -FileSystem NTFS -AllocationUnitSize 65536 -DriveLetter F -FriendlyName " Hyper-V"
+Get-Disk -ErrorAction Stop | Where-Object -Property PartitionStyle -EQ " RAW" | Initialize-Disk -PartitionStyle GPT -PassThru | New-Volume -FileSystem NTFS -AllocationUnitSize 65536 -DriveLetter F -FriendlyName " Hyper-V"
 
 
 

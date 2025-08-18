@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Asr Sql Failoveragclassic
 
@@ -77,7 +77,7 @@ param(
 
      #Connect to Azure
      $WEAzureAccount = Add-AzureAccount -Credential $WECred
-    ;  $WEAzureSubscriptionName = Get-AutomationVariable –Name ‘AzureSubscriptionName’
+    ;  $WEAzureSubscriptionName = Get-AutomationVariable -ErrorAction Stop –Name ‘AzureSubscriptionName’
      Select-AzureSubscription -SubscriptionName $WEAzureSubscriptionName
 
      InLineScript

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.Network
 
 <#
@@ -121,13 +121,14 @@ try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.Network -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -143,11 +144,12 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Create Virtual WAN instance
-function New-VirtualWAN {
+[CmdletBinding()]
+function New-VirtualWAN -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -176,7 +178,8 @@ function New-VirtualWAN {
 }
 
 # Create Virtual Hub
-function New-VirtualHub {
+[CmdletBinding()]
+function New-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$WANName,
@@ -230,7 +233,8 @@ function New-VirtualHub {
 }
 
 # Create VPN Gateway in hub
-function New-VpnGateway {
+[CmdletBinding()]
+function New-VpnGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
@@ -254,7 +258,8 @@ function New-VpnGateway {
 }
 
 # Create ExpressRoute Gateway in hub
-function New-ExpressRouteGateway {
+[CmdletBinding()]
+function New-ExpressRouteGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
@@ -278,7 +283,8 @@ function New-ExpressRouteGateway {
 }
 
 # Create Azure Firewall in hub
-function New-AzureFirewall {
+[CmdletBinding()]
+function New-AzureFirewall -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
@@ -306,7 +312,8 @@ function New-AzureFirewall {
 }
 
 # Create VPN sites
-function New-VpnSite {
+[CmdletBinding()]
+function New-VpnSite -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$WANName,
@@ -339,7 +346,8 @@ function New-VpnSite {
 }
 
 # Configure Point-to-Site VPN
-function Set-P2SVpnConfiguration {
+[CmdletBinding()]
+function Set-P2SVpnConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
@@ -364,7 +372,8 @@ function Set-P2SVpnConfiguration {
 }
 
 # Create custom route table
-function New-HubRouteTable {
+[CmdletBinding()]
+function New-HubRouteTable -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [string]$HubName,
@@ -392,7 +401,8 @@ function New-HubRouteTable {
 }
 
 # Monitor Virtual WAN status
-function Get-VirtualWANStatus {
+[CmdletBinding()]
+function Get-VirtualWANStatus -ErrorAction Stop {
     [CmdletBinding()]
     param()
     
@@ -453,7 +463,8 @@ function Get-VirtualWANStatus {
 }
 
 # Configure monitoring and diagnostics
-function Set-VirtualWANMonitoring {
+[CmdletBinding()]
+function Set-VirtualWANMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -523,7 +534,8 @@ function Set-VirtualWANMonitoring {
 }
 
 # Apply security baseline
-function Set-SecurityBaseline {
+[CmdletBinding()]
+function Set-SecurityBaseline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -549,7 +561,8 @@ function Set-SecurityBaseline {
 }
 
 # Remove Virtual Hub
-function Remove-VirtualHub {
+[CmdletBinding()]
+function Remove-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([string]$HubName)
     
@@ -608,18 +621,18 @@ try {
     
     switch ($Action) {
         "Create" {
-            $virtualWAN = New-VirtualWAN
+            $virtualWAN = New-VirtualWAN -ErrorAction Stop
             
             if ($VpnSiteNames.Count -gt 0) {
                 New-VpnSite -WANName $VirtualWANName -SiteNames $VpnSiteNames
             }
             
             if ($EnableMonitoring) {
-                Set-VirtualWANMonitoring
+                Set-VirtualWANMonitoring -ErrorAction Stop
             }
             
             if ($EnableSecurityBaseline) {
-                Set-SecurityBaseline
+                Set-SecurityBaseline -ErrorAction Stop
             }
         }
         
@@ -648,20 +661,20 @@ try {
         
         "Configure" {
             if ($EnableMonitoring) {
-                Set-VirtualWANMonitoring
+                Set-VirtualWANMonitoring -ErrorAction Stop
             }
             
             if ($EnableSecurityBaseline) {
-                Set-SecurityBaseline
+                Set-SecurityBaseline -ErrorAction Stop
             }
         }
         
         "Monitor" {
-            Get-VirtualWANStatus
+            Get-VirtualWANStatus -ErrorAction Stop
         }
         
         "Status" {
-            Get-VirtualWANStatus
+            Get-VirtualWANStatus -ErrorAction Stop
         }
         
         "Scale" {

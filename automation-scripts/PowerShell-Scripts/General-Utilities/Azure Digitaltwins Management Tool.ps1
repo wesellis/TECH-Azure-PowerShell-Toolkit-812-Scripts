@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Digitaltwins Management Tool
 
@@ -164,6 +164,7 @@ try {
 }
 
 
+[CmdletBinding()]
 function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
@@ -187,7 +188,8 @@ function WE-Write-EnhancedLog {
 }
 
 
-function WE-New-DigitalTwinsInstance {
+[CmdletBinding()]
+function WE-New-DigitalTwinsInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -210,7 +212,7 @@ function WE-New-DigitalTwinsInstance {
             Tag = $WETags
         }
         
-        $digitalTwinsInstance = New-AzDigitalTwinsInstance @dtParams
+        $digitalTwinsInstance = New-AzDigitalTwinsInstance -ErrorAction Stop @dtParams
         Write-EnhancedLog " Successfully created Digital Twins instance: $($digitalTwinsInstance.Name)" " Success"
         
         # Wait for instance to be ready
@@ -235,7 +237,8 @@ function WE-New-DigitalTwinsInstance {
 }
 
 
-function WE-New-PrivateEndpoint {
+[CmdletBinding()]
+function WE-New-PrivateEndpoint -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
@@ -274,7 +277,8 @@ function WE-New-PrivateEndpoint {
 }
 
 
-function WE-Set-EventRouting {
+[CmdletBinding()]
+function WE-Set-EventRouting -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
@@ -311,7 +315,7 @@ function WE-Set-EventRouting {
             EventHubName = $WEEventHubName
         }
         
-        New-AzDigitalTwinsEndpoint @endpointParams
+        New-AzDigitalTwinsEndpoint -ErrorAction Stop @endpointParams
         
         # Create event route
         $routeName = " telemetry-route"
@@ -328,6 +332,7 @@ function WE-Set-EventRouting {
 }
 
 
+[CmdletBinding()]
 function WE-Deploy-DigitalTwinsModel {
     param(
         [object]$WEDigitalTwinsInstance,
@@ -458,7 +463,8 @@ function WE-Deploy-DigitalTwinsModel {
 }
 
 
-function WE-Set-DiagnosticSetting {
+[CmdletBinding()]
+function WE-Set-DiagnosticSetting -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
@@ -534,7 +540,8 @@ function WE-Set-DiagnosticSetting {
 }
 
 
-function WE-Set-RoleAssignment {
+[CmdletBinding()]
+function WE-Set-RoleAssignment -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
@@ -543,7 +550,7 @@ function WE-Set-RoleAssignment {
             Write-EnhancedLog " Configuring RBAC roles for Digital Twins instance" " Info"
         
         # Get current user
-        $currentUser = Get-AzContext
+        $currentUser = Get-AzContext -ErrorAction Stop
         
         # Assign Azure Digital Twins Data Owner role
         New-AzRoleAssignment -ObjectId $currentUser.Account.Id -RoleDefinitionName " Azure Digital Twins Data Owner" -Scope $WEDigitalTwinsInstance.Id
@@ -557,7 +564,8 @@ function WE-Set-RoleAssignment {
 }
 
 
-function WE-Get-DigitalTwinsStatus {
+[CmdletBinding()]
+function WE-Get-DigitalTwinsStatus -ErrorAction Stop {
     param([object]$WEDigitalTwinsInstance)
     
     try {
@@ -605,7 +613,7 @@ try {
     
     switch ($WEAction) {
         " Create" {
-            $instance = New-DigitalTwinsInstance
+            $instance = New-DigitalTwinsInstance -ErrorAction Stop
             
             if ($WEEnablePrivateEndpoint) {
                 New-PrivateEndpoint -DigitalTwinsInstance $instance

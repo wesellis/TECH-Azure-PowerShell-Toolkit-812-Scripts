@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Retrieves Azure cost and usage data for analysis and reporting.
 
@@ -100,13 +100,14 @@ catch {
     exit 1
 }
 
+[CmdletBinding()]
 function Test-AzureConnection {
     <#
     .SYNOPSIS
         Tests if user is connected to Azure
     #>
     try {
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             Write-Warning "Not connected to Azure. Please run Connect-AzAccount first."
             return $false
@@ -122,7 +123,8 @@ function Test-AzureConnection {
     }
 }
 
-function Get-CostManagementData {
+[CmdletBinding()]
+function Get-CostManagementData -ErrorAction Stop {
     <#
     .SYNOPSIS
         Retrieves cost data from Azure Cost Management API
@@ -215,6 +217,7 @@ function Get-CostManagementData {
     }
 }
 
+[CmdletBinding()]
 function Export-CostData {
     <#
     .SYNOPSIS
@@ -232,15 +235,15 @@ function Export-CostData {
         switch ($Format) {
             "CSV" {
                 $Data | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
-                Write-Host "Cost data exported to: $Path" -ForegroundColor Green
+                Write-Information "Cost data exported to: $Path"
             }
             "JSON" {
                 $Data | ConvertTo-Json -Depth 5 | Out-File -FilePath $Path -Encoding UTF8
-                Write-Host "Cost data exported to: $Path" -ForegroundColor Green
+                Write-Information "Cost data exported to: $Path"
             }
             "Excel" {
                 $Data | Export-Excel -Path $Path -WorksheetName "Azure Costs" -AutoSize -FreezeTopRow -BoldTopRow
-                Write-Host "Cost data exported to: $Path" -ForegroundColor Green
+                Write-Information "Cost data exported to: $Path"
             }
             "Console" {
                 $Data | Format-Table -AutoSize
@@ -253,6 +256,7 @@ function Export-CostData {
     }
 }
 
+[CmdletBinding()]
 function Show-CostSummary {
     <#
     .SYNOPSIS
@@ -270,41 +274,41 @@ function Show-CostSummary {
     $topServices = $Data | Group-Object ServiceName | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
     $topResourceGroups = $Data | Group-Object ResourceGroup | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
     
-    Write-Host "`n==================== COST ANALYSIS SUMMARY ====================" -ForegroundColor Cyan
-    Write-Host "Analysis Period: $($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Yellow
-    Write-Host "Total Cost: $($totalCost.ToString('C'))" -ForegroundColor Green
-    Write-Host "Average Daily Cost: $($avgDailyCost.ToString('C'))" -ForegroundColor Green
-    Write-Host "Number of Records: $($Data.Count)" -ForegroundColor Yellow
+    Write-Information "`n==================== COST ANALYSIS SUMMARY ===================="
+    Write-Information "Analysis Period: $($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))"
+    Write-Information "Total Cost: $($totalCost.ToString('C'))"
+    Write-Information "Average Daily Cost: $($avgDailyCost.ToString('C'))"
+    Write-Information "Number of Records: $($Data.Count)"
     
-    Write-Host "`nTop 5 Services by Cost:" -ForegroundColor Cyan
+    Write-Information "`nTop 5 Services by Cost:"
     foreach ($service in $topServices) {
         $serviceCost = ($service.Group | Measure-Object Cost -Sum).Sum
-        Write-Host "  • $($service.Name): $($serviceCost.ToString('C'))" -ForegroundColor White
+        Write-Information "  • $($service.Name): $($serviceCost.ToString('C'))"
     }
     
-    Write-Host "`nTop 5 Resource Groups by Cost:" -ForegroundColor Cyan
+    Write-Information "`nTop 5 Resource Groups by Cost:"
     foreach ($rg in $topResourceGroups) {
         $rgCost = ($rg.Group | Measure-Object Cost -Sum).Sum
-        Write-Host "  • $($rg.Name): $($rgCost.ToString('C'))" -ForegroundColor White
+        Write-Information "  • $($rg.Name): $($rgCost.ToString('C'))"
     }
     
-    Write-Host "===============================================================`n" -ForegroundColor Cyan
+    Write-Information "===============================================================`n"
 }
 
 # Main execution
 try {
-    Write-Host "Azure Cost Management Data Retrieval Tool" -ForegroundColor Cyan
-    Write-Host "==========================================" -ForegroundColor Cyan
+    Write-Information "Azure Cost Management Data Retrieval Tool"
+    Write-Information "=========================================="
     
     # Test Azure connection
     if (-not (Test-AzureConnection)) {
-        Write-Host "Please authenticate to Azure first using Connect-AzAccount" -ForegroundColor Red
+        Write-Information "Please authenticate to Azure first using Connect-AzAccount"
         exit 1
     }
     
     # Set default subscription if not provided
     if (-not $SubscriptionId) {
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         $SubscriptionId = $context.Subscription.Id
         Write-Verbose "Using default subscription: $SubscriptionId"
     }
@@ -327,11 +331,11 @@ try {
     
     if ($EndDate -gt (Get-Date)) {
         Write-Warning "End date is in the future. Setting to current date."
-        $EndDate = Get-Date
+        $EndDate = Get-Date -ErrorAction Stop
     }
     
     # Retrieve cost data
-    Write-Host "Retrieving cost data..." -ForegroundColor Yellow
+    Write-Information "Retrieving cost data..."
     $costData = Get-CostManagementData -Subscription $SubscriptionId -ResourceGroup $ResourceGroupName -Start $StartDate -End $EndDate -DataGranularity $Granularity
     
     # Display summary

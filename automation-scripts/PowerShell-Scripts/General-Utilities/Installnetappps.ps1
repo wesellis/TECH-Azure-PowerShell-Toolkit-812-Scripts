@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installnetappps
 
@@ -34,8 +34,8 @@
     Requires appropriate permissions and modules
 
 
-New-Item C:\NetApp -Type Directory
-$WEWebClient = New-Object System.Net.WebClient
+New-Item -ErrorAction Stop C:\NetApp -Type Directory
+$WEWebClient = New-Object -ErrorAction Stop System.Net.WebClient
 $WEWebClient.DownloadFile("https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi" ," C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" )
 Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" /qn ADDLOCAL=F.PSTKDOT}
 

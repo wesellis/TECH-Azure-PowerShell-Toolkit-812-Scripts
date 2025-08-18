@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Cfgmirror
 
@@ -47,6 +47,7 @@ param(
 
 
 
+[CmdletBinding()]
 function WE-Log {
 	[CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -65,7 +66,7 @@ $repdir = " $env:systemdrive/replicated"
 
 if ($WEMName){
 
-	$ucfg = [Xml] (Get-Content " $safekitmod/$WEMName/conf/userconfig.xml" )
+	$ucfg = [Xml] (Get-Content -ErrorAction Stop " $safekitmod/$WEMName/conf/userconfig.xml" )
 	$ucfg.safe.service.heart.heartbeat.name=" default"
 	[xml]$rfsconf=" <rfs><replicated dir='$repdir'/></rfs>"
 	$ucfg.safe.service.AppendChild($ucfg.ImportNode($rfsconf.rfs,$true))

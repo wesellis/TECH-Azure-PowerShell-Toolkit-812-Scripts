@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azureusage Schedules Ms Mgmt
 
@@ -79,16 +79,16 @@ $schedulerrunbookname=" AzureUsage-Schedules-MS-Mgmt"
 $WERunbookStartTime = $WEDate = $([DateTime]::Now.AddMinutes(10))
 IF($syncInterval -eq 'Hourly')
 {
-	$WERunbookScheduleTime=(get-date   -Minute 2 -Second 0).addhours(1)
+	$WERunbookScheduleTime=(get-date -ErrorAction Stop   -Minute 2 -Second 0).addhours(1)
 	if ($WERunbookStartTime -gt $WERunbookScheduleTime)
 	{
-		$WERunbookScheduleTime=(get-date   -Minute 2 -Second 0).addhours(2)
+		$WERunbookScheduleTime=(get-date -ErrorAction Stop   -Minute 2 -Second 0).addhours(2)
 	}
 	$interval=1
 	
 }Else
 {
-	$WERunbookScheduleTime=(get-date  -Hour 0 -Minute 0 -Second 0).adddays(1).AddHours(2)
+	$WERunbookScheduleTime=(get-date -ErrorAction Stop  -Hour 0 -Minute 0 -Second 0).adddays(1).AddHours(2)
 	$interval=24
 }
 $checkschdl=@(get-AzureRmAutomationScheduledRunbook -RunbookName $WERunbookName -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup)

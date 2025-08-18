@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azuresaingestionlogs Ms Mgmt Sa
 
@@ -93,21 +93,21 @@ $schedulename = " AzureStorageIngestionChild-Schedule-MS-Mgmt-SA"
 
 $hash = [hashtable]::New(@{})
 
-$WEStarttimer = get-date
+$WEStarttimer = get-date -ErrorAction Stop
 
 
 
 
 
 
-Function Build-tableSignature ($customerId, $sharedKey, $date, $method, $resource, $uri) {
+function New-tableSignature ($customerId, $sharedKey, $date, $method, $resource, $uri) {
     $stringToHash = $method + " `n" + " `n" + " `n" + $date + " `n" + " /" + $resource + $uri.AbsolutePath
     Add-Type -AssemblyName System.Web
     $query = [System.Web.HttpUtility]::ParseQueryString($uri.query)  
     $querystr = ''
     $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
     $keyBytes = [Convert]::FromBase64String($sharedKey)
-    $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+    $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
     $sha256.Key = $keyBytes
     $calculatedHash = $sha256.ComputeHash($bytesToHash)
     $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -116,7 +116,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date, $method, $resourc
 	
 }
 
-Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
+function New-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
     Add-Type -AssemblyName System.Web
    ;  $str = New-Object -TypeName " System.Text.StringBuilder" ;
     $builder = [System.Text.StringBuilder]::new(" /" )
@@ -138,7 +138,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
                 }
                 $builder2.Append($obj2.ToString()) |Out-Null
             }
-            IF ($str2 -ne $null) {
+            IF ($null -ne $str2) {
                 $values2.add($str2.ToLowerInvariant(), $builder2.ToString())
             } 
         }
@@ -170,7 +170,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
                 }
                 $builder2.Append($obj2.ToString()) |Out-Null
             }
-            IF ($str2 -ne $null) {
+            IF ($null -ne $str2) {
                 $values2.add($str2.ToLowerInvariant(), $builder2.ToString())
             } 
         }
@@ -207,7 +207,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
 
     $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
     $keyBytes = [Convert]::FromBase64String($sharedKey)
-    $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+    $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
     $sha256.Key = $keyBytes
     $calculatedHash = $sha256.ComputeHash($bytesToHash)
     $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -263,7 +263,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
         $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody  -OutFile " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 		
-        #$xresp=Get-Content " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
+        #$xresp=Get-Content -ErrorAction Stop " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
         return " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 
@@ -304,7 +304,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
 }
 
 
-function WE-Get-BlobSize ($bloburi, $storageaccount, $rg, $type) {
+function WE-Get-BlobSize -ErrorAction Stop ($bloburi, $storageaccount, $rg, $type) {
 
     If ($type -eq 'ARM') {
         $WEUri = " https://management.azure.com/subscriptions/{3}/resourceGroups/{2}/providers/Microsoft.Storage/storageAccounts/{1}/listKeys?api-version={0}" -f $WEApiVerSaArm, $storageaccount, $rg, $WESubscriptionId 
@@ -335,12 +335,12 @@ function WE-Get-BlobSize ($bloburi, $storageaccount, $rg, $type) {
 
 }		
 
-Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
+function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
     $xHeaders = " x-ms-date:" + $date
     $stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
     $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
     $keyBytes = [Convert]::FromBase64String($sharedKey)
-    $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+    $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
     $sha256.Key = $keyBytes
     $calculatedHash = $sha256.ComputeHash($bytesToHash)
     $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -397,9 +397,10 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType) {
 
 
 
+[CmdletBinding()]
 function WE-Cleanup-Variables {
 
-    Get-Variable |
+    Get-Variable -ErrorAction Stop |
 
     Where-Object { $startupVariables -notcontains $_.Name } |
 
@@ -416,7 +417,7 @@ function WE-Cleanup-Variables {
 " Logging in to Azure..."
 $WEArmConn = Get-AutomationConnection -Name AzureRunAsConnection 
 
-if ($WEArmConn  -eq $null)
+if ($null -eq $WEArmConn)
 {
 	throw " Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
@@ -465,8 +466,8 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
-$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 $result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
 $headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -490,19 +491,19 @@ if ($getAsmHeader) {
     }
     Catch
     {
-        if ($WEAsmConn -eq $null) {
+        if ($null -eq $WEAsmConn) {
             Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
             $getAsmHeader=$false
         }
     }
-     if ($WEAsmConn -eq $null) {
+     if ($null -eq $WEAsmConn) {
         Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
         $getAsmHeader=$false
     }Else{
 
         $WECertificateAssetName = $WEAsmConn.CertificateAssetName
         $WEAzureCert = Get-AutomationCertificate -Name $WECertificateAssetName
-        if ($WEAzureCert -eq $null)
+        if ($null -eq $WEAzureCert)
         {
             Write-Warning  " Could not retrieve certificate asset: $WECertificateAssetName. Ensure that this asset exists and valid  in the Automation account."
             $getAsmHeader=$false
@@ -705,14 +706,14 @@ $scriptBlock = {
 
     #region Define Required Functions
 
-    Function Build-tableSignature ($customerId, $sharedKey, $date, $method, $resource, $uri) {
+    function New-tableSignature ($customerId, $sharedKey, $date, $method, $resource, $uri) {
         $stringToHash = $method + " `n" + " `n" + " `n" + $date + " `n" + " /" + $resource + $uri.AbsolutePath
         Add-Type -AssemblyName System.Web
         $query = [System.Web.HttpUtility]::ParseQueryString($uri.query)  
         $querystr = ''
         $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
         $keyBytes = [Convert]::FromBase64String($sharedKey)
-        $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+        $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
         $sha256.Key = $keyBytes
         $calculatedHash = $sha256.ComputeHash($bytesToHash)
         $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -721,7 +722,7 @@ $scriptBlock = {
 		
     }
     # Create the function to create the authorization signature
-    Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
+    function New-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
         Add-Type -AssemblyName System.Web
        ;  $str = New-Object -TypeName " System.Text.StringBuilder" ;
         $builder = [System.Text.StringBuilder]::new(" /" )
@@ -743,7 +744,7 @@ $scriptBlock = {
                     }
                     $builder2.Append($obj2.ToString()) |Out-Null
                 }
-                IF ($str2 -ne $null) {
+                IF ($null -ne $str2) {
                     $values2.add($str2.ToLowerInvariant(), $builder2.ToString())
                 } 
             }
@@ -775,7 +776,7 @@ $scriptBlock = {
                     }
                     $builder2.Append($obj2.ToString()) |Out-Null
                 }
-                IF ($str2 -ne $null) {
+                IF ($null -ne $str2) {
                     $values2.add($str2.ToLowerInvariant(), $builder2.ToString())
                 } 
             }
@@ -812,7 +813,7 @@ $scriptBlock = {
 
         $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
         $keyBytes = [Convert]::FromBase64String($sharedKey)
-        $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+        $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
         $sha256.Key = $keyBytes
         $calculatedHash = $sha256.ComputeHash($bytesToHash)
         $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -868,7 +869,7 @@ $scriptBlock = {
             $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody  -OutFile " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 			
-            #$xresp=Get-Content " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
+            #$xresp=Get-Content -ErrorAction Stop " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
             return " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 
@@ -909,7 +910,7 @@ $scriptBlock = {
     }
     #get blob file size in gb 
 
-    function WE-Get-BlobSize ($bloburi, $storageaccount, $rg, $type) {
+    function WE-Get-BlobSize -ErrorAction Stop ($bloburi, $storageaccount, $rg, $type) {
 
         If ($type -eq 'ARM') {
             $WEUri = " https://management.azure.com/subscriptions/{3}/resourceGroups/{2}/providers/Microsoft.Storage/storageAccounts/{1}/listKeys?api-version={0}" -f $WEApiVerSaArm, $storageaccount, $rg, $WESubscriptionId 
@@ -940,12 +941,12 @@ $scriptBlock = {
 
     }		
     # Create the function to create the authorization signature
-    Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
+    function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource) {
         $xHeaders = " x-ms-date:" + $date
         $stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
         $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
         $keyBytes = [Convert]::FromBase64String($sharedKey)
-        $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+        $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
         $sha256.Key = $keyBytes
         $calculatedHash = $sha256.ComputeHash($bytesToHash)
         $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -1083,7 +1084,7 @@ $scriptBlock = {
     }
 
 
-    $hash.SAInfo += New-Object PSObject -Property @{
+    $hash.SAInfo += New-Object -ErrorAction Stop PSObject -Property @{
         StorageAccount = $storageaccount
         Key            = $prikey
         Logging        = $logging
@@ -1102,7 +1103,7 @@ write-output " $($colParamsforChild.count) objects will be processed "
 
 $i = 1 
 
-$WEStarttimer = get-date
+$WEStarttimer = get-date -ErrorAction Stop
 
 
 
@@ -1112,7 +1113,7 @@ $colParamsforChild|foreach {
     $splitmetrics = $_
     $WEJob = [powershell]::Create().AddScript($WEScriptBlock).AddArgument($hash).AddArgument($splitmetrics).Addargument($i)
     $WEJob.RunspacePool = $WERunspacePool
-    $WEJobs = $WEJobs + New-Object PSObject -Property @{
+    $WEJobs = $WEJobs + New-Object -ErrorAction Stop PSObject -Property @{
         RunNum = $i
         Pipe   = $WEJob
         Result = $WEJob.BeginInvoke()
@@ -1163,10 +1164,10 @@ Write-output " All jobs completed!"
 
 
 $jobs|foreach {$_.Pipe.Dispose()}
-Remove-Variable Jobs -Force -Scope Global
-Remove-Variable Job -Force -Scope Global
-Remove-Variable Jobobj -Force -Scope Global
-Remove-Variable Jobsclone -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobs -Force -Scope Global
+Remove-Variable -ErrorAction Stop Job -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobobj -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobsclone -Force -Scope Global
 
 $runspacepool.Close()
 
@@ -1176,7 +1177,7 @@ $runspacepool.Close()
 
 $startupVariables = ””
 
-new-variable -force -name startupVariables -value ( Get-Variable |
+new-variable -force -name startupVariables -value ( Get-Variable -ErrorAction Stop |
 
     % { $_.Name } )
 
@@ -1256,14 +1257,14 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
                 $auditlog = invoke-StorageREST -sharedKey $prikey -method GET -resource $storageaccount -uri $uriLogs3 -download $true 
 
                 if (Test-Path $auditlog) {
-                   ;  $file = New-Object System.IO.StreamReader -Arg $auditlog
+                   ;  $file = New-Object -ErrorAction Stop System.IO.StreamReader -Arg $auditlog
 					
                     while ($line = $file.ReadLine()) {
 						
 
                        ;  $splitline = [regex]::Split( $line , ';(?=(?:[^" ]|" [^" ]*" )*$)' )
 
-                        $logArray = $logArray + New-Object PSObject -Property @{
+                        $logArray = $logArray + New-Object -ErrorAction Stop PSObject -Property @{
                             Timestamp          = $splitline[1]
                             MetricName         = 'AuditLogs'
                             StorageAccount     = $storageaccount
@@ -1285,10 +1286,10 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
                     }
                     $file.close()
 
-                    $file = get-item $auditlog 
+                    $file = get-item -ErrorAction Stop $auditlog 
                     $WELogcount++
                     $WELogSize = $WELogSize + [Math]::Round($file.Length / 1024, 0)
-                    Remove-Item $auditl -Forceo -Forceg -Force
+                    Remove-Item -ErrorAction Stop $auditl -Forceo -Forceg -Force
 
 
                     #push data into oms if specific thresholds are reached 
@@ -1300,7 +1301,7 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
 
                         Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
-                        remove-variable jsonlogs -force 
+                        remove-variable -ErrorAction Stop jsonlogs -force 
                         [gc]::Collect()
 						
                     }
@@ -1315,7 +1316,7 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
         write-output " $($blobs.count)  log file processed for $storageaccount. $($logarray.count) records wil be uploaded"
     }
     Remove-Variable -Name Blobs
-    $logTracker = $logTracker + New-Object PSObject -Property @{
+    $logTracker = $logTracker + New-Object -ErrorAction Stop PSObject -Property @{
         StorageAccount = $storageaccount
         Logcount       = $WELogcount
         LogSizeinKB    = $WELogSize            

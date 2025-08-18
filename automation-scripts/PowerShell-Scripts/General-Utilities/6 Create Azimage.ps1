@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     6 Create Azimage
 
@@ -62,7 +62,7 @@ $setAzImageOsDiskSplat = @{
     ManagedDiskId = $diskID
 }
 
-$imageConfig = Set-AzImageOsDisk @setAzImageOsDiskSplat
+$imageConfig = Set-AzImageOsDisk -ErrorAction Stop @setAzImageOsDiskSplat
 
 ; 
 $newAzImageSplat = @{
@@ -71,7 +71,7 @@ $newAzImageSplat = @{
     Image = $imageConfig
 }
 ; 
-$image = New-AzImage @newAzImageSplat
+$image = New-AzImage -ErrorAction Stop @newAzImageSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

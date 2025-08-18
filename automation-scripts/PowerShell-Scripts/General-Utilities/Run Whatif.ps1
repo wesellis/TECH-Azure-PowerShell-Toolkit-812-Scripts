@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Whatif
 
@@ -57,14 +57,14 @@ param(
 if (!$uploadResults) {
 
     Invoke-WebRequest -uri " $url" -OutFile " $ttkFolder/$filename" -Verbose
-    Get-ChildItem " $ttkFolder/$filename"
+    Get-ChildItem -ErrorAction Stop " $ttkFolder/$filename"
 
     # Unzip Module
     Write-WELog " Expanding files..." " INFO"
     Expand-Archive -Path " $ttkFolder/$filename" -DestinationPath " $ttkFolder/modules" -Verbose -Force
 
     Write-WELog " Expanded files found:" " INFO"
-    #Get-ChildItem " $ttkFolder/modules" -Recurse
+    #Get-ChildItem -ErrorAction Stop " $ttkFolder/modules" -Recurse
 
     # Import Module
     Import-Module " $ttkFolder/modules/Az.Accounts/Az.Accounts.psd1" -Verbose -Scope Local

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2 New Azstorageaccount
 
@@ -88,11 +88,11 @@ Specifies the SKU name of the Storage account that this cmdlet creates. The acce
 .NOTES
     General notes
 
-    New-AzStorageAccount : FGC_Prod_FileStrage_SA1 is not a valid storage account name. Storage account name must be between 3 and 24 characters in   
+    New-AzStorageAccount -ErrorAction Stop : FGC_Prod_FileStrage_SA1 is not a valid storage account name. Storage account name must be between 3 and 24 characters in   
 length and use numbers and lower-case letters only.
 Parameter name: Name
 At C:\Users\Abdullah.Ollivierre\AzureRepos2\Azure\Storage\Storage Accounts\2-New-AzStorageAccount.ps1:64 char:1
-+ New-AzStorageAccount @newAzStorageAccountSplat
++ New-AzStorageAccount -ErrorAction Stop @newAzStorageAccountSplat
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : CloseError: (:) [New-AzStorageAccount], ArgumentException
     + FullyQualifiedErrorId : Microsoft.Azure.Commands.Management.Storage.NewAzureStorageAccountCommand
@@ -146,7 +146,7 @@ $newAzStorageAccountSplat = @{
     Tag               = $WETags
 }
 
-New-AzStorageAccount @newAzStorageAccountSplat
+New-AzStorageAccount -ErrorAction Stop @newAzStorageAccountSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

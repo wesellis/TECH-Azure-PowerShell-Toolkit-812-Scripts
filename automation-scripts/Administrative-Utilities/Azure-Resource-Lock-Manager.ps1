@@ -1,4 +1,4 @@
-# Azure Resource Lock Manager
+﻿# Azure Resource Lock Manager
 # Professional utility for managing resource locks across Azure resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Resource protection and governance
@@ -62,10 +62,10 @@ try {
             if ($ResourceGroupName) {
                 $locks = Get-AzResourceLock -ResourceGroupName $ResourceGroupName
             } else {
-                $locks = Get-AzResourceLock
+                $locks = Get-AzResourceLock -ErrorAction Stop
             }
             
-            Write-Host "Found $($locks.Count) resource locks:" -ForegroundColor Cyan
+            Write-Information "Found $($locks.Count) resource locks:"
             $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
         }
         
@@ -81,7 +81,7 @@ try {
         }
         
         "Audit" {
-            $allLocks = Get-AzResourceLock
+            $allLocks = Get-AzResourceLock -ErrorAction Stop
             $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name
@@ -90,10 +90,10 @@ try {
                 }
             }
             
-            Write-Host "Lock Audit Summary:" -ForegroundColor Cyan
-            Write-Host "Total Locks: $($allLocks.Count)" -ForegroundColor White
+            Write-Information "Lock Audit Summary:"
+            Write-Information "Total Locks: $($allLocks.Count)"
             $lockReport | ForEach-Object {
-                Write-Host "$($_.LockLevel) Locks: $($_.Count)" -ForegroundColor Yellow
+                Write-Information "$($_.LockLevel) Locks: $($_.Count)"
             }
         }
     }

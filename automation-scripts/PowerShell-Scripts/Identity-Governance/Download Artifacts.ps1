@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Download Artifacts
 
@@ -38,7 +38,8 @@ $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $WEProgressPreference = 'SilentlyContinue'
 
-function WE-Get-ManagedIdentityAccessToken {
+[CmdletBinding()]
+function WE-Get-ManagedIdentityAccessToken -ErrorAction Stop {
     [CmdletBinding()
 try {
     # Main script execution
@@ -65,8 +66,9 @@ param(
     return $accessToken
 }
 
-function WE-Get-AzureDevOpsAccessToken {
-    return (Get-ManagedIdentityAccessToken '499b84ac-1321-427f-aa17-267ca6975798')
+[CmdletBinding()]
+function WE-Get-AzureDevOpsAccessToken -ErrorAction Stop {
+    return (Get-ManagedIdentityAccessToken -ErrorAction Stop '499b84ac-1321-427f-aa17-267ca6975798')
 }
 
 $toolsRoot = " C:\.tools\Setup"
@@ -83,7 +85,7 @@ if ($scriptsRepoUrl.StartsWith('https://github.com/')) {
     mkdir $expandedArchiveRoot -Force | Out-Null
     Expand-Archive -Path $zip -DestinationPath $expandedArchiveRoot
 
-    $expandedScriptsPath = [IO.Path]::GetFullPath($(Join-Path $((Get-ChildItem $expandedArchiveRoot)[0].FullName) $scriptsRepoPath))
+    $expandedScriptsPath = [IO.Path]::GetFullPath($(Join-Path $((Get-ChildItem -ErrorAction Stop $expandedArchiveRoot)[0].FullName) $scriptsRepoPath))
     Write-WELog " -- Moving $expandedScriptsPath to $toolsRoot" " INFO"
     Move-Item -Path $expandedScriptsPath -Destination $toolsRoot
 
@@ -94,7 +96,7 @@ if ($scriptsRepoUrl.StartsWith('https://github.com/')) {
 elseif ($scriptsRepoUrl.StartsWith('https://dev.azure.com/')) {
     Write-WELog " === Downloading artifacts from $scriptsRepoPath of branch $scriptsRepoBranch in repo $scriptsRepoUrl" " INFO"
    ;  $requestUri = " $scriptsRepoUrl/items?path=$scriptsRepoPath&`$format=zip&versionDescriptor.version=$scriptsRepoBranch&versionDescriptor.versionType=branch&api-version=5.0-preview.1"
-   ;  $aadToken = Get-AzureDevOpsAccessToken
+   ;  $aadToken = Get-AzureDevOpsAccessToken -ErrorAction Stop
     Invoke-RestMethod -Uri $requestUri -Method Get -Headers @{" Authorization" = " Bearer $aadToken" } -OutFile $zip
 
     Write-WELog " -- Extracting to $toolsRoot" " INFO"
@@ -106,7 +108,7 @@ else {
 }
 
 Write-WELog " -- Content of $toolsRoot" " INFO"
-Get-ChildItem $toolsRoot -Recurse
+Get-ChildItem -ErrorAction Stop $toolsRoot -Recurse
 
 Write-WELog " === Completed downloading artifacts" " INFO"
 

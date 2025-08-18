@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure App Configuration Manager
 
@@ -121,7 +121,7 @@ try {
         " Create" {
             Write-Log " 🏗️ Creating App Configuration store..." -Level INFO
             
-            $configStore = New-AzAppConfigurationStore `
+            $configStore = New-AzAppConfigurationStore -ErrorAction Stop `
                 -ResourceGroupName $WEResourceGroupName `
                 -Name $WEConfigStoreName `
                 -Location $WELocation `
@@ -144,7 +144,7 @@ try {
             if ($WEContentType) { $keyParams.ContentType = $WEContentType }
             if ($WETags.Count -gt 0) { $keyParams.Tag = $WETags }
             
-            Set-AzAppConfigurationKeyValue @keyParams
+            Set-AzAppConfigurationKeyValue -ErrorAction Stop @keyParams
             Write-Log " ✓ Configuration key added: $WEKeyName" -Level SUCCESS
         }
         

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Datafactory Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -114,7 +115,7 @@ if ($WEEnableGitIntegration -and $WEGitAccountName -and $WEGitRepositoryName) {
     Write-WELog " Collaboration Branch: $WEGitCollaborationBranch" " INFO"
     
     # Create Data Factory with Git integration
-   ;  $WEDataFactory = New-AzDataFactoryV2 `
+   ;  $WEDataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEFactoryName `
         -Location $WELocation `
@@ -125,7 +126,7 @@ if ($WEEnableGitIntegration -and $WEGitAccountName -and $WEGitRepositoryName) {
         -GitRepoType $WEGitRepoType
 } else {
     # Create Data Factory without Git integration
-   ;  $WEDataFactory = New-AzDataFactoryV2 `
+   ;  $WEDataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEFactoryName `
         -Location $WELocation

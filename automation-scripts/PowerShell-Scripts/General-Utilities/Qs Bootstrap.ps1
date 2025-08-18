@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Qs Bootstrap
 
@@ -38,7 +38,7 @@ $adminUser = $WEArgs[0]
 $adminPassword = $WEArgs[1]
 $scriptUrl = $($WEArgs[10]); 
 $password =  ConvertTo-SecureString $($adminPassword) -AsPlainText -Force; 
-$credential = New-Object System.Management.Automation.PSCredential -ArgumentList $env:computername\$adminUser, $password
+$credential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $env:computername\$adminUser, $password
 New-Item -ItemType directory -Path C:\installation
 copy-item ".\qs-install.ps1" " c:\installation\"
 Enable-PSRemoting -Force

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Backup Vault Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,10 +21,10 @@ param (
     [string]$StorageType = "GeoRedundant"
 )
 
-Write-Host "Creating Recovery Services Vault: $VaultName"
+Write-Information "Creating Recovery Services Vault: $VaultName"
 
 # Create Recovery Services Vault
-$Vault = New-AzRecoveryServicesVault `
+$Vault = New-AzRecoveryServicesVault -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $VaultName `
     -Location $Location
@@ -33,40 +33,40 @@ $Vault = New-AzRecoveryServicesVault `
 Set-AzRecoveryServicesVaultContext -Vault $Vault
 
 # Configure storage redundancy
-Set-AzRecoveryServicesBackupProperty `
+Set-AzRecoveryServicesBackupProperty -ErrorAction Stop `
     -Vault $Vault `
     -BackupStorageRedundancy $StorageType
 
-Write-Host "✅ Recovery Services Vault created successfully:"
-Write-Host "  Name: $($Vault.Name)"
-Write-Host "  Location: $($Vault.Location)"
-Write-Host "  Storage Type: $StorageType"
-Write-Host "  Resource ID: $($Vault.ID)"
+Write-Information "✅ Recovery Services Vault created successfully:"
+Write-Information "  Name: $($Vault.Name)"
+Write-Information "  Location: $($Vault.Location)"
+Write-Information "  Storage Type: $StorageType"
+Write-Information "  Resource ID: $($Vault.ID)"
 
 # Display backup policies
-Write-Host "`nDefault Backup Policies:"
+Write-Information "`nDefault Backup Policies:"
 $Policies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $Vault.ID
 foreach ($Policy in $Policies) {
-    Write-Host "  • $($Policy.Name) [$($Policy.WorkloadType)]"
+    Write-Information "  • $($Policy.Name) [$($Policy.WorkloadType)]"
 }
 
-Write-Host "`nVault Capabilities:"
-Write-Host "• VM backup and restore"
-Write-Host "• File and folder backup"
-Write-Host "• SQL Server backup"
-Write-Host "• Azure File Shares backup"
-Write-Host "• Cross-region restore"
-Write-Host "• Point-in-time recovery"
+Write-Information "`nVault Capabilities:"
+Write-Information "• VM backup and restore"
+Write-Information "• File and folder backup"
+Write-Information "• SQL Server backup"
+Write-Information "• Azure File Shares backup"
+Write-Information "• Cross-region restore"
+Write-Information "• Point-in-time recovery"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Configure backup policies"
-Write-Host "2. Enable backup for resources"
-Write-Host "3. Schedule backup jobs"
-Write-Host "4. Test restore procedures"
-Write-Host "5. Monitor backup status"
+Write-Information "`nNext Steps:"
+Write-Information "1. Configure backup policies"
+Write-Information "2. Enable backup for resources"
+Write-Information "3. Schedule backup jobs"
+Write-Information "4. Test restore procedures"
+Write-Information "5. Monitor backup status"
 
-Write-Host "`nSupported Workloads:"
-Write-Host "• Azure Virtual Machines"
-Write-Host "• Azure File Shares"
-Write-Host "• SQL Server in Azure VMs"
-Write-Host "• SAP HANA in Azure VMs"
+Write-Information "`nSupported Workloads:"
+Write-Information "• Azure Virtual Machines"
+Write-Information "• Azure File Shares"
+Write-Information "• SQL Server in Azure VMs"
+Write-Information "• SAP HANA in Azure VMs"

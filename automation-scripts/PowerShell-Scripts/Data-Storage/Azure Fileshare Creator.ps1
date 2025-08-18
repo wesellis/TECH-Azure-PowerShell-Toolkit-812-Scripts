@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Fileshare Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -97,7 +98,7 @@ Write-WELog " Creating File Share: $WEShareName" " INFO"
 $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
 $WEContext = $WEStorageAccount.Context
 
-$WEFileShare = New-AzStorageShare `
+$WEFileShare = New-AzStorageShare -ErrorAction Stop `
     -Name $WEShareName `
     -Context $WEContext `
     -QuotaGiB $WEQuotaInGB

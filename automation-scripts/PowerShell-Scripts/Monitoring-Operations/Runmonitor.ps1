@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Runmonitor
 
@@ -52,6 +52,7 @@ Required params: -resourceGroupName -DataFactoryName
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()
 try {
@@ -74,7 +75,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]

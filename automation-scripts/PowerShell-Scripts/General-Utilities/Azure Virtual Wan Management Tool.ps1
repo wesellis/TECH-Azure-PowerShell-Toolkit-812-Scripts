@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Virtual Wan Management Tool
 
@@ -199,6 +199,7 @@ try {
 }
 
 
+[CmdletBinding()]
 function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
@@ -222,7 +223,8 @@ function WE-Write-EnhancedLog {
 }
 
 
-function WE-New-VirtualWAN {
+[CmdletBinding()]
+function WE-New-VirtualWAN -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -251,7 +253,8 @@ function WE-New-VirtualWAN {
 }
 
 
-function WE-New-VirtualHub {
+[CmdletBinding()]
+function WE-New-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory=$false)]
@@ -317,7 +320,8 @@ function WE-New-VirtualHub {
 }
 
 
-function WE-New-VpnGateway {
+[CmdletBinding()]
+function WE-New-VpnGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -345,7 +349,8 @@ function WE-New-VpnGateway {
 }
 
 
-function WE-New-ExpressRouteGateway {
+[CmdletBinding()]
+function WE-New-ExpressRouteGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -373,7 +378,8 @@ function WE-New-ExpressRouteGateway {
 }
 
 
-function WE-New-AzureFirewall {
+[CmdletBinding()]
+function WE-New-AzureFirewall -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -405,7 +411,8 @@ function WE-New-AzureFirewall {
 }
 
 
-function WE-New-VpnSite {
+[CmdletBinding()]
+function WE-New-VpnSite -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory=$false)]
@@ -442,7 +449,8 @@ function WE-New-VpnSite {
 }
 
 
-function WE-Set-P2SVpnConfiguration {
+[CmdletBinding()]
+function WE-Set-P2SVpnConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -471,7 +479,8 @@ function WE-Set-P2SVpnConfiguration {
 }
 
 
-function WE-New-HubRouteTable {
+[CmdletBinding()]
+function WE-New-HubRouteTable -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory=$false)]
@@ -503,7 +512,8 @@ function WE-New-HubRouteTable {
 }
 
 
-function WE-Get-VirtualWANStatus {
+[CmdletBinding()]
+function WE-Get-VirtualWANStatus -ErrorAction Stop {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
     param()
@@ -565,7 +575,8 @@ $ErrorActionPreference = " Stop"
 }
 
 
-function WE-Set-VirtualWANMonitoring {
+[CmdletBinding()]
+function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -635,7 +646,8 @@ function WE-Set-VirtualWANMonitoring {
 }
 
 
-function WE-Set-SecurityBaseline {
+[CmdletBinding()]
+function WE-Set-SecurityBaseline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -661,7 +673,8 @@ function WE-Set-SecurityBaseline {
 }
 
 
-function WE-Remove-VirtualHub {
+[CmdletBinding()]
+function WE-Remove-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -724,18 +737,18 @@ try {
     
     switch ($WEAction) {
         " Create" {
-            $virtualWAN = New-VirtualWAN
+            $virtualWAN = New-VirtualWAN -ErrorAction Stop
             
             if ($WEVpnSiteNames.Count -gt 0) {
                 New-VpnSite -WANName $WEVirtualWANName -SiteNames $WEVpnSiteNames
             }
             
             if ($WEEnableMonitoring) {
-                Set-VirtualWANMonitoring
+                Set-VirtualWANMonitoring -ErrorAction Stop
             }
             
             if ($WEEnableSecurityBaseline) {
-                Set-SecurityBaseline
+                Set-SecurityBaseline -ErrorAction Stop
             }
         }
         
@@ -764,20 +777,20 @@ try {
         
         " Configure" {
             if ($WEEnableMonitoring) {
-                Set-VirtualWANMonitoring
+                Set-VirtualWANMonitoring -ErrorAction Stop
             }
             
             if ($WEEnableSecurityBaseline) {
-                Set-SecurityBaseline
+                Set-SecurityBaseline -ErrorAction Stop
             }
         }
         
         " Monitor" {
-            Get-VirtualWANStatus
+            Get-VirtualWANStatus -ErrorAction Stop
         }
         
         " Status" {
-            Get-VirtualWANStatus
+            Get-VirtualWANStatus -ErrorAction Stop
         }
         
         " Scale" {

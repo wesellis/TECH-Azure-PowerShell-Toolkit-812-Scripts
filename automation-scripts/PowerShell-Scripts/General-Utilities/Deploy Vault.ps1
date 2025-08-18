@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deploy Vault
 
@@ -92,15 +92,15 @@ param(
 
     Add-AzureRmAccount
 
-    Write-Host 'Selecting Azure Subscription...' $WESubscriptionId -foregroundcolor Yellow
+    Write-Information \'Selecting Azure Subscription...\' $WESubscriptionId -foregroundcolor Yellow
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId
 
     # Create a new Key vault, with enable soft delete (prerequisites to use a stored key as encryption protector for SQL)
-    Write-Host 'Creating the new Key Vault...' -foregroundcolor Yellow
+    Write-Information \'Creating the new Key Vault...\'
     New-AzureRmKeyVault -VaultName $WEKeyVaultName -ResourceGroupName $WEResourceGroupName -Location $WEKeyVaultLocation -EnableSoftDelete
 
     # Generate a key
-    Write-Host 'Adding the new key inside the Key Vault...' -foregroundcolor Yellow
+    Write-Information \'Adding the new key inside the Key Vault...\'
     Add-AzureKeyVaultKey -VaultName $WEKeyVaultName -Name $WEKeyName -Destination 'Software'
 }
 

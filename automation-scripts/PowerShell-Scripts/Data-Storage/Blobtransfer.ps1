@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Blobtransfer
 
@@ -92,6 +92,7 @@ param(
 )
 
 
+[CmdletBinding()]
 function getBlobName
 {
 	param(
@@ -110,6 +111,7 @@ function getBlobName
 	return $url.Substring($startIndex)
 }
 
+[CmdletBinding()]
 function getPathUpToContainerLevelfromUrl
 {
 	param(
@@ -128,6 +130,7 @@ function getPathUpToContainerLevelfromUrl
 	return $url.Substring(0,$startIndex-1)
 }
 
+[CmdletBinding()]
 function getBlobCompletionStatus
 {
 	param(
@@ -148,7 +151,7 @@ function getBlobCompletionStatus
 
 
 	# Parsing log file for errors
-	$azCopyOutput = Get-Content $WEAzCopyLogFile
+	$azCopyOutput = Get-Content -ErrorAction Stop $WEAzCopyLogFile
 			
 	for ($i=$azCopyOutput.Count-1 ;$i -ge 0; $i--)
 	{
@@ -220,7 +223,7 @@ try
 	} 
       
 	" Saving file at [$localPath]" | Out-File " c:\$scriptName.txt" -Append
-	$client = new-object System.Net.WebClient 
+	$client = new-object -ErrorAction Stop System.Net.WebClient 
 	$client.DownloadFile($url, $localPath) 
 
 	" Installing AzCopy" | Out-File " c:\$scriptName.txt" -Append
@@ -229,7 +232,7 @@ try
 
 	Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i $localPath /log $azCopyInstallLogFileName" /qn}
 
-	$installLog = Get-Content $azCopyInstallLogFileName
+	$installLog = Get-Content -ErrorAction Stop $azCopyInstallLogFileName
 	# Pattern matching for validation
 # Pattern matching for validation
 $installFolder = ($installLog | ? {$_ -match " AZURESTORAGETOOLSFOLDER" }).Split(" =" )[1].Trim()

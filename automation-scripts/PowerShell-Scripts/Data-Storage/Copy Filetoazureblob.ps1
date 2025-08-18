@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Copy Filetoazureblob
 
@@ -52,10 +52,10 @@ $storageContext = @{
 }
 
 
-$blob = Get-AzStorageBlobContent @storageContext -Blob $fileName -Destination $filePath -Force
+$blob = Get-AzStorageBlobContent -ErrorAction Stop @storageContext -Blob $fileName -Destination $filePath -Force
 if ($blob)
 {
-    $text = Get-Content $filePath -Raw
+    $text = Get-Content -ErrorAction Stop $filePath -Raw
     Write-Output " ---------"
     Write-Output $text
     Write-Output " ---------"
@@ -200,7 +200,7 @@ $text | Out-File $filePath
 
 
 Write-Output " Uploading settings.json file..."
-Set-AzStorageBlobContent @storageContext -File $filePath -Force | Out-Null
+Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $filePath -Force | Out-Null
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

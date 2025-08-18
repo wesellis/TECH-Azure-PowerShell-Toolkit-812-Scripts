@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Csconfiguration
 
@@ -75,7 +75,7 @@ param(
    ;  $WECurrentRole = " CS"
    ;  $WEPrimarySiteName = $WEPSName.split(" ." )[0] + " $"
     
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node LOCALHOST
     {

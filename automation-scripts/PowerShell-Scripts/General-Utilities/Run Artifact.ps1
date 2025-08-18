@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Artifact
 
@@ -37,10 +37,12 @@
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+[CmdletBinding()]
 function ____ExitOne {
     exit 1
 }
 
+[CmdletBinding()]
 function ____Invoke-Artifact {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -49,7 +51,7 @@ param(
         [Parameter(Mandatory = $false)][String] $____ParamsBase64
     )
 
-    if ((new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    if ((new-object -ErrorAction Stop System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
         if ($env:USERNAME -eq " $($env:COMPUTERNAME)$" ) {
             $private:userInfo = " (as SYSTEM)"
         }
@@ -101,8 +103,8 @@ param(
            ;  $exitCodeMsg = " (exit code $WELASTEXITCODE)"
         }
         Write-WELog " === Failed$exitCodeMsg to run $private:scriptPath with arguments: $private:paramsJson" " INFO"
-        Write-Host -Object $_
-        Write-Host -Object $_.ScriptStackTrace
+        Write-Information -Object $_
+        Write-Information -Object $_.ScriptStackTrace
         ____ExitOne
     }
 }

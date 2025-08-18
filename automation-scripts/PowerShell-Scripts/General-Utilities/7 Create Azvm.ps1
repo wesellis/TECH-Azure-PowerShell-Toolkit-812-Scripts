@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     7 Create Azvm
 
@@ -76,7 +76,7 @@ $newAzVmSplat = @{
     # Tag                 = $WETag #causing an error maybe need to be added later
 }
 
-New-AzVm @newAzVmSplat
+New-AzVm -ErrorAction Stop @newAzVmSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

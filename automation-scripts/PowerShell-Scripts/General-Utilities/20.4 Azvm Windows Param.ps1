@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     20.4 Azvm Windows Param
 
@@ -35,7 +35,7 @@
 
 
 $WEHelpers2 = "$WEPsScriptRoot\Helpers\"
-New-IaaCAzVMWindows @NewIaaCAzVMWindowsSplat
+New-IaaCAzVMWindows -ErrorAction Stop @NewIaaCAzVMWindowsSplat
 
 
 $WEErrorActionPreference = " Stop"
@@ -206,7 +206,7 @@ $WENewIaaCAzVMWindowsSplat = @{
 
 
 }
-New-IaaCAzVMWindows @NewIaaCAzVMWindowsSplat
+New-IaaCAzVMWindows -ErrorAction Stop @NewIaaCAzVMWindowsSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

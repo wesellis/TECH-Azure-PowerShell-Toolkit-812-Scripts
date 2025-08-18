@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Public IP Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,17 +24,17 @@ param (
     [string]$Sku = "Standard"
 )
 
-Write-Host "Creating Public IP: $PublicIpName"
+Write-Information "Creating Public IP: $PublicIpName"
 
-$PublicIp = New-AzPublicIpAddress `
+$PublicIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $PublicIpName `
     -Location $Location `
     -AllocationMethod $AllocationMethod `
     -Sku $Sku
 
-Write-Host "Public IP created successfully:"
-Write-Host "  Name: $($PublicIp.Name)"
-Write-Host "  IP Address: $($PublicIp.IpAddress)"
-Write-Host "  Allocation: $($PublicIp.PublicIpAllocationMethod)"
-Write-Host "  SKU: $($PublicIp.Sku.Name)"
+Write-Information "Public IP created successfully:"
+Write-Information "  Name: $($PublicIp.Name)"
+Write-Information "  IP Address: $($PublicIp.IpAddress)"
+Write-Information "  Allocation: $($PublicIp.PublicIpAllocationMethod)"
+Write-Information "  SKU: $($PublicIp.Sku.Name)"

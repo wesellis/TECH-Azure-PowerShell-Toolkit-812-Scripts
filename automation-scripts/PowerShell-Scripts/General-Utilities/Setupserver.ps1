@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setupserver
 
@@ -35,7 +35,7 @@
 
 
 mkdir c:\temp -Force
-Get-Date > c:\temp\hello.txt
+Get-Date -ErrorAction Stop > c:\temp\hello.txt
 
 
 dnscmd.exe /Config $args[0] /AllowUpdate 1

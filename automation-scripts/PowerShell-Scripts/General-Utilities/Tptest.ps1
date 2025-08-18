@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Tptest
 
@@ -95,8 +95,8 @@ else {$srmode = " -r" }
 
 & " $WENTttcpPath\NTttcp.exe" $srmode $dtmode -l $WEBufferSize -m " $WEThreadNumber,*,$WEReceiverIP" -a $WEOverlappedBuffers -t $WEDuration -xml $output | Out-Null
 ; 
-$tp =([xml](Get-Content $output)).ntttcps.throughput
-Write-Host -NoNewline ($tp | ? { $_.metric -match 'MB/s'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'mbps'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'buffers/s'} | % {$_.'#text'})
+$tp =([xml](Get-Content -ErrorAction Stop $output)).ntttcps.throughput
+Write-Information -NoNewline ($tp | ? { $_.metric -match 'MB/s'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'mbps'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'buffers/s'} | % {$_.'#text'})
 
 
 

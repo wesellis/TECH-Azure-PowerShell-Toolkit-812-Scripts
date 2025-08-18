@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Role Assignment Manager
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -106,7 +107,7 @@ try {
     }
     
     # Create new role assignment
-   ;  $WEAssignment = New-AzRoleAssignment `
+   ;  $WEAssignment = New-AzRoleAssignment -ErrorAction Stop `
         -ObjectId $WEPrincipalId `
         -RoleDefinitionName $WERoleDefinitionName `
         -Scope $WEScope

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Bastion Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -109,7 +110,7 @@ if (-not $WEBastionSubnet) {
 
 
 $WEBastionIpName = " $WEBastionName-pip"; 
-$WEBastionIp = New-AzPublicIpAddress `
+$WEBastionIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEBastionIpName `
     -Location $WELocation `
@@ -118,7 +119,7 @@ $WEBastionIp = New-AzPublicIpAddress `
 
 
 Write-WELog " Creating Bastion host (this may take 10-15 minutes)..." " INFO" ; 
-$WEBastion = New-AzBastion `
+$WEBastion = New-AzBastion -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEBastionName `
     -PublicIpAddress $WEBastionIp `

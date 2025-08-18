@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Enterprise FinOps automation engine with AI-powered cost optimization and automated remediation.
 
@@ -79,10 +79,10 @@ class FinOpsEngine {
     }
     
     [void]AnalyzeCosts([string]$SubscriptionId) {
-        Write-Host "Analyzing costs for subscription: $SubscriptionId" -ForegroundColor Yellow
+        Write-Information "Analyzing costs for subscription: $SubscriptionId"
         
         # Get cost data for last 30 days
-        $endDate = Get-Date
+        $endDate = Get-Date -ErrorAction Stop
         $startDate = $endDate.AddDays(-30)
         
         $query = @{
@@ -139,7 +139,7 @@ class FinOpsEngine {
         $unusedResources = @()
         
         # Check for unused disks
-        $disks = Get-AzDisk
+        $disks = Get-AzDisk -ErrorAction Stop
         foreach ($disk in $disks) {
             if ($disk.DiskState -eq "Unattached") {
                 $unusedResources += @{
@@ -154,7 +154,7 @@ class FinOpsEngine {
         }
         
         # Check for unused public IPs
-        $publicIps = Get-AzPublicIpAddress
+        $publicIps = Get-AzPublicIpAddress -ErrorAction Stop
         foreach ($ip in $publicIps) {
             if (!$ip.IpConfiguration) {
                 $unusedResources += @{
@@ -189,10 +189,10 @@ class FinOpsEngine {
         $rightSizingRecommendations = @()
         
         # Analyze VM performance metrics
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         foreach ($vm in $vms) {
             # Get CPU metrics for last 7 days
-            $endTime = Get-Date
+            $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddDays(-7)
             
             $metrics = Get-AzMetric -ResourceId $vm.Id -MetricName "Percentage CPU" `
@@ -241,7 +241,7 @@ class FinOpsEngine {
         $riRecommendations = @()
         
         # Analyze steady-state workloads
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         $vmsBySize = $vms | Group-Object -Property { $_.HardwareProfile.VmSize }
         
         foreach ($group in $vmsBySize) {
@@ -263,7 +263,7 @@ class FinOpsEngine {
     [array]IdentifyAutoShutdownCandidates([string]$SubscriptionId) {
         $shutdownCandidates = @()
         
-        $vms = Get-AzVM
+        $vms = Get-AzVM -ErrorAction Stop
         foreach ($vm in $vms) {
             $tags = $vm.Tags
             
@@ -290,7 +290,7 @@ class FinOpsEngine {
         $storageOptimizations = @()
         
         # Analyze storage accounts
-        $storageAccounts = Get-AzStorageAccount
+        $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
         foreach ($storage in $storageAccounts) {
             # Check for lifecycle management
             $lifecycle = Get-AzStorageAccountManagementPolicy -ResourceGroupName $storage.ResourceGroupName `
@@ -328,7 +328,7 @@ class FinOpsEngine {
         $networkOptimizations = @()
         
         # Check for unused Application Gateways
-        $appGateways = Get-AzApplicationGateway
+        $appGateways = Get-AzApplicationGateway -ErrorAction Stop
         foreach ($gw in $appGateways) {
             if ($gw.BackendAddressPools.Count -eq 0 -or 
                 $gw.BackendAddressPools[0].BackendAddresses.Count -eq 0) {
@@ -344,7 +344,7 @@ class FinOpsEngine {
         }
         
         # Check for ExpressRoute circuits utilization
-        $circuits = Get-AzExpressRouteCircuit
+        $circuits = Get-AzExpressRouteCircuit -ErrorAction Stop
         foreach ($circuit in $circuits) {
             # This is a placeholder - actual utilization check would be more complex
             $networkOptimizations += @{
@@ -360,35 +360,35 @@ class FinOpsEngine {
     }
     
     [void]ImplementOptimizations([hashtable]$Optimizations) {
-        Write-Host "`nImplementing optimizations..." -ForegroundColor Green
+        Write-Information "`nImplementing optimizations..."
         
         foreach ($category in $Optimizations.Keys) {
-            Write-Host "`nProcessing $category optimizations:" -ForegroundColor Yellow
+            Write-Information "`nProcessing $category optimizations:"
             
             foreach ($optimization in $Optimizations[$category]) {
                 if ($global:WhatIfPreference) {
-                    Write-Host "What if: $($optimization.Action) for $($optimization.Name)" -ForegroundColor Cyan
+                    Write-Information "What if: $($optimization.Action) for $($optimization.Name)"
                 } else {
                     switch ($optimization.Type) {
                         "Disk" {
                             if ($optimization.Action -eq "Delete unattached disk") {
                                 Remove-AzDisk -ResourceGroupName $optimization.ResourceGroup `
                                     -DiskName $optimization.Name -Force
-                                Write-Host "Deleted disk: $($optimization.Name)" -ForegroundColor Green
+                                Write-Information "Deleted disk: $($optimization.Name)"
                             }
                         }
                         "PublicIP" {
                             if ($optimization.Action -eq "Delete unused public IP") {
                                 Remove-AzPublicIpAddress -Name $optimization.Name `
                                     -ResourceGroupName $optimization.ResourceGroup -Force
-                                Write-Host "Deleted public IP: $($optimization.Name)" -ForegroundColor Green
+                                Write-Information "Deleted public IP: $($optimization.Name)"
                             }
                         }
                         "VM" {
                             if ($optimization.Action -eq "Deallocate stopped VM") {
                                 Stop-AzVM -Name $optimization.Name `
                                     -ResourceGroupName $optimization.ResourceGroup -Force
-                                Write-Host "Deallocated VM: $($optimization.Name)" -ForegroundColor Green
+                                Write-Information "Deallocated VM: $($optimization.Name)"
                             }
                         }
                     }
@@ -404,7 +404,7 @@ class FinOpsEngine {
         # In a real implementation, this would use Azure ML or more sophisticated algorithms
         
         $predictions = @()
-        $currentDate = Get-Date
+        $currentDate = Get-Date -ErrorAction Stop
         
         for ($i = 1; $i -le $DaysAhead; $i++) {
             $predictedDate = $currentDate.AddDays($i)
@@ -421,7 +421,8 @@ class FinOpsEngine {
     }
 }
 
-function Generate-FinOpsReport {
+[CmdletBinding()]
+function New-FinOpsReport {
     param(
         [FinOpsEngine]$Engine,
         [hashtable]$Optimizations
@@ -577,19 +578,19 @@ function Generate-FinOpsReport {
 
 # Main execution
 try {
-    Write-Host "Azure FinOps Automation Engine v1.0" -ForegroundColor Cyan
-    Write-Host "===================================" -ForegroundColor Cyan
+    Write-Information "Azure FinOps Automation Engine v1.0"
+    Write-Information "==================================="
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Information "Connecting to Azure..."
         Connect-AzAccount
     }
     
     # Get subscriptions to analyze
     if (!$SubscriptionId) {
-        $subscriptions = Get-AzSubscription | Where-Object { $_.State -eq "Enabled" }
+        $subscriptions = Get-AzSubscription -ErrorAction Stop | Where-Object { $_.State -eq "Enabled" }
         $SubscriptionId = $subscriptions.Id
     }
     
@@ -598,7 +599,7 @@ try {
     $allOptimizations = @{}
     
     foreach ($subId in $SubscriptionId) {
-        Write-Host "`nAnalyzing subscription: $subId" -ForegroundColor Yellow
+        Write-Information "`nAnalyzing subscription: $subId"
         Set-AzContext -SubscriptionId $subId | Out-Null
         
         # Analyze costs
@@ -617,11 +618,11 @@ try {
     }
     
     # Display summary
-    Write-Host "`n=== FinOps Analysis Summary ===" -ForegroundColor Green
+    Write-Information "`n=== FinOps Analysis Summary ==="
     foreach ($category in $allOptimizations.Keys) {
         $count = $allOptimizations[$category].Count
         if ($count -gt 0) {
-            Write-Host "$category : $count opportunities found" -ForegroundColor Yellow
+            Write-Information "$category : $count opportunities found"
         }
     }
     
@@ -634,33 +635,33 @@ try {
         }
     }
     
-    Write-Host "`nTotal Potential Monthly Savings: `$$([math]::Round($engine.TotalSavings, 2))" -ForegroundColor Green
-    Write-Host "Annual Savings Potential: `$$([math]::Round($engine.TotalSavings * 12, 2))" -ForegroundColor Green
+    Write-Information "`nTotal Potential Monthly Savings: `$$([math]::Round($engine.TotalSavings, 2))"
+    Write-Information "Annual Savings Potential: `$$([math]::Round($engine.TotalSavings * 12, 2))"
     
     # Generate predictions if enabled
     if ($EnableMLPredictions) {
-        Write-Host "`nGenerating cost predictions..." -ForegroundColor Yellow
+        Write-Information "`nGenerating cost predictions..."
         $engine.Predictions = $engine.PredictCosts(30)
     }
     
     # Implement optimizations based on mode
     if ($OptimizationMode -eq "AutoRemediate") {
-        Write-Host "`n=== Auto-Remediation Mode ===" -ForegroundColor Red
+        Write-Information "`n=== Auto-Remediation Mode ==="
         $response = Read-Host "Are you sure you want to automatically implement optimizations? (yes/no)"
         
         if ($response -eq "yes") {
             $engine.ImplementOptimizations($allOptimizations)
-            Write-Host "`nOptimizations implemented successfully!" -ForegroundColor Green
+            Write-Information "`nOptimizations implemented successfully!"
         } else {
-            Write-Host "Auto-remediation cancelled." -ForegroundColor Yellow
+            Write-Information "Auto-remediation cancelled."
         }
     }
     
     # Auto-shutdown configuration
     if ($AutoShutdownNonProd) {
-        Write-Host "`nConfiguring auto-shutdown for non-production resources..." -ForegroundColor Yellow
+        Write-Information "`nConfiguring auto-shutdown for non-production resources..."
         foreach ($candidate in $allOptimizations["AutoShutdown"]) {
-            Write-Host "Configuring shutdown for: $($candidate.Name)" -ForegroundColor Cyan
+            Write-Information "Configuring shutdown for: $($candidate.Name)"
             # Implementation would go here
         }
     }
@@ -669,12 +670,12 @@ try {
     $report = Generate-FinOpsReport -Engine $engine -Optimizations $allOptimizations
     $report | Out-File -FilePath $OutputPath -Encoding UTF8
     
-    Write-Host "`nFinOps report generated: $OutputPath" -ForegroundColor Green
+    Write-Information "`nFinOps report generated: $OutputPath"
     
     # Cost threshold alert
     if ($engine.TotalSavings -gt $CostThreshold) {
-        Write-Host "`n⚠️  ALERT: Potential savings exceed threshold of `$$CostThreshold!" -ForegroundColor Red
-        Write-Host "Immediate action recommended to reduce costs." -ForegroundColor Red
+        Write-Information "`n⚠️  ALERT: Potential savings exceed threshold of `$$CostThreshold!"
+        Write-Information "Immediate action recommended to reduce costs."
     }
     
 } catch {

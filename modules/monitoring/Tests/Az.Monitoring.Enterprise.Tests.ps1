@@ -1,4 +1,4 @@
-#Requires -Module Pester
+﻿#Requires -Module Pester
 <#
 .SYNOPSIS
     Tests for Az.Monitoring.Enterprise module
@@ -12,7 +12,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.Monitoring.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzOperationalInsightsWorkspace {
+    Mock Get-AzOperationalInsightsWorkspace -ErrorAction Stop {
         [PSCustomObject]@{
             Name = "TestWorkspace"
             ResourceGroupName = "TestRG"
@@ -24,7 +24,7 @@ BeforeAll {
         }
     }
     
-    Mock New-AzOperationalInsightsWorkspace {
+    Mock New-AzOperationalInsightsWorkspace -ErrorAction Stop {
         [PSCustomObject]@{
             Name = "TestWorkspace"
             ResourceGroupName = "TestRG"
@@ -33,7 +33,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzMetricDefinition {
+    Mock Get-AzMetricDefinition -ErrorAction Stop {
         @(
             [PSCustomObject]@{
                 Name = [PSCustomObject]@{Value = "TestMetric"; LocalizedValue = "Test Metric"}
@@ -54,7 +54,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzResourceGroup {
+    Mock Get-AzResourceGroup -ErrorAction Stop {
         [PSCustomObject]@{
             ResourceGroupName = "TestRG"
             Location = "eastus"
@@ -66,7 +66,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     
     Context "Module Loading" {
         It "Should have exported functions" {
-            $module = Get-Module Az.Monitoring.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.Monitoring.Enterprise
             $module.ExportedFunctions.Count | Should -BeGreaterThan 0
         }
         
@@ -88,7 +88,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
                 'Get-AzMonitoringHealth'
             )
             
-            $module = Get-Module Az.Monitoring.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.Monitoring.Enterprise
             foreach ($function in $expectedFunctions) {
                 $module.ExportedFunctions.Keys | Should -Contain $function
             }
@@ -98,10 +98,10 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "New-AzLogAnalyticsWorkspaceAdvanced" {
         
         BeforeEach {
-            Mock Set-AzOperationalInsightsIntelligencePack { }
-            Mock New-AzOperationalInsightsWindowsPerformanceCounterDataSource { }
-            Mock New-AzOperationalInsightsWindowsEventDataSource { }
-            Mock New-AzOperationalInsightsLinuxPerformanceCounterDataSource { }
+            Mock Set-AzOperationalInsightsIntelligencePack -ErrorAction Stop { }
+            Mock New-AzOperationalInsightsWindowsPerformanceCounterDataSource -ErrorAction Stop { }
+            Mock New-AzOperationalInsightsWindowsEventDataSource -ErrorAction Stop { }
+            Mock New-AzOperationalInsightsLinuxPerformanceCounterDataSource -ErrorAction Stop { }
         }
         
         It "Should create workspace with default settings" {
@@ -127,9 +127,9 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "Set-AzLogAnalyticsDataSources" {
         
         BeforeEach {
-            Mock New-AzOperationalInsightsWindowsPerformanceCounterDataSource { }
-            Mock New-AzOperationalInsightsWindowsEventDataSource { }
-            Mock New-AzOperationalInsightsLinuxPerformanceCounterDataSource { }
+            Mock New-AzOperationalInsightsWindowsPerformanceCounterDataSource -ErrorAction Stop { }
+            Mock New-AzOperationalInsightsWindowsEventDataSource -ErrorAction Stop { }
+            Mock New-AzOperationalInsightsLinuxPerformanceCounterDataSource -ErrorAction Stop { }
         }
         
         It "Should configure Windows performance counters" {
@@ -170,7 +170,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
         
         It "Should use correct timestamp" {
-            $testTime = Get-Date
+            $testTime = Get-Date -ErrorAction Stop
             $metric = New-AzCustomMetric -ResourceId "/subscriptions/xxx/resource" -MetricName "TestMetric" -Value 100 -Timestamp $testTime
             
             $expectedTime = $testTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
@@ -181,7 +181,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "New-AzMetricAlertRuleV2Advanced" {
         
         BeforeEach {
-            Mock New-AzMetricAlertRuleV2Criteria {
+            Mock New-AzMetricAlertRuleV2Criteria -ErrorAction Stop {
                 [PSCustomObject]@{
                     MetricName = "Percentage CPU"
                     TimeAggregation = "Average"
@@ -219,11 +219,11 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "Deploy-AzMonitorDashboard" {
         
         BeforeEach {
-            Mock New-AzResourceGroupDeployment { }
+            Mock New-AzResourceGroupDeployment -ErrorAction Stop { }
             Mock Test-Path { $true }
-            Mock Get-Content { '{"lenses": {}, "metadata": {}}' }
+            Mock Get-Content -ErrorAction Stop { '{"lenses": {}, "metadata": {}}' }
             Mock Out-File { }
-            Mock Remove-Item { }
+            Mock Remove-Item -ErrorAction Stop { }
         }
         
         It "Should deploy dashboard from template file" {
@@ -249,14 +249,14 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "New-AzActionGroupAdvanced" {
         
         BeforeEach {
-            Mock New-AzActionGroupReceiver {
+            Mock New-AzActionGroupReceiver -ErrorAction Stop {
                 param($Name, [switch]$EmailReceiver, [switch]$SmsReceiver, [switch]$WebhookReceiver, $EmailAddress, $CountryCode, $PhoneNumber, $ServiceUri)
                 [PSCustomObject]@{
                     Name = $Name
                     Type = if ($EmailReceiver) { "Email" } elseif ($SmsReceiver) { "SMS" } else { "Webhook" }
                 }
             }
-            Mock Set-AzActionGroup {
+            Mock Set-AzActionGroup -ErrorAction Stop {
                 [PSCustomObject]@{
                     Name = "TestActionGroup"
                     Id = "/subscriptions/xxx/resourceGroups/TestRG/providers/microsoft.insights/actionGroups/TestActionGroup"
@@ -296,16 +296,16 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "Export-AzMonitoringConfiguration" {
         
         BeforeEach {
-            Mock Get-AzMetricAlertRuleV2 {
+            Mock Get-AzMetricAlertRuleV2 -ErrorAction Stop {
                 @([PSCustomObject]@{Name="Alert1"; Severity=3})
             }
-            Mock Get-AzScheduledQueryRule {
+            Mock Get-AzScheduledQueryRule -ErrorAction Stop {
                 @([PSCustomObject]@{Name="QueryAlert1"})
             }
-            Mock Get-AzActionGroup {
+            Mock Get-AzActionGroup -ErrorAction Stop {
                 @([PSCustomObject]@{Name="AG1"; EmailReceivers=@()})
             }
-            Mock Get-AzResource {
+            Mock Get-AzResource -ErrorAction Stop {
                 @([PSCustomObject]@{Name="Dashboard1"; ResourceId="/subscriptions/xxx/dashboard1"})
             }
             Mock Out-File { }
@@ -338,13 +338,13 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
     Context "Get-AzMonitoringHealth" {
         
         BeforeEach {
-            Mock Get-AzMetricAlertRuleV2 {
+            Mock Get-AzMetricAlertRuleV2 -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{Name="Alert1"; Enabled=$true},
                     [PSCustomObject]@{Name="Alert2"; Enabled=$false}
                 )
             }
-            Mock Get-AzActionGroup {
+            Mock Get-AzActionGroup -ErrorAction Stop {
                 @([PSCustomObject]@{
                     Name="AG1"
                     EmailReceivers=@([PSCustomObject]@{Name="Email1"})
@@ -389,7 +389,7 @@ Describe "Helper Function Tests" {
     Context "Get-DefaultDashboardTemplate" {
         
         It "Should return valid dashboard template" {
-            $template = Get-DefaultDashboardTemplate
+            $template = Get-DefaultDashboardTemplate -ErrorAction Stop
             
             $template | Should -Not -BeNullOrEmpty
             $template.lenses | Should -Not -BeNullOrEmpty
@@ -397,7 +397,7 @@ Describe "Helper Function Tests" {
         }
         
         It "Should include markdown tile" {
-            $template = Get-DefaultDashboardTemplate
+            $template = Get-DefaultDashboardTemplate -ErrorAction Stop
             
             $firstPart = $template.lenses."0".parts."0"
             $firstPart.metadata.type | Should -Match "MarkdownPart"

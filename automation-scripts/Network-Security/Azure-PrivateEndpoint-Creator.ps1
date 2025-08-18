@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Private Endpoint Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -27,29 +27,29 @@ param (
     [string]$Location
 )
 
-Write-Host "Creating Private Endpoint: $EndpointName"
+Write-Information "Creating Private Endpoint: $EndpointName"
 
 # Create private endpoint
-$PrivateLinkServiceConnection = New-AzPrivateLinkServiceConnection `
+$PrivateLinkServiceConnection = New-AzPrivateLinkServiceConnection -ErrorAction Stop `
     -Name "$EndpointName-connection" `
     -PrivateLinkServiceId $TargetResourceId `
     -GroupId $GroupId
 
-$PrivateEndpoint = New-AzPrivateEndpoint `
+$PrivateEndpoint = New-AzPrivateEndpoint -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $EndpointName `
     -Location $Location `
     -Subnet @{Id=$SubnetId} `
     -PrivateLinkServiceConnection $PrivateLinkServiceConnection
 
-Write-Host "✅ Private Endpoint created successfully:"
-Write-Host "  Name: $($PrivateEndpoint.Name)"
-Write-Host "  Location: $($PrivateEndpoint.Location)"
-Write-Host "  Target Resource: $($TargetResourceId.Split('/')[-1])"
-Write-Host "  Group ID: $GroupId"
-Write-Host "  Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
+Write-Information "✅ Private Endpoint created successfully:"
+Write-Information "  Name: $($PrivateEndpoint.Name)"
+Write-Information "  Location: $($PrivateEndpoint.Location)"
+Write-Information "  Target Resource: $($TargetResourceId.Split('/')[-1])"
+Write-Information "  Group ID: $GroupId"
+Write-Information "  Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Configure DNS records for the private endpoint"
-Write-Host "2. Update network security groups if needed"
-Write-Host "3. Test connectivity from the virtual network"
+Write-Information "`nNext Steps:"
+Write-Information "1. Configure DNS records for the private endpoint"
+Write-Information "2. Update network security groups if needed"
+Write-Information "3. Test connectivity from the virtual network"

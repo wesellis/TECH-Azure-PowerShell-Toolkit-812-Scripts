@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Dotnet Install
 
@@ -176,7 +176,7 @@ function WE-Say($str) {
         Write-WELog " dotnet-install: $str" " INFO"
     }
     catch {
-        # Some platforms cannot utilize Write-Host (Azure Functions, for instance). Fall back to Write-Output
+        # Some platforms cannot utilize Write-Information (Azure Functions, for instance). Fall back to Write-Output
         Write-Output " dotnet-install: $str"
     }
 }
@@ -325,17 +325,17 @@ function WE-GetHTTPResponse([Uri] $WEUri)
             }
 
             if($WEProxyAddress) {
-               ;  $WEHttpClientHandler = New-Object System.Net.Http.HttpClientHandler
-                $WEHttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{
+               ;  $WEHttpClientHandler = New-Object -ErrorAction Stop System.Net.Http.HttpClientHandler
+                $WEHttpClientHandler.Proxy =  New-Object -ErrorAction Stop System.Net.WebProxy -Property @{
                     Address=$WEProxyAddress;
                     UseDefaultCredentials=$WEProxyUseDefaultCredentials;
                     BypassList = $WEProxyBypassList;
                 }
-                $WEHttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $WEHttpClientHandler
+                $WEHttpClient = New-Object -ErrorAction Stop System.Net.Http.HttpClient -ArgumentList $WEHttpClientHandler
             }
             else {
 
-               ;  $WEHttpClient = New-Object System.Net.Http.HttpClient
+               ;  $WEHttpClient = New-Object -ErrorAction Stop System.Net.Http.HttpClient
             }
             # Default timeout for HttpClient is 100s.  For a 50 MB download this assumes 500 KB/s average, any less will time out
             # 20 minutes allows it to work over much slower connections.
@@ -377,7 +377,7 @@ function WE-GetHTTPResponse([Uri] $WEUri)
             throw $WEDownloadException
         }
         finally {
-             if ($WEHttpClient -ne $null) {
+             if ($null -ne $WEHttpClient) {
                 $WEHttpClient.Dispose()
             }
         }
@@ -467,7 +467,7 @@ function WE-Parse-Jsonfile-For-Version([Parameter(Mandatory=$false)]
     else {
         throw " Unable to find the SDK node in '$WEJSonFile'"
     }
-    If ($WEVersion -eq $null) {
+    If ($null -eq $WEVersion) {
         throw " Unable to find the SDK:version node in '$WEJSonFile'"
     }
     return $WEVersion
@@ -719,7 +719,7 @@ function WE-Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([
     $ret = @()
     foreach ($entry in $WEZip.Entries) {
         $dir = Get-Path-Prefix-With-Version $entry.FullName
-        if ($dir -ne $null) {
+        if ($null -ne $dir) {
             $path = Get-Absolute-Path $(Join-Path -Path $WEOutPath -ChildPath $dir)
             if (-Not (Test-Path $path -PathType Container)) {
                 $ret = $ret + $dir
@@ -727,7 +727,7 @@ function WE-Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([
         }
     }
 
-   ;  $ret = $ret | Sort-Object | Get-Unique
+   ;  $ret = $ret | Sort-Object | Get-Unique -ErrorAction Stop
 
    ;  $values = ($ret | foreach { " $_" }) -join " ;"
     Say-Verbose " Directories to unpack: $values"
@@ -756,7 +756,7 @@ function WE-Extract-Dotnet-Package([Parameter(Mandatory=$false)]
 
         foreach ($entry in $WEZip.Entries) {
             $WEPathWithVersion = Get-Path-Prefix-With-Version $entry.FullName
-            if (($WEPathWithVersion -eq $null) -Or ($WEDirectoriesToUnpack -contains $WEPathWithVersion)) {
+            if (($null -eq $WEPathWithVersion) -Or ($WEDirectoriesToUnpack -contains $WEPathWithVersion)) {
                 $WEDestinationPath = Get-Absolute-Path $(Join-Path -Path $WEOutPath -ChildPath $entry.FullName)
                 $WEDestinationDir = Split-Path -Parent $WEDestinationPath
                 $WEOverrideFiles=$WEOverrideNonVersionedFiles -Or (-Not (Test-Path $WEDestinationPath))
@@ -768,7 +768,7 @@ function WE-Extract-Dotnet-Package([Parameter(Mandatory=$false)]
         }
     }
     finally {
-        if ($WEZip -ne $null) {
+        if ($null -ne $WEZip) {
             $WEZip.Dispose()
         }
     }
@@ -801,7 +801,7 @@ function WE-DownloadFile($WESource, [Parameter(Mandatory=$false)]
         $WEFile.Close()
     }
     finally {
-        if ($WEStream -ne $null) {
+        if ($null -ne $WEStream) {
             $WEStream.Dispose()
         }
     }
@@ -810,7 +810,7 @@ function WE-DownloadFile($WESource, [Parameter(Mandatory=$false)]
 function WE-SafeRemoveFile($WEPath) {
     try {
         if (Test-Path $WEPath) {
-            Remove-Item $WEPat -Forceh -Force
+            Remove-Item -ErrorAction Stop $WEPat -Forceh -Force
             Say-Verbose " The temporary file `" $WEPath`" was removed."
         }
         else
@@ -925,7 +925,7 @@ if ((!$WEOverrideVersion) -and ($isAssetInstalled)) {
 
 New-Item -ItemType Directory -Force -Path $WEInstallRoot | Out-Null
 ; 
-$installDrive = $((Get-Item $WEInstallRoot).PSDrive.Name);
+$installDrive = $((Get-Item -ErrorAction Stop $WEInstallRoot).PSDrive.Name);
 $diskInfo = Get-PSDrive -Name $installDrive
 if ($diskInfo.Free / 1MB -le 100) {
     throw " There is not enough disk space on drive ${installDrive}:"

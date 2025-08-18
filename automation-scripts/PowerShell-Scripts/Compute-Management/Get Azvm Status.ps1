@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Get Azvm Status
 
@@ -37,7 +37,8 @@
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-function WE-Get-ARMVM {
+[CmdletBinding()]
+function WE-Get-ARMVM -ErrorAction Stop {
 
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -57,7 +58,7 @@ $ErrorActionPreference = " Stop"
 
         try {
         
-            $WERGs = Get-AzResourceGroup
+            $WERGs = Get-AzResourceGroup -ErrorAction Stop
             foreach ($WERG in $WERGs) {
 
                 if ($WERG.ResourceGroupName -eq $WERGNAME) {
@@ -79,8 +80,9 @@ $ErrorActionPreference = " Stop"
             }
         }
         catch {
-            
-        }
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
         finally {
             
         }

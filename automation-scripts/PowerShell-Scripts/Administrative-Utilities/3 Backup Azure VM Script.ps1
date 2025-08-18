@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     3 Backup Azure Vm Script
 
@@ -34,9 +34,11 @@
     Requires appropriate permissions and modules
 
 
-function WE-New-AzureVMBackup {
+[CmdletBinding()]
+function WE-New-AzureVMBackup -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -56,7 +58,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -123,7 +125,7 @@ param(
             ResourceGroup = $WEResourceGroupName
             VaultName = $WEVaultName
             BackupJobId = $backupJob.JobId
-            StartTime = Get-Date
+            StartTime = Get-Date -ErrorAction Stop
             Status = $backupJob.Status
             RetentionDays = $WERetentionDays
         }
@@ -172,7 +174,7 @@ try {
     
     # Create backup
     Write-WELog " `nCreating backup..." " INFO" -ForegroundColor Yellow
-   ;  $backup = New-AzureVMBackup @backupParams
+   ;  $backup = New-AzureVMBackup -ErrorAction Stop @backupParams
     
     Write-WELog " `nBackup operation completed!" " INFO" -ForegroundColor Green
     Write-WELog " Backup Job ID: $($backup.BackupJobId)" " INFO" -ForegroundColor Green

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Test Localsample
 
@@ -107,7 +107,7 @@ $mainTemplateFilenameJson = $vars[" MAINTEMPLATE_FILENAME_JSON" ]
 Assert-NotEmptyOrNull $mainTemplateFilenameJson " mainTemplateFilenameJson"
 
 
-Write-host " Validating deployment file"
+Write-Information " Validating deployment file"
 
 $buildHostOutput = & $WEPSScriptRoot/Validate-DeploymentFile.ps1 `
     -SampleFolder $WESampleFolder `
@@ -192,10 +192,10 @@ $isPortalSample = $vars[" IsPortalSample" ] -eq " true"
 
 
 if ($null -ne $WECompiledJsonFilename -and (Test-Path $WECompiledJsonFilename)) {
-    Remove-Item $WECompiledJsonFilenam -Forcee -Force
+    Remove-Item -ErrorAction Stop $WECompiledJsonFilenam -Forcee -Force
 }
 
-Write-host " Validation complete."
+Write-Information " Validation complete."
 ; 
 $fixesMade = $fixedReadme
 if ($fixedReadme) {

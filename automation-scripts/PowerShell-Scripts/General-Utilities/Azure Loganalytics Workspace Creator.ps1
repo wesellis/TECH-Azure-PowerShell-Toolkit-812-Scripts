@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Loganalytics Workspace Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -97,7 +98,7 @@ param(
 
 Write-WELog " Creating Log Analytics Workspace: $WEWorkspaceName" " INFO"
 ; 
-$WEWorkspace = New-AzOperationalInsightsWorkspace `
+$WEWorkspace = New-AzOperationalInsightsWorkspace -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEWorkspaceName `
     -Location $WELocation `

@@ -1,9 +1,9 @@
-# Commit and push the consolidated Azure Enterprise Toolkit
-Write-Host "Committing Azure Enterprise Toolkit to GitHub..." -ForegroundColor Green
+﻿# Commit and push the consolidated Azure Enterprise Toolkit
+Write-Information "Committing Azure Enterprise Toolkit to GitHub..."
 
 # Add all files
 git add .
-Write-Host "Added all files to staging" -ForegroundColor Green
+Write-Information "Added all files to staging"
 
 # Commit with comprehensive message
 $commitMessage = @"
@@ -36,12 +36,12 @@ Ready for enterprise Azure administration!
 "@
 
 git commit -m $commitMessage
-Write-Host "Committed with comprehensive message" -ForegroundColor Green
+Write-Information "Committed with comprehensive message"
 
 # Push to GitHub
 git push
-Write-Host "Pushed to GitHub successfully!" -ForegroundColor Green
+Write-Information "Pushed to GitHub successfully!"
 
-Write-Host "`n🎉 Azure Enterprise Toolkit is now live on GitHub!" -ForegroundColor Cyan
-Write-Host "🌐 View at: https://github.com/wesellis/Azure-Enterprise-Toolkit" -ForegroundColor Blue
-Write-Host "⭐ Don't forget to star your own repository!" -ForegroundColor Yellow
+Write-Information "`n🎉 Azure Enterprise Toolkit is now live on GitHub!"
+Write-Information "🌐 View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
+Write-Information "⭐ Don't forget to star your own repository!"

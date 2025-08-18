@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deleteresourcegroups Parent
 
@@ -83,13 +83,13 @@ try
     $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
 
 
-    if($WEVMRGList -ne $null)
+    if($null -ne $WEVMRGList)
     {
         $WEResources=@()
         foreach($WEResource in $WEVMRGList)
         {
-            $checkRGname = Get-AzureRmResourceGroup  $WEResource.Trim() -ev notPresent -ea 0  
-            if ($checkRGname -eq $null)
+            $checkRGname = Get-AzureRmResourceGroup -ErrorAction Stop  $WEResource.Trim() -ev notPresent -ea 0  
+            if ($null -eq $checkRGname)
             {
                 Write-Output " $($WEResource) is not a valid Resource Group Name. Please Verify!"
                 Write-Warning " $($WEResource) is not a valid Resource Group Name. Please Verify!"

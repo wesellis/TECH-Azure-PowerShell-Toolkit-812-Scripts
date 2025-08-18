@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Chocoinstall
 
@@ -55,7 +55,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
 
 ; 
-$sb = { iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) }
+$sb = { iex ((new-object -ErrorAction Stop net.webclient).DownloadString('https://chocolatey.org/install.ps1')) }
 Invoke-Command -ScriptBlock $sb 
 ; 
 $sb = { Set-ItemProperty -path HKLM:\Software\Microsoft\Windows\CurrentVersion\Policies\System -name EnableLua -value 0 }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setupchocolatey
 
@@ -68,7 +68,7 @@ $group.add(" WinNT://$env:ComputerName/$userName" )
 
 
 $secPassword = ConvertTo-SecureString $password -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential(" $env:COMPUTERNAME\$($username)" , $secPassword)
+$credential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential(" $env:COMPUTERNAME\$($username)" , $secPassword)
 
 
 Enable-PSRemoting -Force -SkipNetworkProfileCheck
@@ -77,7 +77,7 @@ Enable-PSRemoting -Force -SkipNetworkProfileCheck
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
 ; 
-$sb = { iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) }
+$sb = { iex ((new-object -ErrorAction Stop net.webclient).DownloadString('https://chocolatey.org/install.ps1')) }
 Invoke-Command -ScriptBlock $sb -ComputerName $env:COMPUTERNAME -Credential $credential | Out-Null
 
 ; 

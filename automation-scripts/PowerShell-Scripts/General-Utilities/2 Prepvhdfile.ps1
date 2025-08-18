@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     2 Prepvhdfile
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Test-RequiredPath {
     [CmdletBinding()
 try {
@@ -81,7 +82,7 @@ Get-VHD -Path 'PathtoYourFixedSized.VHD' | Select-Object *
 
 ; 
 $WEVHDfile = 'E:\FGC_Kroll_Lab_P2V_Clone_VHD_to_Azure\FGC-CR08NW2.VHD'; 
-$vhdSizeBytes = (Get-Item $WEVHDfile).length
+$vhdSizeBytes = (Get-Item -ErrorAction Stop $WEVHDfile).length
 
 
 
@@ -100,7 +101,7 @@ $WEScript:SYS_ENV_SYSDIRECTORY = $null
 $WEScript:SYS_ENV_SYSDIRECTORY = [System.Environment]::SystemDirectory
 
 
-write-host " Starting Sysprep with OOBE"
+Write-Information " Starting Sysprep with OOBE"
 & $WESYS_ENV_SYSDIRECTORY\sysprep\sysprep.exe /generalize /reboot /oobe
 
 

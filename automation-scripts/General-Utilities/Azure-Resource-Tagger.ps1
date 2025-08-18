@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Resource Tagger
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -15,23 +15,23 @@ param (
     [switch]$Force
 )
 
-Write-Host "Azure Resource Tagger" -ForegroundColor Cyan
-Write-Host "=====================" -ForegroundColor Cyan
+Write-Information "Azure Resource Tagger"
+Write-Information "====================="
 
 if ($Tags.Count -eq 0) {
-    Write-Host "No tags specified. Example usage:" -ForegroundColor Yellow
-    Write-Host "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}" -ForegroundColor White
+    Write-Information "No tags specified. Example usage:"
+    Write-Information "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}"
     return
 }
 
-Write-Host "Target Resource Group: $ResourceGroupName" -ForegroundColor Green
-Write-Host "Tags to Apply:" -ForegroundColor Green
+Write-Information "Target Resource Group: $ResourceGroupName"
+Write-Information "Tags to Apply:"
 foreach ($tag in $Tags.GetEnumerator()) {
-    Write-Host "  $($tag.Key): $($tag.Value)" -ForegroundColor White
+    Write-Information "  $($tag.Key): $($tag.Value)"
 }
 
 if ($WhatIf) {
-    Write-Host "`n[WHAT-IF MODE] - No changes will be made" -ForegroundColor Yellow
+    Write-Information "`n[WHAT-IF MODE] - No changes will be made"
 }
 
 # Get resources to tag
@@ -41,13 +41,13 @@ $resources = if ($ResourceType) {
     Get-AzResource -ResourceGroupName $ResourceGroupName
 }
 
-Write-Host "`nFound $($resources.Count) resources to tag" -ForegroundColor Green
+Write-Information "`nFound $($resources.Count) resources to tag"
 
 $taggedCount = 0
 foreach ($resource in $resources) {
     try {
         if ($WhatIf) {
-            Write-Host "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))" -ForegroundColor Yellow
+            Write-Information "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))"
         } else {
             # Merge existing tags with new tags
             $existingTags = $resource.Tags ?? @{}
@@ -56,7 +56,7 @@ foreach ($resource in $resources) {
             }
             
             Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$Force
-            Write-Host "  ✓ Tagged: $($resource.Name)" -ForegroundColor Green
+            Write-Information "  ✓ Tagged: $($resource.Name)"
             $taggedCount++
         }
     } catch {
@@ -65,7 +65,7 @@ foreach ($resource in $resources) {
 }
 
 if (-not $WhatIf) {
-    Write-Host "`n✓ Successfully tagged $taggedCount resources" -ForegroundColor Green
+    Write-Information "`n✓ Successfully tagged $taggedCount resources"
 }
 
-Write-Host "`nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan
+Write-Information "`nResource tagging completed at $(Get-Date)"

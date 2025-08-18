@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Update Azvmdisk
 
@@ -73,7 +73,7 @@ $setAzVMOSDiskSplat = @{
     # Windows = $true
     DiskSizeInGB = '256'
 }
-$WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+$WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
 
 
 

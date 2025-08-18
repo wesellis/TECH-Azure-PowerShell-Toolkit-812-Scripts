@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Frontenddscvmss
 
@@ -180,7 +180,7 @@ Node $nodeName
 					New-WebBinding -Name " Default Web Site" -IP " *" -Port 443 -Protocol https					
 				; 	$certWThumb = $certPath + '\' + $certObj.Thumbprint 
 					cd IIS:\SSLBindings
-					get-item $certWThumb | new-item 0.0.0.0!443
+					get-item -ErrorAction Stop $certWThumb | new-item -ErrorAction Stop 0.0.0.0!443
 
 					# Create URL Rewrite Rules
 					cd c:
@@ -201,12 +201,12 @@ Node $nodeName
   #          SetScript =  {
 		#	Import-PfxCertificate -FilePath \\XXXdemoad01\source\certs\MyWebAppCert.pfx -CertStoreLocation Cert:\LocalMachine\WebHosting
 		#	}
-  #          TestScript = " try { (Get-Item
+  #          TestScript = " try { (Get-Item -ErrorAction Stop
   #            Cert:\LocalMachine\WebHosting\
   #            C534DFBFE8DB597F22320682F7BBFBA2611DC45A 
   #            -ErrorAction Stop).HasPrivateKey} catch { `$WEFalse }"
   #          GetScript = {
-		#		@{Ensure = if ((Get-Item Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction SilentlyContinue).HasPrivateKey) 
+		#		@{Ensure = if ((Get-Item -ErrorAction Stop Cert:\LocalMachine\WebHosting\C534DFBFE8DB597F22320682F7BBFBA2611DC45A -ErrorAction SilentlyContinue).HasPrivateKey) 
   #            {'Present'} 
   #            else {'Absent'}}
 		#	  }

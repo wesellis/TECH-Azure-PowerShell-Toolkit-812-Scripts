@@ -1,4 +1,4 @@
-# Enhanced Azure Environment Cloner
+﻿# Enhanced Azure Environment Cloner
 param (
     [Parameter(Mandatory=$true)][string]$SourceResourceGroup,
     [Parameter(Mandatory=$true)][string]$TargetResourceGroup,
@@ -147,7 +147,7 @@ try {
     
     # Cleanup temporary files
     $templates.Values | ForEach-Object {
-        if (Test-Path $_) { Remove-Item $_ -Force }
+        if (Test-Path $_) { Remove-Item -ErrorAction Stop $_ -Force }
     }
     
     Write-Progress -Activity "Environment Cloning" -Completed

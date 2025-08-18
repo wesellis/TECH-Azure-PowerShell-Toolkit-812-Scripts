@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmnetworkinterface
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVMNetworkInterface {
 }
 
@@ -41,6 +42,7 @@ function WE-Invoke-AzVMNetworkInterface {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVMNetworkInterface {
 
     #Region func Add-AzVMNetworkInterface

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Validate Readme
 
@@ -112,13 +112,13 @@ $links = $WEARMVizLinks + $WEPublicLinks + $WEGovLinks
 Write-Output " Testing file: $WESampleFolder/$WEReadMeFileName"
 
 
-$readmeFile = (Get-Item $WESampleFolder).GetFiles($WEReadMeFileName)
+$readmeFile = (Get-Item -ErrorAction Stop $WESampleFolder).GetFiles($WEReadMeFileName)
 if ($readmeFile.Name -cne 'README.md') {
     Write-Error " Readme file must be named README.md (with that exact casing)."
 }
 
 $readmePath = " $WESampleFolder/$WEReadMeFileName"
-$readme = Get-Content $readmePath -Raw
+$readme = Get-Content -ErrorAction Stop $readmePath -Raw
 
 $badgesError = $false
 
@@ -153,7 +153,7 @@ foreach ($badge in $badgeLinks) {
 
 
 foreach ($link in $links) {
-    #Write-Host $link
+    #Write-Information $link
     if (-not ($readme -clike " *$link*" )) {
         Note-FixableError " Readme must have a button with the link: $link"
     }
@@ -198,11 +198,11 @@ $WEARMVizButton
             -ExpectedMarkdown $md
 
         # Back up existing
-       ;  $backup = New-TemporaryFile
+       ;  $backup = New-TemporaryFile -ErrorAction Stop
         mv $readmePath $backup
 
         # Write new readme
-        Set-Content $readmePath $fixed
+        Set-Content -ErrorAction Stop $readmePath $fixed
 
         Write-Warning " ***************************************************************************************"
         Write-Warning " Fixes have been made to $readmePath"
@@ -215,7 +215,7 @@ $WEARMVizButton
         Write-WELog " ***************************************************************************************" " INFO"
         Write-WELog " Copy and paste the following markdown to the README just under the top line's heading:" " INFO"
         Write-WELog " ***************************************************************************************" " INFO"
-        Write-Host $md
+        Write-Information $md
         Write-WELog "" " INFO"
         Write-WELog " ***************************************************************************************" " INFO"
         Write-WELog " End of copy and paste for README" " INFO"

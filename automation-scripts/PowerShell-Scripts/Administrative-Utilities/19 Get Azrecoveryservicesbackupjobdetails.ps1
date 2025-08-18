@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     19 Get Azrecoveryservicesbackupjobdetails
 
@@ -94,14 +94,14 @@ $getAzRecoveryServicesBackupJobSplat = @{
     Status = 'Completed'
     From = (Get-Date).AddDays(-30).ToUniversalTime()
 }
-$restorejob = Get-AzRecoveryServicesBackupJob @getAzRecoveryServicesBackupJobSplat | Where-Object {$_.JobId -eq '064ee552-fb05-4d1c-a2c3-80051f40b533'}
+$restorejob = Get-AzRecoveryServicesBackupJob -ErrorAction Stop @getAzRecoveryServicesBackupJobSplat | Where-Object {$_.JobId -eq '064ee552-fb05-4d1c-a2c3-80051f40b533'}
 
 ; 
 $getAzRecoveryServicesBackupJobDetailsSplat = @{
     Job = $restorejob
     VaultId = $targetVault.ID
 }; 
-$details = Get-AzRecoveryServicesBackupJobDetail @getAzRecoveryServicesBackupJobDetailsSplat
+$details = Get-AzRecoveryServicesBackupJobDetail -ErrorAction Stop @getAzRecoveryServicesBackupJobDetailsSplat
 $details | Format-List
 
 # Wesley Ellis Enterprise PowerShell Toolkit

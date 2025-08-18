@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Sysinternals Suite
 
@@ -56,7 +56,7 @@ Set-StrictMode -Version Latest
 ; 
 $WESysinternalsSuiteUrl = " https://download.sysinternals.com/files/SysinternalsSuite.zip" ;
 
-filter timestamp {" $(Get-Date ([datetime]::UtcNow) -Format G) UTC: $_" }
+filter timestamp {" $(Get-Date -ErrorAction Stop ([datetime]::UtcNow) -Format G) UTC: $_" }
 
 if (!(Test-Path -Path $WESoftwareDir)) {
     Write-Output " Path $WESoftwareDir doesn't exist. Creating new path" | timestamp

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Disable Reservedstorage
 
@@ -62,7 +62,7 @@ $onFailureBlock = {
     if (Test-Path -Path $dismLog -PathType Leaf) {
         Write-WELog " === Tail of $dismLog :" " INFO"
         try {
-            Get-Content $dismLog -Tail $logTailLines
+            Get-Content -ErrorAction Stop $dismLog -Tail $logTailLines
         }
         catch {
             LogError $_ " [WARN] Failed to read $dismLog"
@@ -79,7 +79,7 @@ try {
     #   " This operation is not supported when reserved storage is in use. Please wait for any servicing operations to complete and then try again later."
     # Leaving Reserved Storage enabled is undesirable because it could extent Dev Box provisioning time by 15-20 minutes. Therefore keep waiting for a while before failing.
     RunWithRetries -retryAttempts 10 -waitBeforeRetrySeconds 2 -exponentialBackoff -runBlock {
-       ;  $dismExitCode = (Start-Process -FilePath " DISM.exe" -ArgumentList " /Online /Set-ReservedStorageState /State:Disabled" -Wait -Passthru -NoNewWindow).ExitCode 
+       ;  $dismExitCode = (Start-Process -FilePath " DISM.exe" -ArgumentList " /Online /Set-ReservedStorageState -ErrorAction Stop /State:Disabled" -Wait -Passthru -NoNewWindow).ExitCode 
         if ($dismExitCode -ne 0) { 
             throw " DISM command failed with exit code $dismExitCode" 
         }

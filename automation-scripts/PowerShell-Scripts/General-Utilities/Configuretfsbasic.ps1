@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuretfsbasic
 
@@ -58,10 +58,10 @@ function WE-Ensure-TfsInstalled()
 
     if(Test-Path $WEInstallKey)
     {
-        $key = Get-Item $WEInstallKey
+        $key = Get-Item -ErrorAction Stop $WEInstallKey
         $value = $key.GetValue(" Install" , $null)
 
-        if(($value -ne $null) -and $value -eq 1)
+        if(($null -ne $value) -and $value -eq 1)
         {
             $tfsInstalled = $true
         }
@@ -91,7 +91,7 @@ function WE-Ensure-TfsInstalled()
         finally 
         {
             Dismount-DiskImage -ImagePath $fullPath\tfsserver2017.3.1_enu.iso
-            Remove-Item $fullPath\tfsserver2017.3.1_enu.is -Forceo -Force -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -ErrorAction Stop $fullPath\tfsserver2017.3.1_enu.is -Forceo -Force -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
     else

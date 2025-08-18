@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sequencedsnooze Parent
 
@@ -120,7 +120,7 @@ try
     Write-Output " Filtering the tags across all the VM's..."
     
     $tagValue = " sequence"    
-    $WETagKeys = Get-AzureRmVM | Where-Object {$_.Tags.Keys -eq $tagValue.ToLower()} | Select Tags
+    $WETagKeys = Get-AzureRmVM -ErrorAction Stop | Where-Object {$_.Tags.Keys -eq $tagValue.ToLower()} | Select Tags
     $WESequences=[System.Collections.ArrayList]@()
     foreach($tag in $WETagKeys.Tags)
     {

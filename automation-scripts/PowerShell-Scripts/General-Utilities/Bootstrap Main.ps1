@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Bootstrap Main
 
@@ -56,7 +56,7 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
        Write-Error -Message " Key Vault $keyVaultName creation failed. Please fix and continue"
        return
      }
-     $uri = New-Object System.Uri($keyValut.VaultUri, $true)
+     $uri = New-Object -ErrorAction Stop System.Uri($keyValut.VaultUri, $true)
      $hostName = $uri.Host
      Start-Sleep -s 15     
      # Note: This script will not delete the KeyVault created. If required, please delete the same manually.
@@ -83,7 +83,7 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
 
    $secretRetrieved = Get-AzureKeyVaultSecret -VaultName $keyVaultName -Name $certificateName
    $pfxBytes = [System.Convert]::FromBase64String($secretRetrieved.SecretValueText)
-   $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+   $certCollection = New-Object -ErrorAction Stop System.Security.Cryptography.X509Certificates.X509Certificate2Collection
    $certCollection.Import($pfxBytes,$null,[System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
    
    #Export  the .pfx file 
@@ -100,11 +100,11 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
  }
 
  function WE-CreateServicePrincipal([System.Security.Cryptography.X509Certificates.X509Certificate2] $WEPfxCert, [string] $applicationDisplayName) {  
-   $WECurrentDate = Get-Date
+   $WECurrentDate = Get-Date -ErrorAction Stop
    $keyValue = [System.Convert]::ToBase64String($WEPfxCert.GetRawCertData())
    $WEKeyId = [Guid]::NewGuid() 
 
-   $WEKeyCredential = New-Object  Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
+   $WEKeyCredential = New-Object -ErrorAction Stop  Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
    $WEKeyCredential.StartDate = $WECurrentDate
    $WEKeyCredential.EndDate= [DateTime]$WEPfxCert.GetExpirationDateString()
    $WEKeyCredential.KeyId = $WEKeyId
@@ -121,7 +121,7 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
 
   ;  $WENewRole = $null
   ;  $WERetries = 0;
-   While ($WENewRole -eq $null -and $WERetries -le 6)
+   While ($null -eq $WENewRole -and $WERetries -le 6)
    {
       New-AzureRMRoleAssignment -RoleDefinitionName Contributor -ServicePrincipalName $WEApplication.ApplicationId | Write-Verbose -ErrorAction SilentlyContinue
       Start-Sleep -s 10
@@ -157,7 +157,7 @@ try
     $WESubscriptionId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
     $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
 
-    if ($servicePrincipalConnection -eq $null)
+    if ($null -eq $servicePrincipalConnection)
     {
         #---------Read the Credentials variable---------------
         $myCredential = Get-AutomationPSCredential -Name 'AzureCredentials'  
@@ -179,12 +179,12 @@ try
     
             #-----L O G I N - A U T H E N T I C A T I O N-----
             $secPassword = ConvertTo-SecureString $WEAzureLoginPassword -AsPlainText -Force
-            $WEAzureOrgIdCredential = New-Object System.Management.Automation.PSCredential($WEAzureLoginUserName, $secPassword)
+            $WEAzureOrgIdCredential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential($WEAzureLoginUserName, $secPassword)
             Login-AzureRmAccount -Credential $WEAzureOrgIdCredential
             Get-AzureRmSubscription -SubscriptionId $WESubscriptionId | Select-AzureRmSubscription
             Write-Output " Successfully logged into Azure Subscription..."
 
-            $WEAzureRMProfileVersion= (Get-Module AzureRM.Profile).Version
+            $WEAzureRMProfileVersion= (Get-Module -ErrorAction Stop AzureRM.Profile).Version
             if (!(($WEAzureRMProfileVersion.Major -ge 2 -and $WEAzureRMProfileVersion.Minor -ge 1) -or ($WEAzureRMProfileVersion.Major -gt 2)))
             {
                 Write-Error -Message " Please install the latest Azure PowerShell and retry. Relevant doc url : https://docs.microsoft.com/en-us/powershell/azureps-cmdlets-docs/ "
@@ -292,7 +292,7 @@ try
 
         $checkWebhook = Get-AzureRmAutomationWebhook -Name $webhookNameforStopVM -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
 
-        if($checkWebhook -eq $null)
+        if($null -eq $checkWebhook)
         {
             Write-Output " Executing Step-2 : Create the webhook for $($runbookNameforStopVM)..."
 
@@ -341,7 +341,7 @@ try
 
         $checkMegaSchedule = Get-AzureRmAutomationSchedule -Name $scheduleNameforCreateAlert -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
 
-        if($checkMegaSchedule -eq $null)
+        if($null -eq $checkMegaSchedule)
         {
             Write-Output " Executing Step-3 : Create schedule for AutoSnooze_CreateAlert_Parent runbook ..."    
 
@@ -399,11 +399,11 @@ try
         $checkSchSnoozeStop = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleStop -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue 
 
         #Starts everyday 6AM
-        $WEStartVmUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
+        $WEStartVmUTCTime = (Get-Date -ErrorAction Stop " 13:00:00" ).AddDays(1).ToUniversalTime()
         #Stops everyday 6PM
-       ;  $WEStopVmUTCTime = (Get-Date " 01:00:00" ).AddDays(1).ToUniversalTime()
+       ;  $WEStopVmUTCTime = (Get-Date -ErrorAction Stop " 01:00:00" ).AddDays(1).ToUniversalTime()
 
-        if($checkSchSnoozeStart -eq $null)
+        if($null -eq $checkSchSnoozeStart)
         {
             Write-Output " Executing Step-4 : Create schedule for ScheduledSnooze_Parent runbook ..."
 
@@ -421,7 +421,7 @@ try
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
         }
 
-        if($checkSchSnoozeStop -eq $null)
+        if($null -eq $checkSchSnoozeStop)
         {
             New-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleStop -ResourceGroupName $aroResourceGroupName -StartTime $WEStopVmUTCTime -ExpiryTime $WEStopVmUTCTime.AddYears(1) -DayInterval 1 
             Write-Output " Successfully created the Schedule in Automation Account ($($automationAccountName))..."
@@ -437,7 +437,7 @@ try
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
          }
          
-         if($checkSchSnoozeStart -ne $null -and $checkSchSnoozeStop -ne $null)
+         if($null -ne $checkSchSnoozeStart -and $null -ne $checkSchSnoozeStop)
          {
             Write-Output " Schedule already available. Ignoring Step-4..."   
          }
@@ -461,11 +461,11 @@ try
 
         $runbookNameforAutoupdate = " AROToolkit_AutoUpdate"
         $scheduleNameforAutoupdate = " Schedule_AROToolkit_AutoUpdate"
-        $WEStartUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
+        $WEStartUTCTime = (Get-Date -ErrorAction Stop " 13:00:00" ).AddDays(1).ToUniversalTime()
 
         $checkScheduleAU = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleNameforAutoupdate -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
 
-        if($checkScheduleAU -eq $null)
+        if($null -eq $checkScheduleAU)
         {
 
             Write-Output " Executing Step-5 : Create schedule for AROToolkit_AutoUpdate runbook ..."    
@@ -513,11 +513,11 @@ try
         $checkSeqSnoozeStop = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $sequenceStop -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue 
 
         #Starts every monday 6AM
-        $WEStartVmUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
+        $WEStartVmUTCTime = (Get-Date -ErrorAction Stop " 13:00:00" ).AddDays(1).ToUniversalTime()
         #Stops every friday 6PM
-       ;  $WEStopVmUTCTime = (Get-Date " 01:00:00" ).AddDays(1).ToUniversalTime()
+       ;  $WEStopVmUTCTime = (Get-Date -ErrorAction Stop " 01:00:00" ).AddDays(1).ToUniversalTime()
 
-        if($checkSeqSnoozeStart -eq $null)
+        if($null -eq $checkSeqSnoozeStart)
         {
             Write-Output " Executing Step-6 : Create schedule for SequencedSnooze_Parent runbook ..."
 
@@ -535,7 +535,7 @@ try
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
         }
 
-        if($checkSeqSnoozeStop -eq $null)
+        if($null -eq $checkSeqSnoozeStop)
         {
             Write-Output " Executing Step-6 : Create schedule for SequencedSnooze_Parent runbook ..."
 
@@ -553,7 +553,7 @@ try
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
         }
 
-        if($checkSeqSnoozeStart -ne $null -and $checkSeqSnoozeStop -ne $null)
+        if($null -ne $checkSeqSnoozeStart -and $null -ne $checkSeqSnoozeStop)
          {
             Write-Output " Schedule already available. Ignoring Step-6..."   
          }
@@ -619,7 +619,7 @@ try
 
         Write-Output " Executing Step-8 : Performing clean up tasks (Bootstrap script, Bootstrap Schedule, Credential asset variable, and Keyvault) ..."
 
-        if($WEKeyVaultName -ne $null)
+        if($null -ne $WEKeyVaultName)
         {
             Write-Output " Removing the Keyvault : ($($WEKeyVaultName))..."
             Remove-AzureRmKeyVault -VaultName $WEKeyVaultName -ResourceGroupName $aroResourceGroupName -Confirm:$WEFalse -Force
@@ -627,7 +627,7 @@ try
         
        ;  $checkCredentials = Get-AzureRmAutomationCredential -Name " AzureCredentials" -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
         
-        if($checkCredentials -ne $null)
+        if($null -ne $checkCredentials)
         {
             Write-Output " Removing the Azure Credentials..."
 
@@ -636,7 +636,7 @@ try
 
        ;  $checkScheduleBootstrap = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name " startBootstrap" -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
 
-        if($checkScheduleBootstrap -ne $null)
+        if($null -ne $checkScheduleBootstrap)
         {
 
             Write-Output " Removing Bootstrap Schedule..."    

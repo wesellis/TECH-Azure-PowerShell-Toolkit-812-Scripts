@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Publish Omshypervreplica
 
@@ -86,7 +86,7 @@ param(
 				try
 				{
 					Write-Verbose " Uploading Data To OMS For VM $($vm.name)"
-					New-OMSDataInjection @OMSDataInjection
+					New-OMSDataInjection -ErrorAction Stop @OMSDataInjection
 				}
 				catch
 				{

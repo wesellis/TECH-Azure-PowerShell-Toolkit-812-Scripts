@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Cdn Profile Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -109,7 +110,7 @@ param(
 Write-WELog " Creating CDN Profile: $WEProfileName" " INFO"
 
 ; 
-$WECdnProfile = New-AzCdnProfile `
+$WECdnProfile = New-AzCdnProfile -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -ProfileName $WEProfileName `
     -Location $WELocation `
@@ -120,7 +121,7 @@ Write-WELog " CDN Profile created: $($WECdnProfile.Name)" " INFO"
 
 Write-WELog " Creating CDN Endpoint: $WEEndpointName" " INFO"
 ; 
-$WECdnEndpoint = New-AzCdnEndpoint `
+$WECdnEndpoint = New-AzCdnEndpoint -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -ProfileName $WEProfileName `
     -EndpointName $WEEndpointName `

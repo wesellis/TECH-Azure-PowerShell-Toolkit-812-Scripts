@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Expandosdisk
 
@@ -38,6 +38,7 @@ $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $WEVerbosePreference = 'Continue'
 
+[CmdletBinding()]
 function WE-Resize-PartitionWithRetries {
     [CmdletBinding()
 try {

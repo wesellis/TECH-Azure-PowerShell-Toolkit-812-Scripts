@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Elasticsearch Windows Install
 
@@ -119,29 +119,30 @@ param(
 )
 
 
-Set-Variable regEnvPath -Option Constant -Value 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment'
+Set-Variable -ErrorAction Stop regEnvPath -Option Constant -Value 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment'
 
 function WE-Log-Output(){
-	$args | Write-Host -ForegroundColor Cyan
+	$args | Write-Information -ForegroundColor Cyan
 }
 
 function WE-Log-Error(){
-	$args | Write-Host -ForegroundColor Red
+	$args | Write-Information -ForegroundColor Red
 }
 
 Set-Alias -Name lmsg -Value Log-Output -Description " Displays an informational message in green color" 
 Set-Alias -Name lerr -Value Log-Error -Description " Displays an error message in red color" 
 
+[CmdletBinding()]
 function WE-Initialize-Disks{
 	
     # Get raw disks
-    $disks = Get-Disk | Where partitionstyle -eq 'raw' | sort number
+    $disks = Get-Disk -ErrorAction Stop | Where partitionstyle -eq 'raw' | sort number
     
     # Get letters starting from F
     $label = 'datadisk-'
     $letters = 70..90 | ForEach-Object { ([char]$_) }
     $letterIndex = 0
-	if($disks -ne $null)
+	if($null -ne $disks)
 	{
         $numberedDisks = $disks.Number -join ','
         lmsg " Found attached VHDs with raw partition and numbers $numberedDisks"
@@ -184,6 +185,7 @@ function WE-Create-DataFolders([int]$numDrives, [Parameter(Mandatory=$false)]
     return $retVal
 }
 
+[CmdletBinding()]
 function WE-Download-Jdk
 {
     [CmdletBinding()]
@@ -208,7 +210,7 @@ param(
                 New-Item -Path $folder -ItemType Directory | Out-Null
             }
 
-			$client = new-object System.Net.WebClient 
+			$client = new-object -ErrorAction Stop System.Net.WebClient 
 			$cookie = " oraclelicense=accept-securebackup-cookie"
 
             lmsg " Downloading JDK from $source to $destination"
@@ -224,6 +226,7 @@ param(
 	return $destination
 }
 
+[CmdletBinding()]
 function WE-Install-Jdk
 {
     [CmdletBinding()]
@@ -265,6 +268,7 @@ param(
 	return $installPath
 }
 
+[CmdletBinding()]
 function WE-Download-ElasticSearch
 {
     [CmdletBinding()]
@@ -290,7 +294,7 @@ param(
                 New-Item -Path $folder -ItemType Directory | Out-Null
             }
 
-			$client = new-object System.Net.WebClient 
+			$client = new-object -ErrorAction Stop System.Net.WebClient 
 
             lmsg " Downloading Elasticsearch version $elasticVersion from $source to $destination"
 
@@ -331,7 +335,7 @@ function WE-SetEnv-JavaHome($jdkInstallLocation)
 	Set-ItemProperty -Path $regEnvPath -Name JAVA_HOME -Value $homePath | Out-Null
     
     lmsg 'Setting JAVA_HOME for the current session...'
-    Set-Item Env:JAVA_HOME " $homePath" | Out-Null
+    Set-Item -ErrorAction Stop Env:JAVA_HOME " $homePath" | Out-Null
 
     # Additional check
     if ([environment]::GetEnvironmentVariable(" JAVA_HOME" ," machine" ) -eq $null)
@@ -343,13 +347,14 @@ function WE-SetEnv-JavaHome($jdkInstallLocation)
    ;  $currentPath = (Get-ItemProperty -Path $regEnvPath -Name PATH).Path
    ;  $currentPath = $currentPath + ';' + " $homePath\bin"
     Set-ItemProperty -Path $regEnvPath -Name PATH -Value $currentPath
-    Set-Item Env:PATH " $currentPath"
+    Set-Item -ErrorAction Stop Env:PATH " $currentPath"
 }
 
+[CmdletBinding()]
 function WE-SetEnv-HeapSize
 {
     # Obtain total memory in MB and divide in half
-    $halfRamCnt = [math]::Round(((Get-CimInstance Win32_PhysicalMemory | measure-object Capacity -sum).sum/1mb)/2,0)
+    $halfRamCnt = [math]::Round(((Get-CimInstance -ErrorAction Stop Win32_PhysicalMemory | measure-object Capacity -sum).sum/1mb)/2,0)
     $halfRamCnt = [math]::Min($halfRamCnt, 31744)
     $halfRam = $halfRamCnt.ToString() + 'm'
     lmsg " Half of total RAM in system is $halfRam mb."
@@ -358,7 +363,7 @@ function WE-SetEnv-HeapSize
 	Set-ItemProperty -Path $regEnvPath -Name ES_HEAP_SIZE -Value $halfRam | Out-Null
 
     lmsg 'Setting ES_HEAP_SIZE for the current session...'
-    Set-Item Env:ES_HEAP_SIZE $halfRam | Out-Null
+    Set-Item -ErrorAction Stop Env:ES_HEAP_SIZE $halfRam | Out-Null
 
     # Additional check
     if ([environment]::GetEnvironmentVariable(" ES_HEAP_SIZE" ," machine" ) -eq $null)
@@ -433,8 +438,8 @@ function WE-Implode-Host2([Parameter(Mandatory=$false)]
 function WE-ElasticSearch-InstallService($scriptPath)
 {
 	# Install and start elastic search as a service
-	$elasticService = (get-service | Where-Object {$_.Name -match " elasticsearch" }).Name
-	if($elasticService -eq $null) 
+	$elasticService = (get-service -ErrorAction Stop | Where-Object {$_.Name -match " elasticsearch" }).Name
+	if($null -eq $elasticService) 
     {	
         # First set heap size
         SetEnv-HeapSize
@@ -451,29 +456,30 @@ function WE-ElasticSearch-InstallService($scriptPath)
 function WE-ElasticSearch-StartService()
 {
     # Check if the service is installed and start it
-    $elasticService = (get-service | Where-Object {$_.Name -match 'elasticsearch'}).Name
-    if($elasticService -ne $null)
+    $elasticService = (get-service -ErrorAction Stop | Where-Object {$_.Name -match 'elasticsearch'}).Name
+    if($null -ne $elasticService)
     {
         lmsg 'Starting elasticsearch service...'
         Start-Service -Name $elasticService | Out-Null
-        $svc = Get-Service | Where-Object { $_.Name -Match 'elasticsearch'}
+        $svc = Get-Service -ErrorAction Stop | Where-Object { $_.Name -Match 'elasticsearch'}
         
-        if($svc -ne $null)
+        if($null -ne $svc)
         {
             $svc.WaitForStatus('Running', '00:00:10')
         }
 
 		lmsg 'Setting the elasticsearch service startup to automatic...'
-        Set-Service $elasticService -StartupType Automatic | Out-Null
+        Set-Service -ErrorAction Stop $elasticService -StartupType Automatic | Out-Null
     }
 }
 
+[CmdletBinding()]
 function WE-ElasticSearch-VerifyInstall
 {
     $esRequest = [System.Net.WebRequest]::Create(" http://localhost:9200" )
     $esRequest.Method = " GET"
 	$esResponse = $esRequest.GetResponse()
-	$reader = new-object System.IO.StreamReader($esResponse.GetResponseStream())
+	$reader = new-object -ErrorAction Stop System.IO.StreamReader($esResponse.GetResponseStream())
 	lmsg 'Elasticsearch service response status: ' $esResponse.StatusCode
 	lmsg 'Elasticsearch service response full text: ' $reader.ReadToEnd()
 }
@@ -490,7 +496,7 @@ function WE-Jmeter-Download($drive)
                 New-Item -Path $folder -ItemType Directory | Out-Null
             }
 
-			$client = new-object System.Net.WebClient 
+			$client = new-object -ErrorAction Stop System.Net.WebClient 
 
             lmsg " Downloading Jmeter SA from $source to $destination"
 
@@ -528,6 +534,7 @@ function WE-Jmeter-Unzip($source, $drive)
     return $loc
 }
 
+[CmdletBinding()]
 function WE-Jmeter-ConfigFirewall
 {
     for($i=4440; $i -le 4444; $i++)
@@ -540,6 +547,7 @@ function WE-Jmeter-ConfigFirewall
     }
 }
 
+[CmdletBinding()]
 function WE-Elasticsearch-OpenPorts
 {
 	# Add firewall rules
@@ -565,6 +573,7 @@ function WE-Jmeter-Run($unzipLoc)
     Start-Process -FilePath $targetPath -WindowStyle Minimized | Out-Null
 }
 
+[CmdletBinding()]
 function WE-Install-WorkFlow
 {
 	# Start script
@@ -619,7 +628,7 @@ function WE-Install-WorkFlow
     $textToAppend = $textToAppend + " `nnode.name: $hostname"
 
     # Set data paths
-    if($folderPathSetting -ne $null)
+    if($null -ne $folderPathSetting)
     {
         $textToAppend = $textToAppend + " `npath.data: $folderPathSetting"
     }
@@ -648,7 +657,7 @@ function WE-Install-WorkFlow
 	$textToAppend = $textToAppend + " `ndiscovery.zen.minimum_master_nodes: 2"
     $textToAppend = $textToAppend + " `ndiscovery.zen.ping.multicast.enabled: false"
 
-    if($ipAddresses -ne $null)
+    if($null -ne $ipAddresses)
     {
         $textToAppend = $textToAppend + " `ndiscovery.zen.ping.unicast.hosts: [$ipAddresses]"
     }
@@ -736,6 +745,7 @@ function WE-Install-WorkFlow
     # ElasticSearch-VerifyInstall
 }
 
+[CmdletBinding()]
 function WE-Startup-Output
 {
 	lmsg 'Install workflow starting with following params:'

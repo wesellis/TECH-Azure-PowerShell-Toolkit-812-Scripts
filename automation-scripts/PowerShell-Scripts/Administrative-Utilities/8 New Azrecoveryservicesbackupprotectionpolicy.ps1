@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     8 New Azrecoveryservicesbackupprotectionpolicy
 
@@ -51,10 +51,10 @@
 
     A backup protection policy is associated with at least one retention policy. A retention policy defines how long a recovery point is kept before it's deleted.
 
-Use Get-AzRecoveryServicesBackupRetentionPolicyObject to view the default retention policy.
-Similarly you can use Get-AzRecoveryServicesBackupSchedulePolicyObject to obtain the default schedule policy.
-The New-AzRecoveryServicesBackupProtectionPolicy cmdlet creates a PowerShell object that holds backup policy information.
-The schedule and retention policy objects are used as inputs to the New-AzRecoveryServicesBackupProtectionPolicy cmdlet.
+Use Get-AzRecoveryServicesBackupRetentionPolicyObject -ErrorAction Stop to view the default retention policy.
+Similarly you can use Get-AzRecoveryServicesBackupSchedulePolicyObject -ErrorAction Stop to obtain the default schedule policy.
+The New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop cmdlet creates a PowerShell object that holds backup policy information.
+The schedule and retention policy objects are used as inputs to the New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop cmdlet.
 
 
 
@@ -70,7 +70,7 @@ $newAzRecoveryServicesBackupProtectionPolicySplat = @{
     VaultId = $targetVault.ID
 }
 
-New-AzRecoveryServicesBackupProtectionPolicy @newAzRecoveryServicesBackupProtectionPolicySplat
+New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop @newAzRecoveryServicesBackupProtectionPolicySplat
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

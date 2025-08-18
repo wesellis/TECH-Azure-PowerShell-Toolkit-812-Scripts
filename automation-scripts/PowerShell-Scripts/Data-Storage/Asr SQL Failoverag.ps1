@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Asr Sql Failoverag
 
@@ -132,7 +132,7 @@ Catch
     }
 
     
-    $WEPathSqno = $WERPVariable.Paths | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name 
+    $WEPathSqno = $WERPVariable.Paths | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name 
     $WEPathDetails = $WERPVariable.Paths
 
 

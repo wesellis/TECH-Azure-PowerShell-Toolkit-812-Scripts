@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Clientconfiguration
 
@@ -71,7 +71,7 @@ param(
     $WEDCComputerAccount = " $WEDName\$WEDCName$"
    ;  $WEPSComputerAccount = " $WEDName\$WEPSName$"
 
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
    ;  $WEPrimarySiteName = $WEPSName.split(" ." )[0] + " $"
 
     Node localhost

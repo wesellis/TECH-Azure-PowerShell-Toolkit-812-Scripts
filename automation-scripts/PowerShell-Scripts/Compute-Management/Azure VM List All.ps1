@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm List All
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -73,17 +74,17 @@ param(
 
 if ($WESubscriptionId) {
     Set-AzContext -SubscriptionId $WESubscriptionId
-    Write-Host -Object " Connected to subscription: $WESubscriptionId"
+    Write-Information -Object " Connected to subscription: $WESubscriptionId"
 }
 
-Write-Host -Object " Retrieving all VMs across subscription..."
+Write-Information -Object " Retrieving all VMs across subscription..."
 ; 
 $WEVMs = Get-AzVM -Status
-Write-Host -Object " `nFound $($WEVMs.Count) Virtual Machines:"
-Write-Host -Object (" =" * 60)
+Write-Information -Object " `nFound $($WEVMs.Count) Virtual Machines:"
+Write-Information -Object (" =" * 60)
 
 foreach ($WEVM in $WEVMs) {
-    Write-Host -Object " VM: $($WEVM.Name) | RG: $($WEVM.ResourceGroupName) | State: $($WEVM.PowerState) | Size: $($WEVM.HardwareProfile.VmSize)"
+    Write-Information -Object " VM: $($WEVM.Name) | RG: $($WEVM.ResourceGroupName) | State: $($WEVM.PowerState) | Size: $($WEVM.HardwareProfile.VmSize)"
 }
 
 

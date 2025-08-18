@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm Provisioning Tool Enhanced
 
@@ -108,7 +108,7 @@ try {
             Tag = $defaultTags
         }
         
-       ;  $vm = Invoke-AzureOperation -Operation { New-AzVM @vmParams } -OperationName " Create VM" -MaxRetries 2
+       ;  $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } -OperationName " Create VM" -MaxRetries 2
         Write-Log " ✓ VM created successfully: $($vm.Name)" -Level SUCCESS
     }
     

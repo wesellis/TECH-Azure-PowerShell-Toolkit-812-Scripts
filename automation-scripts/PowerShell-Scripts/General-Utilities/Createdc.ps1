@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Createdc
 
@@ -54,8 +54,8 @@ param(
     ) 
     
     Import-DscResource -ModuleName xActiveDirectory, xNetworking
-    [System.Management.Automation.PSCredential] $WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-   ;  $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
+    [System.Management.Automation.PSCredential] $WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+   ;  $WEInterface = Get-NetAdapter -ErrorAction Stop | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
    ;  $WEInterfaceAlias = $($WEInterface.Name)
 
     Node localhost

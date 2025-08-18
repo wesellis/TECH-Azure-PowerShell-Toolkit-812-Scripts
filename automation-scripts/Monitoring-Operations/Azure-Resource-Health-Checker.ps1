@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Resource Health Checker
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -12,7 +12,7 @@ param (
     [string]$ResourceGroupName
 )
 
-Write-Host -Object "Checking health status for resources in: $ResourceGroupName"
+Write-Information -Object "Checking health status for resources in: $ResourceGroupName"
 
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
 $HealthStatus = @()
@@ -52,8 +52,8 @@ foreach ($Resource in $Resources) {
     }
 }
 
-Write-Host -Object "`nResource Health Status:"
-Write-Host -Object ("=" * 60)
+Write-Information -Object "`nResource Health Status:"
+Write-Information -Object ("=" * 60)
 
 foreach ($Health in $HealthStatus) {
     $StatusColor = switch ($Health.Status) {
@@ -63,5 +63,5 @@ foreach ($Health in $HealthStatus) {
         default { "⚠️" }
     }
     
-    Write-Host -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
+    Write-Information -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
 }

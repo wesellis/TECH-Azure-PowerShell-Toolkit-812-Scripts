@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuration
 
@@ -55,7 +55,7 @@ param(
     
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xNetworking
 
-    $domainCreds = New-Object System.Management.Automation.PSCredential (" $domainName\$($adminCreds.UserName)" , $adminCreds.Password)
+    $domainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $domainName\$($adminCreds.UserName)" , $adminCreds.Password)
    
     Node localhost
     {
@@ -272,7 +272,7 @@ param(
     $externalFqdn = $webAccessServer
 
     $username = $adminCreds.UserName -split '\\' | select -last 1
-    $domainCreds = New-Object System.Management.Automation.PSCredential (" $domainName\$username" , $adminCreds.Password)
+    $domainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $domainName\$username" , $adminCreds.Password)
 
     if (-not $connectionBroker)   { $connectionBroker = $localhost }
     if (-not $webAccessServer)    { $webAccessServer  = $localhost }

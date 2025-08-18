@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     S2Dmon
 
@@ -138,7 +138,7 @@ param(
 $scriptVersion = "2016-11-17"
 
 
-$argv0 = Get-Item $WEMyInvocation.MyCommand.Definition
+$argv0 = Get-Item -ErrorAction Stop $WEMyInvocation.MyCommand.Definition
 $script = $argv0.basename               # Ex: PSService
 $scriptName = $argv0.name               # Ex: PSService.ps1
 $scriptFullName = $argv0.fullname       # Ex: C:\Temp\PSService.ps1
@@ -175,12 +175,13 @@ if ($WEVersion) {
 
 
 
+[CmdletBinding()]
 Function Now {
   param(
     [Switch]$ms,        # Append milliseconds
     [Switch]$ns         # Append nanoseconds
   )
-  $WEDate = Get-Date
+  $WEDate = Get-Date -ErrorAction Stop
   $now = ""
   $now = $now + " {0:0000}-{1:00}-{2:00} " -f $WEDate.Year, $WEDate.Month, $WEDate.Day
   $now = $now + " {0:00}:{1:00}:{2:00}" -f $WEDate.Hour, $WEDate.Minute, $WEDate.Second
@@ -221,7 +222,7 @@ Function Log () {
 $WEPSThreadCount = 0              # Counter of PSThread IDs generated so far
 $WEPSThreadList = @{}             # Existing PSThreads indexed by Id
 
-Function Get-PSThread () {
+Function Get-PSThread -ErrorAction Stop () {
   param(
     [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
     [int[]]$WEId = $WEPSThreadList.Keys     # List of thread IDs
@@ -254,13 +255,13 @@ Function Start-PSThread () {
   foreach ($WEVarName in $WEVariables.Keys) { # Copy the specified variables into the script initial context
     $value = $WEVariables.$WEVarName
     Write-Debug " Adding variable $WEVarName=[$($WEValue.GetType())]$WEValue"
-    $var = New-Object System.Management.Automation.Runspaces.SessionStateVariableEntry($WEVarName, $value, "" )
+    $var = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateVariableEntry($WEVarName, $value, "" )
     $WEInitialSessionState.Variables.Add($var)
   }
   foreach ($WEFuncName in $WEFunctions) { # Copy the specified functions into the script initial context
-    $WEBody = Get-Content function:$WEFuncName
+    $WEBody = Get-Content -ErrorAction Stop function:$WEFuncName
     Write-Debug " Adding function $WEFuncName () {$WEBody}"
-    $func = New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry($WEFuncName, $WEBody)
+    $func = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateFunctionEntry($WEFuncName, $WEBody)
     $WEInitialSessionState.Commands.Add($func)
   }
   $WERunSpace = [RunspaceFactory]::CreateRunspace($WEInitialSessionState)
@@ -276,7 +277,7 @@ Function Start-PSThread () {
   if ($WEEvent.Length) { # Do this after BeginInvoke(), to avoid getting the start event.
     Register-ObjectEvent $WEPSPipeline -EventName InvocationStateChanged -SourceIdentifier $WEName -MessageData $WEEvent
   }
-  $WEPSThread = New-Object PSObject -Property @{
+  $WEPSThread = New-Object -ErrorAction Stop PSObject -Property @{
     Id = $WEId
     Name = $WEName
     Event = $WEEvent
@@ -302,7 +303,7 @@ $ErrorActionPreference = " Stop"
   Process {
     if ($WEPSThread.Event -and $WEAutoRemove) {
       Unregister-Event -SourceIdentifier $WEPSThread.Name
-      Get-Event -SourceIdentifier $WEPSThread.Name | Remove-Event # Flush remaining events
+      Get-Event -SourceIdentifier $WEPSThread.Name | Remove-Event -ErrorAction Stop # Flush remaining events
     }
     try {
       $WEPSThread.PSPipeline.EndInvoke($WEPSThread.Handle) # Output the thread pipeline output
@@ -317,7 +318,7 @@ $ErrorActionPreference = " Stop"
   }
 }
 
-Function Remove-PSThread () {
+Function Remove-PSThread -ErrorAction Stop () {
   [CmdletBinding()]
 $ErrorActionPreference = " Stop"
   param(
@@ -344,8 +345,8 @@ Function Send-PipeMessage () {
   $pipe = $null # Named pipe stream
   $sw = $null   # Stream Writer
   try {
-    $pipe = new-object System.IO.Pipes.NamedPipeClientStream(" ." , $WEPipeName, $WEPipeDir, $WEPipeOpt)
-    $sw = new-object System.IO.StreamWriter($pipe)
+    $pipe = new-object -ErrorAction Stop System.IO.Pipes.NamedPipeClientStream(" ." , $WEPipeName, $WEPipeDir, $WEPipeOpt)
+    $sw = new-object -ErrorAction Stop System.IO.StreamWriter($pipe)
     $pipe.Connect(1000)
     if (!$pipe.IsConnected) {
       throw " Failed to connect client to pipe $pipeName"
@@ -379,9 +380,9 @@ Function Receive-PipeMessage () {
 
   try {
     $pipe = $null       # Named pipe stream
-    $pipe = New-Object system.IO.Pipes.NamedPipeServerStream($WEPipeName, $WEPipeDir, 1, $WEPipeMode, $WEPipeOpt)
+    $pipe = New-Object -ErrorAction Stop system.IO.Pipes.NamedPipeServerStream($WEPipeName, $WEPipeDir, 1, $WEPipeMode, $WEPipeOpt)
     $sr = $null         # Stream Reader
-    $sr = new-object System.IO.StreamReader($pipe)
+    $sr = new-object -ErrorAction Stop System.IO.StreamReader($pipe)
     $pipe.WaitForConnection()
     $WEMessage = $sr.Readline()
     $WEMessage
@@ -629,7 +630,7 @@ if ($WERestart) {                 # Restart the service
 
 if ($WEStatus) {                  # Get the current service status
   $spid = $null
-  $processes = @(Get-CimInstance Win32_Process -filter " Name = 'powershell.exe'" | Where-Object {
+  $processes = @(Get-CimInstance -ErrorAction Stop Win32_Process -filter " Name = 'powershell.exe'" | Where-Object {
     $_.CommandLine -match " .*$scriptCopyCname.*-Service"
   })
   foreach ($process in $processes) { # There should be just one, but be prepared for surprises.
@@ -638,7 +639,7 @@ if ($WEStatus) {                  # Get the current service status
   }
   # if (Test-Path " HKLM:\SYSTEM\CurrentControlSet\services\$serviceName" ) {}
   try {
-    $pss = Get-Service $serviceName -ea stop # Will error-out if not installed
+    $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
   } catch {
     " Not Installed"
     return
@@ -654,9 +655,9 @@ if ($WEStatus) {                  # Get the current service status
 if ($WESetup) {                   # Install the service
   # Check if it's necessary
   try {
-    $pss = Get-Service $serviceName -ea stop # Will error-out if not installed
+    $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
     # Check if this script is newer than the installed copy.
-    if ((Get-Item $scriptCopy -ea SilentlyContinue).LastWriteTime -lt (Get-Item $scriptFullName -ea SilentlyContinue).LastWriteTime) {
+    if ((Get-Item -ErrorAction Stop $scriptCopy -ea SilentlyContinue).LastWriteTime -lt (Get-Item -ErrorAction Stop $scriptFullName -ea SilentlyContinue).LastWriteTime) {
       Write-Verbose " Service $serviceName is already Installed, but requires upgrade"
       & $scriptFullName -Remove
       throw " continue"
@@ -678,7 +679,7 @@ if ($WESetup) {                   # Install the service
     Copy-Item $WEScriptFullName $scriptCopy
 
     # Create and Save Key
-    $WEKey = New-Object Byte[] 32   # You can use 16, 24, or 32 for AES
+    $WEKey = New-Object -ErrorAction Stop Byte[] 32   # You can use 16, 24, or 32 for AES
     [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($WEKey)
     $WEKey | out-file $WEKeyFileFullName
 
@@ -700,7 +701,7 @@ if ($WESetup) {                   # Install the service
   }
   # Register the service
   Write-Verbose " Registering service $serviceName"
-  $pss = New-Service $serviceName $exeFullName -DisplayName $serviceDisplayName -Description $WEServiceDescription -StartupType Automatic
+  $pss = New-Service -ErrorAction Stop $serviceName $exeFullName -DisplayName $serviceDisplayName -Description $WEServiceDescription -StartupType Automatic
 
   return
 }
@@ -708,13 +709,13 @@ if ($WESetup) {                   # Install the service
 if ($WERemove) {                  # Uninstall the service
   # Check if it's necessary
   try {
-    $pss = Get-Service $serviceName -ea stop # Will error-out if not installed
+    $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
   } catch {
     Write-Verbose " Already uninstalled"
     return
   }
   Stop-Service $serviceName # Make sure it's stopped
-  # In the absence of a Remove-Service applet, use sc.exe instead.
+  # In the absence of a Remove-Service -ErrorAction Stop applet, use sc.exe instead.
   Write-Verbose " Removing service $serviceName"
   $msg = sc.exe delete $serviceName
   if ($WELastExitCode) {
@@ -729,12 +730,12 @@ if ($WERemove) {                  # Uninstall the service
       $file = " $installDir\$serviceName.$ext"
       if (Test-Path $file) {
         Write-Verbose " Deleting file $file"
-        Remove-Item $fil -Forcee -Force
+        Remove-Item -ErrorAction Stop $fil -Forcee -Force
       }
     }
-    if (!(@(Get-ChildItem $installDir -ea SilentlyContinue)).Count) {
+    if (!(@(Get-ChildItem -ErrorAction Stop $installDir -ea SilentlyContinue)).Count) {
       Write-Verbose " Removing directory $installDir"
-      Remove-Item $installDi -Forcer -Force
+      Remove-Item -ErrorAction Stop $installDi -Forcer -Force
     }
   }
   return
@@ -755,7 +756,7 @@ if ($WEService) {                 # Run the service
     # Start a periodic timer
     $timerName = " Sample service timer"
     $period = 60 # seconds
-    $timer = new-object System.Timers.Timer
+    $timer = new-object -ErrorAction Stop System.Timers.Timer
     $timer.Interval = ($period * 1000) # Milliseconds
     $timer.AutoReset = $true # Make it fire repeatedly
     Register-ObjectEvent $timer -EventName Elapsed -SourceIdentifier $timerName -MessageData " TimerTick"
@@ -767,7 +768,7 @@ if ($WEService) {                 # Run the service
       $message = $event.MessageData
       $eventTime = $event.TimeGenerated.TimeofDay
       Write-Debug " Event at $eventTime from ${source}: $message"
-      $event | Remove-Event # Flush the event from the queue
+      $event | Remove-Event -ErrorAction Stop # Flush the event from the queue
       switch ($message) {
         " ControlMessage" { # Required. Message received by the control pipe thread
           $state = $event.SourceEventArgs.InvocationStateInfo.state
@@ -798,7 +799,7 @@ if ($WEService) {                 # Run the service
             # Get the Key
             Try
             {
-                $key = Get-Content $WEKeyFileFullName
+                $key = Get-Content -ErrorAction Stop $WEKeyFileFullName
             }
             Catch
             {
@@ -809,7 +810,7 @@ if ($WEService) {                 # Run the service
             # Get Workspace ID
             Try
             {
-                $WEOMSWorkspaceIDFromFile = Get-Content $workspaceIdFileFullName
+                $WEOMSWorkspaceIDFromFile = Get-Content -ErrorAction Stop $workspaceIdFileFullName
             }
             Catch
             {
@@ -820,7 +821,7 @@ if ($WEService) {                 # Run the service
             # Get Workspace Key
             Try
             {
-                $WEOMSWorkspaceKeyFromFile  = Get-Content $credFileFullName | ConvertTo-SecureString -Key $key
+                $WEOMSWorkspaceKeyFromFile  = Get-Content -ErrorAction Stop $credFileFullName | ConvertTo-SecureString -Key $key
             }
             Catch
             {
@@ -840,7 +841,7 @@ if ($WEService) {                 # Run the service
 
 
             # Get Server and Cluster names
-            $domainfqdn = (Get-CimInstance Win32_ComputerSystem | Select-Object -ExpandProperty domain)
+            $domainfqdn = (Get-CimInstance -ErrorAction Stop Win32_ComputerSystem | Select-Object -ExpandProperty domain)
             $WEServerName = ($env:computername + " ." + $domainfqdn).ToUpper()
             Try
             {
@@ -856,7 +857,7 @@ if ($WEService) {                 # Run the service
             if($WEClusterName)
             {
                 #region Get and Send S2D cluster Data to OMS
-                $s2dreport = Get-StorageSubSystem Cluster*  | Get-StorageHealthReport
+                $s2dreport = Get-StorageSubSystem -ErrorAction Stop Cluster*  | Get-StorageHealthReport -ErrorAction Stop
                 if($s2dreport)
                 {
                     $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
@@ -885,7 +886,7 @@ if ($WEService) {                 # Run the service
                          ;  $WEUnitType = " Percentage"
                       }
                       
-                     ;  $sx = New-Object PSObject -Property @{
+                     ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         
                         Timestamp = $WENowTime
                         MetricLevel = " Cluster" ;
@@ -916,7 +917,7 @@ if ($WEService) {                 # Run the service
 
                 #region Get and Send S2D Node Data to OMS
                 $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
-                $s2dNodes = Get-StorageNode
+                $s2dNodes = Get-StorageNode -ErrorAction Stop
                 if($s2dNodes)
                 {
                     $nodescount = $s2dNodes.GetEnumerator() | Group-Object Name | ? { $_.Count -gt 1 }
@@ -954,7 +955,7 @@ if ($WEService) {                 # Run the service
                                  ;  $WEUnitType = " Percentage"
                               }
 
-                             ;  $sx = New-Object PSObject -Property @{
+                             ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                                 
                                 Timestamp = $WENowTime
                                 MetricLevel = " Node" ;
@@ -987,7 +988,7 @@ if ($WEService) {                 # Run the service
                 #endregion
                       
                 #region Get and Send S2D Volume Data to OMS
-                $volumes = Get-Volume | where {$_.FileSystem -eq " CSVFS" }
+                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq " CSVFS" }
                 $table  = @()
                 $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if($volumes)
@@ -1025,7 +1026,7 @@ if ($WEService) {                 # Run the service
                                ;  $WEUnitType = " Percentage"
                             }
 
-                           ;  $sx = New-Object PSObject -Property @{
+                           ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                           
                              Timestamp = $WENowTime
                              MetricLevel = " Volume" ;
@@ -1063,7 +1064,7 @@ if ($WEService) {                 # Run the service
                 #endregion
 
                 #region Get and Send S2D Cluster Faults to OMS
-                $s2dFaults = Get-StorageSubSystem Cluster* | Debug-StorageSubSystem
+                $s2dFaults = Get-StorageSubSystem -ErrorAction Stop Cluster* | Debug-StorageSubSystem
                 $table  = @()
                 $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 
@@ -1107,7 +1108,7 @@ if ($WEService) {                 # Run the service
                            ;  $action = $action + " | "
                         }
 
-                       ;  $sx = New-Object PSObject -Property @{
+                       ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         
                             Timestamp = $WENowTime;
                             SecondTimeStamp = $WENowTime;
@@ -1145,7 +1146,7 @@ if ($WEService) {                 # Run the service
                 #endregion
 
                 #region Get and Send S2D Volume Faults to OMS
-                $volumes = Get-Volume | where {$_.FileSystem -eq " CSVFS" }
+                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq " CSVFS" }
                 $table  = @()
                 $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if ($volumes)
@@ -1196,7 +1197,7 @@ if ($WEService) {                 # Run the service
                                    ;  $action = $action + " | "
                                 }
                                 
-                               ;  $sx = New-Object PSObject -Property @{
+                               ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                             
                                     Timestamp = $WENowTime;
                                     SecondTimeStamp = $WENowTime;
@@ -1237,7 +1238,7 @@ if ($WEService) {                 # Run the service
                 #endregion
 
                 #region Get and Send S2D Share Faults to OMS
-                $shares = Get-FileShare | where {$_.ContinuouslyAvailable -eq $true}
+                $shares = Get-FileShare -ErrorAction Stop | where {$_.ContinuouslyAvailable -eq $true}
                 $table  = @()
                 $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if($shares)
@@ -1287,7 +1288,7 @@ if ($WEService) {                 # Run the service
                                    ;  $action = $action + " | "
                                 }
                                 
-                               ;  $sx = New-Object PSObject -Property @{
+                               ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                             
                                     Timestamp = $WENowTime;
                                     SecondTimeStamp = $WENowTime;
@@ -1347,9 +1348,9 @@ if ($WEService) {                 # Run the service
     $timer.stop()
     ############### End of the service code example. ################
     # Terminate the control pipe handler thread
-    Get-PSThread | Remove-PSThread # Remove all remaining threads
+    Get-PSThread -ErrorAction Stop | Remove-PSThread -ErrorAction Stop # Remove all remaining threads
     # Flush all leftover events (There may be some that arrived after we exited the while event loop, but before we unregistered the events)
-   ;  $events = Get-Event | Remove-Event
+   ;  $events = Get-Event -ErrorAction Stop | Remove-Event -ErrorAction Stop
     # Log a termination event, no matter what the cause is.
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1006 -EntryType Information -Message " $script -Service # Exiting"
     Log " $scriptName -Service # Exiting"

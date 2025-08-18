@@ -1,4 +1,4 @@
-# Azure Purview Data Governance Manager
+﻿# Azure Purview Data Governance Manager
 # Professional Azure data governance automation script
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise data catalog and governance automation
@@ -115,7 +115,7 @@ try {
             }
             
             $purviewAccount = Invoke-AzureOperation -Operation {
-                New-AzPurviewAccount @purviewParams
+                New-AzPurviewAccount -ErrorAction Stop @purviewParams
             } -OperationName "Create Purview Account"
             
             Write-Log "✓ Purview account created: $PurviewAccountName" -Level SUCCESS
@@ -287,9 +287,9 @@ try {
                 return $response
             } -OperationName "Get Classifications"
             
-            Write-Host ""
-            Write-Host "📋 Available Data Classifications" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "📋 Available Data Classifications"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             $systemClassifications = @(
                 "MICROSOFT.GOVERNMENT.AUSTRALIA.DRIVERS_LICENSE_NUMBER",
@@ -305,9 +305,9 @@ try {
                 "MICROSOFT.PERSONAL.US.SOCIAL_SECURITY_NUMBER"
             )
             
-            Write-Host "Built-in Classifications:" -ForegroundColor Yellow
+            Write-Information "Built-in Classifications:"
             foreach ($classification in $systemClassifications) {
-                Write-Host "• $classification" -ForegroundColor White
+                Write-Information "• $classification"
             }
             
             # Create custom classifications if provided
@@ -352,35 +352,35 @@ try {
                 return $response.value
             } -OperationName "Get Data Sources"
             
-            Write-Host ""
-            Write-Host "📊 Purview Account Information" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Account Name: $($purviewAccount.Name)" -ForegroundColor White
-            Write-Host "Location: $($purviewAccount.Location)" -ForegroundColor White
-            Write-Host "Atlas Endpoint: $($purviewAccount.AtlasEndpoint)" -ForegroundColor White
-            Write-Host "Scan Endpoint: $($purviewAccount.ScanEndpoint)" -ForegroundColor White
-            Write-Host "Catalog Endpoint: $($purviewAccount.CatalogEndpoint)" -ForegroundColor White
-            Write-Host "Provisioning State: $($purviewAccount.ProvisioningState)" -ForegroundColor Green
-            Write-Host "Public Network Access: $($purviewAccount.PublicNetworkAccess)" -ForegroundColor White
+            Write-Information ""
+            Write-Information "📊 Purview Account Information"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Account Name: $($purviewAccount.Name)"
+            Write-Information "Location: $($purviewAccount.Location)"
+            Write-Information "Atlas Endpoint: $($purviewAccount.AtlasEndpoint)"
+            Write-Information "Scan Endpoint: $($purviewAccount.ScanEndpoint)"
+            Write-Information "Catalog Endpoint: $($purviewAccount.CatalogEndpoint)"
+            Write-Information "Provisioning State: $($purviewAccount.ProvisioningState)"
+            Write-Information "Public Network Access: $($purviewAccount.PublicNetworkAccess)"
             
             if ($collections.Count -gt 0) {
-                Write-Host ""
-                Write-Host "📁 Collections ($($collections.Count)):" -ForegroundColor Cyan
+                Write-Information ""
+                Write-Information "📁 Collections ($($collections.Count)):"
                 foreach ($collection in $collections) {
-                    Write-Host "• $($collection.name)" -ForegroundColor White
+                    Write-Information "• $($collection.name)"
                     if ($collection.description) {
-                        Write-Host "  Description: $($collection.description)" -ForegroundColor Gray
+                        Write-Information "  Description: $($collection.description)"
                     }
                 }
             }
             
             if ($dataSources.Count -gt 0) {
-                Write-Host ""
-                Write-Host "🗄️  Data Sources ($($dataSources.Count)):" -ForegroundColor Cyan
+                Write-Information ""
+                Write-Information "🗄️  Data Sources ($($dataSources.Count)):"
                 foreach ($source in $dataSources) {
-                    Write-Host "• $($source.name) ($($source.kind))" -ForegroundColor White
+                    Write-Information "• $($source.name) ($($source.kind))"
                     if ($source.properties.endpoint) {
-                        Write-Host "  Endpoint: $($source.properties.endpoint)" -ForegroundColor Gray
+                        Write-Information "  Endpoint: $($source.properties.endpoint)"
                     }
                 }
             }
@@ -422,7 +422,7 @@ try {
                     MetricCategory = @("AllMetrics")
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
@@ -553,70 +553,70 @@ try {
     }
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                      AZURE PURVIEW DATA GOVERNANCE READY" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                      AZURE PURVIEW DATA GOVERNANCE READY"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Host "📊 Purview Account Details:" -ForegroundColor Cyan
-        Write-Host "   • Account Name: $PurviewAccountName" -ForegroundColor White
-        Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-        Write-Host "   • Location: $Location" -ForegroundColor White
-        Write-Host "   • Atlas Endpoint: $($accountStatus.AtlasEndpoint)" -ForegroundColor White
-        Write-Host "   • Scan Endpoint: $($accountStatus.ScanEndpoint)" -ForegroundColor White
-        Write-Host "   • Catalog Endpoint: $($accountStatus.CatalogEndpoint)" -ForegroundColor White
-        Write-Host "   • Status: $($accountStatus.ProvisioningState)" -ForegroundColor Green
+        Write-Information "📊 Purview Account Details:"
+        Write-Information "   • Account Name: $PurviewAccountName"
+        Write-Information "   • Resource Group: $ResourceGroupName"
+        Write-Information "   • Location: $Location"
+        Write-Information "   • Atlas Endpoint: $($accountStatus.AtlasEndpoint)"
+        Write-Information "   • Scan Endpoint: $($accountStatus.ScanEndpoint)"
+        Write-Information "   • Catalog Endpoint: $($accountStatus.CatalogEndpoint)"
+        Write-Information "   • Status: $($accountStatus.ProvisioningState)"
         
-        Write-Host ""
-        Write-Host "🔒 Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
-            Write-Host "   $finding" -ForegroundColor White
+            Write-Information "   $finding"
         }
         
-        Write-Host ""
-        Write-Host "💰 Cost Components:" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "💰 Cost Components:"
         foreach ($cost in $costComponents.GetEnumerator()) {
-            Write-Host "   • $($cost.Key): $($cost.Value)" -ForegroundColor White
+            Write-Information "   • $($cost.Key): $($cost.Value)"
         }
     }
     
-    Write-Host ""
-    Write-Host "📋 Data Governance Best Practices:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "📋 Data Governance Best Practices:"
     foreach ($recommendation in $governanceRecommendations) {
-        Write-Host "   $recommendation" -ForegroundColor White
+        Write-Information "   $recommendation"
     }
     
-    Write-Host ""
-    Write-Host "🏛️  Supported Compliance Frameworks:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "🏛️  Supported Compliance Frameworks:"
     foreach ($framework in $complianceFrameworks) {
-        Write-Host "   • $framework" -ForegroundColor White
+        Write-Information "   • $framework"
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Register your data sources using RegisterDataSource action" -ForegroundColor White
-    Write-Host "   • Create collections to organize your data assets" -ForegroundColor White
-    Write-Host "   • Set up automated scanning schedules" -ForegroundColor White
-    Write-Host "   • Configure data classifications and sensitivity labels" -ForegroundColor White
-    Write-Host "   • Establish data lineage for critical data flows" -ForegroundColor White
-    Write-Host "   • Train data stewards on Purview Studio usage" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Register your data sources using RegisterDataSource action"
+    Write-Information "   • Create collections to organize your data assets"
+    Write-Information "   • Set up automated scanning schedules"
+    Write-Information "   • Configure data classifications and sensitivity labels"
+    Write-Information "   • Establish data lineage for critical data flows"
+    Write-Information "   • Train data stewards on Purview Studio usage"
+    Write-Information ""
 
     Write-Log "✅ Azure Purview data governance operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Purview data governance operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Purview service availability in your region" -ForegroundColor White
-    Write-Host "   • Check subscription quotas and resource limits" -ForegroundColor White
-    Write-Host "   • Ensure proper permissions for data governance operations" -ForegroundColor White
-    Write-Host "   • Validate data source connectivity and permissions" -ForegroundColor White
-    Write-Host "   • Check network connectivity to Purview endpoints" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Purview service availability in your region"
+    Write-Information "   • Check subscription quotas and resource limits"
+    Write-Information "   • Ensure proper permissions for data governance operations"
+    Write-Information "   • Validate data source connectivity and permissions"
+    Write-Information "   • Check network connectivity to Purview endpoints"
+    Write-Information ""
     
     exit 1
 }

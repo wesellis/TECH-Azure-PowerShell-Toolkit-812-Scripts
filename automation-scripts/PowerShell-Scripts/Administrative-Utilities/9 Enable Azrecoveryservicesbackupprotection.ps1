@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     9 Enable Azrecoveryservicesbackupprotection
 
@@ -74,7 +74,7 @@ $getAzRecoveryServicesBackupProtectionPolicySplat = @{
     VaultId = $targetVault.ID
 }
 ; 
-$pol = Get-AzRecoveryServicesBackupProtectionPolicy @getAzRecoveryServicesBackupProtectionPolicySplat
+$pol = Get-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop @getAzRecoveryServicesBackupProtectionPolicySplat
 ; 
 $enableAzRecoveryServicesBackupProtectionSplat = @{
     Policy = $pol

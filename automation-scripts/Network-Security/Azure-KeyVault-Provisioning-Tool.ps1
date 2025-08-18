@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Key Vault Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -17,13 +17,13 @@ param (
     [bool]$EnabledForDiskEncryption = $true
 )
 
-Write-Host "Provisioning Key Vault: $VaultName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
+Write-Information "Provisioning Key Vault: $VaultName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "SKU: $SkuName"
 
 # Create the Key Vault
-$KeyVault = New-AzKeyVault `
+$KeyVault = New-AzKeyVault -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -VaultName $VaultName `
     -Location $Location `
@@ -32,8 +32,8 @@ $KeyVault = New-AzKeyVault `
     -EnabledForTemplateDeployment:$EnabledForTemplateDeployment `
     -EnabledForDiskEncryption:$EnabledForDiskEncryption
 
-Write-Host "Key Vault $VaultName provisioned successfully"
-Write-Host "Vault URI: $($KeyVault.VaultUri)"
-Write-Host "Enabled for Deployment: $EnabledForDeployment"
-Write-Host "Enabled for Template Deployment: $EnabledForTemplateDeployment"
-Write-Host "Enabled for Disk Encryption: $EnabledForDiskEncryption"
+Write-Information "Key Vault $VaultName provisioned successfully"
+Write-Information "Vault URI: $($KeyVault.VaultUri)"
+Write-Information "Enabled for Deployment: $EnabledForDeployment"
+Write-Information "Enabled for Template Deployment: $EnabledForTemplateDeployment"
+Write-Information "Enabled for Disk Encryption: $EnabledForDiskEncryption"

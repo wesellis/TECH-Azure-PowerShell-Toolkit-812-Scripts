@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Validate Deploymentfile.Tests
 
@@ -64,7 +64,7 @@
                 -ErrorAction SilentlyContinue `
                 -WarningVariable warn `
                 6>&1 2>$null 3>$null
-            # Write-Host $buildHostOutput
+            # Write-Information $buildHostOutput
             $WEErrorActionPreference = 'Stop'
             $vars = Find-VarsFromWriteHostOutput $buildHostOutput
             $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ] -eq " True"

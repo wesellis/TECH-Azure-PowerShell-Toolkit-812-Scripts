@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Enable Static Website
 
@@ -42,11 +42,11 @@ $ctx = $storageAccount.Context
 Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $env:IndexDocumentPath -ErrorDocument404Path $env:ErrorDocument404Path
 
 ; 
-$tempIndexFile = New-TemporaryFile
+$tempIndexFile = New-TemporaryFile -ErrorAction Stop
 Set-Content $tempIndexFile $env:IndexDocumentContents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempIndexFile -Blob $env:IndexDocumentPath -Properties @{'ContentType' = 'text/html'} -Force
 ; 
-$tempErrorDocument404File = New-TemporaryFile
+$tempErrorDocument404File = New-TemporaryFile -ErrorAction Stop
 Set-Content $tempErrorDocument404File $env:ErrorDocument404Contents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempErrorDocument404File -Blob $env:ErrorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force
 

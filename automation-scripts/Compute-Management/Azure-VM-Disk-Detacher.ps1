@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Disk Detacher
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,7 +18,7 @@ param (
     [string]$DiskName
 )
 
-Write-Host "Detaching disk from VM: $VmName"
+Write-Information "Detaching disk from VM: $VmName"
 
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 
@@ -30,7 +30,7 @@ if (-not $DiskToDetach) {
     return
 }
 
-Write-Host "Found disk: $DiskName (LUN: $($DiskToDetach.Lun))"
+Write-Information "Found disk: $DiskName (LUN: $($DiskToDetach.Lun))"
 
 # Remove the disk
 Remove-AzVMDataDisk -VM $VM -Name $DiskName
@@ -38,8 +38,8 @@ Remove-AzVMDataDisk -VM $VM -Name $DiskName
 # Update the VM
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 
-Write-Host "✅ Disk detached successfully:"
-Write-Host "  Disk: $DiskName"
-Write-Host "  VM: $VmName"
-Write-Host "  LUN: $($DiskToDetach.Lun)"
-Write-Host "  Note: Disk is now available for attachment to other VMs"
+Write-Information "✅ Disk detached successfully:"
+Write-Information "  Disk: $DiskName"
+Write-Information "  VM: $VmName"
+Write-Information "  LUN: $($DiskToDetach.Lun)"
+Write-Information "  Note: Disk is now available for attachment to other VMs"

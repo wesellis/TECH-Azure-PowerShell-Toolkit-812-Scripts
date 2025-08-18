@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Access Review Creator
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -124,7 +125,7 @@ try {
     Write-WELog "  Reviewer Type: $WEReviewerType" " INFO"
     
     # Calculate review dates
-    $WEStartDate = Get-Date
+    $WEStartDate = Get-Date -ErrorAction Stop
     $WEEndDate = $WEStartDate.AddDays($WEDurationInDays)
     
     Write-WELog "  Start Date: $($WEStartDate.ToString('yyyy-MM-dd'))" " INFO"

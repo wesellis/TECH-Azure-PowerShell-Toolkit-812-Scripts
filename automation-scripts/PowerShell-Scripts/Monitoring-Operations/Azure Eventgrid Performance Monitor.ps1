@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Eventgrid Performance Monitor
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -171,7 +172,7 @@ Write-WELog "  Public Network Access: Enabled" " INFO"
 
 Write-WELog " `nSample Event Format ($($WEEventGridTopic.InputSchema)):" " INFO"
 if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
-    Write-Host @"
+    Write-Information @"
   {
     " id" : " unique-event-id" ,
     " eventType" : " Custom.Event.Type" ,
@@ -185,7 +186,7 @@ if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
   }
 " @
 } elseif ($WEEventGridTopic.InputSchema -eq " CloudEventSchemaV1_0" ) {
-    Write-Host @"
+    Write-Information @"
   {
     " specversion" : " 1.0" ,
     " type" : " Custom.Event.Type" ,

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure CLI PowerShell Bridge
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -13,13 +13,13 @@ param (
     [switch]$PassThru
 )
 
-Write-Host "Azure CLI PowerShell Bridge" -ForegroundColor Cyan
-Write-Host "===========================" -ForegroundColor Cyan
+Write-Information "Azure CLI PowerShell Bridge"
+Write-Information "==========================="
 
 # Check if Azure CLI is installed
 try {
     $azVersion = az version 2>$null | ConvertFrom-Json
-    Write-Host "✓ Azure CLI Version: $($azVersion.'azure-cli')" -ForegroundColor Green
+    Write-Information "✓ Azure CLI Version: $($azVersion.'azure-cli')"
 } catch {
     Write-Error "Azure CLI is not installed or not in PATH. Please install Azure CLI first."
     return
@@ -28,8 +28,8 @@ try {
 # Check if logged in to Azure CLI
 try {
     $account = az account show 2>$null | ConvertFrom-Json
-    Write-Host "✓ Logged in as: $($account.user.name)" -ForegroundColor Green
-    Write-Host "✓ Subscription: $($account.name)" -ForegroundColor Green
+    Write-Information "✓ Logged in as: $($account.user.name)"
+    Write-Information "✓ Subscription: $($account.name)"
 } catch {
     Write-Warning "Not logged in to Azure CLI. Please run 'az login' first."
     if (-not $Force) {
@@ -38,14 +38,14 @@ try {
 }
 
 if (-not $Command) {
-    Write-Host "`nUsage Examples:" -ForegroundColor Yellow
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'" -ForegroundColor White
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'" -ForegroundColor White
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru" -ForegroundColor White
+    Write-Information "`nUsage Examples:"
+    Write-Information "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'"
+    Write-Information "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'"
+    Write-Information "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru"
     return
 }
 
-Write-Host "`nExecuting: $Command --output $OutputFormat" -ForegroundColor Yellow
+Write-Information "`nExecuting: $Command --output $OutputFormat"
 
 try {
     # Execute Azure CLI command safely without Invoke-Expression
@@ -55,11 +55,11 @@ try {
     if ($OutputFormat -eq "json" -and -not $PassThru) {
         # Parse JSON and return as PowerShell objects
         $jsonResult = $result | ConvertFrom-Json
-        Write-Host "`n✓ Command executed successfully" -ForegroundColor Green
+        Write-Information "`n✓ Command executed successfully"
         return $jsonResult
     } else {
         # Return raw output
-        Write-Host "`n✓ Command executed successfully" -ForegroundColor Green
+        Write-Information "`n✓ Command executed successfully"
         return $result
     }
 } catch {
@@ -67,4 +67,4 @@ try {
     return $null
 }
 
-Write-Host "`nAzure CLI bridge completed at $(Get-Date)" -ForegroundColor Cyan
+Write-Information "`nAzure CLI bridge completed at $(Get-Date)"

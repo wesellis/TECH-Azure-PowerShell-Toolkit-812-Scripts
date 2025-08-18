@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Power State Checker
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -15,9 +15,9 @@ param (
     [string]$VmName
 )
 
-Write-Host "Checking power state for VM: $VmName"
+Write-Information "Checking power state for VM: $VmName"
 
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Status
-Write-Host "VM: $($VM.Name)"
-Write-Host "Power State: $($VM.PowerState)"
-Write-Host "Status: $($VM.Statuses | Where-Object { $_.Code -like 'PowerState*' } | Select-Object -ExpandProperty DisplayStatus)"
+Write-Information "VM: $($VM.Name)"
+Write-Information "Power State: $($VM.PowerState)"
+Write-Information "Status: $($VM.Statuses | Where-Object { $_.Code -like 'PowerState*' } | Select-Object -ExpandProperty DisplayStatus)"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Scriptworkflow
 
@@ -47,7 +47,7 @@ if($WECurrentRole -eq " CS" )
 $WEProvisionToolPath = " $env:windir\temp\ProvisionScript"
 if(!(Test-Path $WEProvisionToolPath))
 {
-    New-Item $WEProvisionToolPath -ItemType directory | Out-Null
+    New-Item -ErrorAction Stop $WEProvisionToolPath -ItemType directory | Out-Null
 }
 
 $WEConfigurationFile = Join-Path -Path $WEProvisionToolPath -ChildPath " $WERole.json"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Get Oldestsamplefolder
 
@@ -69,13 +69,13 @@ Else set the sample folder to run the test
 
 
 $ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
-$cloudTable = (Get-AzStorageTable –Name $tableName –Context $ctx).CloudTable
+$cloudTable = (Get-AzStorageTable -ErrorAction Stop –Name $tableName –Context $ctx).CloudTable
 $t = Get-AzTableRow -table $cloudTable
 Write-WELog " Retrieved $($t.Length) rows" " INFO"
 
 
 Write-WELog " Searching all sample folders in '$WEBuildSourcesDirectory'..." " INFO"
-$WEArtifactFilePaths = Get-ChildItem $WEBuildSourcesDirectory\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
+$WEArtifactFilePaths = Get-ChildItem -ErrorAction Stop $WEBuildSourcesDirectory\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
 Write-WELog " Found $($WEArtifactFilePaths.Length) samples" " INFO"
 
 
@@ -89,12 +89,12 @@ Write-WELog " Checking table to see if this is a new sample (does the row exist?
 foreach ($WESourcePath in $WEArtifactFilePaths) {
     
     if ($WESourcePath -like " *\test\*" ) {
-        Write-host " Skipping..."
+        Write-Information " Skipping..."
         continue
     }
 
     Write-WELog " Reading: $WESourcePath" " INFO"
-    $WEMetadataJson = Get-Content $WESourcePath -Raw | ConvertFrom-Json
+    $WEMetadataJson = Get-Content -ErrorAction Stop $WESourcePath -Raw | ConvertFrom-Json
 
     # Get the sample's path off of the root, replace any path chars with " @" since the rowkey for table storage does not allow / or \ (among other things)
     $WESamplePath = Split-Path ([System.IO.Path]::GetRelativePath($WEBuildSourcesDirectory, $WESourcePath).toString()) -Parent
@@ -109,7 +109,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     Write-WELog " END (Row from Where-Object)" " INFO"
 
     # if the row isn't found in the table, it could be a new sample, add it with the data found in metadata.json
-    If ($r -eq $null) {
+    If ($null -eq $r) {
 
         Write-WELog " Adding: $WERowkey" " INFO"
 
@@ -153,7 +153,7 @@ if ($WEPurgeOldRows) {
         Write-WELog " Metadata path: $WEPathToSample > Found: $WESampleFound" " INFO"
 
         if ($WESampleFound) {
-            $WEMetadataJson = Get-Content $WEPathToSample -Raw | ConvertFrom-Json
+            $WEMetadataJson = Get-Content -ErrorAction Stop $WEPathToSample -Raw | ConvertFrom-Json
         }
 
         # If the sample isn't found in the repo (and it's not a new sample, still in PR (i.e. it's live))

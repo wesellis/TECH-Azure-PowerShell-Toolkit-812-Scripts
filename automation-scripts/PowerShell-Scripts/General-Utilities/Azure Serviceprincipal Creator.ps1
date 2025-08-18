@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Serviceprincipal Creator
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -89,7 +90,7 @@ Write-WELog " Creating Service Principal: $WEDisplayName" " INFO"
 
 try {
     # Create service principal with password
-   ;  $WEServicePrincipal = New-AzADServicePrincipal `
+   ;  $WEServicePrincipal = New-AzADServicePrincipal -ErrorAction Stop `
         -DisplayName $WEDisplayName `
         -Role $WERole `
         -Scope $WEScope

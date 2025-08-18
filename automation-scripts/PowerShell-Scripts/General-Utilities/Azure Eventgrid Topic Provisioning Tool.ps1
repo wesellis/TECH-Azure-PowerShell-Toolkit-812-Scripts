@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Eventgrid Topic Provisioning Tool
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -89,7 +90,7 @@ Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " Input Schema: $WEInputSchema" " INFO"
 
 ; 
-$WEEventGridTopic = New-AzEventGridTopic `
+$WEEventGridTopic = New-AzEventGridTopic -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WETopicName `
     -Location $WELocation `
@@ -100,7 +101,7 @@ if ($WETags.Count -gt 0) {
     foreach ($WETag in $WETags.GetEnumerator()) {
         Write-WELog "  $($WETag.Key): $($WETag.Value)" " INFO"
     }
-    # Apply tags (this would require Set-AzEventGridTopic in actual implementation)
+    # Apply tags (this would require Set-AzEventGridTopic -ErrorAction Stop in actual implementation)
 }
 
 Write-WELog " `nEvent Grid Topic $WETopicName provisioned successfully" " INFO"
@@ -114,7 +115,7 @@ try {
     Write-WELog "  Key 1: $($WEKeys.Key1.Substring(0,8))... (use for authentication)" " INFO"
     Write-WELog "  Key 2: $($WEKeys.Key2.Substring(0,8))... (backup key)" " INFO"
 } catch {
-    Write-WELog " `nAccess Keys: Available via Get-AzEventGridTopicKey cmdlet" " INFO"
+    Write-WELog " `nAccess Keys: Available via Get-AzEventGridTopicKey -ErrorAction Stop cmdlet" " INFO"
 }
 
 Write-WELog " `nEvent Publishing:" " INFO"
@@ -130,7 +131,7 @@ Write-WELog " 3. Start publishing events to the topic endpoint" " INFO"
 Write-WELog " 4. Monitor event delivery through Azure Portal" " INFO"
 
 Write-WELog " `nSample Event Format (EventGridSchema):" " INFO"
-Write-Host @"
+Write-Information @"
 [
   {
     " id" : " unique-id" ,

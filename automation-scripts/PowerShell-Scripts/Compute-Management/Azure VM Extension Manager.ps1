@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm Extension Manager
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -100,7 +101,7 @@ Write-WELog " Managing VM extension: $WEExtensionName" " INFO"
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
 
 
-Set-AzVMExtension `
+Set-AzVMExtension -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -VMName $WEVmName `
     -Name $WEExtensionName `

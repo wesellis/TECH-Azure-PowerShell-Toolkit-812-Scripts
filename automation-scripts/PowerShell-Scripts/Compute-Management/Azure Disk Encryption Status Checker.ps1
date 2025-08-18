@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Disk Encryption Status Checker
 
@@ -69,7 +69,7 @@ try {
     $vms = if ($WEResourceGroupName) {
         Get-AzVM -ResourceGroupName $WEResourceGroupName
     } else {
-        Get-AzVM
+        Get-AzVM -ErrorAction Stop
     }
 
     foreach ($vm in $vms) {
@@ -89,7 +89,7 @@ try {
     $disks = if ($WEResourceGroupName) {
         Get-AzDisk -ResourceGroupName $WEResourceGroupName
     } else {
-        Get-AzDisk
+        Get-AzDisk -ErrorAction Stop
     }
 
     foreach ($disk in $disks) {

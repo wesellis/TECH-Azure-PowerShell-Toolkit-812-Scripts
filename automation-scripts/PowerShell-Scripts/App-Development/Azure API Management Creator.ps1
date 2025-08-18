@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Api Management Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -109,7 +110,7 @@ param(
 Write-WELog " Creating API Management service: $WEServiceName" " INFO"
 Write-WELog " This process may take 30-45 minutes..." " INFO"
 ; 
-$WEApiManagement = New-AzApiManagement `
+$WEApiManagement = New-AzApiManagement -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEServiceName `
     -Location $WELocation `

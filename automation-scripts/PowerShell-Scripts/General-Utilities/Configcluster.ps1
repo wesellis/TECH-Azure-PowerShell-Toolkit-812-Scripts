@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configcluster
 
@@ -52,6 +52,7 @@ $safevar=$env:SAFEVAR
 $safewebconf=$env:SAFEWEBCONF
 $logdir=$pwd
 
+[CmdletBinding()]
 function WE-Log {
         [CmdletBinding()]
 $ErrorActionPreference = " Stop"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Autosnooze Createalert Child
 
@@ -48,6 +48,7 @@ param(
 
 
 
+[CmdletBinding()]
 function WE-Generate-AlertName 
 {
     param ([string] $WEOldAlertName , 
@@ -114,7 +115,7 @@ try
     if($WEAlertAction -eq " Disable" )
     {
         $WEExVMAlerts = Get-AzureRmAlertRule -ResourceGroup $WEVMObject.ResourceGroupName -DetailedOutput -ErrorAction SilentlyContinue
-                 if($WEExVMAlerts -ne $null)
+                 if($null -ne $WEExVMAlerts)
                     {
                         Write-Output " Checking for any previous alert(s)..." 
                         #Alerts exists so disable alert
@@ -154,7 +155,7 @@ try
                                 $WEVMAlerts = Get-AzureRmAlertRule -ResourceGroup $WEResourceGroupName -DetailedOutput -ErrorAction SilentlyContinue
 
                                 #Check if alerts exists and take action
-                                if($WEVMAlerts -ne $null)
+                                if($null -ne $WEVMAlerts)
                                 {
                                     Write-Output " Checking for any previous alert(s)..." 
                                     #Alerts exists so delete and re-create the new alert
@@ -174,7 +175,7 @@ try
                                               ;  $WEGetAlert=Get-AzureRmAlertRule -ResourceGroup $WEResourceGroupName -Name $WEAlert.Name -DetailedOutput -ErrorAction SilentlyContinue                                       
                                                         
                                             }
-                                            while($WEGetAlert -ne $null)
+                                            while($null -ne $WEGetAlert)
                                    
                                             Write-Output " Generating a new alert with unique name..."
                                             #Now generate new unique alert name

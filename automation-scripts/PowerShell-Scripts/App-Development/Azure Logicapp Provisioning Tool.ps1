@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Logicapp Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -104,7 +105,7 @@ if ($WEPlanName) {
     
     if (-not $WEPlan) {
         Write-WELog " Creating App Service Plan for Logic App..." " INFO"
-        $WEPlan = New-AzAppServicePlan `
+        $WEPlan = New-AzAppServicePlan -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -Name $WEPlanName `
             -Location $WELocation `
@@ -121,14 +122,14 @@ if ($WEPlanName) {
 Write-WELog " `nCreating Logic App..." " INFO"
 if ($WEPlanName) {
     # Logic App with dedicated plan (Standard tier)
-   ;  $WELogicApp = New-AzLogicApp `
+   ;  $WELogicApp = New-AzLogicApp -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEAppName `
         -Location $WELocation `
         -AppServicePlan $WEPlanName
 } else {
     # Consumption-based Logic App
-   ;  $WELogicApp = New-AzLogicApp `
+   ;  $WELogicApp = New-AzLogicApp -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEAppName `
         -Location $WELocation

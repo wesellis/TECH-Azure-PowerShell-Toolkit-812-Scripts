@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installdp
 
@@ -51,7 +51,7 @@ $subKey =  $key.OpenSubKey(" SOFTWARE\Microsoft\ConfigMgr10\Setup" )
 $uiInstallPath = $subKey.GetValue(" UI Installation Directory" )
 $modulePath = $uiInstallPath+" bin\ConfigurationManager.psd1"
 
-if((Get-Module ConfigurationManager) -eq $null) {
+if((Get-Module -ErrorAction Stop ConfigurationManager) -eq $null) {
     Import-Module $modulePath
 }
 $key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
@@ -72,7 +72,7 @@ while((Get-PSDrive -Name $WESiteCode -PSProvider CMSite -ErrorAction SilentlyCon
     New-PSDrive -Name $WESiteCode -PSProvider CMSite -Root $WEProviderMachineName @initParams
 }
 
-Set-Location " $($WESiteCode):\" @initParams
+Set-Location -ErrorAction Stop " $($WESiteCode):\" @initParams
 
 $WESystemServer = Get-CMSiteSystemServer -SiteSystemServerName $WEMachineName
 if(!$WESystemServer)

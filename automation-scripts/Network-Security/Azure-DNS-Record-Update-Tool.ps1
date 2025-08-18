@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure DNS Record Update Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -19,11 +19,11 @@ param (
 # Get the existing record set
 $RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
 
-Write-Host "Updating DNS Record: $RecordSetName.$ZoneName"
-Write-Host "Record Type: $RecordType"
-Write-Host "Current TTL: $($RecordSet.Ttl)"
-Write-Host "New TTL: $TTL"
-Write-Host "New Value: $RecordValue"
+Write-Information "Updating DNS Record: $RecordSetName.$ZoneName"
+Write-Information "Record Type: $RecordType"
+Write-Information "Current TTL: $($RecordSet.Ttl)"
+Write-Information "New TTL: $TTL"
+Write-Information "New Value: $RecordValue"
 
 # Update TTL
 $RecordSet.Ttl = $TTL
@@ -47,4 +47,4 @@ switch ($RecordType) {
 # Apply the changes
 Set-AzDnsRecordSet -RecordSet $RecordSet
 
-Write-Host "DNS record updated successfully"
+Write-Information "DNS record updated successfully"

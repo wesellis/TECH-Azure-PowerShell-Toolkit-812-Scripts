@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azuresacreateschedules Ms Mgmt Sa
 
@@ -40,7 +40,7 @@ param ($collectAuditLogs,$collectionFromAllSubscriptions)
 "Logging in to Azure..."
 $WEArmConn = Get-AutomationConnection -Name AzureRunAsConnection 
 
-if ($WEArmConn  -eq $null)
+if ($null -eq $WEArmConn)
 {
 	throw " Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
@@ -89,8 +89,8 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
-$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 $result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
 $headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -112,12 +112,12 @@ IF($subscriptionInfo)
     }
     Catch
     {
-        if ($WEAsmConn -eq $null) {
+        if ($null -eq $WEAsmConn) {
             Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
             $getAsmHeader=$false
         }
     }
-     if ($WEAsmConn -eq $null) {
+     if ($null -eq $WEAsmConn) {
         Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
         $getAsmHeader=$false
     }Else
@@ -182,7 +182,7 @@ $WERBStart4=$WERBStart3.AddMinutes(15)
 
 
 
-$allSchedules=Get-AzureRmAutomationSchedule `
+$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction Stop `
 -AutomationAccountName $WEAAAccount `
 -ResourceGroupName $WEAAResourceGroup
 
@@ -190,7 +190,7 @@ foreach ($sch in  $allSchedules|where{$_.Name -match $WEMetricsScheduleName -or 
 {
 
 	Write-output " Removing Schedule $($sch.Name)    "
-	Remove-AzureRmAutomationSchedule `
+	Remove-AzureRmAutomationSchedule -ErrorAction Stop `
 	-AutomationAccountName $WEAAAccount `
 	-Force `
 	-Name $sch.Name `
@@ -202,7 +202,7 @@ Write-output  " Creating schedule $WEMetricsScheduleName for runbook $WEMetricsR
 ; 
 $i=1
 Do {
-	New-AzureRmAutomationSchedule `
+	New-AzureRmAutomationSchedule -ErrorAction Stop `
 	-AutomationAccountName $WEAAAccount `
 	-HourInterval 1 `
 	-Name $($WEMetricsScheduleName+" -$i" ) `
@@ -250,7 +250,7 @@ IF($collectAuditLogs -eq 'Enabled')
 	}
 	Write-Output " Creating schedule $WELogsScheduleName for $WERunbookStartTime for runbook $WELogsRunbookName"
 
-	New-AzureRmAutomationSchedule `
+	New-AzureRmAutomationSchedule -ErrorAction Stop `
 	-AutomationAccountName $WEAAAccount `
 	-HourInterval 1 `
 	-Name $WELogsScheduleName `
@@ -292,7 +292,7 @@ $WEMetricsRunbookStartTime = $WEDate = [DateTime]::Today.AddHours(2).AddDays(1)
 
 Write-Output " Creating schedule $WEMetricsEnablerScheduleName for $WEMetricsRunbookStartTime for runbook $WEMetricsEnablerRunbookName"
 
-New-AzureRmAutomationSchedule `
+New-AzureRmAutomationSchedule -ErrorAction Stop `
 -AutomationAccountName $WEAAAccount `
 -DayInterval 1 `
 -Name " $WEMetricsEnablerScheduleName" `
@@ -314,7 +314,7 @@ Start-AzureRmAutomationRunbook -Name $WEMetricsEnablerRunbookName -ResourceGroup
 
 
 ; 
-$allSchedules=Get-AzureRmAutomationSchedule `
+$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction Stop `
 		-AutomationAccountName $WEAAAccount `
 		-ResourceGroupName $WEAAResourceGroup |where{$_.Name -match $WEMetricsScheduleName -or $_.Name -match $WEMetricsEnablerScheduleName -or $_.Name -match $WELogsScheduleName }
 
@@ -322,7 +322,7 @@ $allSchedules=Get-AzureRmAutomationSchedule `
 If ($allSchedules.count -ge 5)
 {
 Write-output " Removing hourly schedule for this runbook as its not needed anymore  "
-Remove-AzureRmAutomationSchedule `
+Remove-AzureRmAutomationSchedule -ErrorAction Stop `
 		-AutomationAccountName $WEAAAccount `
 		-Force `
 		-Name $mainSchedulerName `

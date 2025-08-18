@@ -1,4 +1,4 @@
-# Azure Service Health Monitor
+﻿# Azure Service Health Monitor
 # Monitor Azure service health and incidents
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -39,8 +39,8 @@ try {
         $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $EventType }
     }
 
-    Write-Host "Service Health Summary (Last $DaysBack days):" -ForegroundColor Cyan
-    Write-Host "Total Events: $($serviceHealthEvents.Count)" -ForegroundColor White
+    Write-Information "Service Health Summary (Last $DaysBack days):"
+    Write-Information "Total Events: $($serviceHealthEvents.Count)"
     
     $eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
         [PSCustomObject]@{
@@ -53,7 +53,7 @@ try {
     $eventSummary | Format-Table EventType, Count, ActiveEvents
 
     if ($serviceHealthEvents.Count -gt 0) {
-        Write-Host "Recent Events:" -ForegroundColor Yellow
+        Write-Information "Recent Events:"
         $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
 

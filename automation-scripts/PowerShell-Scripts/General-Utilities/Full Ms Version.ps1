@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Full Ms Version
 
@@ -61,7 +61,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 New-AzResourceGroup -Name TestRG1 -Location EastUS
 
 
-$virtualNetwork = New-AzVirtualNetwork `
+$virtualNetwork = New-AzVirtualNetwork -ErrorAction Stop `
   -ResourceGroupName TestRG1 `
   -Location EastUS `
   -Name VNet1 `
@@ -74,7 +74,7 @@ $virtualNetwork = New-AzVirtualNetwork `
   -VirtualNetwork $virtualNetwork
 
 
-  $virtualNetwork | Set-AzVirtualNetwork
+  $virtualNetwork | Set-AzVirtualNetwork -ErrorAction Stop
 
 
   $vnet = Get-AzVirtualNetwork -ResourceGroupName TestRG1 -Name VNet1
@@ -83,7 +83,7 @@ $virtualNetwork = New-AzVirtualNetwork `
   Add-AzVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix 10.1.255.0/27 -VirtualNetwork $vnet
 
 
-  $vnet | Set-AzVirtualNetwork
+  $vnet | Set-AzVirtualNetwork -ErrorAction Stop
 
 
   $gwpip= New-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1 -Location 'East US' -AllocationMethod Dynamic

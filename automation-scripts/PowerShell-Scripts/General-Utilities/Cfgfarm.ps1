@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Cfgfarm
 
@@ -47,6 +47,7 @@ param(
 
 
 
+[CmdletBinding()]
 function WE-Log {
 	[CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -63,7 +64,7 @@ Log $WEMName
 
 if ($WEMName){
 
-	$ucfg = [Xml] (Get-Content " $safekitmod/$WEMName/conf/userconfig.xml" )
+	$ucfg = [Xml] (Get-Content -ErrorAction Stop " $safekitmod/$WEMName/conf/userconfig.xml" )
 	$ucfg.safe.service.farm.lan.name=" default"
 
 

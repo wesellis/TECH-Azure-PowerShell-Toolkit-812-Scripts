@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Test Bestpractices
 
@@ -48,6 +48,7 @@ Note: This script is only needed in the Azure pipeline, not intended for local u
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -67,7 +68,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -101,7 +102,7 @@ else {
 
 
 if($bicepSupported){
-    Remove-Item " -Force $($WESampleFolder)/azuredeploy.json"
+    Remove-Item -ErrorAction Stop " -Force $($WESampleFolder)/azuredeploy.json"
 }
 
 

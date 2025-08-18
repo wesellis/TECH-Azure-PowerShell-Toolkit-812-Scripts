@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Aznetworksecuritygroup
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkSecurityGroup {
 }
 
@@ -41,6 +42,7 @@ function WE-Invoke-AzNetworkSecurityGroup {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkSecurityGroup {
 
 
@@ -53,7 +55,7 @@ $newAzNetworkSecurityGroupSplat = @{
     SecurityRules     = $rule1
     Tag               = $WETags
 }; 
-$WENSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+$WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 
 
     

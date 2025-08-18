@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     23 New Azresourcegroupdeployment
 
@@ -98,7 +98,7 @@ $newAzResourceGroupDeploymentSplat = @{
     VirtualMachineName = $WEVMName
 }
 
-New-AzResourceGroupDeployment @newAzResourceGroupDeploymentSplat
+New-AzResourceGroupDeployment -ErrorAction Stop @newAzResourceGroupDeploymentSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

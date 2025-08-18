@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Documentintelligence Service Manager
 
@@ -152,7 +152,7 @@ try {
             }
             
             $docIntelligenceService = Invoke-AzureOperation -Operation {
-                New-AzCognitiveServicesAccount @serviceParams
+                New-AzCognitiveServicesAccount -ErrorAction Stop @serviceParams
             } -OperationName " Create Document Intelligence Service"
             
             Write-Log " ✓ Document Intelligence service created: $WEServiceName" -Level SUCCESS
@@ -293,7 +293,7 @@ try {
                     MetricCategory = @(" AllMetrics" )
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null

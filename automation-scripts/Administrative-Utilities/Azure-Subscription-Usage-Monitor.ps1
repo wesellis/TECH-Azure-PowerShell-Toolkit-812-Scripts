@@ -1,4 +1,4 @@
-# Azure Subscription Usage Monitor
+﻿# Azure Subscription Usage Monitor
 # Professional utility for tracking subscription limits and quotas
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Resource usage and quota monitoring
@@ -106,33 +106,33 @@ try {
         elseif ($_.Status -eq "Warning") { $warningItems += $_ }
     }
 
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              SUBSCRIPTION USAGE REPORT" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "📊 Usage Summary for $($Location):" -ForegroundColor Cyan
-    Write-Host "   • Critical Items: $($criticalItems.Count)" -ForegroundColor Red
-    Write-Host "   • Warning Items: $($warningItems.Count)" -ForegroundColor Yellow
-    Write-Host "   • Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)" -ForegroundColor White
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              SUBSCRIPTION USAGE REPORT"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "📊 Usage Summary for $($Location):"
+    Write-Information "   • Critical Items: $($criticalItems.Count)"
+    Write-Information "   • Warning Items: $($warningItems.Count)"
+    Write-Information "   • Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)"
     
     if ($criticalItems.Count -gt 0) {
-        Write-Host ""
-        Write-Host "🚨 Critical Usage (>$CriticalThreshold%):" -ForegroundColor Red
+        Write-Information ""
+        Write-Information "🚨 Critical Usage (>$CriticalThreshold%):"
         $criticalItems | ForEach-Object {
-            Write-Host "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" -ForegroundColor White
+            Write-Information "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
         }
     }
     
     if ($warningItems.Count -gt 0) {
-        Write-Host ""
-        Write-Host "⚠️ Warning Usage (>$WarningThreshold%):" -ForegroundColor Yellow
+        Write-Information ""
+        Write-Information "⚠️ Warning Usage (>$WarningThreshold%):"
         $warningItems | ForEach-Object {
-            Write-Host "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" -ForegroundColor White
+            Write-Information "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
         }
     }
     
-    Write-Host ""
+    Write-Information ""
 
     Write-Log "✅ Subscription usage monitoring completed successfully!" -Level SUCCESS
 

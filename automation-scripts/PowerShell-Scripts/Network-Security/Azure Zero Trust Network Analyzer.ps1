@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Zero Trust Network Analyzer
 
@@ -105,7 +105,7 @@ foreach ($module in $requiredModules) {
 
 $assessmentResults = @{
     SubscriptionId = ""
-    AssessmentDate = Get-Date
+    AssessmentDate = Get-Date -ErrorAction Stop
     OverallScore = 0
     NetworkSegmentation = @()
     IdentityPerimeter = @()
@@ -117,10 +117,11 @@ $assessmentResults = @{
     Recommendations = @()
 }
 
+[CmdletBinding()]
 function WE-Test-NetworkSegmentation {
     Write-WELog " Analyzing network segmentation..." " INFO" -ForegroundColor Yellow
     
-    $vnets = Get-AzVirtualNetwork
+    $vnets = Get-AzVirtualNetwork -ErrorAction Stop
     $segmentationIssues = @()
     
     foreach ($vnet in $vnets) {
@@ -172,13 +173,14 @@ function WE-Test-NetworkSegmentation {
     return $segmentationIssues
 }
 
+[CmdletBinding()]
 function WE-Test-IdentityPerimeter {
     Write-WELog " Analyzing identity perimeter security..." " INFO" -ForegroundColor Yellow
     
     $identityIssues = @()
     
     # Check for Service Endpoints vs Private Endpoints usage
-    $storageAccounts = Get-AzStorageAccount
+    $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
     foreach ($storage in $storageAccounts) {
         $storageAnalysis = @{
             ResourceName = $storage.StorageAccountName
@@ -203,7 +205,7 @@ function WE-Test-IdentityPerimeter {
     }
     
     # Check SQL Servers
-    $sqlServers = Get-AzSqlServer
+    $sqlServers = Get-AzSqlServer -ErrorAction Stop
     foreach ($sql in $sqlServers) {
         $sqlAnalysis = @{
             ResourceName = $sql.ServerName
@@ -227,13 +229,14 @@ function WE-Test-IdentityPerimeter {
     return $identityIssues
 }
 
+[CmdletBinding()]
 function WE-Test-EncryptionCompliance {
     Write-WELog " Analyzing encryption compliance..." " INFO" -ForegroundColor Yellow
     
     $encryptionIssues = @()
     
     # Check VM disk encryption
-    $vms = Get-AzVM
+    $vms = Get-AzVM -ErrorAction Stop
     foreach ($vm in $vms) {
         $vmAnalysis = @{
             ResourceName = $vm.Name
@@ -260,11 +263,12 @@ function WE-Test-EncryptionCompliance {
     return $encryptionIssues
 }
 
+[CmdletBinding()]
 function WE-Test-MicroSegmentation {
     Write-WELog " Analyzing micro-segmentation implementation..." " INFO" -ForegroundColor Yellow
     
     $microSegmentationIssues = @()
-    $nsgs = Get-AzNetworkSecurityGroup
+    $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
     
     foreach ($nsg in $nsgs) {
         $nsgAnalysis = @{
@@ -300,6 +304,7 @@ function WE-Test-MicroSegmentation {
     return $microSegmentationIssues
 }
 
+[CmdletBinding()]
 function WE-Generate-RemediationScripts {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -328,7 +333,7 @@ param($WEAssessmentResults)
 `$nsg = New-AzNetworkSecurityGroup -Name " nsg-$($subnet.Name)" -ResourceGroupName " $($vnet.ResourceGroup)" -Location " East US"
 `$vnet = Get-AzVirtualNetwork -Name " $($vnet.VNetName)" -ResourceGroupName " $($vnet.ResourceGroup)"
 Set-AzVirtualNetworkSubnetConfig -Name " $($subnet.Name)" -VirtualNetwork `$vnet -AddressPrefix " $($subnet.AddressPrefix)" -NetworkSecurityGroup `$nsg
-`$vnet | Set-AzVirtualNetwork
+`$vnet | Set-AzVirtualNetwork -ErrorAction Stop
 " @
                 }
             }
@@ -340,6 +345,7 @@ Set-AzVirtualNetworkSubnetConfig -Name " $($subnet.Name)" -VirtualNetwork `$vnet
     return $remediationScript
 }
 
+[CmdletBinding()]
 function WE-Generate-HTMLReport {
     [CmdletBinding()]; 
 $ErrorActionPreference = " Stop"
@@ -443,7 +449,7 @@ param($WEAssessmentResults)
 
 try {
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
         Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
         Connect-AzAccount

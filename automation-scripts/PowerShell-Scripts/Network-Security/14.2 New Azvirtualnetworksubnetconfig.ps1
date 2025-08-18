@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.2 New Azvirtualnetworksubnetconfig
 
@@ -63,7 +63,7 @@ $newAzVirtualNetworkSubnetConfigSplat = @{
     AddressPrefix = '10.0.0.0/24'
 }
 ; 
-$subnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+$subnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

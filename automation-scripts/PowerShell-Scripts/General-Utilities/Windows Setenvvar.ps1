@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Setenvvar
 
@@ -49,7 +49,7 @@ param(
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 
-Write-Host $(if ($WEPrintValue -eq " true" ) { " Setting variable $WEVariable with value $WEValue" } else { " Setting variable $WEVariable" })
+Write-Information $(if ($WEPrintValue -eq " true" ) { " Setting variable $WEVariable with value $WEValue" } else { " Setting variable $WEVariable" })
 [Environment]::SetEnvironmentVariable(" $WEVariable" , " $WEValue" , " Machine" )
 
 

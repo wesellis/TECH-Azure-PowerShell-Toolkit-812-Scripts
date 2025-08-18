@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     7 Get Azvmimagesku
 
@@ -179,13 +179,13 @@ premium-ubuntu-xenial        test-ubuntu-premium-offer-0002        Canonical    
 
 
 
-Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku | Get-Member
+Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku -ErrorAction Stop | Get-Member -ErrorAction Stop
 
 
-Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Get-AzVMImageSku
+Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Get-AzVMImageSku -ErrorAction Stop
 
 
-Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'MicrosoftWindowsDesktop' | Get-AzVMImageSku | Where-Object {$_.Offer -eq 'windows-10-20h2-vhd-client-office-prod-stage'}
+Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'MicrosoftWindowsDesktop' | Get-AzVMImageSku -ErrorAction Stop | Where-Object {$_.Offer -eq 'windows-10-20h2-vhd-client-office-prod-stage'}
 
 
 

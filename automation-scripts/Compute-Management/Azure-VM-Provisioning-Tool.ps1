@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Virtual Machine Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -19,16 +19,16 @@ param (
     [string]$ImageSku = "2022-Datacenter"
 )
 
-Write-Host "Provisioning Virtual Machine: $VmName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "VM Size: $VmSize"
+Write-Information "Provisioning Virtual Machine: $VmName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "VM Size: $VmSize"
 
 # Create VM configuration
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
 
 # Set operating system
-$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object PSCredential($AdminUsername, $AdminPassword))
+$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object -ErrorAction Stop PSCredential($AdminUsername, $AdminPassword))
 
 # Set source image
 $VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Offer $ImageOffer -Skus $ImageSku -Version "latest"
@@ -36,4 +36,4 @@ $VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Of
 # Create the VM
 New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
 
-Write-Host "Virtual Machine $VmName provisioned successfully"
+Write-Information "Virtual Machine $VmName provisioned successfully"

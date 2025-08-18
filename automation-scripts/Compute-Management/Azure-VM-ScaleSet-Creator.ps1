@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Scale Set Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,10 +24,10 @@ param (
     [int]$InstanceCount = 2
 )
 
-Write-Host "Creating VM Scale Set: $ScaleSetName"
+Write-Information "Creating VM Scale Set: $ScaleSetName"
 
 # Create scale set configuration
-$VmssConfig = New-AzVmssConfig `
+$VmssConfig = New-AzVmssConfig -ErrorAction Stop `
     -Location $Location `
     -SkuCapacity $InstanceCount `
     -SkuName $VmSize `
@@ -42,13 +42,13 @@ $VmssConfig = Add-AzVmssNetworkInterfaceConfiguration `
     -CreatePublicIPAddress $false
 
 # Set OS profile
-$VmssConfig = Set-AzVmssOsProfile `
+$VmssConfig = Set-AzVmssOsProfile -ErrorAction Stop `
     -VirtualMachineScaleSet $VmssConfig `
     -ComputerNamePrefix "vmss" `
     -AdminUsername "azureuser"
 
 # Set storage profile
-$VmssConfig = Set-AzVmssStorageProfile `
+$VmssConfig = Set-AzVmssStorageProfile -ErrorAction Stop `
     -VirtualMachineScaleSet $VmssConfig `
     -OsDiskCreateOption "FromImage" `
     -ImageReferencePublisher "MicrosoftWindowsServer" `
@@ -57,13 +57,13 @@ $VmssConfig = Set-AzVmssStorageProfile `
     -ImageReferenceVersion "latest"
 
 # Create the scale set
-$Vmss = New-AzVmss `
+$Vmss = New-AzVmss -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $ScaleSetName `
     -VirtualMachineScaleSet $VmssConfig
 
-Write-Host "✅ VM Scale Set created successfully:"
-Write-Host "  Name: $($Vmss.Name)"
-Write-Host "  Location: $($Vmss.Location)"
-Write-Host "  VM Size: $VmSize"
-Write-Host "  Instance Count: $InstanceCount"
+Write-Information "✅ VM Scale Set created successfully:"
+Write-Information "  Name: $($Vmss.Name)"
+Write-Information "  Location: $($Vmss.Location)"
+Write-Information "  VM Size: $VmSize"
+Write-Information "  Instance Count: $InstanceCount"

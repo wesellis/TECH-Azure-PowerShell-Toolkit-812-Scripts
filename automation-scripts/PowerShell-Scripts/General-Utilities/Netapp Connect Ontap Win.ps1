@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Netapp Connect Ontap Win
 
@@ -114,7 +114,7 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
 
         $WEIqnName = " azureqsiqn"
         $WESecPasswd = ConvertTo-SecureString $WESVMPwd -AsPlainText -Force
-        $WESvmCreds = New-Object System.Management.Automation.PSCredential (" admin" , $WESecPasswd)
+        $WESvmCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" admin" , $WESecPasswd)
         $WEVMIqn = (get-initiatorPort).nodeaddress
         #Pad the data Volume size by 10 percent
         $WEDataVolSize = [System.Math]::Floor($WECapacity * 1.1)
@@ -131,13 +131,13 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
         New-IscsiTargetPortal -TargetPortalAddress $iScSiLIF
         Connect-Iscsitarget -NodeAddress (Get-IscsiTarget).NodeAddress -IsMultipathEnabled $WETrue -TargetPortalAddress $iScSiLIF
     
-        Get-IscsiSession | Register-IscsiSession
+        Get-IscsiSession -ErrorAction Stop | Register-IscsiSession
 
         New-Ncvol -name sql_data_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WEDataVolSize)+" g" ) -SpaceReserve none
         New-Ncvol -name sql_log_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WELogVolSize)+" g" ) -SpaceReserve none
 
-        New-Nclun /vol/sql_data_root/sql_data_lun ([string]$WEDataLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
-        New-Nclun /vol/sql_log_root/sql_log_lun ([string]$WELogLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008" 
+        New-Nclun -ErrorAction Stop /vol/sql_data_root/sql_data_lun ([string]$WEDataLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
+        New-Nclun -ErrorAction Stop /vol/sql_log_root/sql_log_lun ([string]$WELogLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008" 
 
         Add-Nclunmap /vol/sql_data_root/sql_data_lun $WEIqnName
         Add-Nclunmap /vol/sql_log_root/sql_log_lun $WEIqnName
@@ -148,8 +148,8 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
         Wait-NcHostDisk -ControllerLunPath /vol/sql_log_root/sql_log_lun -ControllerName $WESVMName
 
 
-       ;  $WEDataDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_data_lun*" }).Disk
-       ;  $WELogDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_log_lun*" }).Disk
+       ;  $WEDataDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_data_lun*" }).Disk
+       ;  $WELogDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_log_lun*" }).Disk
 
         Stop-Service -Name ShellHWDetection
         Set-Disk -Number $WEDataDisk -IsOffline $WEFalse
@@ -175,7 +175,7 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
 
 function WE-Create-NcGroup( [String] $WEVserverIqn, [String] $WEInisitatorIqn, [String] $WEVserver)
 {
-    $iGroupList = Get-ncigroup
+    $iGroupList = Get-ncigroup -ErrorAction Stop
     $iGroupSetup = $WEFalse
     $iGroupInitiatorSetup = $WEFalse
 
@@ -232,7 +232,7 @@ function WE-Start-ThisService([String]$WEServiceName)
         Write-Output " Starting $WEServiceName"
     }
     if ($WEService.StartType -ne " Automatic" ) {
-        Set-Service $WEServiceName -startuptype " Automatic"
+        Set-Service -ErrorAction Stop $WEServiceName -startuptype " Automatic"
         Write-Output " Setting $WEServiceName Service Startup to Automatic"
     }
    
@@ -240,13 +240,14 @@ function WE-Start-ThisService([String]$WEServiceName)
 
  function WE-Setup-VM ()
  {
-    Set-MultiPathIO
+    Set-MultiPathIO -ErrorAction Stop
     Start-ThisService " MSiSCSI"
  }
 
 
 
 
+[CmdletBinding()]
 function WE-Load-SampleDatabase
 {
 
@@ -254,6 +255,7 @@ $WEDataDirectory = " F:\SQL\DATA"
 $WELogDirectory = " G:\SQL\Logs"
 $WEBackupDirectory = " F:\SQL\BACKUPS"
 
+[CmdletBinding()]
 function WE-Create-DirectoryStructure
 {
 New-Item -ItemType directory -Path $WEDataDirectory
@@ -263,7 +265,8 @@ New-Item -ItemType directory -Path $WEBackupDirectory
 }
 
 
-function WE-Set-SQLDataLocation
+[CmdletBinding()]
+function WE-Set-SQLDataLocation -ErrorAction Stop
 {
 $WEDataRegKeyPath = " HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
 $WEDataRegKeyName = " DefaultData"
@@ -292,12 +295,14 @@ If ((Get-ItemProperty -Path $WEBackupRegKeyPath -Name $WEBackupRegKeyName -Error
 }
 
 
+[CmdletBinding()]
 function WE-Download-SampleDatabase
 {
 wget https://msftdbprodsamples.codeplex.com/downloads/get/880661 -OutFile $WEBackupDirectory\AdventureWorks2014bakzip.zip
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+[CmdletBinding()]
 function WE-Unzip
 {
     param([Parameter(Mandatory=$false)]
@@ -318,7 +323,7 @@ Unzip $WEBackupDirectory\AdventureWorks2014bakzip.zip $WEBackupDirectory
 }
 
 Create-DirectoryStructure
-Set-SQLDataLocation
+Set-SQLDataLocation -ErrorAction Stop
 Restart-Service -Force MSSQLSERVER
 Download-SampleDatabase
 
@@ -327,14 +332,15 @@ function WE-Remove-Password([String]$password)
 {
 $azurelogfilepath = 'C:\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\1.8\CustomScriptHandler.log'
 $scriptlogfilepath = 'C:\WindowsAzure\Logs\SQLNetApp_Connect_Storage.ps1.txt'
-(get-content $azurelogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content $azurelogfilepath
-(get-content $scriptlogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content $scriptlogfilepath
+(get-content -ErrorAction Stop $azurelogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content -ErrorAction Stop $azurelogfilepath
+(get-content -ErrorAction Stop $scriptlogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content -ErrorAction Stop $scriptlogfilepath
 }
 
+[CmdletBinding()]
 function WE-Install-NetAppPSToolkit
 {
-New-Item C:\NetApp -Type Directory; 
-$WEWebClient = New-Object System.Net.WebClient
+New-Item -ErrorAction Stop C:\NetApp -Type Directory; 
+$WEWebClient = New-Object -ErrorAction Stop System.Net.WebClient
 $WEWebClient.DownloadFile(" https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi" ," C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" )
 Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" /qn ADDLOCAL=F.PSTKDOT}
 }
@@ -342,10 +348,10 @@ Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i C:\NetApp\NetApp_PowerSh
 ; 
 $WESVMPwd = $WEOTCpassword
 Install-NetAppPSToolkit
-Get-ONTAPClusterDetails $email $password $ocmip
+Get-ONTAPClusterDetails -ErrorAction Stop $email $password $ocmip
 Connect-ONTAP $WEAdminLIF $iScSILIF $WESVMName $WESVMPwd $WECapacity
 Load-SampleDatabase
-Remove-Password $password
+Remove-Password -ErrorAction Stop $password
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

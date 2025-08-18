@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Sql Database Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -107,18 +108,18 @@ Write-WELog " Service Objective: $WEServiceObjective" " INFO"
 
 
 Write-WELog " `nCreating SQL Server..." " INFO"; 
-$WESqlServer = New-AzSqlServer `
+$WESqlServer = New-AzSqlServer -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Location $WELocation `
     -ServerName $WEServerName `
-    -SqlAdministratorCredentials (New-Object PSCredential($WEAdminUser, $WEAdminPassword))
+    -SqlAdministratorCredentials (New-Object -ErrorAction Stop PSCredential($WEAdminUser, $WEAdminPassword))
 
 Write-WELog " SQL Server created: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
 
 
 if ($WEAllowAzureIps) {
     Write-WELog " Configuring firewall to allow Azure services..." " INFO"
-    New-AzSqlServerFirewallRule `
+    New-AzSqlServerFirewallRule -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -ServerName $WEServerName `
         -FirewallRuleName " AllowAzureServices" `
@@ -128,7 +129,7 @@ if ($WEAllowAzureIps) {
 
 
 Write-WELog " `nCreating SQL Database..." " INFO" ; 
-$WESqlDatabase = New-AzSqlDatabase `
+$WESqlDatabase = New-AzSqlDatabase -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -ServerName $WEServerName `
     -DatabaseName $WEDatabaseName `

@@ -1,4 +1,4 @@
-# Microsoft Defender for Cloud Automation Tool
+﻿# Microsoft Defender for Cloud Automation Tool
 # Professional Azure security automation script
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise security posture management automation
@@ -91,7 +91,7 @@ try {
                     }
                     
                     Invoke-AzureOperation -Operation {
-                        Set-AzSecurityPricing @params
+                        Set-AzSecurityPricing -ErrorAction Stop @params
                     } -OperationName "Enable Defender Plan: $planName"
                     
                     $enabledPlans += $plan
@@ -103,18 +103,18 @@ try {
                 }
             }
             
-            Write-Host ""
-            Write-Host "📊 Defender for Cloud Plan Status" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "✅ Enabled Plans ($($enabledPlans.Count)):" -ForegroundColor Green
+            Write-Information ""
+            Write-Information "📊 Defender for Cloud Plan Status"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "✅ Enabled Plans ($($enabledPlans.Count)):"
             foreach ($plan in $enabledPlans) {
-                Write-Host "   • $plan" -ForegroundColor White
+                Write-Information "   • $plan"
             }
             
             if ($failedPlans.Count -gt 0) {
-                Write-Host "❌ Failed Plans ($($failedPlans.Count)):" -ForegroundColor Red
+                Write-Information "❌ Failed Plans ($($failedPlans.Count)):"
                 foreach ($plan in $failedPlans) {
-                    Write-Host "   • $plan" -ForegroundColor White
+                    Write-Information "   • $plan"
                 }
             }
         }
@@ -127,18 +127,18 @@ try {
                 Get-AzPolicyAssignment -Scope "/subscriptions/$SubscriptionId" | Where-Object { $_.Properties.DisplayName -like "*Security Center*" -or $_.Properties.DisplayName -like "*Azure Security Benchmark*" }
             } -OperationName "Get Security Policy Assignments"
             
-            Write-Host ""
-            Write-Host "📋 Current Security Policy Assignments" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "📋 Current Security Policy Assignments"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             foreach ($assignment in $policyAssignments) {
                 $complianceState = Get-AzPolicyState -PolicyAssignmentName $assignment.Name -Top 1 | Select-Object -First 1
                 $complianceStatus = if ($complianceState) { $complianceState.ComplianceState } else { "Unknown" }
                 
-                Write-Host "• $($assignment.Properties.DisplayName)" -ForegroundColor White
-                Write-Host "  Scope: $($assignment.Properties.Scope)" -ForegroundColor Gray
-                Write-Host "  Compliance: $complianceStatus" -ForegroundColor $(if ($complianceStatus -eq "Compliant") { "Green" } elseif ($complianceStatus -eq "NonCompliant") { "Red" } else { "Yellow" })
-                Write-Host ""
+                Write-Information "• $($assignment.Properties.DisplayName)"
+                Write-Information "  Scope: $($assignment.Properties.Scope)"
+                Write-Information "  Compliance: $complianceStatus" -ForegroundColor $(if ($complianceStatus -eq "Compliant") { "Green" } elseif ($complianceStatus -eq "NonCompliant") { "Red" } else { "Yellow" })
+                Write-Information ""
             }
             
             # Configure auto-provisioning if enabled
@@ -193,31 +193,31 @@ try {
             $mediumFindings = $recommendations | Where-Object { $_.properties.status.severity -eq "Medium" -and $_.properties.status.code -eq "Unhealthy" }
             $lowFindings = $recommendations | Where-Object { $_.properties.status.severity -eq "Low" -and $_.properties.status.code -eq "Unhealthy" }
             
-            Write-Host ""
-            Write-Host "🛡️  Security Score Dashboard" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "🛡️  Security Score Dashboard"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             if ($securityScore) {
                 $currentScore = [math]::Round(($securityScore.properties.score.current / $securityScore.properties.score.max) * 100, 1)
                 $scoreColor = if ($currentScore -ge 80) { "Green" } elseif ($currentScore -ge 60) { "Yellow" } else { "Red" }
                 
-                Write-Host "📊 Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
-                Write-Host ""
+                Write-Information "📊 Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
+                Write-Information ""
             }
             
-            Write-Host "🚨 Security Findings by Severity:" -ForegroundColor Cyan
-            Write-Host "   • Critical (High): $($criticalFindings.Count)" -ForegroundColor Red
-            Write-Host "   • Medium: $($mediumFindings.Count)" -ForegroundColor Yellow  
-            Write-Host "   • Low: $($lowFindings.Count)" -ForegroundColor Green
-            Write-Host ""
+            Write-Information "🚨 Security Findings by Severity:"
+            Write-Information "   • Critical (High): $($criticalFindings.Count)"
+            Write-Information "   • Medium: $($mediumFindings.Count)"  
+            Write-Information "   • Low: $($lowFindings.Count)"
+            Write-Information ""
             
             if ($DetailedOutput -and $criticalFindings.Count -gt 0) {
-                Write-Host "🔥 Critical Security Issues (Top 10):" -ForegroundColor Red
-                Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Red
+                Write-Information "🔥 Critical Security Issues (Top 10):"
+                Write-Information "════════════════════════════════════════════════════════════════════"
                 $criticalFindings | Select-Object -First 10 | ForEach-Object {
-                    Write-Host "• $($_.properties.displayName)" -ForegroundColor White
-                    Write-Host "  Resource: $($_.properties.resourceDetails.id)" -ForegroundColor Gray
-                    Write-Host ""
+                    Write-Information "• $($_.properties.displayName)"
+                    Write-Information "  Resource: $($_.properties.resourceDetails.id)"
+                    Write-Information ""
                 }
             }
         }
@@ -299,7 +299,7 @@ try {
             }
             
             Invoke-AzureOperation -Operation {
-                Set-AzSecurityContact @contactParams
+                Set-AzSecurityContact -ErrorAction Stop @contactParams
             } -OperationName "Configure Security Contacts"
             
             Write-Log "✓ Security contacts configured: $($AlertEmails -join ', ')" -Level SUCCESS
@@ -343,7 +343,7 @@ try {
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName "Plan Status" -Status "Checking current Defender for Cloud plan status"
     
     $currentPlans = Invoke-AzureOperation -Operation {
-        Get-AzSecurityPricing
+        Get-AzSecurityPricing -ErrorAction Stop
     } -OperationName "Get Current Defender Plans"
     
     $enabledPlans = $currentPlans | Where-Object { $_.PricingTier -eq "Standard" }
@@ -395,72 +395,72 @@ try {
     } else { 0 }
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                      MICROSOFT DEFENDER FOR CLOUD STATUS" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                      MICROSOFT DEFENDER FOR CLOUD STATUS"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
     
-    Write-Host "🛡️  Defender for Cloud Overview:" -ForegroundColor Cyan
-    Write-Host "   • Subscription: $SubscriptionId" -ForegroundColor White
-    Write-Host "   • Plans Enabled: $($enabledPlans.Count)/$($currentPlans.Count)" -ForegroundColor $(if ($enabledPlans.Count -gt 0) { "Green" } else { "Red" })
-    Write-Host "   • Coverage Score: $overallSecurityScore%" -ForegroundColor $(if ($overallSecurityScore -ge 80) { "Green" } elseif ($overallSecurityScore -ge 50) { "Yellow" } else { "Red" })
+    Write-Information "🛡️  Defender for Cloud Overview:"
+    Write-Information "   • Subscription: $SubscriptionId"
+    Write-Information "   • Plans Enabled: $($enabledPlans.Count)/$($currentPlans.Count)" -ForegroundColor $(if ($enabledPlans.Count -gt 0) { "Green" } else { "Red" })
+    Write-Information "   • Coverage Score: $overallSecurityScore%" -ForegroundColor $(if ($overallSecurityScore -ge 80) { "Green" } elseif ($overallSecurityScore -ge 50) { "Yellow" } else { "Red" })
     
     if ($enabledPlans.Count -gt 0) {
-        Write-Host ""
-        Write-Host "✅ Enabled Protection Plans:" -ForegroundColor Green
+        Write-Information ""
+        Write-Information "✅ Enabled Protection Plans:"
         foreach ($plan in $enabledPlans) {
-            Write-Host "   • $($plan.Name)" -ForegroundColor White
+            Write-Information "   • $($plan.Name)"
         }
     }
     
     if ($freePlans.Count -gt 0) {
-        Write-Host ""
-        Write-Host "⚠️  Free Tier Plans (Consider Upgrading):" -ForegroundColor Yellow
+        Write-Information ""
+        Write-Information "⚠️  Free Tier Plans (Consider Upgrading):"
         foreach ($plan in $freePlans) {
-            Write-Host "   • $($plan.Name)" -ForegroundColor White
+            Write-Information "   • $($plan.Name)"
         }
     }
     
-    Write-Host ""
-    Write-Host "💰 Estimated Monthly Costs:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "💰 Estimated Monthly Costs:"
     foreach ($cost in $costEstimates.GetEnumerator()) {
-        Write-Host "   • $($cost.Key): $($cost.Value)" -ForegroundColor White
+        Write-Information "   • $($cost.Key): $($cost.Value)"
     }
     
-    Write-Host ""
-    Write-Host "📋 Security Recommendations:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "📋 Security Recommendations:"
     foreach ($recommendation in $securityRecommendations) {
-        Write-Host "   $recommendation" -ForegroundColor White
+        Write-Information "   $recommendation"
     }
     
-    Write-Host ""
-    Write-Host "🏛️  Compliance Standards Available:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "🏛️  Compliance Standards Available:"
     foreach ($standard in $complianceStandards) {
-        Write-Host "   • $standard" -ForegroundColor White
+        Write-Information "   • $standard"
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Review and remediate high-priority security recommendations" -ForegroundColor White
-    Write-Host "   • Configure custom security policies for your environment" -ForegroundColor White
-    Write-Host "   • Set up regular security assessments and reporting" -ForegroundColor White
-    Write-Host "   • Implement automated response to security incidents" -ForegroundColor White
-    Write-Host "   • Train your team on security best practices" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Review and remediate high-priority security recommendations"
+    Write-Information "   • Configure custom security policies for your environment"
+    Write-Information "   • Set up regular security assessments and reporting"
+    Write-Information "   • Implement automated response to security incidents"
+    Write-Information "   • Train your team on security best practices"
+    Write-Information ""
 
     Write-Log "✅ Microsoft Defender for Cloud operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Microsoft Defender for Cloud operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Security Center access permissions" -ForegroundColor White
-    Write-Host "   • Check subscription eligibility for Defender plans" -ForegroundColor White
-    Write-Host "   • Ensure Azure Security module is installed and updated" -ForegroundColor White
-    Write-Host "   • Validate network connectivity to Azure Security endpoints" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Security Center access permissions"
+    Write-Information "   • Check subscription eligibility for Defender plans"
+    Write-Information "   • Ensure Azure Security module is installed and updated"
+    Write-Information "   • Validate network connectivity to Azure Security endpoints"
+    Write-Information ""
     
     exit 1
 }

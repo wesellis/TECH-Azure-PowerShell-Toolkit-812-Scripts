@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Extension Manager
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,12 +24,12 @@ param (
     [string]$Publisher = "Microsoft.Compute"
 )
 
-Write-Host "Managing VM extension: $ExtensionName"
+Write-Information "Managing VM extension: $ExtensionName"
 
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 
 # Install extension
-Set-AzVMExtension `
+Set-AzVMExtension -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -VMName $VmName `
     -Name $ExtensionName `
@@ -38,7 +38,7 @@ Set-AzVMExtension `
     -TypeHandlerVersion "1.10" `
     -Location $VM.Location
 
-Write-Host "✅ Extension '$ExtensionName' installed successfully"
-Write-Host "VM: $VmName"
-Write-Host "Publisher: $Publisher"
-Write-Host "Type: $ExtensionType"
+Write-Information "✅ Extension '$ExtensionName' installed successfully"
+Write-Information "VM: $VmName"
+Write-Information "Publisher: $Publisher"
+Write-Information "Type: $ExtensionType"

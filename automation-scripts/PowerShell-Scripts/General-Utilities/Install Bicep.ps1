@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Install Bicep
 
@@ -58,7 +58,7 @@ $installPath = " $ttkFolder\bicep"
 $bicepFolder = New-Item -ItemType Directory -Path $installPath -Force; 
 $bicepPath = " $bicepFolder\bicep.exe"
 Write-WELog " $bicepPath" " INFO"
-(New-Object Net.WebClient).DownloadFile($bicepUri, $bicepPath)
+(New-Object -ErrorAction Stop Net.WebClient).DownloadFile($bicepUri, $bicepPath)
 if (!(Test-Path $bicepPath)) {
     Write-Error " Couldn't find downloaded file $bicepPath"
 }
@@ -71,8 +71,8 @@ Write-WELog " ##vso[task.prependpath]$p" " INFO" # this doesn't seem to work - s
 
 $WEENV:PATH = " $p;$($WEENV:PATH)" # since the prependpath task isn't working explicitly set it here and will have to for each subsequent task since it doesn't carry across processes
 
-Write-Host $WEENV:PATH
-$bicepPath = $(Get-command bicep.exe).source # rewrite the var to make sure we have the correct bicep.exe
+Write-Information $WEENV:PATH
+$bicepPath = $(Get-command -ErrorAction Stop bicep.exe).source # rewrite the var to make sure we have the correct bicep.exe
 
 Write-WELog " Using bicep at: $bicepPath" " INFO"
 Write-WELog " ##vso[task.setvariable variable=bicep.path]$bicepPath" " INFO"

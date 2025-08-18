@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Adddatabasetosqlserver
 
@@ -48,7 +48,7 @@ param(
 	$password
 )
 
-if ((Get-Command Install-PackageProvider -ErrorAction Ignore) -eq $null)
+if ((Get-Command -ErrorAction Stop Install-PackageProvider -ErrorAction Ignore) -eq $null)
 {
 	# Load the latest SQL PowerShell Provider
 	(Get-Module -ListAvailable SQLPS `
@@ -85,14 +85,14 @@ foreach ($nextBackupFile in $fileList)
 {
     # Move the file to the default data directory of the default instance
     $nextBackupFileName = Split-Path -Path ($nextBackupFile.PhysicalName) -Leaf;
-    $relocateFiles = $relocateFiles + New-Object `
+    $relocateFiles = $relocateFiles + New-Object -ErrorAction Stop `
         Microsoft.SqlServer.Management.Smo.RelocateFile( `
             $nextBackupFile.LogicalName,
             " $env:temp\$($nextBackupFileName)" );
 }
 
 $securePassword = ConvertTo-SecureString $password -AsPlainText -Force; 
-$credentials = New-Object System.Management.Automation.PSCredential ($username, $securePassword)
+$credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username, $securePassword)
 Restore-SqlDatabase `
 	-ReplaceDatabase `
 	-ServerInstance . `

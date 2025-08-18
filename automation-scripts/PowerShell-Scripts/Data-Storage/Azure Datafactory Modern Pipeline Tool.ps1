@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Datafactory Modern Pipeline Tool
 
@@ -184,6 +184,7 @@ try {
 }
 
 
+[CmdletBinding()]
 function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
@@ -207,7 +208,8 @@ function WE-Write-EnhancedLog {
 }
 
 
-function WE-New-DataFactoryInstance {
+[CmdletBinding()]
+function WE-New-DataFactoryInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -227,7 +229,7 @@ function WE-New-DataFactoryInstance {
             
             # Configure Git integration if provided
             if ($WEGitConfiguration.Keys.Count -gt 0) {
-                Set-DataFactoryGitConfiguration
+                Set-DataFactoryGitConfiguration -ErrorAction Stop
             }
             
             return $dataFactory
@@ -240,7 +242,8 @@ function WE-New-DataFactoryInstance {
 }
 
 
-function WE-Set-DataFactoryGitConfiguration {
+[CmdletBinding()]
+function WE-Set-DataFactoryGitConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -257,7 +260,7 @@ function WE-Set-DataFactoryGitConfiguration {
                     CollaborationBranch = $WEGitConfiguration.CollaborationBranch ?? " main"
                 }
                 
-                Set-AzDataFactoryV2GitIntegration @gitConfig
+                Set-AzDataFactoryV2GitIntegration -ErrorAction Stop @gitConfig
                 Write-EnhancedLog " Successfully configured Git integration" " Success"
             }
         }
@@ -268,7 +271,8 @@ function WE-Set-DataFactoryGitConfiguration {
 }
 
 
-function WE-New-ModernDataPipeline {
+[CmdletBinding()]
+function WE-New-ModernDataPipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
@@ -276,13 +280,13 @@ function WE-New-ModernDataPipeline {
             Write-EnhancedLog " Creating modern data pipeline templates..." " Info"
         
         # Create sample linked services
-        New-SampleLinkedService
+        New-SampleLinkedService -ErrorAction Stop
         
         # Create sample datasets
-        New-SampleDataset
+        New-SampleDataset -ErrorAction Stop
         
         # Create sample pipelines
-        New-SamplePipeline
+        New-SamplePipeline -ErrorAction Stop
         
         Write-EnhancedLog " Successfully created modern data pipeline templates" " Success"
         }
@@ -293,7 +297,8 @@ function WE-New-ModernDataPipeline {
 }
 
 
-function WE-New-SampleLinkedService {
+[CmdletBinding()]
+function WE-New-SampleLinkedService -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -366,7 +371,8 @@ function WE-New-SampleLinkedService {
 }
 
 
-function WE-New-SampleDataset {
+[CmdletBinding()]
+function WE-New-SampleDataset -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -435,7 +441,8 @@ function WE-New-SampleDataset {
 }
 
 
-function WE-New-SamplePipeline {
+[CmdletBinding()]
+function WE-New-SamplePipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -594,6 +601,7 @@ function WE-New-SamplePipeline {
 }
 
 
+[CmdletBinding()]
 function WE-Deploy-PipelineFromFile {
     param(
         [Parameter(Mandatory=$false)]
@@ -611,7 +619,7 @@ function WE-Deploy-PipelineFromFile {
             throw " Pipeline definition file not found: $WEDefinitionPath"
         }
         
-        $pipelineDefinition = Get-Content $WEDefinitionPath -Raw | ConvertFrom-Json
+        $pipelineDefinition = Get-Content -ErrorAction Stop $WEDefinitionPath -Raw | ConvertFrom-Json
         
         Set-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $WEPipelineName -DefinitionObject $pipelineDefinition
         
@@ -624,7 +632,8 @@ function WE-Deploy-PipelineFromFile {
 }
 
 
-function WE-New-DataFactoryTrigger {
+[CmdletBinding()]
+function WE-New-DataFactoryTrigger -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -695,13 +704,14 @@ function WE-New-DataFactoryTrigger {
 }
 
 
-function WE-Get-DataFactoryMonitoring {
+[CmdletBinding()]
+function WE-Get-DataFactoryMonitoring -ErrorAction Stop {
     try {
         Write-EnhancedLog " Monitoring Data Factory pipelines..." " Info"
         
         # Get pipeline runs from last 24 hours
         $startTime = (Get-Date).AddDays(-1)
-        $endTime = Get-Date
+        $endTime = Get-Date -ErrorAction Stop
         
         $pipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
         
@@ -753,7 +763,8 @@ function WE-Get-DataFactoryMonitoring {
 }
 
 
-function WE-Set-DataFactoryMonitoring {
+[CmdletBinding()]
+function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -825,6 +836,7 @@ function WE-Set-DataFactoryMonitoring {
 }
 
 
+[CmdletBinding()]
 function WE-Export-DataFactoryConfiguration {
     try {
         Write-EnhancedLog " Exporting Data Factory configuration..." " Info"
@@ -884,12 +896,12 @@ try {
     
     switch ($WEAction) {
         " Create" {
-           ;  $dataFactory = New-DataFactoryInstance
+           ;  $dataFactory = New-DataFactoryInstance -ErrorAction Stop
             New-ModernDataPipeline
-            New-DataFactoryTrigger
+            New-DataFactoryTrigger -ErrorAction Stop
             
             if ($WEEnableMonitoring) {
-                Set-DataFactoryMonitoring
+                Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
         
@@ -901,12 +913,12 @@ try {
             if ($WEPipelineDefinitionPath) {
                 Deploy-PipelineFromFile -PipelineName $WEPipelineName -DefinitionPath $WEPipelineDefinitionPath
             } else {
-                New-ModernDataPipeline
+                New-ModernDataPipeline -ErrorAction Stop
             }
         }
         
         " Monitor" {
-            Get-DataFactoryMonitoring
+            Get-DataFactoryMonitoring -ErrorAction Stop
         }
         
         " Trigger" {
@@ -920,9 +932,9 @@ try {
         }
         
         " Configure" {
-            New-DataFactoryTrigger
+            New-DataFactoryTrigger -ErrorAction Stop
             if ($WEEnableMonitoring) {
-                Set-DataFactoryMonitoring
+                Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
         

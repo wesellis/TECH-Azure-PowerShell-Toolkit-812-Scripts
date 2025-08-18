@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Automated Iaas Backup
 
@@ -84,7 +84,7 @@ Catch {
       }
 
 Try {
-        $WEVMs = Get-AzureRmVM | Where-Object {$_.Location -eq $WELocation}
+        $WEVMs = Get-AzureRmVM -ErrorAction Stop | Where-Object {$_.Location -eq $WELocation}
     }
 
 Catch {

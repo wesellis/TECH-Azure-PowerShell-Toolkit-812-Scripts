@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Remove Oldresources
 
@@ -43,13 +43,13 @@ $adfParams = @{
 }
 
 ; 
-$triggers = Get-AzDataFactoryV2Trigger @adfParams -ErrorAction SilentlyContinue `
+$triggers = Get-AzDataFactoryV2Trigger -ErrorAction Stop @adfParams -ErrorAction SilentlyContinue `
 | Where-Object { $_.Name -match '^msexports(_(setup|daily|monthly|extract|FileAdded))?$' }
 $WEDeploymentScriptOutputs["stopTriggers" ] = $triggers | Stop-AzDataFactoryV2Trigger -Force -ErrorAction SilentlyContinue
 $WEDeploymentScriptOutputs[" deleteTriggers" ] = $triggers | Remove-AzDataFactoryV2Trigger -Force -ErrorAction SilentlyContinue
 
 
-$WEDeploymentScriptOutputs[" pipelines" ] = Get-AzDataFactoryV2Pipeline @adfParams -ErrorAction SilentlyContinue `
+$WEDeploymentScriptOutputs[" pipelines" ] = Get-AzDataFactoryV2Pipeline -ErrorAction Stop @adfParams -ErrorAction SilentlyContinue `
 | Where-Object { $_.Name -match '^(msexports_(backfill|extract|fill|get|run|setup|transform)|config_(BackfillData|ExportData|RunBackfill|RunExports))$' } `
 | Remove-AzDataFactoryV2Pipeline -Force -ErrorAction SilentlyContinue
 

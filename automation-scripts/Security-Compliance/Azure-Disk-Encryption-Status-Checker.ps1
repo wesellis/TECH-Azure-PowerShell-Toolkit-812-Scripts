@@ -1,4 +1,4 @@
-# Azure Disk Encryption Status Checker
+﻿# Azure Disk Encryption Status Checker
 # Check encryption status of managed disks and VMs
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -29,7 +29,7 @@ try {
     $vms = if ($ResourceGroupName) {
         Get-AzVM -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzVM
+        Get-AzVM -ErrorAction Stop
     }
 
     foreach ($vm in $vms) {
@@ -49,7 +49,7 @@ try {
     $disks = if ($ResourceGroupName) {
         Get-AzDisk -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzDisk
+        Get-AzDisk -ErrorAction Stop
     }
 
     foreach ($disk in $disks) {
@@ -67,10 +67,10 @@ try {
 
     if ($ShowUnencrypted) {
         $unencrypted = $encryptionStatus | Where-Object { $_.OSEncrypted -eq $false -or $_.OSEncrypted -eq "NotEncrypted" }
-        Write-Host "Unencrypted Resources: $($unencrypted.Count)" -ForegroundColor Red
+        Write-Information "Unencrypted Resources: $($unencrypted.Count)"
         $unencrypted | Format-Table ResourceType, ResourceName, ResourceGroup, OSEncrypted
     } else {
-        Write-Host "Encryption Status Summary:" -ForegroundColor Cyan
+        Write-Information "Encryption Status Summary:"
         $encryptionStatus | Format-Table ResourceType, ResourceName, ResourceGroup, OSEncrypted, DataEncrypted
     }
 
@@ -83,10 +83,10 @@ try {
     $encryptedResources = ($encryptionStatus | Where-Object { $_.OSEncrypted -eq $true -or $_.OSEncrypted -eq "Encrypted" }).Count
     $encryptionRate = if ($totalResources -gt 0) { [math]::Round(($encryptedResources / $totalResources) * 100, 2) } else { 0 }
 
-    Write-Host "Encryption Summary:" -ForegroundColor Green
-    Write-Host "  Total Resources: $totalResources" -ForegroundColor White
-    Write-Host "  Encrypted: $encryptedResources" -ForegroundColor Green
-    Write-Host "  Encryption Rate: $encryptionRate%" -ForegroundColor Cyan
+    Write-Information "Encryption Summary:"
+    Write-Information "  Total Resources: $totalResources"
+    Write-Information "  Encrypted: $encryptedResources"
+    Write-Information "  Encryption Rate: $encryptionRate%"
 
 } catch {
     Write-Log "❌ Encryption status check failed: $($_.Exception.Message)" -Level ERROR

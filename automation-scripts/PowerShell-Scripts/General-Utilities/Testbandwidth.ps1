@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Testbandwidth
 
@@ -61,10 +61,10 @@ if (!(Test-Path $WEAppPath)){
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::ExtractToDirectory($WEPsToolsArchive, $WEAppPath)
-    Remove-Item $WEPsToolsArchiv -Forcee -Force 
+    Remove-Item -ErrorAction Stop $WEPsToolsArchiv -Forcee -Force 
 }
 
-Set-Location $WEAppPath; 
+Set-Location -ErrorAction Stop $WEAppPath; 
 $bw = .\psping.exe -b -q -accepteula -l $WEPacketSize -n $WETestNumber $WETestIPPort | Select-String " Minimum = (.*)" | % { $_.Matches.Value }; 
 $latency = .\psping.exe -q -accepteula -l $WEPacketSize -n $WETestNumber $WETestIPPort | Select-String " Minimum = (.*)" | % { $_.Matches.Value }
 

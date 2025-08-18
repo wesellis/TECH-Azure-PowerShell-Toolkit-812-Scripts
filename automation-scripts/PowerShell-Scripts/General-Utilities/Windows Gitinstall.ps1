@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Gitinstall
 
@@ -46,7 +46,7 @@ $WEVerbosePreference = 'Continue'
 function getSimpleValue([string] $url, [string] $filename ) {
     $fullpath = " ${env:Temp}\$filename"
     Invoke-WebRequest -Uri $url -OutFile $fullpath
-    $value = Get-Content $fullpath -Raw
+    $value = Get-Content -ErrorAction Stop $fullpath -Raw
 
     return $value
 }
@@ -94,7 +94,7 @@ try {
        ;  $arguments = @('config', '--system', 'credential.helper', 'manager')
         Write-WELog " Running $gitPath $($arguments -join ' ')" " INFO"
         & $gitPath $arguments
-        Write-host " Result: $WELastExitCode"
+        Write-Information " Result: $WELastExitCode"
         Write-WELog " Git system config settings:" " INFO"
         & $gitPath @('config', '--system', '--list')
         Write-WELog " Done updating git config" " INFO"

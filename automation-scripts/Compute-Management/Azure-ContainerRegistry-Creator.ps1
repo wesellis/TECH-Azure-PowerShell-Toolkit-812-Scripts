@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Container Registry Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,24 +21,24 @@ param (
     [string]$Sku = "Basic"
 )
 
-Write-Host "Creating Container Registry: $RegistryName"
+Write-Information "Creating Container Registry: $RegistryName"
 
-$Registry = New-AzContainerRegistry `
+$Registry = New-AzContainerRegistry -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $RegistryName `
     -Location $Location `
     -Sku $Sku `
     -EnableAdminUser
 
-Write-Host "✅ Container Registry created successfully:"
-Write-Host "  Name: $($Registry.Name)"
-Write-Host "  Login Server: $($Registry.LoginServer)"
-Write-Host "  Location: $($Registry.Location)"
-Write-Host "  SKU: $($Registry.Sku.Name)"
-Write-Host "  Admin Enabled: $($Registry.AdminUserEnabled)"
+Write-Information "✅ Container Registry created successfully:"
+Write-Information "  Name: $($Registry.Name)"
+Write-Information "  Login Server: $($Registry.LoginServer)"
+Write-Information "  Location: $($Registry.Location)"
+Write-Information "  SKU: $($Registry.Sku.Name)"
+Write-Information "  Admin Enabled: $($Registry.AdminUserEnabled)"
 
 # Get admin credentials
 $Creds = Get-AzContainerRegistryCredential -ResourceGroupName $ResourceGroupName -Name $RegistryName
-Write-Host "`nAdmin Credentials:"
-Write-Host "  Username: $($Creds.Username)"
-Write-Host "  Password: $($Creds.Password)"
+Write-Information "`nAdmin Credentials:"
+Write-Information "  Username: $($Creds.Username)"
+Write-Information "  Password: $($Creds.Password)"

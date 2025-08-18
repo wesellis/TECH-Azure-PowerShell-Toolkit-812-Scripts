@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm Availabilityset Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -97,7 +98,7 @@ param(
 
 Write-WELog " Creating Availability Set: $WEAvailabilitySetName" " INFO"
 ; 
-$WEAvailabilitySet = New-AzAvailabilitySet `
+$WEAvailabilitySet = New-AzAvailabilitySet -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEAvailabilitySetName `
     -Location $WELocation `

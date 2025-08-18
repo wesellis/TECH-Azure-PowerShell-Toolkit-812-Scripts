@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Winget Packages
 
@@ -73,9 +73,11 @@ $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $WEProgressPreference = 'SilentlyContinue'
 
+[CmdletBinding()]
 function WE-Invoke-Executable {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -95,7 +97,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -108,9 +110,11 @@ param(
     & ([ScriptBlock]::Create($commandLine))
 }
 
-function WE-Install-WinGet-Packages {
+[CmdletBinding()]
+function WE-Install-WinGet-Packages -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -130,7 +134,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -140,9 +144,9 @@ param(
         [Parameter(Mandatory = $false)] [bool] $WEIgnorePackageInstallFailures
     )
 
-    Write-WELog " === Microsoft.DesktopAppInstaller package info: $(Get-AppxPackage Microsoft.DesktopAppInstaller | Out-String)" " INFO"
+    Write-WELog " === Microsoft.DesktopAppInstaller package info: $(Get-AppxPackage -ErrorAction Stop Microsoft.DesktopAppInstaller | Out-String)" " INFO"
 
-   ;  $winGetAppInfo = Get-Command " winget.exe" -ErrorAction SilentlyContinue
+   ;  $winGetAppInfo = Get-Command -ErrorAction Stop " winget.exe" -ErrorAction SilentlyContinue
     if (!$winGetAppInfo) {
         throw 'Could not locate winget.exe'
     }
@@ -168,7 +172,7 @@ param(
         }
 
        ;  $runBlock = {
-            $global:LASTEXITCODE = 0
+            $script:LASTEXITCODE = 0
             Invoke-Executable " $WEWinGetPath install --id $packageId $versionArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force"
             if ($global:LASTEXITCODE -ne 0) {
                 throw " Failed to install $package with exit code $global:LASTEXITCODE. WinGet return codes are listed at https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md"

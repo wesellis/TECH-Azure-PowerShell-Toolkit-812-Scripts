@@ -1,15 +1,15 @@
-# Initialize Azure Enterprise Toolkit Repository
-Write-Host "🚀 Initializing Azure Enterprise Toolkit Git Repository" -ForegroundColor Green
+﻿# Initialize Azure Enterprise Toolkit Repository
+Write-Information "🚀 Initializing Azure Enterprise Toolkit Git Repository"
 
-Set-Location "A:\GITHUB\Azure-Enterprise-Toolkit"
+Set-Location -ErrorAction Stop "A:\GITHUB\Azure-Enterprise-Toolkit"
 
 # Initialize Git repository
 git init
-Write-Host "✅ Git repository initialized" -ForegroundColor Green
+Write-Information "✅ Git repository initialized"
 
 # Add remote origin
 git remote add origin https://github.com/wesellis/Azure-Enterprise-Toolkit.git
-Write-Host "✅ Remote origin added" -ForegroundColor Green
+Write-Information "✅ Remote origin added"
 
 # Create initial README
 $readmeContent = @"
@@ -37,17 +37,17 @@ Coming soon! Content is being migrated from existing repositories.
 "@
 
 $readmeContent | Out-File -FilePath "README.md" -Encoding UTF8
-Write-Host "✅ Initial README created" -ForegroundColor Green
+Write-Information "✅ Initial README created"
 
 # Add and commit initial structure
 git add .
 git commit -m "Initial repository structure and README"
-Write-Host "✅ Initial commit created" -ForegroundColor Green
+Write-Information "✅ Initial commit created"
 
 # Set default branch and push
 git branch -M main
 git push -u origin main
-Write-Host "✅ Repository pushed to GitHub" -ForegroundColor Green
+Write-Information "✅ Repository pushed to GitHub"
 
-Write-Host "`n🎉 Repository is now initialized and connected to GitHub!" -ForegroundColor Cyan
-Write-Host "Ready for content migration from existing repositories." -ForegroundColor Yellow
+Write-Information "`n🎉 Repository is now initialized and connected to GitHub!"
+Write-Information "Ready for content migration from existing repositories."

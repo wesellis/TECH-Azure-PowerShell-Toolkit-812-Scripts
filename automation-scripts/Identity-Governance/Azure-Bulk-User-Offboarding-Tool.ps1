@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Bulk User Offboarding Automation Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -46,11 +46,12 @@ param(
 
 # Initialize logging
 $LogFile = "UserOffboarding_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+[CmdletBinding()]
 function Write-Log {
     param($Message)
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$Timestamp - $Message" | Out-File -FilePath $LogFile -Append
-    Write-Host "$Timestamp - $Message"
+    Write-Information "$Timestamp - $Message"
 }
 
 try {

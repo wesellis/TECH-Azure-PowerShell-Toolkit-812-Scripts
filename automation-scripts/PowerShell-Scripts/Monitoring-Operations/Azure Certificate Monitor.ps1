@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Certificate Monitor
 
@@ -60,7 +60,7 @@ try {
     $warningDate = (Get-Date).AddDays($WEExpirationWarningDays)
 
     if ($WECheckKeyVaultCertificates) {
-        $keyVaults = Get-AzKeyVault
+        $keyVaults = Get-AzKeyVault -ErrorAction Stop
         
         foreach ($vault in $keyVaults) {
             try {

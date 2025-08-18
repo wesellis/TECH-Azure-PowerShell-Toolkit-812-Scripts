@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Write Testresults
 
@@ -136,7 +136,7 @@ Write-WELog " PathToMetadata: $WEPathToMetadata" " INFO"
 $WERowKey = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
 Write-WELog " RowKey: $WERowKey" " INFO"
 
-$WEMetadata = Get-Content $WEPathToMetadata -Raw | ConvertFrom-Json
+$WEMetadata = Get-Content -ErrorAction Stop $WEPathToMetadata -Raw | ConvertFrom-Json
 $WEPartitionKey = $WEMetadata.Type # if the type changes we'll have an orphaned row, this is removed in Get-OldestSampleFolder.ps1
 
 
@@ -415,10 +415,10 @@ else {
 }
 
 
-$WEBPRegressed = Get-Regression $comparisonResults $newResults " BestPracticeResult"
-$WEFairfaxRegressed = Get-Regression $comparisonResults $newResults " FairfaxDeployment"
-$WEPublicRegressed = Get-Regression $comparisonResults $newResults " PublicDeployment"
-$WETemplateAnalyzerRegressed = Get-Regression $comparisonResults $newResults " TemplateAnalyzerResult"
+$WEBPRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " BestPracticeResult"
+$WEFairfaxRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " FairfaxDeployment"
+$WEPublicRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " PublicDeployment"
+$WETemplateAnalyzerRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " TemplateAnalyzerResult"
 
 $WEAnyRegressed = $WEBPRegressed -or $WEFairfaxRegressed -or $WEPublicRegresse
 

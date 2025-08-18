@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Enterprise chaos engineering platform for Azure resilience testing and disaster recovery validation.
 
@@ -106,7 +106,7 @@ class ChaosEngineeringPlatform {
     [void]InitializeSafetyBreakers() {
         if (!$this.SafetyEnabled) { return }
         
-        Write-Host "Initializing safety breakers..." -ForegroundColor Yellow
+        Write-Information "Initializing safety breakers..."
         
         $this.SafetyBreakers = @(
             @{
@@ -137,7 +137,7 @@ class ChaosEngineeringPlatform {
     }
     
     [void]DiscoverTargetResources([string]$ResourceGroupName) {
-        Write-Host "Discovering target resources in scope: $($this.TargetScope)" -ForegroundColor Yellow
+        Write-Information "Discovering target resources in scope: $($this.TargetScope)"
         
         switch ($this.TargetScope) {
             "ResourceGroup" {
@@ -147,15 +147,15 @@ class ChaosEngineeringPlatform {
                 $this.TargetResources = Get-AzResource -ResourceGroupName $ResourceGroupName
             }
             "Subscription" {
-                $this.TargetResources = Get-AzResource
+                $this.TargetResources = Get-AzResource -ErrorAction Stop
             }
             "Region" {
                 # Filter by region - would need region parameter
-                $this.TargetResources = Get-AzResource | Where-Object { $_.Location -eq "East US" }
+                $this.TargetResources = Get-AzResource -ErrorAction Stop | Where-Object { $_.Location -eq "East US" }
             }
         }
         
-        Write-Host "Found $($this.TargetResources.Count) resources in scope" -ForegroundColor Cyan
+        Write-Information "Found $($this.TargetResources.Count) resources in scope"
         
         # Filter resources based on chaos mode
         $this.FilterResourcesByMode()
@@ -204,25 +204,25 @@ class ChaosEngineeringPlatform {
         }
         
         $filteredCount = $this.TargetResources.Count
-        Write-Host "Filtered to $filteredCount resources for $($this.ChaosMode) experiment" -ForegroundColor Cyan
+        Write-Information "Filtered to $filteredCount resources for $($this.ChaosMode) experiment"
     }
     
     [void]EstablishBaseline() {
-        Write-Host "Establishing baseline metrics..." -ForegroundColor Yellow
+        Write-Information "Establishing baseline metrics..."
         
         foreach ($resource in $this.TargetResources) {
             $metrics = $this.CollectResourceMetrics($resource)
             $this.BaselineMetrics[$resource.ResourceId] = $metrics
         }
         
-        Write-Host "Baseline established for $($this.BaselineMetrics.Count) resources" -ForegroundColor Green
+        Write-Information "Baseline established for $($this.BaselineMetrics.Count) resources"
     }
     
     [hashtable]CollectResourceMetrics([object]$Resource) {
         $metrics = @{
             ResourceId = $Resource.ResourceId
             ResourceType = $Resource.ResourceType
-            Timestamp = Get-Date
+            Timestamp = Get-Date -ErrorAction Stop
             CPUUtilization = $null
             MemoryUtilization = $null
             NetworkLatency = $null
@@ -254,7 +254,7 @@ class ChaosEngineeringPlatform {
     
     [double]GetVMCPUMetrics([object]$VM) {
         try {
-            $endTime = Get-Date
+            $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddMinutes(-5)
             
             $metrics = Get-AzMetric -ResourceId $VM.ResourceId -MetricName "Percentage CPU" `
@@ -287,16 +287,16 @@ class ChaosEngineeringPlatform {
     }
     
     [void]ExecuteChaosExperiment([bool]$DryRun) {
-        Write-Host "`n=== Starting Chaos Experiment: $($this.ChaosMode) ===" -ForegroundColor Red
-        Write-Host "Experiment ID: $($this.ExperimentId)" -ForegroundColor Cyan
-        Write-Host "Duration: $($this.Duration) minutes" -ForegroundColor Cyan
-        Write-Host "Target Resources: $($this.TargetResources.Count)" -ForegroundColor Cyan
+        Write-Information "`n=== Starting Chaos Experiment: $($this.ChaosMode) ==="
+        Write-Information "Experiment ID: $($this.ExperimentId)"
+        Write-Information "Duration: $($this.Duration) minutes"
+        Write-Information "Target Resources: $($this.TargetResources.Count)"
         
         if ($DryRun) {
-            Write-Host "`n*** DRY RUN MODE - No actual changes will be made ***" -ForegroundColor Yellow
+            Write-Information "`n*** DRY RUN MODE - No actual changes will be made ***"
         }
         
-        $startTime = Get-Date
+        $startTime = Get-Date -ErrorAction Stop
         $endTime = $startTime.AddMinutes($this.Duration)
         
         # Pre-experiment safety check
@@ -323,27 +323,27 @@ class ChaosEngineeringPlatform {
             
         } finally {
             # Cleanup and recovery
-            Write-Host "`nCleaning up experiment..." -ForegroundColor Yellow
+            Write-Information "`nCleaning up experiment..."
             $this.CleanupExperiment($DryRun)
         }
     }
     
     [void]InjectNetworkLatency([bool]$DryRun) {
-        Write-Host "Injecting network latency..." -ForegroundColor Red
+        Write-Information "Injecting network latency..."
         
         foreach ($resource in $this.TargetResources) {
             if ($resource.ResourceType -eq "Microsoft.Compute/virtualMachines") {
                 if ($DryRun) {
-                    Write-Host "DRY RUN: Would inject 200ms latency on VM: $($resource.Name)" -ForegroundColor Yellow
+                    Write-Information "DRY RUN: Would inject 200ms latency on VM: $($resource.Name)"
                 } else {
                     # In a real implementation, this would use Azure Chaos Studio or custom agents
-                    Write-Host "Injecting latency on VM: $($resource.Name)" -ForegroundColor Red
+                    Write-Information "Injecting latency on VM: $($resource.Name)"
                     
                     $result = @{
                         ResourceId = $resource.ResourceId
                         Action = "NetworkLatency"
                         Parameters = @{ Latency = "200ms" }
-                        Timestamp = Get-Date
+                        Timestamp = Get-Date -ErrorAction Stop
                         Success = $true
                     }
                     
@@ -354,7 +354,7 @@ class ChaosEngineeringPlatform {
     }
     
     [void]TriggerResourceFailure([bool]$DryRun) {
-        Write-Host "Triggering resource failures..." -ForegroundColor Red
+        Write-Information "Triggering resource failures..."
         
         # Select random resources for failure (max 30% of resources)
         $failureCount = [math]::Min([math]::Ceiling($this.TargetResources.Count * 0.3), 3)
@@ -362,15 +362,15 @@ class ChaosEngineeringPlatform {
         
         foreach ($resource in $resourcesToFail) {
             if ($DryRun) {
-                Write-Host "DRY RUN: Would stop resource: $($resource.Name)" -ForegroundColor Yellow
+                Write-Information "DRY RUN: Would stop resource: $($resource.Name)"
             } else {
                 switch ($resource.ResourceType) {
                     "Microsoft.Compute/virtualMachines" {
-                        Write-Host "Stopping VM: $($resource.Name)" -ForegroundColor Red
+                        Write-Information "Stopping VM: $($resource.Name)"
                         Stop-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -Force -NoWait
                     }
                     "Microsoft.Web/sites" {
-                        Write-Host "Stopping Web App: $($resource.Name)" -ForegroundColor Red
+                        Write-Information "Stopping Web App: $($resource.Name)"
                         Stop-AzWebApp -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name
                     }
                 }
@@ -379,7 +379,7 @@ class ChaosEngineeringPlatform {
                     ResourceId = $resource.ResourceId
                     Action = "ResourceFailure"
                     Parameters = @{ Type = "Stop" }
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                     Success = $true
                 }
                 
@@ -389,21 +389,21 @@ class ChaosEngineeringPlatform {
     }
     
     [void]InjectApplicationStress([bool]$DryRun) {
-        Write-Host "Injecting application stress..." -ForegroundColor Red
+        Write-Information "Injecting application stress..."
         
         foreach ($resource in $this.TargetResources) {
             if ($resource.ResourceType -eq "Microsoft.Web/sites") {
                 if ($DryRun) {
-                    Write-Host "DRY RUN: Would stress test app: $($resource.Name)" -ForegroundColor Yellow
+                    Write-Information "DRY RUN: Would stress test app: $($resource.Name)"
                 } else {
-                    Write-Host "Starting stress test on: $($resource.Name)" -ForegroundColor Red
+                    Write-Information "Starting stress test on: $($resource.Name)"
                     
                     # Simulate stress testing
                     $result = @{
                         ResourceId = $resource.ResourceId
                         Action = "ApplicationStress"
                         Parameters = @{ CPULoad = "80%"; MemoryLoad = "70%" }
-                        Timestamp = Get-Date
+                        Timestamp = Get-Date -ErrorAction Stop
                         Success = $true
                     }
                     
@@ -414,21 +414,21 @@ class ChaosEngineeringPlatform {
     }
     
     [void]TriggerDatabaseFailover([bool]$DryRun) {
-        Write-Host "Triggering database failover..." -ForegroundColor Red
+        Write-Information "Triggering database failover..."
         
         $databases = $this.TargetResources | Where-Object { $_.ResourceType -like "*Sql*" -or $_.ResourceType -like "*DocumentDB*" }
         
         foreach ($db in $databases) {
             if ($DryRun) {
-                Write-Host "DRY RUN: Would trigger failover for: $($db.Name)" -ForegroundColor Yellow
+                Write-Information "DRY RUN: Would trigger failover for: $($db.Name)"
             } else {
-                Write-Host "Triggering failover for: $($db.Name)" -ForegroundColor Red
+                Write-Information "Triggering failover for: $($db.Name)"
                 
                 $result = @{
                     ResourceId = $db.ResourceId
                     Action = "DatabaseFailover"
                     Parameters = @{ Type = "Automatic" }
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                     Success = $true
                 }
                 
@@ -438,29 +438,29 @@ class ChaosEngineeringPlatform {
     }
     
     [void]SimulateZoneFailure([bool]$DryRun) {
-        Write-Host "Simulating availability zone failure..." -ForegroundColor Red
+        Write-Information "Simulating availability zone failure..."
         
         if ($DryRun) {
-            Write-Host "DRY RUN: Would simulate zone failure affecting multiple resources" -ForegroundColor Yellow
+            Write-Information "DRY RUN: Would simulate zone failure affecting multiple resources"
         } else {
             # This would simulate an entire availability zone going down
-            Write-Host "Simulating zone failure - affecting zone-redundant resources" -ForegroundColor Red
+            Write-Information "Simulating zone failure - affecting zone-redundant resources"
         }
     }
     
     [void]ExecuteFullDRTest([bool]$DryRun) {
-        Write-Host "Executing full disaster recovery test..." -ForegroundColor Red
+        Write-Information "Executing full disaster recovery test..."
         
         if ($DryRun) {
-            Write-Host "DRY RUN: Would execute complete DR failover" -ForegroundColor Yellow
+            Write-Information "DRY RUN: Would execute complete DR failover"
         } else {
-            Write-Host "*** FULL DR TEST - This will test complete failover procedures ***" -ForegroundColor Red
+            Write-Information "*** FULL DR TEST - This will test complete failover procedures ***"
             # Full DR implementation would go here
         }
     }
     
     [void]MonitorExperiment([datetime]$EndTime, [bool]$DryRun) {
-        Write-Host "`nMonitoring experiment progress..." -ForegroundColor Cyan
+        Write-Information "`nMonitoring experiment progress..."
         
         while ((Get-Date) -lt $EndTime) {
             # Collect current metrics
@@ -475,20 +475,20 @@ class ChaosEngineeringPlatform {
             if ($this.SafetyEnabled) {
                 $safetyResult = $this.CheckSafetyBreakers($currentMetrics)
                 if (!$safetyResult.Safe) {
-                    Write-Host "SAFETY BREAKER TRIGGERED: $($safetyResult.Reason)" -ForegroundColor Red
+                    Write-Information "SAFETY BREAKER TRIGGERED: $($safetyResult.Reason)"
                     break
                 }
             }
             
             $remainingMinutes = [math]::Ceiling(($EndTime - (Get-Date)).TotalMinutes)
-            Write-Host "Experiment running... $remainingMinutes minutes remaining" -ForegroundColor Cyan
+            Write-Information "Experiment running... $remainingMinutes minutes remaining"
             
             Start-Sleep -Seconds 30
         }
     }
     
     [hashtable]PerformSafetyCheck() {
-        Write-Host "Performing pre-experiment safety check..." -ForegroundColor Yellow
+        Write-Information "Performing pre-experiment safety check..."
         
         # Check baseline metrics
         foreach ($resourceId in $this.BaselineMetrics.Keys) {
@@ -512,7 +512,7 @@ class ChaosEngineeringPlatform {
                 $metrics = $CurrentMetrics[$resourceId]
                 $metricValue = $metrics[$breaker.MetricName]
                 
-                if ($metricValue -ne $null) {
+                if ($null -ne $metricValue) {
                     $thresholdBreached = switch ($breaker.MetricName) {
                         "ErrorRate" { $metricValue -gt $breaker.Threshold }
                         "Availability" { $metricValue -lt $breaker.Threshold }
@@ -536,18 +536,18 @@ class ChaosEngineeringPlatform {
     }
     
     [void]CleanupExperiment([bool]$DryRun) {
-        Write-Host "Cleaning up chaos experiment..." -ForegroundColor Green
+        Write-Information "Cleaning up chaos experiment..."
         
         foreach ($result in $this.ExperimentResults) {
             switch ($result.Action) {
                 "ResourceFailure" {
                     if ($DryRun) {
-                        Write-Host "DRY RUN: Would restart stopped resources" -ForegroundColor Yellow
+                        Write-Information "DRY RUN: Would restart stopped resources"
                     } else {
                         # Restart stopped resources
                         $resource = Get-AzResource -ResourceId $result.ResourceId
                         if ($resource.ResourceType -eq "Microsoft.Compute/virtualMachines") {
-                            Write-Host "Restarting VM: $($resource.Name)" -ForegroundColor Green
+                            Write-Information "Restarting VM: $($resource.Name)"
                             Start-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -NoWait
                         }
                     }
@@ -557,7 +557,7 @@ class ChaosEngineeringPlatform {
     }
     
     [void]ValidateRecovery() {
-        Write-Host "`nValidating recovery mechanisms..." -ForegroundColor Green
+        Write-Information "`nValidating recovery mechanisms..."
         
         Start-Sleep -Seconds 60  # Wait for recovery
         
@@ -574,9 +574,9 @@ class ChaosEngineeringPlatform {
             }
             
             if ($recovery.FullyRecovered) {
-                Write-Host "✅ $($resource.Name) - Recovery successful" -ForegroundColor Green
+                Write-Information "✅ $($resource.Name) - Recovery successful"
             } else {
-                Write-Host "❌ $($resource.Name) - Recovery incomplete" -ForegroundColor Red
+                Write-Information "❌ $($resource.Name) - Recovery incomplete"
             }
         }
     }
@@ -702,23 +702,23 @@ class ChaosEngineeringPlatform {
 
 # Main execution
 try {
-    Write-Host "Azure Chaos Engineering Platform v1.0" -ForegroundColor Red
-    Write-Host "====================================" -ForegroundColor Red
-    Write-Host "⚠️  WARNING: This tool introduces controlled failures!" -ForegroundColor Yellow
-    Write-Host "⚠️  Use with extreme caution in production environments!" -ForegroundColor Yellow
+    Write-Information "Azure Chaos Engineering Platform v1.0"
+    Write-Information "===================================="
+    Write-Information "⚠️  WARNING: This tool introduces controlled failures!"
+    Write-Information "⚠️  Use with extreme caution in production environments!"
     
     if (!$DryRun) {
         $confirmation = Read-Host "`nAre you sure you want to proceed with chaos engineering? (yes/no)"
         if ($confirmation -ne "yes") {
-            Write-Host "Chaos engineering cancelled by user." -ForegroundColor Yellow
+            Write-Information "Chaos engineering cancelled by user."
             exit 0
         }
     }
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Information "Connecting to Azure..."
         Connect-AzAccount
     }
     
@@ -748,11 +748,11 @@ try {
         $report = $chaosEngine.GenerateExperimentReport()
         $reportPath = ".\ChaosEngineering-Report-$($chaosEngine.ExperimentId).html"
         $report | Out-File -FilePath $reportPath -Encoding UTF8
-        Write-Host "`nExperiment report saved to: $reportPath" -ForegroundColor Green
+        Write-Information "`nExperiment report saved to: $reportPath"
     }
     
-    Write-Host "`n✅ Chaos engineering experiment completed successfully!" -ForegroundColor Green
-    Write-Host "Experiment ID: $($chaosEngine.ExperimentId)" -ForegroundColor Cyan
+    Write-Information "`n✅ Chaos engineering experiment completed successfully!"
+    Write-Information "Experiment ID: $($chaosEngine.ExperimentId)"
     
 } catch {
     Write-Error "Chaos engineering experiment failed: $_"

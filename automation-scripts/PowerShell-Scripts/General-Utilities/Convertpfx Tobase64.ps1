@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Convertpfx Tobase64
 
@@ -44,7 +44,7 @@ param(
     [string] [Parameter(mandatory = $true)] $pfxFile
 )
 ; 
-$fileContent = get-content " $pfxFile" -AsByteStream 
+$fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream 
 [System.Convert]::ToBase64String($fileContent) | Set-Content -Encoding ascii " $pfxFile.txt"
 
 

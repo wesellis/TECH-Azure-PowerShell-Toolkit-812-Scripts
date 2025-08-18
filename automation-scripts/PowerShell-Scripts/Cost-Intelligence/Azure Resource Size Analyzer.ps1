@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Size Analyzer
 
@@ -63,7 +63,7 @@ try {
     $vms = if ($WEResourceGroupName) {
         Get-AzVM -ResourceGroupName $WEResourceGroupName
     } else {
-        Get-AzVM
+        Get-AzVM -ErrorAction Stop
     }
 
     $sizeAnalysis = @()

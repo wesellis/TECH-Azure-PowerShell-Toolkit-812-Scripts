@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Blob File Uploader
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -110,7 +111,7 @@ Write-WELog "  Blob name: $WEBlobName" " INFO"
 $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName; 
 $WEContext = $WEStorageAccount.Context
 ; 
-$WEBlob = Set-AzStorageBlobContent `
+$WEBlob = Set-AzStorageBlobContent -ErrorAction Stop `
     -File $WELocalFilePath `
     -Container $WEContainerName `
     -Blob $WEBlobName `

@@ -1,4 +1,4 @@
-# Azure Resource Move Validator
+﻿# Azure Resource Move Validator
 # Validates if resources can be moved between resource groups or subscriptions
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -33,7 +33,7 @@ try {
         Get-AzResource -ResourceGroupName $SourceResourceGroupName 
     }
 
-    Write-Host "Validating move for $($resources.Count) resources..." -ForegroundColor Cyan
+    Write-Information "Validating move for $($resources.Count) resources..."
     
     $targetResourceId = "/subscriptions/$(if($TargetSubscriptionId){$TargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$TargetResourceGroupName"
     
@@ -43,9 +43,9 @@ try {
     } -Force
 
     if ($validation) {
-        Write-Host "✅ All resources can be moved successfully!" -ForegroundColor Green
+        Write-Information "✅ All resources can be moved successfully!"
     } else {
-        Write-Host "❌ Some resources cannot be moved. Check Azure portal for details." -ForegroundColor Red
+        Write-Information "❌ Some resources cannot be moved. Check Azure portal for details."
     }
 
 } catch {

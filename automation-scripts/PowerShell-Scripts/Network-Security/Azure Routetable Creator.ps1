@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Routetable Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -112,7 +113,7 @@ param(
 Write-WELog " Creating Route Table: $WERouteTableName" " INFO"
 
 ; 
-$WERouteTable = New-AzRouteTable `
+$WERouteTable = New-AzRouteTable -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WERouteTableName `
     -Location $WELocation

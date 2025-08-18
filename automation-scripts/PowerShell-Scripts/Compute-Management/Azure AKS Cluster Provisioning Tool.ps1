@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Aks Cluster Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -101,7 +102,7 @@ Write-WELog " RBAC Enabled: $WEEnableRBAC" " INFO"
 
 
 Write-WELog " `nCreating AKS cluster (this may take 10-15 minutes)..." " INFO" ; 
-$WEAksCluster = New-AzAksCluster `
+$WEAksCluster = New-AzAksCluster -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEAksClusterName `
     -NodeCount $WENodeCount `

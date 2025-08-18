@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuresqlvm
 
@@ -58,9 +58,9 @@ param(
     $WEInterfaceAlias = $($WEInterface.Name)
     
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESQLCredsQualified = New-Object PSCredential (" ${DomainNetbiosName}\$($WESqlSvcCreds.UserName)" , $WESqlSvcCreds.Password)
-    [String];  $WEComputerName = Get-Content env:computername
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESQLCredsQualified = New-Object -ErrorAction Stop PSCredential (" ${DomainNetbiosName}\$($WESqlSvcCreds.UserName)" , $WESqlSvcCreds.Password)
+    [String];  $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String];  $WEAdfsDnsEntryName = " adfs"
 
     Node localhost
@@ -383,7 +383,7 @@ param(
         # }
 
         # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\" , otherwise certificate request will fail
-        # $WEDCServerName = Get-ADDomainController | Select-Object -First 1 -Expand Name
+        # $WEDCServerName = Get-ADDomainController -ErrorAction Stop | Select-Object -First 1 -Expand Name
         $WEDCServerName = " DC"
         Script UpdateGPOToTrustRootCACert {
             SetScript            =
@@ -433,12 +433,12 @@ param(
                 $sqlsvcUserName = $using:sqlsvcUserName
 
                 # Grant access to the certificate private key.
-                $cert = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subjectName }
+                $cert = Get-ChildItem -ErrorAction Stop Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subjectName }
                 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
                 $fileName = $rsaCert.key.UniqueName
                 $path = " $env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
                 $permissions = Get-Acl -Path $path
-                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($sqlsvcUserName, 'FullControl', 'None', 'None', 'Allow')
+                $access_rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule($sqlsvcUserName, 'FullControl', 'None', 'None', 'Allow')
                 $permissions.AddAccessRule($access_rule)
                 Set-Acl -Path $path -AclObject $permissions
             }
@@ -457,7 +457,7 @@ param(
         }
 
         # $subjectName = " CN=SQL.contoso.local"
-        # $sqlServerEncryptionCertThumbprint = Get-ChildItem Cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=$WEComputerName.$WEDomainFQDN" } | Select-Object -Expand Thumbprint
+        # $sqlServerEncryptionCertThumbprint = Get-ChildItem -ErrorAction Stop Cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=$WEComputerName.$WEDomainFQDN" } | Select-Object -Expand Thumbprint
         SqlSecureConnection EnableSecureConnection
         {
             InstanceName    = 'MSSQLSERVER'
@@ -485,7 +485,8 @@ param(
     }
 }
 
-function WE-Get-NetBIOSName
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop
 {
     [OutputType([string])]
     [CmdletBinding()]
@@ -511,6 +512,7 @@ param(
     }
 }
 
+[CmdletBinding()]
 function WE-WaitForSqlSetup
 {
     # Wait for SQL Server Setup to finish before proceeding.
@@ -518,7 +520,7 @@ function WE-WaitForSqlSetup
     {
         try
         {
-            Get-ScheduledTaskInfo " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+            Get-ScheduledTaskInfo -ErrorAction Stop " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
             Start-Sleep -Seconds 5
         }
         catch

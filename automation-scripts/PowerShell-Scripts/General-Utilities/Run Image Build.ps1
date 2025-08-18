@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Image Build
 
@@ -47,7 +47,7 @@ function WE-Log([string] $message, [switch] $asError) {
         Write-Error $formattedMessage
     }
     else {
-        Write-Host $formattedMessage
+        Write-Information $formattedMessage
     }
 }
 
@@ -80,12 +80,12 @@ RunWithRetries {
 Log " === Waiting for the image build to complete"
 
 
-$global:status = 'UNKNOWN'
+$script:status = 'UNKNOWN'
 while ($global:status -ne 'Succeeded' -and $global:status -ne 'Failed' -and $global:status -ne 'Canceled') { 
     Start-Sleep -Seconds 15
     RunWithRetries {
-        $global:info = Get-AzImageBuilderTemplate -ImageTemplateName $imageTemplateName -ResourceGroupName ${env:resourceGroupName}
-        $global:status = $info.LastRunStatusRunState
+        $script:info = Get-AzImageBuilderTemplate -ImageTemplateName $imageTemplateName -ResourceGroupName ${env:resourceGroupName}
+        $script:status = $info.LastRunStatusRunState
     }
 }
 
@@ -115,11 +115,11 @@ if ($printCustomizationLogLastLines -ne 0) {
 
         if ($printCustomizationLogLastLines -gt 0) {
             Log " === Last $printCustomizationLogLastLines lines of $logsFile :`n"
-            Log " $(Get-Content $logsFile -Tail $printCustomizationLogLastLines | Out-String)"
+            Log " $(Get-Content -ErrorAction Stop $logsFile -Tail $printCustomizationLogLastLines | Out-String)"
         }
         else {
             Log " === Content of $logsFile :`n"
-            Log " $(Get-Content $logsFile | Out-String)"
+            Log " $(Get-Content -ErrorAction Stop $logsFile | Out-String)"
         }
     }
     else {

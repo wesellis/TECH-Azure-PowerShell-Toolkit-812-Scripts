@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deploy Azureresourcegroup
 
@@ -59,14 +59,19 @@ param(
 try {
     [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
 } 
-catch { }
+catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3
 
+[CmdletBinding()]
 function WE-Format-ValidationOutput {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -86,12 +91,12 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($WEValidationOutput, [int] $WEDepth = 0)
     Set-StrictMode -Off
-    return @($WEValidationOutput | Where-Object { $_ -ne $null } | ForEach-Object { @('  ' * $WEDepth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($WEDepth + 1)) })
+    return @($WEValidationOutput | Where-Object { $null -ne $_ } | ForEach-Object { @('  ' * $WEDepth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($WEDepth + 1)) })
 }
 
 $WEOptionalParameters = New-Object -TypeName Hashtable
@@ -122,7 +127,7 @@ if (!$WEValidateOnly) {
 $WETemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WETemplateFile))
 $WETemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WETemplateParametersFile))
 
-$WETemplateJSON = Get-Content $WETemplateFile -Raw | ConvertFrom-Json
+$WETemplateJSON = Get-Content -ErrorAction Stop $WETemplateFile -Raw | ConvertFrom-Json
 
 $WETemplateSchema = $WETemplateJson | Select-Object -expand '$schema' -ErrorAction Ignore
 
@@ -138,13 +143,13 @@ Write-WELog " Running a $deploymentScope scoped deployment..." " INFO"
 $WEArtifactsLocationParameter = $WETemplateJson | Select-Object -expand 'parameters' -ErrorAction Ignore | Select-Object -Expand '_artifactsLocation' -ErrorAction Ignore
 
 
-if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
+if ($WEUploadArtifacts -Or $null -ne $WEArtifactsLocationParameter) {
     # Convert relative paths to absolute paths if needed
     $WEArtifactStagingDirectory = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WEArtifactStagingDirectory))
     $WEDSCSourceFolder = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WEDSCSourceFolder))
 
     # Parse the parameter file and update the values of artifacts location and artifacts location SAS token if they are present
-    $WEJsonParameters = Get-Content $WETemplateParametersFile -Raw | ConvertFrom-Json
+    $WEJsonParameters = Get-Content -ErrorAction Stop $WETemplateParametersFile -Raw | ConvertFrom-Json
     if (($WEJsonParameters | Get-Member -Type NoteProperty 'parameters') -ne $null) {
         $WEJsonParameters = $WEJsonParameters.parameters
     }
@@ -155,7 +160,7 @@ if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
 
     # Create DSC configuration archive
     if ((Test-Path $WEDSCSourceFolder) -and ($WEBuildDscPackage)) {
-        $WEDSCSourceFilePaths = @(Get-ChildItem $WEDSCSourceFolder -File -Filter '*.ps1' | ForEach-Object -Process { $_.FullName })
+        $WEDSCSourceFilePaths = @(Get-ChildItem -ErrorAction Stop $WEDSCSourceFolder -File -Filter '*.ps1' | ForEach-Object -Process { $_.FullName })
         foreach ($WEDSCSourceFilePath in $WEDSCSourceFilePaths) {
             $WEDSCArchiveFilePath = $WEDSCSourceFilePath.Substring(0, $WEDSCSourceFilePath.Length - 4) + '.zip'
             Publish-AzureRmVMDscConfiguration $WEDSCSourceFilePath -OutputArchivePath $WEDSCArchiveFilePath -Force -Verbose
@@ -167,10 +172,10 @@ if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
         $WEStorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.Id).Replace('-', '').substring(0, 19)
     }
 
-    $WEStorageAccount = (Get-AzureRmStorageAccount | Where-Object { $_.StorageAccountName -eq $WEStorageAccountName })
+    $WEStorageAccount = (Get-AzureRmStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $WEStorageAccountName })
 
     # Create the storage account if it doesn't already exist
-    if ($WEStorageAccount -eq $null) {
+    if ($null -eq $WEStorageAccount) {
         $WEStorageResourceGroupName = 'ARM_Deploy_Staging'
         New-AzureRmResourceGroup -Location " $WELocation" -Name $WEStorageResourceGroupName -Force
         $WEStorageAccount = New-AzureRmStorageAccount -StorageAccountName $WEStorageAccountName -Type 'Standard_LRS' -ResourceGroupName $WEStorageResourceGroupName -Location " $WELocation"
@@ -193,7 +198,7 @@ if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
     # Copy files from the local storage staging location to the storage account container
     New-AzureStorageContainer -Name $WEStorageContainerName -Context $WEStorageAccount.Context -ErrorAction SilentlyContinue *>&1
 
-    $WEArtifactFilePaths = Get-ChildItem $WEArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
+    $WEArtifactFilePaths = Get-ChildItem -ErrorAction Stop $WEArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
     foreach ($WESourcePath in $WEArtifactFilePaths) {
         
         if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*" )) {
@@ -207,7 +212,7 @@ if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
         $WEOptionalParameters[$WEArtifactsLocationSasTokenName] = (New-AzureStorageContainerSASToken -Container $WEStorageContainerName -Context $WEStorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
     }
 
-    $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem $WETemplateFile).Name + $WEOptionalParameters[$WEArtifactsLocationSasTokenName])
+    $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem -ErrorAction Stop $WETemplateFile).Name + $WEOptionalParameters[$WEArtifactsLocationSasTokenName])
 
     $WEOptionalParameters[$WEArtifactsLocationSasTokenName] = ConvertTo-SecureString $WEOptionalParameters[$WEArtifactsLocationSasTokenName] -AsPlainText -Force
 

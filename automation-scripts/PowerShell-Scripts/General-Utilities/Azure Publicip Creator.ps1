@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Publicip Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -97,7 +98,7 @@ param(
 
 Write-WELog " Creating Public IP: $WEPublicIpName" " INFO"
 ; 
-$WEPublicIp = New-AzPublicIpAddress `
+$WEPublicIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEPublicIpName `
     -Location $WELocation `

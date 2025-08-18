@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Networkwatcher Enabler
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -92,7 +93,7 @@ $WENetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $WEResourceGroupName
 
 if (-not $WENetworkWatcher) {
     # Create Network Watcher
-   ;  $WENetworkWatcher = New-AzNetworkWatcher `
+   ;  $WENetworkWatcher = New-AzNetworkWatcher -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WENetworkWatcherName `
         -Location $WELocation

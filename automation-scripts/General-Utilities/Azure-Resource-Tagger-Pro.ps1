@@ -1,4 +1,4 @@
-# Enhanced Azure Resource Tagger with Bulk Operations
+﻿# Enhanced Azure Resource Tagger with Bulk Operations
 param (
     [Parameter(Mandatory=$false)][string]$ResourceGroupName,
     [Parameter(Mandatory=$false)][string]$SubscriptionId,
@@ -27,9 +27,9 @@ try {
         Get-AzResource -ResourceGroupName $ResourceGroupName
     } elseif ($SubscriptionId) {
         Set-AzContext -SubscriptionId $SubscriptionId
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     # Filter by resource types if specified

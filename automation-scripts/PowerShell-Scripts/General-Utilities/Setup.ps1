@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setup
 
@@ -47,7 +47,7 @@ param(
 $WEProgressPreference = 'SilentlyContinue' 
 
 
-Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter F | Format-Volume -FileSystem NTFS -Confirm:$false -Force
+Get-Disk -ErrorAction Stop | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter F | Format-Volume -FileSystem NTFS -Confirm:$false -Force
 New-Item -Path f:\le -ItemType Directory | Out-Null
 New-Item -Path f:\le\acme.json | Out-Null
 New-Item -Path f:\dockerdata -ItemType Directory | Out-Null
@@ -70,7 +70,8 @@ $acl = Get-Acl -Path $path
 $acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)" )
 Set-Acl -Path $path -AclObject $acl
 New-ItemProperty -Path " HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value " C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
-'function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
+'[CmdletBinding()]
+function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
 Restart-Service sshd
 
 
@@ -82,8 +83,8 @@ $dockerDaemonConfig = @"
 " @
 $dockerDaemonConfig | Out-File " c:\programdata\docker\config\daemon.json" -Encoding ascii
 
-Remove-Item 'f:\dockerdata\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
-New-Item 'f:\dockerdata\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
+Remove-Item -ErrorAction Stop 'f:\dockerdata\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
+New-Item -ErrorAction Stop 'f:\dockerdata\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
 
 Add-MpPreference -ExclusionPath '${env:ProgramFiles}\docker\'
 Add-MpPreference -ExclusionPath 'f:\dockerdata'
@@ -95,11 +96,11 @@ $adminPwd | Out-File -NoNewline -Encoding ascii " f:\portainerdata\passwordfile"
 
 [DownloadWithRetry]::DoDownloadWithRetry(" https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe" , 5, 10, $null, " $($WEEnv:ProgramFiles)\Docker\docker-compose.exe" , $false)
 
-$template = Get-Content (Join-Path $basepath 'docker-compose.yml.template') -Raw
+$template = Get-Content -ErrorAction Stop (Join-Path $basepath 'docker-compose.yml.template') -Raw
 $expanded = Invoke-Expression " @`" `r`n$template`r`n`" @"
 $expanded | Out-File " f:\compose\docker-compose.yml" -Encoding ASCII
 
-Set-Location " f:\compose"
+Set-Location -ErrorAction Stop " f:\compose"
 Invoke-Expression " docker-compose up -d"
 
 class DownloadWithRetry {
@@ -133,7 +134,7 @@ class DownloadWithRetry {
             }
             catch {
                 if ($headers.Count -ne 0) {
-                    write-host " download of $uri failed"
+                    Write-Information " download of $uri failed"
                 }
                 try {
                     if ([string]::IsNullOrEmpty($outFile)) {
@@ -146,7 +147,7 @@ class DownloadWithRetry {
                     }
                 }
                 catch {
-                    write-host " download of $uri failed"
+                    Write-Information " download of $uri failed"
                     $retryCount++;
                     if ($retryCount -le $maxRetries) {
                         Start-Sleep -Seconds $retryWaitInSeconds

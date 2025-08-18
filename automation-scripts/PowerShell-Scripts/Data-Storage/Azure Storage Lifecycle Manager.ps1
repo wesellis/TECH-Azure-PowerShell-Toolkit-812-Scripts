@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Storage Lifecycle Manager
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -122,7 +123,7 @@ $WELifecycleRule = @{
 $WEPolicyJson = $WELifecycleRule | ConvertTo-Json -Depth 10
 
 
-Set-AzStorageAccountManagementPolicy `
+Set-AzStorageAccountManagementPolicy -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -StorageAccountName $WEStorageAccountName `
     -Policy $WEPolicyJson

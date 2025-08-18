@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Writeblob
 
@@ -77,7 +77,7 @@ Connect-AzAccount -Identity -Verbose
 $WEContainerName=$WEContainerName.ToLowerInvariant()
 $WEBlobName=$env:COMPUTERNAME.ToLowerInvariant(); 
 $WEFileName=[System.IO.Path]::GetTempFileName()
-Get-Date | Out-File $WEFileName  
+Get-Date -ErrorAction Stop | Out-File $WEFileName  
 ; 
 $ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
 

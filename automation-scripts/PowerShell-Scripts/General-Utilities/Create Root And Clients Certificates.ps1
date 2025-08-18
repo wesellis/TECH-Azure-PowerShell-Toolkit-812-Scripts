@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Create Root And Clients Certificates
 
@@ -60,12 +60,12 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
 
     $pathFolder = [string](Split-Path -Path $certPath -Parent)
     $folderName = [string](Split-Path -Path $certPath -Leaf)
-    Write-Host 'folder to store digital certificates: '$pathFolder$folderName
+    Write-Information \'folder to store digital certificates: \'$pathFolder$folderName
 
 
     # Create a local folder: 'C:\cert'
     New-Item -Path $pathFolder -Name $folderName -ItemType Directory -Force
-    Write-Host '' 
+    Write-Information '' 
     #
     # Create self-signed Root Certificate
     # It creates a self-signed root certificate named 'P2SRootCert' that is automatically installed in 'Certificates-Current User\Personal\Certificates'.
@@ -88,7 +88,7 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
     $certRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=P2SRootCert' }
     If ($null -eq $certRoot) {
         # Create a new Root Certificate if it doesn't exist.
-        $certRoot = New-SelfSignedCertificate @params
+        $certRoot = New-SelfSignedCertificate -ErrorAction Stop @params
         Write-WELog " $(Get-Date) - P2S Root certificate created" " INFO"
     }
     Else { 
@@ -128,7 +128,7 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
     $certClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $certSubject }
     If ($null -eq $certClient) {
         # getting client certificate
-        New-SelfSignedCertificate @params
+        New-SelfSignedCertificate -ErrorAction Stop @params
         Write-WELog " $(Get-Date) - P2S Client cert: $certSubject created" " INFO" -ForegroundColor Yellow
     }
     Else { Write-WELog " $(Get-Date) - P2S Client cert: $certSubject already exists, skipping....." " INFO" }
@@ -139,7 +139,7 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
     $certRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq " CN=P2SRootCert" }
     If ($null -eq $certRoot) {
         Write-WELog " $(Get-Date) - Root Certificate CN=P2SRootCert not found " " INFO"
-        write-host " stop processing!"
+        Write-Information " stop processing!"
         Exit
     }
     Else { 
@@ -170,8 +170,8 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
 
 
    ;  $pwdFile = $certPath + 'certpwd.txt'
-    Write-Host ''
-    Write-Host 'write password file: '$pwdFile
+    Write-Information ''
+    Write-Information \'write password file: \'$pwdFile
     Out-File -FilePath $pwdFile -Force -InputObject $pwdCertificates
 }
 

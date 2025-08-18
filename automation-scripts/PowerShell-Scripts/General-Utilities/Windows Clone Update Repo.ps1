@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Clone Update Repo
 
@@ -91,7 +91,7 @@ enum SourceControl {
 }
 
 $logfilepath = $null
-$global:varLogArray = New-Object -TypeName " PSCustomObject"
+$script:varLogArray = New-Object -TypeName " PSCustomObject"
 Function ProcessRunner(
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -162,7 +162,7 @@ Function ProcessRunner(
         # if logfilepath is set, write that out too if the process exited
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
             Write-WELog " Logfile output from '$logfilepath':" " INFO"
-            Get-Content $logfilepath
+            Get-Content -ErrorAction Stop $logfilepath
         }
 
         if ($checkForSuccess) {
@@ -178,6 +178,7 @@ Function ProcessRunner(
 .DESCRIPTION
     Gvfs clones the repository and checks out to the specified gitBranchName
 
+[CmdletBinding()]
 function WE-GvfsCloneGitRepo {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -192,13 +193,13 @@ param(
     # pre-condition checks
     if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
         $errMsg = $(" Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
+        Write-Information $errMsg
         Throw $errMsg
     }
     
     if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
         $errMsg = $(" Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
+        Write-Information $errMsg
         Throw $errMsg
     }
 
@@ -207,7 +208,7 @@ param(
     # Known Issue: gvfs clone does not work with -b <branch> option.
     # So, first gvfs clone without -b <branch> option
     # then, next git checkout <branch>
-    Write-Host $(" Gvfs cloning the git repo..." )
+    Write-Information $(" Gvfs cloning the git repo..." )
 
     # Limitation: gvfs clone doesn't take a -c parameter like git clone.
     # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
@@ -228,7 +229,8 @@ param(
     ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
 }
 
-function WE-Get-CanUseManagedIdentityForRepo {
+[CmdletBinding()]
+function WE-Get-CanUseManagedIdentityForRepo -ErrorAction Stop {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param(
@@ -242,6 +244,7 @@ param(
 .DESCRIPTION
     Clones the repository and checks out to the specified CommitId
 
+[CmdletBinding()]
 function WE-CloneGitRepo {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -257,13 +260,13 @@ param(
     # pre-condition checks
     if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
         $errMsg = $(" Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
+        Write-Information $errMsg
         Throw $errMsg
     }
     
     if ($false -eq ($gitRepoLocation.Length -gt 8)) {
         $errMsg = $(" Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
+        Write-Information $errMsg
         Throw $errMsg
     }
 
@@ -291,19 +294,19 @@ param(
 
     $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
 
-    Write-Host $(" Cloning the git repo..." )
+    Write-Information $(" Cloning the git repo..." )
     $runBlock = {
         # Remove existing repo folder in case it was created by the previous clone attempt
         if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
 
         ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
     }
     RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
 
-    Write-Host Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location $gitLocalRepoLocation
+    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $gitLocalRepoLocation
 
     # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
     if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
@@ -319,6 +322,7 @@ param(
 .DESCRIPTION
     Updates the local repository to the commit ID specified
 
+[CmdletBinding()]
 function WE-UpdateGitRepo {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -410,6 +414,7 @@ param(
 .DESCRIPTION
     Executes a git command with arguments
 
+[CmdletBinding()]
 function WE-ExecuteGitCmd {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -427,7 +432,7 @@ param(
         $argumentsToLog = $gitCmdArgs
     }
 
-    Write-Host $(" Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
+    Write-Information $(" Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
     $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
     ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
 }
@@ -436,6 +441,7 @@ param(
 .DESCRIPTION
     Executes a gvfs command with arguments
 
+[CmdletBinding()]
 function WE-ExecuteGvfsCmd {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -452,7 +458,7 @@ param(
         $argumentsToLog = $gvfsCmdArgs
     }
 
-    Write-Host $(" Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
+    Write-Information $(" Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
     $arguments = " $gvfsCmd $gvfsCmdArgs"
     # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
     # So, dont -Wait during Start-Process for gvfs clone
@@ -460,6 +466,7 @@ param(
 }
 
 
+[CmdletBinding()]
 function WE-ConfigureGitRepoBeforeClone {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -475,6 +482,7 @@ param(
 }
 
 
+[CmdletBinding()]
 function WE-ConfigureGitRepoAfterClone {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -496,6 +504,7 @@ param(
 .DESCRIPTION
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 
+[CmdletBinding()]
 function WE-UpdateOrCloneRepo {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -516,12 +525,12 @@ param(
     switch ($sourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
             # Get git install location
-            $gitexe = Get-Command git
+            $gitexe = Get-Command -ErrorAction Stop git
             $WEGitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
             # Get gvfs install location
-            $gvfsexe = Get-Command gvfs
+            $gvfsexe = Get-Command -ErrorAction Stop gvfs
             $WEGvfsExeLocation = $gvfsexe.Source
         }
     }
@@ -545,14 +554,14 @@ param(
         }
     }
     else {
-        Set-Location $targetDirectory
+        Set-Location -ErrorAction Stop $targetDirectory
 
         switch ($sourceControl) {
             git {
                 Write-WELog " Testing if '$targetDirectory' hosts a git repository..." " INFO"
 
                 # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$WEGitExeLocation remote get-url origin 
+                $repo_originUrl = &$WEGitExeLocation remote get-url -ErrorAction Stop origin 
             }
             gvfs {
                 Write-WELog " Testing if '$targetDirectory' hosts a gvfs repository..." " INFO"
@@ -562,10 +571,10 @@ param(
 
                 if ($? -eq $true) {
                     # gvfs repository is always at " src" folder
-                    Set-Location (Join-Path $targetDirectory " src" )
+                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
 
                     # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$WEGitExeLocation remote get-url origin 
+                    $repo_originUrl = &$WEGitExeLocation remote get-url -ErrorAction Stop origin 
                 }
             }
         }
@@ -598,11 +607,11 @@ param(
             }
         }
 
-        Write-Host Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location $targetDirectory
+        Write-Information Changing to repo location: $(" '$targetDirectory'" )
+        Set-Location -ErrorAction Stop $targetDirectory
     
         # update repo_originUrl to the new location
-        $repo_originUrl = &$WEGitExeLocation remote get-url origin 
+        $repo_originUrl = &$WEGitExeLocation remote get-url -ErrorAction Stop origin 
 
         ConfigureGitRepoAfterClone -gitExeLocation $WEGitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
     }
@@ -611,7 +620,7 @@ param(
         Write-WELog " Skip pulling latest updates for just cloned repo: $repo_originUrl" " INFO"
     } 
     else {
-        Write-Host Updating repo with Url: $repo_originUrl
+        Write-Information Updating repo with Url: $repo_originUrl
         UpdateGitRepo -gitExeLocation $WEGitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
     }
 }
@@ -647,12 +656,12 @@ function WE-RunScriptSyncRepo(
 ) {
 
     $logfilepath = $null
-    $global:varLogArray = New-Object -TypeName " PSCustomObject"
+    $script:varLogArray = New-Object -TypeName " PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
 
     # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location
+    $startingDirectory = Get-Location -ErrorAction Stop
 
     # Set Repo Log file path
     $repoLogFilePath = 'c:\.tools\RepoLogs'
@@ -664,7 +673,7 @@ function WE-RunScriptSyncRepo(
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
                 # Get git install location
-                $gitexe = Get-Command git
+                $gitexe = Get-Command -ErrorAction Stop git
                 $WEGitExeLocation = $gitexe.Source
 
                 # confirm git is there
@@ -676,7 +685,7 @@ function WE-RunScriptSyncRepo(
             }
             { $_ -eq [SourceControl]::gvfs } {
                 # Get gvfs install location
-                $gvfsexe = Get-Command gvfs
+                $gvfsexe = Get-Command -ErrorAction Stop gvfs
                 $WEGvfsExeLocation = $gvfsexe.Source
 
                 # confirm gvfs is there
@@ -689,11 +698,11 @@ function WE-RunScriptSyncRepo(
             }
         }
 
-        Write-Host --------------------------------------
+        Write-Information --------------------------------------
         Write-WELog " Repository name: '$repoName'" " INFO"
         Write-WELog " Commit id: '$commitId'" " INFO"
         Write-WELog " BranchName name: '$branchName'" " INFO"
-        Write-Host --------------------------------------
+        Write-Information --------------------------------------
 
         # Add input data variables to log array
         Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
@@ -719,7 +728,7 @@ function WE-RunScriptSyncRepo(
         UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
 
         Write-WELog " Var Log Array" " INFO"
-        Write-Host $global:varLogArray | ConvertTo-Json
+        Write-Information $global:varLogArray | ConvertTo-Json
 
         # Set the file name for logging repo sync variables
         Write-WELog " Derive Repo Log Name" " INFO"
@@ -730,28 +739,28 @@ function WE-RunScriptSyncRepo(
         Write-WELog " Write output file to " " INFO" $outFile
         $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
 
-        Write-Host Completed!
+        Write-Information Completed!
     }
     catch {
-        Write-Host -Object $_
-        Write-Host -Object $_.ScriptStackTrace
+        Write-Information -Object $_
+        Write-Information -Object $_.ScriptStackTrace
 
         if (($null -ne $WEError[0]) -and ($null -ne $WEError[0].Exception) -and ($null -ne $WEError[0].Exception.Message)) {
            ;  $errMsg = $WEError[0].Exception.Message
-            Write-Host $errMsg
+            Write-Information $errMsg
             Write-Error $errMsg
         }
 
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
             Write-WELog " Logfile output from '$logfilepath':" " INFO"
-            Get-Content $logfilepath
+            Get-Content -ErrorAction Stop $logfilepath
         }
 
-        Write-Host 'Script failed.'
-        Set-Location $startingDirectory
+        Write-Information \'Script failed.\'
+        Set-Location -ErrorAction Stop $startingDirectory
         exit 1
     }
-    Set-Location $startingDirectory
+    Set-Location -ErrorAction Stop $startingDirectory
 }
 
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {

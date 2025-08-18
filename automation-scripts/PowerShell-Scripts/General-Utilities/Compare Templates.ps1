@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Compare Templates
 
@@ -55,12 +55,12 @@ if ($WEWriteToHost) {
     Write-WELog " Comparing $WETemplateFilePathExpected and $WETemplateFilePathActual" " INFO"
 }
 
-$templateContentsExpectedRaw = Get-Content $WETemplateFilePathExpected -Raw
-$templateContentsActualRaw = Get-Content $WETemplateFilePathActual -Raw
+$templateContentsExpectedRaw = Get-Content -ErrorAction Stop $WETemplateFilePathExpected -Raw
+$templateContentsActualRaw = Get-Content -ErrorAction Stop $WETemplateFilePathActual -Raw
 
 if ($WERemoveGeneratorMetadata) {
-    $templateContentsExpectedRaw = Remove-GeneratorMetadata $templateContentsExpectedRaw
-    $templateContentsActualRaw = Remove-GeneratorMetadata $templateContentsActualRaw
+    $templateContentsExpectedRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsExpectedRaw
+    $templateContentsActualRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsActualRaw
 }
 
 $templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw; 
@@ -77,12 +77,11 @@ if ($diffs) {
         Write-Verbose $templateContentsActualRaw
         Write-Verbose " ***************** END OF ACTUAL CONTENTS ***************"
         Write-WELog " `n`n************* EXPECTED CONTENTS ****************" " INFO"
-        Write-Host $templateContentsExpectedRaw
-        Write-host " ***************** END OF EXPECTED CONTENTS ***************"
+        Write-Information $templateContentsExpectedRaw
+        Write-Information " ***************** END OF EXPECTED CONTENTS ***************"
 
         Write-WELog " `n`n************* DIFFERENCES (IGNORING METADATA) ****************`n" " INFO"
-        $diffs | Out-String | Write-Host
-        Write-WELog " `n***************** END OF DIFFERENCES ***************" " INFO"
+        $diffs | Out-String | Write-Information Write-WELog " `n***************** END OF DIFFERENCES ***************" " INFO"
     }
     
     return $false

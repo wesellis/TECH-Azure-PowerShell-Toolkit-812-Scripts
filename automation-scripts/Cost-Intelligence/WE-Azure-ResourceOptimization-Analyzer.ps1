@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Wesley Ellis Azure Resource Optimization & Cost Intelligence Analyzer
 # Author: Wesley Ellis
 # Contact: wesellis.com
@@ -40,9 +40,10 @@ param (
 # Wesley Ellis Enterprise Framework
 $WEToolName = "WE-Azure-ResourceOptimizer"
 $WEVersion = "4.0"
-$WEStartTime = Get-Date
+$WEStartTime = Get-Date -ErrorAction Stop
 
 # Enhanced enterprise logging
+[CmdletBinding()]
 function Write-WEOptimizationLog {
     param(
         [string]$Message,
@@ -62,7 +63,7 @@ function Write-WEOptimizationLog {
     }
     
     $logEntry = "$timestamp [$WEToolName] [$Category] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
     
     # Enterprise audit logging
     $logPath = "$env:TEMP\WE-Azure-Optimization-$(Get-Date -Format 'yyyyMMdd').log"
@@ -70,7 +71,8 @@ function Write-WEOptimizationLog {
 }
 
 # Wesley Ellis Cost Analysis Engine
-function Get-WEResourceCostAnalysis {
+[CmdletBinding()]
+function Get-WEResourceCostAnalysis -ErrorAction Stop {
     param(
         [string]$SubscriptionId,
         [string]$ResourceGroupName,
@@ -80,7 +82,7 @@ function Get-WEResourceCostAnalysis {
     Write-WEOptimizationLog "Performing comprehensive cost analysis" "ANALYZE" "COST"
     
     try {
-        $endDate = Get-Date
+        $endDate = Get-Date -ErrorAction Stop
         $startDate = $endDate.AddDays(-$DaysBack)
         
         # Get consumption data
@@ -94,7 +96,7 @@ function Get-WEResourceCostAnalysis {
         }
         
         # Comprehensive cost breakdown
-        $costData = Get-AzConsumptionUsageDetail @consumptionParams | Group-Object ResourceType
+        $costData = Get-AzConsumptionUsageDetail -ErrorAction Stop @consumptionParams | Group-Object ResourceType
         
         $costAnalysis = @()
         $totalCost = 0
@@ -128,7 +130,7 @@ function Get-WEResourceCostAnalysis {
             TotalCost = $totalCost
             AnalysisPeriod = "$DaysBack days"
             ResourceTypeBreakdown = $costAnalysis
-            AnalysisDate = Get-Date
+            AnalysisDate = Get-Date -ErrorAction Stop
         }
         
     } catch {
@@ -138,7 +140,8 @@ function Get-WEResourceCostAnalysis {
 }
 
 # Enhanced Resource Rightsizing Analyzer
-function Get-WERightsizingRecommendations {
+[CmdletBinding()]
+function Get-WERightsizingRecommendations -ErrorAction Stop {
     param([string]$ResourceGroupName)
     
     Write-WEOptimizationLog "Analyzing resource rightsizing opportunities" "ANALYZE" "RIGHTSIZE"
@@ -150,7 +153,7 @@ function Get-WERightsizingRecommendations {
         $vms = if ($ResourceGroupName) {
             Get-AzVM -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzVM
+            Get-AzVM -ErrorAction Stop
         }
         
         Write-WEOptimizationLog "Analyzing $($vms.Count) virtual machines" "INFO" "RIGHTSIZE"
@@ -194,7 +197,7 @@ function Get-WERightsizingRecommendations {
         $storageAccounts = if ($ResourceGroupName) {
             Get-AzStorageAccount -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzStorageAccount
+            Get-AzStorageAccount -ErrorAction Stop
         }
         
         foreach ($storage in $storageAccounts) {
@@ -233,6 +236,7 @@ function Get-WERightsizingRecommendations {
 }
 
 # Unused Resource Detection Engine
+[CmdletBinding()]
 function Find-WEUnusedResources {
     param([string]$ResourceGroupName)
     
@@ -245,7 +249,7 @@ function Find-WEUnusedResources {
         $disks = if ($ResourceGroupName) {
             Get-AzDisk -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzDisk
+            Get-AzDisk -ErrorAction Stop
         }
         
         $unattachedDisks = $disks | Where-Object { $_.ManagedBy -eq $null }
@@ -266,7 +270,7 @@ function Find-WEUnusedResources {
         $nsgs = if ($ResourceGroupName) {
             Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzNetworkSecurityGroup
+            Get-AzNetworkSecurityGroup -ErrorAction Stop
         }
         
         $unusedNSGs = $nsgs | Where-Object { 
@@ -290,7 +294,7 @@ function Find-WEUnusedResources {
         $publicIPs = if ($ResourceGroupName) {
             Get-AzPublicIpAddress -ResourceGroupName $ResourceGroupName
         } else {
-            Get-AzPublicIpAddress
+            Get-AzPublicIpAddress -ErrorAction Stop
         }
         
         $unusedPublicIPs = $publicIPs | Where-Object { $_.IpConfiguration -eq $null }
@@ -328,7 +332,7 @@ try {
         Write-WEOptimizationLog "Context set to subscription: $WESubscriptionId" "INFO"
     }
     
-    $currentContext = Get-AzContext
+    $currentContext = Get-AzContext -ErrorAction Stop
     Write-WEOptimizationLog "Analyzing subscription: $($currentContext.Subscription.Name)" "INFO"
     
     # Initialize results container

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Managedidentity Creator
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -96,7 +97,7 @@ Write-WELog " Creating Managed Identity: $WEIdentityName" " INFO"
 
 try {
     # Create user-assigned managed identity
-   ;  $WEIdentity = New-AzUserAssignedIdentity `
+   ;  $WEIdentity = New-AzUserAssignedIdentity -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEIdentityName `
         -Location $WELocation
@@ -114,7 +115,7 @@ try {
         
         Start-Sleep -Seconds 10  # Wait for identity propagation
         
-       ;  $WERoleAssignment = New-AzRoleAssignment `
+       ;  $WERoleAssignment = New-AzRoleAssignment -ErrorAction Stop `
             -ObjectId $WEIdentity.PrincipalId `
             -RoleDefinitionName $WERole `
             -Scope $WEScope

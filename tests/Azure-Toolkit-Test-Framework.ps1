@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Pester, Az.Accounts, Az.Resources
 
 <#
@@ -69,10 +69,11 @@ param(
 
 # Initialize test environment
 $ErrorActionPreference = "Stop"
-$script:TestStartTime = Get-Date
+$script:TestStartTime = Get-Date -ErrorAction Stop
 $script:TestResults = @()
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-TestLog {
     param(
         [string]$Message,
@@ -89,10 +90,11 @@ function Write-TestLog {
         Test = "Cyan"
     }
     
-    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] [$Level] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Install and import required modules
+[CmdletBinding()]
 function Initialize-TestEnvironment {
     try {
         Write-TestLog "Initializing test environment..." "Info"
@@ -122,12 +124,13 @@ function Initialize-TestEnvironment {
 }
 
 # Azure authentication and setup
+[CmdletBinding()]
 function Initialize-AzureTestEnvironment {
     try {
         Write-TestLog "Setting up Azure test environment..." "Info"
         
         # Ensure Azure connection
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             Write-TestLog "Connecting to Azure..." "Info"
             Connect-AzAccount
@@ -155,10 +158,11 @@ function Initialize-AzureTestEnvironment {
 }
 
 # Unit Tests for PowerShell Scripts
+[CmdletBinding()]
 function Invoke-UnitTests {
     Write-TestLog "Running unit tests..." "Test"
     
-    $unitTestConfig = New-PesterConfiguration
+    $unitTestConfig = New-PesterConfiguration -ErrorAction Stop
     $unitTestConfig.Run.Container = New-PesterContainer -Path ".\tests\unit" -Data @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -182,10 +186,11 @@ function Invoke-UnitTests {
 }
 
 # Integration Tests for Azure Resources
+[CmdletBinding()]
 function Invoke-IntegrationTests {
     Write-TestLog "Running integration tests..." "Test"
     
-    $integrationTestConfig = New-PesterConfiguration
+    $integrationTestConfig = New-PesterConfiguration -ErrorAction Stop
     $integrationTestConfig.Run.Container = New-PesterContainer -Path ".\tests\integration" -Data @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -209,10 +214,11 @@ function Invoke-IntegrationTests {
 }
 
 # Security Tests for Azure Resources
+[CmdletBinding()]
 function Invoke-SecurityTests {
     Write-TestLog "Running security tests..." "Test"
     
-    $securityTestConfig = New-PesterConfiguration
+    $securityTestConfig = New-PesterConfiguration -ErrorAction Stop
     $securityTestConfig.Run.Container = New-PesterContainer -Path ".\tests\security" -Data @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -237,10 +243,11 @@ function Invoke-SecurityTests {
 }
 
 # Performance Tests
+[CmdletBinding()]
 function Invoke-PerformanceTests {
     Write-TestLog "Running performance tests..." "Test"
     
-    $performanceTestConfig = New-PesterConfiguration
+    $performanceTestConfig = New-PesterConfiguration -ErrorAction Stop
     $performanceTestConfig.Run.Container = New-PesterContainer -Path ".\tests\performance" -Data @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -265,10 +272,11 @@ function Invoke-PerformanceTests {
 }
 
 # Compliance Tests
+[CmdletBinding()]
 function Invoke-ComplianceTests {
     Write-TestLog "Running compliance tests..." "Test"
     
-    $complianceTestConfig = New-PesterConfiguration
+    $complianceTestConfig = New-PesterConfiguration -ErrorAction Stop
     $complianceTestConfig.Run.Container = New-PesterContainer -Path ".\tests\compliance" -Data @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -293,7 +301,8 @@ function Invoke-ComplianceTests {
 }
 
 # Create sample unit tests
-function Create-SampleUnitTests {
+[CmdletBinding()]
+function New-SampleUnitTests {
     $unitTestContent = @'
 BeforeAll {
     # Import automation scripts for testing
@@ -309,14 +318,14 @@ Describe "PowerShell Script Validation" -Tag "Unit", "Validation" {
         @{ Script = $scripts }
     ) -ForEach $scripts {
         $errors = $null
-        $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $Script.FullName -Raw), [ref]$errors)
+        $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content -ErrorAction Stop $Script.FullName -Raw), [ref]$errors)
         $errors.Count | Should -Be 0
     }
     
     It "Should have help documentation for <Name>" -TestCases @(
         @{ Script = $scripts }
     ) -ForEach $scripts {
-        $content = Get-Content $Script.FullName -Raw
+        $content = Get-Content -ErrorAction Stop $Script.FullName -Raw
         $content | Should -Match "\.SYNOPSIS"
         $content | Should -Match "\.DESCRIPTION"
         $content | Should -Match "\.EXAMPLE"
@@ -325,7 +334,7 @@ Describe "PowerShell Script Validation" -Tag "Unit", "Validation" {
     It "Should have proper error handling for <Name>" -TestCases @(
         @{ Script = $scripts | Where-Object { $_.Name -notlike "*Test*" } }
     ) -ForEach ($scripts | Where-Object { $_.Name -notlike "*Test*" }) {
-        $content = Get-Content $Script.FullName -Raw
+        $content = Get-Content -ErrorAction Stop $Script.FullName -Raw
         $content | Should -Match "try\s*\{"
         $content | Should -Match "catch\s*\{"
     }
@@ -345,7 +354,8 @@ Describe "Module Dependencies" -Tag "Unit", "Dependencies" {
 }
 
 # Create sample integration tests
-function Create-SampleIntegrationTests {
+[CmdletBinding()]
+function New-SampleIntegrationTests {
     $integrationTestContent = @'
 BeforeAll {
     param($ResourceGroupName, $Location, $TestEnvironment)
@@ -410,7 +420,8 @@ Describe "Network Resources" -Tag "Integration", "Network" {
 }
 
 # Create sample security tests
-function Create-SampleSecurityTests {
+[CmdletBinding()]
+function New-SampleSecurityTests {
     $securityTestContent = @'
 BeforeAll {
     param($ResourceGroupName, $Location, $TestEnvironment)
@@ -480,7 +491,8 @@ Describe "Key Vault Security" -Tag "Security", "KeyVault" {
 }
 
 # Create sample performance tests
-function Create-SamplePerformanceTests {
+[CmdletBinding()]
+function New-SamplePerformanceTests {
     $performanceTestContent = @'
 BeforeAll {
     param($ResourceGroupName, $Location, $TestEnvironment)
@@ -490,7 +502,7 @@ BeforeAll {
 
 Describe "Performance Tests" -Tag "Performance" {
     It "Should create resources within acceptable time limits" {
-        $startTime = Get-Date
+        $startTime = Get-Date -ErrorAction Stop
         
         # Test storage account creation performance
         $storageAccountName = "perftest$(Get-Random -Maximum 99999)"
@@ -499,7 +511,7 @@ Describe "Performance Tests" -Tag "Performance" {
         if (Test-Path $script) {
             & $script -ResourceGroupName $script:ResourceGroupName -StorageAccountName $storageAccountName -Location $script:Location -SkuName "Standard_LRS"
             
-            $endTime = Get-Date
+            $endTime = Get-Date -ErrorAction Stop
             $duration = ($endTime - $startTime).TotalSeconds
             
             # Storage account should be created within 2 minutes
@@ -512,7 +524,7 @@ Describe "Performance Tests" -Tag "Performance" {
     
     It "Should handle bulk operations efficiently" {
         # Test bulk resource group creation
-        $startTime = Get-Date
+        $startTime = Get-Date -ErrorAction Stop
         
         $testResourceGroups = @()
         for ($i = 1; $i -le 5; $i++) {
@@ -521,7 +533,7 @@ Describe "Performance Tests" -Tag "Performance" {
             New-AzResourceGroup -Name $rgName -Location $script:Location -Force | Out-Null
         }
         
-        $endTime = Get-Date
+        $endTime = Get-Date -ErrorAction Stop
         $duration = ($endTime - $startTime).TotalSeconds
         
         # Should create 5 resource groups within 1 minute
@@ -539,7 +551,8 @@ Describe "Performance Tests" -Tag "Performance" {
 }
 
 # Create sample compliance tests
-function Create-SampleComplianceTests {
+[CmdletBinding()]
+function New-SampleComplianceTests {
     $complianceTestContent = @'
 BeforeAll {
     param($ResourceGroupName, $Location, $TestEnvironment)
@@ -613,7 +626,8 @@ Describe "Compliance Tests" -Tag "Compliance", "Governance" {
 }
 
 # Generate test report
-function New-TestReport {
+[CmdletBinding()]
+function New-TestReport -ErrorAction Stop {
     try {
         Write-TestLog "Generating test report..." "Info"
         
@@ -627,7 +641,7 @@ function New-TestReport {
         $report = @{
             TestRun = @{
                 StartTime = $script:TestStartTime
-                EndTime = Get-Date
+                EndTime = Get-Date -ErrorAction Stop
                 Duration = $testDuration.ToString()
                 Environment = $TestEnvironment
                 Scope = $TestScope
@@ -662,7 +676,8 @@ function New-TestReport {
 }
 
 # Cleanup test resources
-function Remove-TestResources {
+[CmdletBinding()]
+function Remove-TestResources -ErrorAction Stop {
     if ($IncludeDestructive) {
         try {
             Write-TestLog "Cleaning up test resources..." "Info"
@@ -709,10 +724,10 @@ try {
     }
     
     # Generate report
-    New-TestReport
+    New-TestReport -ErrorAction Stop
     
     # Cleanup if requested
-    Remove-TestResources
+    Remove-TestResources -ErrorAction Stop
     
     Write-TestLog "Test framework execution completed" "Success"
     

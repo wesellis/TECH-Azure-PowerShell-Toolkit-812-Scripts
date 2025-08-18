@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     5 Get Azrecoveryservicesbackupretentionpolicyobject
 
@@ -73,7 +73,7 @@ $getAzRecoveryServicesBackupRetentionPolicyObjectSplat = @{
     WorkloadType = 'AzureVM'
 }
 
-Get-AzRecoveryServicesBackupRetentionPolicyObject @getAzRecoveryServicesBackupRetentionPolicyObjectSplat
+Get-AzRecoveryServicesBackupRetentionPolicyObject -ErrorAction Stop @getAzRecoveryServicesBackupRetentionPolicyObjectSplat
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

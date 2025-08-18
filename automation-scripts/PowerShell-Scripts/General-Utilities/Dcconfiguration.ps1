@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Dcconfiguration
 
@@ -78,7 +78,7 @@ param(
    ;  $WEClients = [system.String]::Join(" ," , $WEClientName)
    ;  $WEClientComputerAccount = " $WEDName\$WEClients$"
 
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node LOCALHOST
     {

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Remove Recoveryservicesvaults Updated
 
@@ -37,9 +37,11 @@
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-function WE-Remove-SingleVault {
+[CmdletBinding()]
+function WE-Remove-SingleVault -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -59,7 +61,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -162,7 +164,7 @@ param(
     }
 
     # Handle ASR items
-    $fabricObjects = Get-AzRecoveryServicesAsrFabric
+    $fabricObjects = Get-AzRecoveryServicesAsrFabric -ErrorAction Stop
     if ($null -ne $fabricObjects) {
         foreach ($fabricObject in $fabricObjects) {
             $containerObjects = Get-AzRecoveryServicesAsrProtectionContainer -Fabric $fabricObject
@@ -193,7 +195,8 @@ param(
     Write-WELog " Successfully deleted vault: $($WEVaultToDelete.Name)" " INFO" -ForegroundColor Green
 }
 
-function WE-Remove-AllRecoveryServicesVaults {
+[CmdletBinding()]
+function WE-Remove-AllRecoveryServicesVaults -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -201,14 +204,14 @@ param()
 
     try {
         # Check if user is logged in
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             Write-Error " Not logged into Azure. Please run Connect-AzAccount first."
             return
         }
 
         # Get all subscriptions
-        $subscriptions = Get-AzSubscription
+        $subscriptions = Get-AzSubscription -ErrorAction Stop
         Write-WELog " `nFound $($subscriptions.Count) subscriptions" " INFO" -ForegroundColor Cyan
 
         # Get all vaults across all subscriptions
@@ -217,7 +220,7 @@ param()
             try {
                ;  $null = Set-AzContext -Subscription $sub.Id -Force
                 Write-WELog " Scanning subscription: $($sub.Name) ($($sub.Id))" " INFO" -ForegroundColor Yellow
-               ;  $vaults = Get-AzRecoveryServicesVault
+               ;  $vaults = Get-AzRecoveryServicesVault -ErrorAction Stop
                 if ($vaults) {
                     Write-WELog "  Found $($vaults.Count) vaults" " INFO" -ForegroundColor Cyan
                    ;  $allVaults = $allVaults + $vaults
@@ -263,7 +266,7 @@ param()
 }
 
 
-Remove-AllRecoveryServicesVaults    # To run with confirmation
+Remove-AllRecoveryServicesVaults -ErrorAction Stop    # To run with confirmation
 
 
 

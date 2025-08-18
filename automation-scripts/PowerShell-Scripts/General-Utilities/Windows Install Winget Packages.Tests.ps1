@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Winget Packages.Tests
 
@@ -38,7 +38,7 @@ $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 BeforeAll {
-    $global:IsUnderTest = $true
+    $script:IsUnderTest = $true
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
 try {
     # Main script execution
@@ -48,10 +48,11 @@ try {
 
 Describe " CreateDevVhdTests" {
     BeforeEach {
-        $global:LASTEXITCODE = 0
+        $script:LASTEXITCODE = 0
         $script:sleepTimes = @()
         Mock -CommandName Start-Sleep -ModuleName windows-retry-utils -MockWith { 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -71,7 +72,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds seconds" " INFO" }
@@ -79,6 +80,7 @@ param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -98,7 +100,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -113,6 +115,7 @@ param(
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -132,7 +135,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -147,6 +150,7 @@ param(
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -166,7 +170,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -176,12 +180,13 @@ param(
             )
     
             Write-WELog " === [Mock] Invoking $commandLine" " INFO"
-            $global:LASTEXITCODE = 123
+            $script:LASTEXITCODE = 123
         } -ParameterFilter { $commandLine -like '*robocopy.exe /R:5 /W:5 /S *AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir C:\.tools\Setup\Logs\WinGet' }
 
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -201,7 +206,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -211,7 +216,7 @@ param(
             )
     
             Write-WELog " === [Mock] Invoking $commandLine" " INFO"
-            $global:LASTEXITCODE = 123
+            $script:LASTEXITCODE = 123
         } -ParameterFilter { $commandLine -like 'C:\Windows\System32\icacls.exe " C:\Program Files\WinGet\Packages" /t /q /grant " BUILTIN\Users:(rx)" ' }
     }
 
@@ -240,6 +245,7 @@ param(
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -259,7 +265,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -292,7 +298,8 @@ param(
     }
 
     It " MissingWinGet" {
-        function WE-Get-Command { return $null }
+        [CmdletBinding()]
+function WE-Get-Command -ErrorAction Stop { return $null }
         { Install-WinGet-Packages -Packages 'TestPkg_975' } | Should -Throw 'Could not locate winget.exe'
         $script:sleepTimes | Should -Be @()
     }
@@ -301,6 +308,7 @@ param(
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -320,7 +328,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -335,7 +343,7 @@ param(
             }
 
             if ($commandLine -like '*winget.exe install --id TestPkg_2  --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force') {
-                $global:LASTEXITCODE = 1
+                $script:LASTEXITCODE = 1
                 Write-WELog " === [Mock] Failed command: $commandLine" " INFO"
                 return
             }
@@ -352,6 +360,7 @@ param(
         Mock Invoke-Executable {
             
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -371,7 +380,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -388,7 +397,7 @@ param(
             }
 
             if ($commandLine -like '*winget.exe install --id TestPkg_2  --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force') {
-                $global:LASTEXITCODE = 1
+                $script:LASTEXITCODE = 1
                 Write-WELog " === [Mock] Failed command: $commandLine" " INFO"
                 return
             }

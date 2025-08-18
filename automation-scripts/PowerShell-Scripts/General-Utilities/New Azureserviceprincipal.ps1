@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     New Azureserviceprincipal
 
@@ -90,12 +90,13 @@ param(
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
 
 
+[CmdletBinding()]
 function WE-Roll-Back 
 {
  [CmdletBinding()]
@@ -124,15 +125,15 @@ param($thumbprint, $WEApplicationId, $servicePrincipalID)
 
 
 
-write-host " Enter credentials for the 'target' Azure Subscription..." -F Yellow
+Write-Information " Enter credentials for the 'target' Azure Subscription..." -F Yellow
 $login= Login-AzureRmAccount -EnvironmentName $WEEnvironment
 $loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription 
+$sub = Get-AzureRmSubscription -ErrorAction Stop 
 $WESubscriptionId = $sub.Id
 
 
 if($sub.count -gt 1) {
-    $WESubscriptionId = (Get-AzureRmSubscription | select * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
+    $WESubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | select * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId| Out-Null
     $sub = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
 }
@@ -147,7 +148,7 @@ if(! $WESubscriptionId)
 ; 
 $WETenantID = $sub.TenantId 
 
-write-host " Logged into $($sub.Name) with subscriptionID $WESubscriptionId as $loginID" -f Green
+Write-Information " Logged into $($sub.Name) with subscriptionID $WESubscriptionId as $loginID" -f Green
 
 
 
@@ -167,7 +168,7 @@ while($WEPassword -ne $confirmpassword )
 
 write-verbose " Creating self-signed certificate" -Verbose
 
-$WECurrentDate = get-date
+$WECurrentDate = get-date -ErrorAction Stop
 $notAfter = $WECurrentDate.AddYears($certYearsValid)
 $newCert = New-SelfSignedCertificate -DnsName " $WEApplicationDisplayName" -CertStoreLocation cert:\CurrentUser\My -NotAfter $notAfter -KeyExportPolicy Exportable -Provider " Microsoft Enhanced RSA and AES Cryptographic Provider"
 $endDate = $newCert.GetExpirationDateString()
@@ -179,7 +180,7 @@ $xport = Export-PFXCertificate -Cert $newcert -FilePath $WECertPath -Password $W
 write-verbose " Creating Azure AD Application and Service Principal" -Verbose
 try
 {   
-    $WEKeyCredential = New-Object  Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
+    $WEKeyCredential = New-Object -ErrorAction Stop  Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
     $WEKeyCredential.StartDate = $WECurrentDate
     $WEKeyCredential.EndDate= $endDate
     $WEKeyCredential.KeyId = $guid
@@ -206,7 +207,7 @@ catch
 write-verbose " Adding Role to Service Principal $servicePrincipalID" -Verbose; 
 $WENewRole = $null; 
 $WERetries = 0;
-While ($WENewRole -eq $null -and $WERetries -le 6)
+While ($null -eq $WENewRole -and $WERetries -le 6)
 {
     # Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
     Sleep 5
@@ -262,7 +263,7 @@ catch
 }
 
 
-Get-AzureRmResourceGroup
+Get-AzureRmResourceGroup -ErrorAction Stop
 
 " @
   

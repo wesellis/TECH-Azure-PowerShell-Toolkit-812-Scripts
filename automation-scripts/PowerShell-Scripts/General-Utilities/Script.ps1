@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Script
 
@@ -89,7 +89,8 @@ param(
     $extraParameters
     )
 
-    function log
+    [CmdletBinding()]
+function log
     {
         [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -117,7 +118,7 @@ param([Parameter(Mandatory=$false)]
 	#  requires WMF 5.0
 
 	#  verify NuGet package
-	$nuget = get-packageprovider nuget
+	$nuget = get-packageprovider -ErrorAction Stop nuget
 	if (-not $nuget -or ($nuget.Version -lt 2.8.5.22))
 	{
 		log " installing nuget package..."
@@ -126,7 +127,7 @@ param([Parameter(Mandatory=$false)]
 
 	#  install AzureRM module
 	#
-	if (-not (get-module AzureRM))
+	if (-not (get-module -ErrorAction Stop AzureRM))
 	{
 		log " installing AzureRm powershell module..."
 		install-module AzureRM -force
@@ -137,7 +138,7 @@ param([Parameter(Mandatory=$false)]
 	#
 	log " logging onto azure account with app id = $appId ..."
 
-	$creds = new-object System.Management.Automation.PSCredential ($appId, (convertto-securestring $appPassword -asplaintext -force))
+	$creds = new-object -ErrorAction Stop System.Management.Automation.PSCredential ($appId, (convertto-securestring $appPassword -asplaintext -force))
 	login-azurermaccount -credential $creds -serviceprincipal -tenantid $tenantId -confirm:$false
 
 	#  get the secret from key vault
@@ -145,7 +146,7 @@ param([Parameter(Mandatory=$false)]
 	log " getting secret '$secretName' from keyvault '$vaultName'..."
 	$secret = get-azurekeyvaultsecret -vaultname $vaultName -name $secretName
 
-	$certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+	$certCollection = New-Object -ErrorAction Stop System.Security.Cryptography.X509Certificates.X509Certificate2Collection
 
 	$bytes = [System.Convert]::FromBase64String($secret.SecretValueText)
 	$certCollection.Import($bytes, $null, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
@@ -166,7 +167,7 @@ param([Parameter(Mandatory=$false)]
 	#  impersonate as admin 
 	#
 	log " impersonating as '$adminUsername'..."
-	$admincreds = New-Object System.Management.Automation.PSCredential (($adminUsername + " @" + $adDomainName), (ConvertTo-SecureString $adminPassword -AsPlainText -Force))
+	$admincreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (($adminUsername + " @" + $adDomainName), (ConvertTo-SecureString $adminPassword -AsPlainText -Force))
 
 	.\New-ImpersonateUser.ps1 -Credential $admincreds
 	whoami
@@ -182,12 +183,12 @@ param([Parameter(Mandatory=$false)]
 	}
 
 	log " remove impersonation..."
-	Remove-ImpersonateUser
+	Remove-ImpersonateUser -ErrorAction Stop
 	whoami
 	
 	#  set client access name
 	#
-	$gatewayConfig = get-rddeploymentgatewayconfiguration
+	$gatewayConfig = get-rddeploymentgatewayconfiguration -ErrorAction Stop
 
 	if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
 	{
@@ -205,7 +206,7 @@ param([Parameter(Mandatory=$false)]
 	if (test-path($pfxFilePath))
 	{
 		log " running cleanup..."
-		remove-item $pfxFilePath
+		remove-item -ErrorAction Stop $pfxFilePath
 	}
 
 	log " done."

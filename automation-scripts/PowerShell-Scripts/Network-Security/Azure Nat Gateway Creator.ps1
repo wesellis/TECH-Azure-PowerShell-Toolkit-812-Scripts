@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Nat Gateway Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -96,7 +97,7 @@ Write-WELog " Creating NAT Gateway: $WENatGatewayName" " INFO"
 
 
 $WENatIpName = " $WENatGatewayName-pip"; 
-$WENatIp = New-AzPublicIpAddress `
+$WENatIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WENatIpName `
     -Location $WELocation `
@@ -104,7 +105,7 @@ $WENatIp = New-AzPublicIpAddress `
     -Sku Standard
 
 ; 
-$WENatGateway = New-AzNatGateway `
+$WENatGateway = New-AzNatGateway -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WENatGatewayName `
     -Location $WELocation `

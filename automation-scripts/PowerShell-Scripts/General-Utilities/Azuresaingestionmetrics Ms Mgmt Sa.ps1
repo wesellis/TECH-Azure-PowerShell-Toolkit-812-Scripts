@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azuresaingestionmetrics Ms Mgmt Sa
 
@@ -87,12 +87,12 @@ $logname='AzureStorage'
 
 $hash = [hashtable]::New(@{})
 
-$WEStarttimer=get-date
+$WEStarttimer=get-date -ErrorAction Stop
 
 
 
 
-Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
+function New-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
 {
 	$stringToHash = $method + " `n" + " `n" + " `n" +$date+" `n" +" /" +$resource+$uri.AbsolutePath
 	Add-Type -AssemblyName System.Web
@@ -100,7 +100,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resou
 	$querystr=''
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -109,7 +109,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resou
 	
 }
 
-Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+function New-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
 ; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
@@ -136,7 +136,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -175,7 +175,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -218,7 +218,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -278,7 +278,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc,$
 		$resp1= Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody  -OutFile " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 		
-		#$xresp=Get-Content " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
+		#$xresp=Get-Content -ErrorAction Stop " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 		return " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 
@@ -318,7 +318,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc,$
 }
 
 
-function WE-Get-BlobSize ($bloburi,$storageaccount,$rg,$type)
+function WE-Get-BlobSize -ErrorAction Stop ($bloburi,$storageaccount,$rg,$type)
 {
 
 	If($type -eq 'ARM')
@@ -351,13 +351,13 @@ function WE-Get-BlobSize ($bloburi,$storageaccount,$rg,$type)
 
 }		
 
-Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
 	$xHeaders = " x-ms-date:" + $date
 	$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -415,9 +415,10 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 }
 
 
+[CmdletBinding()]
 function WE-Cleanup-Variables {
 
-	Get-Variable |
+	Get-Variable -ErrorAction Stop |
 
 	Where-Object { $startupVariables -notcontains $_.Name } |
 
@@ -432,7 +433,7 @@ function WE-Cleanup-Variables {
 " Logging in to Azure..."
 $WEArmConn = Get-AutomationConnection -Name AzureRunAsConnection 
 
-if ($WEArmConn  -eq $null)
+if ($null -eq $WEArmConn)
 {
 	throw " Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
@@ -481,8 +482,8 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
-$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 $result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
 $headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -506,19 +507,19 @@ if ($getAsmHeader) {
     }
     Catch
     {
-        if ($WEAsmConn -eq $null) {
+        if ($null -eq $WEAsmConn) {
             Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
             $getAsmHeader=$false
         }
     }
-     if ($WEAsmConn -eq $null) {
+     if ($null -eq $WEAsmConn) {
         Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
         $getAsmHeader=$false
     }Else{
 
         $WECertificateAssetName = $WEAsmConn.CertificateAssetName
         $WEAzureCert = Get-AutomationCertificate -Name $WECertificateAssetName
-        if ($WEAzureCert -eq $null)
+        if ($null -eq $WEAzureCert)
         {
             Write-Warning  " Could not retrieve certificate asset: $WECertificateAssetName. Ensure that this asset exists and valid  in the Automation account."
             $getAsmHeader=$false
@@ -649,7 +650,7 @@ foreach($sa in $saArmList)
 {
 	$rg=$sa.id.Split('/')[4]
 ; 	$cu=$null
-; 	$cu = New-Object PSObject -Property @{
+; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory';
 		InventoryType='StorageAccount'
@@ -683,7 +684,7 @@ foreach($sa in $saAsmList)
 ; 	$cu=$iotype=$null
 	IF($sa.properties.accountType -like 'Standard*')
 	{$iotype='Standard'}Else{$iotype='Premium'}
-; 	$cu = New-Object PSObject -Property @{
+; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory'
 		InventoryType='StorageAccount'
@@ -724,7 +725,7 @@ IF($getAsmHeader)
 	[int]$WESAMAX=$qres.Subscription.MaxStorageAccounts
 	[int]$WESACurrent=$qres.Subscription.CurrentStorageAccounts
 ; 	$WEQuotapct=$qres.Subscription.CurrentStorageAccounts/$qres.Subscription.MaxStorageAccounts*100  
-; 	$quotas = $quotas + New-Object PSObject -Property @{
+; 	$quotas = $quotas + New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'StorageQuotas';
 		QuotaType=" Classic"
@@ -745,7 +746,7 @@ $WESAquotapct=$usagecontent[0].currentValue/$usagecontent[0].Limit*100
 [int]$WESAMAX=$usagecontent[0].limit
 [int]$WESACurrent=$usagecontent[0].currentValue
 ; 
-$quotas = $quotas + New-Object PSObject -Property @{
+$quotas = $quotas + New-Object -ErrorAction Stop PSObject -Property @{
 	Timestamp = $timestamp
 	MetricName = 'StorageQuotas';
 	QuotaType=" ARM"
@@ -850,7 +851,7 @@ $scriptBlockGetKeys={
 
 
 
-	Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
+	function New-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
 	{
 		$stringToHash = $method + " `n" + " `n" + " `n" +$date+" `n" +" /" +$resource+$uri.AbsolutePath
 		Add-Type -AssemblyName System.Web
@@ -858,7 +859,7 @@ $scriptBlockGetKeys={
 		$querystr=''
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -867,7 +868,7 @@ $scriptBlockGetKeys={
 		
 	}
 
-	Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+	function New-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 	{
 		Add-Type -AssemblyName System.Web
 	; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
@@ -894,7 +895,7 @@ $scriptBlockGetKeys={
 					}
 					$builder2.Append($obj2.ToString()) |Out-Null
 				}
-				IF ($str2 -ne $null)
+				IF ($null -ne $str2)
 				{
 					$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 				} 
@@ -933,7 +934,7 @@ $scriptBlockGetKeys={
 					}
 					$builder2.Append($obj2.ToString()) |Out-Null
 				}
-				IF ($str2 -ne $null)
+				IF ($null -ne $str2)
 				{
 					$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 				} 
@@ -976,7 +977,7 @@ $scriptBlockGetKeys={
 
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -1036,7 +1037,7 @@ $scriptBlockGetKeys={
 			$resp1= Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody  -OutFile " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 			
-			#$xresp=Get-Content " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
+			#$xresp=Get-Content -ErrorAction Stop " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 			return " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 
@@ -1160,7 +1161,7 @@ $scriptBlockGetKeys={
 	}
 
 
-	$hash.SAInfo+=New-Object PSObject -Property @{
+	$hash.SAInfo+=New-Object -ErrorAction Stop PSObject -Property @{
 		StorageAccount = $storageaccount
 		Key=$prikey
 		Logging=$logging
@@ -1178,14 +1179,14 @@ Write-Output " After Runspace creation  $([System.gc]::gettotalmemory('forcefull
 write-output " $($colParamsforChild.count) objects will be processed "
 
 $i=1 
-$WEStarttimer=get-date
+$WEStarttimer=get-date -ErrorAction Stop
 $colParamsforChild|foreach{
 
 	$splitmetrics=$null
 	$splitmetrics=$_
 	$WEJob = [powershell]::Create().AddScript($scriptBlockGetKeys).AddArgument($hash).AddArgument($splitmetrics).Addargument($i)
 	$WEJob.RunspacePool = $WERunspacePool
-	$WEJobs = $WEJobs + New-Object PSObject -Property @{
+	$WEJobs = $WEJobs + New-Object -ErrorAction Stop PSObject -Property @{
 		RunNum = $i
 		Pipe = $WEJob
 		Result = $WEJob.BeginInvoke()
@@ -1241,10 +1242,10 @@ Write-output " All jobs completed!"
 $jobs|foreach{$_.Pipe.Dispose()}
 
 
-if(Get-Variable -Name Jobs ){Remove-Variable Jobs -Force -Scope Global }
-if(Get-Variable -Name Job ){Remove-Variable Job -Force -Scope Global }
-if(Get-Variable -Name Jobobj ){Remove-Variable Jobobj -Force -Scope Global }
-if(Get-Variable -Name Jobsclone ){Remove-Variable Jobsclone -Force -Scope Global }
+if(Get-Variable -Name Jobs ){Remove-Variable -ErrorAction Stop Jobs -Force -Scope Global }
+if(Get-Variable -Name Job ){Remove-Variable -ErrorAction Stop Job -Force -Scope Global }
+if(Get-Variable -Name Jobobj ){Remove-Variable -ErrorAction Stop Jobobj -Force -Scope Global }
+if(Get-Variable -Name Jobsclone ){Remove-Variable -ErrorAction Stop Jobsclone -Force -Scope Global }
 $runspacepool.Close()
 [gc]::Collect()
 
@@ -1290,7 +1291,7 @@ $scriptBlockGetMetrics={
 
 
 
-	Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
+	function New-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
 	{
 		$stringToHash = $method + " `n" + " `n" + " `n" +$date+" `n" +" /" +$resource+$uri.AbsolutePath
 		Add-Type -AssemblyName System.Web
@@ -1298,7 +1299,7 @@ $scriptBlockGetMetrics={
 		$querystr=''
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -1307,7 +1308,7 @@ $scriptBlockGetMetrics={
 		
 	}
 
-	Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+	function New-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 	{
 		Add-Type -AssemblyName System.Web
 	; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
@@ -1334,7 +1335,7 @@ $scriptBlockGetMetrics={
 					}
 					$builder2.Append($obj2.ToString()) |Out-Null
 				}
-				IF ($str2 -ne $null)
+				IF ($null -ne $str2)
 				{
 					$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 				} 
@@ -1373,7 +1374,7 @@ $scriptBlockGetMetrics={
 					}
 					$builder2.Append($obj2.ToString()) |Out-Null
 				}
-				IF ($str2 -ne $null)
+				IF ($null -ne $str2)
 				{
 					$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 				} 
@@ -1416,7 +1417,7 @@ $scriptBlockGetMetrics={
 
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -1476,7 +1477,7 @@ $scriptBlockGetMetrics={
 			$resp1= Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody  -OutFile " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 			
-			#$xresp=Get-Content " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
+			#$xresp=Get-Content -ErrorAction Stop " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 			return " $($env:TEMP)\$resource.$($uri.LocalPath.Replace('/','.').Substring(7,$uri.LocalPath.Length-7))"
 
 
@@ -1516,7 +1517,7 @@ $scriptBlockGetMetrics={
 	}
 
 
-	function WE-Get-BlobSize ($bloburi,$storageaccount,$rg,$type)
+	function WE-Get-BlobSize -ErrorAction Stop ($bloburi,$storageaccount,$rg,$type)
 	{
 
 		If($type -eq 'ARM')
@@ -1549,13 +1550,13 @@ $scriptBlockGetMetrics={
 
 	}		
 
-	Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+	function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 	{
 		$xHeaders = " x-ms-date:" + $date
 		$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -1626,7 +1627,7 @@ $scriptBlockGetMetrics={
 	$tier=$sa.Tier
 	$kind=$sa.Kind
 
-	$colltime=Get-Date
+	$colltime=Get-Date -ErrorAction Stop
 
 	If($colltime.Minute -in 0..15)
 	{
@@ -1743,7 +1744,7 @@ $scriptBlockGetMetrics={
 				$timestamp=$dt.Substring(0,4)+'-'+$dt.Substring(4,2)+'-'+$dt.Substring(6,3)+$dt.Substring(9,2)+':'+$dt.Substring(11,2)+':00.000Z'
 
 
-				$cu = New-Object PSObject -Property @{
+				$cu = New-Object -ErrorAction Stop PSObject -Property @{
 					Timestamp = $timestamp
 					MetricName = 'MetricsTransactions'
 					TotalRequests=[long]$rowitem.TotalRequests             
@@ -1827,7 +1828,7 @@ $scriptBlockGetMetrics={
 		$entities=@($jresponse.value)
 	; 	$cu=$null
 
-	; 	$cu = New-Object PSObject -Property @{
+	; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 			Timestamp = $timestamp
 			MetricName = 'MetricsCapacity'				
 			Capacity=$([long]$entities[0].Capacity)/1024/1024/1024               
@@ -1861,7 +1862,7 @@ $scriptBlockGetMetrics={
 				write-verbose  " Queue found :$($sa.name) ; $($queue.name) "
 				
 				$queuearr = $queuearr + " {0};{1}" -f $queue.Name.tostring(),$sa.name
-				$queueinventory = $queueinventory + New-Object PSObject -Property @{
+				$queueinventory = $queueinventory + New-Object -ErrorAction Stop PSObject -Property @{
 					Timestamp = $timestamp
 					MetricName = 'Inventory'
 					InventoryType='Queue'
@@ -1884,7 +1885,7 @@ $scriptBlockGetMetrics={
 				
 				
 			; 	$cuq=$null
-			; 	$cuq = $cuq + New-Object PSObject -Property @{
+			; 	$cuq = $cuq + New-Object -ErrorAction Stop PSObject -Property @{
 					Timestamp=$timestamp
 					MetricName = 'QueueMetrics';
 					StorageAccount=$storageaccount
@@ -1937,7 +1938,7 @@ $scriptBlockGetMetrics={
 			; 	$filearr = $filearr + " {0};{1}" -f $WEShare.Name,$storageaccount
 
 				
-				$cuf= New-Object PSObject -Property @{
+				$cuf= New-Object -ErrorAction Stop PSObject -Property @{
 					Timestamp = $timestamp
 					MetricName = 'Inventory'
 					InventoryType='File'
@@ -2000,7 +2001,7 @@ $scriptBlockGetMetrics={
 				}
 				
 				
-				$hash['queueInventory']+= New-Object PSObject -Property @{
+				$hash['queueInventory']+= New-Object -ErrorAction Stop PSObject -Property @{
 					Timestamp = $timestamp
 					MetricName = 'Inventory'
 					InventoryType='Table'
@@ -2044,7 +2045,7 @@ $scriptBlockGetMetrics={
 				{
 					IF($blob.name -match '.vhd')
 					{
-					; 	$cu = New-Object PSObject -Property @{
+					; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 							Timestamp = $timestamp
 							MetricName = 'Inventory'
 							InventoryType='VHDFile'
@@ -2089,7 +2090,7 @@ $runspacepool.Open()
 Write-Output " After Runspace creation for metric collection : $([System.gc]::gettotalmemory('forcefullcollection') /1MB) MB"
 
 $i=1 
-$WEStarttimer=get-date
+$WEStarttimer=get-date -ErrorAction Stop
 
 $hash.SAInfo|foreach{
 
@@ -2097,7 +2098,7 @@ $hash.SAInfo|foreach{
 	$splitmetrics=$_
 	$WEJob = [powershell]::Create().AddScript($scriptBlockGetMetrics).AddArgument($hash).AddArgument($splitmetrics).Addargument($i)
 	$WEJob.RunspacePool = $WERunspacePool
-	$WEJobs = $WEJobs + New-Object PSObject -Property @{
+	$WEJobs = $WEJobs + New-Object -ErrorAction Stop PSObject -Property @{
 		RunNum = $i
 		Pipe = $WEJob
 		Result = $WEJob.BeginInvoke()
@@ -2150,16 +2151,16 @@ Write-output " All jobs completed!"
 
 
 $jobs|foreach{$_.Pipe.Dispose()}
-Remove-Variable Jobs -Force -Scope Global
-Remove-Variable Job -Force -Scope Global
-Remove-Variable Jobobj -Force -Scope Global
-Remove-Variable Jobsclone -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobs -Force -Scope Global
+Remove-Variable -ErrorAction Stop Job -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobobj -Force -Scope Global
+Remove-Variable -ErrorAction Stop Jobsclone -Force -Scope Global
 $runspacepool.Close()
 
 $([System.gc]::gettotalmemory('forcefullcollection') /1MB)
 
 
-$WEEndtimer=get-date
+$WEEndtimer=get-date -ErrorAction Stop
 
 Write-Output " All jobs completed in $(($WEEndtimer-$starttimer).TotalMinutes) minutes"
 
@@ -2204,9 +2205,9 @@ If($hash.saTransactionsMetrics)
 
 
 	}
-	Remove-Variable uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
-	Remove-Variable jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
-	Remove-Variable spltlist -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 	[System.gc]::Collect()
 }
 
@@ -2244,9 +2245,9 @@ If($hash.saCapacityMetrics)
 		Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
 	}
-	Remove-Variable uploadToOms -Force -Scope Global  -ErrorAction SilentlyContinue
-	Remove-Variable jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
-	Remove-Variable spltlist -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global  -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 	[System.gc]::Collect()
 }
 
@@ -2283,9 +2284,9 @@ If($hash.tableInventory)
 		Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
 	}
-	Remove-Variable uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
-	Remove-Variable jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
-	Remove-Variable spltlist -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
+	Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 	[System.gc]::Collect()
 }
 
@@ -2293,7 +2294,7 @@ If($hash.tableInventory)
 If(!$hash.queueInventory)
 {
 
-	$hash.queueInventory+=New-Object PSObject -Property @{
+	$hash.queueInventory+=New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory'
 		InventoryType='Queue'
@@ -2335,9 +2336,9 @@ If($uploadToOms.count -gt $splitSize)
 	Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
 }
-Remove-Variable uploadToOms -Force -Scope Global  -ErrorAction SilentlyContinue
-Remove-Variable jsonlogs -Force -Scope Global  -ErrorAction SilentlyContinue
-Remove-Variable spltlist -Force -Scope Global  -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global  -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global  -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global  -ErrorAction SilentlyContinue
 [System.gc]::Collect()
 
 
@@ -2345,7 +2346,7 @@ If(!$hash.fileInventory)
 {
 
 
-	$hash.fileInventory+=New-Object PSObject -Property @{
+	$hash.fileInventory+=New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory'
 		InventoryType='File'
@@ -2390,9 +2391,9 @@ If($uploadToOms.count -gt $splitSize)
 	Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
 }
-Remove-Variable uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
-Remove-Variable jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
-Remove-Variable spltlist -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 [System.gc]::Collect()
 
 
@@ -2401,7 +2402,7 @@ If(!$hash.vhdinventory)
 {
 
 
-	$hash.vhdinventory+= New-Object PSObject -Property @{
+	$hash.vhdinventory+= New-Object -ErrorAction Stop PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory'
 		InventoryType='VHDFile'
@@ -2446,9 +2447,9 @@ If($uploadToOms.count -gt $splitSize)
 	
 	
 }
-Remove-Variable uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
-Remove-Variable jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
-Remove-Variable spltlist -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
+Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 [System.gc]::Collect()
 
 

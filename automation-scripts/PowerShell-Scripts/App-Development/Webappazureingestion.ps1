@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Webappazureingestion
 
@@ -87,7 +87,7 @@ if($WEWebApps -ne $WENull)
 			{
 				foreach($metricValue in $metric.MetricValues)
 				{
-				; 	$sx = New-Object PSObject -Property @{
+				; 	$sx = New-Object -ErrorAction Stop PSObject -Property @{
 						Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 						MetricName = $metric.Name; 
 						Average = $metricValue.Average;

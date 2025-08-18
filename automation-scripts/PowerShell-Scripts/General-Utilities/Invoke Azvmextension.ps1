@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmextension
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVMExtension {
 }
 
@@ -41,9 +42,10 @@ function WE-Invoke-AzVMExtension {
 $WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVMExtension {
     
-    #Region func Set-AzVMExtension 
+    #Region func Set-AzVMExtension -ErrorAction Stop 
 ; 
 $setAzVMExtensionSplat = @{
     ResourceGroupName = $WEResourceGroupName
@@ -55,7 +57,7 @@ $setAzVMExtensionSplat = @{
     TypeHandlerVersion = " 1.0"
     # SettingString = $WESettingsString
 }
-Set-AzVMExtension @setAzVMExtensionSplat
+Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
 
 
     

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domaincontrollerconfig
 
@@ -98,8 +98,8 @@ Import-DscResource -ModuleName @{ModuleName = 'xPendingReboot'; ModuleVersion = 
 Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
 
 
-$domainCredential = Get-AutomationPSCredential 'Credential'; 
-$safeModeCredential = Get-AutomationPSCredential 'Credential'
+$domainCredential = Get-AutomationPSCredential -ErrorAction Stop 'Credential'; 
+$safeModeCredential = Get-AutomationPSCredential -ErrorAction Stop 'Credential'
 
   node localhost
   {

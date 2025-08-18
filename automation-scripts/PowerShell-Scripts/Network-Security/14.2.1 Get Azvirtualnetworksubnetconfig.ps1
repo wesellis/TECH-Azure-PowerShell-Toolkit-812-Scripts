@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.2.1 Get Azvirtualnetworksubnetconfig
 
@@ -125,7 +125,7 @@ $getAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }
 ; 
-$vnet = Get-AzVirtualNetwork @getAzVirtualNetworkSplat
+$vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
 
 
 Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet | Select-Object -Property AddressPrefix,Name

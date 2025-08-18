@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.Billing, Az.CostManagement
 
 <#
@@ -114,7 +114,7 @@ try {
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.Billing -Force -ErrorAction Stop
     Import-Module Az.CostManagement -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
@@ -127,6 +127,7 @@ $script:Recommendations = @()
 $script:Insights = @()
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -143,14 +144,15 @@ function Write-EnhancedLog {
         AI = "Cyan"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Calculate date ranges
-function Get-DateRange {
+[CmdletBinding()]
+function Get-DateRange -ErrorAction Stop {
     param([string]$TimeFrame)
     
-    $endDate = Get-Date
+    $endDate = Get-Date -ErrorAction Stop
     
     switch ($TimeFrame) {
         "ThisMonth" {
@@ -189,7 +191,8 @@ function Get-DateRange {
 }
 
 # Get comprehensive cost data
-function Get-CostData {
+[CmdletBinding()]
+function Get-CostData -ErrorAction Stop {
     param(
         [DateTime]$StartDate,
         [DateTime]$EndDate
@@ -209,10 +212,10 @@ function Get-CostData {
             GroupBy = @("ResourceGroupName", "ResourceType", "ResourceLocation")
         }
         
-        $costData = Get-AzCostManagementQueryResult @costParams
+        $costData = Get-AzCostManagementQueryResult -ErrorAction Stop @costParams
         
         # Get resource usage data
-        $resources = Get-AzResource
+        $resources = Get-AzResource -ErrorAction Stop
         if ($ResourceGroupName) {
             $resources = $resources | Where-Object { $_.ResourceGroupName -eq $ResourceGroupName }
         }
@@ -251,6 +254,7 @@ function Get-CostData {
 }
 
 # AI-powered cost analysis
+[CmdletBinding()]
 function Invoke-AICostAnalysis {
     param([array]$CostData)
     
@@ -367,7 +371,8 @@ function Invoke-AICostAnalysis {
 }
 
 # Generate predictive cost forecasting
-function New-CostForecast {
+[CmdletBinding()]
+function New-CostForecast -ErrorAction Stop {
     param(
         [array]$HistoricalData,
         [int]$ForecastDays = 30
@@ -451,7 +456,8 @@ function New-CostForecast {
 }
 
 # Generate automated optimization recommendations
-function New-OptimizationRecommendations {
+[CmdletBinding()]
+function New-OptimizationRecommendations -ErrorAction Stop {
     try {
         Write-EnhancedLog "🎯 Generating automated optimization recommendations..." "AI"
         
@@ -554,7 +560,8 @@ function New-OptimizationRecommendations {
 }
 
 # Generate comprehensive cost report
-function New-CostReport {
+[CmdletBinding()]
+function New-CostReport -ErrorAction Stop {
     param(
         [object]$Analysis,
         [object]$Forecast,
@@ -566,7 +573,7 @@ function New-CostReport {
         
         $report = @{
             Metadata = @{
-                GeneratedDate = Get-Date
+                GeneratedDate = Get-Date -ErrorAction Stop
                 TimeFrame = $TimeFrame
                 SubscriptionId = $SubscriptionId
                 ResourceGroup = $ResourceGroupName
@@ -660,6 +667,7 @@ function New-CostReport {
 }
 
 # Send cost alerts
+[CmdletBinding()]
 function Send-CostAlerts {
     param(
         [object]$Analysis,
@@ -739,7 +747,7 @@ try {
     
     # Get current subscription if not provided
     if (-not $SubscriptionId) {
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         $SubscriptionId = $context.Subscription.Id
         Write-EnhancedLog "Using current subscription: $SubscriptionId" "Info"
     }
@@ -769,7 +777,7 @@ try {
         
         "Optimize" {
             $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations
+            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
             
             if ($EnablePredictiveAnalytics) {
                 $forecast = New-CostForecast -HistoricalData $costData
@@ -794,7 +802,7 @@ try {
         
         "Recommend" {
             $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations
+            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
             
             Write-EnhancedLog "🎯 Top Optimization Recommendations:" "AI"
             $recommendations | Sort-Object { 
@@ -816,7 +824,7 @@ try {
         
         "Report" {
             $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations
+            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
             
             if ($EnablePredictiveAnalytics) {
                 $forecast = New-CostForecast -HistoricalData $costData

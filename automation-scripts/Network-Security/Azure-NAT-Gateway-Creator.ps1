@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure NAT Gateway Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,11 +21,11 @@ param (
     [int]$IdleTimeoutInMinutes = 10
 )
 
-Write-Host "Creating NAT Gateway: $NatGatewayName"
+Write-Information "Creating NAT Gateway: $NatGatewayName"
 
 # Create public IP for NAT Gateway
 $NatIpName = "$NatGatewayName-pip"
-$NatIp = New-AzPublicIpAddress `
+$NatIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $NatIpName `
     -Location $Location `
@@ -33,7 +33,7 @@ $NatIp = New-AzPublicIpAddress `
     -Sku Standard
 
 # Create NAT Gateway
-$NatGateway = New-AzNatGateway `
+$NatGateway = New-AzNatGateway -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $NatGatewayName `
     -Location $Location `
@@ -41,17 +41,17 @@ $NatGateway = New-AzNatGateway `
     -Sku Standard `
     -PublicIpAddress $NatIp
 
-Write-Host "✅ NAT Gateway created successfully:"
-Write-Host "  Name: $($NatGateway.Name)"
-Write-Host "  Location: $($NatGateway.Location)"
-Write-Host "  SKU: $($NatGateway.Sku.Name)"
-Write-Host "  Idle Timeout: $($NatGateway.IdleTimeoutInMinutes) minutes"
-Write-Host "  Public IP: $($NatIp.IpAddress)"
+Write-Information "✅ NAT Gateway created successfully:"
+Write-Information "  Name: $($NatGateway.Name)"
+Write-Information "  Location: $($NatGateway.Location)"
+Write-Information "  SKU: $($NatGateway.Sku.Name)"
+Write-Information "  Idle Timeout: $($NatGateway.IdleTimeoutInMinutes) minutes"
+Write-Information "  Public IP: $($NatIp.IpAddress)"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Associate NAT Gateway with subnet(s)"
-Write-Host "2. Configure route tables if needed"
-Write-Host "3. Test outbound connectivity"
+Write-Information "`nNext Steps:"
+Write-Information "1. Associate NAT Gateway with subnet(s)"
+Write-Information "2. Configure route tables if needed"
+Write-Information "3. Test outbound connectivity"
 
-Write-Host "`nUsage Command:"
-Write-Host "Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'subnet-name' -AddressPrefix '10.0.1.0/24' -NatGateway `$natGateway"
+Write-Information "`nUsage Command:"
+Write-Information "Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'subnet-name' -AddressPrefix '10.0.1.0/24' -NatGateway `$natGateway"

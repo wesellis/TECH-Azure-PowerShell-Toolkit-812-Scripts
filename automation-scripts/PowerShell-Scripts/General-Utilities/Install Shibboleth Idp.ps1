@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Install Shibboleth Idp
 
@@ -39,6 +39,7 @@ $location = $args[1]
 
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
+[CmdletBinding()]
 function WE-Unzip
 {
     [CmdletBinding()
@@ -84,13 +85,13 @@ param(
 $WESITENAME=" $domain.$location.cloudapp.azure.com"
 echo $WESITENAME 
 
-New-Item c:\Temp -type directory
+New-Item -ErrorAction Stop c:\Temp -type directory
 
 
 echo " Downloading jdk10..."
 $source = " http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_windows-x64_bin.exe"
 $destination = " C:\Temp\jdk-10.0.1_windows-x64_bin.exe"
-$client = new-object System.Net.WebClient 
+$client = new-object -ErrorAction Stop System.Net.WebClient 
 $cookie = " oraclelicense=accept-securebackup-cookie"
 $client.Headers.Add([System.Net.HttpRequestHeader]::Cookie, $cookie) 
 $client.DownloadFile($source,$destination)
@@ -98,7 +99,7 @@ $client.DownloadFile($source,$destination)
 echo " Downloading tomcat8..."
 $source = " http://apache.mirrors.ionfish.org/tomcat/tomcat-8/v8.5.31/bin/apache-tomcat-8.5.31-windows-x64.zip"
 $destination = " C:\Temp\apache-tomcat-8.5.31-windows-x64.zip"
-$client = new-object System.Net.WebClient 
+$client = new-object -ErrorAction Stop System.Net.WebClient 
 $client.DownloadFile($source,$destination)
 
 echo " Installing jdk8..."; 
@@ -133,14 +134,14 @@ $filedata=$filedata.Replace($WEOriginalString,$WEReplaceWith)
 echo " Downloading JSTL..."
 $source = " http://central.maven.org/maven2/jstl/jstl/1.2/jstl-1.2.jar"
 $destination = " C:\apache-tomcat-8.5.31\lib\jstl-1.2.jar"
-$client = new-object System.Net.WebClient 
+$client = new-object -ErrorAction Stop System.Net.WebClient 
 $client.DownloadFile($source,$destination)
 
 
 echo " Downloading Shibboleth..."
 $source = " https://shibboleth.net/downloads/identity-provider/latest/shibboleth-identity-provider-3.3.2.zip"
 $destination = " C:\Temp\shibboleth-identity-provider-3.3.2.zip"
-$client = new-object System.Net.WebClient 
+$client = new-object -ErrorAction Stop System.Net.WebClient 
 $client.DownloadFile($source,$destination)
 
 echo " Unzip shibboleth"
@@ -198,7 +199,7 @@ $content=$content.Replace($WEOriginalString,$WEReplceString)
 [IO.File]::WriteAllText(" C:\opt\shibboleth-idp\metadata\idp-metadata.xml" , $content.TrimEnd())
 
 echo " Adding application to tomcat7..."
-New-Item C:\apache-tomcat-8.5.31\conf\Catalina\localhost -type directory
+New-Item -ErrorAction Stop C:\apache-tomcat-8.5.31\conf\Catalina\localhost -type directory
 $appData='<Context docBase=" C:\opt\shibboleth-idp\war\idp.war" privileged=" true" antiresourcelocking=" false" antijarlocking=" false" unpackwar=" false" swallowoutput=" true" />'
 [IO.File]::WriteAllText(" C:\apache-tomcat-8.5.31\conf\Catalina\localhost\idp.xml" , $appData.TrimEnd())
 

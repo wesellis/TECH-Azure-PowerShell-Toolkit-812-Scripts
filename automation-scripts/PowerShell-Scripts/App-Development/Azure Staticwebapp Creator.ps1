@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Staticwebapp Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -108,7 +109,7 @@ param(
 Write-WELog " Creating Static Web App: $WEName" " INFO"
 
 ; 
-$WEStaticWebApp = New-AzStaticWebApp `
+$WEStaticWebApp = New-AzStaticWebApp -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEName `
     -Location $WELocation

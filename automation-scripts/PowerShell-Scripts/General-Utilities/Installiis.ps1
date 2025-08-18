@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installiis
 
@@ -147,7 +147,7 @@ Node $nodeName
 		$WEDestination= " C:\WindowsAzure\WebApplication.zip" 
         Invoke-WebRequest -Uri $using:WebDeployPackagePath -OutFile $WEDestination -Verbose
        ;  $WEArgument = '-source:package=" C:\WindowsAzure\WebApplication.zip" -dest:auto,ComputerName=" localhost" , -verb:sync -allowUntrusted'
-	; 	$WEMSDeployPath = (Get-ChildItem " HKLM:\SOFTWARE\Microsoft\IIS Extensions\MSDeploy" | Select -Last 1).GetValue(" InstallPath" )
+	; 	$WEMSDeployPath = (Get-ChildItem -ErrorAction Stop " HKLM:\SOFTWARE\Microsoft\IIS Extensions\MSDeploy" | Select -Last 1).GetValue(" InstallPath" )
         Start-Process " $WEMSDeployPath\msdeploy.exe" $WEArgument -Verb runas 
         }
 	}

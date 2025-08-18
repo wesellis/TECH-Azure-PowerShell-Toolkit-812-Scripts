@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvmoperatingsystem
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVMOperatingSystem {
 
 
@@ -41,9 +42,10 @@ function WE-Invoke-AzVMOperatingSystem {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVMOperatingSystem {
 
-    #Region func Set-AzVMOperatingSystem
+    #Region func Set-AzVMOperatingSystem -ErrorAction Stop
     #Creating the OS Object for the VM
    ;  $setAzVMOperatingSystemSplat = @{
         VM               = $WEVirtualMachine
@@ -55,8 +57,8 @@ function WE-Invoke-AzVMOperatingSystem {
         # EnableAutoUpdate = $true
     
     }
-   ;  $WEVirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
-    #endRegion func Set-AzVMOperatingSystem 
+   ;  $WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
+    #endRegion func Set-AzVMOperatingSystem -ErrorAction Stop 
 
     
 }

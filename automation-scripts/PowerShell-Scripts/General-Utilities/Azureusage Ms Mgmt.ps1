@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azureusage Ms Mgmt
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -53,7 +54,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -394,13 +395,13 @@ $logname='AzureUsage'
 [Collections.Arraylist]$instanceResults = @()
 $colltime=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddThh:00:00.000Z" )
 
-Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
 	$xHeaders = " x-ms-date:" + $date
 	$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -479,7 +480,7 @@ function WE-Calculate-rate ($meter,[double]$quantity)
 			$lastval=$curval
 		}
 	}
-	$calcBillItem = New-Object PSObject -Property @{
+	$calcBillItem = New-Object -ErrorAction Stop PSObject -Property @{
 		calcCost=[double]$calcCost
 	}
 	Return $calcBillItem
@@ -491,7 +492,7 @@ Function find-lowestcost ($meter)
 	$sortedMEter=@()
 	Foreach($billRegion in $filteredMEters)
 	{
-		$sortedMeter = $sortedMeter + new-object PSobject -Property @{
+		$sortedMeter = $sortedMeter + new-object -ErrorAction Stop PSobject -Property @{
 			MeterRegion=$billRegion.MeterRegion
 			Meterrates=$billRegion.MeterRates.0
 			Rates=$billRegion.MeterRates
@@ -501,7 +502,7 @@ Function find-lowestcost ($meter)
 	$resultarr=@()
 	$sortedMEter|where {$_.Meterrates -eq $($sortedMEter|Sort-Object -Property Meterrates |select -First 1).Meterrates}|?{
 		$lowestregion = $lowestregion + " $($_.MEterregion),"
-		$resultarr = $resultarr + New-Object PSObject -Property @{
+		$resultarr = $resultarr + New-Object -ErrorAction Stop PSObject -Property @{
 			Lowcostregion=$_.MEterregion
 			LowcostregionCost=[double]$_.MeterRates
 			Meterid=$_.MeterId
@@ -556,8 +557,8 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
-$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 $result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
 $headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -572,15 +573,15 @@ IF($subscriptionInfo)
 
 $WEScriptBlock = {
 	Param ($hash,$meters,$metrics)
-	$start=get-date
+	$start=get-date -ErrorAction Stop
 
-	Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+	function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 	{
 		$xHeaders = " x-ms-date:" + $date
 		$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 		$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 		$keyBytes = [Convert]::FromBase64String($sharedKey)
-		$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+		$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 		$sha256.Key = $keyBytes
 		$calculatedHash = $sha256.ComputeHash($bytesToHash)
 		$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -664,7 +665,7 @@ $WEScriptBlock = {
 		$sortedMEter=@()
 		Foreach($billRegion in $filteredMEters)
 		{
-			$sortedMeter = $sortedMeter + new-object PSobject -Property @{
+			$sortedMeter = $sortedMeter + new-object -ErrorAction Stop PSobject -Property @{
 				MeterRegion=$billRegion.MeterRegion
 				Meterrates=$billRegion.MeterRates.0
 				Rates=$billRegion.MeterRates
@@ -721,7 +722,7 @@ $WEScriptBlock = {
 			$calcSaving=$calcCost-$calcLowestCost
 		}
 
-		$calcBillItem = New-Object PSObject -Property @{
+		$calcBillItem = New-Object -ErrorAction Stop PSObject -Property @{
 			calcCost=[double]$calcCost
 		}
 		Return $calcBillItem
@@ -732,7 +733,7 @@ $WEScriptBlock = {
 		$sortedMEter=@()
 		Foreach($billRegion in $filteredMEters)
 		{
-			$sortedMeter = $sortedMeter + new-object PSobject -Property @{
+			$sortedMeter = $sortedMeter + new-object -ErrorAction Stop PSobject -Property @{
 				MeterRegion=$billRegion.MeterRegion
 				Meterrates=$billRegion.MeterRates.0
 				Rates=$billRegion.MeterRates
@@ -742,7 +743,7 @@ $WEScriptBlock = {
 		$resultarr=@()
 		$sortedMEter|where {$_.Meterrates -eq $($sortedMEter|Sort-Object -Property Meterrates |select -First 1).Meterrates}|?{
 			$lowestregion = $lowestregion + " $($_.MEterregion),"
-			$resultarr = $resultarr + New-Object PSObject -Property @{
+			$resultarr = $resultarr + New-Object -ErrorAction Stop PSObject -Property @{
 				Lowcostregion=$_.MEterregion
 				LowcostregionCost=[double]$_.MeterRates
 				Meterid=$_.MeterId
@@ -801,7 +802,7 @@ $WEScriptBlock = {
 			$WEUsageType=$insdata.additionalInfo.UsageType
 			$WEMeter=($meters|where {$_.meterid -eq $metricitem.meterId})
 		; 	$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
-		; 	$cu = New-Object PSObject -Property @{
+		; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 				Timestamp = $metricitem.usageStartTime
 				Collectiontime=$colltime 
 				meterCategory= $WEMeter.meterCategory
@@ -841,7 +842,7 @@ $WEScriptBlock = {
 				foreach ($tag in $tags.Keys)
 				{
 					
-				; 	$cu = New-Object PSObject -Property @{
+				; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 						Timestamp = $metricitem.usageStartTime
 						Collectiontime=$colltime 
 						meterCategory= $meter.meterCategory
@@ -892,7 +893,7 @@ $WEScriptBlock = {
 			$price=$null
 			$WEMeter=($meters|where {$_.meterid -eq $metricitem.meterId})
 		; 	$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
-		; 	$cu1 = New-Object PSObject -Property @{
+		; 	$cu1 = New-Object -ErrorAction Stop PSObject -Property @{
 				
 				Timestamp = $metricitem.usageStartTime
 				Collectiontime=$colltime 
@@ -934,7 +935,7 @@ $WEScriptBlock = {
 					
 					
 				; 	$cu1=$null
-				; 	$cu1 = New-Object PSObject -Property @{
+				; 	$cu1 = New-Object -ErrorAction Stop PSObject -Property @{
 						Timestamp = $metricitem.usageStartTime
 						Collectiontime=$colltime                                     
 						meterCategory= $meter.meterCategory
@@ -994,7 +995,7 @@ $WEScriptBlock = {
 		}
 	}
 
-	$end=get-date
+	$end=get-date -ErrorAction Stop
 	$timetaken = ($end-$start).Totalseconds
 	Write-Information " $timetaken   seconds ..." -Verbose
 }
@@ -1055,7 +1056,7 @@ foreach($azres in $resresources.value)
 {
 	$resgrp=$null
 	$resgrp=$azres.id.split('/')[4]
-	$resmap = $resmap + New-Object PSObject -Property @{
+	$resmap = $resmap + New-Object -ErrorAction Stop PSObject -Property @{
 		
 		Resource=$azres.name
 		REsourceGroup=$resgrp
@@ -1146,7 +1147,7 @@ $spltlist|foreach{
 	$splitmetrics=$_
 	$WEJob = [powershell]::Create().AddScript($WEScriptBlock).AddArgument($hash).AddArgument($meters).AddArgument($splitmetrics)
 	$WEJob.RunspacePool = $WERunspacePool
-; 	$WEJobs = $WEJobs + New-Object PSObject -Property @{
+; 	$WEJobs = $WEJobs + New-Object -ErrorAction Stop PSObject -Property @{
 		RunNum = $_
 		Pipe = $WEJob
 		Result = $WEJob.BeginInvoke()

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Appdscsql
 
@@ -138,28 +138,28 @@ Node $nodeName
             return $false
         }
         SetScript ={
-		$disks = Get-Disk | Where partitionstyle -eq 'raw' 
-		if($disks -ne $null)
+		$disks = Get-Disk -ErrorAction Stop | Where partitionstyle -eq 'raw' 
+		if($null -ne $disks)
 		{
 		# Create a new storage pool using all available disks 
-		New-StoragePool �FriendlyName " VMStoragePool" `
+		New-StoragePool -ErrorAction Stop �FriendlyName " VMStoragePool" `
 				�StorageSubsystemFriendlyName " Storage Spaces*" `
-				�PhysicalDisks (Get-PhysicalDisk �CanPool $WETrue)
+				�PhysicalDisks (Get-PhysicalDisk -ErrorAction Stop �CanPool $WETrue)
 
 		# Return all disks in the new pool
-		$disks = Get-StoragePool �FriendlyName " VMStoragePool" `
+		$disks = Get-StoragePool -ErrorAction Stop �FriendlyName " VMStoragePool" `
 					-IsPrimordial $false | 
-					Get-PhysicalDisk
+					Get-PhysicalDisk -ErrorAction Stop
 
 		# Create a new virtual disk 
-		New-VirtualDisk �FriendlyName " DataDisk" `
+		New-VirtualDisk -ErrorAction Stop �FriendlyName " DataDisk" `
 				-ResiliencySettingName Simple `
 						�NumberOfColumns $disks.Count `
 						�UseMaximumSize �Interleave 256KB `
 						-StoragePoolFriendlyName " VMStoragePool" 
 
 		# Format the disk using NTFS and mount it as the F: drive
-		Get-Disk | 
+		Get-Disk -ErrorAction Stop | 
 			Where partitionstyle -eq 'raw' |
 			Initialize-Disk -PartitionStyle MBR -PassThru |
 			New-Partition -DriveLetter " F" -UseMaximumSize |
@@ -178,7 +178,7 @@ Node $nodeName
 	# Setup the data, backup and log directories as well as mixed mode authentication
 	Import-Module " sqlps" -DisableNameChecking
 	[System.Reflection.Assembly]::LoadWithPartialName(" Microsoft.SqlServer.Smo" )
-	$sqlesq = new-object ('Microsoft.SqlServer.Management.Smo.Server') Localhost
+	$sqlesq = new-object -ErrorAction Stop ('Microsoft.SqlServer.Management.Smo.Server') Localhost
 	$sqlesq.Settings.LoginMode = [Microsoft.SqlServer.Management.Smo.ServerLoginMode]::Mixed
 	$sqlesq.Settings.DefaultFile = $data
 	$sqlesq.Settings.DefaultLog = $logs
@@ -196,8 +196,8 @@ Node $nodeName
 	$dbdestination = " C:\SQDATA\AdventureWorks2012.bak"
 	Invoke-WebRequest $dbsource -OutFile $dbdestination 
 
-; 	$mdf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Data" , " F:\Data\AdventureWorks2012.mdf" )
-; 	$ldf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Log" , " F:\Logs\AdventureWorks2012.ldf" )
+; 	$mdf = New-Object -ErrorAction Stop Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Data" , " F:\Data\AdventureWorks2012.mdf" )
+; 	$ldf = New-Object -ErrorAction Stop Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Log" , " F:\Logs\AdventureWorks2012.ldf" )
 
 	# Restore the database from the backup
 	Restore-SqlDatabase -ServerInstance Localhost -Database AdventureWorks `

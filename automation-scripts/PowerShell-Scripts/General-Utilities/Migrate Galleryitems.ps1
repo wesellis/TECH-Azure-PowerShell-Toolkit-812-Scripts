@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Migrate Galleryitems
 
@@ -105,7 +105,10 @@ if ($WEResourceGroupName -ne "" -and $location -eq "" ) {
 
 try {
     [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-GalleryMigration" , " 1.0" )
-} catch { }
+} catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 
 if ($WEItemsToExport -eq 'MyGalleryItems') {
 

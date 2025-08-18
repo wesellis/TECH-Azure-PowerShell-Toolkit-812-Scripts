@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Wesley Ellis Advanced Azure VM Maintenance & Update Manager
 # Author: Wesley Ellis
 # Contact: wesellis.com
@@ -40,9 +40,10 @@ param (
 
 # Wesley Ellis Enhanced Framework
 $WELogPrefix = "[WE-VM-MaintenanceManager]"
-$WEStartTime = Get-Date
+$WEStartTime = Get-Date -ErrorAction Stop
 
 # Enhanced logging and reporting
+[CmdletBinding()]
 function Write-WEMaintenanceLog {
     param(
         [string]$Message,
@@ -61,14 +62,15 @@ function Write-WEMaintenanceLog {
     }
     
     $logEntry = "$timestamp $WELogPrefix [$VMName] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
     
     # Always log to file for audit trail
     Add-Content -Path "WE-VM-Maintenance-$(Get-Date -Format 'yyyyMMdd').log" -Value $logEntry
 }
 
 # Wesley Ellis VM Health Assessment Function
-function Get-WEVMHealthStatus {
+[CmdletBinding()]
+function Get-WEVMHealthStatus -ErrorAction Stop {
     param([string]$ResourceGroup, [string]$VMName)
     
     Write-WEMaintenanceLog "Performing comprehensive health assessment" "ACTION" $VMName
@@ -134,6 +136,7 @@ function Get-WEVMHealthStatus {
 }
 
 # Enhanced Update Management Function
+[CmdletBinding()]
 function Invoke-WEVMUpdateProcess {
     param(
         [string]$ResourceGroup,
@@ -277,7 +280,7 @@ try {
             VMName = $vm.Name
             MaintenanceType = $WEMaintenanceType
             StartTime = $WEStartTime
-            CompletionTime = Get-Date
+            CompletionTime = Get-Date -ErrorAction Stop
             Status = $maintenanceResult.Status
             HealthMetrics = $healthStatus
             Recommendations = $healthStatus.Recommendations -join "; "

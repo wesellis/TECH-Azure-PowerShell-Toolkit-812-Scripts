@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Real Time Monitor
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
@@ -56,7 +57,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -85,9 +86,10 @@ $script:MonitoringState = @{
     Resources = @{}
     Metrics = @()
     Alerts = @()
-    StartTime = Get-Date
+    StartTime = Get-Date -ErrorAction Stop
 }
 
+[CmdletBinding()]
 function WE-Start-ResourceMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
@@ -97,14 +99,14 @@ function WE-Start-ResourceMonitoring {
     
     while ($script:MonitoringState.Running) {
         try {
-            $timestamp = Get-Date
+            $timestamp = Get-Date -ErrorAction Stop
             Write-Log " 📊 Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
             
             # Get resources to monitor
             $resources = if ($WEResourceGroups.Count -gt 0) {
                 $WEResourceGroups | ForEach-Object { Get-AzResource -ResourceGroupName $_ }
             } else {
-                Get-AzResource
+                Get-AzResource -ErrorAction Stop
             }
             
             if ($WEResourceTypes.Count -gt 0) {
@@ -149,7 +151,8 @@ function WE-Start-ResourceMonitoring {
     }
 }
 
-function WE-Get-ResourceHealthMetric {
+[CmdletBinding()]
+function WE-Get-ResourceHealthMetric -ErrorAction Stop {
     param($WEResource)
     
     $metric = @{
@@ -159,7 +162,7 @@ function WE-Get-ResourceHealthMetric {
         Location = $WEResource.Location
         Status = " Unknown"
         Details = ""
-        Timestamp = Get-Date
+        Timestamp = Get-Date -ErrorAction Stop
         Metrics = @{}
     }
     
@@ -205,6 +208,7 @@ function WE-Get-ResourceHealthMetric {
     return $metric
 }
 
+[CmdletBinding()]
 function WE-Test-ResourceAlert {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -226,7 +230,7 @@ $ErrorActionPreference = " Stop"
     
     if ($alertTriggered) {
        ;  $alert = @{
-            Timestamp = Get-Date
+            Timestamp = Get-Date -ErrorAction Stop
             Resource = $WEMetric.Name
             Type = $WEMetric.Type
             Message = $alertMessage
@@ -243,6 +247,7 @@ $ErrorActionPreference = " Stop"
     }
 }
 
+[CmdletBinding()]
 function WE-Send-AlertWebhook {
     param($WEAlert)
     

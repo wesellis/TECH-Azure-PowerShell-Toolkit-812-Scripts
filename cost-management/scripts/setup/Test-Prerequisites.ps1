@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Comprehensive test script to validate all Azure Cost Management Dashboard prerequisites and configuration.
 
@@ -60,9 +60,10 @@ $testResults = @{
     Overall = @{}
 }
 
-$testStartTime = Get-Date
+$testStartTime = Get-Date -ErrorAction Stop
 
 # Helper functions
+[CmdletBinding()]
 function Write-TestResult {
     param(
         [string]$Test,
@@ -85,12 +86,12 @@ function Write-TestResult {
         "INFO" { "Cyan" }
     }
     
-    Write-Host "$icon $Test" -ForegroundColor $color
+    Write-Information "$icon $Test" -ForegroundColor $color
     if ($Message) {
-        Write-Host "   $Message" -ForegroundColor Gray
+        Write-Information "   $Message"
     }
     if ($Details -and $Detailed) {
-        Write-Host "   Details: $Details" -ForegroundColor DarkGray
+        Write-Information "   Details: $Details"
     }
     
     return @{
@@ -98,12 +99,13 @@ function Write-TestResult {
         Status = $Status
         Message = $Message
         Details = $Details
-        Timestamp = Get-Date
+        Timestamp = Get-Date -ErrorAction Stop
     }
 }
 
+[CmdletBinding()]
 function Test-PowerShellEnvironment {
-    Write-Host "`n🔍 Testing PowerShell Environment..." -ForegroundColor Cyan
+    Write-Information "`n🔍 Testing PowerShell Environment..."
     
     # PowerShell Version
     $psVersion = $PSVersionTable.PSVersion
@@ -115,7 +117,7 @@ function Test-PowerShellEnvironment {
     }
     
     # Execution Policy
-    $execPolicy = Get-ExecutionPolicy
+    $execPolicy = Get-ExecutionPolicy -ErrorAction Stop
     if ($execPolicy -in @("RemoteSigned", "Unrestricted", "Bypass")) {
         $testResults.PowerShell.ExecutionPolicy = Write-TestResult "Execution Policy" "PASS" $execPolicy
     }
@@ -133,8 +135,9 @@ function Test-PowerShellEnvironment {
     }
 }
 
+[CmdletBinding()]
 function Test-RequiredModules {
-    Write-Host "`n📦 Testing Required Modules..." -ForegroundColor Cyan
+    Write-Information "`n📦 Testing Required Modules..."
     
     $requiredModules = @(
         @{ Name = "Az"; MinVersion = "9.0.0" },
@@ -173,8 +176,9 @@ function Test-RequiredModules {
     }
 }
 
+[CmdletBinding()]
 function Test-AzureConnectivity {
-    Write-Host "`n☁️ Testing Azure Connectivity..." -ForegroundColor Cyan
+    Write-Information "`n☁️ Testing Azure Connectivity..."
     
     try {
         # Test Azure connection
@@ -246,8 +250,9 @@ function Test-AzureConnectivity {
     }
 }
 
+[CmdletBinding()]
 function Test-Configuration {
-    Write-Host "`n⚙️ Testing Configuration..." -ForegroundColor Cyan
+    Write-Information "`n⚙️ Testing Configuration..."
     
     # Test configuration file existence
     $fullConfigPath = Join-Path $PWD $ConfigPath
@@ -255,7 +260,7 @@ function Test-Configuration {
         $testResults.Configuration.File = Write-TestResult "Configuration File" "PASS" "Found at $ConfigPath"
         
         try {
-            $config = Get-Content $fullConfigPath | ConvertFrom-Json
+            $config = Get-Content -ErrorAction Stop $fullConfigPath | ConvertFrom-Json
             $testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "PASS" "Valid JSON format"
             
             # Validate required sections
@@ -311,8 +316,9 @@ function Test-Configuration {
     }
 }
 
+[CmdletBinding()]
 function Test-Functionality {
-    Write-Host "`n🧪 Testing Core Functionality..." -ForegroundColor Cyan
+    Write-Information "`n🧪 Testing Core Functionality..."
     
     if ($TestData) {
         # Test with sample data
@@ -360,7 +366,7 @@ function Test-Functionality {
             $testPath = "test-export.xlsx"
             @{Test="Value"} | Export-Excel -Path $testPath -AutoSize
             if (Test-Path $testPath) {
-                Remove-Item $testPath -Force
+                Remove-Item -ErrorAction Stop $testPath -Force
                 $testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "PASS" "Export capability confirmed"
             }
         }
@@ -389,7 +395,8 @@ function Test-Functionality {
     }
 }
 
-function Get-OverallStatus {
+[CmdletBinding()]
+function Get-OverallStatus -ErrorAction Stop {
     $totalTests = 0
     $passedTests = 0
     $failedTests = 0
@@ -418,51 +425,52 @@ function Get-OverallStatus {
     }
 }
 
+[CmdletBinding()]
 function Show-Summary {
     $overall = $testResults.Overall
     
-    Write-Host "`n" + "="*70 -ForegroundColor Cyan
-    Write-Host "AZURE COST MANAGEMENT DASHBOARD - SYSTEM TEST RESULTS" -ForegroundColor Cyan
-    Write-Host "="*70 -ForegroundColor Cyan
+    Write-Information "`n" + "="*70 -ForegroundColor Cyan
+    Write-Information "AZURE COST MANAGEMENT DASHBOARD - SYSTEM TEST RESULTS"
+    Write-Information "="*70 -ForegroundColor Cyan
     
-    Write-Host "`nOverall Status: " -NoNewline
+    Write-Information "`nOverall Status: " -NoNewline
     $statusColor = switch ($overall.Status) {
         "PASS" { "Green" }
         "WARN" { "Yellow" }
         "FAIL" { "Red" }
     }
-    Write-Host $overall.Status -ForegroundColor $statusColor
+    Write-Information $overall.Status -ForegroundColor $statusColor
     
-    Write-Host "Tests Run: $($overall.TotalTests)" -ForegroundColor White
-    Write-Host "Passed: $($overall.PassedTests)" -ForegroundColor Green
-    Write-Host "Failed: $($overall.FailedTests)" -ForegroundColor Red
-    Write-Host "Warnings: $($overall.Warnings)" -ForegroundColor Yellow
-    Write-Host "Pass Rate: $($overall.PassRate)%" -ForegroundColor $(if ($overall.PassRate -ge 80) { "Green" } else { "Yellow" })
+    Write-Information "Tests Run: $($overall.TotalTests)"
+    Write-Information "Passed: $($overall.PassedTests)"
+    Write-Information "Failed: $($overall.FailedTests)"
+    Write-Information "Warnings: $($overall.Warnings)"
+    Write-Information "Pass Rate: $($overall.PassRate)%" -ForegroundColor $(if ($overall.PassRate -ge 80) { "Green" } else { "Yellow" })
     
     # Recommendations based on results
-    Write-Host "`nRecommendations:" -ForegroundColor Cyan
+    Write-Information "`nRecommendations:"
     
     if ($overall.FailedTests -gt 0) {
-        Write-Host "❌ Critical Issues Found:" -ForegroundColor Red
+        Write-Information "❌ Critical Issues Found:"
         foreach ($category in $testResults.Keys) {
             if ($category -ne "Overall") {
                 foreach ($test in $testResults[$category].Values) {
                     if ($test.Status -eq "FAIL") {
-                        Write-Host "   • $($test.Test): $($test.Message)" -ForegroundColor Red
+                        Write-Information "   • $($test.Test): $($test.Message)"
                     }
                 }
             }
         }
-        Write-Host "`n   Please resolve failed tests before proceeding." -ForegroundColor Red
+        Write-Information "`n   Please resolve failed tests before proceeding."
     }
     
     if ($overall.Warnings -gt 0) {
-        Write-Host "⚠️ Warnings to Consider:" -ForegroundColor Yellow
+        Write-Information "⚠️ Warnings to Consider:"
         foreach ($category in $testResults.Keys) {
             if ($category -ne "Overall") {
                 foreach ($test in $testResults[$category].Values) {
                     if ($test.Status -eq "WARN") {
-                        Write-Host "   • $($test.Test): $($test.Message)" -ForegroundColor Yellow
+                        Write-Information "   • $($test.Test): $($test.Message)"
                     }
                 }
             }
@@ -470,36 +478,37 @@ function Show-Summary {
     }
     
     if ($overall.Status -eq "PASS") {
-        Write-Host "✅ System Ready!" -ForegroundColor Green
-        Write-Host "   Your Azure Cost Management Dashboard is properly configured." -ForegroundColor Green
-        Write-Host "   Next steps:" -ForegroundColor White
-        Write-Host "   • Generate your first cost report" -ForegroundColor White
-        Write-Host "   • Configure automated reporting" -ForegroundColor White
-        Write-Host "   • Customize dashboards for your needs" -ForegroundColor White
+        Write-Information "✅ System Ready!"
+        Write-Information "   Your Azure Cost Management Dashboard is properly configured."
+        Write-Information "   Next steps:"
+        Write-Information "   • Generate your first cost report"
+        Write-Information "   • Configure automated reporting"
+        Write-Information "   • Customize dashboards for your needs"
     }
     
-    Write-Host "`nTest completed in $([math]::Round(((Get-Date) - $testStartTime).TotalSeconds, 1)) seconds" -ForegroundColor Gray
+    Write-Information "`nTest completed in $([math]::Round(((Get-Date) - $testStartTime).TotalSeconds, 1)) seconds"
 }
 
+[CmdletBinding()]
 function Export-TestResults {
     if ($ExportResults) {
         $exportPath = "test-results-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
         $testResults | ConvertTo-Json -Depth 5 | Out-File $exportPath
-        Write-Host "`n📄 Test results exported to: $exportPath" -ForegroundColor Blue
+        Write-Information "`n📄 Test results exported to: $exportPath"
     }
 }
 
 # Main execution
 try {
-    Write-Host "Azure Cost Management Dashboard - System Prerequisites Test" -ForegroundColor Cyan
-    Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host "Test Started: $(Get-Date)" -ForegroundColor Gray
+    Write-Information "Azure Cost Management Dashboard - System Prerequisites Test"
+    Write-Information "============================================================"
+    Write-Information "Test Started: $(Get-Date)"
     
     if ($TestData) {
-        Write-Host "Mode: Test Data (No live Azure data will be accessed)" -ForegroundColor Yellow
+        Write-Information "Mode: Test Data (No live Azure data will be accessed)"
     }
     else {
-        Write-Host "Mode: Live Testing (Will test Azure connectivity and permissions)" -ForegroundColor Yellow
+        Write-Information "Mode: Live Testing (Will test Azure connectivity and permissions)"
     }
     
     # Run all tests
@@ -512,7 +521,7 @@ try {
     Test-Functionality
     
     # Calculate overall results
-    Get-OverallStatus
+    Get-OverallStatus -ErrorAction Stop
     
     # Show summary
     Show-Summary

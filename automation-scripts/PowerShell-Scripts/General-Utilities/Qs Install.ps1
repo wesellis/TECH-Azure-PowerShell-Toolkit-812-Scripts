@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Qs Install
 
@@ -115,8 +115,8 @@ $json = (@{
 
 $json | ConvertTo-Json -Compress -Depth 10 | Out-File 'c:\installation\qsVer.json'
 
-$qsVer = (Get-Content C:\installation\qsVer.json -raw) | ConvertFrom-Json
-$qsBinaryURL = (Get-Content C:\installation\qBinaryDownload.json -raw) | ConvertFrom-Json
+$qsVer = (Get-Content -ErrorAction Stop C:\installation\qsVer.json -raw) | ConvertFrom-Json
+$qsBinaryURL = (Get-Content -ErrorAction Stop C:\installation\qBinaryDownload.json -raw) | ConvertFrom-Json
 $binaryName = $qsBinaryURL.qliksense | where { $_.name -eq $qsVer.name}
 $selVer = $qsBinaryURL.qliksense | where { $_.name -eq $qsVer.name }
 $path = 'c:\installation'
@@ -124,15 +124,15 @@ $url = $selVer.url
 $fileName = $url.Substring($url.LastIndexOf(" /" ) + 1)
 $dlLoc = join-path $path $fileName
 if ($selVer.name -like " *Patch*" ) {
-    (New-Object System.Net.WebClient).DownloadFile($url, $dlLoc)
+    (New-Object -ErrorAction Stop System.Net.WebClient).DownloadFile($url, $dlLoc)
     $url2 = $selVer.url2
     $fileName = $url2.Substring($url2.LastIndexOf(" /" ) + 1)
     $dlLoc = join-path $path $fileName
-    (New-Object System.Net.WebClient).DownloadFile($url2, $dlLoc)
+    (New-Object -ErrorAction Stop System.Net.WebClient).DownloadFile($url2, $dlLoc)
    }
 else
    {
-   (New-Object System.Net.WebClient).DownloadFile($url, $dlLoc)
+   (New-Object -ErrorAction Stop System.Net.WebClient).DownloadFile($url, $dlLoc)
    }
 
 
@@ -182,9 +182,9 @@ If (Test-Path " c:\installation\Qlik_Sense_update.exe" )
 	{
 		Unblock-File -Path c:\installation\Qlik_Sense_update.exe
 		Invoke-Command -ScriptBlock {Start-Process -FilePath " c:\installation\Qlik_Sense_Update.exe" -ArgumentList " install" -Wait -Passthru }
-		Get-Service Qlik* | where {$_.Name -ne 'QlikLoggingService'} | Start-Service
-		Get-Service Qlik* | where {$_.Name -eq 'QlikSenseServiceDispatcher'} | Stop-Service
-		Get-Service Qlik* | where {$_.Name -eq 'QlikSenseServiceDispatcher'} | Start-Service
+		Get-Service -ErrorAction Stop Qlik* | where {$_.Name -ne 'QlikLoggingService'} | Start-Service
+		Get-Service -ErrorAction Stop Qlik* | where {$_.Name -eq 'QlikSenseServiceDispatcher'} | Stop-Service
+		Get-Service -ErrorAction Stop Qlik* | where {$_.Name -eq 'QlikSenseServiceDispatcher'} | Start-Service
 	}
 
 If (! ( $qlikSenseSerial -eq " defaultValue" ) -or $qlikSenseSerial -eq "" ) {

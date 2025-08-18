@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vm Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -103,7 +104,7 @@ Write-WELog " VM Size: $WEVmSize" " INFO"
 $WEVmConfig = New-AzVMConfig -VMName $WEVmName -VMSize $WEVmSize
 
 ; 
-$WEVmConfig = Set-AzVMOperatingSystem -VM $WEVmConfig -Windows -ComputerName $WEVmName -Credential (New-Object PSCredential($WEAdminUsername, $WEAdminPassword))
+$WEVmConfig = Set-AzVMOperatingSystem -VM $WEVmConfig -Windows -ComputerName $WEVmName -Credential (New-Object -ErrorAction Stop PSCredential($WEAdminUsername, $WEAdminPassword))
 
 ; 
 $WEVmConfig = Set-AzVMSourceImage -VM $WEVmConfig -PublisherName $WEImagePublisher -Offer $WEImageOffer -Skus $WEImageSku -Version " latest"

@@ -1,4 +1,4 @@
-# Azure Resource Tagging Enforcer
+﻿# Azure Resource Tagging Enforcer
 # Professional Azure utility script for enforcing consistent resource tagging
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise tag governance and compliance
@@ -57,14 +57,14 @@ try {
     $resources = if ($ResourceGroupName) {
         Get-AzResource -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     if ($IncludeResourceGroups) {
         $resourceGroups = if ($ResourceGroupName) {
             Get-AzResourceGroup -Name $ResourceGroupName
         } else {
-            Get-AzResourceGroup
+            Get-AzResourceGroup -ErrorAction Stop
         }
         $resources += $resourceGroups
     }
@@ -151,26 +151,26 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName "Summary" -Status "Generating summary"
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              TAG COMPLIANCE ANALYSIS COMPLETE" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "📊 Compliance Summary:" -ForegroundColor Cyan
-    Write-Host "   • Total Resources: $($resources.Count)" -ForegroundColor White
-    Write-Host "   • Non-Compliant: $($nonCompliantResources.Count)" -ForegroundColor Yellow
-    Write-Host "   • Compliance Rate: $([math]::Round((($resources.Count - $nonCompliantResources.Count) / $resources.Count) * 100, 2))%" -ForegroundColor Green
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              TAG COMPLIANCE ANALYSIS COMPLETE"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "📊 Compliance Summary:"
+    Write-Information "   • Total Resources: $($resources.Count)"
+    Write-Information "   • Non-Compliant: $($nonCompliantResources.Count)"
+    Write-Information "   • Compliance Rate: $([math]::Round((($resources.Count - $nonCompliantResources.Count) / $resources.Count) * 100, 2))%"
     
-    Write-Host ""
-    Write-Host "🏷️ Required Tags:" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "🏷️ Required Tags:"
     foreach ($tag in $RequiredTags.Keys) {
         $allowedValues = if ($RequiredTags[$tag].Count -gt 0) { "($($RequiredTags[$tag] -join ', '))" } else { "(any value)" }
-        Write-Host "   • $tag $allowedValues" -ForegroundColor White
+        Write-Information "   • $tag $allowedValues"
     }
     
-    Write-Host ""
-    Write-Host "📋 Report: $OutputPath" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Information ""
+    Write-Information "📋 Report: $OutputPath"
+    Write-Information ""
 
     Write-Log "✅ Tag compliance analysis completed successfully!" -Level SUCCESS
 

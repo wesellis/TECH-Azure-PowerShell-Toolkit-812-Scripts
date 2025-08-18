@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Get Samplefolder
 
@@ -64,7 +64,10 @@ elseif ($WEENV:BUILD_REASON -eq " BatchedCI" -or $WEENV:BUILD_REASON -eq " Indiv
         $begin = 0
         $begin = $pr.IndexOf(" #" ) # look for the #
     }
-    catch { }
+    catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
     if ($begin -ge 0) {
         $end = $pr.IndexOf(" )" , $begin) # look for the trailing space
         if($end -eq -1){

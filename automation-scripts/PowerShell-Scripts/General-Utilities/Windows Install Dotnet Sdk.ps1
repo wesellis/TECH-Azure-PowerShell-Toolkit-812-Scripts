@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Dotnet Sdk
 
@@ -127,7 +127,7 @@ try {
         if ($true -eq [System.IO.File]::Exists($globalJsonFullPath)) {
             Write-WELog " Reading from global.json" " INFO"
             Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-json-utils.psm1')
-            $dotnet_sdk_version = (Get-JsonFromFile $globalJsonFullPath).sdk.version
+            $dotnet_sdk_version = (Get-JsonFromFile -ErrorAction Stop $globalJsonFullPath).sdk.version
             Write-WELog " Found version $dotnet_sdk_version" " INFO"
         }
         else {
@@ -141,7 +141,7 @@ try {
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-retry-utils.psm1')
 
     # download the dotnet sdk script and run it
-    Write-Host Downloading dotnet-install script
+    Write-Information Downloading dotnet-install script
    ;  $scriptLocation = [System.IO.Path]::Combine($env:TEMP, 'dotnet-install.ps1')
     ProcessRunner -command curl -arguments " -SsL https://dot.net/v1/dotnet-install.ps1 -o $scriptLocation"
  

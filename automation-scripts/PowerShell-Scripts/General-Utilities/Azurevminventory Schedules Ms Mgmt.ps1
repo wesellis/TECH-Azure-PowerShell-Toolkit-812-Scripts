@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azurevminventory Schedules Ms Mgmt
 
@@ -88,7 +88,7 @@ $varVMIopsList=" AzureVMInventory-VM-IOPSLimits"
 
 If ($clearLocks)
 {
-        $lockList = Get-AzureRmResourceLock `
+        $lockList = Get-AzureRmResourceLock -ErrorAction Stop `
 		-ResourceGroupName $WEAAResourceGroup
         " $($locklist|where {$_.Name -match " AzureVMInventory" }).count) locks found "
 

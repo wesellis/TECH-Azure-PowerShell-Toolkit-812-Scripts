@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Create Refs
 
@@ -73,10 +73,10 @@ $WEErrorActionPreference = " Stop"
 Write-WELog " `nSTART: $(Get-Date -Format u)" " INFO"
 
 function WE-FindOrCreateReFSOrDevDriveVolume([string] $WEDevBoxRefsDrive, [int] $WEOsDriveMinSizeGB, [bool] $WEIsDevDrive, [string] $WETempDir) {
-    Write-WELog " `nStarted with volumes:$(Get-Volume | Out-String)" " INFO"
+    Write-WELog " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
 
     # Check whether Dev Drive volume already exists, i.e. has already been created in the base image.
-    $firstReFSVolume = (Get-Volume | Where-Object { $_.FileSystemType -eq " ReFS" } | Select-Object -First 1)
+    $firstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq " ReFS" } | Select-Object -First 1)
     if ($firstReFSVolume) {
         $fromDriveLetterOrNull = $firstReFSVolume.DriveLetter
         if ($WEDevBoxRefsDrive -eq $fromDriveLetterOrNull) {
@@ -84,18 +84,18 @@ function WE-FindOrCreateReFSOrDevDriveVolume([string] $WEDevBoxRefsDrive, [int] 
         }
         else {
             Write-WELog " Assigning code drive letter to $WEDevBoxRefsDrive" " INFO"
-            $firstReFSVolume | Get-Partition | Set-Partition -NewDriveLetter $WEDevBoxRefsDrive
+            $firstReFSVolume | Get-Partition -ErrorAction Stop | Set-Partition -NewDriveLetter $WEDevBoxRefsDrive
         }
     
-        Write-WELog " `nDone with volumes:$(Get-Volume | Out-String)" " INFO"
+        Write-WELog " `nDone with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
     
         # This will mount the drive and open a handle to it which is important to get the drive ready.
         Write-WELog " Checking dir contents of ${DevBoxRefsDrive}: drive" " INFO"
-        Get-ChildItem ${DevBoxRefsDrive}:
+        Get-ChildItem -ErrorAction Stop ${DevBoxRefsDrive}:
         return
     }
 
-    $cSizeGB = (Get-Volume C).Size / 1024 / 1024 / 1024
+    $cSizeGB = (Get-Volume -ErrorAction Stop C).Size / 1024 / 1024 / 1024
     $targetReFSSizeGB = [math]::Floor($cSizeGB - $WEOsDriveMinSizeGB)
     $diffGB = $cSizeGB - $targetReFSSizeGB
     Write-WELog " Target ReFS size $targetReFSSizeGB GB, current C: size $cSizeGB GB" " INFO"
@@ -147,7 +147,7 @@ function WE-FindOrCreateReFSOrDevDriveVolume([string] $WEDevBoxRefsDrive, [int] 
     }
     Run-Program format " $WEDevBoxDriveWithColon /q /y /FS:ReFS $WEDevDriveParam /V:$WEDriveLabel" -RetryAttempts 1
     Write-WELog " Successfully formatted ReFS $WEDevBoxRefsDrive volume. Final volume list:" " INFO"
-    Get-Volume | Out-String
+    Get-Volume -ErrorAction Stop | Out-String
 }
 
 Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-run-program.psm1') -DisableNameChecking

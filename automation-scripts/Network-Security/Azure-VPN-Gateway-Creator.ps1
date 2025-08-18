@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VPN Gateway Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,7 +24,7 @@ param (
     [string]$GatewaySku = "VpnGw1"
 )
 
-Write-Host "Creating VPN Gateway: $GatewayName"
+Write-Information "Creating VPN Gateway: $GatewayName"
 
 # Get VNet
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
@@ -32,7 +32,7 @@ $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetNa
 # Create gateway subnet if it doesn't exist
 $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
 if (-not $GatewaySubnet) {
-    Write-Host "Creating GatewaySubnet..."
+    Write-Information "Creating GatewaySubnet..."
     Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $VNet -AddressPrefix "10.0.255.0/27"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
     $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
@@ -41,21 +41,21 @@ if (-not $GatewaySubnet) {
 
 # Create public IP for gateway
 $GatewayIpName = "$GatewayName-pip"
-$GatewayIp = New-AzPublicIpAddress `
+$GatewayIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $GatewayIpName `
     -Location $Location `
     -AllocationMethod Dynamic
 
 # Create gateway IP configuration
-$GatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig `
+$GatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop `
     -Name "gatewayConfig" `
     -SubnetId $GatewaySubnet.Id `
     -PublicIpAddressId $GatewayIp.Id
 
 # Create VPN gateway
-Write-Host "Creating VPN Gateway (this may take 30-45 minutes)..."
-$Gateway = New-AzVirtualNetworkGateway `
+Write-Information "Creating VPN Gateway (this may take 30-45 minutes)..."
+$Gateway = New-AzVirtualNetworkGateway -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $GatewayName `
     -Location $Location `
@@ -64,8 +64,8 @@ $Gateway = New-AzVirtualNetworkGateway `
     -VpnType "RouteBased" `
     -GatewaySku $GatewaySku
 
-Write-Host "✅ VPN Gateway created successfully:"
-Write-Host "  Name: $($Gateway.Name)"
-Write-Host "  Type: $($Gateway.GatewayType)"
-Write-Host "  SKU: $($Gateway.Sku.Name)"
-Write-Host "  Public IP: $($GatewayIp.IpAddress)"
+Write-Information "✅ VPN Gateway created successfully:"
+Write-Information "  Name: $($Gateway.Name)"
+Write-Information "  Type: $($Gateway.GatewayType)"
+Write-Information "  SKU: $($Gateway.Sku.Name)"
+Write-Information "  Public IP: $($GatewayIp.IpAddress)"

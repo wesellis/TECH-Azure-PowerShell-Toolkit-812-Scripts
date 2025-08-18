@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Enhanced Azure AD Group Management Tool
 # Author: Wesley Ellis
 # Contact: wesellis.com
@@ -42,6 +42,7 @@ $ErrorActionPreference = "Stop"
 $WELogPrefix = "[WE-AzureAD-GroupManager]"
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-WELog {
     param(
         [string]$Message,
@@ -58,7 +59,7 @@ function Write-WELog {
     }
     
     $output = "$timestamp $WELogPrefix [$Level] $Message"
-    Write-Host $output -ForegroundColor $colorMap[$Level]
+    Write-Information $output -ForegroundColor $colorMap[$Level]
     
     if ($WEVerboseLogging) {
         Add-Content -Path "WE-AzureAD-Operations-$(Get-Date -Format 'yyyyMMdd').log" -Value $output
@@ -66,6 +67,7 @@ function Write-WELog {
 }
 
 # Wesley Ellis Group Validation Function
+[CmdletBinding()]
 function Test-WEGroupNameAvailability {
     param([string]$GroupName)
     
@@ -86,6 +88,7 @@ function Test-WEGroupNameAvailability {
 }
 
 # Enhanced User Resolution Function
+[CmdletBinding()]
 function Resolve-WEUserByEmail {
     param([string]$EmailAddress)
     
@@ -132,7 +135,7 @@ try {
     
     # Step 3: Create the group
     Write-WELog "Creating Azure AD group..." "INFO"
-    $WENewGroup = New-AzADGroup @WEGroupParameters
+    $WENewGroup = New-AzADGroup -ErrorAction Stop @WEGroupParameters
     
     Write-WELog "✅ Azure AD Group created successfully!" "SUCCESS"
     Write-WELog "   Display Name: $($WENewGroup.DisplayName)" "SUCCESS"
@@ -181,7 +184,7 @@ try {
         MembersAdded = if ($WEMemberList) { $WEMemberList.Count } else { 0 }
         OwnersAdded = if ($WEOwnerList) { $WEOwnerList.Count } else { 0 }
         CreatedBy = "Wesley Ellis Enterprise Toolkit"
-        CreatedDate = Get-Date
+        CreatedDate = Get-Date -ErrorAction Stop
         Website = "wesellis.com"
     }
     

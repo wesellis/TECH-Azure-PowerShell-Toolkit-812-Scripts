@@ -1,4 +1,4 @@
-# Azure Event Grid Subscription Manager
+﻿# Azure Event Grid Subscription Manager
 # Manage Event Grid topics and subscriptions
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -36,7 +36,7 @@ try {
         "CreateTopic" {
             $topic = New-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName -Location $Location
             Write-Log "✓ Event Grid topic created: $TopicName" -Level SUCCESS
-            Write-Host "Endpoint: $($topic.Endpoint)" -ForegroundColor Green
+            Write-Information "Endpoint: $($topic.Endpoint)"
         }
         
         "CreateSubscription" {
@@ -48,8 +48,8 @@ try {
             $topic = Get-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName
             $subscriptions = Get-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName
             
-            Write-Host "Topic: $($topic.Name)" -ForegroundColor Cyan
-            Write-Host "Subscriptions: $($subscriptions.Count)" -ForegroundColor White
+            Write-Information "Topic: $($topic.Name)"
+            Write-Information "Subscriptions: $($subscriptions.Count)"
             $subscriptions | Format-Table EventSubscriptionName, Destination
         }
         

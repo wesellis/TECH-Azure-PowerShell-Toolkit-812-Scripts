@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.4 New Azpublicipaddress
 
@@ -65,7 +65,7 @@ $newAzPublicIpAddressSplat = @{
     Sku = 'Standard'
 }
 ; 
-$publicip = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+$publicip = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

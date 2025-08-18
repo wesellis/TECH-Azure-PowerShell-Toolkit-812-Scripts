@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Msiinstaller
 
@@ -52,7 +52,7 @@ try {
     Start-Process msiexec -ArgumentList " /i $output /qn" -Wait -NoNewWindow
     Write-WELog " Installation complete." " INFO"
 
-    Remove-Item $outpu -Forcet -Force
+    Remove-Item -ErrorAction Stop $outpu -Forcet -Force
 } catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
 }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Asr Addsingleloadbalancer
 
@@ -85,7 +85,7 @@ if ($WERecoveryPlanContext.FailoverDirection -ne " PrimaryToSecondary" )
         Write-Output " Failover Direction is not Azure, and the script will stop."
     }
 else {
-        $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
+        $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
         Write-Output (" Found the following VMGuid(s): `n" + $WEVMInfo)
             if ($WEVMInfo -is [system.array])
             {
@@ -136,7 +136,7 @@ Catch
     #Getting VM details from the Recovery Plan Group, and associate the vNics with the Load Balancer
 Try
  {
-    $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
+    $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
     $WEVMs = $WERecoveryPlanContext.VmMap
     $vmMap = $WERecoveryPlanContext.VmMap
     foreach ($WEVMID in $WEVMinfo)
@@ -157,7 +157,7 @@ Try
        ;  $WEARMNic = Get-AzureRmResource -ResourceId $WEAzureVm.NetworkInterfaceIDs[0]
        ;  $WENic = Get-AzureRmNetworkInterface -Name $WEARMNic.Name -ResourceGroupName $WEARMNic.ResourceGroupName
         $WENic.IpConfigurations[0].LoadBalancerBackendAddressPools.Add($WELoadBalancer.BackendAddressPools[0]);        
-        $WENic | Set-AzureRmNetworkInterface    
+        $WENic | Set-AzureRmNetworkInterface -ErrorAction Stop    
         Write-Output " Done configuring Load Balancing for VM" $WEAzureVm.Name    
     }
  }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Asr Dns Updateip
 
@@ -120,7 +120,7 @@ Catch
  }
 
  
-    $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
+    $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
     $vmMap = $WERecoveryPlanContext.VmMap
 
     if ($WERecoveryPlanContext.FailoverType -ne " Test" ) { 

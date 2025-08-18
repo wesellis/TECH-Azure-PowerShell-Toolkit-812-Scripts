@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Create Devenv Shortcut
 
@@ -181,7 +181,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
     Write-WELog " Creating shortcut with Target path: $shortcutTargetPath and Arguments: $shortcutArguments " " INFO" 
     
    ;  $invokecommandScriptPath = (Join-Path $(Split-Path -Parent $WEPSScriptRoot) 'windows-create-shortcut/windows-create-shortcut.ps1')
-    New-Shortcut $invokecommandScriptPath $WEShortcutName $WEShortcutTargetPath $shortcutArguments $WEShortcutIcon $WEShortcutRunAsAdmin
+    New-Shortcut -ErrorAction Stop $invokecommandScriptPath $WEShortcutName $WEShortcutTargetPath $shortcutArguments $WEShortcutIcon $WEShortcutRunAsAdmin
 
     Write-WELog " Sucessfully created shortcut with $invokecommandScriptPath" " INFO"
 }

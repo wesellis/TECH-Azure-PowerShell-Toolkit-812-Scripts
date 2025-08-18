@@ -1,4 +1,4 @@
-# Azure Certificate Monitor
+﻿# Azure Certificate Monitor
 # Monitor SSL certificate expiration across Azure services
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -24,7 +24,7 @@ try {
     $warningDate = (Get-Date).AddDays($ExpirationWarningDays)
 
     if ($CheckKeyVaultCertificates) {
-        $keyVaults = Get-AzKeyVault
+        $keyVaults = Get-AzKeyVault -ErrorAction Stop
         
         foreach ($vault in $keyVaults) {
             try {
@@ -49,14 +49,14 @@ try {
         }
     }
 
-    Write-Host "Certificate Monitoring Results:" -ForegroundColor Cyan
-    Write-Host "Warning threshold: $ExpirationWarningDays days" -ForegroundColor Yellow
-    Write-Host "Certificates expiring soon: $($expiringCertificates.Count)" -ForegroundColor Red
+    Write-Information "Certificate Monitoring Results:"
+    Write-Information "Warning threshold: $ExpirationWarningDays days"
+    Write-Information "Certificates expiring soon: $($expiringCertificates.Count)"
 
     if ($expiringCertificates.Count -gt 0) {
         $expiringCertificates | Sort-Object ExpirationDate | Format-Table Service, VaultName, CertificateName, ExpirationDate, DaysUntilExpiration
     } else {
-        Write-Host "✅ No certificates expiring within $ExpirationWarningDays days" -ForegroundColor Green
+        Write-Information "✅ No certificates expiring within $ExpirationWarningDays days"
     }
 
 } catch {

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     1 Azure Vm Restore And Disk Expansion Setup
 
@@ -37,9 +37,11 @@
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Initialize-RequiredModules {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -59,7 +61,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -126,9 +128,11 @@ param(
 }
 
 
+[CmdletBinding()]
 function WE-Connect-AzureEnvironment {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -148,7 +152,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -180,10 +184,10 @@ param(
                 SubscriptionId = $WESubscriptionId
                 ErrorAction = 'Stop'
             }
-            Set-AzContext @subParams
+            Set-AzContext -ErrorAction Stop @subParams
         }
 
-        $currentContext = Get-AzContext
+        $currentContext = Get-AzContext -ErrorAction Stop
         $connectionInfo = [PSCustomObject]@{
             SubscriptionName = $currentContext.Subscription.Name
             SubscriptionId = $currentContext.Subscription.Id

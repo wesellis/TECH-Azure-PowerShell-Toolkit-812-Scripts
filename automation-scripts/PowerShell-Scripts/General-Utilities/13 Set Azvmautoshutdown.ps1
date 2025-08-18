@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     13 Set Azvmautoshutdown
 
@@ -39,7 +39,7 @@
         Sets the auto-shutdown property for a virtual machine hosted in Microsoft Azure. 
  
     .DESCRIPTION 
-        The Set-AzVMAutoShutdown script set the auto-shutdown property for a virtual machine. 
+        The Set-AzVMAutoShutdown -ErrorAction Stop script set the auto-shutdown property for a virtual machine. 
  
     .PARAMETER ResourceGroupName 
         Specifies the name of a resource group. 
@@ -128,7 +128,8 @@ Properties        : @{status=Enabled; taskType=ComputeVmShutdownTask; dailyRecur
     General notes
 
 
-function WE-Set-AzVMAutoShutdown {
+[CmdletBinding()]
+function WE-Set-AzVMAutoShutdown -ErrorAction Stop {
 
     [CmdletBinding()]
 $ErrorActionPreference = " Stop" 
@@ -146,7 +147,7 @@ $ErrorActionPreference = " Stop"
         [Parameter(ParameterSetName = " PsDisable" , Mandatory = $true)][switch]$WEDisable, 
         [Parameter(ParameterSetName = " PsEnable" , Mandatory = $true)][switch]$WEEnable, 
         [Parameter(ParameterSetName = " PsEnable" , Mandatory = $true)][DateTime]$WETime, 
-        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][string]$WETimeZone = (Get-TimeZone | Select-Object -ExpandProperty Id), 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][string]$WETimeZone = (Get-TimeZone -ErrorAction Stop | Select-Object -ExpandProperty Id), 
         [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][AllowEmptyString()][string]$WEWebhookUrl = "" , 
         [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][string]$WEEmail
     ) 
@@ -245,9 +246,12 @@ $ErrorActionPreference = " Stop"
             ErrorAction = 'SilentlyContinue'
         }
 
-       ;  $output = New-AzResource @newAzResourceSplat 
+       ;  $output = New-AzResource -ErrorAction Stop @newAzResourceSplat 
     }
-    catch {} 
+    catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+} 
  
     # Check if resource deployment threw an error 
     if ($? -eq $true) { 

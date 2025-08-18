@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     4 Creat Azdisk
 
@@ -53,7 +53,7 @@ $newAzDiskConfigSplat = @{
     HyperVGeneration = 'V2'
 }
 ; 
-$diskconfig = New-AzDiskConfig @newAzDiskConfigSplat
+$diskconfig = New-AzDiskConfig -ErrorAction Stop @newAzDiskConfigSplat
 
 New-AzDisk -ResourceGroupName $rgName -DiskName $WEDiskname -Disk $diskconfig
 

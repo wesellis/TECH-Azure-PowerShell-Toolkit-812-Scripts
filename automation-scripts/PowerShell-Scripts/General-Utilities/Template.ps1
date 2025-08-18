@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Template
 
@@ -74,7 +74,7 @@ $newAzResourceGroupSplat = @{
     Tag = $WETags
 }
 
-New-AzResourceGroup @newAzResourceGroupSplat
+New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

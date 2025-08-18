@@ -1,4 +1,4 @@
-# Azure Resource Dependency Mapper
+﻿# Azure Resource Dependency Mapper
 # Map dependencies between Azure resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -51,7 +51,7 @@ try {
         }
     }
 
-    Write-Host "Resource Dependencies Found: $($dependencies.Count)" -ForegroundColor Cyan
+    Write-Information "Resource Dependencies Found: $($dependencies.Count)"
     $dependencies | Format-Table ResourceName, ResourceType
 
     if ($ExportDiagram) {

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Kubernetes Service Status Monitor
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -12,31 +12,31 @@ param (
     [string]$ClusterName
 )
 
-Write-Host "Monitoring AKS Cluster: $ClusterName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "============================================"
+Write-Information "Monitoring AKS Cluster: $ClusterName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "============================================"
 
 # Get AKS cluster details
 $AksCluster = Get-AzAksCluster -ResourceGroupName $ResourceGroupName -Name $ClusterName
 
-Write-Host "Cluster Information:"
-Write-Host "  Name: $($AksCluster.Name)"
-Write-Host "  Location: $($AksCluster.Location)"
-Write-Host "  Kubernetes Version: $($AksCluster.KubernetesVersion)"
-Write-Host "  Provisioning State: $($AksCluster.ProvisioningState)"
-Write-Host "  Power State: $($AksCluster.PowerState.Code)"
-Write-Host "  DNS Prefix: $($AksCluster.DnsPrefix)"
-Write-Host "  FQDN: $($AksCluster.Fqdn)"
+Write-Information "Cluster Information:"
+Write-Information "  Name: $($AksCluster.Name)"
+Write-Information "  Location: $($AksCluster.Location)"
+Write-Information "  Kubernetes Version: $($AksCluster.KubernetesVersion)"
+Write-Information "  Provisioning State: $($AksCluster.ProvisioningState)"
+Write-Information "  Power State: $($AksCluster.PowerState.Code)"
+Write-Information "  DNS Prefix: $($AksCluster.DnsPrefix)"
+Write-Information "  FQDN: $($AksCluster.Fqdn)"
 
 # Get node pool information
-Write-Host "`nNode Pool Information:"
+Write-Information "`nNode Pool Information:"
 foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
-    Write-Host "  Pool Name: $($NodePool.Name)"
-    Write-Host "  VM Size: $($NodePool.VmSize)"
-    Write-Host "  Node Count: $($NodePool.Count)"
-    Write-Host "  OS Type: $($NodePool.OsType)"
-    Write-Host "  Provisioning State: $($NodePool.ProvisioningState)"
-    Write-Host "  ---"
+    Write-Information "  Pool Name: $($NodePool.Name)"
+    Write-Information "  VM Size: $($NodePool.VmSize)"
+    Write-Information "  Node Count: $($NodePool.Count)"
+    Write-Information "  OS Type: $($NodePool.OsType)"
+    Write-Information "  Provisioning State: $($NodePool.ProvisioningState)"
+    Write-Information "  ---"
 }
 
-Write-Host "`nCluster monitoring completed at $(Get-Date)"
+Write-Information "`nCluster monitoring completed at $(Get-Date)"

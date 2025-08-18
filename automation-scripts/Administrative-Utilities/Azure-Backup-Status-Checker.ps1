@@ -1,4 +1,4 @@
-# Azure Backup Status Checker
+﻿# Azure Backup Status Checker
 # Quick backup status verification for VMs and other resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -25,7 +25,7 @@ try {
     $vaults = if ($VaultName) {
         Get-AzRecoveryServicesVault -Name $VaultName
     } else {
-        Get-AzRecoveryServicesVault
+        Get-AzRecoveryServicesVault -ErrorAction Stop
     }
 
     $backupReport = @()
@@ -43,15 +43,15 @@ try {
     }
 
     if ($ShowUnprotected) {
-        $allVMs = Get-AzVM
+        $allVMs = Get-AzVM -ErrorAction Stop
         $protectedVMs = $vaults | ForEach-Object {
             Set-AzRecoveryServicesVaultContext -Vault $_
             Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM
         }
         
         $unprotectedVMs = $allVMs | Where-Object { $_.Name -notin $protectedVMs.Name }
-        Write-Host "Unprotected VMs: $($unprotectedVMs.Count)" -ForegroundColor Red
-        $unprotectedVMs | ForEach-Object { Write-Host "  • $($_.Name)" -ForegroundColor Yellow }
+        Write-Information "Unprotected VMs: $($unprotectedVMs.Count)"
+        $unprotectedVMs | ForEach-Object { Write-Information "  • $($_.Name)" }
     }
 
     $backupReport | Format-Table -AutoSize

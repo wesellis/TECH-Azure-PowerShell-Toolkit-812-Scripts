@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     5.1 Get Azvmextensions
 
@@ -106,7 +106,7 @@ FilterExpression :
 
 
 
-Get-AzVmImagePublisher -Location " CanadaCentral" | Get-AzVMExtensionImageType | Get-AzVMExtensionImage | Select-Object Type, Version
+Get-AzVmImagePublisher -Location " CanadaCentral" | Get-AzVMExtensionImageType -ErrorAction Stop | Get-AzVMExtensionImage -ErrorAction Stop | Select-Object Type, Version
 
 
 $getAzVMExtensionImageSplat = @{
@@ -115,7 +115,7 @@ $getAzVMExtensionImageSplat = @{
     Type = " AADLoginForWindows"
 }
 
-Get-AzVMExtensionImage @getAzVMExtensionImageSplat | Select-Object *
+Get-AzVMExtensionImage -ErrorAction Stop @getAzVMExtensionImageSplat | Select-Object *
 
 
 
@@ -130,7 +130,7 @@ $getAzVMSplat = @{
     Status = $true
 }
 
-Get-AzVM @getAzVMSplat | clip
+Get-AzVM -ErrorAction Stop @getAzVMSplat | clip
 
 
 

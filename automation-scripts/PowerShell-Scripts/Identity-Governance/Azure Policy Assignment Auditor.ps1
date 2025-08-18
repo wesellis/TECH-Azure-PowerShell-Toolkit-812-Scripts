@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Policy Assignment Auditor
 
@@ -75,8 +75,8 @@ try {
 
     if ($WESubscriptionId) { Set-AzContext -SubscriptionId $WESubscriptionId }
 
-    $policyAssignments = Get-AzPolicyAssignment
-    $policyStates = Get-AzPolicyState
+    $policyAssignments = Get-AzPolicyAssignment -ErrorAction Stop
+    $policyStates = Get-AzPolicyState -ErrorAction Stop
     
     $complianceReport = $policyAssignments | ForEach-Object {
         $assignment = $_

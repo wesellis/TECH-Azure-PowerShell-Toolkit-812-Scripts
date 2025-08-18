@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installorupdatedockerengine
 
@@ -41,7 +41,7 @@ param(
     [string] $envScope = " User"
 )
 
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+$currentPrincipal = New-Object -ErrorAction Stop Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw " This script needs to run as admin"
 }
@@ -73,7 +73,7 @@ $latestVersion = [Version]($latestZipFile.SubString(7,$latestZipFile.Length-11))
 Write-WELog " Latest stable available Docker Engine version is $latestVersion" " INFO"
 
 
-$dockerService = get-service docker -ErrorAction SilentlyContinue
+$dockerService = get-service -ErrorAction Stop docker -ErrorAction SilentlyContinue
 if ($dockerService) {
     if ($dockerService.Status -eq " Running" ) {
         $dockerVersion = [Version](docker version -f " {{.Server.Version}}" )
@@ -104,7 +104,7 @@ if ($dockerService) {
 $tempFile = " $([System.IO.Path]::GetTempFileName()).zip"
 Invoke-WebRequest -UseBasicParsing -Uri $latestZipFileUrl -OutFile $tempFile
 Expand-Archive $tempFile -DestinationPath $env:ProgramFiles -Force
-Remove-Item $tempFi -Forcel -Forcee -Force
+Remove-Item -ErrorAction Stop $tempFi -Forcel -Forcee -Force
 ; 
 $path = [System.Environment]::GetEnvironmentVariable(" Path" , $envScope)
 if (" ;$path;" -notlike " *;$($env:ProgramFiles)\docker;*" ) {
@@ -117,15 +117,15 @@ if (-not $dockerService) {
     & $dockerdExe --register-service
 }
 
-New-Item 'c:\ProgramData\Docker' -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
-Remove-Item 'c:\ProgramData\Docker\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
-New-Item 'c:\ProgramData\Docker\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
+New-Item -ErrorAction Stop 'c:\ProgramData\Docker' -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+Remove-Item -ErrorAction Stop 'c:\ProgramData\Docker\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
+New-Item -ErrorAction Stop 'c:\ProgramData\Docker\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
 
 try {
     Start-Service docker
 }
 catch {
-    Write-Host -ForegroundColor Red " Could not start docker service, you might need to reboot your computer."
+    Write-Information -ForegroundColor Red " Could not start docker service, you might need to reboot your computer."
 }
 
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Call Copybadges
 
@@ -47,8 +47,8 @@ if (($WEStorageAccountKey -eq "" ) -or ($null -eq $WEStorageAccountKey)) {
 $WEENV:BUILD_REASON = " IndividualCI"
 $WEENV:BUILD_SOURCEVERSIONMESSAGE = " Add francecentral in azAppInsightsLocationMap (#9498)"
 $WEENV:BUILD_REPOSITORY_NAME = " Azure/azure-quickstart-templates"
-$WEENV:BUILD_REPOSITORY_LOCALPATH = Get-SampleRootPath
-$WEENV:BUILD_SOURCESDIRECTORY = Get-SampleRootPath
+$WEENV:BUILD_REPOSITORY_LOCALPATH = Get-SampleRootPath -ErrorAction Stop
+$WEENV:BUILD_SOURCESDIRECTORY = Get-SampleRootPath -ErrorAction Stop
 
 $getSampleFolderHost = & " $WEPSScriptRoot/../ci-scripts/Get-SampleFolder.ps1" `
     6>&1

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.Compute
 
 <#
@@ -138,13 +138,14 @@ try {
     Import-Module Az.Compute -Force -ErrorAction Stop
     Import-Module Az.Network -Force -ErrorAction Stop
     Import-Module Az.KeyVault -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -160,11 +161,12 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Get GitHub registration token
-function Get-GitHubRegistrationToken {
+[CmdletBinding()]
+function Get-GitHubRegistrationToken -ErrorAction Stop {
     try {
         Write-EnhancedLog "Getting GitHub runner registration token..." "Info"
         
@@ -196,7 +198,8 @@ function Get-GitHubRegistrationToken {
 }
 
 # Create runner infrastructure
-function New-RunnerInfrastructure {
+[CmdletBinding()]
+function New-RunnerInfrastructure -ErrorAction Stop {
     try {
         Write-EnhancedLog "Creating GitHub Actions runner infrastructure..." "Info"
         
@@ -254,7 +257,8 @@ function New-RunnerInfrastructure {
 }
 
 # Generate runner configuration script
-function New-RunnerConfigurationScript {
+[CmdletBinding()]
+function New-RunnerConfigurationScript -ErrorAction Stop {
     param(
         [string]$RegistrationToken,
         [string]$RunnerName,
@@ -333,12 +337,12 @@ echo "GitHub Actions runner '$RunnerName' configured successfully"
             # Windows PowerShell script
             $configScript = @"
 # GitHub Actions Runner Configuration Script for Windows
-Set-ExecutionPolicy Bypass -Scope Process -Force
+Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force
 
 # Install Chocolatey
-if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+if (!(Get-Command -ErrorAction Stop choco -ErrorAction SilentlyContinue)) {
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    iex ((New-Object -ErrorAction Stop System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
 # Install required software
@@ -352,12 +356,12 @@ choco install -y gh
 New-Item -ItemType Directory -Path `$runnerPath -Force
 
 # Download GitHub Actions runner
-Set-Location `$runnerPath
+Set-Location -ErrorAction Stop `$runnerPath
 `$runnerVersion = (Invoke-RestMethod -Uri "https://api.github.com/repos/actions/runner/releases/latest").tag_name.TrimStart('v')
 `$runnerUrl = "https://github.com/actions/runner/releases/download/v`$runnerVersion/actions-runner-win-x64-`$runnerVersion.zip"
 Invoke-WebRequest -Uri `$runnerUrl -OutFile "actions-runner.zip"
 Expand-Archive -Path "actions-runner.zip" -DestinationPath . -Force
-Remove-Item "actions-runner.zip"
+Remove-Item -ErrorAction Stop "actions-runner.zip"
 
 # Configure runner
 & .\config.cmd --url "$runnerUrl" --token "$RegistrationToken" --name "$RunnerName" --labels "$labelsString" --unattended --replace
@@ -366,7 +370,7 @@ Remove-Item "actions-runner.zip"
 & .\svc.sh install
 & .\svc.sh start
 
-Write-Host "GitHub Actions runner '$RunnerName' configured successfully"
+Write-Information "GitHub Actions runner '$RunnerName' configured successfully"
 "@
         }
         
@@ -379,14 +383,15 @@ Write-Host "GitHub Actions runner '$RunnerName' configured successfully"
 }
 
 # Deploy GitHub Actions runners
-function Deploy-GitHubRunners {
+[CmdletBinding()]
+function Install-GitHubRunners {
     param([hashtable]$Infrastructure)
     
     try {
         Write-EnhancedLog "Deploying $RunnerCount GitHub Actions runners..." "Info"
         
         # Get GitHub registration token
-        $registrationToken = Get-GitHubRegistrationToken
+        $registrationToken = Get-GitHubRegistrationToken -ErrorAction Stop
         
         $deployedRunners = @()
         
@@ -426,7 +431,7 @@ function Deploy-GitHubRunners {
             }
             
             # Create the VM
-            $vm = New-AzVM @vmParams
+            $vm = New-AzVM -ErrorAction Stop @vmParams
             
             # Apply configuration script
             if ($RunnerOS -eq "Linux") {
@@ -458,7 +463,8 @@ function Deploy-GitHubRunners {
 }
 
 # Configure auto-scaling
-function Set-RunnerAutoScaling {
+[CmdletBinding()]
+function Set-RunnerAutoScaling -ErrorAction Stop {
     try {
         if (-not $EnableAutoScaling) {
             Write-EnhancedLog "Auto-scaling is not enabled" "Info"
@@ -480,7 +486,8 @@ function Set-RunnerAutoScaling {
 }
 
 # Monitor runner status
-function Get-RunnerStatus {
+[CmdletBinding()]
+function Get-RunnerStatus -ErrorAction Stop {
     try {
         Write-EnhancedLog "Checking GitHub Actions runner status..." "Info"
         
@@ -539,7 +546,8 @@ function Get-RunnerStatus {
 }
 
 # Scale runners
-function Set-RunnerScale {
+[CmdletBinding()]
+function Set-RunnerScale -ErrorAction Stop {
     param([int]$TargetCount)
     
     try {
@@ -554,7 +562,7 @@ function Set-RunnerScale {
             Write-EnhancedLog "Scaling up by $scaleUpCount runners..." "Info"
             
             # Create infrastructure if needed
-            $infrastructure = New-RunnerInfrastructure
+            $infrastructure = New-RunnerInfrastructure -ErrorAction Stop
             
             # Deploy additional runners
             $script:RunnerCount = $scaleUpCount
@@ -584,7 +592,8 @@ function Set-RunnerScale {
 }
 
 # Remove all runners
-function Remove-RunnerInfrastructure {
+[CmdletBinding()]
+function Remove-RunnerInfrastructure -ErrorAction Stop {
     try {
         Write-EnhancedLog "Removing GitHub Actions runner infrastructure..." "Warning"
         
@@ -634,11 +643,11 @@ try {
                 throw "GitHubOrganization parameter is required for Deploy action"
             }
             
-            $infrastructure = New-RunnerInfrastructure
+            $infrastructure = New-RunnerInfrastructure -ErrorAction Stop
             $runners = Deploy-GitHubRunners -Infrastructure $infrastructure
             
             if ($EnableAutoScaling) {
-                Set-RunnerAutoScaling
+                Set-RunnerAutoScaling -ErrorAction Stop
             }
         }
         
@@ -647,11 +656,11 @@ try {
         }
         
         "Monitor" {
-            Get-RunnerStatus
+            Get-RunnerStatus -ErrorAction Stop
         }
         
         "Status" {
-            Get-RunnerStatus
+            Get-RunnerStatus -ErrorAction Stop
         }
         
         "Update" {
@@ -662,7 +671,7 @@ try {
         }
         
         "Remove" {
-            Remove-RunnerInfrastructure
+            Remove-RunnerInfrastructure -ErrorAction Stop
         }
         
         "Register" {
@@ -670,7 +679,7 @@ try {
                 throw "GitHubOrganization parameter is required for Register action"
             }
             
-            $registrationToken = Get-GitHubRegistrationToken
+            $registrationToken = Get-GitHubRegistrationToken -ErrorAction Stop
             Write-EnhancedLog "Registration token obtained: $($registrationToken.Substring(0, 10))..." "Success"
         }
     }

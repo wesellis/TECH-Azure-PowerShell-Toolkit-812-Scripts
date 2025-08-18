@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Activity Log Checker
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -81,31 +82,31 @@ param(
     [int]$WEMaxEvents = 20
 )
 
-Write-Host -Object " Retrieving Activity Log events (last $WEHoursBack hours)"
+Write-Information -Object " Retrieving Activity Log events (last $WEHoursBack hours)"
 
 $WEStartTime = (Get-Date).AddHours(-$WEHoursBack)
-$WEEndTime = Get-Date
+$WEEndTime = Get-Date -ErrorAction Stop
 
 if ($WEResourceGroupName) {
     $WEActivityLogs = Get-AzActivityLog -ResourceGroupName $WEResourceGroupName -StartTime $WEStartTime -EndTime $WEEndTime
-    Write-Host -Object " Resource Group: $WEResourceGroupName"
+    Write-Information -Object " Resource Group: $WEResourceGroupName"
 } else {
    ;  $WEActivityLogs = Get-AzActivityLog -StartTime $WEStartTime -EndTime $WEEndTime
-    Write-Host -Object " Subscription-wide activity"
+    Write-Information -Object " Subscription-wide activity"
 }
 ; 
 $WERecentLogs = $WEActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $WEMaxEvents
 
-Write-Host -Object " `nRecent Activity (Last $WEMaxEvents events):"
-Write-Host -Object (" =" * 60)
+Write-Information -Object " `nRecent Activity (Last $WEMaxEvents events):"
+Write-Information -Object (" =" * 60)
 
 foreach ($WELog in $WERecentLogs) {
-    Write-Host -Object " Time: $($WELog.EventTimestamp)"
-    Write-Host -Object " Operation: $($WELog.OperationName.Value)"
-    Write-Host -Object " Status: $($WELog.Status.Value)"
-    Write-Host -Object " Resource: $($WELog.ResourceId.Split('/')[-1])"
-    Write-Host -Object " Caller: $($WELog.Caller)"
-    Write-Host -Object (" -" * 40)
+    Write-Information -Object " Time: $($WELog.EventTimestamp)"
+    Write-Information -Object " Operation: $($WELog.OperationName.Value)"
+    Write-Information -Object " Status: $($WELog.Status.Value)"
+    Write-Information -Object " Resource: $($WELog.ResourceId.Split('/')[-1])"
+    Write-Information -Object " Caller: $($WELog.Caller)"
+    Write-Information -Object (" -" * 40)
 }
 
 

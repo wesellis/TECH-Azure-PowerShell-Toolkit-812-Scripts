@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Appservice Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -101,7 +102,7 @@ Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
 Write-WELog " HTTPS Only: $WEHttpsOnly" " INFO"
 
 ; 
-$WEWebApp = New-AzWebApp `
+$WEWebApp = New-AzWebApp -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEAppName `
     -AppServicePlan $WEPlanName `

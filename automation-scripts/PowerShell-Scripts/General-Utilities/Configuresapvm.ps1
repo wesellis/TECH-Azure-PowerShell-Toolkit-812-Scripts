@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuresapvm
 
@@ -50,6 +50,7 @@ param(
 ; 
 $WEErrorActionPreference = " Stop" ;
 
+[CmdletBinding()]
 function WE-Log
 {
 	[CmdletBinding()]
@@ -58,7 +59,7 @@ param(
 		[string] $message
 	)
 ; 	$message = (Get-Date).ToString() + " : " + $message;
-	Write-Host $message;
+	Write-Information $message;
 	if (-not (Test-Path (" c:" + [char]92 + " sapcd" )))
 	{
 		$nul = mkdir (" c:" + [char]92 + " sapcd" );
@@ -66,6 +67,7 @@ param(
 	$message | Out-File -Append -FilePath (" c:" + [char]92 + " sapcd" + [char]92 + " log.txt" );
 }
 
+[CmdletBinding()]
 function WE-Create-Pool
 {
     [CmdletBinding()]
@@ -85,7 +87,7 @@ param(
         foreach ($lun in $luns)
         {
 	    Log (" Preparing LUN " + $lun);
-            $disk = Get-CimInstance Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
+            $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
             $disk | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false -ErrorAction SilentlyContinue;
             $disks = $disks + Get-PhysicalDisk -UniqueId $disk.UniqueId;
             $count++;
@@ -103,7 +105,7 @@ param(
     {		
        ;  $lun = $luns[0];
 		Log (" Creating volume for disk " + $lun);
-        $disk = Get-CimInstance Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
+        $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
         $partition = $disk | Initialize-Disk -PartitionStyle GPT -ErrorAction SilentlyContinue -PassThru | New-Partition -DriveLetter $path.Substring(0,1) -UseMaximumSize;
 		sleep 10;
 		$partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false;

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Network Security Group Rule Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -33,7 +33,7 @@ param (
     [int]$Priority
 )
 
-Write-Host "Adding security rule to NSG: $NsgName"
+Write-Information "Adding security rule to NSG: $NsgName"
 
 $Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
 
@@ -50,4 +50,4 @@ Add-AzNetworkSecurityRuleConfig `
     -Direction Inbound
 
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
-Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName"
+Write-Information "Security rule '$RuleName' added successfully to NSG: $NsgName"

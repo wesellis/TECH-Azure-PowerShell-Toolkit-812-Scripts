@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Servicebusingestion
 
@@ -45,7 +45,7 @@ $connection = Get-AutomationConnection -Name $connectionAssetName
 
 Write-Verbose " Get connection asset: $WEConnectionAssetName" -Verbose
 $WEConn = Get-AutomationConnection -Name $WEConnectionAssetName
-if ($WEConn -eq $null)
+if ($null -eq $WEConn)
     {
         throw " Could not retrieve connection asset: $WEConnectionAssetName. Assure that this asset exists in the Automation account."
     }
@@ -54,7 +54,7 @@ $WECertificateAssetName = $WEConn.CertificateAssetName
 Write-Verbose " Getting the certificate: $WECertificateAssetName" -Verbose
 
 $WEAzureCert = Get-AutomationCertificate -Name $WECertificateAssetName
-if ($WEAzureCert -eq $null)
+if ($null -eq $WEAzureCert)
     {
         throw " Could not retrieve certificate asset: $WECertificateAssetName. Assure that this asset exists in the Automation account."
     }
@@ -90,7 +90,8 @@ $WESelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $WEConn.Subscri
 
 
 
- Function CalculateFreeSpacePercentage{
+ [CmdletBinding()]
+Function CalculateFreeSpacePercentage{
  [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param(
@@ -105,10 +106,11 @@ $percentage = (($WEMaxSizeMB - $WECurrentSizeMB)/$WEMaxSizeMB)*100 #calculate pe
 Return ($percentage)
 }
 
-Function Get-SbNameSpace
+[CmdletBinding()]
+Function Get-SbNameSpace -ErrorAction Stop
 {
-    $sbNamespace = Get-AzureRmServiceBusNamespace
-    if($sbNamespace -ne $null)
+    $sbNamespace = Get-AzureRmServiceBusNamespace -ErrorAction Stop
+    if($null -ne $sbNamespace)
         {
             #" Found $($sbNamespace.Count) service bus namespace(s)."
         }
@@ -120,7 +122,8 @@ Function Get-SbNameSpace
 return $sbNamespace
 }
 
-Function Publish-SbQueueMetrics
+[CmdletBinding()]
+function Publish-SbQueueMetrics
 {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -152,7 +155,7 @@ param([parameter(mandatory=$true)]
         catch
         {Write-Output (" Error in getting queue information for namespace:  " + $sb.name + " `n" )}
         
-        if($WESBqueue -ne $null) #We have Queues, so we can continue
+        if($null -ne $WESBqueue) #We have Queues, so we can continue
         {
             #clear table
             $queueTable = @()
@@ -193,7 +196,7 @@ param([parameter(mandatory=$true)]
                     }
                     
 
-			       ;  $sx = New-Object PSObject -Property @{
+			       ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
 			            #SubscriptionName = $subscriptionName;
                         ServiceBusName = $sb.Name;
@@ -262,7 +265,8 @@ param([parameter(mandatory=$true)]
     " ----------------- End Queue section -----------------`n"
 }
 
-Function Publish-SbTopicMetrics{
+[CmdletBinding()]
+function Publish-SbTopicMetrics{
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param([parameter(mandatory=$true)]
@@ -274,7 +278,7 @@ param([parameter(mandatory=$true)]
 
     " ----------------- Start Topic section -----------------"
 
-	if ($sbNamespace -ne $null)
+	if ($null -ne $sbNamespace)
     {
     " Processing Topics... `n"
 
@@ -299,7 +303,7 @@ param([parameter(mandatory=$true)]
             " Found $($topicList.name.Count) topic(s).`n"
             foreach ($topic in $topicList)
 		    {
-				if ($topicList -ne $null)
+				if ($null -ne $topicList)
 				{
 
                     #check if the topic message size (SizeInBytes) exceeds the threshold of MaxSizeInMegabytes
@@ -333,7 +337,7 @@ param([parameter(mandatory=$true)]
 			            
                         
                         #Construct the ingestion table
-                       ;  $sx = New-Object PSObject -Property @{
+                       ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                         TopicName = $topic.name;
                         DefaultMessageTimeToLive = $topic.DefaultMessageTimeToLive;
@@ -377,7 +381,8 @@ param([parameter(mandatory=$true)]
     " ----------------- End Topic section -----------------`n"
 }
 
-Function Publish-SbTopicSubscriptions{
+[CmdletBinding()]
+function Publish-SbTopicSubscriptions{
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param([parameter(mandatory=$true)]
@@ -391,7 +396,7 @@ param([parameter(mandatory=$true)]
 
     " Processing Topic Subscriptions... `n"
 
-    if($sbNamespace -ne $null)
+    if($null -ne $sbNamespace)
     {
         #" Processing $($sbNamespace.Count) service bus namespace(s) `n"
 
@@ -431,7 +436,7 @@ param([parameter(mandatory=$true)]
                             " Processing Subscription: `" $($topicSubscription.Name)`" for Topic: `" $($topic.Name)`" `n"
 
                              #Construct the ingestion table
-                             ;  $sx = New-Object PSObject -Property @{
+                             ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
                                 TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                                 ServiceBusName=$sb.Name;
                                 TopicName = $topic.Name;
@@ -475,7 +480,7 @@ $sbNameSpace = $null
 $topic = $null; 
 $sx = $null
 ; 
-$sbNameSpace = Get-SbNameSpace
+$sbNameSpace = Get-SbNameSpace -ErrorAction Stop
 Publish-SbQueueMetrics -sbNamespace $sbNameSpace
 Publish-SbTopicMetrics -sbNamespace $sbNameSpace
 Publish-SbTopicSubscriptions -sbNamespace $sbNameSpace

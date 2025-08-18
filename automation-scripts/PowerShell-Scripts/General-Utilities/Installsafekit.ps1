@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installsafekit
 
@@ -44,6 +44,7 @@ param(
 	[string] $WEPasswd
 )
 
+[CmdletBinding()]
 function WE-Log {
 	[CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -87,12 +88,12 @@ Log " Applying firewall rules"
 & \safekit\private\bin\firewallcfg.cmd add
 
 Log " Starting CA helper service" ; 
-$cwd = Get-Location
+$cwd = Get-Location -ErrorAction Stop
 try{
 	cd /safekit/web/bin
 	& ./startcaserv.cmd " $WEPasswd"
 }finally{
-	set-location $cwd
+	set-location -ErrorAction Stop $cwd
 }	
 
 }

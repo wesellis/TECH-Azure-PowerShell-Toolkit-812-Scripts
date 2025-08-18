@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Unsetenvvar
 
@@ -47,9 +47,9 @@ param(
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 
-write-host " Removing variable $WEVariable"
+Write-Information " Removing variable $WEVariable"
 [Environment]::SetEnvironmentVariable(" $WEVariable" , $null, " Machine" )
-write-host " Removing variable $WEVariable complete"
+Write-Information " Removing variable $WEVariable complete"
 
 
 } catch {

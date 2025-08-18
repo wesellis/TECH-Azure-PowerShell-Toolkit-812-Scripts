@@ -1,4 +1,4 @@
-# Azure Defender for Cloud Automation Tool
+﻿# Azure Defender for Cloud Automation Tool
 # Professional Azure security automation script for comprehensive cloud protection
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enhanced for enterprise security environments
@@ -93,7 +93,7 @@ try {
                 }
                 
                 Invoke-AzureOperation -Operation {
-                    Set-AzSecurityContact @contactParams
+                    Set-AzSecurityContact -ErrorAction Stop @contactParams
                 } -OperationName "Configure Security Contacts"
                 
                 Write-Log "✓ Security contact configured: $EmailContact" -Level SUCCESS
@@ -113,7 +113,7 @@ try {
             Write-Log "📊 Retrieving security score and posture..." -Level INFO
             
             $secureScore = Invoke-AzureOperation -Operation {
-                Get-AzSecurityScore
+                Get-AzSecurityScore -ErrorAction Stop
             } -OperationName "Get Security Score"
             
             $results = @{
@@ -127,7 +127,7 @@ try {
             Write-Log "📋 Retrieving security recommendations..." -Level INFO
             
             $recommendations = Invoke-AzureOperation -Operation {
-                Get-AzSecurityTask
+                Get-AzSecurityTask -ErrorAction Stop
             } -OperationName "Get Security Recommendations"
             
             $highPriorityRecs = $recommendations | Where-Object { $_.SecurityTaskParameters.severityLevel -eq "High" }
@@ -144,7 +144,7 @@ try {
             Write-Log "🚨 Retrieving security alerts..." -Level INFO
             
             $alerts = Invoke-AzureOperation -Operation {
-                Get-AzSecurityAlert
+                Get-AzSecurityAlert -ErrorAction Stop
             } -OperationName "Get Security Alerts"
             
             # Filter by severity if specified
@@ -216,7 +216,7 @@ try {
         
         # Get current security state
         $currentPricings = Invoke-AzureOperation -Operation {
-            Get-AzSecurityPricing
+            Get-AzSecurityPricing -ErrorAction Stop
         } -OperationName "Get All Security Pricings"
         
         $enabledPlans = $currentPricings | Where-Object { $_.PricingTier -eq "Standard" }
@@ -227,50 +227,50 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName "Validation" -Status "Validating security configuration"
     
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              AZURE DEFENDER CONFIGURATION SUCCESSFUL" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "🛡️ Security Operation: $Action" -ForegroundColor Cyan
-    Write-Host "   • Subscription: $(if($SubscriptionId){$SubscriptionId}else{'Current'})" -ForegroundColor White
-    Write-Host "   • Pricing Tier: $PricingTier" -ForegroundColor White
-    Write-Host "   • Protected Services: $($DefenderPlans.Count)" -ForegroundColor White
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              AZURE DEFENDER CONFIGURATION SUCCESSFUL"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "🛡️ Security Operation: $Action"
+    Write-Information "   • Subscription: $(if($SubscriptionId){$SubscriptionId}else{'Current'})"
+    Write-Information "   • Pricing Tier: $PricingTier"
+    Write-Information "   • Protected Services: $($DefenderPlans.Count)"
     
     if ($results) {
-        Write-Host ""
-        Write-Host "📊 Results Summary:" -ForegroundColor Cyan
+        Write-Information ""
+        Write-Information "📊 Results Summary:"
         if ($results.SecurityScore) {
-            Write-Host "   • Security Score: $($results.SecurityScore.SecureScorePercentage)%" -ForegroundColor Green
+            Write-Information "   • Security Score: $($results.SecurityScore.SecureScorePercentage)%"
         }
         if ($results.TotalRecommendations) {
-            Write-Host "   • Total Recommendations: $($results.TotalRecommendations)" -ForegroundColor White
-            Write-Host "   • High Priority: $($results.HighPriorityRecommendations)" -ForegroundColor Yellow
+            Write-Information "   • Total Recommendations: $($results.TotalRecommendations)"
+            Write-Information "   • High Priority: $($results.HighPriorityRecommendations)"
         }
         if ($results.TotalAlerts) {
-            Write-Host "   • Security Alerts: $($results.TotalAlerts)" -ForegroundColor White
+            Write-Information "   • Security Alerts: $($results.TotalAlerts)"
         }
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Review recommendations: Get-AzSecurityTask" -ForegroundColor White
-    Write-Host "   • Monitor alerts: Get-AzSecurityAlert" -ForegroundColor White
-    Write-Host "   • Check compliance: Get-AzSecurityCompliance" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Review recommendations: Get-AzSecurityTask"
+    Write-Information "   • Monitor alerts: Get-AzSecurityAlert"
+    Write-Information "   • Check compliance: Get-AzSecurityCompliance"
+    Write-Information ""
 
     Write-Log "✅ Azure Defender configuration completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ Azure Defender configuration failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify Security Center permissions" -ForegroundColor White
-    Write-Host "   • Check subscription access" -ForegroundColor White
-    Write-Host "   • Ensure Az.Security module is installed" -ForegroundColor White
-    Write-Host "   • Validate pricing tier permissions" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify Security Center permissions"
+    Write-Information "   • Check subscription access"
+    Write-Information "   • Ensure Az.Security module is installed"
+    Write-Information "   • Validate pricing tier permissions"
+    Write-Information ""
     
     exit 1
 }

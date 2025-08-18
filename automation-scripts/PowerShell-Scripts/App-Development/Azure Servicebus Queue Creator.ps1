@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Servicebus Queue Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -94,7 +95,7 @@ param(
 
 Write-WELog " Creating Service Bus queue: $WEQueueName" " INFO"
 ; 
-$WEQueue = New-AzServiceBusQueue `
+$WEQueue = New-AzServiceBusQueue -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -NamespaceName $WENamespaceName `
     -Name $WEQueueName `

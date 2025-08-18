@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Diskconfig
 
@@ -47,6 +47,7 @@ param(
 )
 ; 
 $WEErrorActionPreference = " Stop" ;
+[CmdletBinding()]
 function WE-Log
 {
     [CmdletBinding()]
@@ -55,7 +56,7 @@ param(
         [string] $message
     )
    ;  $message = (Get-Date).ToString() + " : " + $message;
-    Write-Host $message;
+    Write-Information $message;
     if (-not (Test-Path (" c:" + [char]92 + " sapcd" )))
     {
         $nul = mkdir (" c:" + [char]92 + " sapcd" );
@@ -91,7 +92,7 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
         if (-not ($pool))
         {
             Log " Creating Pool" ;
-            $disks = Get-CimInstance Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -In $lunParts | % { Get-PhysicalDisk | where DeviceId -eq $_.Index }
+            $disks = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -In $lunParts | % { Get-PhysicalDisk -ErrorAction Stop | where DeviceId -eq $_.Index }
            ;  $pool = New-StoragePool -FriendlyName $poolname -StorageSubSystemUniqueId $subsystem.UniqueId -PhysicalDisks $disks -ResiliencySettingNameDefault Simple -ProvisioningTypeDefault Fixed;
         }
         
@@ -121,12 +122,12 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
             }
             else
             {
-                $unallocatedSize = $disk.Size - ($disk | Get-Disk | Get-Partition | Measure-Object -Property Size -Sum).Sum
+                $unallocatedSize = $disk.Size - ($disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Measure-Object -Property Size -Sum).Sum
                 [UInt64] $sizeToUse = ($unallocatedSize / 100) * ([int]$size)
                 $args = $args + @{" Size" =$sizeToUse}
             }
 
-           ;  $volume = $disk | Get-Disk | Get-Partition | Get-Volume | where FileSystemLabel -eq $name
+           ;  $volume = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name
             if (-not $volume)
             {
                ;  $partition = New-Partition -DiskId $disk.UniqueId @args
@@ -135,8 +136,8 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
 
             if ($path.Length -ne 1)
             {
-                $partition = $disk | Get-Disk | Get-Partition | Get-Volume | where FileSystemLabel -eq $name | Get-Partition
-                $ddisk = $disk | Get-Disk
+                $partition = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name | Get-Partition -ErrorAction Stop
+                $ddisk = $disk | Get-Disk -ErrorAction Stop
 
                 $diskMounted = $false
                 foreach ($accessPath in $partition.AccessPaths)
@@ -163,7 +164,7 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
     {		
        ;  $lun = $lunParts[0];
         Log (" Creating volume for disk " + $lun);
-        $disk = Get-CimInstance Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
+        $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
         Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId -ErrorAction SilentlyContinue
 
         for ($partIndex = 0; $partIndex -lt $pathsPartSplit.Count; $partIndex++)
@@ -189,7 +190,7 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
                 $args = $args + @{" Size" =$sizeToUse}
             }
 
-           ;  $volume = $disk | Get-Disk | Get-Partition | Get-Volume | where FileSystemLabel -eq $name
+           ;  $volume = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name
             if (-not $volume)
             {
                ;  $partition = New-Partition -DiskId $disk.UniqueId @args
@@ -198,8 +199,8 @@ for ($index = 0; $index -lt $lunsSplit.Count; $index++)
 
             if ($path.Length -ne 1)
             {
-                $partition = $disk | Get-Disk | Get-Partition | Get-Volume | where FileSystemLabel -eq $name | Get-Partition
-                $ddisk = $disk | Get-Disk
+                $partition = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name | Get-Partition -ErrorAction Stop
+                $ddisk = $disk | Get-Disk -ErrorAction Stop
 
                 $diskMounted = $false
                 foreach ($accessPath in $partition.AccessPaths)

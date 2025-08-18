@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Vmmanalytics
 
@@ -35,14 +35,14 @@
 
 
 $vmmServers = (Get-AutomationVariable -Name 'vmmServers').Split("," )
-$lastRunTimestamp = Get-Date (Get-AutomationVariable -Name 'lastRunTime')
-$currentTimestamp = Get-Date
+$lastRunTimestamp = Get-Date -ErrorAction Stop (Get-AutomationVariable -Name 'lastRunTime')
+$currentTimestamp = Get-Date -ErrorAction Stop
 $workSpaceId= Get-AutomationVariable -Name 'workspaceId'
 $sharedKey = Get-AutomationVariable -Name 'workspaceKey'
 
 
 
-Function Build-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
     $xHeaders = " x-ms-date:" + $date
     $stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
@@ -50,7 +50,7 @@ Function Build-Signature ($customerId, $sharedKey, $date, $contentLength, $metho
     $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
     $keyBytes = [Convert]::FromBase64String($sharedKey)
 
-    $sha256 = New-Object System.Security.Cryptography.HMACSHA256
+    $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
     $sha256.Key = $keyBytes
     $calculatedHash = $sha256.ComputeHash($bytesToHash)
     $encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -105,7 +105,7 @@ foreach ($server in $vmmServers)
        ;  $vmmJobsDataForOMS = @();
         foreach ($job in $jobsData) {
 
-            $vmmJobsDataForOMS = $vmmJobsDataForOMS + New-Object PSObject -Property @{
+            $vmmJobsDataForOMS = $vmmJobsDataForOMS + New-Object -ErrorAction Stop PSObject -Property @{
                 JobName = $job.CmdletName;
                 Name = $job.Name;
                 StartTime = $job.StartTime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" );

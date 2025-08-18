@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Webandgwfarmadd Postconfig1.1
 
@@ -53,7 +53,7 @@ param(
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
 $username = $WEDomainNetbios + " \" + $WEUsername
-$cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
+$cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
 configuration RDWebAccessdeployment
 {
@@ -216,7 +216,7 @@ Start-DscConfiguration -Wait -Force -Path .\RDGatewaydeployment -Verbose
 
 Write-WELog " Username : $($username),   Password: $($password)" " INFO"
 ; 
-$webServernameArray = New-Object System.Collections.ArrayList
+$webServernameArray = New-Object -ErrorAction Stop System.Collections.ArrayList
 
 for ($i = 0; $i -le $numberofwebServers; $i++)
 { 
@@ -237,27 +237,27 @@ Write-WELog " web server Array value $($webServernameArray)" " INFO"
 
 
 [int]$keylen = 64
-       $buff = new-object " System.Byte[]" $keylen
-      ;  $rnd = new-object System.Security.Cryptography.RNGCryptoServiceProvider
+       $buff = new-object -ErrorAction Stop " System.Byte[]" $keylen
+      ;  $rnd = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
        $rnd.GetBytes($buff)
       ;  $result =""
        for($i=0; $i -lt $keylen; $i++)  {
              $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
        $validationkey64 = $result
-       # Write-Host $validationkey64
+       # Write-Information $validationkey64
        # end of Validation Key code
 
        $keylen = 24
-       $buff1 = new-object " System.Byte[]" $keylen
-      ;  $rnd1 = new-object System.Security.Cryptography.RNGCryptoServiceProvider
+       $buff1 = new-object -ErrorAction Stop " System.Byte[]" $keylen
+      ;  $rnd1 = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
        $rnd1.GetBytes($buff1)
       ;  $result =""
        for($i=0; $i -lt $keylen; $i++)  {
              $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
        $decryptionKey24 = $result
-       # Write-Host $decryptionKey24
+       # Write-Information $decryptionKey24
 
 
 
@@ -269,7 +269,7 @@ foreach ($item in $webServernameArray)
     $session = New-PSSession -ComputerName $WEWebServer -Credential $cred 
     }
     catch{
-    Write-Host $WEError
+    Write-Information $WEError
     }
 
 
@@ -304,7 +304,7 @@ if($WEValidationheck -eq $true)
         Write-WELog " editing machine config file : $($machineConfig) on server $($localhost) " " INFO"
         
         try{
-        $xml = [xml](get-content $machineConfig)
+        $xml = [xml](get-content -ErrorAction Stop $machineConfig)
         $xml.Save($machineConfig + " _" )
         
         $root = $xml.get_DocumentElement()
@@ -320,7 +320,7 @@ if($WEValidationheck -eq $true)
         
         }
         Catch{
-        Write-Host $WEError
+        Write-Information $WEError
         }
         
         } # end of If test-path

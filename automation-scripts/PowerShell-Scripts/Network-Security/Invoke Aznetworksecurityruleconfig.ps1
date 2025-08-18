@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Aznetworksecurityruleconfig
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkSecurityRuleConfig {
 }
 
@@ -41,6 +42,7 @@ function WE-Invoke-AzNetworkSecurityRuleConfig {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzNetworkSecurityRuleConfig {
 
     #Region func New-AzNetworkSecurityRuleConfig; 
@@ -58,7 +60,7 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationPortRange                = '3389'
     DestinationApplicationSecurityGroup = $WEASG
 }; 
-$rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+$rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 
 
 }

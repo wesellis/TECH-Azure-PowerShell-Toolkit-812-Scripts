@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Applicationgateway Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -113,7 +114,7 @@ Write-WELog " Using Subnet: $WESubnetName" " INFO"
 
 
 $WEPublicIpName = " $WEGatewayName-pip"
-$WEPublicIp = New-AzPublicIpAddress `
+$WEPublicIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Location $WELocation `
     -Name $WEPublicIpName `
@@ -123,40 +124,40 @@ $WEPublicIp = New-AzPublicIpAddress `
 Write-WELog " Public IP created: $WEPublicIpName" " INFO"
 
 
-$WEGatewayIpConfig = New-AzApplicationGatewayIPConfiguration `
+$WEGatewayIpConfig = New-AzApplicationGatewayIPConfiguration -ErrorAction Stop `
     -Name " gatewayIP01" `
     -Subnet $WESubnet
 
 
-$WEFrontendIpConfig = New-AzApplicationGatewayFrontendIPConfig `
+$WEFrontendIpConfig = New-AzApplicationGatewayFrontendIPConfig -ErrorAction Stop `
     -Name " frontendIP01" `
     -PublicIPAddress $WEPublicIp
 
 
-$WEFrontendPort = New-AzApplicationGatewayFrontendPort `
+$WEFrontendPort = New-AzApplicationGatewayFrontendPort -ErrorAction Stop `
     -Name " frontendPort01" `
     -Port 80
 
 
-$WEBackendPool = New-AzApplicationGatewayBackendAddressPool `
+$WEBackendPool = New-AzApplicationGatewayBackendAddressPool -ErrorAction Stop `
     -Name " backendPool01"
 
 
-$WEBackendHttpSettings = New-AzApplicationGatewayBackendHttpSetting `
+$WEBackendHttpSettings = New-AzApplicationGatewayBackendHttpSetting -ErrorAction Stop `
     -Name " backendHttpSettings01" `
     -Port 80 `
     -Protocol Http `
     -CookieBasedAffinity Disabled
 
 
-$WEHttpListener = New-AzApplicationGatewayHttpListener `
+$WEHttpListener = New-AzApplicationGatewayHttpListener -ErrorAction Stop `
     -Name " httpListener01" `
     -Protocol Http `
     -FrontendIPConfiguration $WEFrontendIpConfig `
     -FrontendPort $WEFrontendPort
 
 
-$WERoutingRule = New-AzApplicationGatewayRequestRoutingRule `
+$WERoutingRule = New-AzApplicationGatewayRequestRoutingRule -ErrorAction Stop `
     -Name " routingRule01" `
     -RuleType Basic `
     -HttpListener $WEHttpListener `
@@ -164,14 +165,14 @@ $WERoutingRule = New-AzApplicationGatewayRequestRoutingRule `
     -BackendHttpSettings $WEBackendHttpSettings
 
 ; 
-$WESku = New-AzApplicationGatewaySku `
+$WESku = New-AzApplicationGatewaySku -ErrorAction Stop `
     -Name $WESkuName `
     -Tier $WETier `
     -Capacity $WECapacity
 
 
 Write-WELog " `nCreating Application Gateway (this may take 10-15 minutes)..." " INFO" ; 
-$WEAppGateway = New-AzApplicationGateway `
+$WEAppGateway = New-AzApplicationGateway -ErrorAction Stop `
     -Name $WEGatewayName `
     -ResourceGroupName $WEResourceGroupName `
     -Location $WELocation `

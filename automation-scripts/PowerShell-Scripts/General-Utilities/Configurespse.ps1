@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configurespse
 
@@ -74,19 +74,19 @@ param(
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
     
     # Init
-    [String] $WEInterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content env:computername
+    [String] $WEInterfaceAlias = (Get-NetAdapter -ErrorAction Stop | Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
     [String] $WEDomainLDAPPath = " DC=$($WEDomainFQDN.Split(" ." )[0]),DC=$($WEDomainFQDN.Split(" ." )[1])"
     [String] $WEAdditionalUsersPath = " OU=AdditionalUsers,DC={0},DC={1}" -f $WEDomainFQDN.Split('.')[0], $WEDomainFQDN.Split('.')[1]
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)" , $WESPSvcCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)" , $WESPAppPoolCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)" , $WESPADDirSyncCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)" , $WESPSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)" , $WESPAppPoolCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)" , $WESPADDirSyncCreds.Password)
     
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
@@ -427,7 +427,7 @@ param(
                         Write-Verbose -Verbose -Message " Finished installation of SharePoint build '$WESharePointBuildLabel'. needReboot: $needReboot"
 
                         if ($true -eq $needReboot) {
-                            $global:DSCMachineStatus = 1
+                            $script:DSCMachineStatus = 1
                         }
                     }
                     TestScript = {
@@ -484,7 +484,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                # if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -498,7 +498,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 }
                 else {
@@ -834,7 +834,7 @@ param(
                 $db = " master"
                ;  $retry = $true
                 while ($retry) {
-                   ;  $sqlConnection = New-Object System.Data.SqlClient.SqlConnection " Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
+                   ;  $sqlConnection = New-Object -ErrorAction Stop System.Data.SqlClient.SqlConnection " Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
                     try {
                         $sqlConnection.Open()
                         Write-Verbose -Verbose -Message " Connection to SQL Server $server succeeded"
@@ -1088,7 +1088,7 @@ param(
         #     }
         #     SetScript            = {
         #         New-Item -Path HKLM:\SOFTWARE\DscScriptExecution\flag_ForceRebootBeforeCreatingSPTrust -Force
-        #         $global:DSCMachineStatus = 1
+        #         $script:DSCMachineStatus = 1
         #     }
         #     GetScript            = { }
         #     PsDscRunAsCredential = $WEDomainAdminCredsQualified
@@ -1131,12 +1131,12 @@ param(
                 $fileName = $rsaCert.key.UniqueName
                 $path = " $env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
                 $permissions = Get-Acl -Path $path
-                $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
+                $access_rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
                 $permissions.AddAccessRule($access_rule)
                 Set-Acl -Path $path -AclObject $permissions
 
                 # Set farm properties
-                $f = Get-SPFarm
+                $f = Get-SPFarm -ErrorAction Stop
                 $f.Farm.Properties['SP-NonceCookieCertificateThumbprint'] = $cert.Thumbprint
                 $f.Farm.Properties['SP-NonceCookieHMACSecretKey'] = " randomString$domainAdminUserName"
                 $f.Farm.Update()
@@ -1150,7 +1150,7 @@ param(
             {
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 # Import-Module SharePointServer | Out-Null
-                # $f = Get-SPFarm
+                # $f = Get-SPFarm -ErrorAction Stop
                 # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
                 if ((Get-ChildItem -Path " cert:\LocalMachine\My\" | Where-Object { $_.Subject -eq " CN=SharePoint Cookie Cert" }) -eq $null) {
                     return $false
@@ -1231,7 +1231,7 @@ param(
                 try {
                     Add-Type -AssemblyName " Yvand.LDAPCPSE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=80be731bc1a1a740"
                     $config = [Yvand.LdapClaimsProvider.LDAPCPSE]::GetConfiguration()
-                    if ($config -eq $null) {
+                    if ($null -eq $config) {
                         return $false
                     }
                     else {
@@ -1469,7 +1469,7 @@ param(
         # - In User Profile Service:
         #    - Create a synchronization connection that uses the authentication type " Trusted Claims Provider Authentication"
         #    - Edit profile property " Claim User Identifier" to remove default mapping, and readd one that uses the LDAP attribute " userPrincipalName"
-        # - In the trust: Associate the claims provider: $trust = Get-SPTrustedIdentityTokenIssuer " contoso.local" ; $trust.ClaimProviderName = " contoso.local" ; $trust.Update();
+        # - In the trust: Associate the claims provider: $trust = Get-SPTrustedIdentityTokenIssuer -ErrorAction Stop " contoso.local" ; $trust.ClaimProviderName = " contoso.local" ; $trust.Update();
         Script ConfigureUPAClaimProvider {
             SetScript            = 
             {
@@ -1502,11 +1502,11 @@ param(
 
                     # Running this set below would set SPTrustedBackedByUPAClaimProvider as the active claims provider for this trust
                     # But it wouldn't work since properties " SPS-ClaimProviderID" and " SPS-ClaimProviderType" of trusted profiles are not set
-                    # Set-SPTrustedIdentityTokenIssuer $trust -ClaimProvider $claimsProvider -IsOpenIDConnect
+                    # Set-SPTrustedIdentityTokenIssuer -ErrorAction Stop $trust -ClaimProvider $claimsProvider -IsOpenIDConnect
 
                     # Sets the property IsPeoplePickerSearchable on specific profile properties
                     $site = Get-SPSite -Identity $spSiteUrl -ErrorAction SilentlyContinue
-                    $context = Get-SPServiceContext $site -ErrorAction SilentlyContinue
+                    $context = Get-SPServiceContext -ErrorAction Stop $site -ErrorAction SilentlyContinue
                     $psm = [Microsoft.Office.Server.UserProfiles.ProfileSubTypeManager]::Get($context)
                     $ps = $psm.GetProfileSubtype([Microsoft.Office.Server.UserProfiles.ProfileSubtypeManager]::GetDefaultProfileName([Microsoft.Office.Server.UserProfiles.ProfileType]::User))
                     $properties = $ps.Properties
@@ -1728,7 +1728,7 @@ param(
                 $certName = " HighTrustAddins.cer"
                 $certFullPath = [System.IO.Path]::Combine($destinationPath, $certName)
                 Write-Verbose -Verbose -Message " Exporting public key of certificate with subject $certSubject to $certFullPath..."
-                New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
+                New-Item -ErrorAction Stop $destinationPath -Type directory -ErrorAction SilentlyContinue
                 $signingCert = Get-ChildItem -Path " cert:\LocalMachine\My\" -DnsName " $certSubject"
                 $signingCert | Export-Certificate -FilePath $certFullPath
                 Write-Verbose -Verbose -Message " Public key of certificate with subject $certSubject successfully exported to $certFullPath."
@@ -1808,8 +1808,8 @@ param(
 
                     try {
                         $site = Get-SPSite -Identity $uri -ErrorAction SilentlyContinue
-                        $context = Get-SPServiceContext $site -ErrorAction SilentlyContinue
-                       ;  $upm = New-Object Microsoft.Office.Server.UserProfiles.UserProfileManager($context)
+                        $context = Get-SPServiceContext -ErrorAction Stop $site -ErrorAction SilentlyContinue
+                       ;  $upm = New-Object -ErrorAction Stop Microsoft.Office.Server.UserProfiles.UserProfileManager($context)
                         Write-Verbose -Verbose -Message " Got UserProfileManager"
                     }
                     catch {
@@ -1996,7 +1996,8 @@ param(
     }
 }
 
-function WE-Get-LatestGitHubRelease {
+[CmdletBinding()]
+function WE-Get-LatestGitHubRelease -ErrorAction Stop {
     [OutputType([string])]
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -2015,7 +2016,8 @@ param(
     return $assetUrl
 }
 
-function WE-Get-NetBIOSName {
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop {
     [OutputType([string])]
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"

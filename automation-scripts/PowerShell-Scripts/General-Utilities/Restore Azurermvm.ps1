@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Restore Azurermvm
 
@@ -115,8 +115,8 @@ $resourceGroupVMjsonPath = " $env:TEMP\$WEResourceGroupName.resourceGroupVMs.jso
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
 
@@ -124,7 +124,8 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
 <###############################
  Get Storage Context function
 
-function WE-Get-StorageObject 
+[CmdletBinding()]
+function WE-Get-StorageObject -ErrorAction Stop 
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI) 
@@ -139,13 +140,14 @@ param($resourceGroupName, $srcURI)
     
     return $WEStorageContext
 
-} # end of Get-StorageObject function
+} # end of Get-StorageObject -ErrorAction Stop function
 
 
 
 <###############################
   Copy blob function
 
+[CmdletBinding()]
 function copy-azureBlob 
 {  [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -215,15 +217,15 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
 
 
-write-host " Enter credentials for your Azure Subscription..." -F Yellow
+Write-Information " Enter credentials for your Azure Subscription..." -F Yellow
 $login= Connect-AzureRmAccount -EnvironmentName $WEEnvironment
 $loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription
+$sub = Get-AzureRmSubscription -ErrorAction Stop
 $WESubscriptionId = $sub.Id
 
 
 if($sub.count -gt 1) {
-    $WESubscriptionId = (Get-AzureRmSubscription | select * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
+    $WESubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | select * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId| Out-Null
     $sub = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
     $WESubscriptionId = $sub.Id
@@ -241,7 +243,7 @@ if(! $WESubscriptionId)
 write-verbose " Logged into $($sub.Name) with subscriptionID $WESubscriptionId as $loginID" -verbose
 
 
-if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $resourceGroupName)) 
+if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $resourceGroupName)) 
 {
    write-warning " The provided resource group $resourceGroupName could not be found. Exiting the script."
    break
@@ -311,7 +313,7 @@ foreach($srcVM in $resourceGroupVMs)
     # check on copy status
     do{
        $rtn = $null
-       $rtn = Get-AzureStorageBlob -Context $WEOSstorageContext -container $WEOScontainerName -Blob $WEOSblobName | Get-AzureStorageBlobCopyState
+       $rtn = Get-AzureStorageBlob -Context $WEOSstorageContext -container $WEOScontainerName -Blob $WEOSblobName | Get-AzureStorageBlobCopyState -ErrorAction Stop
        $rtn | select Source, Status, BytesCopied, TotalBytes | fl
        if($rtn.status  -ne 'Success'){
          write-verbose " Waiting for blob copy $WEOSblobName to complete" -verbose
@@ -381,7 +383,7 @@ foreach($srcVM in $resourceGroupVMs)
             do
             { 
              ;  $drtn = $null
-             ;  $drtn = Get-AzureStorageBlob -Context $diskStorageContext -container $diskContainerName -Blob $diskBlobName | Get-AzureStorageBlobCopyState
+             ;  $drtn = Get-AzureStorageBlob -Context $diskStorageContext -container $diskContainerName -Blob $diskBlobName | Get-AzureStorageBlobCopyState -ErrorAction Stop
               $drtn| select Source, Status, BytesCopied, TotalBytes|fl
               if($rtn.status  -ne 'Success')
               {

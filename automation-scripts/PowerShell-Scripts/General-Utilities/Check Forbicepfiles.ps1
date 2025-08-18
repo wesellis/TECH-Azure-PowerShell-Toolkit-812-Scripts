@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Check Forbicepfiles
 
@@ -65,15 +65,15 @@ $prereqBicepFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameBicep" ;
 $isBicepPrereqFileFound = Test-Path $prereqBicepFullPath
 
 Write-Output " Bicep files:"
-Write-Host $bicepFullPath
-Write-Host $prereqBicepFullPath
+Write-Information $bicepFullPath
+Write-Information $prereqBicepFullPath
 Write-Output " ************************"
 
 if($isBicepFileFound -or $isBicepPrereqFileFound){
     # Install Bicep
     & " $ttKFolder\ci-scripts\Install-Bicep.ps1"
 
-    Get-Command bicep.exe
+    Get-Command -ErrorAction Stop bicep.exe
 
     if($isBicepFileFound){
         # build main.bicep to azuredeploy.json

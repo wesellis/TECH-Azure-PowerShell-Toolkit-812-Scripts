@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Run Firstlogon Tasks
 
@@ -53,7 +53,7 @@ if (!(Test-Path -Path $firstLogonTasksFile -PathType Leaf)) {
 }
 
 Write-WELog " === Executing tasks from $firstLogonTasksFile" " INFO"
-$firstLogonTasks = Get-Content $firstLogonTasksFile -Raw | ConvertFrom-Json
+$firstLogonTasks = Get-Content -ErrorAction Stop $firstLogonTasksFile -Raw | ConvertFrom-Json
 foreach ($firstLogonTask in $firstLogonTasks) {
     $taskName = $firstLogonTask.Task
    ;  $taskScript = " $firstLogonTasksDir\$taskName.ps1"
@@ -75,8 +75,8 @@ foreach ($firstLogonTask in $firstLogonTasks) {
     catch {
         # Log but keep running other tasks
         Write-WELog " === [WARN] Task $taskName failed" " INFO"
-        Write-Host -Object $_
-        Write-Host -Object $_.ScriptStackTrace
+        Write-Information -Object $_
+        Write-Information -Object $_.ScriptStackTrace
     }
 }
 

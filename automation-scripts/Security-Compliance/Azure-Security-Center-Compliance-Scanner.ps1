@@ -1,4 +1,4 @@
-# Azure Security Center Compliance Scanner
+﻿# Azure Security Center Compliance Scanner
 # Professional security compliance assessment tool
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Comprehensive security posture analysis
@@ -40,13 +40,13 @@ try {
     Write-ProgressStep -StepNumber 2 -TotalSteps 5 -StepName "Compliance Assessment" -Status "Gathering compliance data"
     
     # Get security assessments
-    $assessments = Get-AzSecurityAssessment
+    $assessments = Get-AzSecurityAssessment -ErrorAction Stop
     
     # Get policy compliance
-    $policyStates = Get-AzPolicyState
+    $policyStates = Get-AzPolicyState -ErrorAction Stop
     
     # Get security score
-    $securityScore = Get-AzSecurityScore
+    $securityScore = Get-AzSecurityScore -ErrorAction Stop
 
     Write-ProgressStep -StepNumber 3 -TotalSteps 5 -StepName "Analysis" -Status "Analyzing compliance status"
     
@@ -92,27 +92,27 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 5 -StepName "Summary" -Status "Displaying results"
 
     # Display summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              SECURITY COMPLIANCE REPORT" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "🛡️ Security Score: $($complianceReport.SecurityScore.SecureScorePercentage)%" -ForegroundColor Cyan
-    Write-Host "📊 Compliance Rate: $($complianceReport.ComplianceRate)%" -ForegroundColor Green
-    Write-Host "❌ Failed Assessments: $($complianceReport.FailedAssessments)/$($complianceReport.TotalAssessments)" -ForegroundColor Yellow
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              SECURITY COMPLIANCE REPORT"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "🛡️ Security Score: $($complianceReport.SecurityScore.SecureScorePercentage)%"
+    Write-Information "📊 Compliance Rate: $($complianceReport.ComplianceRate)%"
+    Write-Information "❌ Failed Assessments: $($complianceReport.FailedAssessments)/$($complianceReport.TotalAssessments)"
     
-    Write-Host ""
-    Write-Host "🚨 High Priority Issues:" -ForegroundColor Red
+    Write-Information ""
+    Write-Information "🚨 High Priority Issues:"
     $highPriorityIssues = $complianceReport.Assessments | Where-Object { $_.Status -eq "Unhealthy" -and $_.Severity -eq "High" }
     if ($highPriorityIssues.Count -gt 0) {
         $highPriorityIssues | ForEach-Object {
-            Write-Host "   • $($_.Name)" -ForegroundColor White
+            Write-Information "   • $($_.Name)"
         }
     } else {
-        Write-Host "   • No high priority issues found" -ForegroundColor Green
+        Write-Information "   • No high priority issues found"
     }
     
-    Write-Host ""
+    Write-Information ""
 
     Write-Log "✅ Security compliance scan completed successfully!" -Level SUCCESS
 

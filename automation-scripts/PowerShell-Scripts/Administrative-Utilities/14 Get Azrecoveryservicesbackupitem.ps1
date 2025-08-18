@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14 Get Azrecoveryservicesbackupitem
 
@@ -67,7 +67,7 @@ $getAzRecoveryServicesVaultSplat = @{
     Name = $WEVaultname
 }
 
-$targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
+$targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
 ; 
 $getAzRecoveryServicesBackupItemSplat = @{
     Container = $namedContainer
@@ -75,7 +75,7 @@ $getAzRecoveryServicesBackupItemSplat = @{
     VaultId = $targetVault.ID
 }
 ; 
-$backupitem = Get-AzRecoveryServicesBackupItem @getAzRecoveryServicesBackupItemSplat
+$backupitem = Get-AzRecoveryServicesBackupItem -ErrorAction Stop @getAzRecoveryServicesBackupItemSplat
 $backupitem
 
 # Wesley Ellis Enterprise PowerShell Toolkit

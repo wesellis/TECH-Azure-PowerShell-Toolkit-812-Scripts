@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configsqlao
 
@@ -98,9 +98,9 @@ param(
     )
 
     Import-DscResource -ModuleName xComputerManagement, xFailOverCluster,CDisk,xActiveDirectory,xDisk,xNetworking,xSql
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServiceCreds.UserName)" , $WESQLServiceCreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServiceCreds.UserName)" , $WESQLServiceCreds.Password)
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12    
 
     Enable-CredSSPNTLM -DomainName $WEDomainName
@@ -389,6 +389,7 @@ param(
 
 }
 
+[CmdletBinding()]
 function WE-WaitForSqlSetup
 {
     # Wait for SQL Server Setup to finish before proceeding.
@@ -396,7 +397,7 @@ function WE-WaitForSqlSetup
     {
         try
         {
-            Get-ScheduledTaskInfo " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+            Get-ScheduledTaskInfo -ErrorAction Stop " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
             Start-Sleep -Seconds 5
         }
         catch
@@ -406,7 +407,8 @@ function WE-WaitForSqlSetup
     }
 }
 
-function WE-Get-NetBIOSName
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop
 { 
     [OutputType([string])]
     [CmdletBinding()]
@@ -432,6 +434,7 @@ param(
     }
 }
 
+[CmdletBinding()]
 function WE-Enable-CredSSPNTLM
 { 
     [CmdletBinding()]; 
@@ -453,14 +456,14 @@ param(
         New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows -Name '\CredentialsDelegation' -ErrorAction SilentlyContinue
     }
 
-    if( -not (Get-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue))
+    if( -not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue))
     {
-        New-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
     }
 
-    if (-not (Get-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -ErrorAction SilentlyContinue))
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -ErrorAction SilentlyContinue))
     {
-        New-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
     }
 
     if(-not (Test-Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -ErrorAction SilentlyContinue))
@@ -468,19 +471,19 @@ param(
         New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue
     }
 
-    if (-not (Get-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -ErrorAction SilentlyContinue))
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -ErrorAction SilentlyContinue))
     {
-        New-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -value " wsman/$env:COMPUTERNAME" -PropertyType string -ErrorAction SilentlyContinue
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -value " wsman/$env:COMPUTERNAME" -PropertyType string -ErrorAction SilentlyContinue
     }
 
-    if (-not (Get-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -ErrorAction SilentlyContinue))
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -ErrorAction SilentlyContinue))
     {
-        New-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -value " wsman/localhost" -PropertyType string -ErrorAction SilentlyContinue
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -value " wsman/localhost" -PropertyType string -ErrorAction SilentlyContinue
     }
 
-    if (-not (Get-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -ErrorAction SilentlyContinue))
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -ErrorAction SilentlyContinue))
     {
-        New-ItemProperty HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -value " wsman/*.$WEDomainName" -PropertyType string -ErrorAction SilentlyContinue
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -value " wsman/*.$WEDomainName" -PropertyType string -ErrorAction SilentlyContinue
     }
 
     Write-Verbose " DONE:Setting up CredSSP for NTLM"

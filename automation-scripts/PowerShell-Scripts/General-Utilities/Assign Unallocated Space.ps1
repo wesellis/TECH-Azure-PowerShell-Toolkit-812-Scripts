@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Assign Unallocated Space
 
@@ -66,9 +66,11 @@ param(
 Set-StrictMode -Version latest
 $WEErrorActionPreference = " Stop"
 
+[CmdletBinding()]
 function WE-Invoke-AssignUnallocatedSpace {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -88,7 +90,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -99,7 +101,7 @@ param(
     )
 
     if (-not $WESuppressVerboseOutput) {
-        Write-WELog " `nStarted with volumes:$(Get-Volume | Out-String)" " INFO"
+        Write-WELog " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
     }
 
     $driveLetter = $WETaskParams.DriveLetter
@@ -113,7 +115,7 @@ param(
     if (($maxSizeMB - $currentSizeMB) -gt 1) {
         $partition | Resize-Partition -Size $supportedSize.SizeMax
         if (-not $WESuppressVerboseOutput) {
-            Write-WELog " `nEnded with volumes:$(Get-Volume | Out-String)" " INFO"
+            Write-WELog " `nEnded with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
         }
     }
 }

@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Blob File Uploader
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -28,18 +28,18 @@ if (-not $BlobName) {
     $BlobName = Split-Path $LocalFilePath -Leaf
 }
 
-Write-Host "Uploading file to blob storage:"
-Write-Host "  Local file: $LocalFilePath"
-Write-Host "  Blob name: $BlobName"
+Write-Information "Uploading file to blob storage:"
+Write-Information "  Local file: $LocalFilePath"
+Write-Information "  Blob name: $BlobName"
 
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 
-$Blob = Set-AzStorageBlobContent `
+$Blob = Set-AzStorageBlobContent -ErrorAction Stop `
     -File $LocalFilePath `
     -Container $ContainerName `
     -Blob $BlobName `
     -Context $Context
 
-Write-Host "✅ File uploaded successfully!"
-Write-Host "  URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
+Write-Information "✅ File uploaded successfully!"
+Write-Information "  URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"

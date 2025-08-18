@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Update Readme
 
@@ -64,7 +64,7 @@ Write-Output '******************************************************************
 Write-Output '*****************************************************************************************'
 
 
-$readme = Get-Content $readmePath -Raw
+$readme = Get-Content -ErrorAction Stop $readmePath -Raw
 Write-Output $readme
 
 
@@ -74,11 +74,11 @@ $metadataDescription = $metadata.description # note this will be truncated to 15
 
 
 $metadata.dateUpdated = (Get-Date).ToString(" yyyy-MM-dd" )
-$metadata | ConvertTo-Json | Set-Content " $WESampleFolder\metadata.json" -NoNewline
+$metadata | ConvertTo-Json | Set-Content -ErrorAction Stop " $WESampleFolder\metadata.json" -NoNewline
 
 
 
-[string[]]$readmeArray = Get-Content $readmePath
+[string[]]$readmeArray = Get-Content -ErrorAction Stop $readmePath
 ; 
 $currentH1 = ""
 for ($i = 0; $i -lt $readmeArray.Length; $i++) {
@@ -156,7 +156,7 @@ languages:
     # add tags
     $allResources = @()
 
-    $allJsonFiles = Get-ChildItem " $sampleFolder\*.json" -Recurse | ForEach-Object -Process { $_.FullName }
+    $allJsonFiles = Get-ChildItem -ErrorAction Stop " $sampleFolder\*.json" -Recurse | ForEach-Object -Process { $_.FullName }
     foreach ($file in $allJsonFiles) {
         if ($(split-path $file -leaf) -ne " metadata.json" -and
             !($(split-path $file -leaf).EndsWith(" parameters.json" ))) {
@@ -206,7 +206,7 @@ languages:
     }
         
     #Write-Output $readme
-    $readme | Set-Content $readmePath -NoNewline
+    $readme | Set-Content -ErrorAction Stop $readmePath -NoNewline
 
 }
 

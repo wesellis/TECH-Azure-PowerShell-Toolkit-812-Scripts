@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Route Table Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -30,21 +30,21 @@ param (
     [string]$NextHopIpAddress
 )
 
-Write-Host "Creating Route Table: $RouteTableName"
+Write-Information "Creating Route Table: $RouteTableName"
 
 # Create route table
-$RouteTable = New-AzRouteTable `
+$RouteTable = New-AzRouteTable -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $RouteTableName `
     -Location $Location
 
-Write-Host "✅ Route Table created successfully:"
-Write-Host "  Name: $($RouteTable.Name)"
-Write-Host "  Location: $($RouteTable.Location)"
+Write-Information "✅ Route Table created successfully:"
+Write-Information "  Name: $($RouteTable.Name)"
+Write-Information "  Location: $($RouteTable.Location)"
 
 # Add custom route if parameters provided
 if ($RouteName -and $AddressPrefix) {
-    Write-Host "`nAdding custom route: $RouteName"
+    Write-Information "`nAdding custom route: $RouteName"
     
     if ($NextHopIpAddress -and $NextHopType -eq "VirtualAppliance") {
         Add-AzRouteConfig `
@@ -63,16 +63,16 @@ if ($RouteName -and $AddressPrefix) {
     
     Set-AzRouteTable -RouteTable $RouteTable
     
-    Write-Host "✅ Custom route added:"
-    Write-Host "  Route Name: $RouteName"
-    Write-Host "  Address Prefix: $AddressPrefix"
-    Write-Host "  Next Hop Type: $NextHopType"
+    Write-Information "✅ Custom route added:"
+    Write-Information "  Route Name: $RouteName"
+    Write-Information "  Address Prefix: $AddressPrefix"
+    Write-Information "  Next Hop Type: $NextHopType"
     if ($NextHopIpAddress) {
-        Write-Host "  Next Hop IP: $NextHopIpAddress"
+        Write-Information "  Next Hop IP: $NextHopIpAddress"
     }
 }
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Associate route table with subnet(s)"
-Write-Host "2. Add additional routes as needed"
-Write-Host "3. Test routing behavior"
+Write-Information "`nNext Steps:"
+Write-Information "1. Associate route table with subnet(s)"
+Write-Information "2. Add additional routes as needed"
+Write-Information "3. Test routing behavior"

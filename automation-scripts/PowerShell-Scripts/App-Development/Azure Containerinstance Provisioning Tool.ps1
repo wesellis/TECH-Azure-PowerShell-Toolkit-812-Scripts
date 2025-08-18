@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Containerinstance Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -122,7 +123,7 @@ if ($WEEnvironmentVariables.Count -gt 0) {
 }
 
 ; 
-$WEContainer = New-AzContainerInstanceObject `
+$WEContainer = New-AzContainerInstanceObject -ErrorAction Stop `
     -Name $WEContainerGroupName `
     -Image $WEImage `
     -RequestCpu $WECpu `
@@ -135,7 +136,7 @@ if ($WEEnvVarObjects.Count -gt 0) {
 
 
 Write-WELog " `nCreating Container Instance..." " INFO" ; 
-$WEContainerGroup = New-AzContainerGroup `
+$WEContainerGroup = New-AzContainerGroup -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEContainerGroupName `
     -Location $WELocation `

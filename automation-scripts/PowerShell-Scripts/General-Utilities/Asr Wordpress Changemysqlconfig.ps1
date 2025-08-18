@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Asr Wordpress Changemysqlconfig
 
@@ -95,7 +95,7 @@ param(
 		}
 	} 
     
-   ;  $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
+   ;  $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
 	
     Write-output $WERecoveryPlanContext.VmMap
     Write-output $WERecoveryPlanContext

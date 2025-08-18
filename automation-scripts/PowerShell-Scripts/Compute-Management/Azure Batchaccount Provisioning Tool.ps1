@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Batchaccount Provisioning Tool
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -104,7 +105,7 @@ if ($WEStorageAccountName) {
     
     if (-not $WEStorageAccount) {
         Write-WELog " Creating storage account for Batch..." " INFO"
-        $WEStorageAccount = New-AzStorageAccount `
+        $WEStorageAccount = New-AzStorageAccount -ErrorAction Stop `
             -ResourceGroupName $WEResourceGroupName `
             -Name $WEStorageAccountName `
             -Location $WELocation `
@@ -119,13 +120,13 @@ if ($WEStorageAccountName) {
 
 
 if ($WEStorageAccountName) {
-   ;  $WEBatchAccount = New-AzBatchAccount `
+   ;  $WEBatchAccount = New-AzBatchAccount -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEAccountName `
         -Location $WELocation `
         -AutoStorageAccountId $WEStorageAccount.Id
 } else {
-   ;  $WEBatchAccount = New-AzBatchAccount `
+   ;  $WEBatchAccount = New-AzBatchAccount -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEAccountName `
         -Location $WELocation

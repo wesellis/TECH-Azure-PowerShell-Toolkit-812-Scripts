@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Scheduledsnooze Parent
 
@@ -91,7 +91,7 @@ function WE-CheckExcludeVM ($WEFilterVMList) {
             $invalidvm = $invalidvm + $filtervm
         }
     }
-    if ($invalidvm -ne $null) {
+    if ($null -ne $invalidvm) {
         Write-Output " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         Write-Warning " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         exit
@@ -153,17 +153,17 @@ try {
     $WEAzureVMListTemp = $null
     $WEAzureVMList = @()
     ##Getting VM Details based on RG List or Subscription
-    if ($WEVMRGList -ne $null) {
+    if ($null -ne $WEVMRGList) {
         foreach ($WEResource in $WEVMRGList) {
             Write-Output " Validating the resource group name ($($WEResource.Trim()))" 
             $checkRGname = Get-AzureRmResourceGroup -Name $WEResource.Trim() -ev notPresent -ea 0  
-            if ($checkRGname -eq $null) {
+            if ($null -eq $checkRGname) {
                 Write-Warning " $($WEResource) is not a valid Resource Group Name. Please Verify!"
             }
             else {                   
                 Write-Output " Resource Group Exists..."
                 $WEAzureVMListTemp = Get-AzureRmVM -ResourceGroupName $WEResource -ErrorAction SilentlyContinue
-                if ($WEAzureVMListTemp -ne $null) {
+                if ($null -ne $WEAzureVMListTemp) {
                     $WEAzureVMList = $WEAzureVMList + $WEAzureVMListTemp
                 }
             }
@@ -175,7 +175,7 @@ try {
     }
 
     $WEActualAzureVMList = @()
-    if ($WEVMfilterList -ne $null) {
+    if ($null -ne $WEVMfilterList) {
         foreach ($WEVM in $WEAzureVMList) {  
             ##Checking Vm in excluded list                         
             if ($WEVMfilterList -notcontains ($($WEVM.Name))) {

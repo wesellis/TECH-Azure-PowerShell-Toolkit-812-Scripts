@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Runscript
 
@@ -72,7 +72,7 @@ Save-Module -Name GuestConfiguration -path $modulesFolder
 [scriptblock];  $gcModuleDetails = {
     $env:PSModulePath += ';c:\ProgramData\GuestConfig\modules'
     Import-Module 'GuestConfiguration'
-    Get-Module 'GuestConfiguration'
+    Get-Module -ErrorAction Stop 'GuestConfiguration'
 }
 $gcModule = & $pwshExePath -Command $gcModuleDetails; 
 $gcModulePath = Join-Path -Path $gcModule.ModuleBase -ChildPath $gcModule.RootModule

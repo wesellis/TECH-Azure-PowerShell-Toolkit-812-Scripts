@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sets up automated Azure cost reporting with email notifications.
 
@@ -97,6 +97,7 @@ $ReportPath = Join-Path (Split-Path $ScriptRoot -Parent) "reports"
 }
 
 # Logging function
+[CmdletBinding()]
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -105,7 +106,8 @@ function Write-Log {
     Add-Content -Path (Join-Path $LogPath "cost-reports.log") -Value $logEntry
 }
 
-function Get-EmailCredential {
+[CmdletBinding()]
+function Get-EmailCredential -ErrorAction Stop {
     <#
     .SYNOPSIS
         Gets email credentials from secure storage or prompts user
@@ -134,7 +136,8 @@ function Get-EmailCredential {
     return $cred
 }
 
-function Get-CostReportData {
+[CmdletBinding()]
+function Get-CostReportData -ErrorAction Stop {
     <#
     .SYNOPSIS
         Retrieves cost data for the specified time period
@@ -173,7 +176,8 @@ function Get-CostReportData {
     }
 }
 
-function New-CostReport {
+[CmdletBinding()]
+function New-CostReport -ErrorAction Stop {
     <#
     .SYNOPSIS
         Generates a formatted cost report
@@ -282,6 +286,7 @@ function New-CostReport {
     }
 }
 
+[CmdletBinding()]
 function Send-CostReport {
     <#
     .SYNOPSIS
@@ -336,7 +341,8 @@ Azure Cost Management System
     }
 }
 
-function New-ScheduledTask {
+[CmdletBinding()]
+function New-ScheduledTask -ErrorAction Stop {
     <#
     .SYNOPSIS
         Creates a Windows scheduled task for automated reports
@@ -388,7 +394,7 @@ try {
     Write-Log "Starting automated cost report setup - Type: $Type"
     
     # Validate Azure connection
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (-not $context) {
         throw "Not connected to Azure. Please run Connect-AzAccount first."
     }
@@ -401,10 +407,10 @@ try {
     Write-Log "Using subscription: $SubscriptionId"
     
     # Get email credentials
-    $emailCred = Get-EmailCredential
+    $emailCred = Get-EmailCredential -ErrorAction Stop
     
     # Determine date range based on report type
-    $endDate = Get-Date
+    $endDate = Get-Date -ErrorAction Stop
     $startDate = switch ($Type) {
         "Daily" { $endDate.AddDays(-1) }
         "Weekly" { $endDate.AddDays(-7) }
@@ -448,16 +454,16 @@ try {
     
     Write-Log "Automated cost reporting setup completed successfully" -Level "SUCCESS"
     
-    Write-Host "`n✅ SETUP COMPLETE!" -ForegroundColor Green
-    Write-Host "📧 Test report sent to: $($Recipients -join ', ')" -ForegroundColor Yellow
-    Write-Host "⏰ Scheduled task created: $taskName" -ForegroundColor Yellow
-    Write-Host "📊 Report format: $Format" -ForegroundColor Yellow
-    Write-Host "💰 Total cost in test period: $($totalCost.ToString('C'))" -ForegroundColor Yellow
-    Write-Host "`nNext steps:" -ForegroundColor Cyan
-    Write-Host "• Check your email for the test report"
-    Write-Host "• Verify the scheduled task in Task Scheduler"
-    Write-Host "• Monitor the logs in: $LogPath"
-    Write-Host "• Reports will be saved in: $ReportPath"
+    Write-Information "`n✅ SETUP COMPLETE!"
+    Write-Information "📧 Test report sent to: $($Recipients -join ', ')"
+    Write-Information "⏰ Scheduled task created: $taskName"
+    Write-Information "📊 Report format: $Format"
+    Write-Information "💰 Total cost in test period: $($totalCost.ToString('C'))"
+    Write-Information "`nNext steps:"
+    Write-Information "• Check your email for the test report"
+    Write-Information "• Verify the scheduled task in Task Scheduler"
+    Write-Information "• Monitor the logs in: $LogPath"
+    Write-Information "• Reports will be saved in: $ReportPath"
 }
 catch {
     Write-Log "Script execution failed: $($_.Exception.Message)" -Level "ERROR"

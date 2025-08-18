@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Pim Role Activator
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -105,7 +106,7 @@ try {
     Write-WELog " Current user: $($WECurrentUser.DisplayName)" " INFO"
     
     # Calculate activation end time
-   ;  $WEActivationStart = Get-Date
+   ;  $WEActivationStart = Get-Date -ErrorAction Stop
    ;  $WEActivationEnd = $WEActivationStart.AddHours($WEDurationHours)
     
     Write-WELog " `nPIM Activation Request:" " INFO"

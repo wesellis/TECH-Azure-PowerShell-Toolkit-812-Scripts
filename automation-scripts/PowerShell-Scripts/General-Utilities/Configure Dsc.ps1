@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configure Dsc
 
@@ -34,7 +34,7 @@
     Requires appropriate permissions and modules
 
 
-Set-ExecutionPolicy Unrestricted -Force
+Set-ExecutionPolicy -ErrorAction Stop Unrestricted -Force
 
 
 Install-PackageProvider -Name NuGet -Force

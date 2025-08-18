@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Arotoolkit Autoupdate
 
@@ -88,7 +88,7 @@ try
 
     #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions" )
 
-    $WEWebClient = New-Object System.Net.WebClient
+    $WEWebClient = New-Object -ErrorAction Stop System.Net.WebClient
 
     Write-Output " Download the AutoUpdateWorker script from GitHub..."
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.5.1 Get Azbastion
 
@@ -107,7 +107,7 @@ Id                   : /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resou
     General notes
 
 
-Get-AzBastion | Format-Table
+Get-AzBastion -ErrorAction Stop | Format-Table
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

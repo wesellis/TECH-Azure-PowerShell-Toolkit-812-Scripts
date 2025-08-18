@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configureadbdc
 
@@ -55,7 +55,7 @@ param(
 
     Import-DscResource -ModuleName xActiveDirectory, xPendingReboot
 
-    [System.Management.Automation.PSCredential ]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential ]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node localhost
     {

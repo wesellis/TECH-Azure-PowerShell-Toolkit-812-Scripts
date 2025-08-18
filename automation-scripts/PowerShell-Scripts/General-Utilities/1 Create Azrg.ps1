@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     1 Create Azrg
 
@@ -56,6 +56,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function WE-Invoke-CreateAZRG {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -78,7 +79,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -101,7 +102,7 @@ param(
         try {
 
             
-           ;  $WEResourceGroupConfig = New-AzResourceGroup @newAzResourceGroupSplat
+           ;  $WEResourceGroupConfig = New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
          
         }
      
@@ -114,17 +115,17 @@ param(
             Write-WELog " A Terminating Error (Exception) happened" " INFO" -ForegroundColor Magenta
             Write-WELog " Displaying the Catch Statement ErrorCode" " INFO" -ForegroundColor Yellow
             $WEPSItem
-            Write-Host $WEPSItem.ScriptStackTrace -ForegroundColor Red
+            Write-Information $WEPSItem.ScriptStackTrace -ForegroundColor Red
             
             
            ;  $WEErrorMessage_1 = $_.Exception.Message
-            write-host $WEErrorMessage_1  -ForegroundColor Red
+            Write-Information $WEErrorMessage_1  -ForegroundColor Red
             Write-Output " Ran into an issue: $WEPSItem"
-            Write-host " Ran into an issue: $WEPSItem" -ForegroundColor Red
+            Write-Information " Ran into an issue: $WEPSItem"
             throw " Ran into an issue: $WEPSItem"
             throw " I am the catch"
             throw " Ran into an issue: $WEPSItem"
-            $WEPSItem | Write-host -ForegroundColor
+            $WEPSItem | Write-Information -ForegroundColor
             $WEPSItem | Select-Object *
             $WEPSCmdlet.ThrowTerminatingError($WEPSitem)
             throw

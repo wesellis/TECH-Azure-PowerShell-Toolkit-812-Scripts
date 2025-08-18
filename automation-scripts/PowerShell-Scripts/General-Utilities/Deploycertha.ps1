@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deploycertha
 
@@ -136,7 +136,7 @@ $WEServerFQDN = $WEServerName + " ." + $WEDomainName
 $WECertPasswd = ConvertTo-SecureString -String $WEPasswd -Force -AsPlainText
 $WEAzureSQLUserID = $WEAdminUser; 
 $WEAzureSQLPasswd = $WEPasswd
-[System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdminUser)" , $WECertPasswd)
+[System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdminUser)" , $WECertPasswd)
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -166,11 +166,11 @@ Function RequestCert([Parameter(Mandatory=$false)]
     [string]$WEFqdn) {
     $WECertMaxRetries = 30
 
-    Set-PAServer LE_PROD
+    Set-PAServer -ErrorAction Stop LE_PROD
     New-PAAccount -AcceptTOS -Contact " $($WEAdminUser)@$($WEFqdn)" -Force
-    New-PAOrder $WEFqdn
-    $auth = Get-PAOrder | Get-PAAuthorizations | Where-Object { $_.HTTP01Status -eq " Pending" }
-    $WEAcmeBody = Get-KeyAuthorization $auth.HTTP01Token (Get-PAAccount)
+    New-PAOrder -ErrorAction Stop $WEFqdn
+    $auth = Get-PAOrder -ErrorAction Stop | Get-PAAuthorizations -ErrorAction Stop | Where-Object { $_.HTTP01Status -eq " Pending" }
+    $WEAcmeBody = Get-KeyAuthorization -ErrorAction Stop $auth.HTTP01Token (Get-PAAccount)
 
     Invoke-Command -ComputerName $WEWebGatewayServers -Credential $WEDomainCreds -ScriptBlock {
         Param($auth, $WEAcmeBody, $WEBrokerName, $WEDomainName)
@@ -189,15 +189,15 @@ Function RequestCert([Parameter(Mandatory=$false)]
         Write-WELog " Waiting for validation. Sleeping 30 seconds..." " INFO"
         Start-Sleep -Seconds 30
         $WERetries++
-    } While (((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid" ) -And ($WERetries -ne $WECertMaxRetries))
+    } While (((Get-PAOrder -ErrorAction Stop | Get-PAAuthorizations).HTTP01Status -ne " valid" ) -And ($WERetries -ne $WECertMaxRetries))
 
-    If ((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid" ){
+    If ((Get-PAOrder -ErrorAction Stop | Get-PAAuthorizations).HTTP01Status -ne " valid" ){
         Write-Error " Certificate for $($WEFqdn) not ready in 15 minutes. Exiting..."
         [Environment]::Exit(-1)
     }
 
-    New-PACertificate $WEFqdn -Install
-    $WEThumbprint = (Get-PACertificate $WEFqdn).Thumbprint
+    New-PACertificate -ErrorAction Stop $WEFqdn -Install
+    $WEThumbprint = (Get-PACertificate -ErrorAction Stop $WEFqdn).Thumbprint
     
     $WECertFullPath = (Join-path " C:\temp" $($WEFqdn + " .pfx" ))
     Export-PfxCertificate -Cert Cert:\LocalMachine\My\$WEThumbprint -FilePath $WECertFullPath -Password $WECertPasswd -Force
@@ -226,20 +226,23 @@ Function InstallSQLClient() {
         $params = $params + 'C:\Temp\vcredistinstall.log'
             
         Try {
-            $WEProcessInfo = New-Object System.Diagnostics.ProcessStartInfo 
+            $WEProcessInfo = New-Object -ErrorAction Stop System.Diagnostics.ProcessStartInfo 
             $WEProcessInfo.FileName = $WEVCRedist
             $WEProcessInfo.RedirectStandardError = $true
             $WEProcessInfo.RedirectStandardOutput = $true
             $WEProcessInfo.UseShellExecute = $false
             $WEProcessInfo.Arguments = $params
-            $WEProcess = New-Object System.Diagnostics.Process
+            $WEProcess = New-Object -ErrorAction Stop System.Diagnostics.Process
             $WEProcess.StartInfo = $WEProcessInfo
             $WEProcess.Start() | Out-Null
             $WEProcess.WaitForExit()
             $WEReturnMSG = $WEProcess.StandardOutput.ReadToEnd()
             $WEReturnMSG
         }
-        Catch { }
+        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
     }
     
     If (Test-Path -Path $WEODBCmsi) {
@@ -255,20 +258,23 @@ Function InstallSQLClient() {
         $params = $params + 'IACCEPTMSODBCSQLLICENSETERMS=YES'
             
         Try {
-            $WEProcessInfo = New-Object System.Diagnostics.ProcessStartInfo 
+            $WEProcessInfo = New-Object -ErrorAction Stop System.Diagnostics.ProcessStartInfo 
             $WEProcessInfo.FileName = " $($WEEnv:SystemRoot)\System32\msiexec.exe"
             $WEProcessInfo.RedirectStandardError = $true
             $WEProcessInfo.RedirectStandardOutput = $true
             $WEProcessInfo.UseShellExecute = $false
             $WEProcessInfo.Arguments = $params
-            $WEProcess = New-Object System.Diagnostics.Process
+            $WEProcess = New-Object -ErrorAction Stop System.Diagnostics.Process
             $WEProcess.StartInfo = $WEProcessInfo
             $WEProcess.Start() | Out-Null
             $WEProcess.WaitForExit()
             $WEReturnMSG = $WEProcess.StandardOutput.ReadToEnd()
             $WEReturnMSG
         }
-        Catch { }
+        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
     }
 }
 
@@ -347,7 +353,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     Invoke-Command -ComputerName $WEWebGatewayServers -Credential $WEDomainCreds -ScriptBlock {
         Param($WERedirectPage)
         Import-Module WebAdministration
-        Set-WebConfiguration System.WebServer/HttpRedirect " IIS:\sites\Default Web Site" -Value @{Enabled=" True" ;Destination=" $WERedirectPage" ;ExactDestination=" True" ;HttpResponseStatus=" Found" }
+        Set-WebConfiguration -ErrorAction Stop System.WebServer/HttpRedirect " IIS:\sites\Default Web Site" -Value @{Enabled=" True" ;Destination=" $WERedirectPage" ;ExactDestination=" True" ;HttpResponseStatus=" Found" }
     } -ArgumentList $WERedirectPage
     #End of https redirect
 

@@ -1,4 +1,4 @@
-# Real-time Azure Resource Monitor with Dashboards
+﻿# Real-time Azure Resource Monitor with Dashboards
 param (
     [Parameter(Mandatory=$false)][string[]]$ResourceGroups = @(),
     [Parameter(Mandatory=$false)][string[]]$ResourceTypes = @(),
@@ -21,9 +21,10 @@ $script:MonitoringState = @{
     Resources = @{}
     Metrics = @()
     Alerts = @()
-    StartTime = Get-Date
+    StartTime = Get-Date -ErrorAction Stop
 }
 
+[CmdletBinding()]
 function Start-ResourceMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
@@ -33,14 +34,14 @@ function Start-ResourceMonitoring {
     
     while ($script:MonitoringState.Running) {
         try {
-            $timestamp = Get-Date
+            $timestamp = Get-Date -ErrorAction Stop
             Write-Log "📊 Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
             
             # Get resources to monitor
             $resources = if ($ResourceGroups.Count -gt 0) {
                 $ResourceGroups | ForEach-Object { Get-AzResource -ResourceGroupName $_ }
             } else {
-                Get-AzResource
+                Get-AzResource -ErrorAction Stop
             }
             
             if ($ResourceTypes.Count -gt 0) {
@@ -67,12 +68,12 @@ function Start-ResourceMonitoring {
             $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq "Healthy" }).Count
             $unhealthyCount = ($currentMetrics | Where-Object { $_.Status -ne "Healthy" }).Count
             
-            Write-Host "📈 Resources: $($resources.Count) | ✅ Healthy: $healthyCount | ⚠️ Issues: $unhealthyCount" -ForegroundColor Green
+            Write-Information "📈 Resources: $($resources.Count) | ✅ Healthy: $healthyCount | ⚠️ Issues: $unhealthyCount"
             
             if ($unhealthyCount -gt 0) {
                 $issues = $currentMetrics | Where-Object { $_.Status -ne "Healthy" }
                 foreach ($issue in $issues) {
-                    Write-Host "  ⚠️ $($issue.Name): $($issue.Status) - $($issue.Details)" -ForegroundColor Yellow
+                    Write-Information "  ⚠️ $($issue.Name): $($issue.Status) - $($issue.Details)"
                 }
             }
             
@@ -85,7 +86,8 @@ function Start-ResourceMonitoring {
     }
 }
 
-function Get-ResourceHealthMetric {
+[CmdletBinding()]
+function Get-ResourceHealthMetric -ErrorAction Stop {
     param($Resource)
     
     $metric = @{
@@ -95,7 +97,7 @@ function Get-ResourceHealthMetric {
         Location = $Resource.Location
         Status = "Unknown"
         Details = ""
-        Timestamp = Get-Date
+        Timestamp = Get-Date -ErrorAction Stop
         Metrics = @{}
     }
     
@@ -141,6 +143,7 @@ function Get-ResourceHealthMetric {
     return $metric
 }
 
+[CmdletBinding()]
 function Test-ResourceAlert {
     [CmdletBinding()]
     param($Metric)
@@ -161,7 +164,7 @@ function Test-ResourceAlert {
     
     if ($alertTriggered) {
         $alert = @{
-            Timestamp = Get-Date
+            Timestamp = Get-Date -ErrorAction Stop
             Resource = $Metric.Name
             Type = $Metric.Type
             Message = $alertMessage
@@ -178,6 +181,7 @@ function Test-ResourceAlert {
     }
 }
 
+[CmdletBinding()]
 function Send-AlertWebhook {
     param($Alert)
     

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Purview Data Governance Manager
 
@@ -179,7 +179,7 @@ try {
             }
             
             $purviewAccount = Invoke-AzureOperation -Operation {
-                New-AzPurviewAccount @purviewParams
+                New-AzPurviewAccount -ErrorAction Stop @purviewParams
             } -OperationName " Create Purview Account"
             
             Write-Log " ✓ Purview account created: $WEPurviewAccountName" -Level SUCCESS
@@ -486,7 +486,7 @@ try {
                     MetricCategory = @(" AllMetrics" )
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null

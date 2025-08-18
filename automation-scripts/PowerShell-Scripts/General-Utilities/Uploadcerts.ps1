@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Uploadcerts
 
@@ -55,9 +55,12 @@ try{
 	if($meta) {
 	; 	$caname = " /CN=SafeKit CA for Azure $($meta.compute.resourceGroupName) cluster"
 	}
-}catch{}
+}catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 ; 
-$cwd = Get-Location
+$cwd = Get-Location -ErrorAction Stop
 try{
 	cd " $safeweb/bin"
 	& ./initssl sca " $caname"

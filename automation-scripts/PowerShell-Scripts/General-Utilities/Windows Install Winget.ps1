@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Winget
 
@@ -43,8 +43,9 @@ $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $WEProgressPreference = 'SilentlyContinue'
 
-function WE-Get-WinGetExePath {
-    $winGetCmd = Get-Command 'winget.exe' -ErrorAction SilentlyContinue
+[CmdletBinding()]
+function WE-Get-WinGetExePath -ErrorAction Stop {
+    $winGetCmd = Get-Command -ErrorAction Stop 'winget.exe' -ErrorAction SilentlyContinue
     if ($winGetCmd) {
         $winGetExe = $winGetCmd.Path
     }
@@ -59,7 +60,7 @@ try {
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-retry-utils.psm1')
 
     # PowerShell 7 is required for Microsoft.WinGet.* modules
-    $pwsh7Cmd = Get-Command 'pwsh.exe' -ErrorAction SilentlyContinue
+    $pwsh7Cmd = Get-Command -ErrorAction Stop 'pwsh.exe' -ErrorAction SilentlyContinue
     if ($pwsh7Cmd) {
         $pwsh7Exe = $pwsh7Cmd.Path
     }
@@ -103,7 +104,7 @@ try {
         Write-WELog " === Repair-WinGetPackageManager succeeded`:`n$pwsh7Output" " INFO"
     }
 
-    $winGetExe = Get-WinGetExePath
+    $winGetExe = Get-WinGetExePath -ErrorAction Stop
     if (Test-Path $winGetExe) {
         Write-WELog " === Found $winGetExe" " INFO"
         & $winGetExe '--info'
@@ -123,7 +124,7 @@ try {
 
    ;  $settingsJsonPath = " $env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\settings.json"
     $settingsJson | ConvertTo-Json | Out-File -FilePath $settingsJsonPath -Encoding ascii -Force
-    Write-WELog " Content of $settingsJsonPath :`n$(Get-Content $settingsJsonPath -Raw | Out-String)" " INFO"
+    Write-WELog " Content of $settingsJsonPath :`n$(Get-Content -ErrorAction Stop $settingsJsonPath -Raw | Out-String)" " INFO"
 }
 catch {
     # Do not block image creation if WinGet pre-installation fails. 'configure-winget' logon task will attempt to repait WinGet it needed.

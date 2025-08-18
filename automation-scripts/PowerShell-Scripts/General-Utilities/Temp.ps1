@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Temp
 
@@ -150,16 +150,16 @@ $setAzVMAutoShutdownSplat = @{
     Email             = " abdullah@canadacomputing.ca"
 }
 
-Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
+Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 
 
 
 
 
-Write-Host 'The VM is now ready.... here is your login details'
-Write-Host 'username:' $WEVMLocalAdminUser
-Write-Host 'Password:' $WEVMLocalAdminPassword
-Write-Host 'DNSName:' $WEDNSNameLabel
+Write-Information \'The VM is now ready.... here is your login details\'
+Write-Information \'username:\' $WEVMLocalAdminUser
+Write-Information \'Password:\' $WEVMLocalAdminPassword
+Write-Information \'DNSName:\' $WEDNSNameLabel
 
 
 

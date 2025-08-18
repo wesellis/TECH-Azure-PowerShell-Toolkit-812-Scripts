@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     22 New Azvm(Winserver Without New Vnet)
 
@@ -38,7 +38,8 @@ try {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-function WE-New-IaaCAzVM {
+[CmdletBinding()]
+function WE-New-IaaCAzVM -ErrorAction Stop {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
     param(
@@ -209,20 +210,20 @@ $ErrorActionPreference = " Stop"
         Tag      = $WETags
     }
 
-    New-AzResourceGroup @newAzResourceGroupSplat
+    New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
 
     #Getting the Existing VNET. We put our VMs in the same VNET as much as possible, so we do not have to create new bastions and new VPN gateways for each VM
     $getAzVirtualNetworkSplat = @{
         Name = $WEVnetName
     }
-    $vnet = Get-AzVirtualNetwork @getAzVirtualNetworkSplat
+    $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
 
     #Getting the Existing Subnet
     $getAzVirtualNetworkSubnetConfigSplat = @{
         VirtualNetwork = $vnet
         Name           = $WESubnetName
     }
-    $WEVMsubnet = Get-AzVirtualNetworkSubnetConfig @getAzVirtualNetworkSubnetConfigSplat
+    $WEVMsubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
 
     #Creating the PublicIP for the VM
     $newAzPublicIpAddressSplat = @{
@@ -233,7 +234,7 @@ $ErrorActionPreference = " Stop"
         AllocationMethod  = $WEPublicIPAllocation
         Tag               = $WETags
     }
-    $WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+    $WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 
     #Creating the Application Security Group
     $newAzApplicationSecurityGroupSplat = @{
@@ -242,7 +243,7 @@ $ErrorActionPreference = " Stop"
         Location          = " $WELocationName"
         Tag               = $WETags
     }
-    $WEASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+    $WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 
     $newAzNetworkInterfaceIpConfigSplat = @{
         Name                     = $WEIPConfigName
@@ -251,7 +252,7 @@ $ErrorActionPreference = " Stop"
         ApplicationSecurityGroup = $WEASG
         Primary                  = $true
     }
-    $WEIPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+    $WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 
     $newAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $WEResourceGroupName
@@ -259,7 +260,7 @@ $ErrorActionPreference = " Stop"
         Name              = $WENSGName
         Tag               = $WETags
     }
-    $WENSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+    $WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 
     #Creating the NIC for the VM
     $newAzNetworkInterfaceSplat = @{
@@ -271,10 +272,10 @@ $ErrorActionPreference = " Stop"
         Tag                    = $WETags
     
     }
-    $WENIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+    $WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
 
     #Creating the Cred Object for the VM
-    $WECredential = Get-Credential
+    $WECredential = Get-Credential -ErrorAction Stop
 
     #Creating the VM Config Object for the VM
     $newAzVMConfigSplat = @{
@@ -282,7 +283,7 @@ $ErrorActionPreference = " Stop"
         VMSize = $WEVMSize
         Tags   = $WETags
     }
-    $WEVirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+    $WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 
     #Creating the OS Object for the VM
     $setAzVMOperatingSystemSplat = @{
@@ -291,7 +292,7 @@ $ErrorActionPreference = " Stop"
         ComputerName = $WEComputerName
         Credential   = $WECredential
     }
-    $WEVirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    $WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 
     #Adding the NIC to the VM
     $addAzVMNetworkInterfaceSplat = @{
@@ -308,7 +309,7 @@ $ErrorActionPreference = " Stop"
         Version       = $WEVersion
     
     }
-    $WEVirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+    $WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 
     #Setting the VM OS Disk to the VM
     $setAzVMOSDiskSplat = @{
@@ -318,7 +319,7 @@ $ErrorActionPreference = " Stop"
         CreateOption = $WEOSCreateOption
         DiskSizeInGB = $WEDiskSizeInGB
     }
-    $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+    $WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
 
     #Creating the VM
     $newAzVMSplat = @{
@@ -328,7 +329,7 @@ $ErrorActionPreference = " Stop"
         Verbose           = $true
         Tag               = $WETags
     }
-    New-AzVM @newAzVMSplat
+    New-AzVM -ErrorAction Stop @newAzVMSplat
     
 }
 
@@ -453,7 +454,7 @@ $WENewIaaCAzVMSplat = @{
     DiskSizeInGB        = $WEDiskSizeInGB
 
 }
-New-IaaCAzVM @NewIaaCAzVMSplat
+New-IaaCAzVM -ErrorAction Stop @NewIaaCAzVMSplat
 
 
 

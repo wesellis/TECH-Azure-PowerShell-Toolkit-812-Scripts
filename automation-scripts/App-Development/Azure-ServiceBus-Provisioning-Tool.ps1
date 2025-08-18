@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Service Bus Namespace Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -17,12 +17,12 @@ param (
     [hashtable]$Tags = @{}
 )
 
-Write-Host "Provisioning Service Bus Namespace: $NamespaceName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
-Write-Host "Capacity: $Capacity"
-Write-Host "Zone Redundant: $ZoneRedundant"
+Write-Information "Provisioning Service Bus Namespace: $NamespaceName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "SKU: $SkuName"
+Write-Information "Capacity: $Capacity"
+Write-Information "Zone Redundant: $ZoneRedundant"
 
 # Validate SKU and capacity
 $ValidSkus = @("Basic", "Standard", "Premium")
@@ -49,45 +49,45 @@ if ($SkuName -eq "Premium") {
     }
 }
 
-$ServiceBusNamespace = New-AzServiceBusNamespace @ServiceBusParams
+$ServiceBusNamespace = New-AzServiceBusNamespace -ErrorAction Stop @ServiceBusParams
 
 # Apply tags if provided
 if ($Tags.Count -gt 0) {
-    Write-Host "`nApplying tags:"
+    Write-Information "`nApplying tags:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Host "  $($Tag.Key): $($Tag.Value)"
+        Write-Information "  $($Tag.Key): $($Tag.Value)"
     }
     Set-AzResource -ResourceId $ServiceBusNamespace.Id -Tag $Tags -Force
 }
 
-Write-Host "`nService Bus Namespace $NamespaceName provisioned successfully"
-Write-Host "Namespace ID: $($ServiceBusNamespace.Id)"
-Write-Host "Service Bus Endpoint: $($ServiceBusNamespace.ServiceBusEndpoint)"
-Write-Host "Provisioning State: $($ServiceBusNamespace.ProvisioningState)"
-Write-Host "Status: $($ServiceBusNamespace.Status)"
+Write-Information "`nService Bus Namespace $NamespaceName provisioned successfully"
+Write-Information "Namespace ID: $($ServiceBusNamespace.Id)"
+Write-Information "Service Bus Endpoint: $($ServiceBusNamespace.ServiceBusEndpoint)"
+Write-Information "Provisioning State: $($ServiceBusNamespace.ProvisioningState)"
+Write-Information "Status: $($ServiceBusNamespace.Status)"
 
 # Display SKU-specific features
-Write-Host "`nSKU Features:"
+Write-Information "`nSKU Features:"
 switch ($SkuName) {
     "Basic" {
-        Write-Host "  • Queues only"
-        Write-Host "  • Up to 100 connections"
-        Write-Host "  • 256 KB message size"
+        Write-Information "  • Queues only"
+        Write-Information "  • Up to 100 connections"
+        Write-Information "  • 256 KB message size"
     }
     "Standard" {
-        Write-Host "  • Queues and Topics/Subscriptions"
-        Write-Host "  • Up to 1,000 connections"
-        Write-Host "  • 256 KB message size"
-        Write-Host "  • Auto-forwarding and duplicate detection"
+        Write-Information "  • Queues and Topics/Subscriptions"
+        Write-Information "  • Up to 1,000 connections"
+        Write-Information "  • 256 KB message size"
+        Write-Information "  • Auto-forwarding and duplicate detection"
     }
     "Premium" {
-        Write-Host "  • All Standard features plus:"
-        Write-Host "  • Dedicated capacity ($Capacity messaging units)"
-        Write-Host "  • Up to 100 MB message size"
-        Write-Host "  • Virtual Network integration"
-        Write-Host "  • Private endpoints support"
+        Write-Information "  • All Standard features plus:"
+        Write-Information "  • Dedicated capacity ($Capacity messaging units)"
+        Write-Information "  • Up to 100 MB message size"
+        Write-Information "  • Virtual Network integration"
+        Write-Information "  • Private endpoints support"
         if ($ZoneRedundant) {
-            Write-Host "  • Zone redundancy enabled"
+            Write-Information "  • Zone redundancy enabled"
         }
     }
 }
@@ -96,35 +96,35 @@ switch ($SkuName) {
 try {
     $AuthRules = Get-AzServiceBusAuthorizationRule -ResourceGroupName $ResourceGroupName -Namespace $NamespaceName
     if ($AuthRules) {
-        Write-Host "`nAuthorization Rules:"
+        Write-Information "`nAuthorization Rules:"
         foreach ($Rule in $AuthRules) {
-            Write-Host "  • $($Rule.Name): $($Rule.Rights -join ', ')"
+            Write-Information "  • $($Rule.Name): $($Rule.Rights -join ', ')"
         }
         
         $DefaultRule = $AuthRules | Where-Object { $_.Name -eq "RootManageSharedAccessKey" }
         if ($DefaultRule) {
             $Keys = Get-AzServiceBusKey -ResourceGroupName $ResourceGroupName -Namespace $NamespaceName -Name $DefaultRule.Name
-            Write-Host "`nConnection Strings:"
-            Write-Host "  Primary: $($Keys.PrimaryConnectionString.Substring(0,50))..."
-            Write-Host "  Secondary: $($Keys.SecondaryConnectionString.Substring(0,50))..."
+            Write-Information "`nConnection Strings:"
+            Write-Information "  Primary: $($Keys.PrimaryConnectionString.Substring(0,50))..."
+            Write-Information "  Secondary: $($Keys.SecondaryConnectionString.Substring(0,50))..."
         }
     }
 } catch {
-    Write-Host "`nConnection Strings: Available via Get-AzServiceBusKey cmdlet"
+    Write-Information "`nConnection Strings: Available via Get-AzServiceBusKey -ErrorAction Stop cmdlet"
 }
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Create queues for point-to-point messaging"
-Write-Host "2. Create topics and subscriptions for publish-subscribe scenarios"
-Write-Host "3. Configure message filters and rules"
-Write-Host "4. Set up dead letter queues for error handling"
-Write-Host "5. Configure auto-scaling (Premium tier)"
+Write-Information "`nNext Steps:"
+Write-Information "1. Create queues for point-to-point messaging"
+Write-Information "2. Create topics and subscriptions for publish-subscribe scenarios"
+Write-Information "3. Configure message filters and rules"
+Write-Information "4. Set up dead letter queues for error handling"
+Write-Information "5. Configure auto-scaling (Premium tier)"
 
-Write-Host "`nCommon Use Cases:"
-Write-Host "  • Decoupling application components"
-Write-Host "  • Load balancing across worker instances"
-Write-Host "  • Reliable message delivery"
-Write-Host "  • Event-driven architectures"
-Write-Host "  • Integrating on-premises and cloud systems"
+Write-Information "`nCommon Use Cases:"
+Write-Information "  • Decoupling application components"
+Write-Information "  • Load balancing across worker instances"
+Write-Information "  • Reliable message delivery"
+Write-Information "  • Event-driven architectures"
+Write-Information "  • Integrating on-premises and cloud systems"
 
-Write-Host "`nService Bus Namespace provisioning completed at $(Get-Date)"
+Write-Information "`nService Bus Namespace provisioning completed at $(Get-Date)"

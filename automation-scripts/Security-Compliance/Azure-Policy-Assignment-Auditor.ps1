@@ -1,4 +1,4 @@
-# Azure Policy Assignment Auditor
+﻿# Azure Policy Assignment Auditor
 # Audit policy assignments and compliance across subscriptions
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -31,8 +31,8 @@ try {
 
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
 
-    $policyAssignments = Get-AzPolicyAssignment
-    $policyStates = Get-AzPolicyState
+    $policyAssignments = Get-AzPolicyAssignment -ErrorAction Stop
+    $policyStates = Get-AzPolicyState -ErrorAction Stop
     
     $complianceReport = $policyAssignments | ForEach-Object {
         $assignment = $_
@@ -58,11 +58,11 @@ try {
         Write-Log "✓ Policy audit report exported to: $OutputPath" -Level SUCCESS
     }
 
-    Write-Host "Policy Compliance Summary:" -ForegroundColor Cyan
+    Write-Information "Policy Compliance Summary:"
     $complianceReport | Format-Table PolicyName, TotalResources, CompliantResources, NonCompliantResources, ComplianceRate
     
     $avgCompliance = ($complianceReport | Measure-Object ComplianceRate -Average).Average
-    Write-Host "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%" -ForegroundColor Green
+    Write-Information "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%"
 
 } catch {
     Write-Log "❌ Policy audit failed: $($_.Exception.Message)" -Level ERROR

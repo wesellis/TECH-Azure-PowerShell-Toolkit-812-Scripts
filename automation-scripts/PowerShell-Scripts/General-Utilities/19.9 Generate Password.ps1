@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     19.9 Generate Password
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Generate-Password {
 
 
@@ -41,6 +42,7 @@ function WE-Generate-Password {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Generate-Password {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -63,7 +65,7 @@ function Write-WELog {
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param(
@@ -118,7 +120,7 @@ param(
     process {
 
         try {
-            # Write-Host $password -ForegroundColor Green
+            # Write-Information $password -ForegroundColor Green
            ;  $length = $password.length
             # Write-WELog " Generating an O365 Password of length" " INFO" $length -ForegroundColor Green
             $WEScript:O365Password = $password
@@ -129,9 +131,9 @@ param(
 
             Write-WELog " A Terminating Error (Exception) happened" " INFO" -ForegroundColor Magenta
             Write-WELog " Displaying the Catch Statement ErrorCode" " INFO" -ForegroundColor Yellow
-            Write-host $WEPSItem -ForegroundColor Red
+            Write-Information $WEPSItem -ForegroundColor Red
             $WEPSItem
-            Write-host $WEPSItem.ScriptStackTrace -ForegroundColor Red
+            Write-Information $WEPSItem.ScriptStackTrace -ForegroundColor Red
             
         }
         finally {

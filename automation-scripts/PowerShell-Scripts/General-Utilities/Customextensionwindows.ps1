@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Customextensionwindows
 
@@ -41,6 +41,7 @@ Start-Sleep -s 20
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
 
+[CmdletBinding()]
 function WE-Ignore-SelfSignedCerts
 {
 try
@@ -63,9 +64,9 @@ Write-WELog " TrustAllCertsPolicy type added." " INFO" -ForegroundColor White
 }
 catch
 {
-Write-Host $_ -ForegroundColor " Yellow"
+Write-Information $_ -ForegroundColor " Yellow"
 }
-[System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+[System.Net.ServicePointManager]::CertificatePolicy = New-Object -ErrorAction Stop TrustAllCertsPolicy
 }
 Ignore-SelfSignedCerts;
 
@@ -76,7 +77,7 @@ $pair = " ${user}:${pass}"
 $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
 $base64 = [System.Convert]::ToBase64String($bytes)
 $basicAuthValue = " Basic $base64"; 
-$headers = New-Object " System.Collections.Generic.Dictionary[[String],[String]]"
+$headers = New-Object -ErrorAction Stop " System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add( " Authorization" , $basicAuthValue )
 $headers.Add( " Accept" , " application/octet-stream" )
 ; 

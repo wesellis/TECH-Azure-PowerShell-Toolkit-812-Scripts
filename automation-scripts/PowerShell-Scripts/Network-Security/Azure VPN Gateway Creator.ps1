@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Vpn Gateway Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -116,21 +117,21 @@ if (-not $WEGatewaySubnet) {
 
 
 $WEGatewayIpName = " $WEGatewayName-pip"
-$WEGatewayIp = New-AzPublicIpAddress `
+$WEGatewayIp = New-AzPublicIpAddress -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEGatewayIpName `
     -Location $WELocation `
     -AllocationMethod Dynamic
 
 ; 
-$WEGatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig `
+$WEGatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop `
     -Name " gatewayConfig" `
     -SubnetId $WEGatewaySubnet.Id `
     -PublicIpAddressId $WEGatewayIp.Id
 
 
 Write-WELog " Creating VPN Gateway (this may take 30-45 minutes)..." " INFO" ; 
-$WEGateway = New-AzVirtualNetworkGateway `
+$WEGateway = New-AzVirtualNetworkGateway -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEGatewayName `
     -Location $WELocation `

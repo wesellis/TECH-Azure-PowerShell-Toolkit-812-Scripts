@@ -1,4 +1,4 @@
-# Azure App Configuration Service Manager
+﻿# Azure App Configuration Service Manager
 # Professional configuration management for modern applications
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Centralized application configuration
@@ -57,7 +57,7 @@ try {
         "Create" {
             Write-Log "🏗️ Creating App Configuration store..." -Level INFO
             
-            $configStore = New-AzAppConfigurationStore `
+            $configStore = New-AzAppConfigurationStore -ErrorAction Stop `
                 -ResourceGroupName $ResourceGroupName `
                 -Name $ConfigStoreName `
                 -Location $Location `
@@ -80,7 +80,7 @@ try {
             if ($ContentType) { $keyParams.ContentType = $ContentType }
             if ($Tags.Count -gt 0) { $keyParams.Tag = $Tags }
             
-            Set-AzAppConfigurationKeyValue @keyParams
+            Set-AzAppConfigurationKeyValue -ErrorAction Stop @keyParams
             Write-Log "✓ Configuration key added: $KeyName" -Level SUCCESS
         }
         
@@ -88,9 +88,9 @@ try {
             Write-Log "📖 Retrieving configuration key..." -Level INFO
             
             $key = Get-AzAppConfigurationKeyValue -Endpoint "https://$ConfigStoreName.azconfig.io" -Key $KeyName
-            Write-Host "Key: $($key.Key)" -ForegroundColor Cyan
-            Write-Host "Value: $($key.Value)" -ForegroundColor Green
-            Write-Host "Label: $($key.Label)" -ForegroundColor White
+            Write-Information "Key: $($key.Key)"
+            Write-Information "Value: $($key.Value)"
+            Write-Information "Label: $($key.Label)"
         }
         
         "ListKeys" {
@@ -108,16 +108,16 @@ try {
     
     Write-ProgressStep -StepNumber 4 -TotalSteps 4 -StepName "Summary" -Status "Generating summary"
 
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              APP CONFIGURATION OPERATION COMPLETE" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "⚙️ Configuration Store: $ConfigStoreName" -ForegroundColor Cyan
-    Write-Host "🌍 Endpoint: https://$ConfigStoreName.azconfig.io" -ForegroundColor Yellow
-    Write-Host "📍 Location: $($store.Location)" -ForegroundColor White
-    Write-Host "💰 SKU: $($store.Sku.Name)" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              APP CONFIGURATION OPERATION COMPLETE"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "⚙️ Configuration Store: $ConfigStoreName"
+    Write-Information "🌍 Endpoint: https://$ConfigStoreName.azconfig.io"
+    Write-Information "📍 Location: $($store.Location)"
+    Write-Information "💰 SKU: $($store.Sku.Name)"
+    Write-Information ""
 
     Write-Log "✅ App Configuration operation completed successfully!" -Level SUCCESS
 

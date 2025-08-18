@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configuresplegacy
 
@@ -74,18 +74,18 @@ param(
 
     # Init
     [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content env:computername
+    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
     [String] $WEDomainLDAPPath = " DC=$($WEDomainFQDN.Split(" ." )[0]),DC=$($WEDomainFQDN.Split(" ." )[1])"
     [String] $WEAdditionalUsersPath = " OU=AdditionalUsers,DC={0},DC={1}" -f $WEDomainFQDN.Split('.')[0], $WEDomainFQDN.Split('.')[1]
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)" , $WESPSvcCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)" , $WESPAppPoolCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)" , $WESPADDirSyncCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)" , $WESPSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)" , $WESPAppPoolCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)" , $WESPADDirSyncCreds.Password)
 
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
@@ -135,7 +135,7 @@ param(
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
 
-        # cChocoInstaller fails with this error: Get-FileDownload for 'https://chocolatey.org/install.ps1' failed on attempt 1 with this error: .NET Framework 4.8 was installed, but a reboot is required.  Please reboot the system and try to install/upgrade Chocolatey again.
+        # cChocoInstaller fails with this error: Get-FileDownload -ErrorAction Stop for 'https://chocolatey.org/install.ps1' failed on attempt 1 with this error: .NET Framework 4.8 was installed, but a reboot is required.  Please reboot the system and try to install/upgrade Chocolatey again.
         # But running it right at the beginning eventually works, and somehow it does not propagate the error to the Azure DSC extension (and doing a reboot juste before has no effect)
         cChocoInstaller InstallChoco             { InstallDir = " C:\Chocolatey" ; }
 
@@ -315,7 +315,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                # if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -328,7 +328,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
+                if (!(Get-CimInstance -ErrorAction Stop Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 } else {
                     return $true
@@ -648,7 +648,7 @@ param(
                 $db = " master"
                ;  $retry = $true
                 while ($retry) {
-                   ;  $sqlConnection = New-Object System.Data.SqlClient.SqlConnection " Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
+                   ;  $sqlConnection = New-Object -ErrorAction Stop System.Data.SqlClient.SqlConnection " Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
                     try {
                         $sqlConnection.Open()
                         Write-Verbose -Verbose -Message " Connection to SQL Server $server succeeded"
@@ -891,7 +891,7 @@ param(
         #         }
         #         SetScript = {
         #             New-Item -Path HKLM:\SOFTWARE\DscScriptExecution\flag_ForceRebootBeforeCreatingSPTrust -Force
-        #             $global:DSCMachineStatus = 1
+        #             $script:DSCMachineStatus = 1
         #         }
         #         GetScript = { }
         #         PsDscRunAsCredential = $WEDomainAdminCredsQualified
@@ -968,7 +968,7 @@ param(
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 Add-Type -AssemblyName " Yvand.LDAPCPSE, Version=1.0.0.0, Culture=neutral, PublicKeyToken=80be731bc1a1a740"
                ;  $config = [Yvand.LdapClaimsProvider.LDAPCPSE]::GetConfiguration()
-                if ($config -eq $null) {
+                if ($null -eq $config) {
                     return $false
                 }
                 else {
@@ -1382,7 +1382,7 @@ param(
                 $certName = " HighTrustAddins.cer"
                 $certFullPath = [System.IO.Path]::Combine($destinationPath, $certName)
                 Write-Verbose -Verbose -Message " Exporting public key of certificate with subject $certSubject to $certFullPath..."
-                New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
+                New-Item -ErrorAction Stop $destinationPath -Type directory -ErrorAction SilentlyContinue
                 $signingCert = Get-ChildItem -Path " cert:\LocalMachine\My\" -DnsName " $certSubject"
                 $signingCert | Export-Certificate -FilePath $certFullPath
                 Write-Verbose -Verbose -Message " Public key of certificate with subject $certSubject successfully exported to $certFullPath."
@@ -1465,8 +1465,8 @@ param(
 
                     try {
                         $site = Get-SPSite -Identity $uri -ErrorAction SilentlyContinue
-                        $ctx = Get-SPServiceContext $site -ErrorAction SilentlyContinue
-                        $upm = New-Object Microsoft.Office.Server.UserProfiles.UserProfileManager($ctx)
+                        $ctx = Get-SPServiceContext -ErrorAction Stop $site -ErrorAction SilentlyContinue
+                        $upm = New-Object -ErrorAction Stop Microsoft.Office.Server.UserProfiles.UserProfileManager($ctx)
                         Write-Verbose -Verbose -Message " Got UserProfileManager"
                     }
                     catch {
@@ -1617,7 +1617,8 @@ param(
     }
 }
 
-function WE-Get-LatestGitHubRelease
+[CmdletBinding()]
+function WE-Get-LatestGitHubRelease -ErrorAction Stop
 {
     [OutputType([string])]
     [CmdletBinding()]
@@ -1637,7 +1638,8 @@ param(
     return $assetUrl
 }
 
-function WE-Get-NetBIOSName
+[CmdletBinding()]
+function WE-Get-NetBIOSName -ErrorAction Stop
 {
     [OutputType([string])]
     [CmdletBinding()]
@@ -1663,11 +1665,12 @@ param(
     }
 }
 
-function WE-Get-SPDSCInstalledProductVersion
+[CmdletBinding()]
+function WE-Get-SPDSCInstalledProductVersion -ErrorAction Stop
 {
     $pathToSearch = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\*\ISAPI\Microsoft.SharePoint.dll"
-    $fullPath = Get-Item $pathToSearch | Sort-Object { $_.Directory } -Descending | Select-Object -First 1
-    return (Get-Command $fullPath).FileVersionInfo
+    $fullPath = Get-Item -ErrorAction Stop $pathToSearch | Sort-Object { $_.Directory } -Descending | Select-Object -First 1
+    return (Get-Command -ErrorAction Stop $fullPath).FileVersionInfo
 }
 
 <#

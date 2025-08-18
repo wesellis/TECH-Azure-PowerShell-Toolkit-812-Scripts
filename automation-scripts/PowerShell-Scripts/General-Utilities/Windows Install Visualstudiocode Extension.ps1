@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Install Visualstudiocode Extension
 
@@ -196,7 +196,7 @@ function WE-Main (
    ;  $vsCodeGlobalExtensionsPath = Resolve-VisualStudioCodeBootstrapPath
 
     if (-not (Test-Path $vsCodeGlobalExtensionsPath)) {
-        New-Item $vsCodeGlobalExtensionsPath -ItemType Directory -ErrorAction 'SilentlyContinue' | Out-Null
+        New-Item -ErrorAction Stop $vsCodeGlobalExtensionsPath -ItemType Directory -ErrorAction 'SilentlyContinue' | Out-Null
 
         if (-not (Test-Path $vsCodeGlobalExtensionsPath)) {
             Write-Error " The folder $vsCodeGlobalExtensionsPath could not be created. Please ensure you are running as admin."

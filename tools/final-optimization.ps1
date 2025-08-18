@@ -1,9 +1,9 @@
-# Final optimization push for Azure Enterprise Toolkit
-Write-Host "Adding final optimizations for perfect GitHub setup..." -ForegroundColor Green
+﻿# Final optimization push for Azure Enterprise Toolkit
+Write-Information "Adding final optimizations for perfect GitHub setup..."
 
 # Add all new files
 git add .
-Write-Host "Added all optimization files" -ForegroundColor Green
+Write-Information "Added all optimization files"
 
 # Commit with comprehensive message
 $commitMessage = @"
@@ -36,13 +36,13 @@ $commitMessage = @"
 "@
 
 git commit -m $commitMessage
-Write-Host "Committed optimization improvements" -ForegroundColor Green
+Write-Information "Committed optimization improvements"
 
 # Push to GitHub
 git push
-Write-Host "Pushed final optimizations to GitHub!" -ForegroundColor Green
+Write-Information "Pushed final optimizations to GitHub!"
 
-Write-Host "`n🎉 Azure Enterprise Toolkit is now PERFECTLY optimized!" -ForegroundColor Cyan
-Write-Host "🌐 GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit" -ForegroundColor Blue
-Write-Host "🔄 GitHub Actions will automate testing and deployment" -ForegroundColor Yellow
-Write-Host "⭐ Repository is now enterprise-grade and community-ready!" -ForegroundColor Green
+Write-Information "`n🎉 Azure Enterprise Toolkit is now PERFECTLY optimized!"
+Write-Information "🌐 GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit"
+Write-Information "🔄 GitHub Actions will automate testing and deployment"
+Write-Information "⭐ Repository is now enterprise-grade and community-ready!"

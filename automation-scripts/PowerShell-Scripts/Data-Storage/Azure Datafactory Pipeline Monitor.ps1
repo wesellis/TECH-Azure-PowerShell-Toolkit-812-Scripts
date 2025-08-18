@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Datafactory Pipeline Monitor
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -111,7 +112,7 @@ if ($WEPipelines.Count -eq 0) {
 }
 
 
-$WEEndTime = Get-Date
+$WEEndTime = Get-Date -ErrorAction Stop
 $WEStartTime = $WEEndTime.AddDays(-$WEDaysBack)
 
 Write-WELog " `nRecent Pipeline Runs (Last $WEDaysBack days):" " INFO"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Dotnetcore Sdk
 
@@ -75,7 +75,7 @@ param(
 if (![string]::IsNullOrEmpty($WEGlobalJsonFilePath)) {
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-json-utils.psm1')
     if([System.IO.File]::Exists($WEGlobalJsonFilePath)) {
-        $WEDotNetCoreVersion = (Get-JsonFromFile $WEGlobalJsonFilePath).sdk.version
+        $WEDotNetCoreVersion = (Get-JsonFromFile -ErrorAction Stop $WEGlobalJsonFilePath).sdk.version
     }
 
     Write-WELog " Installing NetCore SDK version: $WEDotNetCoreVersion" " INFO"

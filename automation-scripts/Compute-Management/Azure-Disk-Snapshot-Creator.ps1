@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Disk Snapshot Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,7 +18,7 @@ param (
     [string]$SnapshotName = "$DiskName-snapshot-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 )
 
-Write-Host "Creating snapshot of disk: $DiskName"
+Write-Information "Creating snapshot of disk: $DiskName"
 
 $Disk = Get-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $DiskName
 
@@ -26,7 +26,7 @@ $SnapshotConfig = New-AzSnapshotConfig -SourceUri $Disk.Id -Location $Disk.Locat
 
 $Snapshot = New-AzSnapshot -ResourceGroupName $ResourceGroupName -SnapshotName $SnapshotName -Snapshot $SnapshotConfig
 
-Write-Host "Snapshot created successfully:"
-Write-Host "  Name: $($Snapshot.Name)"
-Write-Host "  Size: $($Snapshot.DiskSizeGB) GB"
-Write-Host "  Location: $($Snapshot.Location)"
+Write-Information "Snapshot created successfully:"
+Write-Information "  Name: $($Snapshot.Name)"
+Write-Information "  Size: $($Snapshot.DiskSizeGB) GB"
+Write-Information "  Location: $($Snapshot.Location)"

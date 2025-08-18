@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure VM Availability Set Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,9 +24,9 @@ param (
     [int]$PlatformUpdateDomainCount = 5
 )
 
-Write-Host "Creating Availability Set: $AvailabilitySetName"
+Write-Information "Creating Availability Set: $AvailabilitySetName"
 
-$AvailabilitySet = New-AzAvailabilitySet `
+$AvailabilitySet = New-AzAvailabilitySet -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $AvailabilitySetName `
     -Location $Location `
@@ -34,9 +34,9 @@ $AvailabilitySet = New-AzAvailabilitySet `
     -PlatformUpdateDomainCount $PlatformUpdateDomainCount `
     -Sku Aligned
 
-Write-Host "✅ Availability Set created successfully:"
-Write-Host "  Name: $($AvailabilitySet.Name)"
-Write-Host "  Location: $($AvailabilitySet.Location)"
-Write-Host "  Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
-Write-Host "  Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
-Write-Host "  SKU: $($AvailabilitySet.Sku)"
+Write-Information "✅ Availability Set created successfully:"
+Write-Information "  Name: $($AvailabilitySet.Name)"
+Write-Information "  Location: $($AvailabilitySet.Location)"
+Write-Information "  Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
+Write-Information "  Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
+Write-Information "  SKU: $($AvailabilitySet.Sku)"

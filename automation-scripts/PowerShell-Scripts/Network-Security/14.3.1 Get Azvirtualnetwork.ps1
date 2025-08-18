@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     14.3.1 Get Azvirtualnetwork
 
@@ -61,7 +61,7 @@ $getAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }
 ; 
-$vnet = Get-AzVirtualNetwork @getAzVirtualNetworkSplat
+$vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

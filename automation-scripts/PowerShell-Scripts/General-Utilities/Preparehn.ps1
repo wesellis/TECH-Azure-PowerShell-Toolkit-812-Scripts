@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Preparehn
 
@@ -82,6 +82,7 @@ param(
     [switch] $WENodeStateCheck
 )
 
+[CmdletBinding()]
 function WE-TraceInfo
 {
     [CmdletBinding()]
@@ -95,7 +96,7 @@ param(
 }
 
 
-$domainRole = (Get-CimInstance Win32_ComputerSystem).DomainRole
+$domainRole = (Get-CimInstance -ErrorAction Stop Win32_ComputerSystem).DomainRole
 if($domainRole -lt 3)
 {
     throw " This machine is not domain joined, DomainRole=$domainRole"
@@ -137,16 +138,16 @@ else
     if(-not (Test-Path -Path $WEHPCHNDeployRoot))
     {
         New-Item -Path $WEHPCHNDeployRoot -ItemType directory -Confirm:$false -Force
-        $acl = Get-Acl $WEHPCHNDeployRoot
+        $acl = Get-Acl -ErrorAction Stop $WEHPCHNDeployRoot
         $acl.SetAccessRuleProtection($true, $false)
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" SYSTEM" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
+        $rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule(" SYSTEM" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
         $acl.AddAccessRule($rule)
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" Administrators" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
+        $rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule(" Administrators" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
         $acl.AddAccessRule($rule)
         $domainNetBios = $WEDomainFQDN.Split('.')[0].ToUpper()
         try
         {
-            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" $domainNetBios\$WEAdminUserName" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
+            $rule = New-Object -ErrorAction Stop System.Security.AccessControl.FileSystemAccessRule(" $domainNetBios\$WEAdminUserName" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
             $acl.AddAccessRule($rule)
         }
         catch
@@ -268,7 +269,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  foreach($svcname in $WEHNServiceList)
                  {
                      $service = Get-Service -Name $svcname -ErrorAction SilentlyContinue
-                     if($service -eq $null)
+                     if($null -eq $service)
                      {
                          TraceInfo " Service $svcname not found"
                          $taskSucceeded = $false
@@ -294,12 +295,12 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  Add-PSSnapin Microsoft.HPC
                  # setting network topology to 5 (enterprise)
                  TraceInfo 'Setting HPC cluster network topologogy...'
-                 $nics = @(Get-CimInstance win32_networkadapterconfiguration -filter " IPEnabled='true' AND DHCPEnabled='true'" )
+                 $nics = @(Get-CimInstance -ErrorAction Stop win32_networkadapterconfiguration -filter " IPEnabled='true' AND DHCPEnabled='true'" )
                  if ($nics.Count -ne 1)
                  {
                      throw " Cannot find a suitable network adapter for enterprise topology"
                  }
-                ;  $startTime = Get-Date
+                ;  $startTime = Get-Date -ErrorAction Stop
                  while($true)
                  {
                      Set-HpcNetwork -Topology 'Enterprise' -Enterprise $nics.Description -EnterpriseFirewall $true -ErrorAction SilentlyContinue
@@ -512,7 +513,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
     {
         $WEPostConfigScript = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEPostConfigScript.Trim()))
         $WEPostConfigScript = $WEPostConfigScript.Trim()
-        if((Test-Path $postScriptFlagFile) -and ($WEPostConfigScript -eq (Get-Content $postScriptFlagFile | select -First 1)))
+        if((Test-Path $postScriptFlagFile) -and ($WEPostConfigScript -eq (Get-Content -ErrorAction Stop $postScriptFlagFile | select -First 1)))
         {
             TraceInfo " The Post configuration script was already executed"
         }
@@ -540,7 +541,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                 $scriptFileName = $($scriptUrl -split '/')[-1]
                 $scriptFilePath = " $env:HPCHNDeployRoot\$scriptFileName"
 
-                $downloader = New-Object System.Net.WebClient
+                $downloader = New-Object -ErrorAction Stop System.Net.WebClient
                 $downloadRetry = 0
                 $downloaded = $false
                 while($true)

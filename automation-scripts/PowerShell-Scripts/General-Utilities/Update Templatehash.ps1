@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Update Templatehash
 
@@ -60,8 +60,8 @@ if ($bearerToken -eq "" ) {
     Write-WELog " Getting token..." " INFO"
     Import-Module Az.Accounts
     $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-    $azContext = Get-AzContext
-    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
+    $azContext = Get-AzContext -ErrorAction Stop
+    $profileClient = New-Object -ErrorAction Stop Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
     $bearerToken = ($profileClient.AcquireAccessToken($azContext.Tenant.TenantId)).AccessToken
 }
 $uri = " https://management.azure.com/providers/Microsoft.Resources/calculateTemplateHash?api-version=2019-10-01"
@@ -91,7 +91,7 @@ if ($WEENV:BUILD_REASON -eq " Schedule" -or $WEENV:BUILD_REASON -eq " Manual" ) 
 foreach ($WESourcePath in $WEArtifactFilePaths) {
 
     if ($WESourcePath -like " *\test\*" ) {
-        Write-host " Skipping... $WESourcePath"
+        Write-Information " Skipping... $WESourcePath"
         continue
     }
 
@@ -107,7 +107,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     $WEJsonFilePaths = Get-ChildItem -Path $metadataPath .\*.json -Recurse -File | ForEach-Object -Process { $_.FullName }
     foreach ($file in $WEJsonFilePaths) {
         if ($file -like " *\test\*" ) {
-            Write-host " Skipping..."
+            Write-Information " Skipping..."
             continue
         }
 
@@ -125,7 +125,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                 -Headers $WEHeaders `
                 -Body $json -verbose
             }catch{
-                Write-Host $response
+                Write-Information $response
                 Write-Error " Failed to get hash for: $file"
             }
             

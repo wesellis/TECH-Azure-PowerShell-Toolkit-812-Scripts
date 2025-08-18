@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     1 Get Azlocation
 
@@ -34,16 +34,16 @@
     Requires appropriate permissions and modules
 
 
-Get-AzLocation | Select-Object -Property Location, DisplayName
-Get-AzLocation | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}
 
 
 $WEErrorActionPreference = "Stop" ; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-Get-AzLocation | Select-Object -Property Location, DisplayName
-Get-AzLocation | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -eq 'CanadaCentral'}
-Get-AzLocation | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -eq 'CanadaCentral'}
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

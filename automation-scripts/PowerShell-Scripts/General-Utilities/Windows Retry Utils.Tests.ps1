@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Retry Utils.Tests
 
@@ -53,6 +53,7 @@ try {
         $script:sleepTimes = @()
         Mock -CommandName Start-Sleep -ModuleName windows-retry-utils -MockWith { 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -72,7 +73,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds seconds" " INFO" }
@@ -95,7 +96,7 @@ param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds
     It " ReportsErrorOnFailure" {
         Mock LogError {}
         RunWithRetries -runBlock { throw 'testing' } -ignoreFailure $true -retryAttempts 0 -waitBeforeRetrySeconds 0
-        Should -Invoke LogError -Times 0 -Exactly -ParameterFilter { ($message -eq '[WARN] Ignoring the failure') -and ($e -ne $null) }
+        Should -Invoke LogError -Times 0 -Exactly -ParameterFilter { ($message -eq '[WARN] Ignoring the failure') -and ($null -ne $e) }
         $script:sleepTimes | Should -Be @()
     }
 

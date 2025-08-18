@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Bulk User Offboarding Tool
 
@@ -86,6 +86,7 @@ param(
 
 
 $WELogFile = " UserOffboarding_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+[CmdletBinding()]
 function WE-Write-Log {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"

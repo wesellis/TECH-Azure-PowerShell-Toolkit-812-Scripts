@@ -1,4 +1,4 @@
-# Azure Cognitive Services Manager
+﻿# Azure Cognitive Services Manager
 # Manage Azure Cognitive Services accounts and endpoints
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -39,20 +39,20 @@ try {
             Write-Log "🧠 Creating Cognitive Services account..." -Level INFO
             $account = New-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AccountName -Type $Kind -SkuName $Sku -Location $Location
             Write-Log "✓ Created $Kind account: $AccountName" -Level SUCCESS
-            Write-Host "Endpoint: $($account.Endpoint)" -ForegroundColor Green
+            Write-Information "Endpoint: $($account.Endpoint)"
         }
         
         "GetKeys" {
             $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName
-            Write-Host "Key 1: $($keys.Key1)" -ForegroundColor Cyan
-            Write-Host "Key 2: $($keys.Key2)" -ForegroundColor Cyan
+            Write-Information "Key 1: $($keys.Key1)"
+            Write-Information "Key 2: $($keys.Key2)"
         }
         
         "RegenerateKey" {
             $newKeys = New-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName -KeyName Key1
             Write-Log "✓ Key regenerated successfully" -Level SUCCESS
-            Write-Host "New Key 1: $($newKeys.Key1)" -ForegroundColor Green
-            Write-Host "Key 2: $($newKeys.Key2)" -ForegroundColor Cyan
+            Write-Information "New Key 1: $($newKeys.Key1)"
+            Write-Information "Key 2: $($newKeys.Key2)"
         }
         
         "ListUsage" {

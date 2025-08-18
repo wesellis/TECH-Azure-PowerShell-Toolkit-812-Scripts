@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Diagnostic Settings Configurator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -151,7 +152,7 @@ $WEDiagnosticParams.Log = $WELogSettings
 $WEDiagnosticParams.Metric = $WEMetricSettings
 
 ; 
-$WEDiagnosticSetting = Set-AzDiagnosticSetting @DiagnosticParams
+$WEDiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
 
 Write-WELog " ✅ Diagnostic settings configured successfully:" " INFO"
 Write-WELog "  Setting ID: $($WEDiagnosticSetting.Id)" " INFO"

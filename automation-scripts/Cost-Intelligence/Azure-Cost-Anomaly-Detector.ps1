@@ -1,4 +1,4 @@
-# Azure Cost Anomaly Detector
+﻿# Azure Cost Anomaly Detector
 # Detect unusual spending patterns and cost anomalies
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -45,14 +45,14 @@ try {
     $avgCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
     $anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $AnomalyThreshold) }
 
-    Write-Host "Cost Anomaly Analysis:" -ForegroundColor Cyan
-    Write-Host "Analysis Period: $startDate to $endDate" -ForegroundColor White
-    Write-Host "Average Daily Cost: $${avgCost:F2}" -ForegroundColor Green
-    Write-Host "Anomaly Threshold: $${($avgCost * $AnomalyThreshold):F2}" -ForegroundColor Yellow
-    Write-Host "Anomalies Detected: $($anomalies.Count)" -ForegroundColor Red
+    Write-Information "Cost Anomaly Analysis:"
+    Write-Information "Analysis Period: $startDate to $endDate"
+    Write-Information "Average Daily Cost: $${avgCost:F2}"
+    Write-Information "Anomaly Threshold: $${($avgCost * $AnomalyThreshold):F2}"
+    Write-Information "Anomalies Detected: $($anomalies.Count)"
 
     if ($anomalies.Count -gt 0) {
-        Write-Host "`nAnomalous Days:" -ForegroundColor Red
+        Write-Information "`nAnomalous Days:"
         $anomalies | Format-Table Date, @{Name="Cost";Expression={"$" + "{0:F2}" -f $_.TotalCost}}
     }
 

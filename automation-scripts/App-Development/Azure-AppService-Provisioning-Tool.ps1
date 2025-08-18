@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure App Service Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -18,21 +18,21 @@ param (
     [hashtable]$AppSettings = @{}
 )
 
-Write-Host "Provisioning App Service: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "App Service Plan: $PlanName"
-Write-Host "Location: $Location"
-Write-Host "Runtime: $Runtime $RuntimeVersion"
-Write-Host "HTTPS Only: $HttpsOnly"
+Write-Information "Provisioning App Service: $AppName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "App Service Plan: $PlanName"
+Write-Information "Location: $Location"
+Write-Information "Runtime: $Runtime $RuntimeVersion"
+Write-Information "HTTPS Only: $HttpsOnly"
 
 # Create the App Service
-$WebApp = New-AzWebApp `
+$WebApp = New-AzWebApp -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $AppName `
     -AppServicePlan $PlanName `
     -Location $Location
 
-Write-Host "App Service created: $($WebApp.DefaultHostName)"
+Write-Information "App Service created: $($WebApp.DefaultHostName)"
 
 # Configure runtime stack
 if ($Runtime -eq "DOTNET") {
@@ -42,20 +42,20 @@ if ($Runtime -eq "DOTNET") {
 # Enable HTTPS only
 if ($HttpsOnly) {
     Set-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName -HttpsOnly $true
-    Write-Host "HTTPS-only enforcement enabled"
+    Write-Information "HTTPS-only enforcement enabled"
 }
 
 # Add app settings if provided
 if ($AppSettings.Count -gt 0) {
-    Write-Host "`nConfiguring App Settings:"
+    Write-Information "`nConfiguring App Settings:"
     foreach ($Setting in $AppSettings.GetEnumerator()) {
-        Write-Host "  $($Setting.Key): $($Setting.Value)"
+        Write-Information "  $($Setting.Key): $($Setting.Value)"
     }
     Set-AzWebAppSlot -ResourceGroupName $ResourceGroupName -Name $AppName -AppSettings $AppSettings
 }
 
-Write-Host "`nApp Service $AppName provisioned successfully"
-Write-Host "URL: https://$($WebApp.DefaultHostName)"
-Write-Host "State: $($WebApp.State)"
+Write-Information "`nApp Service $AppName provisioned successfully"
+Write-Information "URL: https://$($WebApp.DefaultHostName)"
+Write-Information "State: $($WebApp.State)"
 
-Write-Host "`nApp Service provisioning completed at $(Get-Date)"
+Write-Information "`nApp Service provisioning completed at $(Get-Date)"

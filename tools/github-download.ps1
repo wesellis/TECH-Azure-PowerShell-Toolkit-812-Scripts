@@ -1,13 +1,13 @@
-# GitHub Repository Downloader
+﻿# GitHub Repository Downloader
 # Downloads/updates all Wesley's repositories from GitHub
 # Usage: Run this script to get the latest versions of all repositories
 
-Write-Host "=== GitHub Repository Downloader ===" -ForegroundColor Green
-Write-Host "Downloading/updating all repositories from github.com/wesellis" -ForegroundColor Cyan
+Write-Information "=== GitHub Repository Downloader ==="
+Write-Information "Downloading/updating all repositories from github.com/wesellis"
 
 $githubUsername = "wesellis"
 $baseDir = "A:\GITHUB"
-Set-Location $baseDir
+Set-Location -ErrorAction Stop $baseDir
 
 # Add Git to PATH
 $env:PATH += ";C:\Program Files\Git\bin"
@@ -42,40 +42,40 @@ foreach ($repo in $repositories) {
     $localPath = Join-Path $baseDir $repo
     
     if (Test-Path $localPath) {
-        Write-Host "Updating $repo..." -ForegroundColor Yellow
+        Write-Information "Updating $repo..."
         try {
-            Set-Location $localPath
+            Set-Location -ErrorAction Stop $localPath
             git pull --quiet
-            Set-Location $baseDir
-            Write-Host "  Updated successfully" -ForegroundColor Green
+            Set-Location -ErrorAction Stop $baseDir
+            Write-Information "  Updated successfully"
             $updated++
         } catch {
-            Write-Host "  Update failed" -ForegroundColor Red
-            Set-Location $baseDir
+            Write-Information "  Update failed"
+            Set-Location -ErrorAction Stop $baseDir
             $failed++
         }
     } else {
-        Write-Host "Downloading $repo..." -ForegroundColor Cyan
+        Write-Information "Downloading $repo..."
         try {
             git clone $repoUrl --quiet
             if (Test-Path $localPath) {
-                Write-Host "  Downloaded successfully" -ForegroundColor Green
+                Write-Information "  Downloaded successfully"
                 $downloaded++
             } else {
-                Write-Host "  Download failed" -ForegroundColor Red
+                Write-Information "  Download failed"
                 $failed++
             }
         } catch {
-            Write-Host "  Download failed" -ForegroundColor Red
+            Write-Information "  Download failed"
             $failed++
         }
     }
 }
 
-Write-Host "`n=== RESULTS ===" -ForegroundColor Green
-Write-Host "Updated: $updated repositories" -ForegroundColor Green
-Write-Host "Downloaded: $downloaded repositories" -ForegroundColor Green
-Write-Host "Failed: $failed repositories" -ForegroundColor Red
-Write-Host "Total: $($repositories.Count) repositories" -ForegroundColor Cyan
+Write-Information "`n=== RESULTS ==="
+Write-Information "Updated: $updated repositories"
+Write-Information "Downloaded: $downloaded repositories"
+Write-Information "Failed: $failed repositories"
+Write-Information "Total: $($repositories.Count) repositories"
 
-Write-Host "`nAll repositories are now up to date!" -ForegroundColor Green
+Write-Information "`nAll repositories are now up to date!"

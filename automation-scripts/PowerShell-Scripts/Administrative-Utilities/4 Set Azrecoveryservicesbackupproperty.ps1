@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     4 Set Azrecoveryservicesbackupproperty
 
@@ -72,7 +72,7 @@ $setAzRecoveryServicesBackupPropertySplat = @{
     BackupStorageRedundancy = 'GeoRedundant/LocallyRedundant'
 }
 
-Set-AzRecoveryServicesBackupProperty @setAzRecoveryServicesBackupPropertySplat
+Set-AzRecoveryServicesBackupProperty -ErrorAction Stop @setAzRecoveryServicesBackupPropertySplat
 
 
 

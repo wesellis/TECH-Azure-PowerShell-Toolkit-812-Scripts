@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Analyzes Azure environment for Zero Trust Network compliance and provides actionable recommendations.
 
@@ -58,7 +58,7 @@ foreach ($module in $requiredModules) {
 # Initialize assessment results
 $assessmentResults = @{
     SubscriptionId = ""
-    AssessmentDate = Get-Date
+    AssessmentDate = Get-Date -ErrorAction Stop
     OverallScore = 0
     NetworkSegmentation = @()
     IdentityPerimeter = @()
@@ -70,10 +70,11 @@ $assessmentResults = @{
     Recommendations = @()
 }
 
+[CmdletBinding()]
 function Test-NetworkSegmentation {
-    Write-Host "Analyzing network segmentation..." -ForegroundColor Yellow
+    Write-Information "Analyzing network segmentation..."
     
-    $vnets = Get-AzVirtualNetwork
+    $vnets = Get-AzVirtualNetwork -ErrorAction Stop
     $segmentationIssues = @()
     
     foreach ($vnet in $vnets) {
@@ -125,13 +126,14 @@ function Test-NetworkSegmentation {
     return $segmentationIssues
 }
 
+[CmdletBinding()]
 function Test-IdentityPerimeter {
-    Write-Host "Analyzing identity perimeter security..." -ForegroundColor Yellow
+    Write-Information "Analyzing identity perimeter security..."
     
     $identityIssues = @()
     
     # Check for Service Endpoints vs Private Endpoints usage
-    $storageAccounts = Get-AzStorageAccount
+    $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
     foreach ($storage in $storageAccounts) {
         $storageAnalysis = @{
             ResourceName = $storage.StorageAccountName
@@ -156,7 +158,7 @@ function Test-IdentityPerimeter {
     }
     
     # Check SQL Servers
-    $sqlServers = Get-AzSqlServer
+    $sqlServers = Get-AzSqlServer -ErrorAction Stop
     foreach ($sql in $sqlServers) {
         $sqlAnalysis = @{
             ResourceName = $sql.ServerName
@@ -180,13 +182,14 @@ function Test-IdentityPerimeter {
     return $identityIssues
 }
 
+[CmdletBinding()]
 function Test-EncryptionCompliance {
-    Write-Host "Analyzing encryption compliance..." -ForegroundColor Yellow
+    Write-Information "Analyzing encryption compliance..."
     
     $encryptionIssues = @()
     
     # Check VM disk encryption
-    $vms = Get-AzVM
+    $vms = Get-AzVM -ErrorAction Stop
     foreach ($vm in $vms) {
         $vmAnalysis = @{
             ResourceName = $vm.Name
@@ -213,11 +216,12 @@ function Test-EncryptionCompliance {
     return $encryptionIssues
 }
 
+[CmdletBinding()]
 function Test-MicroSegmentation {
-    Write-Host "Analyzing micro-segmentation implementation..." -ForegroundColor Yellow
+    Write-Information "Analyzing micro-segmentation implementation..."
     
     $microSegmentationIssues = @()
-    $nsgs = Get-AzNetworkSecurityGroup
+    $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
     
     foreach ($nsg in $nsgs) {
         $nsgAnalysis = @{
@@ -253,10 +257,11 @@ function Test-MicroSegmentation {
     return $microSegmentationIssues
 }
 
-function Generate-RemediationScripts {
+[CmdletBinding()]
+function New-RemediationScripts {
     param($AssessmentResults)
     
-    Write-Host "Generating remediation scripts..." -ForegroundColor Green
+    Write-Information "Generating remediation scripts..."
     
     $remediationScript = @"
 # Zero Trust Network Remediation Script
@@ -282,7 +287,7 @@ function Generate-RemediationScripts {
 `$nsg = New-AzNetworkSecurityGroup -Name "nsg-$($subnet.Name)" -ResourceGroupName "$($vnet.ResourceGroup)" -Location "East US"
 `$vnet = Get-AzVirtualNetwork -Name "$($vnet.VNetName)" -ResourceGroupName "$($vnet.ResourceGroup)"
 Set-AzVirtualNetworkSubnetConfig -Name "$($subnet.Name)" -VirtualNetwork `$vnet -AddressPrefix "$($subnet.AddressPrefix)" -NetworkSecurityGroup `$nsg
-`$vnet | Set-AzVirtualNetwork
+`$vnet | Set-AzVirtualNetwork -ErrorAction Stop
 "@
                 }
             }
@@ -294,7 +299,8 @@ Set-AzVirtualNetworkSubnetConfig -Name "$($subnet.Name)" -VirtualNetwork `$vnet 
     return $remediationScript
 }
 
-function Generate-HTMLReport {
+[CmdletBinding()]
+function New-HTMLReport {
     param($AssessmentResults)
     
     $html = @"
@@ -395,9 +401,9 @@ function Generate-HTMLReport {
 # Main execution
 try {
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Information "Connecting to Azure..."
         Connect-AzAccount
     }
     
@@ -453,20 +459,20 @@ try {
     $htmlReport = Generate-HTMLReport -AssessmentResults $assessmentResults
     $htmlReport | Out-File -FilePath $OutputPath -Encoding UTF8
     
-    Write-Host "`nAssessment completed successfully!" -ForegroundColor Green
-    Write-Host "Overall Zero Trust Score: $($assessmentResults.OverallScore)%" -ForegroundColor $(
+    Write-Information "`nAssessment completed successfully!"
+    Write-Information "Overall Zero Trust Score: $($assessmentResults.OverallScore)%" -ForegroundColor $(
         if ($assessmentResults.OverallScore -ge 80) { "Green" }
         elseif ($assessmentResults.OverallScore -ge 60) { "Yellow" }
         else { "Red" }
     )
-    Write-Host "Report saved to: $OutputPath" -ForegroundColor Cyan
+    Write-Information "Report saved to: $OutputPath"
     
     # Generate remediation scripts if requested
     if ($IncludeRemediation) {
         $remediationPath = $OutputPath -replace "\.html$", "-remediation.ps1"
         $remediationScript = Generate-RemediationScripts -AssessmentResults $assessmentResults
         $remediationScript | Out-File -FilePath $remediationPath -Encoding UTF8
-        Write-Host "Remediation script saved to: $remediationPath" -ForegroundColor Cyan
+        Write-Information "Remediation script saved to: $remediationPath"
     }
     
 } catch {

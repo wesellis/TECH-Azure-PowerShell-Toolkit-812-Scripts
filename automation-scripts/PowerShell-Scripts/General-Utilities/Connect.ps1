@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Connect
 
@@ -59,14 +59,15 @@ if ($authType -eq " CredSSP" ) {
 for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList " .\$username" , $secpasswd
+        $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " .\$username" , $secpasswd
         $session = New-PSSession -ComputerName $ip -Port $port -Authentication $authType -Credential $cred
 
         Invoke-Command -Session $session -ScriptBlock {
             Param ($subscriptionId, $resourceGroupName, $region, $tenant, $servicePrincipalId, $servicePrincipalSecret)
             $script:ErrorActionPreference = 'Stop'
 
-            function WE-Install-ModuleIfMissing {
+            [CmdletBinding()]
+function WE-Install-ModuleIfMissing {
                 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(

@@ -1,4 +1,4 @@
-#Requires -Module Pester
+﻿#Requires -Module Pester
 <#
 .SYNOPSIS
     Tests for Az.KeyVault.Enterprise module
@@ -12,7 +12,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.KeyVault.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzKeyVault {
+    Mock Get-AzKeyVault -ErrorAction Stop {
         [PSCustomObject]@{
             VaultName = "TestVault"
             ResourceGroupName = "TestRG"
@@ -25,7 +25,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzKeyVaultSecret {
+    Mock Get-AzKeyVaultSecret -ErrorAction Stop {
         [PSCustomObject]@{
             Name = "TestSecret"
             Version = "1234567890"
@@ -36,7 +36,7 @@ BeforeAll {
         }
     }
     
-    Mock Set-AzKeyVaultSecret {
+    Mock Set-AzKeyVaultSecret -ErrorAction Stop {
         [PSCustomObject]@{
             Name = "TestSecret"
             Version = "0987654321"
@@ -50,7 +50,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
     
     Context "Module Loading" {
         It "Should have exported functions" {
-            $module = Get-Module Az.KeyVault.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.KeyVault.Enterprise
             $module.ExportedFunctions.Count | Should -BeGreaterThan 0
         }
         
@@ -67,7 +67,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
                 'Start-AzKeyVaultAccessReview'
             )
             
-            $module = Get-Module Az.KeyVault.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.KeyVault.Enterprise
             foreach ($function in $expectedFunctions) {
                 $module.ExportedFunctions.Keys | Should -Contain $function
             }
@@ -88,7 +88,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
         }
         
         It "Should not rotate secrets newer than threshold" {
-            Mock Get-AzKeyVaultSecret {
+            Mock Get-AzKeyVaultSecret -ErrorAction Stop {
                 [PSCustomObject]@{
                     Name = "TestSecret"
                     Updated = (Get-Date).AddDays(-10)
@@ -134,7 +134,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
     Context "Get-AzKeyVaultCertificateReport" {
         
         BeforeEach {
-            Mock Get-AzKeyVaultCertificate {
+            Mock Get-AzKeyVaultCertificate -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{
                         Name = "Cert1"
@@ -152,7 +152,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
             }
             
             Mock Get-AzKeyVaultCertificate -ParameterFilter { $Name -and $Version } {
-                $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+                $cert = New-Object -ErrorAction Stop System.Security.Cryptography.X509Certificates.X509Certificate2
                 [PSCustomObject]@{
                     Certificate = [PSCustomObject]@{
                         Subject = "CN=TestCert"
@@ -195,8 +195,8 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
     Context "Set-AzKeyVaultAccessPolicyBulk" {
         
         BeforeEach {
-            Mock Set-AzKeyVaultAccessPolicy { }
-            Mock Remove-AzKeyVaultAccessPolicy { }
+            Mock Set-AzKeyVaultAccessPolicy -ErrorAction Stop { }
+            Mock Remove-AzKeyVaultAccessPolicy -ErrorAction Stop { }
         }
         
         It "Should apply policies to multiple vaults" {
@@ -218,7 +218,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
     Context "Get-AzKeyVaultComplianceReport" {
         
         BeforeEach {
-            Mock Get-AzKeyVaultAccessPolicy {
+            Mock Get-AzKeyVaultAccessPolicy -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{
                         ObjectId = "user1"
@@ -228,7 +228,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
                 )
             }
             
-            Mock Get-AzKeyVaultSecret {
+            Mock Get-AzKeyVaultSecret -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{
                         Name = "Secret1"
@@ -237,7 +237,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
                 )
             }
             
-            Mock Get-AzKeyVaultCertificate { @() }
+            Mock Get-AzKeyVaultCertificate -ErrorAction Stop { @() }
         }
         
         It "Should generate compliance report" {
@@ -249,7 +249,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
         }
         
         It "Should identify compliance issues" {
-            Mock Get-AzKeyVault {
+            Mock Get-AzKeyVault -ErrorAction Stop {
                 [PSCustomObject]@{
                     VaultName = "TestVault"
                     EnableSoftDelete = $false
@@ -271,10 +271,10 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
     Context "Enable-AzKeyVaultMonitoring" {
         
         BeforeEach {
-            Mock New-AzDiagnosticSetting { }
-            Mock New-AzDiagnosticSettingLogSettingsObject { [PSCustomObject]@{} }
-            Mock New-AzDiagnosticSettingMetricSettingsObject { [PSCustomObject]@{} }
-            Mock New-AzKeyVaultAlertRules { }
+            Mock New-AzDiagnosticSetting -ErrorAction Stop { }
+            Mock New-AzDiagnosticSettingLogSettingsObject -ErrorAction Stop { [PSCustomObject]@{} }
+            Mock New-AzDiagnosticSettingMetricSettingsObject -ErrorAction Stop { [PSCustomObject]@{} }
+            Mock New-AzKeyVaultAlertRules -ErrorAction Stop { }
         }
         
         It "Should configure diagnostic settings" {

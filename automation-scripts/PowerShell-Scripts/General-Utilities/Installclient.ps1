@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installclient
 
@@ -51,7 +51,7 @@ $subKey =  $key.OpenSubKey(" SOFTWARE\Microsoft\ConfigMgr10\Setup" )
 $uiInstallPath = $subKey.GetValue(" UI Installation Directory" )
 $modulePath = $uiInstallPath+" bin\ConfigurationManager.psd1"
 
-if((Get-Module ConfigurationManager) -eq $null) {
+if((Get-Module -ErrorAction Stop ConfigurationManager) -eq $null) {
     Import-Module $modulePath
 }
 $key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
@@ -72,14 +72,14 @@ while((Get-PSDrive -Name $WESiteCode -PSProvider CMSite -ErrorAction SilentlyCon
     New-PSDrive -Name $WESiteCode -PSProvider CMSite -Root $WEProviderMachineName @initParams
 }
 
-Set-Location " $($WESiteCode):\" @initParams
+Set-Location -ErrorAction Stop " $($WESiteCode):\" @initParams
 
 Get-CMManagementPoint -SiteSystemServerName $WEDPMPMachineName
 
 " [$(Get-Date -format HH:mm:ss)] Setting system descovery..." | Out-File -Append $logpath
 $WEDomainName = $WEDomainFullName.split('.')[0]
 $lastdomainname = $WEDomainFullName.Split(" ." )[-1]
-while(((Get-CMDiscoveryMethod | ?{$_.ItemName -eq " SMS_AD_SYSTEM_DISCOVERY_AGENT|SMS Site Server" }).Props | ?{$_.PropertyName -eq " Settings" }).value1.ToLower() -ne " active" )
+while(((Get-CMDiscoveryMethod -ErrorAction Stop | ?{$_.ItemName -eq " SMS_AD_SYSTEM_DISCOVERY_AGENT|SMS Site Server" }).Props | ?{$_.PropertyName -eq " Settings" }).value1.ToLower() -ne " active" )
 {
     start-sleep -Seconds 20
     Set-CMDiscoveryMethod -ActiveDirectorySystemDiscovery -SiteCode $WESiteCode -Enabled $true -AddActiveDirectoryContainer " LDAP://DC=$WEDomainName,DC=$lastdomainname" -Recursive

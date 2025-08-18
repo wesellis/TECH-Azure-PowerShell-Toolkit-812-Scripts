@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Configurewinrm
 
@@ -65,6 +65,7 @@ function WE-Delete-WinRMListener
     }
 }
 
+[CmdletBinding()]
 function WE-Create-Certificate
 {
     [CmdletBinding()]
@@ -76,14 +77,14 @@ param(
     # makecert ocassionally produces negative serial numbers
 	# which golang tls/crypto <1.6.1 cannot handle
 	# https://github.com/golang/go/issues/8265
-    $serial = Get-Random
+    $serial = Get-Random -ErrorAction Stop
     # Dynamically generate the end date for the certificate 
     	# validity period to be a year from the date the
 	# script is run
     $endDate = (Get-Date).AddYears(1).ToString(" MM/dd/yyyy" )
     .\makecert -r -pe -n CN=$hostname -b 01/01/2012 -e $endDate -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp " Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
 
-    $thumbprint=(Get-ChildItem cert:\Localmachine\my | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1).Thumbprint
+    $thumbprint=(Get-ChildItem -ErrorAction Stop cert:\Localmachine\my | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1).Thumbprint
 
     if(-not $thumbprint)
     {
@@ -93,6 +94,7 @@ param(
     return $thumbprint
 }
 
+[CmdletBinding()]
 function WE-Configure-WinRMHttpsListener
 {
     [CmdletBinding()]
@@ -104,7 +106,7 @@ param([string] $WEHostName,
     Delete-WinRMListener
 
     # Create a test certificate
-    $cert = (Get-ChildItem cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1)
+    $cert = (Get-ChildItem -ErrorAction Stop cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1)
     $thumbprint = $cert.Thumbprint
     if(-not $thumbprint)
     {
@@ -114,7 +116,7 @@ param([string] $WEHostName,
     {
         # The private key is missing - could have been sysprepped
         # Delete the certificate
-        Remove-Item Cert:\LocalMachine\My\$thumbpri -Forcen -Forcet -Force
+        Remove-Item -ErrorAction Stop Cert:\LocalMachine\My\$thumbpri -Forcen -Forcet -Force
        ;  $thumbprint = Create-Certificate -hostname $WEHostName
     }
 
@@ -123,6 +125,7 @@ param([string] $WEHostName,
     winrm set winrm/config/service/auth '@{Basic=" true" }'
 }
 
+[CmdletBinding()]
 function WE-Add-FirewallException
 {
     [CmdletBinding()]

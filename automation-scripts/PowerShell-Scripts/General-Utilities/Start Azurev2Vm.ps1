@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Start Azurev2Vm
 
@@ -47,7 +47,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .DESCRIPTION
    Uses PowerShell workflow to start all VMs in parallel.  Includes a retry and wait cycle to display when VMs are started.
    Workflow sessions require Azure authentication into each session so this script uses a splatting of parameters required for Connect-AzureRmAccount that
-   can be passed to each session.  Recommend using the New-AzureServicePrincipal script to create the required service principal and associated ApplicationId
+   can be passed to each session.  Recommend using the New-AzureServicePrincipal -ErrorAction Stop script to create the required service principal and associated ApplicationId
    and certificate thumbprint required to log into Azure with the -servicePrincipal flag
 
 
@@ -145,11 +145,12 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 5.5.0" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 5.5.0" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
    BREAK
 }
 
+[CmdletBinding()]
 function WE-Start-Vm 
 {
     [CmdletBinding()]
@@ -250,7 +251,7 @@ Start-VMs -VMs $remainingVMs -ResourceGroupName $resourceGroupName -loginParams 
  #post action confirmation
  do{
     cls
-    write-host " Waiting for VMs in $resourceGroupName to start..."
+    Write-Information " Waiting for VMs in $resourceGroupName to start..."
     $allStatus = @()  
     foreach ($vm in $WEVMs) 
     {
@@ -263,7 +264,7 @@ Start-VMs -VMs $remainingVMs -ResourceGroupName $resourceGroupName -loginParams 
  while($allStatus -ne 'VM Running')
 
 cls
-write-host " All VMs in $resourceGroupName are ready..."
+Write-Information " All VMs in $resourceGroupName are ready..."
 foreach ($vm in $WEVMs)
 {       
   ;  $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus

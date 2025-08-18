@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Backup Vault Creator
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()
 try {
@@ -56,7 +57,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -90,7 +91,7 @@ param(
 Write-WELog " Creating Recovery Services Vault: $WEVaultName" " INFO"
 
 ; 
-$WEVault = New-AzRecoveryServicesVault `
+$WEVault = New-AzRecoveryServicesVault -ErrorAction Stop `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEVaultName `
     -Location $WELocation
@@ -99,7 +100,7 @@ $WEVault = New-AzRecoveryServicesVault `
 Set-AzRecoveryServicesVaultContext -Vault $WEVault
 
 
-Set-AzRecoveryServicesBackupProperty `
+Set-AzRecoveryServicesBackupProperty -ErrorAction Stop `
     -Vault $WEVault `
     -BackupStorageRedundancy $WEStorageType
 

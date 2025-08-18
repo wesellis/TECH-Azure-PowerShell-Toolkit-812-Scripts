@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Cost Optimization Analyzer
 
@@ -72,12 +72,12 @@ try {
         Set-AzContext -SubscriptionId $WESubscriptionId | Out-Null
     }
     
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     Write-Log " Analyzing costs for subscription: $($context.Subscription.Name)" -Level INFO
     
     # Get cost data
     $startDate = (Get-Date).AddDays(-$WEAnalysisDays)
-    $endDate = Get-Date
+    $endDate = Get-Date -ErrorAction Stop
     
     $costData = @{
         SubscriptionId = $context.Subscription.Id
@@ -101,7 +101,7 @@ try {
     $resources = if ($WEResourceGroupName) {
         Get-AzResource -ResourceGroupName $WEResourceGroupName
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     Write-Log " Analyzing $($resources.Count) resources..." -Level INFO

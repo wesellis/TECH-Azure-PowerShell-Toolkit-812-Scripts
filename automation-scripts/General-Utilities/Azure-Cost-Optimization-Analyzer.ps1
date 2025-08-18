@@ -1,4 +1,4 @@
-# Azure Cost Optimization Analyzer with AI Recommendations
+﻿# Azure Cost Optimization Analyzer with AI Recommendations
 param (
     [Parameter(Mandatory=$false)][string]$SubscriptionId,
     [Parameter(Mandatory=$false)][string]$ResourceGroupName,
@@ -24,12 +24,12 @@ try {
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     }
     
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     Write-Log "Analyzing costs for subscription: $($context.Subscription.Name)" -Level INFO
     
     # Get cost data
     $startDate = (Get-Date).AddDays(-$AnalysisDays)
-    $endDate = Get-Date
+    $endDate = Get-Date -ErrorAction Stop
     
     $costData = @{
         SubscriptionId = $context.Subscription.Id
@@ -53,7 +53,7 @@ try {
     $resources = if ($ResourceGroupName) {
         Get-AzResource -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     Write-Log "Analyzing $($resources.Count) resources..." -Level INFO

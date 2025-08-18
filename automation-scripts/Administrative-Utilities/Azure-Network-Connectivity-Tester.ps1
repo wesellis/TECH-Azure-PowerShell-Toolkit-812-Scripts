@@ -1,4 +1,4 @@
-# Azure Network Connectivity Tester
+﻿# Azure Network Connectivity Tester
 # Test network connectivity between Azure resources
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
@@ -42,13 +42,13 @@ try {
     
     $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
     
-    Write-Host "Connectivity Test Results:" -ForegroundColor Cyan
-    Write-Host "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
-    Write-Host "Average Latency: $($result.AvgLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Min Latency: $($result.MinLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Max Latency: $($result.MaxLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Probes Sent: $($result.ProbesSent)" -ForegroundColor White
-    Write-Host "Probes Failed: $($result.ProbesFailed)" -ForegroundColor White
+    Write-Information "Connectivity Test Results:"
+    Write-Information "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
+    Write-Information "Average Latency: $($result.AvgLatencyInMs) ms"
+    Write-Information "Min Latency: $($result.MinLatencyInMs) ms"
+    Write-Information "Max Latency: $($result.MaxLatencyInMs) ms"
+    Write-Information "Probes Sent: $($result.ProbesSent)"
+    Write-Information "Probes Failed: $($result.ProbesFailed)"
 
 } catch {
     Write-Log "❌ Network connectivity test failed: $($_.Exception.Message)" -Level ERROR

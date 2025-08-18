@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installros
 
@@ -34,7 +34,7 @@
     Requires appropriate permissions and modules
 
 
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; iex ((New-Object -ErrorAction Stop System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco source add -n=ros-win -s="https://aka.ms/ros/public" --priority=1
 
 

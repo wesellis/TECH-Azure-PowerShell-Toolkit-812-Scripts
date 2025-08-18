@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Industrial Iot Orchestrator
 
@@ -426,7 +426,7 @@ class IndustrialIoTOrchestrator {
         
         try {
             New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $templatePath -Verbose
-            Remove-Item $templatePat -Forceh -Force -ErrorAction SilentlyContinue
+            Remove-Item -ErrorAction Stop $templatePat -Forceh -Force -ErrorAction SilentlyContinue
         } catch {
             Write-Warning " Digital Twins deployment failed: $_"
         }
@@ -534,7 +534,7 @@ class IndustrialIoTOrchestrator {
                 DeviceType = $deviceType
                 Location = " Floor-$([math]::Ceiling($i / 3))"
                 Status = " Online"
-                LastTelemetry = Get-Date
+                LastTelemetry = Get-Date -ErrorAction Stop
                 TelemetryData = $this.GenerateTelemetryData($deviceType)
             }
             
@@ -599,7 +599,7 @@ class IndustrialIoTOrchestrator {
                     Severity = " High"
                     Message = " Device requires immediate maintenance"
                     Score = $maintenanceScore
-                    Timestamp = Get-Date
+                    Timestamp = Get-Date -ErrorAction Stop
                 }
                 
                 $this.Alerts += $alert
@@ -631,7 +631,7 @@ class IndustrialIoTOrchestrator {
             OnlineDevices = ($this.Devices | Where-Object { $_.Status -eq " Online" }).Count
             ActiveAlerts = $this.Alerts.Count
             HighPriorityAlerts = ($this.Alerts | Where-Object { $_.Severity -eq " High" }).Count
-            LastUpdated = Get-Date
+            LastUpdated = Get-Date -ErrorAction Stop
         }
         
        ;  $html = $this.GenerateDashboardHTML($dashboardData)
@@ -717,7 +717,7 @@ try {
     Write-WELog " ======================================" " INFO" -ForegroundColor Cyan
     
     # Connect to Azure if needed
-    $context = Get-AzContext
+    $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
         Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
         Connect-AzAccount

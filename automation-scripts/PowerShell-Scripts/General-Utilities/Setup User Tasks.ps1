@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Setup User Tasks
 
@@ -52,8 +52,8 @@ try {
 }
 catch {
     Write-WELog " [WARN] Unhandled exception:" " INFO"
-    Write-Host -Object $_
-    Write-Host -Object $_.ScriptStackTrace
+    Write-Information -Object $_
+    Write-Information -Object $_.ScriptStackTrace
 }
 
 

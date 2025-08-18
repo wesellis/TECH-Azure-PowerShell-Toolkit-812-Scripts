@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Defender For Cloud Automation
 
@@ -145,7 +145,7 @@ try {
                 }
                 
                 Invoke-AzureOperation -Operation {
-                    Set-AzSecurityContact @contactParams
+                    Set-AzSecurityContact -ErrorAction Stop @contactParams
                 } -OperationName " Configure Security Contacts"
                 
                 Write-Log " ✓ Security contact configured: $WEEmailContact" -Level SUCCESS
@@ -165,7 +165,7 @@ try {
             Write-Log " 📊 Retrieving security score and posture..." -Level INFO
             
             $secureScore = Invoke-AzureOperation -Operation {
-                Get-AzSecurityScore
+                Get-AzSecurityScore -ErrorAction Stop
             } -OperationName " Get Security Score"
             
             $results = @{
@@ -179,7 +179,7 @@ try {
             Write-Log " 📋 Retrieving security recommendations..." -Level INFO
             
             $recommendations = Invoke-AzureOperation -Operation {
-                Get-AzSecurityTask
+                Get-AzSecurityTask -ErrorAction Stop
             } -OperationName " Get Security Recommendations"
             
             $highPriorityRecs = $recommendations | Where-Object { $_.SecurityTaskParameters.severityLevel -eq " High" }
@@ -196,7 +196,7 @@ try {
             Write-Log " 🚨 Retrieving security alerts..." -Level INFO
             
            ;  $alerts = Invoke-AzureOperation -Operation {
-                Get-AzSecurityAlert
+                Get-AzSecurityAlert -ErrorAction Stop
             } -OperationName " Get Security Alerts"
             
             # Filter by severity if specified
@@ -268,7 +268,7 @@ try {
         
         # Get current security state
        ;  $currentPricings = Invoke-AzureOperation -Operation {
-            Get-AzSecurityPricing
+            Get-AzSecurityPricing -ErrorAction Stop
         } -OperationName " Get All Security Pricings"
         
        ;  $enabledPlans = $currentPricings | Where-Object { $_.PricingTier -eq " Standard" }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Check Duplicatefoldername
 
@@ -60,11 +60,11 @@ if($WESampleName.StartsWith('modules')){
 ; 
 $d = Get-ChildItem -Directory -Recurse -filter $fragment
 
-Write-Host $d
+Write-Information $d
 
 if($d.count -gt 1){ # there should be at least one since this sample should be found
     Write-WELog " Duplicate folder names found:" " INFO" -ForegroundColor Yellow
-    Write-Host $d
+    Write-Information $d
     Write-WELog " ##vso[task.setvariable variable=duplicate.folderName]$true" " INFO"
 }
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Update Vmsizes
 
@@ -123,8 +123,8 @@ do {
 $jsonFiles = Get-ChildItem -Path " *.json" -Recurse
 
 foreach($f in $jsonFiles){
-    #Write-host $f.FullName
-    $json = Get-Content $f.FullName -Raw
+    #Write-Information $f.FullName
+    $json = Get-Content -ErrorAction Stop $f.FullName -Raw
     
     # Check to see if it's a template or param file
     if($json -like '*deploymentTemplate.json#" *' -or $json -like '*deploymentParameters.json#" *'){

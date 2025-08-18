@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Network Interface Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -24,24 +24,24 @@ param (
     [string]$PublicIpId
 )
 
-Write-Host "Creating Network Interface: $NicName"
+Write-Information "Creating Network Interface: $NicName"
 
 if ($PublicIpId) {
-    $Nic = New-AzNetworkInterface `
+    $Nic = New-AzNetworkInterface -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -Name $NicName `
         -Location $Location `
         -SubnetId $SubnetId `
         -PublicIpAddressId $PublicIpId
 } else {
-    $Nic = New-AzNetworkInterface `
+    $Nic = New-AzNetworkInterface -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -Name $NicName `
         -Location $Location `
         -SubnetId $SubnetId
 }
 
-Write-Host "Network Interface created successfully:"
-Write-Host "  Name: $($Nic.Name)"
-Write-Host "  Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
-Write-Host "  Location: $($Nic.Location)"
+Write-Information "Network Interface created successfully:"
+Write-Information "  Name: $($Nic.Name)"
+Write-Information "  Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+Write-Information "  Location: $($Nic.Location)"

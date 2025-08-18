@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Postconfiguration
 
@@ -100,13 +100,13 @@ if(Get-Command -Name 'Join-AzStorageAccount' -Module 'AzFilesHybrid' -ErrorActio
     else {
         # Register the target storage account with your active directory environment under the target OU 
         # (for example: specify the OU with Name as " UserAccounts" or DistinguishedName as 
-        # " OU=UserAccounts,DC=CONTOSO,DC=COM" ). You can use this PowerShell cmdlet: Get-ADOrganizationalUnit 
+        # " OU=UserAccounts,DC=CONTOSO,DC=COM" ). You can use this PowerShell cmdlet: Get-ADOrganizationalUnit -ErrorAction Stop 
         # to find the Name and DistinguishedName of your target OU. If you are using the OU Name, specify it 
         # with -OrganizationalUnitName as shown below. If you are using the OU DistinguishedName, you can set it 
         # with -OrganizationalUnitDistinguishedName. You can choose to provide one of the two names to specify 
         # the target OU. You can choose to create the identity that represents the storage account as either a 
         # Service Logon Account or Computer Account (default parameter value), depending on your AD permissions 
-        # and preference. Run Get-Help Join-AzStorageAccountForAuth for more details on this cmdlet.
+        # and preference. Run Get-Help -ErrorAction Stop Join-AzStorageAccountForAuth for more details on this cmdlet.
         Join-AzStorageAccount `
             -ResourceGroupName $WEResourceGroupName `
             -StorageAccountName $WEStorageAccountName `
@@ -123,7 +123,7 @@ if(Get-Command -Name 'Join-AzStorageAccount' -Module 'AzFilesHybrid' -ErrorActio
 else {
     Invoke-WebRequest -Uri 'https://github.com/Azure-Samples/azure-files-samples/releases/download/v0.3.2/AzFilesHybrid.zip' -OutFile " C:\AzFilesHybrid.zip"
     Expand-Archive -LiteralPath 'C:\AzFilesHybrid.zip' -DestinationPath 'C:\AzFilesHybrid'
-    Remove-Item 'C:\AzFilesHybrid.zip -Force' -Force
+    Remove-Item -ErrorAction Stop 'C:\AzFilesHybrid.zip -Force' -Force
 
     # Change the execution policy to unblock importing AzFilesHybrid.psm1 module
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
@@ -138,13 +138,13 @@ else {
 
     # Register the target storage account with your active directory environment under the target OU 
     # (for example: specify the OU with Name as " UserAccounts" or DistinguishedName as 
-    # " OU=UserAccounts,DC=CONTOSO,DC=COM" ). You can use this PowerShell cmdlet: Get-ADOrganizationalUnit 
+    # " OU=UserAccounts,DC=CONTOSO,DC=COM" ). You can use this PowerShell cmdlet: Get-ADOrganizationalUnit -ErrorAction Stop 
     # to find the Name and DistinguishedName of your target OU. If you are using the OU Name, specify it 
     # with -OrganizationalUnitName as shown below. If you are using the OU DistinguishedName, you can set it 
     # with -OrganizationalUnitDistinguishedName. You can choose to provide one of the two names to specify 
     # the target OU. You can choose to create the identity that represents the storage account as either a 
     # Service Logon Account or Computer Account (default parameter value), depending on your AD permissions 
-    # and preference. Run Get-Help Join-AzStorageAccountForAuth for more details on this cmdlet.
+    # and preference. Run Get-Help -ErrorAction Stop Join-AzStorageAccountForAuth for more details on this cmdlet.
     Join-AzStorageAccount `
             -ResourceGroupName $WEResourceGroupName `
             -StorageAccountName $WEStorageAccountName `
@@ -176,7 +176,7 @@ if ($connectTestResult.TcpTestSucceeded) {
 
     Foreach($WEUserAccess in $WEUserAccesses){
        ;  $WESplitObject = $WEUserAccess.Split(" ;" )
-        $WEAccess = New-Object Security.AccessControl.FileSystemAccessRule ($WESplitObject[0], $WESplitObject[1], $WESplitObject[2],'None', 'Allow')
+        $WEAccess = New-Object -ErrorAction Stop Security.AccessControl.FileSystemAccessRule ($WESplitObject[0], $WESplitObject[1], $WESplitObject[2],'None', 'Allow')
         $WEAcl.AddAccessRule($WEAccess)
         Set-Acl -AclObject $WEAcl -Path $WEFolder
     }
@@ -190,7 +190,7 @@ else {
 
 Invoke-WebRequest -Uri 'https://aka.ms/fslogix_download' -OutFile " C:\FSLogix.zip"
 Expand-Archive -LiteralPath " C:\FSLogix.zip" -DestinationPath 'C:\FSLogix'
-Remove-Item 'C:\FSLogix.zip -Force' -Force
+Remove-Item -ErrorAction Stop 'C:\FSLogix.zip -Force' -Force
 
 Copy-Item " C:\FSLogix\fslogix.admx" -Destination " C:\Windows\PolicyDefinitions"
 Copy-Item " C:\FSLogix\fslogix.adml" -Destination " C:\Windows\PolicyDefinitions\en-US"

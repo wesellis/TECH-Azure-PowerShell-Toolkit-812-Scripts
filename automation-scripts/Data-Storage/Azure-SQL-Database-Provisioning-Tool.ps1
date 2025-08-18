@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure SQL Database Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -19,27 +19,27 @@ param (
     [bool]$AllowAzureIps = $true
 )
 
-Write-Host "Provisioning SQL Database: $DatabaseName"
-Write-Host "SQL Server: $ServerName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Edition: $Edition"
-Write-Host "Service Objective: $ServiceObjective"
+Write-Information "Provisioning SQL Database: $DatabaseName"
+Write-Information "SQL Server: $ServerName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "Edition: $Edition"
+Write-Information "Service Objective: $ServiceObjective"
 
 # Create SQL Server
-Write-Host "`nCreating SQL Server..."
-$SqlServer = New-AzSqlServer `
+Write-Information "`nCreating SQL Server..."
+$SqlServer = New-AzSqlServer -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Location $Location `
     -ServerName $ServerName `
-    -SqlAdministratorCredentials (New-Object PSCredential($AdminUser, $AdminPassword))
+    -SqlAdministratorCredentials (New-Object -ErrorAction Stop PSCredential($AdminUser, $AdminPassword))
 
-Write-Host "SQL Server created: $($SqlServer.FullyQualifiedDomainName)"
+Write-Information "SQL Server created: $($SqlServer.FullyQualifiedDomainName)"
 
 # Configure firewall rule to allow Azure services
 if ($AllowAzureIps) {
-    Write-Host "Configuring firewall to allow Azure services..."
-    New-AzSqlServerFirewallRule `
+    Write-Information "Configuring firewall to allow Azure services..."
+    New-AzSqlServerFirewallRule -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -ServerName $ServerName `
         -FirewallRuleName "AllowAzureServices" `
@@ -48,22 +48,22 @@ if ($AllowAzureIps) {
 }
 
 # Create SQL Database
-Write-Host "`nCreating SQL Database..."
-$SqlDatabase = New-AzSqlDatabase `
+Write-Information "`nCreating SQL Database..."
+$SqlDatabase = New-AzSqlDatabase -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -ServerName $ServerName `
     -DatabaseName $DatabaseName `
     -Edition $Edition `
     -RequestedServiceObjectiveName $ServiceObjective
 
-Write-Host "`nSQL Database $DatabaseName provisioned successfully"
-Write-Host "Server: $($SqlServer.FullyQualifiedDomainName)"
-Write-Host "Database: $($SqlDatabase.DatabaseName)"
-Write-Host "Edition: $($SqlDatabase.Edition)"
-Write-Host "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)"
-Write-Host "Max Size: $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2)) GB"
+Write-Information "`nSQL Database $DatabaseName provisioned successfully"
+Write-Information "Server: $($SqlServer.FullyQualifiedDomainName)"
+Write-Information "Database: $($SqlDatabase.DatabaseName)"
+Write-Information "Edition: $($SqlDatabase.Edition)"
+Write-Information "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)"
+Write-Information "Max Size: $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2)) GB"
 
-Write-Host "`nConnection String (template):"
-Write-Host "Server=tcp:$($SqlServer.FullyQualifiedDomainName),1433;Initial Catalog=$DatabaseName;Persist Security Info=False;User ID=$AdminUser;Password=***;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+Write-Information "`nConnection String (template):"
+Write-Information "Server=tcp:$($SqlServer.FullyQualifiedDomainName),1433;Initial Catalog=$DatabaseName;Persist Security Info=False;User ID=$AdminUser;Password=***;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
-Write-Host "`nSQL Database provisioning completed at $(Get-Date)"
+Write-Information "`nSQL Database provisioning completed at $(Get-Date)"

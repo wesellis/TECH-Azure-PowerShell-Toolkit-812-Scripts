@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azresourcegroup
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzResourceGroup {
 
 
@@ -41,8 +42,9 @@ function WE-Invoke-AzResourceGroup {
 $WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzResourceGroup {
-    #Region func New-AzResourceGroup
+    #Region func New-AzResourceGroup -ErrorAction Stop
     #Creating the Resource Group Name
    ;  $newAzResourceGroupSplat = @{
         Name     = $WEResourceGroupName
@@ -51,8 +53,8 @@ function WE-Invoke-AzResourceGroup {
     }
 
 
-    New-AzResourceGroup @newAzResourceGroupSplat
-    #endregion func New-AzResourceGroup
+    New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
+    #endregion func New-AzResourceGroup -ErrorAction Stop
     
 }
 

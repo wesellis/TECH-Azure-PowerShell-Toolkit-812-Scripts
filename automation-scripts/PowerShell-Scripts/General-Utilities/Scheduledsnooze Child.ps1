@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Scheduledsnooze Child
 
@@ -87,7 +87,7 @@ try
         Write-Output " Stopping the VM : $($WEVMName)"
 
        ;  $WEStatus = Stop-AzureRmVM -Name $WEVMName -ResourceGroupName $WEResourceGroupName -Force
-        if($WEStatus -eq $null)
+        if($null -eq $WEStatus)
         {
             Write-Output " Error occured while stopping the Virtual Machine."
         }
@@ -101,7 +101,7 @@ try
         Write-Output " Starting the VM : $($WEVMName)"
 
        ;  $WEStatus = Start-AzureRmVM -Name $WEVMName -ResourceGroupName $WEResourceGroupName
-        if($WEStatus -eq $null)
+        if($null -eq $WEStatus)
         {
             Write-Output " Error occured while starting the Virtual Machine $($WEVMName)"
         }

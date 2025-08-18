@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Logicapp Workflow Monitor
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -92,7 +93,7 @@ Write-WELog "  Location: $($WELogicApp.Location)" " INFO"
 Write-WELog "  Provisioning State: $($WELogicApp.ProvisioningState)" " INFO"
 
 
-$WEEndTime = Get-Date
+$WEEndTime = Get-Date -ErrorAction Stop
 $WEStartTime = $WEEndTime.AddDays(-$WEDaysBack)
 
 Write-WELog " `nWorkflow Runs (Last $WEDaysBack days):" " INFO"

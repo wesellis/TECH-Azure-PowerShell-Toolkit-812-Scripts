@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure CDN Profile Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -27,21 +27,21 @@ param (
     [string]$Sku = "Standard_Microsoft"
 )
 
-Write-Host "Creating CDN Profile: $ProfileName"
+Write-Information "Creating CDN Profile: $ProfileName"
 
 # Create CDN Profile
-$CdnProfile = New-AzCdnProfile `
+$CdnProfile = New-AzCdnProfile -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -ProfileName $ProfileName `
     -Location $Location `
     -Sku $Sku
 
-Write-Host "CDN Profile created: $($CdnProfile.Name)"
+Write-Information "CDN Profile created: $($CdnProfile.Name)"
 
 # Create CDN Endpoint
-Write-Host "Creating CDN Endpoint: $EndpointName"
+Write-Information "Creating CDN Endpoint: $EndpointName"
 
-$CdnEndpoint = New-AzCdnEndpoint `
+$CdnEndpoint = New-AzCdnEndpoint -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -ProfileName $ProfileName `
     -EndpointName $EndpointName `
@@ -49,23 +49,23 @@ $CdnEndpoint = New-AzCdnEndpoint `
     -OriginHostName $OriginHostName `
     -OriginName "origin1"
 
-Write-Host "✅ CDN Profile and Endpoint created successfully:"
-Write-Host "  Profile Name: $($CdnProfile.Name)"
-Write-Host "  SKU: $($CdnProfile.Sku.Name)"
-Write-Host "  Endpoint Name: $($CdnEndpoint.Name)"
-Write-Host "  Endpoint URL: https://$($CdnEndpoint.HostName)"
-Write-Host "  Origin: $OriginHostName"
+Write-Information "✅ CDN Profile and Endpoint created successfully:"
+Write-Information "  Profile Name: $($CdnProfile.Name)"
+Write-Information "  SKU: $($CdnProfile.Sku.Name)"
+Write-Information "  Endpoint Name: $($CdnEndpoint.Name)"
+Write-Information "  Endpoint URL: https://$($CdnEndpoint.HostName)"
+Write-Information "  Origin: $OriginHostName"
 
-Write-Host "`nCDN Benefits:"
-Write-Host "• Global content delivery"
-Write-Host "• Reduced latency"
-Write-Host "• Improved performance"
-Write-Host "• Bandwidth cost optimization"
-Write-Host "• Origin server protection"
+Write-Information "`nCDN Benefits:"
+Write-Information "• Global content delivery"
+Write-Information "• Reduced latency"
+Write-Information "• Improved performance"
+Write-Information "• Bandwidth cost optimization"
+Write-Information "• Origin server protection"
 
-Write-Host "`nNext Steps:"
-Write-Host "1. Configure caching rules"
-Write-Host "2. Set up custom domains"
-Write-Host "3. Enable HTTPS"
-Write-Host "4. Configure compression"
-Write-Host "5. Test global distribution"
+Write-Information "`nNext Steps:"
+Write-Information "1. Configure caching rules"
+Write-Information "2. Set up custom domains"
+Write-Information "3. Enable HTTPS"
+Write-Information "4. Configure compression"
+Write-Information "5. Test global distribution"

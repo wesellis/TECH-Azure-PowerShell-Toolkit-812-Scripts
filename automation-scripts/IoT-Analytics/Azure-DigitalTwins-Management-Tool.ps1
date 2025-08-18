@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+﻿#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.DigitalTwins
 
 <#
@@ -94,13 +94,14 @@ try {
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.DigitalTwins -Force -ErrorAction Stop
     Import-Module Az.EventHub -Force -ErrorAction Stop
-    Write-Host "✅ Successfully imported required Azure modules" -ForegroundColor Green
+    Write-Information "✅ Successfully imported required Azure modules"
 } catch {
     Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
 # Enhanced logging function
+[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -116,11 +117,12 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Create Azure Digital Twins instance
-function New-DigitalTwinsInstance {
+[CmdletBinding()]
+function New-DigitalTwinsInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -143,7 +145,7 @@ function New-DigitalTwinsInstance {
             Tag = $Tags
         }
         
-        $digitalTwinsInstance = New-AzDigitalTwinsInstance @dtParams
+        $digitalTwinsInstance = New-AzDigitalTwinsInstance -ErrorAction Stop @dtParams
         Write-EnhancedLog "Successfully created Digital Twins instance: $($digitalTwinsInstance.Name)" "Success"
         
         # Wait for instance to be ready
@@ -168,7 +170,8 @@ function New-DigitalTwinsInstance {
 }
 
 # Configure private endpoint
-function New-PrivateEndpoint {
+[CmdletBinding()]
+function New-PrivateEndpoint -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
@@ -207,7 +210,8 @@ function New-PrivateEndpoint {
 }
 
 # Configure event routing
-function Set-EventRouting {
+[CmdletBinding()]
+function Set-EventRouting -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
@@ -244,7 +248,7 @@ function Set-EventRouting {
             EventHubName = $EventHubName
         }
         
-        New-AzDigitalTwinsEndpoint @endpointParams
+        New-AzDigitalTwinsEndpoint -ErrorAction Stop @endpointParams
         
         # Create event route
         $routeName = "telemetry-route"
@@ -261,7 +265,8 @@ function Set-EventRouting {
 }
 
 # Deploy Digital Twins model
-function Deploy-DigitalTwinsModel {
+[CmdletBinding()]
+function Install-DigitalTwinsModel {
     param(
         [object]$DigitalTwinsInstance,
         [string]$ModelsPath
@@ -391,7 +396,8 @@ function Deploy-DigitalTwinsModel {
 }
 
 # Configure diagnostic setting
-function Set-DiagnosticSetting {
+[CmdletBinding()]
+function Set-DiagnosticSetting -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
@@ -467,7 +473,8 @@ function Set-DiagnosticSetting {
 }
 
 # Assign RBAC role
-function Set-RoleAssignment {
+[CmdletBinding()]
+function Set-RoleAssignment -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     
@@ -476,7 +483,7 @@ function Set-RoleAssignment {
             Write-EnhancedLog "Configuring RBAC roles for Digital Twins instance" "Info"
         
         # Get current user
-        $currentUser = Get-AzContext
+        $currentUser = Get-AzContext -ErrorAction Stop
         
         # Assign Azure Digital Twins Data Owner role
         New-AzRoleAssignment -ObjectId $currentUser.Account.Id -RoleDefinitionName "Azure Digital Twins Data Owner" -Scope $DigitalTwinsInstance.Id
@@ -490,7 +497,8 @@ function Set-RoleAssignment {
 }
 
 # Monitor Digital Twins instance
-function Get-DigitalTwinsStatus {
+[CmdletBinding()]
+function Get-DigitalTwinsStatus -ErrorAction Stop {
     param([object]$DigitalTwinsInstance)
     
     try {
@@ -538,7 +546,7 @@ try {
     
     switch ($Action) {
         "Create" {
-            $instance = New-DigitalTwinsInstance
+            $instance = New-DigitalTwinsInstance -ErrorAction Stop
             
             if ($EnablePrivateEndpoint) {
                 New-PrivateEndpoint -DigitalTwinsInstance $instance

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Servicedscvmss
 
@@ -104,7 +104,7 @@ Node $nodeName
       Name = " Web-AppInit"
       Ensure = " Present"
     }
-	##Get-WindowsFeature NET-WCF-* | format-table -property name,displayname -AutoSize	
+	##Get-WindowsFeature -ErrorAction Stop NET-WCF-* | format-table -property name,displayname -AutoSize	
 	WindowsFeature WCFServices45
     {
       Name = " NET-WCF-Services45"
@@ -188,7 +188,7 @@ Node $nodeName
 				Add-Type -assembly " system.io.compression.filesystem"
 				[io.compression.zipfile]::ExtractToDirectory($dest, " C:\inetpub\wwwroot" )	
 				$WESourceFolder = " C:\inetpub\wwwroot"
-			; 	$appPaths = @(Get-ChildItem $WESourceFolder -Directory)
+			; 	$appPaths = @(Get-ChildItem -ErrorAction Stop $WESourceFolder -Directory)
 				foreach ($appPath in $appPaths) 
 				{ 
 				; 	$x = " IIS:\Sites\Default Web Site\" + $appPath.Name 

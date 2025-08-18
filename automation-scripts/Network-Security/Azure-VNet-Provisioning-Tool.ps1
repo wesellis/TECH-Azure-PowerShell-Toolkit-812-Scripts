@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Virtual Network Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -16,18 +16,18 @@ param (
     [string]$SubnetPrefix
 )
 
-Write-Host "Provisioning Virtual Network: $VnetName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Address Prefix: $AddressPrefix"
+Write-Information "Provisioning Virtual Network: $VnetName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "Location: $Location"
+Write-Information "Address Prefix: $AddressPrefix"
 
 # Create subnet configuration if specified
 if ($SubnetPrefix) {
     $SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix $SubnetPrefix
-    Write-Host "Subnet: $SubnetName ($SubnetPrefix)"
+    Write-Information "Subnet: $SubnetName ($SubnetPrefix)"
     
     # Create virtual network with subnet
-    $VNet = New-AzVirtualNetwork `
+    $VNet = New-AzVirtualNetwork -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -Location $Location `
         -Name $VnetName `
@@ -35,12 +35,12 @@ if ($SubnetPrefix) {
         -Subnet $SubnetConfig
 } else {
     # Create virtual network without subnet
-    $VNet = New-AzVirtualNetwork `
+    $VNet = New-AzVirtualNetwork -ErrorAction Stop `
         -ResourceGroupName $ResourceGroupName `
         -Location $Location `
         -Name $VnetName `
         -AddressPrefix $AddressPrefix
 }
 
-Write-Host "Virtual Network $VnetName provisioned successfully"
-Write-Host "VNet ID: $($VNet.Id)"
+Write-Information "Virtual Network $VnetName provisioned successfully"
+Write-Information "VNet ID: $($VNet.Id)"

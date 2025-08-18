@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     3 Set Azrecoveryservicesvaultcontext(Deprecated)
 
@@ -55,14 +55,14 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
     General notes
 
     Description
-The Set-AzRecoveryServicesVaultContext cmdlet sets the vault context for Azure Site Recovery services.
+The Set-AzRecoveryServicesVaultContext -ErrorAction Stop cmdlet sets the vault context for Azure Site Recovery services.
 
 Warning: This cmdlet is being deprecated in a future breaking change release. There will be no replacement for it. Please use the -VaultId parameter in all Recovery Services commands going forward.
 
     Use a Recovery Services vault to protect your virtual machines. Before you apply the protection, set the vault context (the type of data protected in the vault), and verify the protection policy. The protection policy is the schedule when the backup jobs run, and how long each backup snapshot is retained.
 
 Set vault context
-Before enabling protection on a VM, use Set-AzRecoveryServicesVaultContext to set the vault context. Once the vault context is set, it applies to all subsequent cmdlets. The following example sets the vault context for the vault, testvault.
+Before enabling protection on a VM, use Set-AzRecoveryServicesVaultContext -ErrorAction Stop to set the vault context. Once the vault context is set, it applies to all subsequent cmdlets. The following example sets the vault context for the vault, testvault.
 
 
 
@@ -77,7 +77,7 @@ $getAzRecoveryServicesVaultSplat = @{
     Name = $WEVaultname
 }
 
-Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat | Set-AzRecoveryServicesVaultContext
+Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat | Set-AzRecoveryServicesVaultContext -ErrorAction Stop
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

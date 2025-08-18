@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Health Checker
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -68,7 +69,7 @@ param(
     [string]$WEResourceGroupName
 )
 
-Write-Host -Object " Checking health status for resources in: $WEResourceGroupName"
+Write-Information -Object " Checking health status for resources in: $WEResourceGroupName"
 
 $WEResources = Get-AzResource -ResourceGroupName $WEResourceGroupName
 $WEHealthStatus = @()
@@ -108,8 +109,8 @@ foreach ($WEResource in $WEResources) {
     }
 }
 
-Write-Host -Object " `nResource Health Status:"
-Write-Host -Object (" =" * 60)
+Write-Information -Object " `nResource Health Status:"
+Write-Information -Object (" =" * 60)
 
 foreach ($WEHealth in $WEHealthStatus) {
    ;  $WEStatusColor = switch ($WEHealth.Status) {
@@ -119,7 +120,7 @@ foreach ($WEHealth in $WEHealthStatus) {
         default { " ⚠️" }
     }
     
-    Write-Host -Object " $WEStatusColor $($WEHealth.ResourceName) ($($WEHealth.ResourceType)): $($WEHealth.Status)"
+    Write-Information -Object " $WEStatusColor $($WEHealth.ResourceName) ($($WEHealth.ResourceType)): $($WEHealth.Status)"
 }
 
 

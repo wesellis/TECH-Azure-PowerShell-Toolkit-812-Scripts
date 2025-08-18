@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Kill Azresourcegroup
 
@@ -103,7 +103,7 @@ foreach($o in $oms){
 
     $jsonBody = $body | ConvertTo-Json -Depth 30
 
-    # Write-Host $jsonBody
+    # Write-Information $jsonBody
 
     # re-PUT the resource with the empty properties body (arrays)
     Invoke-AzRestMethod -Method " PUT" -Path " $($o.id)?api-version=2015-11-01-preview" -Payload $jsonBody -Verbose

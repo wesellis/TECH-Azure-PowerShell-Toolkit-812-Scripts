@@ -1,4 +1,4 @@
-# Azure OpenAI Service Manager
+﻿# Azure OpenAI Service Manager
 # Professional Azure automation script for AI service management
 # Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise AI deployments
@@ -89,7 +89,7 @@ try {
             }
             
             Invoke-AzureOperation -Operation {
-                New-AzCognitiveServicesAccount @openAIParams
+                New-AzCognitiveServicesAccount -ErrorAction Stop @openAIParams
             } -OperationName "Create OpenAI Account" | Out-Null
             
             Write-Log "✓ OpenAI account created: $AccountName" -Level SUCCESS
@@ -140,14 +140,14 @@ try {
                 Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models?api-version=2023-05-01" -Method GET -Headers $headers
             } -OperationName "List Available Models"
             
-            Write-Host ""
-            Write-Host "📋 Available Models for $AccountName" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+            Write-Information ""
+            Write-Information "📋 Available Models for $AccountName"
+            Write-Information "════════════════════════════════════════════════════════════════════"
             
             foreach ($model in $models.value) {
-                Write-Host "• $($model.name) - $($model.version)" -ForegroundColor White
+                Write-Information "• $($model.name) - $($model.version)"
                 if ($model.capabilities) {
-                    Write-Host "  Capabilities: $($model.capabilities -join ', ')" -ForegroundColor Gray
+                    Write-Information "  Capabilities: $($model.capabilities -join ', ')"
                 }
             }
         }
@@ -159,13 +159,13 @@ try {
                 Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName
             } -OperationName "Get API Keys"
             
-            Write-Host ""
-            Write-Host "🔑 API Keys for $AccountName" -ForegroundColor Cyan
-            Write-Host "════════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-            Write-Host "Key 1: $($keys.Key1)" -ForegroundColor Yellow
-            Write-Host "Key 2: $($keys.Key2)" -ForegroundColor Yellow
-            Write-Host ""
-            Write-Host "⚠️  Store these keys securely! Consider using Azure Key Vault." -ForegroundColor Red
+            Write-Information ""
+            Write-Information "🔑 API Keys for $AccountName"
+            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Information "Key 1: $($keys.Key1)"
+            Write-Information "Key 2: $($keys.Key2)"
+            Write-Information ""
+            Write-Information "⚠️  Store these keys securely! Consider using Azure Key Vault."
         }
     }
 
@@ -187,7 +187,7 @@ try {
                     MetricCategory = @("AllMetrics")
                 }
                 
-                Set-AzDiagnosticSetting @diagnosticParams
+                Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
                 Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
@@ -267,53 +267,53 @@ try {
     } -OperationName "Validate Service Status"
 
     # Success summary
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "                              AZURE OPENAI SERVICE READY" -ForegroundColor Green  
-    Write-Host "════════════════════════════════════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "🤖 OpenAI Service Details:" -ForegroundColor Cyan
-    Write-Host "   • Account: $AccountName" -ForegroundColor White
-    Write-Host "   • Resource Group: $ResourceGroupName" -ForegroundColor White
-    Write-Host "   • Location: $Location" -ForegroundColor White
-    Write-Host "   • SKU: $SkuName" -ForegroundColor White
-    Write-Host "   • Endpoint: $($serviceStatus.Endpoint)" -ForegroundColor White
-    Write-Host "   • Status: $($serviceStatus.ProvisioningState)" -ForegroundColor Green
+    Write-Information ""
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information "                              AZURE OPENAI SERVICE READY"  
+    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
+    Write-Information ""
+    Write-Information "🤖 OpenAI Service Details:"
+    Write-Information "   • Account: $AccountName"
+    Write-Information "   • Resource Group: $ResourceGroupName"
+    Write-Information "   • Location: $Location"
+    Write-Information "   • SKU: $SkuName"
+    Write-Information "   • Endpoint: $($serviceStatus.Endpoint)"
+    Write-Information "   • Status: $($serviceStatus.ProvisioningState)"
     
     if ($Action.ToLower() -eq "create") {
-        Write-Host ""
-        Write-Host "🚀 Model Deployment:" -ForegroundColor Cyan
-        Write-Host "   • Model: $ModelName ($ModelVersion)" -ForegroundColor White
-        Write-Host "   • Deployment: $DeploymentName" -ForegroundColor White
-        Write-Host "   • Capacity: $Capacity TPM" -ForegroundColor White
+        Write-Information ""
+        Write-Information "🚀 Model Deployment:"
+        Write-Information "   • Model: $ModelName ($ModelVersion)"
+        Write-Information "   • Deployment: $DeploymentName"
+        Write-Information "   • Capacity: $Capacity TPM"
     }
     
-    Write-Host ""
-    Write-Host "🔒 Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
+    Write-Information ""
+    Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
     foreach ($finding in $securityFindings) {
-        Write-Host "   $finding" -ForegroundColor White
+        Write-Information "   $finding"
     }
     
-    Write-Host ""
-    Write-Host "💡 Next Steps:" -ForegroundColor Cyan
-    Write-Host "   • Test API: Use the endpoint and keys to make API calls" -ForegroundColor White
-    Write-Host "   • Monitor usage: Check Azure Monitor for usage metrics" -ForegroundColor White
-    Write-Host "   • Set up alerts: Configure cost and usage alerts" -ForegroundColor White
-    Write-Host "   • Review compliance: Ensure AI governance policies are met" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "💡 Next Steps:"
+    Write-Information "   • Test API: Use the endpoint and keys to make API calls"
+    Write-Information "   • Monitor usage: Check Azure Monitor for usage metrics"
+    Write-Information "   • Set up alerts: Configure cost and usage alerts"
+    Write-Information "   • Review compliance: Ensure AI governance policies are met"
+    Write-Information ""
 
     Write-Log "✅ Azure OpenAI service '$AccountName' successfully configured for enterprise AI workloads!" -Level SUCCESS
 
 } catch {
     Write-Log "❌ OpenAI service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Host ""
-    Write-Host "🔧 Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "   • Verify OpenAI service availability in your region" -ForegroundColor White
-    Write-Host "   • Check subscription quotas for Cognitive Services" -ForegroundColor White
-    Write-Host "   • Ensure proper permissions for AI service creation" -ForegroundColor White
-    Write-Host "   • Validate model availability for your region" -ForegroundColor White
-    Write-Host ""
+    Write-Information ""
+    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information "   • Verify OpenAI service availability in your region"
+    Write-Information "   • Check subscription quotas for Cognitive Services"
+    Write-Information "   • Ensure proper permissions for AI service creation"
+    Write-Information "   • Validate model availability for your region"
+    Write-Information ""
     
     exit 1
 }

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azapplicationsecuritygroup
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzApplicationSecurityGroup {
 }
 
@@ -41,8 +42,9 @@ function WE-Invoke-AzApplicationSecurityGroup {
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzApplicationSecurityGroup {
-    #Region func New-AzApplicationSecurityGroup
+    #Region func New-AzApplicationSecurityGroup -ErrorAction Stop
     #Creating the Application Security Group
     $WEASGName = -join (" $WEVMName" , " _ASG1" )
    ;  $newAzApplicationSecurityGroupSplat = @{
@@ -51,8 +53,8 @@ function WE-Invoke-AzApplicationSecurityGroup {
         Location          = " $WELocationName"
         Tag               = $WETags
     }
-   ;  $WEASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
-    #endRegion func New-AzApplicationSecurityGroup
+   ;  $WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
+    #endRegion func New-AzApplicationSecurityGroup -ErrorAction Stop
     
 }
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Remove Rsv
 
@@ -158,7 +158,7 @@ Write-WELog " Deleted DPM Servers" " INFO"
 Write-WELog " Ensure that you stop protection and delete backup items from the respective MARS, MAB and DPM consoles as well. Visit https://go.microsoft.com/fwlink/?linkid=2186234 to learn more." " INFO" -ForegroundColor Yellow
 
 
-$fabricObjects = Get-AzRecoveryServicesAsrFabric
+$fabricObjects = Get-AzRecoveryServicesAsrFabric -ErrorAction Stop
 if ($null -ne $fabricObjects) {
 	# First DisableDR all VMs.
 	foreach ($fabricObject in $fabricObjects) {
@@ -212,7 +212,7 @@ Write-WELog " Removed Private Endpoints" " INFO"
 $fabricCount = 0
 $WEASRProtectedItems = 0
 $WEASRPolicyMappings = 0
-$fabricObjects = Get-AzRecoveryServicesAsrFabric
+$fabricObjects = Get-AzRecoveryServicesAsrFabric -ErrorAction Stop
 if ($null -ne $fabricObjects) {
 	foreach ($fabricObject in $fabricObjects) {
 		$containerObjects = Get-AzRecoveryServicesAsrProtectionContainer -Fabric $fabricObject
@@ -244,23 +244,23 @@ $backupServersDPMFin = Get-AzRecoveryServicesBackupManagementServer -VaultId $WE
 $pvtendpointsFin = Get-AzPrivateEndpointConnection -PrivateLinkResourceId $WEVaultToDelete.ID
 
 
-if($backupItemsVMFin.count -ne 0) {Write-Host $backupItemsVMFin.count " Azure VM backups are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupItemsSQLFin.count -ne 0) {Write-Host $backupItemsSQLFin.count " SQL Server Backup Items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupContainersSQLFin.count -ne 0) {Write-Host $backupContainersSQLFin.count " SQL Server Backup Containers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($protectableItemsSQLFin.count -ne 0) {Write-Host $protectableItemsSQLFin.count " SQL Server Instances are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupItemsSAPFin.count -ne 0) {Write-Host $backupItemsSAPFin.count " SAP HANA Backup Items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupContainersSAPFin.count -ne 0) {Write-Host $backupContainersSAPFin.count " SAP HANA Backup Containers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupItemsAFSFin.count -ne 0) {Write-Host $backupItemsAFSFin.count " Azure File Shares are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($WEStorageAccountsFin.count -ne 0) {Write-Host $WEStorageAccountsFin.count " Storage Accounts are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupServersMARSFin.count -ne 0) {Write-Host $backupServersMARSFin.count " MARS Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupServersMABSFin.count -ne 0) {Write-Host $backupServersMABSFin.count " MAB Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($backupServersDPMFin.count -ne 0) {Write-Host $backupServersDPMFin.count " DPM Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($WEASRProtectedItems -ne 0) {Write-Host $WEASRProtectedItems " ASR protected items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($WEASRPolicyMappings -ne 0) {Write-Host $WEASRPolicyMappings " ASR policy mappings are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($fabricCount -ne 0) {Write-Host $fabricCount " ASR Fabrics are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
-if($pvtendpointsFin.count -ne 0) {Write-Host $pvtendpointsFin.count " Private endpoints are still linked to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupItemsVMFin.count -ne 0) {Write-Information $backupItemsVMFin.count " Azure VM backups are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupItemsSQLFin.count -ne 0) {Write-Information $backupItemsSQLFin.count " SQL Server Backup Items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupContainersSQLFin.count -ne 0) {Write-Information $backupContainersSQLFin.count " SQL Server Backup Containers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($protectableItemsSQLFin.count -ne 0) {Write-Information $protectableItemsSQLFin.count " SQL Server Instances are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupItemsSAPFin.count -ne 0) {Write-Information $backupItemsSAPFin.count " SAP HANA Backup Items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupContainersSAPFin.count -ne 0) {Write-Information $backupContainersSAPFin.count " SAP HANA Backup Containers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupItemsAFSFin.count -ne 0) {Write-Information $backupItemsAFSFin.count " Azure File Shares are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($WEStorageAccountsFin.count -ne 0) {Write-Information $WEStorageAccountsFin.count " Storage Accounts are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupServersMARSFin.count -ne 0) {Write-Information $backupServersMARSFin.count " MARS Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupServersMABSFin.count -ne 0) {Write-Information $backupServersMABSFin.count " MAB Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($backupServersDPMFin.count -ne 0) {Write-Information $backupServersDPMFin.count " DPM Servers are still registered to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($WEASRProtectedItems -ne 0) {Write-Information $WEASRProtectedItems " ASR protected items are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($WEASRPolicyMappings -ne 0) {Write-Information $WEASRPolicyMappings " ASR policy mappings are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($fabricCount -ne 0) {Write-Information $fabricCount " ASR Fabrics are still present in the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
+if($pvtendpointsFin.count -ne 0) {Write-Information $pvtendpointsFin.count " Private endpoints are still linked to the vault. Remove the same for successful vault deletion." -ForegroundColor Red}
 
-$accesstoken = Get-AzAccessToken
+$accesstoken = Get-AzAccessToken -ErrorAction Stop
 $token = $accesstoken.Token
 $authHeader = @{
     'Content-Type'='application/json'
@@ -270,7 +270,7 @@ $restUri = " https://management.azure.com//subscriptions/" +$WESubscriptionId+'/
 $response = Invoke-RestMethod -Uri $restUri -Headers $authHeader -Method DELETE
 ; 
 $WEVaultDeleted = Get-AzRecoveryServicesVault -Name $WEVaultName -ResourceGroupName $WEResourceGroup -erroraction 'silentlycontinue'
-if ($WEVaultDeleted -eq $null) {
+if ($null -eq $WEVaultDeleted) {
 	Write-WELog " Recovery Services Vault" " INFO" $WEVaultName " successfully deleted"
 }
 

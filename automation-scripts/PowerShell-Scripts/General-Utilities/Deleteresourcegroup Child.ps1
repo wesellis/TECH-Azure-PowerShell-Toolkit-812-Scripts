@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Deleteresourcegroup Child
 
@@ -77,7 +77,7 @@ catch
 
 try
 {
-    if ($WERGName -eq $null)
+    if ($null -eq $WERGName)
     {
         Write-Warning " $($WERGName) is empty. Please Verify!"
     }

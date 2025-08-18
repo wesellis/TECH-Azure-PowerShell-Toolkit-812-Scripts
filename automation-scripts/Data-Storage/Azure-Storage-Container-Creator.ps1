@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Storage Container Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,15 +21,15 @@ param (
     [string]$PublicAccess = "Off"
 )
 
-Write-Host "Creating storage container: $ContainerName"
+Write-Information "Creating storage container: $ContainerName"
 
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 
 $Container = New-AzStorageContainer -Name $ContainerName -Context $Context -Permission $PublicAccess
 
-Write-Host "Container created successfully:"
-Write-Host "  Name: $($Container.Name)"
-Write-Host "  Public Access: $PublicAccess"
-Write-Host "  Storage Account: $StorageAccountName"
-Write-Host "  URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
+Write-Information "Container created successfully:"
+Write-Information "  Name: $($Container.Name)"
+Write-Information "  Public Access: $PublicAccess"
+Write-Information "  Storage Account: $StorageAccountName"
+Write-Information "  URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"

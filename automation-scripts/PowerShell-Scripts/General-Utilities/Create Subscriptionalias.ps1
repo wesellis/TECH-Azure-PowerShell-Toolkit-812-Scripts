@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Create Subscriptionalias
 
@@ -76,7 +76,7 @@ Invoke-AzRestMethod -Method " PUT" -Path $uri -Payload $bodyJSON
 do {
     Start-Sleep 5
    ;  $status = (Invoke-AzRestMethod -Method " GET" -path $uri -Verbose).Content | ConvertFrom-Json
-    Write-Host $status.properties.provisioningState
+    Write-Information $status.properties.provisioningState
 } while ($status.properties.provisioningState -eq " Running" -or $status.properties.provisioningState -eq " Accepted" )
 
 $status | ConvertTo-Json -Depth 30

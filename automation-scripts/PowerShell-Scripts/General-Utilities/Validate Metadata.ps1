@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Validate Metadata
 
@@ -47,11 +47,11 @@ param(
 )
 
 
-Write-host " Validating metadata file: $WESampleFolder\metadata.json"
+Write-Information " Validating metadata file: $WESampleFolder\metadata.json"
 $metadata = Get-Content -Path " $WESampleFolder\metadata.json" -Raw 
 
 
-Write-host " Validating contents against JSON schema from https://aka.ms/azure-quickstart-templates-metadata-schema"
+Write-Information " Validating contents against JSON schema from https://aka.ms/azure-quickstart-templates-metadata-schema"
 $schema = Invoke-WebRequest -Uri " https://aka.ms/azure-quickstart-templates-metadata-schema" -UseBasicParsing
 $metadata | Test-Json -Schema $schema.content
 
@@ -63,7 +63,7 @@ if ($WEENV:BUILD_REASON -eq " PullRequest" ) {
 }
 
 
-Write-Host $metadata
+Write-Information $metadata
 $environments = ($metadata | convertfrom-json).environments
 Write-WELog " environments: $environments" " INFO"
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     11 New Aznetworksecuritygroup
 
@@ -50,7 +50,7 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationPortRange = 3389
 }
 
-$rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+$rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 
 
 
@@ -66,7 +66,7 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationAddressPrefix = '*'
     DestinationPortRange = 80
 }
-$rule2 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+$rule2 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 
 ; 
 $newAzNetworkSecurityGroupSplat = @{
@@ -76,7 +76,7 @@ $newAzNetworkSecurityGroupSplat = @{
     SecurityRules = $rule1, $rule2
 }
 ; 
-$nsg = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+$nsg = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit

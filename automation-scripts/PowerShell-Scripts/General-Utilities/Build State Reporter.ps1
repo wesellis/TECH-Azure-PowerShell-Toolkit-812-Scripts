@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Build State Reporter
 
@@ -48,7 +48,7 @@ try {
    ;  $maxValueLength = 8
     Write-WELog " === Current environment variables (redacted):" " INFO"
     # Never print full values because they may contain secrets
-    Get-ChildItem env: | ForEach-Object { " $($_.Name)=$(if ($_.Name -notin $WEEnvVarExclusionList) { $(if ($_.Value.Length -gt $maxValueLength) { "" $($_.Value.Substring(0,$maxValueLength))..."" } else { $_.Value }) } else { " <redacted>" })" }
+    Get-ChildItem -ErrorAction Stop env: | ForEach-Object { " $($_.Name)=$(if ($_.Name -notin $WEEnvVarExclusionList) { $(if ($_.Value.Length -gt $maxValueLength) { "" $($_.Value.Substring(0,$maxValueLength))..."" } else { $_.Value }) } else { " <redacted>" })" }
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop

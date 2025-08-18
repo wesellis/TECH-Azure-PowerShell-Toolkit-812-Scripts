@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installmodule
 
@@ -60,10 +60,10 @@ param(
 )
 
 if( $modulepkg ){
-    $module = $modulepkg.Split(',') | Get-ChildItem
+    $module = $modulepkg.Split(',') | Get-ChildItem -ErrorAction Stop
 }
 else{
-    $module = [array] (Get-ChildItem " *.safe" )
+    $module = [array] (Get-ChildItem -ErrorAction Stop " *.safe" )
 }
 
 if($module.Length){ 

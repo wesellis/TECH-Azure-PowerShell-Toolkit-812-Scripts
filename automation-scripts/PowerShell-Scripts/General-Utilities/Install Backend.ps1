@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Install Backend
 
@@ -38,13 +38,13 @@ $mysqlpassword = $args[0]
 $mySqlUser = $args[1]
 $mySqlPasswordForUser=$args[2]
 
-New-Item c:\Temp -type directory
+New-Item -ErrorAction Stop c:\Temp -type directory
 
 
 echo "Downloading mysql"
 $source = " http://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-community-5.7.11.0.msi"
 $destination = " C:\Temp\mysql.msi"; 
-$client = new-object System.Net.WebClient ; 
+$client = new-object -ErrorAction Stop System.Net.WebClient ; 
 $cookie = " oraclelicense=accept-securebackup-cookie"
 $client.Headers.Add([System.Net.HttpRequestHeader]::Cookie, $cookie) 
 $client.DownloadFile($source,$destination)

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sideload Azcreateuidefinition
 
@@ -53,10 +53,10 @@ param(
 try {
 
     $WEStorageAccountName = 'stage' + ((Get-AzContext).Subscription.Id).Replace('-', '').substring(0, 19)
-    $WEStorageAccount = (Get-AzStorageAccount | Where-Object{$_.StorageAccountName -eq $WEStorageAccountName})
+    $WEStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object{$_.StorageAccountName -eq $WEStorageAccountName})
 
     # Create the storage account if it doesn't already exist
-    if ($WEStorageAccount -eq $null) {
+    if ($null -eq $WEStorageAccount) {
         if ($WEStorageResourceGroupLocation -eq "" ) { throw " The StorageResourceGroupLocation parameter is required on first run in a subscription." }
         $WEStorageResourceGroupName = 'ARM_Deploy_Staging'
         New-AzResourceGroup -Location " $WEStorageResourceGroupLocation" -Name $WEStorageResourceGroupName -Force
@@ -85,7 +85,7 @@ https://portal.azure.com/#blade/Microsoft_Azure_Compute/CreateMultiVmWizardBlade
 
 }
 
-Write-Host `n" File: " $uidefurl `n
+Write-Information `n" File: " $uidefurl `n
 Write-WELog " Target URL: " " INFO" $target
 
 

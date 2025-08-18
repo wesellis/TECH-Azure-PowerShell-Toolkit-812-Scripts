@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     6 Get Azrecoveryservicesbackupschedulepolicyobject
 
@@ -53,7 +53,7 @@ ScheduleRunFrequency ScheduleRunDays ScheduleRunTimes
 .NOTES
     General notes
 
-The Get-AzRecoveryServicesBackupSchedulePolicyObject cmdlet gets a base AzureRMRecoveryServicesSchedulePolicyObject. This object is not persisted in the system. It is temporary object that you can manipulate and use with the New-AzRecoveryServicesBackupProtectionPolicy cmdlet to create a new backup protection policy.
+The Get-AzRecoveryServicesBackupSchedulePolicyObject -ErrorAction Stop cmdlet gets a base AzureRMRecoveryServicesSchedulePolicyObject. This object is not persisted in the system. It is temporary object that you can manipulate and use with the New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop cmdlet to create a new backup protection policy.
     
 
 
@@ -61,7 +61,7 @@ $getAzRecoveryServicesBackupSchedulePolicyObjectSplat = @{
     WorkloadType = "AzureVM"
 }
 
-Get-AzRecoveryServicesBackupSchedulePolicyObject @getAzRecoveryServicesBackupSchedulePolicyObjectSplat
+Get-AzRecoveryServicesBackupSchedulePolicyObject -ErrorAction Stop @getAzRecoveryServicesBackupSchedulePolicyObjectSplat
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com

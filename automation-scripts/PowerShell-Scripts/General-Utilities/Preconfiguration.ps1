@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Preconfiguration
 
@@ -61,9 +61,11 @@ param(
     [stringp[]] [Parameter(Mandatory=$true)] $WEAVDChildOrganizationUnitNames
 )
 
-Function Set-DomainOrganizationUnits {
+[CmdletBinding()]
+Function Set-DomainOrganizationUnits -ErrorAction Stop {
     
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -83,7 +85,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -137,7 +139,7 @@ param(
     #$WEDeploymentScriptOutputs['StorageAccountOUDistinguishedName'] = $WEStorageAccountOUDistinguishedName
 }
 
-Set-DomainOrganizationUnits `
+Set-DomainOrganizationUnits -ErrorAction Stop `
     -OUDistinguishedName $WEDomainDistinguishedName `
     -ParentOU $WEParentOrganizationUnitName `
     -StorageAccountOUName $WEStorageAccountOrganizationUnitName `

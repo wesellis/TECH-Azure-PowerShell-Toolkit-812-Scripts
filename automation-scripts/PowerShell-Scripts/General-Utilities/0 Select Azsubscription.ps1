@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     0 Select Azsubscription
 
@@ -62,7 +62,7 @@ Microsoft Azure - FGC Production (353... Admin-CCI@fgchealth.com  Microsoft Azur
     Changes the current and default Azure subscriptions.
 
 
-Get-AzSubscription
+Get-AzSubscription -ErrorAction Stop
 
 Select-AzSubscription '3532a85c-c00a-4465-9b09-388248166360'
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Gatewayinstall
 
@@ -109,8 +109,8 @@ function WE-Run-Process([string] $process, [string] $arguments)
 	$errContent = [string] (Get-Content -Path $errorFile -Delimiter " !!!DoesNotExist!!!" )
 ; 	$outContent = [string] (Get-Content -Path $outFile -Delimiter " !!!DoesNotExist!!!" )
 
-	Remove-Item $errorFil -Forcee -Force
-	Remove-Item $outFil -Forcee -Force
+	Remove-Item -ErrorAction Stop $errorFil -Forcee -Force
+	Remove-Item -ErrorAction Stop $outFil -Forcee -Force
 
 	if($proc.ExitCode -ne 0 -or $errVariable -ne "" )
 	{		
@@ -133,7 +133,7 @@ function WE-Download-Gateway([string] $url, [string] $gwPath)
     {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
        ;  $WEErrorActionPreference = " Stop" ;
-        $client = New-Object System.Net.WebClient
+        $client = New-Object -ErrorAction Stop System.Net.WebClient
         $client.DownloadFile($url, $gwPath)
         Trace-Log " Download gateway successfully. Gateway loc: $gwPath"
     }
@@ -173,7 +173,7 @@ function WE-Get-RegistryProperty([string] $keyPath, [string] $property)
 		Trace-Log " Get-RegistryProperty: $keyPath does not exist"
 	}
 
-	$keyReg = Get-Item $keyPath
+	$keyReg = Get-Item -ErrorAction Stop $keyPath
 	if (! ($keyReg.Property -contains $property))
 	{
 		Trace-Log " Get-RegistryProperty: $property does not exist"
@@ -185,7 +185,7 @@ function WE-Get-RegistryProperty([string] $keyPath, [string] $property)
 
 function WE-Get-InstalledFilePath()
 {
-	$filePath = Get-RegistryProperty " hklm:\Software\Microsoft\DataTransfer\DataManagementGateway\ConfigurationManager" " DiacmdPath"
+	$filePath = Get-RegistryProperty -ErrorAction Stop " hklm:\Software\Microsoft\DataTransfer\DataManagementGateway\ConfigurationManager" " DiacmdPath"
 	if ([string]::IsNullOrEmpty($filePath))
 	{
 		Throw-Error " Get-InstalledFilePath: Cannot find installed File Path"
@@ -198,7 +198,7 @@ function WE-Get-InstalledFilePath()
 function WE-Register-Gateway([string] $instanceKey)
 {
     Trace-Log " Register Agent"
-	$filePath = Get-InstalledFilePath
+	$filePath = Get-InstalledFilePath -ErrorAction Stop
 	Run-Process $filePath " -era 8060"
 	Run-Process $filePath " -k $instanceKey"
     Trace-Log " Agent registration is successful!"

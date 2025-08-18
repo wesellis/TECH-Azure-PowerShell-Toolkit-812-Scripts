@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azureautomationtutorial
 
@@ -68,7 +68,7 @@ catch {
 }
 
 ; 
-$WEResourceGroups = Get-AzureRmResourceGroup 
+$WEResourceGroups = Get-AzureRmResourceGroup -ErrorAction Stop 
 
 foreach ($WEResourceGroup in $WEResourceGroups)
 {    

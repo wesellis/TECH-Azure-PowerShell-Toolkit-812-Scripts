@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azuresametricsenabler Ms Mgmt Sa
 
@@ -68,7 +68,7 @@ $varTableList=" AzureSAIngestion-List-Tables"
 
 
 
-Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+function New-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
 ; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
@@ -95,7 +95,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -134,7 +134,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
-			IF ($str2 -ne $null)
+			IF ($null -ne $str2)
 			{
 				$values2.add($str2.ToLowerInvariant(),$builder2.ToString())
 			} 
@@ -177,7 +177,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -263,13 +263,13 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 }
 
 
-Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
 	$xHeaders = " x-ms-date:" + $date
 	$stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
 	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
 	$keyBytes = [Convert]::FromBase64String($sharedKey)
-	$sha256 = New-Object System.Security.Cryptography.HMACSHA256
+	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
@@ -319,7 +319,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 " Logging in to Azure..."
 $WEArmConn = Get-AutomationConnection -Name AzureRunAsConnection 
 
-if ($WEArmConn  -eq $null)
+if ($null -eq $WEArmConn)
 {
 	throw " Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
@@ -368,8 +368,8 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
-$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$WECliCert=new-object -ErrorAction Stop   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
+$WEAuthContext = new-object -ErrorAction Stop Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
 $result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
 $headers = @{" Authorization" =$header;" Accept" =" application/json" }
@@ -393,19 +393,19 @@ if ($getAsmHeader) {
     }
     Catch
     {
-        if ($WEAsmConn -eq $null) {
+        if ($null -eq $WEAsmConn) {
             Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
             $getAsmHeader=$false
         }
     }
-     if ($WEAsmConn -eq $null) {
+     if ($null -eq $WEAsmConn) {
         Write-Warning " Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
         $getAsmHeader=$false
     }Else{
 
         $WECertificateAssetName = $WEAsmConn.CertificateAssetName
         $WEAzureCert = Get-AutomationCertificate -Name $WECertificateAssetName
-        if ($WEAzureCert -eq $null)
+        if ($null -eq $WEAzureCert)
         {
             Write-Warning  " Could not retrieve certificate asset: $WECertificateAssetName. Ensure that this asset exists and valid  in the Automation account."
             $getAsmHeader=$false
@@ -501,7 +501,7 @@ Foreach($sa in $salist)
 				IF($blob.name -match '.vhd')
 
 				{
-				; 	$cu = New-Object PSObject -Property @{
+				; 	$cu = New-Object -ErrorAction Stop PSObject -Property @{
 						Timestamp = $timestamp
 						MetricName = 'Inventory'
 						InventoryType='VHDFile'

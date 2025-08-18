@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Connectto Azure
 
@@ -60,7 +60,7 @@ if ($WEInstallAzModule){
     Set-PSRepository -InstallationPolicy Trusted -Name PSGallery -verbose
 
    ;  $WEVersionParam = @{}
-    if($WEModuleVersion -ne $null){
+    if($null -ne $WEModuleVersion){
         $WEVersionParam.Add(" RequiredVersion" , " $WEModuleVersion" )
     }
     Install-Module -Name Az -AllowClobber -verbose @VersionParam
@@ -68,7 +68,7 @@ if ($WEInstallAzModule){
 
 }
 ; 
-$pscredential = New-Object System.Management.Automation.PSCredential($appId, (ConvertTo-SecureString $secret -AsPlainText -Force))
+$pscredential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential($appId, (ConvertTo-SecureString $secret -AsPlainText -Force))
 
 Write-WELog " app Id     : $appId" " INFO"
 Write-WELog " sub Id     : $subscriptionId" " INFO"

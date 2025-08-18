@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Stop Azurev2Vm
 
@@ -47,7 +47,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .DESCRIPTION
    Uses PowerShell workflow to stop all VMs in parallel. Includes a retry and wait cycle to display when VMs are stopped. PowerShell
    Workflow sessions require Azure authentication into each session so this script uses a splatting of parameters required for Connect-AzureRmAccount that
-   can be passed to each session.  Recommend using the New-AzureServicePrincipal script to create the required service principal and associated ApplicationId
+   can be passed to each session.  Recommend using the New-AzureServicePrincipal -ErrorAction Stop script to create the required service principal and associated ApplicationId
    and certificate thumbprint required to log into Azure with the -servicePrincipal flag
 
 
@@ -129,8 +129,8 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 5.5.0" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 5.5.0" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
    BREAK
 }
 
@@ -237,7 +237,7 @@ $vms = Get-AzureRmVM -ResourceGroupName $WEResourceGroupName
  do
  {
     cls
-    write-host " Waiting for VMs in $resourceGroupName to stop..."
+    Write-Information " Waiting for VMs in $resourceGroupName to stop..."
     $allStatus = @()  
     foreach ($vm in $WEVMs) 
     {
@@ -250,7 +250,7 @@ $vms = Get-AzureRmVM -ResourceGroupName $WEResourceGroupName
  while($allStatus -ne 'VM deallocated')
 
  cls
- write-host " All VMs in $resourceGroupName are stopped..."
+ Write-Information " All VMs in $resourceGroupName are stopped..."
  foreach ($vm in $WEVMs)
  {       
   ;  $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus

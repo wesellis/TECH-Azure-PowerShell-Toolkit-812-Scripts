@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Resource Tagging Enforcer
 
@@ -101,14 +101,14 @@ try {
     $resources = if ($WEResourceGroupName) {
         Get-AzResource -ResourceGroupName $WEResourceGroupName
     } else {
-        Get-AzResource
+        Get-AzResource -ErrorAction Stop
     }
     
     if ($WEIncludeResourceGroups) {
         $resourceGroups = if ($WEResourceGroupName) {
             Get-AzResourceGroup -Name $WEResourceGroupName
         } else {
-            Get-AzResourceGroup
+            Get-AzResourceGroup -ErrorAction Stop
         }
         $resources = $resources + $resourceGroups
     }

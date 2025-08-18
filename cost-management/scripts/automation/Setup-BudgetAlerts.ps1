@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Sets up Azure budget alerts and monitoring for proactive cost management.
 
@@ -103,6 +103,7 @@ if (-not (Test-Path $LogPath)) {
 }
 
 # Logging function
+[CmdletBinding()]
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -111,13 +112,14 @@ function Write-Log {
     Add-Content -Path (Join-Path $LogPath "budget-alerts.log") -Value $logEntry
 }
 
+[CmdletBinding()]
 function Test-AzureConnection {
     <#
     .SYNOPSIS
         Validates Azure connection and permissions
     #>
     try {
-        $context = Get-AzContext
+        $context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             throw "Not connected to Azure. Please run Connect-AzAccount first."
         }
@@ -132,7 +134,8 @@ function Test-AzureConnection {
     }
 }
 
-function Get-BudgetScope {
+[CmdletBinding()]
+function Get-BudgetScope -ErrorAction Stop {
     <#
     .SYNOPSIS
         Determines the appropriate scope for the budget
@@ -154,7 +157,8 @@ function Get-BudgetScope {
     return $scope
 }
 
-function New-BudgetAlerts {
+[CmdletBinding()]
+function New-BudgetAlerts -ErrorAction Stop {
     <#
     .SYNOPSIS
         Creates budget alert notifications
@@ -183,7 +187,8 @@ function New-BudgetAlerts {
     return $notifications
 }
 
-function New-AzureBudget {
+[CmdletBinding()]
+function New-AzureBudget -ErrorAction Stop {
     <#
     .SYNOPSIS
         Creates or updates an Azure budget with alerts
@@ -240,11 +245,11 @@ function New-AzureBudget {
         
         if ($existingBudget) {
             Write-Log "Budget '$Name' already exists. Updating with new configuration."
-            $budget = Set-AzConsumptionBudget @budgetParams
+            $budget = Set-AzConsumptionBudget -ErrorAction Stop @budgetParams
             Write-Log "Budget updated successfully"
         }
         else {
-            $budget = New-AzConsumptionBudget @budgetParams
+            $budget = New-AzConsumptionBudget -ErrorAction Stop @budgetParams
             Write-Log "Budget created successfully"
         }
         
@@ -256,6 +261,7 @@ function New-AzureBudget {
     }
 }
 
+[CmdletBinding()]
 function Test-BudgetConfiguration {
     <#
     .SYNOPSIS
@@ -339,6 +345,7 @@ Azure Cost Management System
     }
 }
 
+[CmdletBinding()]
 function Show-BudgetSummary {
     <#
     .SYNOPSIS
@@ -349,47 +356,47 @@ function Show-BudgetSummary {
         [hashtable]$TestResults
     )
     
-    Write-Host "`n" + "="*60 -ForegroundColor Cyan
-    Write-Host "BUDGET ALERT SETUP SUMMARY" -ForegroundColor Cyan
-    Write-Host "="*60 -ForegroundColor Cyan
+    Write-Information "`n" + "="*60 -ForegroundColor Cyan
+    Write-Information "BUDGET ALERT SETUP SUMMARY"
+    Write-Information "="*60 -ForegroundColor Cyan
     
-    Write-Host "Budget Name: " -NoNewline -ForegroundColor Yellow
-    Write-Host $Budget.Name -ForegroundColor White
+    Write-Information "Budget Name: " -NoNewline
+    Write-Information $Budget.Name -ForegroundColor White
     
-    Write-Host "Budget Amount: " -NoNewline -ForegroundColor Yellow
-    Write-Host $BudgetAmount.ToString('C') -ForegroundColor Green
+    Write-Information "Budget Amount: " -NoNewline
+    Write-Information $BudgetAmount.ToString('C') -ForegroundColor Green
     
-    Write-Host "Scope: " -NoNewline -ForegroundColor Yellow
-    Write-Host $Budget.Scope -ForegroundColor White
+    Write-Information "Scope: " -NoNewline
+    Write-Information $Budget.Scope -ForegroundColor White
     
-    Write-Host "Time Period: " -NoNewline -ForegroundColor Yellow
-    Write-Host "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor White
+    Write-Information "Time Period: " -NoNewline
+    Write-Information "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))"
     
-    Write-Host "Alert Thresholds: " -NoNewline -ForegroundColor Yellow
-    Write-Host ($AlertThreshold -join "%, ") + "%" -ForegroundColor Orange
+    Write-Information "Alert Thresholds: " -NoNewline
+    Write-Information ($AlertThreshold -join "%, ") + "%"
     
-    Write-Host "Recipients: " -NoNewline -ForegroundColor Yellow
-    Write-Host ($Recipients -join ", ") -ForegroundColor White
+    Write-Information "Recipients: " -NoNewline
+    Write-Information ($Recipients -join ", ")
     
     if ($TestResults) {
-        Write-Host "`nCurrent Status:" -ForegroundColor Cyan
-        Write-Host "Current Spending: " -NoNewline -ForegroundColor Yellow
-        Write-Host $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Information "`nCurrent Status:"
+        Write-Information "Current Spending: " -NoNewline
+        Write-Information $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
         
-        Write-Host "Budget Utilization: " -NoNewline -ForegroundColor Yellow
-        Write-Host "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Information "Budget Utilization: " -NoNewline
+        Write-Information "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
         
-        Write-Host "Alert Status: " -NoNewline -ForegroundColor Yellow
-        Write-Host $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Information "Alert Status: " -NoNewline
+        Write-Information $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
     }
     
-    Write-Host "`nNext Steps:" -ForegroundColor Cyan
-    Write-Host "• Monitor budget in Azure Portal (Cost Management + Billing)" -ForegroundColor White
-    Write-Host "• Check email alerts when thresholds are reached" -ForegroundColor White
-    Write-Host "• Review and adjust budget amounts as needed" -ForegroundColor White
-    Write-Host "• Set up additional budgets for other scopes if required" -ForegroundColor White
+    Write-Information "`nNext Steps:"
+    Write-Information "• Monitor budget in Azure Portal (Cost Management + Billing)"
+    Write-Information "• Check email alerts when thresholds are reached"
+    Write-Information "• Review and adjust budget amounts as needed"
+    Write-Information "• Set up additional budgets for other scopes if required"
     
-    Write-Host "`n✅ Budget alert setup completed successfully!" -ForegroundColor Green
+    Write-Information "`n✅ Budget alert setup completed successfully!"
 }
 
 # Main execution

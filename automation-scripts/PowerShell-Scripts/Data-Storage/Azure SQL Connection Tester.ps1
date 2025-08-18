@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Sql Connection Tester
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]; 
@@ -94,7 +95,7 @@ Write-WELog " Testing connection to SQL Database: $WEDatabaseName" " INFO"
 $WEConnectionString = " Server=tcp:$WEServerName.database.windows.net,1433;Initial Catalog=$WEDatabaseName;Persist Security Info=False;User ID=$WEUsername;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
 try {
-    $WEConnection = New-Object System.Data.SqlClient.SqlConnection
+    $WEConnection = New-Object -ErrorAction Stop System.Data.SqlClient.SqlConnection
     $WEConnection.ConnectionString = $WEConnectionString
     $WEConnection.Open()
     

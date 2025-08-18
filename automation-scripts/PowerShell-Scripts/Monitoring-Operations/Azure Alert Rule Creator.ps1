@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Alert Rule Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -111,12 +112,12 @@ Write-WELog " Creating Alert Rule: $WEAlertRuleName" " INFO"
 if ($WENotificationEmail) {
     $WEActionGroupName = " $WEAlertRuleName-actiongroup"
     
-    $WEEmailReceiver = New-AzActionGroupReceiver `
+    $WEEmailReceiver = New-AzActionGroupReceiver -ErrorAction Stop `
         -Name " EmailAlert" `
         -EmailReceiver `
         -EmailAddress $WENotificationEmail
     
-    $WEActionGroup = Set-AzActionGroup `
+    $WEActionGroup = Set-AzActionGroup -ErrorAction Stop `
         -ResourceGroupName $WEResourceGroupName `
         -Name $WEActionGroupName `
         -ShortName " AlertAG" `
@@ -126,7 +127,7 @@ if ($WENotificationEmail) {
 }
 
 ; 
-$WECondition = New-AzMetricAlertRuleV2Criteria `
+$WECondition = New-AzMetricAlertRuleV2Criteria -ErrorAction Stop `
     -MetricName $WEMetricName `
     -TimeAggregation " Average" `
     -Operator $WEOperator `

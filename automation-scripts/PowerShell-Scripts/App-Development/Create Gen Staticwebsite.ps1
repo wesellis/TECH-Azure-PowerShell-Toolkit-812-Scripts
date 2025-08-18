@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Create Gen Staticwebsite
 
@@ -57,32 +57,32 @@ $errorDocument404Path = 'error.htm'
 $errorDocumentContents = '<h1>Example 404 error page</h1>'
 
 
-$staticWebsiteStorageAccount = (Get-AzStorageAccount | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
-if ($staticWebsiteStorageAccount -eq $null) {
+$staticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
+if ($null -eq $staticWebsiteStorageAccount) {
     $staticWebsiteStorageAccount = New-AzStorageAccount -StorageAccountName $staticWebsiteStorageAccountName -Kind StorageV2 -Type 'Standard_LRS' -ResourceGroupName $WEResourceGroupName -Location " $WELocation" -Verbose
 }
 
 
 Do {
     Write-WELog " Looking for storageAccount: $staticWebsiteStorageAccount" " INFO"
-    $staticWebsiteStorageAccount = (Get-AzStorageAccount | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
-} until ($staticWebsiteStorageAccountName -ne $null)
+    $staticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
+} until ($null -ne $staticWebsiteStorageAccountName)
 
 
 $ctx = $staticWebsiteStorageAccount.Context
 Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $indexDocumentPath -ErrorDocument404Path $errorDocument404Path -Verbose
 
 
-$tempIndexFile = New-TemporaryFile
+$tempIndexFile = New-TemporaryFile -ErrorAction Stop
 Set-Content $tempIndexFile $indexDocumentContents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempIndexFile -Blob $indexDocumentPath -Properties @{'ContentType' = 'text/html'} -Force -Verbose
 
-$tempErrorDocument404File = New-TemporaryFile
+$tempErrorDocument404File = New-TemporaryFile -ErrorAction Stop
 Set-Content $tempErrorDocument404File $errorDocumentContents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempErrorDocument404File -Blob $errorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force -Verbose
 
 ; 
-$json = New-Object System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable; 
+$json = New-Object -ErrorAction Stop System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable; 
 $hostName = (($staticWebsiteStorageAccount.PrimaryEndpoints.Web) -Replace 'https://', '')  -Replace '/', ''
 $json.Add(" STATIC-WEBSITE-URL" , $staticWebsiteStorageAccount.PrimaryEndpoints.Web)
 $json.Add(" STATIC-WEBSITE-HOST-NAME" , $hostName)

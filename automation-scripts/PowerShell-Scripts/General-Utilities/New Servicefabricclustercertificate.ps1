@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     New Servicefabricclustercertificate
 
@@ -68,8 +68,7 @@ $WEContent = [System.Convert]::ToBase64String($WEContentBytes)
 $WESecretValue = ConvertTo-SecureString -String $WEContent -AsPlainText -Force; 
 $WENewSecret = Set-AzureKeyVaultSecret -VaultName $WEKeyVaultName -Name $WEKeyVaultSecretName -SecretValue $WESecretValue -Verbose
 
-Write-Host
-Write-WELog " Source Vault Resource Id: " " INFO" $(Get-AzureRmKeyVault -VaultName $WEKeyVaultName).ResourceId
+Write-Information Write-WELog " Source Vault Resource Id: " " INFO" $(Get-AzureRmKeyVault -VaultName $WEKeyVaultName).ResourceId
 Write-WELog " Certificate URL : " " INFO" $WENewSecret.Id
 Write-WELog " Certificate Thumbprint : " " INFO" $WENewCert.Thumbprint
 

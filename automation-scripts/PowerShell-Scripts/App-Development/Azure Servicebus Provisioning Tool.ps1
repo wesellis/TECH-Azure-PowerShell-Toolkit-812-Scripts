@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Servicebus Provisioning Tool
 
@@ -39,6 +39,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -58,7 +59,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -117,7 +118,7 @@ if ($WESkuName -eq " Premium" ) {
     }
 }
 
-$WEServiceBusNamespace = New-AzServiceBusNamespace @ServiceBusParams
+$WEServiceBusNamespace = New-AzServiceBusNamespace -ErrorAction Stop @ServiceBusParams
 
 
 if ($WETags.Count -gt 0) {
@@ -178,7 +179,7 @@ try {
         }
     }
 } catch {
-    Write-WELog " `nConnection Strings: Available via Get-AzServiceBusKey cmdlet" " INFO"
+    Write-WELog " `nConnection Strings: Available via Get-AzServiceBusKey -ErrorAction Stop cmdlet" " INFO"
 }
 
 Write-WELog " `nNext Steps:" " INFO"

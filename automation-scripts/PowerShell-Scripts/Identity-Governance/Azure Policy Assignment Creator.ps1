@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Policy Assignment Creator
 
@@ -42,6 +42,7 @@ try {
 
 
 
+[CmdletBinding()]
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = " Stop"
@@ -61,7 +62,7 @@ param(
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
 }
 
 [CmdletBinding()]
@@ -121,7 +122,7 @@ if ($WEParameters.Count -gt 0) {
 }
 
 ; 
-$WEAssignment = New-AzPolicyAssignment @AssignmentParams
+$WEAssignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
 
 Write-WELog " ✅ Policy Assignment created successfully:" " INFO"
 Write-WELog "  Name: $($WEAssignment.Name)" " INFO"

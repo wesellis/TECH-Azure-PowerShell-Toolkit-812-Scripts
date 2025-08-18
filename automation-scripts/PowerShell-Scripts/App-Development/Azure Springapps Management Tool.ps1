@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Azure Springapps Management Tool
 
@@ -202,6 +202,7 @@ param(
 )
 
 
+[CmdletBinding()]
 function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
@@ -225,6 +226,7 @@ function WE-Write-EnhancedLog {
 }
 
 
+[CmdletBinding()]
 function WE-Initialize-SpringCLI {
     try {
         Write-EnhancedLog " Checking Azure CLI Spring extension..." " Info"
@@ -248,7 +250,8 @@ function WE-Initialize-SpringCLI {
 }
 
 
-function WE-New-SpringAppsInstance {
+[CmdletBinding()]
+function WE-New-SpringAppsInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -319,7 +322,8 @@ function WE-New-SpringAppsInstance {
 }
 
 
-function WE-Set-SpringCloudService {
+[CmdletBinding()]
+function WE-Set-SpringCloudService -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -385,6 +389,7 @@ function WE-Set-SpringCloudService {
 }
 
 
+[CmdletBinding()]
 function WE-Deploy-SpringApplication {
     try {
         Write-EnhancedLog " Deploying Spring application: $WEAppName" " Info"
@@ -439,7 +444,8 @@ function WE-Deploy-SpringApplication {
 }
 
 
-function WE-Set-SpringAppScale {
+[CmdletBinding()]
+function WE-Set-SpringAppScale -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -464,7 +470,8 @@ function WE-Set-SpringAppScale {
 }
 
 
-function WE-Set-SpringMonitoring {
+[CmdletBinding()]
+function WE-Set-SpringMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
@@ -553,7 +560,8 @@ function WE-Set-SpringMonitoring {
 }
 
 
-function WE-Get-SpringAppsStatus {
+[CmdletBinding()]
+function WE-Get-SpringAppsStatus -ErrorAction Stop {
     try {
         Write-EnhancedLog " Monitoring Spring Apps instance status..." " Info"
         
@@ -597,6 +605,7 @@ function WE-Get-SpringAppsStatus {
 }
 
 
+[CmdletBinding()]
 function WE-Invoke-AppLifecycleAction {
     param(
         [ValidateSet(" Start" , " Stop" , " Restart" )]
@@ -650,11 +659,11 @@ try {
     
     switch ($WEAction) {
         " Create" {
-            New-SpringAppsInstance
+            New-SpringAppsInstance -ErrorAction Stop
             Set-SpringCloudService
             
             if ($WEEnableMonitoring -or $WEEnableApplicationInsights) {
-                Set-SpringMonitoring
+                Set-SpringMonitoring -ErrorAction Stop
             }
         }
         
@@ -669,17 +678,17 @@ try {
             if (-not $WEAppName) {
                 throw " AppName parameter is required for Scale action"
             }
-            Set-SpringAppScale
+            Set-SpringAppScale -ErrorAction Stop
         }
         
         " Monitor" {
-            Get-SpringAppsStatus
+            Get-SpringAppsStatus -ErrorAction Stop
         }
         
         " Configure" {
-            Set-SpringCloudService
+            Set-SpringCloudService -ErrorAction Stop
             if ($WEEnableMonitoring -or $WEEnableApplicationInsights) {
-                Set-SpringMonitoring
+                Set-SpringMonitoring -ErrorAction Stop
             }
         }
         

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Archive Azurermvm
 
@@ -111,8 +111,8 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
-   Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
+if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
+   Write-warning " Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
 
@@ -120,7 +120,8 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
 <###############################
  Get Storage Context function
 
-function WE-Get-StorageObject 
+[CmdletBinding()]
+function WE-Get-StorageObject -ErrorAction Stop 
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI) 
@@ -134,16 +135,17 @@ param($resourceGroupName, $srcURI)
     
     return $WEStorageContext
 
-} # end of Get-StorageObject function
+} # end of Get-StorageObject -ErrorAction Stop function
 
 
 
 <###############################
- New-VM function
+ New-VM -ErrorAction Stop function
  param $vmobj takes Microsoft.Azure.Commands.Compute.Models.PSVirtualMachineList object 
  or custom PS object that was hydrated from a JSON export of the VM configuration
 
-function WE-New-VM
+[CmdletBinding()]
+function WE-New-VM -ErrorAction Stop
 { [CmdletBinding()]
 $ErrorActionPreference = " Stop"
 param($vmObj) 
@@ -232,7 +234,7 @@ param($vmObj)
         write-verbose " Rehydrating Virtual Machine $WEVMName in resource group $resourceGroupName at location $location" -verbose
         New-AzureRmVM -ResourceGroupName $WEResourceGroupName -Location $location -VM $WEVirtualMachine -ea Stop -wa SilentlyContinue | out-null
         $created = $true
-        write-host " Successfully rehydrated Virtual Machine $WEVMName" 
+        Write-Information " Successfully rehydrated Virtual Machine $WEVMName" 
     }
     catch
     {
@@ -263,14 +265,17 @@ param($vmObj)
 
             $newVM | Update-AzureRMVm -ResourceGroupName $resourceGroupName | Out-Null
         }
-        catch{}
+        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
 
     }
     
     return $created
 
 
-} # end of New-VM function
+} # end of New-VM -ErrorAction Stop function
 
 
 
@@ -278,11 +283,11 @@ param($vmObj)
 if($WEOptionalEnvironment -and (Get-AzureRMEnvironment -Name $WEOptionalEnvironment) -eq $null)
 {
    write-warning " The specified -OptionalSourceEnvironment could not be found. Select one of these valid environments."
-   $WEOptionalEnvironment = (Get-AzureRMEnvironment | Select-Object Name, ManagementPortalUrl | Out-GridView -title " Select a valid Azure environment for your source subscription" -OutputMode Single).Name
+   $WEOptionalEnvironment = (Get-AzureRMEnvironment -ErrorAction Stop | Select-Object Name, ManagementPortalUrl | Out-GridView -title " Select a valid Azure environment for your source subscription" -OutputMode Single).Name
 }
 
 
-write-host " Enter credentials for the Azure Subscription..." -f Yellow
+Write-Information " Enter credentials for the Azure Subscription..." -f Yellow
 if($WEOptionalEnvironment)
 {
    $login= Connect-AzureRmAccount -EnvironmentName $WEOptionalEnvironment
@@ -293,13 +298,13 @@ else
 }
 
 $loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription
+$sub = Get-AzureRmSubscription -ErrorAction Stop
 $WESubscriptionId = $sub.Id
 
 
 if($sub.count -gt 1) 
 {
-    $WESubscriptionId = (Get-AzureRmSubscription | Select-Object * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
+    $WESubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | Select-Object * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId | Out-Null
     $sub = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
 }
@@ -315,16 +320,16 @@ if(! $WESubscriptionId)
 
 $WESubscriptionName = $sub.Name
 
-write-host " Logged into $WESubscriptionName with subscriptionID $WESubscriptionId as $loginID" -f Green
+Write-Information " Logged into $WESubscriptionName with subscriptionID $WESubscriptionId as $loginID" -f Green
 
 
-if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $resourceGroupName)) 
+if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $resourceGroupName)) 
 {
    write-warning " The provided resource group $resourceGroupName could not be found. Exiting the script."
    break
 }
 
-if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $resourceGroupName)) 
+if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $resourceGroupName)) 
 {
    write-warning " The provided resource group $resourceGroupName could not be found. Exiting the script."
    break
@@ -352,9 +357,9 @@ if($WERehydrate)
                 {
                     $WETempRehydratefile = Get-AzureStorageBlobContent -CloudBlob $WERehydrateBlob.iCloudBlob -Context $WEStorageContext -Destination $env:temp -Force -ea Stop
                     $WETempRehydratefileName = $WETempRehydratefile.Name
-                    $fileContent = get-content " $env:temp\$WETempRehydratefileName" -ea Stop
+                    $fileContent = get-content -ErrorAction Stop " $env:temp\$WETempRehydratefileName" -ea Stop
                     $fileContent | Where-Object{$_ -ne ''} | out-file " $env:temp\$WETempRehydratefileName"
-                    $rehydrateVM = (get-content " $env:temp\$WETempRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json -ea Stop
+                    $rehydrateVM = (get-content -ErrorAction Stop " $env:temp\$WETempRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json -ea Stop
                 }
                 catch
                 {
@@ -378,9 +383,9 @@ if($WERehydrate)
                                 write-verbose " Retreiving Diagnostics config file $($rehydrateDiagBlob.name)..." -verbose
                                 $WETempDiagRehydratefile = Get-AzureStorageBlobContent -CloudBlob $WERehydrateDiagBlob.iCloudBlob -Context $WEStorageContext -Destination $env:temp -Force -ea Stop
                                 $WETempDiagRehydratefileName = $WETempDiagRehydratefile.Name
-                                $WEDiagfileContent = get-content " $env:temp\$WETempDiagRehydratefileName" -ea Stop
+                                $WEDiagfileContent = get-content -ErrorAction Stop " $env:temp\$WETempDiagRehydratefileName" -ea Stop
                                 $WEDiagfileContent | Where-Object{$_ -ne ''} | out-file " $env:temp\$WETempDiagRehydratefileName"
-                                $rehydrateVMDiag = (get-content " $env:temp\$WETempDiagRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json
+                                $rehydrateVMDiag = (get-content -ErrorAction Stop " $env:temp\$WETempDiagRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json
                                 $wadCfg = $rehydrateVMDiag.wadCfg
                                 $wadStorageAccount = $rehydrateVMDiag.StorageAccount
                                 $wadStorageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $resourceGroupName -Name $wadStorageAccount -ea Stop).Value[0]
@@ -392,7 +397,10 @@ if($WERehydrate)
                                 write-verbose " No Diagnostics config file found for $($rehydrateVM.Name)..." -verbose
                             }
                         }
-                        catch{}
+                        catch {
+    Write-Error "An error occurred: $($_.Exception.Message)"
+    throw
+}
                     }
                 }
  

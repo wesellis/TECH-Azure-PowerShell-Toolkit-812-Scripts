@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Storage Account Usage and Capacity Monitor
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -19,8 +19,8 @@ $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Na
 $Context = $StorageAccount.Context
 $Usage = Get-AzStorageUsage -Context $Context
 
-Write-Host "Storage Account: $($StorageAccount.StorageAccountName)"
-Write-Host "Resource Group: $($StorageAccount.ResourceGroupName)"
-Write-Host "Location: $($StorageAccount.Location)"
-Write-Host "SKU: $($StorageAccount.Sku.Name)"
-Write-Host "Usage: $($Usage.CurrentValue) / $($Usage.Limit)"
+Write-Information "Storage Account: $($StorageAccount.StorageAccountName)"
+Write-Information "Resource Group: $($StorageAccount.ResourceGroupName)"
+Write-Information "Location: $($StorageAccount.Location)"
+Write-Information "SKU: $($StorageAccount.Sku.Name)"
+Write-Information "Usage: $($Usage.CurrentValue) / $($Usage.Limit)"

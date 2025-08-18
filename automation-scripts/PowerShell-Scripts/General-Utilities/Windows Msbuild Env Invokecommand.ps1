@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Windows Msbuild Env Invokecommand
 
@@ -59,7 +59,7 @@ try {
    ;  $msbuildExeFileDir = Split-Path -Parent (Get-LatestMsbuildLocation)
     $env:PATH += " ;$($msbuildExeFileDir);"
 
-    Set-Location $WERepoRoot
+    Set-Location -ErrorAction Stop $WERepoRoot
 
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-build-environment-utils.psm1')
     SetPackagesRestoreEnvironmentAndRunScript -RepoRoot $WERepoRoot -RepoKind MSBuild -Script $WEScript

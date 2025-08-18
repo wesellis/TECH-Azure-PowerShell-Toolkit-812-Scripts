@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Service Bus Queue Creator
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -21,16 +21,16 @@ param (
     [int]$MaxSizeInMegabytes = 1024
 )
 
-Write-Host "Creating Service Bus queue: $QueueName"
+Write-Information "Creating Service Bus queue: $QueueName"
 
-$Queue = New-AzServiceBusQueue `
+$Queue = New-AzServiceBusQueue -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -NamespaceName $NamespaceName `
     -Name $QueueName `
     -MaxSizeInMegabytes $MaxSizeInMegabytes
 
-Write-Host "Queue created successfully:"
-Write-Host "  Name: $($Queue.Name)"
-Write-Host "  Max Size: $($Queue.MaxSizeInMegabytes) MB"
-Write-Host "  Status: $($Queue.Status)"
-Write-Host "  Namespace: $NamespaceName"
+Write-Information "Queue created successfully:"
+Write-Information "  Name: $($Queue.Name)"
+Write-Information "  Max Size: $($Queue.MaxSizeInMegabytes) MB"
+Write-Information "  Status: $($Queue.Status)"
+Write-Information "  Namespace: $NamespaceName"

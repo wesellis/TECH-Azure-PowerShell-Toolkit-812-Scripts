@@ -1,4 +1,4 @@
-#Requires -Module Pester
+﻿#Requires -Module Pester
 <#
 .SYNOPSIS
     Tests for Az.Security.Enterprise module
@@ -12,7 +12,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.Security.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzContext {
+    Mock Get-AzContext -ErrorAction Stop {
         [PSCustomObject]@{
             Subscription = [PSCustomObject]@{
                 Id = "12345678-1234-1234-1234-123456789012"
@@ -21,9 +21,9 @@ BeforeAll {
         }
     }
     
-    Mock Set-AzContext { }
+    Mock Set-AzContext -ErrorAction Stop { }
     
-    Mock Set-AzSecurityPricing {
+    Mock Set-AzSecurityPricing -ErrorAction Stop {
         [PSCustomObject]@{
             Name = $Name
             PricingTier = $PricingTier
@@ -31,7 +31,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzSecurityPricing {
+    Mock Get-AzSecurityPricing -ErrorAction Stop {
         @(
             [PSCustomObject]@{
                 Name = "VirtualMachines"
@@ -48,11 +48,11 @@ BeforeAll {
         )
     }
     
-    Mock Set-AzSecurityAutoProvisioningSetting { }
-    Mock Set-AzSecurityContact { }
-    Mock Set-AzSecurityWorkspaceSetting { }
+    Mock Set-AzSecurityAutoProvisioningSetting -ErrorAction Stop { }
+    Mock Set-AzSecurityContact -ErrorAction Stop { }
+    Mock Set-AzSecurityWorkspaceSetting -ErrorAction Stop { }
     
-    Mock Get-AzSecuritySecureScore {
+    Mock Get-AzSecuritySecureScore -ErrorAction Stop {
         [PSCustomObject]@{
             Name = "ascScore"
             Score = [PSCustomObject]@{
@@ -63,12 +63,12 @@ BeforeAll {
             Weight = 100
             DisplayName = "ASC score"
             Properties = [PSCustomObject]@{
-                LastUpdateTime = Get-Date
+                LastUpdateTime = Get-Date -ErrorAction Stop
             }
         }
     }
     
-    Mock Get-AzSecurityTask {
+    Mock Get-AzSecurityTask -ErrorAction Stop {
         @(
             [PSCustomObject]@{
                 Name = "EnableMFA"
@@ -90,7 +90,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     
     Context "Module Loading" {
         It "Should have exported functions" {
-            $module = Get-Module Az.Security.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.Security.Enterprise
             $module.ExportedFunctions.Count | Should -BeGreaterThan 0
         }
         
@@ -109,7 +109,7 @@ Describe "Az.Security.Enterprise Module Tests" {
                 'Invoke-AzSecurityRecommendation'
             )
             
-            $module = Get-Module Az.Security.Enterprise
+            $module = Get-Module -ErrorAction Stop Az.Security.Enterprise
             foreach ($function in $expectedFunctions) {
                 $module.ExportedFunctions.Keys | Should -Contain $function
             }
@@ -175,7 +175,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "Get-AzDefenderCoverage" {
         
         BeforeEach {
-            Mock Get-AzResource {
+            Mock Get-AzResource -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{ResourceId = "/subscriptions/xxx/vm1"; ResourceType = "Microsoft.Compute/virtualMachines"},
                     [PSCustomObject]@{ResourceId = "/subscriptions/xxx/sql1"; ResourceType = "Microsoft.Sql/servers"}
@@ -184,14 +184,14 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
         
         It "Should calculate coverage percentage" {
-            $coverage = Get-AzDefenderCoverage
+            $coverage = Get-AzDefenderCoverage -ErrorAction Stop
             
             $coverage.CoveragePercentage | Should -Be 50 # 1 protected out of 2
             $coverage.Plans | Should -HaveCount 2
         }
         
         It "Should identify protected and unprotected resources" {
-            $coverage = Get-AzDefenderCoverage
+            $coverage = Get-AzDefenderCoverage -ErrorAction Stop
             
             $coverage.ProtectedResources | Should -HaveCount 1
             $coverage.UnprotectedResources | Should -HaveCount 1
@@ -201,13 +201,13 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "New-AzSecurityPolicySet" {
         
         BeforeEach {
-            Mock New-AzPolicySetDefinition {
+            Mock New-AzPolicySetDefinition -ErrorAction Stop {
                 [PSCustomObject]@{
                     Name = "TestPolicySet"
                     PolicySetDefinitionId = "/providers/Microsoft.Authorization/policySetDefinitions/test"
                 }
             }
-            Mock New-AzPolicyAssignment {
+            Mock New-AzPolicyAssignment -ErrorAction Stop {
                 [PSCustomObject]@{
                     Name = "TestPolicySet-Assignment"
                     PolicyAssignmentId = "/subscriptions/xxx/providers/Microsoft.Authorization/policyAssignments/test"
@@ -240,7 +240,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "Start-AzVulnerabilityAssessment" {
         
         BeforeEach {
-            Mock Get-AzResource {
+            Mock Get-AzResource -ErrorAction Stop {
                 @([PSCustomObject]@{ResourceId = "/subscriptions/xxx/vm1"})
             }
         }
@@ -263,7 +263,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "Get-AzSecurityScore" {
         
         BeforeEach {
-            Mock Get-AzSecuritySecureScoreControl {
+            Mock Get-AzSecuritySecureScoreControl -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{
                         Name = "ASC_EnableMFA"
@@ -278,7 +278,7 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
         
         It "Should retrieve basic security score" {
-            $score = Get-AzSecurityScore
+            $score = Get-AzSecurityScore -ErrorAction Stop
             
             $score.CurrentScore | Should -Be 65
             $score.MaxScore | Should -Be 100
@@ -332,7 +332,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "Get-AzSecurityRecommendations" {
         
         It "Should get all recommendations by default" {
-            $recommendations = Get-AzSecurityRecommendations
+            $recommendations = Get-AzSecurityRecommendations -ErrorAction Stop
             
             $recommendations | Should -Not -BeNullOrEmpty
             Should -Invoke Get-AzSecurityTask -Times 1
@@ -346,7 +346,7 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
         
         It "Should prioritize recommendations" {
-            $recommendations = Get-AzSecurityRecommendations
+            $recommendations = Get-AzSecurityRecommendations -ErrorAction Stop
             
             $recommendations[0].Priority | Should -BeGreaterThan 0
         }
@@ -355,7 +355,7 @@ Describe "Az.Security.Enterprise Module Tests" {
     Context "Invoke-AzSecurityRecommendation" {
         
         BeforeEach {
-            Mock Get-AzSecurityTask {
+            Mock Get-AzSecurityTask -ErrorAction Stop {
                 [PSCustomObject]@{
                     Name = "EnableMFA"
                     SecurityTaskParameters = [PSCustomObject]@{
@@ -374,7 +374,7 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
         
         It "Should fail if recommendation not found" {
-            Mock Get-AzSecurityTask { $null }
+            Mock Get-AzSecurityTask -ErrorAction Stop { $null }
             
             { Invoke-AzSecurityRecommendation -RecommendationId "NonExistent" } | Should -Throw
         }
@@ -386,7 +386,7 @@ Describe "Helper Function Tests" {
     Context "Get-AzResourceCount" {
         
         BeforeEach {
-            Mock Get-AzResource {
+            Mock Get-AzResource -ErrorAction Stop {
                 @(
                     [PSCustomObject]@{ResourceId = "vm1"; ResourceType = "Microsoft.Compute/virtualMachines"},
                     [PSCustomObject]@{ResourceId = "vm2"; ResourceType = "Microsoft.Compute/virtualMachines"}

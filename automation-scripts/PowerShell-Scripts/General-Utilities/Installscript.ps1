@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installscript
 
@@ -47,7 +47,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRes
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux  -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object -ErrorAction Stop System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 New-LocalGroup -Name docker-users -Description " Users of Docker Desktop"
 Add-LocalGroupMember -Group 'docker-users' -Member $WEUserName

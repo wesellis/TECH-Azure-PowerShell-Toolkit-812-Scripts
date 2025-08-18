@@ -1,57 +1,57 @@
-# Enhanced GitHub Repository Uploader with Detailed Status
+﻿# Enhanced GitHub Repository Uploader with Detailed Status
 # Uploads local changes to GitHub for all repositories with better change detection
 
-Write-Host "=== Enhanced GitHub Repository Uploader ===" -ForegroundColor Green
-Write-Host "Checking and uploading local changes to github.com/wesellis" -ForegroundColor Cyan
+Write-Information "=== Enhanced GitHub Repository Uploader ==="
+Write-Information "Checking and uploading local changes to github.com/wesellis"
 
 $baseDir = "A:\GITHUB"
-Set-Location $baseDir
+Set-Location -ErrorAction Stop $baseDir
 
 # Add Git to PATH
 $env:PATH += ";C:\Program Files\Git\bin"
 
 # Focus on Azure-Automation-Scripts repository for detailed analysis
 $repoPath = "A:\GITHUB\Azure-Automation-Scripts"
-Write-Host "`n=== Detailed Analysis: Azure-Automation-Scripts ===" -ForegroundColor Yellow
+Write-Information "`n=== Detailed Analysis: Azure-Automation-Scripts ==="
 
 if (Test-Path $repoPath) {
-    Set-Location $repoPath
+    Set-Location -ErrorAction Stop $repoPath
     
-    Write-Host "Current directory: $((Get-Location).Path)" -ForegroundColor Cyan
+    Write-Information "Current directory: $((Get-Location).Path)"
     
     # Check if this is a Git repository
     if (Test-Path ".git") {
-        Write-Host "✓ Git repository detected" -ForegroundColor Green
+        Write-Information "✓ Git repository detected"
         
         # Get detailed Git status
-        Write-Host "`nChecking Git status..." -ForegroundColor Cyan
+        Write-Information "`nChecking Git status..."
         $gitStatus = git status --porcelain 2>$null
         
         if ([string]::IsNullOrWhiteSpace($gitStatus)) {
-            Write-Host "Git status shows no changes" -ForegroundColor Yellow
+            Write-Information "Git status shows no changes"
             
             # Check for untracked files specifically
-            Write-Host "`nChecking for untracked files..." -ForegroundColor Cyan
+            Write-Information "`nChecking for untracked files..."
             $untrackedFiles = git ls-files --others --exclude-standard 2>$null
             
             if (![string]::IsNullOrWhiteSpace($untrackedFiles)) {
-                Write-Host "Found untracked files:" -ForegroundColor Red
+                Write-Information "Found untracked files:"
                 $untrackedFiles -split "`n" | ForEach-Object { 
                     if (![string]::IsNullOrWhiteSpace($_)) {
-                        Write-Host "  $_" -ForegroundColor White
+                        Write-Information "  $_"
                     }
                 }
                 
                 # Add and commit untracked files
-                Write-Host "`nAdding untracked files..." -ForegroundColor Yellow
+                Write-Information "`nAdding untracked files..."
                 git add . 2>$null
                 
                 $newStatus = git status --porcelain 2>$null
                 if (![string]::IsNullOrWhiteSpace($newStatus)) {
-                    Write-Host "Files staged for commit:" -ForegroundColor Green
+                    Write-Information "Files staged for commit:"
                     $newStatus -split "`n" | ForEach-Object { 
                         if (![string]::IsNullOrWhiteSpace($_)) {
-                            Write-Host "  $_" -ForegroundColor White
+                            Write-Information "  $_"
                         }
                     }
                     
@@ -59,36 +59,36 @@ if (Test-Path $repoPath) {
                     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
                     $commitMessage = "Enhanced Azure Automation Scripts - Added enterprise features - $timestamp"
                     
-                    Write-Host "`nCommitting changes..." -ForegroundColor Yellow
+                    Write-Information "`nCommitting changes..."
                     git commit -m $commitMessage 2>$null
                     
                     if ($LASTEXITCODE -eq 0) {
-                        Write-Host "✓ Changes committed successfully" -ForegroundColor Green
+                        Write-Information "✓ Changes committed successfully"
                         
                         # Push to GitHub
-                        Write-Host "`nPushing to GitHub..." -ForegroundColor Yellow
+                        Write-Information "`nPushing to GitHub..."
                         git push 2>$null
                         
                         if ($LASTEXITCODE -eq 0) {
-                            Write-Host "✓ Successfully pushed to GitHub!" -ForegroundColor Green
+                            Write-Information "✓ Successfully pushed to GitHub!"
                         } else {
-                            Write-Host "✗ Failed to push to GitHub" -ForegroundColor Red
-                            Write-Host "You may need to authenticate with GitHub" -ForegroundColor Yellow
+                            Write-Information "✗ Failed to push to GitHub"
+                            Write-Information "You may need to authenticate with GitHub"
                         }
                     } else {
-                        Write-Host "✗ Failed to commit changes" -ForegroundColor Red
+                        Write-Information "✗ Failed to commit changes"
                     }
                 } else {
-                    Write-Host "No changes after adding files" -ForegroundColor Gray
+                    Write-Information "No changes after adding files"
                 }
             } else {
-                Write-Host "No untracked files found" -ForegroundColor Gray
+                Write-Information "No untracked files found"
             }
         } else {
-            Write-Host "Found changes to commit:" -ForegroundColor Green
+            Write-Information "Found changes to commit:"
             $gitStatus -split "`n" | ForEach-Object { 
                 if (![string]::IsNullOrWhiteSpace($_)) {
-                    Write-Host "  $_" -ForegroundColor White
+                    Write-Information "  $_"
                 }
             }
             
@@ -99,27 +99,27 @@ if (Test-Path $repoPath) {
             git push 2>$null
             
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "✓ Changes uploaded successfully!" -ForegroundColor Green
+                Write-Information "✓ Changes uploaded successfully!"
             } else {
-                Write-Host "✗ Failed to upload changes" -ForegroundColor Red
+                Write-Information "✗ Failed to upload changes"
             }
         }
         
         # Show recent commits
-        Write-Host "`nRecent commits:" -ForegroundColor Cyan
-        git log --oneline -5 2>$null | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+        Write-Information "`nRecent commits:"
+        git log --oneline -5 2>$null | ForEach-Object { Write-Information "  $_" }
         
         # Show branch info
-        Write-Host "`nBranch information:" -ForegroundColor Cyan
+        Write-Information "`nBranch information:"
         $currentBranch = git branch --show-current 2>$null
-        Write-Host "  Current branch: $currentBranch" -ForegroundColor White
+        Write-Information "  Current branch: $currentBranch"
         
-        $remoteUrl = git remote get-url origin 2>$null
-        Write-Host "  Remote URL: $remoteUrl" -ForegroundColor White
+        $remoteUrl = git remote get-url -ErrorAction Stop origin 2>$null
+        Write-Information "  Remote URL: $remoteUrl"
         
     } else {
-        Write-Host "✗ Not a Git repository" -ForegroundColor Red
-        Write-Host "Initialize Git repository? (y/n):" -ForegroundColor Yellow
+        Write-Information "✗ Not a Git repository"
+        Write-Information "Initialize Git repository? (y/n):"
         $response = Read-Host
         
         if ($response -eq 'y' -or $response -eq 'Y') {
@@ -130,17 +130,17 @@ if (Test-Path $repoPath) {
             git branch -M main 2>$null
             git push -u origin main 2>$null
             
-            Write-Host "✓ Repository initialized and pushed to GitHub" -ForegroundColor Green
+            Write-Information "✓ Repository initialized and pushed to GitHub"
         }
     }
 } else {
-    Write-Host "✗ Repository path not found: $repoPath" -ForegroundColor Red
+    Write-Information "✗ Repository path not found: $repoPath"
 }
 
-Write-Host "`n=== Quick Check: All Repositories ===" -ForegroundColor Yellow
+Write-Information "`n=== Quick Check: All Repositories ==="
 
 # Quick check of all repositories
-$repositories = Get-ChildItem $baseDir -Directory | Where-Object { 
+$repositories = Get-ChildItem -ErrorAction Stop $baseDir -Directory | Where-Object { 
     $_.Name -notlike ".*" 
 } | Select-Object -ExpandProperty Name
 
@@ -152,29 +152,29 @@ $summary = @{
 
 foreach ($repo in $repositories) {
     $repoPath = Join-Path $baseDir $repo
-    Set-Location $repoPath
+    Set-Location -ErrorAction Stop $repoPath
     
     if (Test-Path ".git") {
         $status = git status --porcelain 2>$null
         $untracked = git ls-files --others --exclude-standard 2>$null
         
         if (![string]::IsNullOrWhiteSpace($status) -or ![string]::IsNullOrWhiteSpace($untracked)) {
-            Write-Host "$repo - Has changes or untracked files" -ForegroundColor Yellow
+            Write-Information "$repo - Has changes or untracked files"
             $summary.HasChanges++
         } else {
-            Write-Host "$repo - No changes" -ForegroundColor Gray
+            Write-Information "$repo - No changes"
             $summary.NoChanges++
         }
     } else {
-        Write-Host "$repo - Not a Git repository" -ForegroundColor Red
+        Write-Information "$repo - Not a Git repository"
         $summary.NotGitRepo++
     }
 }
 
-Write-Host "`n=== SUMMARY ===" -ForegroundColor Green
-Write-Host "Repositories with changes: $($summary.HasChanges)" -ForegroundColor Yellow
-Write-Host "Repositories with no changes: $($summary.NoChanges)" -ForegroundColor Gray
-Write-Host "Not Git repositories: $($summary.NotGitRepo)" -ForegroundColor Red
-Write-Host "Total repositories: $($repositories.Count)" -ForegroundColor Cyan
+Write-Information "`n=== SUMMARY ==="
+Write-Information "Repositories with changes: $($summary.HasChanges)"
+Write-Information "Repositories with no changes: $($summary.NoChanges)"
+Write-Information "Not Git repositories: $($summary.NotGitRepo)"
+Write-Information "Total repositories: $($repositories.Count)"
 
-Write-Host "`nEnhanced upload process complete!" -ForegroundColor Green
+Write-Information "`nEnhanced upload process complete!"

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Installvstsagent
 
@@ -60,7 +60,7 @@ function WE-PrepMachineForAutologon () {
         Write-Verbose " Username constructed to use for creating a PSSession: $domain\\$userName"
     }
    
-    $credentials = New-Object System.Management.Automation.PSCredential(" $domain\\$userName" , $password)
+    $credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential(" $domain\\$userName" , $password)
     Enter-PSSession -ComputerName $computerName -Credential $credentials
     Exit-PSSession
   
@@ -88,7 +88,7 @@ function WE-PrepMachineForAutologon () {
   
     # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
     while ($timeout -ge 0 -and $canCheckRegistry) {
-        $objUser = New-Object System.Security.Principal.NTAccount($vmAdminUserName)
+        $objUser = New-Object -ErrorAction Stop System.Security.Principal.NTAccount($vmAdminUserName)
         $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
         $securityId = $securityId.Value
   

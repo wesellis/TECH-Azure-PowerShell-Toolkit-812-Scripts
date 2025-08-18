@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # Script Name: Azure Function App Provisioning Tool
 # Author: Wesley Ellis
 # Email: wes@wesellis.com
@@ -17,14 +17,14 @@ param (
     [string]$StorageAccountName
 )
 
-Write-Host "Provisioning Function App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "App Service Plan: $PlanName"
-Write-Host "Location: $Location"
-Write-Host "Runtime: $Runtime $RuntimeVersion"
+Write-Information "Provisioning Function App: $AppName"
+Write-Information "Resource Group: $ResourceGroupName"
+Write-Information "App Service Plan: $PlanName"
+Write-Information "Location: $Location"
+Write-Information "Runtime: $Runtime $RuntimeVersion"
 
 # Create the Function App
-$FunctionApp = New-AzFunctionApp `
+$FunctionApp = New-AzFunctionApp -ErrorAction Stop `
     -ResourceGroupName $ResourceGroupName `
     -Name $AppName `
     -AppServicePlan $PlanName `
@@ -33,9 +33,9 @@ $FunctionApp = New-AzFunctionApp `
     -RuntimeVersion $RuntimeVersion
 
 if ($StorageAccountName) {
-    Write-Host "Storage Account: $StorageAccountName"
+    Write-Information "Storage Account: $StorageAccountName"
 }
 
-Write-Host "Function App $AppName provisioned successfully"
-Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Host "State: $($FunctionApp.State)"
+Write-Information "Function App $AppName provisioned successfully"
+Write-Information "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Information "State: $($FunctionApp.State)"

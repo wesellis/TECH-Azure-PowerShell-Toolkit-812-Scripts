@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Autoupdateworker
 
@@ -86,16 +86,16 @@ try
 
     #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions" )
 
-    $WEWebClient = New-Object System.Net.WebClient
+    $WEWebClient = New-Object -ErrorAction Stop System.Net.WebClient
 
     Write-Output " Download the $($WEFileName) template from GitHub..."
 
     $WEWebClient.DownloadFile($($WEGithubFullPath)," $WEPSScriptRoot\$($WEFileName)" )
     
-    $jsonContent=Get-Content " $WEPSScriptRoot\$($WEFileName)"
+    $jsonContent=Get-Content -ErrorAction Stop " $WEPSScriptRoot\$($WEFileName)"
 
     Write-Output " Deserialize the JSON..."
-    $serializer = New-Object System.Web.Script.Serialization.JavaScriptSerializer
+    $serializer = New-Object -ErrorAction Stop System.Web.Script.Serialization.JavaScriptSerializer
     $jsonData = $serializer.DeserializeObject($jsonContent)
 
     #Get the Automation Account tags to read the version
@@ -109,8 +109,8 @@ try
     $WEUpdateVersion = $jsonData.variables.AROToolkitVersion
 
     Write-Output " Checking the ARO Toolkit version..."
-    $WECurrentVersionCompare = New-Object System.Version($WECurrentVersion)
-    $WEUpdateVersionCompare = New-Object System.Version($WEUpdateVersion)
+    $WECurrentVersionCompare = New-Object -ErrorAction Stop System.Version($WECurrentVersion)
+    $WEUpdateVersionCompare = New-Object -ErrorAction Stop System.Version($WEUpdateVersion)
 
     $WEVersionDiff = $WEUpdateVersionCompare.CompareTo($WECurrentVersionCompare)
 
@@ -129,7 +129,7 @@ try
 
         $WEDiffVariables = Compare-Object -ReferenceObject $WENewVariables -DifferenceObject $WEExistingVariables | ?{$_.sideIndicator -eq " <=" }| Select InputObject
 
-        if($WEDiffVariables -ne $null)
+        if($null -ne $WEDiffVariables)
         {
             Write-Output " New asset variables found and creating now..."
             Write-Output $WEDiffVariables
@@ -179,12 +179,12 @@ try
                 $WERunbooktable.Add($runb.name,$runbookScriptUri.get(1).Replace(" )]" ,"" ).Replace(" '" ,"" ))
                 $currentRunbook = Get-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $runb.name -ErrorAction SilentlyContinue
                 #check if this is new runbook or existing
-                if($currentRunbook -ne $null)
+                if($null -ne $currentRunbook)
                 {
                     $currentRBversion = $currentRunbook.Tags.Values        
                     $WENewVersion = $runb.version
-                    $WECVrbCompare = New-Object System.Version($currentRBversion)
-                    $WENVrbCompare = New-Object System.Version($WENewVersion)
+                    $WECVrbCompare = New-Object -ErrorAction Stop System.Version($currentRBversion)
+                    $WENVrbCompare = New-Object -ErrorAction Stop System.Version($WENewVersion)
                     $WEVersionDiffRB = $WENVrbCompare.CompareTo($WECVrbCompare)
 
                     if($WEVersionDiffRB -gt 0)
@@ -193,7 +193,7 @@ try
                         Write-Output " Updates needed for $($runb.name)..."
                         #Now download the runbook and do the update
                         Write-Output " Downloading the updated PowerShell script from GitHub..."
-                        $WEWebClientRB = New-Object System.Net.WebClient
+                        $WEWebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
                         
                         $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1" )
                         $WERunbookScriptPath = " $WEPSScriptRoot\$($runb.name).ps1"
@@ -211,7 +211,7 @@ try
                     Write-Output " New Runbook $($runb.name) found..."
                     #New Runbook. So download and create it
                     Write-Output " Downloading the PowerShell script from GitHub..."
-                    $WEWebClientRB = New-Object System.Net.WebClient
+                    $WEWebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
                     $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1" )
                     $WERunbookScriptPath = " $WEPSScriptRoot\$($runb.name).ps1"
                     $WENewVersion = $runb.version
@@ -235,7 +235,7 @@ try
 
         $WERunbookDownloadPath = " $($WEGitHubRootPath)/$($WEGitHubBranch)/demos/azure-resource-optimization-toolkit/scripts/Bootstrap_Main.ps1"
         Write-Output " Downloading the Bootstrap_Main PowerShell script from GitHub..."
-       ;  $WEWebClientRB = New-Object System.Net.WebClient
+       ;  $WEWebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
         $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($WEBootstrap_MainRunbook).ps1" )
        ;  $WERunbookScriptPath = " $WEPSScriptRoot\Bootstrap_Main.ps1"
         

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     12 Monitor Backupjob
 
@@ -62,7 +62,7 @@ outlook1         Backup               Completed            2020-12-12 11:18:36 P
     General notes
 
     Monitoring a backup job
-You can monitor long-running operations, such as backup jobs, without using the Azure portal. To get the status of an in-progress job, use the Get-AzRecoveryservicesBackupJob cmdlet. This cmdlet gets the backup jobs for a specific vault, and that vault is specified in the vault context. The following example gets the status of an in-progress job as an array, and stores the status in the $joblist variable.
+You can monitor long-running operations, such as backup jobs, without using the Azure portal. To get the status of an in-progress job, use the Get-AzRecoveryservicesBackupJob -ErrorAction Stop cmdlet. This cmdlet gets the backup jobs for a specific vault, and that vault is specified in the vault context. The following example gets the status of an in-progress job as an array, and stores the status in the $joblist variable.
 
 
 
@@ -78,14 +78,14 @@ $getAzRecoveryServicesVaultSplat = @{
     Name = $WEVaultname
 }
 
-$targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
+$targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
 ; 
 $getAzRecoveryservicesBackupJobSplat = @{
     # Status = " InProgress" #you may ommit this out if you want to see all statuses
     VaultId = $targetVault.ID
 }
 ; 
-$joblist = Get-AzRecoveryservicesBackupJob @getAzRecoveryservicesBackupJobSplat
+$joblist = Get-AzRecoveryservicesBackupJob -ErrorAction Stop @getAzRecoveryservicesBackupJobSplat
 $joblist[0]
 
 

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Set Azvmaddomainextension
 
@@ -57,7 +57,7 @@ $setAzVMADDomainExtensionSplat = @{
     Verbose = $true
 }
 
-Set-AzVMADDomainExtension @setAzVMADDomainExtensionSplat
+Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat
 
  
 $setAzVMADDomainExtensionSplat = @{
@@ -70,7 +70,7 @@ $setAzVMADDomainExtensionSplat = @{
     Verbose = $true
 }
 
-Set-AzVMADDomainExtension @setAzVMADDomainExtensionSplat
+Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat
 
 
 ; 
@@ -82,7 +82,7 @@ $setAzVMADDomainExtensionSplat = @{
     # autoUpgradeMinorVersion = $true
 }
 
-Set-AzVMADDomainExtension @setAzVMADDomainExtensionSplat
+Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat
 
 
 ; 
@@ -97,7 +97,7 @@ $setAzVMADDomainExtensionSplat = @{
     Verbose = $true
 }
 
-Set-AzVMADDomainExtension @setAzVMADDomainExtensionSplat
+Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat
 
 
 

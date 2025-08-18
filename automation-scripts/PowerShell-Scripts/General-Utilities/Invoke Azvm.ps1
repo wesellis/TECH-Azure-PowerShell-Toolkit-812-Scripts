@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Invoke Azvm
 
@@ -34,6 +34,7 @@
     Requires appropriate permissions and modules
 
 
+[CmdletBinding()]
 function WE-Invoke-AzVM {
 }
 
@@ -41,11 +42,12 @@ function WE-Invoke-AzVM {
 $WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
+[CmdletBinding()]
 function WE-Invoke-AzVM {
     
     
 
-    #Region func New-AzVM
+    #Region func New-AzVM -ErrorAction Stop
     #Creating the VM
    ;  $newAzVMSplat = @{
         ResourceGroupName = $WEResourceGroupName
@@ -54,8 +56,8 @@ function WE-Invoke-AzVM {
         Verbose           = $true
         Tag               = $WETags
     }
-    New-AzVM @newAzVMSplat
-    #endRegion func New-AzVM
+    New-AzVM -ErrorAction Stop @newAzVMSplat
+    #endRegion func New-AzVM -ErrorAction Stop
     
 }
 

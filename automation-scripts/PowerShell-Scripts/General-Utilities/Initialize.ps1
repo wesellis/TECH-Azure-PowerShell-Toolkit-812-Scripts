@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Initialize
 
@@ -57,8 +57,9 @@ $acl = Get-Acl -Path $path
 $acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)" )
 Set-Acl -Path $path -AclObject $acl
 New-ItemProperty -Path " HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value " C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
-'function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
-Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter F | Format-Volume -FileSystem NTFS -Confirm:$false -Force
+'[CmdletBinding()]
+function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
+Get-Disk -ErrorAction Stop | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -UseMaximumSize -DriveLetter F | Format-Volume -FileSystem NTFS -Confirm:$false -Force
 Restart-Service sshd
 
 class DownloadWithRetry {
@@ -92,7 +93,7 @@ class DownloadWithRetry {
             }
             catch {
                 if ($headers.Count -ne 0) {
-                    write-host " download of $uri failed"
+                    Write-Information " download of $uri failed"
                 }
                 try {
                     if ([string]::IsNullOrEmpty($outFile)) {
@@ -105,7 +106,7 @@ class DownloadWithRetry {
                     }
                 }
                 catch {
-                    write-host " download of $uri failed"
+                    Write-Information " download of $uri failed"
                     $retryCount++;
                     if ($retryCount -le $maxRetries) {
                         Start-Sleep -Seconds $retryWaitInSeconds

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Serviceprincipal
 
@@ -35,7 +35,7 @@
 
 
 cls
-Set-Location ".\"
+Set-Location -ErrorAction Stop ".\"
 
 
 
@@ -69,7 +69,7 @@ if (($subscriptionName -eq "" ) -or ($cloudwiseAppServiceURL -eq "" ))
 
 
 
-Write-Host (" Step 1: Logging in to Azure Subscription" + $subscriptionName) -ForegroundColor Gray
+Write-Information (" Step 1: Logging in to Azure Subscription" + $subscriptionName)
 
 
 if(![System.IO.File]::Exists($servicePrincipalPath)){
@@ -88,11 +88,11 @@ Select-AzureRmProfile -Path $servicePrincipalPath
 
 
 
-$sub = Get-AzureRmSubscription –SubscriptionName $subscriptionName | Select-AzureRmSubscription 
+$sub = Get-AzureRmSubscription -ErrorAction Stop –SubscriptionName $subscriptionName | Select-AzureRmSubscription 
 
 
 
-Write-Host (" Step 2: Create Azure Active Directory apps in default directory" ) -ForegroundColor Gray
+Write-Information (" Step 2: Create Azure Active Directory apps in default directory" )
 
     $u = (Get-AzureRmContext).Account
     $u1 = ($u -split '@')[0]
@@ -110,51 +110,51 @@ Write-Host (" Step 2: Create Azure Active Directory apps in default directory" )
     # Create Active Directory Application
     $azureAdApplication1 = New-AzureRmADApplication -DisplayName $displayName1 -HomePage $cloudwiseAppServiceURL -IdentifierUris $cloudwiseAppServiceURL -Password $passwordADApp -ReplyUrls $replyURLs
 
-    Write-Host (" Step 2.1: Azure Active Directory apps creation successful. AppID is " + $azureAdApplication1.ApplicationId) -ForegroundColor Gray
+    Write-Information (" Step 2.1: Azure Active Directory apps creation successful. AppID is " + $azureAdApplication1.ApplicationId)
 
 
-    Write-Host (" Step 3: Attempting to create Service Principal" ) -ForegroundColor Gray
+    Write-Information (" Step 3: Attempting to create Service Principal" )
    ;  $principal = New-AzureRmADServicePrincipal -ApplicationId $azureAdApplication1.ApplicationId
     Start-Sleep -s 30 # Wait till the ServicePrincipal is completely created. Usually takes 20+secs. Needed as Role assignment needs a fully deployed servicePrincipal
 
-    Write-Host (" Step 3.1: Service Principal creation successful - " + $principal.DisplayName) -ForegroundColor Gray
+    Write-Information (" Step 3.1: Service Principal creation successful - " + $principal.DisplayName)
 
    ;  $scopedSubs = (" /subscriptions/" + $sub.Subscription)
 
-    Write-Host (" Step 3.2: Attempting Reader Role assignment" ) -ForegroundColor Gray
+    Write-Information (" Step 3.2: Attempting Reader Role assignment" )
 
     New-AzureRmRoleAssignment -RoleDefinitionName Reader -ServicePrincipalName $azureAdApplication1.ApplicationId.Guid -Scope $scopedSubs
 
-    Write-Host (" Step 3.2: Reader Role assignment successful" ) -ForegroundColor Gray
+    Write-Information (" Step 3.2: Reader Role assignment successful" )
 
 
 
-Write-Host (" AD Application Details:" ) -foreground Green
+Write-Information (" AD Application Details:" ) -foreground Green
 $azureAdApplication1
 
 
-Write-Host (" Parameters to be used in the registration / configuration." ) -foreground Green
+Write-Information (" Parameters to be used in the registration / configuration." ) -foreground Green
 
 Write-WELog " SubscriptionID: " " INFO" -foreground Green –NoNewLine
-Write-Host $sub.Subscription -foreground Red 
+Write-Information $sub.Subscription -foreground Red 
 Write-WELog " Domain: " " INFO" -foreground Green –NoNewLine
-Write-Host ($u3 + " .onmicrosoft.com" ) -foreground Red –NoNewLine
+Write-Information ($u3 + " .onmicrosoft.com" ) -foreground Red –NoNewLine
 Write-WELog " - Please verify the domain with the management portal. For debugging purposes we have used the domain of the user signing in. You might have Custom / Organization domains" " INFO" -foreground Yellow
 Write-WELog " Application Client ID: " " INFO" -foreground Green –NoNewLine
-Write-Host $azureAdApplication1.ApplicationId -foreground Red 
+Write-Information $azureAdApplication1.ApplicationId -foreground Red 
 Write-WELog " Application Client Password: " " INFO" -foreground Green –NoNewLine
-Write-Host $passwordADApp -foreground Red 
+Write-Information $passwordADApp -foreground Red 
 Write-WELog " PostLogoutRedirectUri: " " INFO" -foreground Green –NoNewLine
-Write-Host $cloudwiseAppServiceURL -foreground Red 
+Write-Information $cloudwiseAppServiceURL -foreground Red 
 Write-WELog " TenantId: " " INFO" -foreground Green –NoNewLine
-Write-Host $tenantID -foreground Red 
+Write-Information $tenantID -foreground Red 
 
-Write-Host (" TODO - Update permissions for the AD Application  '" ) -foreground Yellow –NoNewLine
-Write-Host $displayName1 -foreground Red –NoNewLine
-Write-Host (" '. Cloudwise would atleast need 2 apps" ) -foreground Yellow
-Write-Host (" `t 1) Windows Azure Active Directory " ) -foreground Yellow
-Write-Host (" `t 2) Windows Azure Service Management API " ) -foreground Yellow
-Write-Host (" see README.md for details" ) -foreground Yellow
+Write-Information (" TODO - Update permissions for the AD Application  '" ) -foreground Yellow –NoNewLine
+Write-Information $displayName1 -foreground Red –NoNewLine
+Write-Information (" '. Cloudwise would atleast need 2 apps" ) -foreground Yellow
+Write-Information (" `t 1) Windows Azure Active Directory " ) -foreground Yellow
+Write-Information (" `t 2) Windows Azure Service Management API " ) -foreground Yellow
+Write-Information (" see README.md for details" ) -foreground Yellow
 
 
 

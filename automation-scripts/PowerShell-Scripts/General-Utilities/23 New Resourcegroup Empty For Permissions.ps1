@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     23 New Resourcegroup Empty For Permissions
 
@@ -80,7 +80,7 @@ $newAzResourceGroupSplat = @{
 }
 
 
-New-AzResourceGroup @newAzResourceGroupSplat
+New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
 
 
 
