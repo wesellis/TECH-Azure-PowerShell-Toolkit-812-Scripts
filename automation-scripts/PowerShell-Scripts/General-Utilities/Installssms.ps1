@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installssms
+    Installssms
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Installssms
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 iex ((new-object net.webclient).DownloadString('https://community.chocolatey.org/install.ps1'))

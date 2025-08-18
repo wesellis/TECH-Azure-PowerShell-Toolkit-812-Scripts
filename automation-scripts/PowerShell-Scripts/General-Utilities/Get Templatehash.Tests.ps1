@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Get Templatehash.Tests
+    Get Templatehash.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Get Templatehash.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿Describe "Get-TemplateHash" {
     BeforeAll {
         $WEErrorActionPreference = 'Stop'    
@@ -25,10 +43,12 @@
             [string][Parameter(Mandatory = $true)] $templateFilePath,
             [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$bearerToken,
             [switch]$removeGeneratorMetadata
         ) {
-            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Get-TemplateHash.ps1".Replace('.Tests.ps1', '.ps1')
+            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Get-TemplateHash.ps1" .Replace('.Tests.ps1', '.ps1')
             . $cmdlet $templateFilePath $bearerToken -RemoveGeneratorMetadata:$removeGeneratorMetadata
         }
     }
@@ -59,7 +79,7 @@
 
     It 'Shows hash difference when files differ outside of generator metadata' {
         # hash with and without metadata should be the same
-        $hash1 = Get-TemplateHash " $dataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
+       ;  $hash1 = Get-TemplateHash " $dataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
        ;  $hash2 = Get-TemplateHash " $dataFolder/TemplateWithMetadataWithChanges.json" -RemoveGeneratorMetadata
 
         $hash1 | Should -Not -Be $hash2

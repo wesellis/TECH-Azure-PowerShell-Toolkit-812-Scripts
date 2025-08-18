@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Scriptworkflow
+    Scriptworkflow
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Scriptworkflow
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 Param($WEDomainFullName,$WECM,$WECMUser,$WEDPMPName,$WEClientName,$WEConfig,$WECurrentRole,$WELogFolder,$WECSName,$WEPSName)
 
 $WECSRole = "CAS"
 $WEPSRole = " PS1"
 
 $WERole = $WEPSRole
-if($WECurrentRole -eq " CS")
+if($WECurrentRole -eq " CS" )
 {
     $WERole = $WECSRole
 }
@@ -40,7 +58,7 @@ if (Test-Path -Path $WEConfigurationFile)
 } 
 else 
 {
-    if($WEConfig -eq " Standalone")
+    if($WEConfig -eq " Standalone" )
     {
         [hashtable]$WEActions = @{
             InstallSCCM = @{
@@ -72,7 +90,7 @@ else
     }
     else 
     {
-        if($WECurrentRole -eq " CS")
+        if($WECurrentRole -eq " CS" )
         {
             [hashtable]$WEActions = @{
                 InstallSCCM = @{
@@ -92,7 +110,7 @@ else
                 }
             }
         }
-        elseif($WECurrentRole -eq " PS") 
+        elseif($WECurrentRole -eq " PS" ) 
         {
             [hashtable]$WEActions = @{
                 WaitingForCASFinsihedInstall = @{
@@ -127,7 +145,7 @@ else
     $WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
 }
 
-if($WEConfig -eq " Standalone")
+if($WEConfig -eq " Standalone" )
 {
     #Install CM and Config
     $WEScriptFile = Join-Path -Path $WEProvisionToolPath -ChildPath " InstallAndUpdateSCCM.ps1"
@@ -150,7 +168,7 @@ if($WEConfig -eq " Standalone")
     . $WEScriptFile $WEDomainFullName $WECMUser $WEClientName $WEDPMPName $WERole $WEProvisionToolPath
 }
 else {
-    if($WECurrentRole -eq " CS")
+    if($WECurrentRole -eq " CS" )
     {
         #Install CM and Config
         $WEScriptFile = Join-Path -Path $WEProvisionToolPath -ChildPath " InstallCSForHierarchy.ps1"
@@ -158,7 +176,7 @@ else {
         . $WEScriptFile $WEDomainFullName $WECM $WECMUser $WERole $WEProvisionToolPath $WELogFolder $WEPSName $WEPSRole
 
     }
-    elseif($WECurrentRole -eq " PS")
+    elseif($WECurrentRole -eq " PS" )
     {
         #Install CM and Config
         $WEScriptFile = Join-Path -Path $WEProvisionToolPath -ChildPath " InstallPSForHierarchy.ps1"
@@ -171,7 +189,7 @@ else {
         . $WEScriptFile $WEDomainFullName $WEDPMPName $WERole $WEProvisionToolPath
     
         #Install MP
-        $WEScriptFile = Join-Path -Path $WEProvisionToolPath -ChildPath " InstallMP.ps1"
+       ;  $WEScriptFile = Join-Path -Path $WEProvisionToolPath -ChildPath " InstallMP.ps1"
     
         . $WEScriptFile $WEDomainFullName $WEDPMPName $WERole $WEProvisionToolPath
 

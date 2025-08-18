@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced New Serviceprincipal
+    New Serviceprincipal
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced New Serviceprincipal
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [cmdletbinding()
 try {
     # Main script execution
@@ -23,13 +41,15 @@ try {
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-	[string]$appName = "rds-update-certificate-script" ,
+	[string]$appName = " rds-update-certificate-script" ,
 
 	# has to be a valid format URI; URI's not validated for single-tenant application
-	[string]$uri = "https://login.microsoft.com/rds-update-certificate-script" ,
+	[string]$uri = " https://login.microsoft.com/rds-update-certificate-script" ,
 	
 	[parameter(mandatory=$true)]
 	[Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$password,
 
@@ -37,7 +57,7 @@ param(
 )
 
 $app = New-AzureRmADApplication -DisplayName $appName -HomePage $uri -IdentifierUris $uri -password $pwd
-
+; 
 $sp = New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId
 
 if ($vaultName)
@@ -49,14 +69,12 @@ $tenantId = (get-azurermsubscription).TenantId | select -Unique
 
 
 
-"application id:  $($app.ApplicationId)"
+" application id:  $($app.ApplicationId)"
 " tenant id:       $tenantId"
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Bicepdecompile
+    Check Bicepdecompile
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Check Bicepdecompile
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 
     Detect unwanted raw output from bicep decompile command
 
@@ -27,11 +45,12 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     $sampleFolder = $WEENV:SAMPLE_FOLDER
 )
 
-Write-WELog "Finding all bicep files in: $sampleFolder" " INFO"
+Write-WELog " Finding all bicep files in: $sampleFolder" " INFO"; 
 $bicepFiles = Get-ChildItem -Path " $sampleFolder\*.bicep" -Recurse
 
 foreach ($f in $bicepFiles) {
@@ -48,10 +67,8 @@ foreach ($f in $bicepFiles) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

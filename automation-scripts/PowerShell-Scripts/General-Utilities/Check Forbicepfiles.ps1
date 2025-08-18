@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Forbicepfiles
+    Check Forbicepfiles
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Check Forbicepfiles
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 
     Detect which bicep files need to be compiled and compile them - this should be run upon merge of a sample to auto-create azuredeploy.json
 
@@ -27,6 +45,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     $sampleFolder = $WEENV:SAMPLE_FOLDER,
     $mainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME,
@@ -37,12 +56,12 @@ param(
 
 
 
-Write-WELog "Checking for bicep files in: $sampleFolder" " INFO"
+Write-WELog " Checking for bicep files in: $sampleFolder" " INFO"
 
 $bicepFullPath = " $sampleFolder\$mainTemplateFilenameBicep"
 $isBicepFileFound = Test-Path $bicepFullPath
-
-$prereqBicepFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameBicep"; 
+; 
+$prereqBicepFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameBicep" ; 
 $isBicepPrereqFileFound = Test-Path $prereqBicepFullPath
 
 Write-Output " Bicep files:"
@@ -69,10 +88,8 @@ if($isBicepFileFound -or $isBicepPrereqFileFound){
     }
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

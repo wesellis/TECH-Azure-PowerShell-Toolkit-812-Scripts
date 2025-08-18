@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 18 Restore Azrecoveryservicesbackupitem
+    18 Restore Azrecoveryservicesbackupitem
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 18 Restore Azrecoveryservicesbackupitem
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -49,7 +67,7 @@ $WEStorageAccountName = "outlook1restoredsa"
 $WEStorageAccountResourceGroupName = " CanPrintEquip_Outlook1Restored_RG"
 $WETargetResourceGroupName = " CanPrintEquip_Outlook1Restored_RG"
 
-
+; 
 $restoreAzRecoveryServicesBackupItemSplat = @{
     RecoveryPoint = $rp[0]
     StorageAccountName = $WEStorageAccountName

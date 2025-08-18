@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deleteresourcegroup Child
+    Deleteresourcegroup Child
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Deleteresourcegroup Child
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -32,11 +50,11 @@ $ErrorActionPreference = "Stop"
 param(
     [String]$WERGName
 )
-$connectionName = "AzureRunAsConnection"
+$connectionName = " AzureRunAsConnection"
 try
 {
     # Get the connection " AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
+   ;  $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
 
     " Logging in to Azure..."
     Add-AzureRmAccount `

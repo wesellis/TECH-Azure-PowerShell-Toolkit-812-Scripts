@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Bulk User Offboarding Tool
+    Azure Bulk User Offboarding Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Bulk User Offboarding Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -46,14 +64,18 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEUserPrincipalName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEForwardingAddress,
@@ -66,7 +88,7 @@ param(
 $WELogFile = " UserOffboarding_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 function WE-Write-Log {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEMessage)
     $WETimestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
     " $WETimestamp - $WEMessage" | Out-File -FilePath $WELogFile -Append
@@ -108,7 +130,7 @@ try {
     if ($WERemoveFromAllGroups) {
         $WEUserGroups = Get-AzureADUserMembership -ObjectId $WEUser.ObjectId
         foreach ($WEGroup in $WEUserGroups) {
-            if ($WEGroup.ObjectType -eq " Group") {
+            if ($WEGroup.ObjectType -eq " Group" ) {
                 Remove-AzureADGroupMember -ObjectId $WEGroup.ObjectId -MemberId $WEUser.ObjectId
                 Write-Log " Removed from group: $($WEGroup.DisplayName)"
             }
@@ -127,7 +149,7 @@ try {
     }
     
     # Reset password to random value
-    $WERandomPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+   ;  $WERandomPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
    ;  $WESecurePassword = ConvertTo-SecureString $WERandomPassword -AsPlainText -Force
     Set-AzureADUserPassword -ObjectId $WEUser.ObjectId -Password $WESecurePassword
     Write-Log " Password reset to random value"

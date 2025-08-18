@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Migrate Galleryitems
+    Migrate Galleryitems
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Migrate Galleryitems
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
     .Synopsis
@@ -82,11 +100,11 @@ param(
 )
 
 if ($WEResourceGroupName -ne "" -and $location -eq "" ) {
-    Write-Error -Message "Location is required when a the ResourceGroupName is specified."
+    Write-Error -Message " Location is required when a the ResourceGroupName is specified."
 }
 
 try {
-    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-GalleryMigration", " 1.0")
+    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-GalleryMigration" , " 1.0" )
 } catch { }
 
 if ($WEItemsToExport -eq 'MyGalleryItems') {
@@ -146,14 +164,14 @@ foreach ($t in $templates) {
 
     # fetch the template content from the gallery 
     Write-WELog " Downloading template from: $uri" " INFO"
-    $r = (Invoke-WebRequest -Uri $uri -Method " GET" -Headers $headers -UseBasicParsing -ContentType " application/json")
+    $r = (Invoke-WebRequest -Uri $uri -Method " GET" -Headers $headers -UseBasicParsing -ContentType " application/json" )
     $templateJSON = $r.content
 
     # To create a templateSpec in a template we need to escape expressions e.g. " [variables()]" must be " [[variables()]"
     # if you want the template exported unmodified remove the ::Replace lines below
-    $templateJSON = @([Regex]::Replace($templateJSON, '\:\s{0,}\" \s{0,}\[', ': "[[')) # replace expressions in string property types (preceded by a colon ':' )
-    $templateJSON = @([Regex]::Replace($templateJSON, '\[\s{0,}\" \s{0,}\[', '[ "[[')) # replace expressions in array properties - the first element of the array (preceded by open bracket '[' )
-    $templateJSON = @([Regex]::Replace($templateJSON, '\,\s{0,}\" \s{0,}\[', ', "[[')) # replace expressions in array properties - all elements after the first (preceded by comma ',' )
+    $templateJSON = @([Regex]::Replace($templateJSON, '\:\s{0,}\" \s{0,}\[', ': " [[')) # replace expressions in string property types (preceded by a colon ':' )
+    $templateJSON = @([Regex]::Replace($templateJSON, '\[\s{0,}\" \s{0,}\[', '[ " [[')) # replace expressions in array properties - the first element of the array (preceded by open bracket '[' )
+    $templateJSON = @([Regex]::Replace($templateJSON, '\,\s{0,}\" \s{0,}\[', ', " [[')) # replace expressions in array properties - all elements after the first (preceded by comma ',' )
     
     $templateJSON = $templateJSON | ConvertFrom-Json -Depth 50 #-AsHashtable # convert to a ps object
     
@@ -294,7 +312,7 @@ if ($WEResourceGroupName -ne "" ) {
     
     # migrate any roleAssignments that exist on the gallery itself 
     if ($WEMigrateRBAC) {
-        Write-WELog "Checking for roleAssignments on the gallery..." " INFO"
+        Write-WELog " Checking for roleAssignments on the gallery..." " INFO"
         $galleryId = " /providers/Microsoft.Gallery/myareas/$galleryName"
                     
         $roleAssignments = Get-AzRoleAssignment -Scope $galleryId
@@ -303,7 +321,7 @@ if ($WEResourceGroupName -ne "" ) {
             # only migrate if the assignment is at the galleryScope, not above
             if ($ra.Scope -eq $galleryId) {
                 $s = " /subscriptions/$($(Get-AzContext).Subscription.id)/resourceGroups/$WEResourceGroupName"
-                $existingRoleAssignment = Get-AzRoleAssignment -Scope $s -ObjectId $ra.ObjectId -RoleDefinitionId $ra.RoleDefinitionId # check for an existing assignment (under another name)
+               ;  $existingRoleAssignment = Get-AzRoleAssignment -Scope $s -ObjectId $ra.ObjectId -RoleDefinitionId $ra.RoleDefinitionId # check for an existing assignment (under another name)
                 if ($null -eq $existingRoleAssignment) {
                     Write-WELog " Adding roleAssignment for principal: $($ra.ObjectId)" " INFO"
                     New-AzRoleAssignment -scope $s -ObjectId $ra.ObjectId -RoleDefinitionId $ra.RoleDefinitionId -Verbose

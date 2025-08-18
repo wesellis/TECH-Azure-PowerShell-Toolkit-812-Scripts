@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Netapp Connect Ontap Win
+    Netapp Connect Ontap Win
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Netapp Connect Ontap Win
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -35,7 +53,7 @@ function WE-Get-ONTAPClusterDetails([String]$email, [String]$password, [String]$
 {
 
 $authbody = @{
-    email = "${email}"
+    email = " ${email}"
     password = " ${password}"
 }
 $authbodyjson = $authbody | ConvertTo-Json
@@ -44,7 +62,7 @@ $authbodyjson = $authbody | ConvertTo-Json
 $uriauth = " http://$ocmip/occm/api/auth/login"
 $urigetpublicid = " http://$ocmip/occm/api/azure/vsa/working-environments"
 $urigetproperties = " http://$ocmip/occm/api/azure/vsa/working-environments/${publicid?fields}?fields=ontapClusterProperties"
-$headers = @{" Referer"= " AzureQS1"}
+$headers = @{" Referer" = " AzureQS1" }
 
 
 Invoke-RestMethod -Method Post -Headers $headers -UseBasicParsing -Uri ${uriauth} -ContentType 'application/json' -Body $authbodyjson  -SessionVariable session
@@ -90,13 +108,13 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
 
         $WEAdminLIF= $WEAdminLIF.Substring($WEAdminLIF.IndexOf(':')+1)
         $iScSiLIF= $iScSiLIF.Substring($iScSiLIF.IndexOf(':')+1)
-        $WESVMName = $WESVMName.Trim().Replace(" -"," _")
+        $WESVMName = $WESVMName.Trim().Replace(" -" ," _" )
 
         Setup-VM
 
         $WEIqnName = " azureqsiqn"
         $WESecPasswd = ConvertTo-SecureString $WESVMPwd -AsPlainText -Force
-        $WESvmCreds = New-Object System.Management.Automation.PSCredential (" admin", $WESecPasswd)
+        $WESvmCreds = New-Object System.Management.Automation.PSCredential (" admin" , $WESecPasswd)
         $WEVMIqn = (get-initiatorPort).nodeaddress
         #Pad the data Volume size by 10 percent
         $WEDataVolSize = [System.Math]::Floor($WECapacity * 1.1)
@@ -106,7 +124,7 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
 		$WEDataLunSize = $WECapacity
 		$WELogLunSize =  $WECapacity *.33
         
-        Import-module 'C:\Program Files (x86)\NetApp\NetApp PowerShell Toolkit\Modules\DataONTAP\DataONTAP.psd1'
+        Import-module '${env:ProgramFiles} (x86)\NetApp\NetApp PowerShell Toolkit\Modules\DataONTAP\DataONTAP.psd1'
         
         Connect-NcController $WEAdminLIF -Credential $WESvmCreds -Vserver $WESVMName
         Create-NcGroup $WEIqnName $WEVMIqn $WESVMName
@@ -115,11 +133,11 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
     
         Get-IscsiSession | Register-IscsiSession
 
-        New-Ncvol -name sql_data_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WEDataVolSize)+" g") -SpaceReserve none
-        New-Ncvol -name sql_log_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WELogVolSize)+" g") -SpaceReserve none
+        New-Ncvol -name sql_data_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WEDataVolSize)+" g" ) -SpaceReserve none
+        New-Ncvol -name sql_log_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WELogVolSize)+" g" ) -SpaceReserve none
 
-        New-Nclun /vol/sql_data_root/sql_data_lun ([string]$WEDataLunSize+" gb") -ThinProvisioningSupportEnabled -OsType " windows_2008"
-        New-Nclun /vol/sql_log_root/sql_log_lun ([string]$WELogLunSize+" gb") -ThinProvisioningSupportEnabled -OsType " windows_2008" 
+        New-Nclun /vol/sql_data_root/sql_data_lun ([string]$WEDataLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
+        New-Nclun /vol/sql_log_root/sql_log_lun ([string]$WELogLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008" 
 
         Add-Nclunmap /vol/sql_data_root/sql_data_lun $WEIqnName
         Add-Nclunmap /vol/sql_log_root/sql_log_lun $WEIqnName
@@ -130,8 +148,8 @@ function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVM
         Wait-NcHostDisk -ControllerLunPath /vol/sql_log_root/sql_log_lun -ControllerName $WESVMName
 
 
-        $WEDataDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_data_lun*"}).Disk
-       ;  $WELogDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_log_lun*"}).Disk
+       ;  $WEDataDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_data_lun*" }).Disk
+       ;  $WELogDisk = (Get-Nchostdisk | Where-Object {$_.ControllerPath -like " *sql_log_lun*" }).Disk
 
         Stop-Service -Name ShellHWDetection
         Set-Disk -Number $WEDataDisk -IsOffline $WEFalse
@@ -182,7 +200,7 @@ function WE-Create-NcGroup( [String] $WEVserverIqn, [String] $WEInisitatorIqn, [
     }
     if($iGroupInitiatorSetup -eq $WEFalse)
     {
-        if ((get-nciscsiservice).IsAvailable -ne " True") { 
+        if ((get-nciscsiservice).IsAvailable -ne " True" ) { 
                 Add-NcIscsiService 
         }
         if ($iGroupSetup -eq $WEFalse) {
@@ -198,7 +216,7 @@ function WE-Set-MultiPathIO()
 {
     $WEIsEnabled = (Get-WindowsOptionalFeature -FeatureName MultiPathIO -Online).State
 
-    if ($WEIsEnabled -ne " Enabled") {
+    if ($WEIsEnabled -ne " Enabled" ) {
 
         Enable-WindowsOptionalFeature –Online –FeatureName MultiPathIO
      }
@@ -209,11 +227,11 @@ function WE-Start-ThisService([String]$WEServiceName)
 {
     
     $WEService = Get-Service -Name $WEServiceName
-    if ($WEService.Status -ne " Running"){
+    if ($WEService.Status -ne " Running" ){
         Start-Service $WEServiceName
         Write-Output " Starting $WEServiceName"
     }
-    if ($WEService.StartType -ne " Automatic") {
+    if ($WEService.StartType -ne " Automatic" ) {
         Set-Service $WEServiceName -startuptype " Automatic"
         Write-Output " Setting $WEServiceName Service Startup to Automatic"
     }
@@ -284,7 +302,11 @@ function WE-Unzip
 {
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$zipfile, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$outpath)
 
@@ -311,9 +333,9 @@ $scriptlogfilepath = 'C:\WindowsAzure\Logs\SQLNetApp_Connect_Storage.ps1.txt'
 
 function WE-Install-NetAppPSToolkit
 {
-New-Item C:\NetApp -Type Directory
+New-Item C:\NetApp -Type Directory; 
 $WEWebClient = New-Object System.Net.WebClient
-$WEWebClient.DownloadFile(" https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi"," C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi")
+$WEWebClient.DownloadFile(" https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi" ," C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" )
 Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" /qn ADDLOCAL=F.PSTKDOT}
 }
 

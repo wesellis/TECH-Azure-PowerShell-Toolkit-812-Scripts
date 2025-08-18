@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Publish Omshypervreplica
+    Publish Omshypervreplica
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Publish Omshypervreplica
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 workflow Publish-omsHyperVReplica
 {
 	[CmdletBinding()]
@@ -28,7 +46,7 @@ param(
 
 	$WEOMSConnection = Get-AutomationConnection -Name 'omsHypervReplicaOMSConnection'
 	$credential    = Get-AutomationPSCredential -Name 'omsHypervReplicaRunAsAccount'
-	$omsRunNumber  = Get-AutomationVariable -Name 'omsHypervReplicaRunNumber'
+; 	$omsRunNumber  = Get-AutomationVariable -Name 'omsHypervReplicaRunNumber'
 
 	Write-Verbose 'Getting Run Number'
 ; 	$omsRunNumberIncrease = $omsRunNumber + 1
@@ -67,7 +85,7 @@ param(
 
 				try
 				{
-					Write-Verbose "Uploading Data To OMS For VM $($vm.name)"
+					Write-Verbose " Uploading Data To OMS For VM $($vm.name)"
 					New-OMSDataInjection @OMSDataInjection
 				}
 				catch

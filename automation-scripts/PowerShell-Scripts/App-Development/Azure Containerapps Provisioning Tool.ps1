@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Containerapps Provisioning Tool
+    Azure Containerapps Provisioning Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Containerapps Provisioning Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,18 +50,22 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEContainerAppName,
     
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEContainerImage,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEEnvironmentName = " $WEContainerAppName-env",
+    [string]$WEEnvironmentName = " $WEContainerAppName-env" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WEMinReplicas = 0,
@@ -59,7 +83,7 @@ param(
     [decimal]$WECpuCores = 0.25,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEMemory = " 0.5Gi",
+    [string]$WEMemory = " 0.5Gi" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEEnableExternalIngress,
@@ -69,7 +93,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Container Apps Provisioning Tool" -Version " 2.0" -Description " Deploy modern serverless containers with enterprise features"
@@ -134,25 +158,25 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Container App Creation" -Status " Deploying container application"
     
     $containerAppArgs = @(
-        " containerapp", " create"
-        " --name", $WEContainerAppName
-        " --resource-group", $WEResourceGroupName
-        " --environment", $WEEnvironmentName
-        " --image", $WEContainerImage
-        " --target-port", $WEPort.ToString()
-        " --cpu", $WECpuCores.ToString()
-        " --memory", $WEMemory
-        " --min-replicas", $WEMinReplicas.ToString()
-        " --max-replicas", $WEMaxReplicas.ToString()
-        " --output", " json"
+        " containerapp" , " create"
+        " --name" , $WEContainerAppName
+        " --resource-group" , $WEResourceGroupName
+        " --environment" , $WEEnvironmentName
+        " --image" , $WEContainerImage
+        " --target-port" , $WEPort.ToString()
+        " --cpu" , $WECpuCores.ToString()
+        " --memory" , $WEMemory
+        " --min-replicas" , $WEMinReplicas.ToString()
+        " --max-replicas" , $WEMaxReplicas.ToString()
+        " --output" , " json"
     )
     
     if ($WEEnableExternalIngress) {
-        $containerAppArgs = $containerAppArgs + @(" --ingress", " external")
+        $containerAppArgs = $containerAppArgs + @(" --ingress" , " external" )
     }
     
     if ($envVarsString) {
-        $containerAppArgs = $containerAppArgs + @(" --env-vars", $envVarsString)
+        $containerAppArgs = $containerAppArgs + @(" --env-vars" , $envVarsString)
     }
     
     $containerApp = Invoke-AzureOperation -Operation {
@@ -191,7 +215,7 @@ try {
     # Final validation and summary
     Write-ProgressStep -StepNumber 8 -TotalSteps 8 -StepName " Validation" -Status " Verifying deployment"
     
-    $finalApp = Invoke-AzureOperation -Operation {
+   ;  $finalApp = Invoke-AzureOperation -Operation {
        ;  $appJson = az containerapp show --name $WEContainerAppName --resource-group $WEResourceGroupName --output json 2>$null
         if ($WELASTEXITCODE -ne 0) {
             throw " Failed to retrieve Container App details"

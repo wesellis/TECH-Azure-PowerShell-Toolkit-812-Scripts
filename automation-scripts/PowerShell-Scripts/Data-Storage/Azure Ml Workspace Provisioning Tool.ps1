@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Ml Workspace Provisioning Tool
+    Azure Ml Workspace Provisioning Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Ml Workspace Provisioning Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
 try {
@@ -26,18 +44,20 @@ try {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -45,26 +65,40 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEWorkspaceName,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WELocation,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEStorageAccountName,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEKeyVaultName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEApplicationInsightsName,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEContainerRegistryName,
@@ -138,7 +172,7 @@ if ($WEContainerRegistryName) {
 }
 
 
-Write-WELog " `nCreating ML Workspace..." " INFO"
+Write-WELog " `nCreating ML Workspace..." " INFO"; 
 $WEMLWorkspaceParams = @{
     ResourceGroupName = $WEResourceGroupName
     Name = $WEWorkspaceName
@@ -195,10 +229,8 @@ Write-WELog " `nML Workspace provisioning completed at $(Get-Date)" " INFO"
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

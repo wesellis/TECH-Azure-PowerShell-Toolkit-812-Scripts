@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 3 Set Azrecoveryservicesvaultcontext(Deprecated)
+    3 Set Azrecoveryservicesvaultcontext(Deprecated)
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 3 Set Azrecoveryservicesvaultcontext(Deprecated)
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -50,9 +68,9 @@ Before enabling protection on a VM, use Set-AzRecoveryServicesVaultContext to se
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join (" $WECustomerName", " _Outlook", " _RG")
-
-$WEVaultname = -join (" $WEVMName", " ARSV1")
+$WEResourceGroupName = -join (" $WECustomerName" , " _Outlook" , " _RG" )
+; 
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 ; 
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $WEResourceGroupName

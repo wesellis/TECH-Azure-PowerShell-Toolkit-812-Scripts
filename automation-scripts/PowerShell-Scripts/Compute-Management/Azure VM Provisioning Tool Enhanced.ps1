@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Vm Provisioning Tool Enhanced
+    Azure Vm Provisioning Tool Enhanced
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,21 +16,43 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Vm Provisioning Tool Enhanced
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVmName,
-    [ValidateSet(" East US", " West US", " Central US", " East US 2", " West US 2")][string]$WELocation = " East US",
-    [ValidateSet(" Standard_B1s", " Standard_B2s", " Standard_D2s_v3", " Standard_D4s_v3")][string]$WEVmSize = " Standard_B2s",
-    [string]$WEAdminUsername = " azureadmin",
+    [ValidateSet(" East US" , " West US" , " Central US" , " East US 2" , " West US 2" )][string]$WELocation = " East US" ,
+    [ValidateSet(" Standard_B1s" , " Standard_B2s" , " Standard_D2s_v3" , " Standard_D4s_v3" )][string]$WEVmSize = " Standard_B2s" ,
+    [string]$WEAdminUsername = " azureadmin" ,
     [securestring]$WEAdminPassword,
     [hashtable]$WETags = @{},
     [switch]$WEEnableBootDiagnostics,
@@ -39,7 +61,7 @@ param(
 )
 
 
-$modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " modules", " AzureAutomationCommon"
+$modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " modules" , " AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName " Azure VM Provisioning Tool" -Description " Enterprise VM deployment with enhanced features"
@@ -62,13 +84,13 @@ try {
     
     Write-ProgressStep -StepNumber 4 -TotalSteps 6 -StepName " Security" -Status " Setting up security..."
     if (-not $WEAdminPassword) { $WEAdminPassword = Read-Host " Enter admin password" -AsSecureString }
-    $credential = [PSCredential]::new($WEAdminUsername, $WEAdminPassword)
+   ;  $credential = [PSCredential]::new($WEAdminUsername, $WEAdminPassword)
     
     Write-ProgressStep -StepNumber 5 -TotalSteps 6 -StepName " VM Creation" -Status " Creating virtual machine..."
     if ($WEWhatIf) {
         Write-Log " [WHAT-IF] Would create VM: $WEVmName ($WEVmSize) in $WEResourceGroupName" -Level INFO
     } else {
-       ;  $defaultTags = @{ CreatedBy = " Azure-Automation-Scripts"; CreatedOn = (Get-Date).ToString(" yyyy-MM-dd"); Script = " Enhanced-VM-Tool" }
+       ;  $defaultTags = @{ CreatedBy = " Azure-Automation-Scripts" ; CreatedOn = (Get-Date).ToString(" yyyy-MM-dd" ); Script = " Enhanced-VM-Tool" }
         foreach ($tag in $WETags.GetEnumerator()) { $defaultTags[$tag.Key] = $tag.Value }
         
         if (-not $WEForce) {

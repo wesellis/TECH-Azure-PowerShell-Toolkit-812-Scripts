@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Visualstudiocode Extension
+    Windows Install Visualstudiocode Extension
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Visualstudiocode Extension
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -73,7 +91,7 @@ function WE-Confirm-UserRequest (
     if (-not [string]::IsNullOrWhiteSpace($extensionVsixPath)) { $paramCount++ }
 
     if ($paramCount -ne 1) {
-        Write-Error "You must provide either an ExtensionId, ExtensionName, or ExtensionVsixPath (but not more than one). You can find the ExtensionName in the URL of the Marketplace extension. Example: If the extension URL is https://marketplace.visualstudio.com/items?itemName=GitHub.copilot then you would use `GitHub.copilot`."
+        Write-Error " You must provide either an ExtensionId, ExtensionName, or ExtensionVsixPath (but not more than one). You can find the ExtensionName in the URL of the Marketplace extension. Example: If the extension URL is https://marketplace.visualstudio.com/items?itemName=GitHub.copilot then you would use `GitHub.copilot`."
     }
     
     if ((-not [string]::IsNullOrWhiteSpace($extensionVsixPath)) -and (-not [string]::IsNullOrWhiteSpace($extensionVersion))) {
@@ -97,7 +115,7 @@ function WE-Import-ExtensionToLocalPath (
         if ($extensionVsixPath -match '^https://') {
             try {
                 $fileName = [System.IO.Path]::GetFileName($extensionVsixPath)
-                if (-not $fileName.EndsWith(" .vsix")) {
+                if (-not $fileName.EndsWith(" .vsix" )) {
                     $fileName = $fileName + " .vsix"
                 }
 
@@ -168,7 +186,7 @@ function WE-Main (
     [Parameter(Mandatory = $false)] [String] $extensionVersion = $null,
     [Parameter(Mandatory = $false)] [String] $visualStudioCodeInstallPath = $null,
     [Parameter(Mandatory = $false)] [bool] $installInsiders = $false,
-    [Parameter(Mandatory = $false)] [bool] $emitAllInstalledExtensions = $false) {
+    [Parameter(Mandatory = $false)] [bool];  $emitAllInstalledExtensions = $false) {
 
     Confirm-UserRequest -extensionId $extensionId `
         -extensionName $extensionName `

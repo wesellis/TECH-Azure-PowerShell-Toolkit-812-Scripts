@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Preconfiguration
+    Preconfiguration
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Preconfiguration
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
     Script will create Active directory parent OU and child OUs for Azure virtual desktop as a prerequisite.
     You can leverage on existing OUs if need be.
 
@@ -31,7 +49,7 @@ try {
 $ErrorActionPreference = "Stop"
 param(
     # Define parameters
-    #$WEOUDistinguishedName = "DC=contoso,DC=com"
+    #$WEOUDistinguishedName = " DC=contoso,DC=com"
     [string] [Parameter(Mandatory=$true)] $WEDomainDistinguishedName,
     #$WEParentOrganizationUnitName = " AzureVirtualDesktop"
     [string] [Parameter(Mandatory=$true)] $WEParentOrganizationUnitName,
@@ -39,7 +57,7 @@ param(
     [string] [Parameter(Mandatory=$true)] $WEStorageAccountOrganizationUnitName,
     #$WEAVDOrganizationUnitName = " AVD-Objects"
     [string] [Parameter(Mandatory=$true)] $WEAVDOrganizationUnitName,
-    #$WEAVDChildOrganizationUnitNames = @(" Groups", " SessionHosts", " Users")
+    #$WEAVDChildOrganizationUnitNames = @(" Groups" , " SessionHosts" , " Users" )
     [stringp[]] [Parameter(Mandatory=$true)] $WEAVDChildOrganizationUnitNames
 )
 
@@ -52,14 +70,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -67,7 +87,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string] [Parameter(Mandatory=$true)] $WEOUDistinguishedName,
         [string] [Parameter(Mandatory=$true)] $WEParentOU,
@@ -77,14 +97,14 @@ param(
     )
     
 
-    $WEGetExistingOU = Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEParentOU}
-    $WEAVDOU = Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}
-    $WEStorageAccountOU = Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEStorageAccountOUName}
+    $WEGetExistingOU = Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEParentOU}
+    $WEAVDOU = Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}
+    $WEStorageAccountOU = Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEStorageAccountOUName}
     if( $WEGetExistingOU ){
         Write-WELog " Organization Unit $($WEParentOu) already exist" " INFO"
         if( ! ($WEAVDOU) ){
             New-ADOrganizationalUnit -Name $WEAVDOUName -Path $WEGetExistingOU.DistinguishedName -ProtectedFromAccidentalDeletion $false
-            $WEAVDOUDistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}).DistinguishedName
+            $WEAVDOUDistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}).DistinguishedName
         }
         else{
             $WEAVDOUDistinguishedName = $WEAVDOU.DistinguishedName
@@ -97,11 +117,11 @@ param(
     else {
         New-ADOrganizationalUnit -Name $WEParentOU -Path $WEOUDistinguishedName -ProtectedFromAccidentalDeletion $false
 
-        $WEParentOODistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEParentOU}).DistinguishedName
+       ;  $WEParentOODistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEParentOU}).DistinguishedName
 
         New-ADOrganizationalUnit -Name $WEAVDOUName -Path $WEParentOODistinguishedName -ProtectedFromAccidentalDeletion $false
         New-ADOrganizationalUnit -Name $WEStorageAccountOUName -Path $WEParentOODistinguishedName -ProtectedFromAccidentalDeletion $false
-       ;  $WEAVDOUDistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *"' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}).DistinguishedName
+       ;  $WEAVDOUDistinguishedName = (Get-ADOrganizationalUnit -Filter 'Name -like " *" ' -ErrorAction SilentlyContinue | Where-Object {$_.Name -eq $WEAVDOUName}).DistinguishedName
         
         ForEach($WEAVDChildOUName in $WEAVDChildOUNames){
             New-ADOrganizationalUnit -Name $WEAVDChildOUName -Path $WEAVDOUDistinguishedName -ProtectedFromAccidentalDeletion $false
@@ -124,9 +144,7 @@ Set-DomainOrganizationUnits `
     -AVDOUName $WEAVDOrganizationUnitName `
     -AVDChildOUNames $WEAVDChildOrganizationUnitNames
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw

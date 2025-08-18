@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installvstsagent (Case Conflict)
+    Installvstsagent (Case Conflict)
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,26 +16,52 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Installvstsagent (Case Conflict)
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVSTSAccount,
 
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPersonalAccessToken,
 
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAgentName,
 
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPoolName,
 
@@ -45,6 +71,8 @@ param(
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAdminUser,
 
 	[Parameter(Mandatory=$true)]
@@ -53,7 +81,7 @@ param(
 	[boolean]$prerelease=$false
 )
 
-Write-Verbose "Entering InstallVSOAgent.ps1" -verbose
+Write-Verbose " Entering InstallVSOAgent.ps1" -verbose
 
 $currentLocation = Split-Path -parent $WEMyInvocation.MyCommand.Definition
 Write-Verbose " Current folder: $currentLocation" -verbose
@@ -78,7 +106,7 @@ do
     $latestRelease = Invoke-RestMethod -Uri " https://api.github.com/repos/Microsoft/vsts-agent/releases"
 	$latestRelease = $latestRelease |  Where-Object prerelease -eq $prerelease |where-object assets -ne $null | Sort-Object created_at -Descending | Select-Object -First 1
     $assetsURL = ($latestRelease.assets).browser_download_url
-    $latestReleaseDownloadUrl = ((Invoke-RestMethod -Uri $assetsURL) -match 'win-x64').downloadurl
+   ;  $latestReleaseDownloadUrl = ((Invoke-RestMethod -Uri $assetsURL) -match 'win-x64').downloadurl
     Invoke-WebRequest -Uri $latestReleaseDownloadUrl -Method Get -OutFile " $agentTempFolderName\agent.zip"
     Write-Verbose " Downloaded agent successfully on attempt $retries" -verbose
     break
@@ -107,8 +135,8 @@ for ($i=0; $i -lt $WEAgentCount; $i++)
 	Push-Location -Path $agentInstallationPath
 	
 	Write-Verbose " Extracting the zip file for the agent" -verbose
-	$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath")
-	$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip").Items(),16)
+	$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath" )
+	$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip" ).Items(),16)
 
 	# Removing the ZoneIdentifier from files downloaded from the internet so the plugins can be loaded
 	# Don't recurse down _work or _diag, those files are not blocked and cause the process to take much longer
@@ -116,7 +144,7 @@ for ($i=0; $i -lt $WEAgentCount; $i++)
 	Get-ChildItem -Recurse -Path $agentInstallationPath | Unblock-File | out-null
 
 	# Retrieve the path to the config.cmd file.
-	$agentConfigPath = [System.IO.Path]::Combine($agentInstallationPath, 'config.cmd')
+; 	$agentConfigPath = [System.IO.Path]::Combine($agentInstallationPath, 'config.cmd')
 	Write-Verbose " Agent Location = $agentConfigPath" -Verbose
 	if (![System.IO.File]::Exists($agentConfigPath))
 	{
@@ -135,9 +163,9 @@ for ($i=0; $i -lt $WEAgentCount; $i++)
 }
 
 ; 
-$WECurrentValue = [Environment]::GetEnvironmentVariable(" PSModulePath", " Machine")
-[Environment]::SetEnvironmentVariable(" PSModulePath", $WECurrentValue + " ;C:\Modules", " Machine")
-$WENewValue = [Environment]::GetEnvironmentVariable(" PSModulePath", " Machine")
+$WECurrentValue = [Environment]::GetEnvironmentVariable(" PSModulePath" , " Machine" )
+[Environment]::SetEnvironmentVariable(" PSModulePath" , $WECurrentValue + " ;C:\Modules" , " Machine" )
+$WENewValue = [Environment]::GetEnvironmentVariable(" PSModulePath" , " Machine" )
 Write-Verbose " new Path is: $($WENewValue)" -verbose
 
 
@@ -153,7 +181,7 @@ Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 Foreach ($WEModule in $WEModules)
 {	Find-Module -Name $WEModule.Name -RequiredVersion $WEModule.Version -Repository PSGallery -Verbose | Save-Module -Path C:\Modules -Verbose	}
 
-$WEDefaultModules = " PowerShellGet", " PackageManagement"," Pester"
+$WEDefaultModules = " PowerShellGet" , " PackageManagement" ," Pester"
 
 Foreach ($WEModule in $WEDefaultModules)
 {
@@ -161,8 +189,8 @@ Foreach ($WEModule in $WEDefaultModules)
 	Find-Module -Name $WEModule -Repository PSGallery -Verbose | Install-Module -Force -Confirm:$false -SkipPublisherCheck -Verbose
 }
 
-
-$programName = " Microsoft Azure PowerShell"; 
+; 
+$programName = " Microsoft Azure PowerShell" ; 
 $app = Get-CimInstance -Class Win32_Product -Filter " Name Like '$($programName)%'" -Verbose
 $app.Uninstall()
 

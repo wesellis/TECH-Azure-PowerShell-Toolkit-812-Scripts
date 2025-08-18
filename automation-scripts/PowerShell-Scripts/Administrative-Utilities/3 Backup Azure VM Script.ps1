@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 3 Backup Azure Vm Script
+    3 Backup Azure Vm Script
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 3 Backup Azure Vm Script
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-New-AzureVMBackup {
     
 
@@ -25,14 +43,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -40,25 +60,33 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVMName,
         
         [Parameter(Mandatory = $true)]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
         
         [Parameter(Mandatory = $true)]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVaultName,
         
         [Parameter(Mandatory = $true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVaultResourceGroup,
         
@@ -112,7 +140,7 @@ param(
 
         # Monitor backup progress
         Write-WELog " Monitoring backup progress..." " INFO" -ForegroundColor Yellow
-        while ($backupJob.Status -eq " InProgress") {
+        while ($backupJob.Status -eq " InProgress" ) {
             $backupJob = Get-AzRecoveryServicesBackupJob -Job $backupJob
             Write-WELog " Backup Status: $($backupJob.Status) - $(Get-Date)" " INFO" -ForegroundColor Cyan
             Start-Sleep -Seconds 30
@@ -131,7 +159,7 @@ try {
     Write-WELog " Starting Azure VM backup process..." " INFO" -ForegroundColor Cyan
     
     # Backup parameters for ArcGisS1
-    $backupParams = @{
+   ;  $backupParams = @{
         VMName = 'ArcGisS1'
         ResourceGroupName = 'anteausa'
         VaultName = '' # Need vault name

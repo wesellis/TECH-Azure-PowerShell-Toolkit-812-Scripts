@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Bootstrap Main
+    Bootstrap Main
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Bootstrap Main
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -47,18 +65,18 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
 
  function WE-CreateSelfSignedCertificate([string] $keyVaultName, [string] $certificateName, [string] $selfSignedCertPlainPassword,[string] $certPath, [string] $certPathCer, [string] $noOfMonthsUntilExpired ) 
 {
-   $certSubjectName=" cn="+$certificateName
+   $certSubjectName=" cn=" +$certificateName
 
    $WEPolicy = New-AzureKeyVaultCertificatePolicy -SecretContentType " application/x-pkcs12" -SubjectName $certSubjectName  -IssuerName " Self" -ValidityInMonths $noOfMonthsUntilExpired -ReuseKeyOnRenewal
    $WEAddAzureKeyVaultCertificateStatus = Add-AzureKeyVaultCertificate -VaultName $keyVaultName -Name $certificateName -CertificatePolicy $WEPolicy 
   
-   While($WEAddAzureKeyVaultCertificateStatus.Status -eq " inProgress")
+   While($WEAddAzureKeyVaultCertificateStatus.Status -eq " inProgress" )
    {
      Start-Sleep -s 10
      $WEAddAzureKeyVaultCertificateStatus = Get-AzureKeyVaultCertificateOperation -VaultName $keyVaultName -Name $certificateName
    }
  
-   if($WEAddAzureKeyVaultCertificateStatus.Status -ne " completed")
+   if($WEAddAzureKeyVaultCertificateStatus.Status -ne " completed" )
    {
      Write-Error -Message " Key vault cert creation is not sucessfull and its status is: $status.Status" 
    }
@@ -101,7 +119,7 @@ function WE-ValidateKeyVaultAndCreate([string] $keyVaultName, [string] $resource
    # Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
    Start-Sleep -s 15
 
-   $WENewRole = $null
+  ;  $WENewRole = $null
   ;  $WERetries = 0;
    While ($WENewRole -eq $null -and $WERetries -le 6)
    {
@@ -176,7 +194,7 @@ try
             [String] $WEApplicationDisplayName=" $($automationAccountName)App1"
             [Boolean] $WECreateClassicRunAsAccount=$false
             [String] $WESelfSignedCertPlainPassword = [Guid]::NewGuid().ToString().Substring(0,8)+" !" 
-            [String] $WEKeyVaultName=" KeyVault"+ [Guid]::NewGuid().ToString().Substring(0,5)        
+            [String] $WEKeyVaultName=" KeyVault" + [Guid]::NewGuid().ToString().Substring(0,5)        
             [int] $WENoOfMonthsUntilExpired = 36
     
             $WERG = Get-AzureRmResourceGroup -Name $aroResourceGroupName 
@@ -191,9 +209,9 @@ try
             ValidateKeyVaultAndCreate $WEKeyVaultName $aroResourceGroupName $WEKeyVaultLocation
 
             $WECertificateName = $automationAccountName+$WECertifcateAssetName
-            $WEPfxCertPathForRunAsAccount = Join-Path $env:TEMP ($WECertificateName + " .pfx")
+            $WEPfxCertPathForRunAsAccount = Join-Path $env:TEMP ($WECertificateName + " .pfx" )
             $WEPfxCertPlainPasswordForRunAsAccount = $WESelfSignedCertPlainPassword
-            $WECerCertPathForRunAsAccount = Join-Path $env:TEMP ($WECertificateName + " .cer")
+            $WECerCertPathForRunAsAccount = Join-Path $env:TEMP ($WECertificateName + " .cer" )
 
             Write-Output " Generating the cert using Keyvault..."
             CreateSelfSignedCertificate $WEKeyVaultName $WECertificateName $WEPfxCertPlainPasswordForRunAsAccount $WEPfxCertPathForRunAsAccount $WECerCertPathForRunAsAccount $WENoOfMonthsUntilExpired
@@ -211,7 +229,7 @@ try
             # Populate the ConnectionFieldValues
             $WESubscriptionInfo = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
             $WETenantID = $WESubscriptionInfo | Select-Object TenantId -First 1
-            $WEThumbprint = $WEPfxCert.Thumbprint
+           ;  $WEThumbprint = $WEPfxCert.Thumbprint
            ;  $WEConnectionFieldValues = @{" ApplicationId" = $WEApplicationId; " TenantId" = $WETenantID.TenantId; " CertificateThumbprint" = $WEThumbprint; " SubscriptionId" = $WESubscriptionId} 
 
             Write-Output " Creating Connection in the Asset..."
@@ -343,7 +361,7 @@ try
     
             Write-Output " Successfully created the Schedule ($($scheduleNameforCreateAlert)) in Automation Account ($($automationAccountName))..."
 
-            $paramsAutoSnooze = @{" WhatIf"=$false}
+            $paramsAutoSnooze = @{" WhatIf" =$false}
 
             #---Link the schedule to the runbook--- 
             Write-Output " Registering the Schedule ($($scheduleNameforCreateAlert)) in the Runbook ($($runbookNameforCreateAlert))..."
@@ -381,9 +399,9 @@ try
         $checkSchSnoozeStop = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleStop -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue 
 
         #Starts everyday 6AM
-        $WEStartVmUTCTime = (Get-Date " 13:00:00").AddDays(1).ToUniversalTime()
+        $WEStartVmUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
         #Stops everyday 6PM
-        $WEStopVmUTCTime = (Get-Date " 01:00:00").AddDays(1).ToUniversalTime()
+       ;  $WEStopVmUTCTime = (Get-Date " 01:00:00" ).AddDays(1).ToUniversalTime()
 
         if($checkSchSnoozeStart -eq $null)
         {
@@ -397,7 +415,7 @@ try
 
             Set-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleStart -ResourceGroupName $aroResourceGroupName -IsEnabled $false
 
-           ;  $paramsStartVM = @{" Action"=" Start";" WhatIf"=$false}
+           ;  $paramsStartVM = @{" Action" =" Start" ;" WhatIf" =$false}
             Register-AzureRmAutomationScheduledRunbook -automationAccountName $automationAccountName -Name $runbookNameforARMVMOptimization -ScheduleName $scheduleStart -ResourceGroupName $aroResourceGroupName -Parameters $paramsStartVM
 
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
@@ -412,7 +430,7 @@ try
 
             Write-Output " Registering the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
 
-            $paramsStopVM = @{" Action"=" Stop";" WhatIf"=$false}
+            $paramsStopVM = @{" Action" =" Stop" ;" WhatIf" =$false}
 
             Register-AzureRmAutomationScheduledRunbook -automationAccountName $automationAccountName -Name $runbookNameforARMVMOptimization -ScheduleName $scheduleStop -ResourceGroupName $aroResourceGroupName -Parameters $paramsStopVM
     
@@ -443,7 +461,7 @@ try
 
         $runbookNameforAutoupdate = " AROToolkit_AutoUpdate"
         $scheduleNameforAutoupdate = " Schedule_AROToolkit_AutoUpdate"
-        $WEStartUTCTime = (Get-Date " 13:00:00").AddDays(1).ToUniversalTime()
+        $WEStartUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
 
         $checkScheduleAU = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleNameforAutoupdate -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
 
@@ -495,9 +513,9 @@ try
         $checkSeqSnoozeStop = Get-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $sequenceStop -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue 
 
         #Starts every monday 6AM
-        $WEStartVmUTCTime = (Get-Date " 13:00:00").AddDays(1).ToUniversalTime()
+        $WEStartVmUTCTime = (Get-Date " 13:00:00" ).AddDays(1).ToUniversalTime()
         #Stops every friday 6PM
-        $WEStopVmUTCTime = (Get-Date " 01:00:00").AddDays(1).ToUniversalTime()
+       ;  $WEStopVmUTCTime = (Get-Date " 01:00:00" ).AddDays(1).ToUniversalTime()
 
         if($checkSeqSnoozeStart -eq $null)
         {
@@ -511,7 +529,7 @@ try
 
             Set-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $sequenceStart -ResourceGroupName $aroResourceGroupName -IsEnabled $false
 
-           ;  $paramsStartVM = @{" Action"=" start";" WhatIf"=$false;" ContinueOnError"=$false}
+           ;  $paramsStartVM = @{" Action" =" start" ;" WhatIf" =$false;" ContinueOnError" =$false}
             Register-AzureRmAutomationScheduledRunbook -automationAccountName $automationAccountName -Name $runbookNameforARMVMOptimization -ScheduleName $sequenceStart -ResourceGroupName $aroResourceGroupName -Parameters $paramsStartVM
 
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
@@ -529,7 +547,7 @@ try
 
             Set-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $sequenceStop -ResourceGroupName $aroResourceGroupName -IsEnabled $false
 
-            $paramsStartVM = @{" Action"=" stop";" WhatIf"=$false;" ContinueOnError"=$false}
+            $paramsStartVM = @{" Action" =" stop" ;" WhatIf" =$false;" ContinueOnError" =$false}
             Register-AzureRmAutomationScheduledRunbook -automationAccountName $automationAccountName -Name $runbookNameforARMVMOptimization -ScheduleName $sequenceStop -ResourceGroupName $aroResourceGroupName -Parameters $paramsStartVM
 
             Write-Output " Successfully Registered the Schedule in the Runbook ($($runbookNameforARMVMOptimization))..."
@@ -607,7 +625,7 @@ try
             Remove-AzureRmKeyVault -VaultName $WEKeyVaultName -ResourceGroupName $aroResourceGroupName -Confirm:$WEFalse -Force
         }
         
-        $checkCredentials = Get-AzureRmAutomationCredential -Name " AzureCredentials" -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
+       ;  $checkCredentials = Get-AzureRmAutomationCredential -Name " AzureCredentials" -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction SilentlyContinue
         
         if($checkCredentials -ne $null)
         {

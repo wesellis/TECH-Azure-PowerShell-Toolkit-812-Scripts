@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Qs Install
+    Qs Install
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Qs Install
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# Qlik Sense Installation #>
 
@@ -31,7 +49,7 @@ $qlikSenseOrganization = $($WEArgs[8])
 $qlikSenseName = $($WEArgs[9])
 $serviceAccountWithDomain = -join ($($env:ComputerName), '\',$($WEArgs[2]))
 
-
+; 
 $json = @{
     qliksense = @(
         @{
@@ -81,7 +99,7 @@ $json | ConvertTo-Json -Compress -Depth 10 | Out-File 'c:\installation\qBinaryDo
 
 
 net user " $($serviceAccountUser)" " $($serviceAccountPass)" /add /fullname:" Qlik Sense Service Account" /passwordchg:NO
-([ADSI]" WinNT://$($env:computername)/administrators,group").psbase.Invoke(" Add",([ADSI]" WinNT://$($env:computername)/$($serviceAccountUser)").path)
+([ADSI]" WinNT://$($env:computername)/administrators,group" ).psbase.Invoke(" Add" ,([ADSI]" WinNT://$($env:computername)/$($serviceAccountUser)" ).path)
 
 
 New-Item -ItemType directory -Path C:\Qlik
@@ -103,12 +121,12 @@ $binaryName = $qsBinaryURL.qliksense | where { $_.name -eq $qsVer.name}
 $selVer = $qsBinaryURL.qliksense | where { $_.name -eq $qsVer.name }
 $path = 'c:\installation'
 $url = $selVer.url
-$fileName = $url.Substring($url.LastIndexOf(" /") + 1)
+$fileName = $url.Substring($url.LastIndexOf(" /" ) + 1)
 $dlLoc = join-path $path $fileName
-if ($selVer.name -like " *Patch*") {
+if ($selVer.name -like " *Patch*" ) {
     (New-Object System.Net.WebClient).DownloadFile($url, $dlLoc)
     $url2 = $selVer.url2
-    $fileName = $url2.Substring($url2.LastIndexOf(" /") + 1)
+    $fileName = $url2.Substring($url2.LastIndexOf(" /" ) + 1)
     $dlLoc = join-path $path $fileName
     (New-Object System.Net.WebClient).DownloadFile($url2, $dlLoc)
    }
@@ -122,8 +140,8 @@ New-NetFirewallRule -DisplayName " Qlik Sense" -Direction Inbound -LocalPort 443
 
 
 @"
-<?xml version=" 1.0"?>
-<SharedPersistenceConfiguration xmlns:xsi=" http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd=" http://www.w3.org/2001/XMLSchema">
+<?xml version=" 1.0" ?>
+<SharedPersistenceConfiguration xmlns:xsi=" http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd=" http://www.w3.org/2001/XMLSchema" >
   <DbUserName>qliksenserepository</DbUserName>
   <DbUserPassword>$($dbPass)</DbUserPassword>
   <DbHost>$env:COMPUTERNAME</DbHost>
@@ -143,10 +161,10 @@ New-NetFirewallRule -DisplayName " Qlik Sense" -Direction Inbound -LocalPort 443
 " @ | Out-File C:\installation\spConfig.xml
 
 
-If (Test-Path "C:\installation\Qlik_Sense_setup.exe" ) 
+If (Test-Path " C:\installation\Qlik_Sense_setup.exe" ) 
 	{
 		Unblock-File -Path C:\installation\Qlik_Sense_setup.exe
-		Invoke-Command -ScriptBlock {Start-Process -FilePath "c:\installation\Qlik_Sense_setup.exe" -ArgumentList " -s -log c:\installation\logqlik.txt dbpassword=$($dbPass) hostname=$($env:COMPUTERNAME) userwithdomain=$serviceAccountWithDomain password=$($serviceAccountPass) spc=c:\installation\spConfig.xml" -Wait -PassThru}
+		Invoke-Command -ScriptBlock {Start-Process -FilePath " c:\installation\Qlik_Sense_setup.exe" -ArgumentList " -s -log c:\installation\logqlik.txt dbpassword=$($dbPass) hostname=$($env:COMPUTERNAME) userwithdomain=$serviceAccountWithDomain password=$($serviceAccountPass) spc=c:\installation\spConfig.xml" -Wait -PassThru}
 	}
 
 $statusCode = 0
@@ -160,7 +178,7 @@ while ($WEStatusCode -ne 200)
 			}
 	}
 
-If (Test-Path " c:\installation\Qlik_Sense_update.exe")
+If (Test-Path " c:\installation\Qlik_Sense_update.exe" )
 	{
 		Unblock-File -Path c:\installation\Qlik_Sense_update.exe
 		Invoke-Command -ScriptBlock {Start-Process -FilePath " c:\installation\Qlik_Sense_Update.exe" -ArgumentList " install" -Wait -Passthru }
@@ -179,8 +197,8 @@ $statusCode = 0
                 start-Sleep -s 20
             }
     }
-    $connectResult = Connect-Qlik $env:COMPUTERNAME -UseDefaultCredentials
-   ;  $licenseResult = Set-QlikLicense -serial $qlikSenseSerial -control $qlikSenseControl -name "$($qlikSenseName)" -organization " $($qlikSenseOrganization)"
+   ;  $connectResult = Connect-Qlik $env:COMPUTERNAME -UseDefaultCredentials
+   ;  $licenseResult = Set-QlikLicense -serial $qlikSenseSerial -control $qlikSenseControl -name " $($qlikSenseName)" -organization " $($qlikSenseOrganization)"
 }
 
 

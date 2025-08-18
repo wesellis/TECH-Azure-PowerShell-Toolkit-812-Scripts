@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 2 Prepvhdfile
+    2 Prepvhdfile
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,17 +16,38 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 2 Prepvhdfile
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Test-RequiredPath {
     [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPath)
     if (!(Test-Path $WEPath)) {
-        Write-Warning "Required path not found: $WEPath"
+        Write-Warning " Required path not found: $WEPath"
         return $false
     }
     return $true
@@ -58,7 +79,7 @@ Resize-VHD -Path 'PathtoYourFixedSized.VHD' -SizeBytes '274877906944' #for a 256
 Get-VHD -Path 'PathtoYourFixedSized.VHD' | Select-Object * 
 
 
-
+; 
 $WEVHDfile = 'E:\FGC_Kroll_Lab_P2V_Clone_VHD_to_Azure\FGC-CR08NW2.VHD'; 
 $vhdSizeBytes = (Get-Item $WEVHDfile).length
 
@@ -93,10 +114,8 @@ Get-AppxPackage -AllUsers *HP* | Remove-AppxPackage -AllUsers #the AllUsers para
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

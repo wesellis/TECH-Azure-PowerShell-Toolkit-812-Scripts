@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azureusage Ms Mgmt
+    Azureusage Ms Mgmt
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,20 +16,40 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azureusage Ms Mgmt
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function Write-WELog {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -37,7 +57,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
 [Parameter(Mandatory=$false)][string]$WECurrency   ,
 [Parameter(Mandatory=$false)][string]$WELocale   ,
@@ -55,295 +75,295 @@ $WEApiVersion = '2015-06-01-preview'
 IF([String]::IsNullOrEmpty($WECurrency)){  $WECurrency = 'USD' }
 IF([String]::IsNullOrEmpty($WELocale)){ $WELocale = 'en-US'}
 $regionlist=@{}
-$regionlist.Add(" Australia"," AU")
-$regionlist.Add(" Afghanistan"," AF")
-$regionlist.Add(" Albania"," AL")
-$regionlist.Add(" Algeria"," DZ")
-$regionlist.Add(" Angola"," AO")
-$regionlist.Add(" Argentina"," AR")
-$regionlist.Add(" Armenia"," AM")
-$regionlist.Add(" Austria"," AT")
-$regionlist.Add(" Azerbaijan"," AZ")
-$regionlist.Add(" Bahamas"," BS")
-$regionlist.Add(" Bahrain"," BH")
-$regionlist.Add(" Bangladesh"," BD")
-$regionlist.Add(" Barbados"," BB")
-$regionlist.Add(" Belarus"," BY")
-$regionlist.Add(" Belgium"," BE")
-$regionlist.Add(" Belize"," BZ")
-$regionlist.Add(" Bermuda"," BM")
-$regionlist.Add(" Bolivia"," BO")
-$regionlist.Add(" Bosnia and Herzegovina"," BA")
-$regionlist.Add(" Botswana"," BW")
-$regionlist.Add(" Brazil"," BR")
-$regionlist.Add(" Brunei"," BN")
-$regionlist.Add(" Bulgaria"," BG")
-$regionlist.Add(" Cameroon"," CM")
-$regionlist.Add(" Canada"," CA")
-$regionlist.Add(" Cape Verde"," CV")
-$regionlist.Add(" Cayman Islands"," KY")
-$regionlist.Add(" Chile"," CL")
-$regionlist.Add(" Colombia"," CO")
-$regionlist.Add(" Costa Rica"," CR")
-$regionlist.Add(" Côte D'ivoire"," CI")
-$regionlist.Add(" Croatia"," HR")
-$regionlist.Add(" Curaçao"," CW")
-$regionlist.Add(" Cyprus"," CY")
-$regionlist.Add(" Czech Republic"," CZ")
-$regionlist.Add(" Denmark"," DK")
-$regionlist.Add(" Dominican Republic"," DO")
-$regionlist.Add(" Ecuador"," EC")
-$regionlist.Add(" Egypt"," EG")
-$regionlist.Add(" El Salvador"," SV")
-$regionlist.Add(" Estonia"," EE")
-$regionlist.Add(" Ethiopia"," ET")
-$regionlist.Add(" Faroe Islands"," FO")
-$regionlist.Add(" Fiji"," FJ")
-$regionlist.Add(" Finland"," FI")
-$regionlist.Add(" France"," FR")
-$regionlist.Add(" Georgia"," GE")
-$regionlist.Add(" Germany"," DE")
-$regionlist.Add(" Ghana"," GH")
-$regionlist.Add(" Greece"," GR")
-$regionlist.Add(" Guatemala"," GT")
-$regionlist.Add(" Honduras"," HN")
-$regionlist.Add(" Hong Kong SAR"," HK")
-$regionlist.Add(" Hungary"," HU")
-$regionlist.Add(" Iceland"," IS")
-$regionlist.Add(" India"," IN")
-$regionlist.Add(" Indonesia"," ID")
-$regionlist.Add(" Iraq"," IQ")
-$regionlist.Add(" Ireland"," IE")
-$regionlist.Add(" Israel"," IL")
-$regionlist.Add(" Italy"," IT")
-$regionlist.Add(" Jamaica"," JM")
-$regionlist.Add(" Japan"," JP")
-$regionlist.Add(" Jordan"," JO")
-$regionlist.Add(" Kazakhstan"," KZ")
-$regionlist.Add(" Kenya"," KE")
-$regionlist.Add(" Korea"," KR")
-$regionlist.Add(" Kuwait"," KW")
-$regionlist.Add(" Kyrgyzstan"," KG")
-$regionlist.Add(" Latvia"," LV")
-$regionlist.Add(" Lebanon"," LB")
-$regionlist.Add(" Libya"," LY")
-$regionlist.Add(" Liechtenstein"," LI")
-$regionlist.Add(" Lithuania"," LT")
-$regionlist.Add(" Luxembourg"," LU")
-$regionlist.Add(" Macao SAR"," MO")
-$regionlist.Add(" Macedonia, FYRO"," MK")
-$regionlist.Add(" Malaysia"," MY")
-$regionlist.Add(" Malta"," MT")
-$regionlist.Add(" Mauritius"," MU")
-$regionlist.Add(" Mexico"," MX")
-$regionlist.Add(" Moldova"," MD")
-$regionlist.Add(" Monaco"," MC")
-$regionlist.Add(" Mongolia"," MN")
-$regionlist.Add(" Montenegro"," ME")
-$regionlist.Add(" Morocco"," MA")
-$regionlist.Add(" Namibia"," NA")
-$regionlist.Add(" Nepal"," NP")
-$regionlist.Add(" Netherlands"," NL")
-$regionlist.Add(" New Zealand"," NZ")
-$regionlist.Add(" Nicaragua"," NI")
-$regionlist.Add(" Nigeria"," NG")
-$regionlist.Add(" Norway"," NO")
-$regionlist.Add(" Oman"," OM")
-$regionlist.Add(" Pakistan"," PK")
-$regionlist.Add(" Palestinian Territory"," PS")
-$regionlist.Add(" Panama"," PA")
-$regionlist.Add(" Paraguay"," PY")
-$regionlist.Add(" Peru"," PE")
-$regionlist.Add(" Philippines"," PH")
-$regionlist.Add(" Poland"," PL")
-$regionlist.Add(" Portugal"," PT")
-$regionlist.Add(" Puerto Rico"," PR")
-$regionlist.Add(" Qatar"," QA")
-$regionlist.Add(" Romania"," RO")
-$regionlist.Add(" Russia"," RU")
-$regionlist.Add(" Rwanda"," RW")
-$regionlist.Add(" Saint Kitts and Nevis"," KN")
-$regionlist.Add(" Saudi Arabia"," SA")
-$regionlist.Add(" Senegal"," SN")
-$regionlist.Add(" Serbia"," RS")
-$regionlist.Add(" Singapore"," SG")
-$regionlist.Add(" Slovakia"," SK")
-$regionlist.Add(" Slovenia"," SI")
-$regionlist.Add(" South Africa"," ZA")
-$regionlist.Add(" Spain"," ES")
-$regionlist.Add(" Sri Lanka"," LK")
-$regionlist.Add(" Sweden"," SE")
-$regionlist.Add(" Switzerland"," CH")
-$regionlist.Add(" Taiwan"," TW")
-$regionlist.Add(" Tajikistan"," TJ")
-$regionlist.Add(" Tanzania"," TZ")
-$regionlist.Add(" Thailand"," TH")
-$regionlist.Add(" Trinidad and Tobago"," TT")
-$regionlist.Add(" Tunisia"," TN")
-$regionlist.Add(" Turkey"," TR")
-$regionlist.Add(" Turkmenistan"," TM")
-$regionlist.Add(" U.S. Virgin Islands"," VI")
-$regionlist.Add(" Uganda"," UG")
-$regionlist.Add(" Ukraine"," UA")
-$regionlist.Add(" United Arab Emirates"," AE")
-$regionlist.Add(" United Kingdom"," GB")
-$regionlist.Add(" United States"," US")
-$regionlist.Add(" Uruguay"," UY")
-$regionlist.Add(" Uzbekistan"," UZ")
-$regionlist.Add(" Venezuela"," VE")
-$regionlist.Add(" Vietnam"," VN")
-$regionlist.Add(" Yemen"," YE")
-$regionlist.Add(" Zambia"," ZM")
-$regionlist.Add(" Zimbabwe"," ZW")
+$regionlist.Add(" Australia" ," AU" )
+$regionlist.Add(" Afghanistan" ," AF" )
+$regionlist.Add(" Albania" ," AL" )
+$regionlist.Add(" Algeria" ," DZ" )
+$regionlist.Add(" Angola" ," AO" )
+$regionlist.Add(" Argentina" ," AR" )
+$regionlist.Add(" Armenia" ," AM" )
+$regionlist.Add(" Austria" ," AT" )
+$regionlist.Add(" Azerbaijan" ," AZ" )
+$regionlist.Add(" Bahamas" ," BS" )
+$regionlist.Add(" Bahrain" ," BH" )
+$regionlist.Add(" Bangladesh" ," BD" )
+$regionlist.Add(" Barbados" ," BB" )
+$regionlist.Add(" Belarus" ," BY" )
+$regionlist.Add(" Belgium" ," BE" )
+$regionlist.Add(" Belize" ," BZ" )
+$regionlist.Add(" Bermuda" ," BM" )
+$regionlist.Add(" Bolivia" ," BO" )
+$regionlist.Add(" Bosnia and Herzegovina" ," BA" )
+$regionlist.Add(" Botswana" ," BW" )
+$regionlist.Add(" Brazil" ," BR" )
+$regionlist.Add(" Brunei" ," BN" )
+$regionlist.Add(" Bulgaria" ," BG" )
+$regionlist.Add(" Cameroon" ," CM" )
+$regionlist.Add(" Canada" ," CA" )
+$regionlist.Add(" Cape Verde" ," CV" )
+$regionlist.Add(" Cayman Islands" ," KY" )
+$regionlist.Add(" Chile" ," CL" )
+$regionlist.Add(" Colombia" ," CO" )
+$regionlist.Add(" Costa Rica" ," CR" )
+$regionlist.Add(" Côte D'ivoire" ," CI" )
+$regionlist.Add(" Croatia" ," HR" )
+$regionlist.Add(" Curaçao" ," CW" )
+$regionlist.Add(" Cyprus" ," CY" )
+$regionlist.Add(" Czech Republic" ," CZ" )
+$regionlist.Add(" Denmark" ," DK" )
+$regionlist.Add(" Dominican Republic" ," DO" )
+$regionlist.Add(" Ecuador" ," EC" )
+$regionlist.Add(" Egypt" ," EG" )
+$regionlist.Add(" El Salvador" ," SV" )
+$regionlist.Add(" Estonia" ," EE" )
+$regionlist.Add(" Ethiopia" ," ET" )
+$regionlist.Add(" Faroe Islands" ," FO" )
+$regionlist.Add(" Fiji" ," FJ" )
+$regionlist.Add(" Finland" ," FI" )
+$regionlist.Add(" France" ," FR" )
+$regionlist.Add(" Georgia" ," GE" )
+$regionlist.Add(" Germany" ," DE" )
+$regionlist.Add(" Ghana" ," GH" )
+$regionlist.Add(" Greece" ," GR" )
+$regionlist.Add(" Guatemala" ," GT" )
+$regionlist.Add(" Honduras" ," HN" )
+$regionlist.Add(" Hong Kong SAR" ," HK" )
+$regionlist.Add(" Hungary" ," HU" )
+$regionlist.Add(" Iceland" ," IS" )
+$regionlist.Add(" India" ," IN" )
+$regionlist.Add(" Indonesia" ," ID" )
+$regionlist.Add(" Iraq" ," IQ" )
+$regionlist.Add(" Ireland" ," IE" )
+$regionlist.Add(" Israel" ," IL" )
+$regionlist.Add(" Italy" ," IT" )
+$regionlist.Add(" Jamaica" ," JM" )
+$regionlist.Add(" Japan" ," JP" )
+$regionlist.Add(" Jordan" ," JO" )
+$regionlist.Add(" Kazakhstan" ," KZ" )
+$regionlist.Add(" Kenya" ," KE" )
+$regionlist.Add(" Korea" ," KR" )
+$regionlist.Add(" Kuwait" ," KW" )
+$regionlist.Add(" Kyrgyzstan" ," KG" )
+$regionlist.Add(" Latvia" ," LV" )
+$regionlist.Add(" Lebanon" ," LB" )
+$regionlist.Add(" Libya" ," LY" )
+$regionlist.Add(" Liechtenstein" ," LI" )
+$regionlist.Add(" Lithuania" ," LT" )
+$regionlist.Add(" Luxembourg" ," LU" )
+$regionlist.Add(" Macao SAR" ," MO" )
+$regionlist.Add(" Macedonia, FYRO" ," MK" )
+$regionlist.Add(" Malaysia" ," MY" )
+$regionlist.Add(" Malta" ," MT" )
+$regionlist.Add(" Mauritius" ," MU" )
+$regionlist.Add(" Mexico" ," MX" )
+$regionlist.Add(" Moldova" ," MD" )
+$regionlist.Add(" Monaco" ," MC" )
+$regionlist.Add(" Mongolia" ," MN" )
+$regionlist.Add(" Montenegro" ," ME" )
+$regionlist.Add(" Morocco" ," MA" )
+$regionlist.Add(" Namibia" ," NA" )
+$regionlist.Add(" Nepal" ," NP" )
+$regionlist.Add(" Netherlands" ," NL" )
+$regionlist.Add(" New Zealand" ," NZ" )
+$regionlist.Add(" Nicaragua" ," NI" )
+$regionlist.Add(" Nigeria" ," NG" )
+$regionlist.Add(" Norway" ," NO" )
+$regionlist.Add(" Oman" ," OM" )
+$regionlist.Add(" Pakistan" ," PK" )
+$regionlist.Add(" Palestinian Territory" ," PS" )
+$regionlist.Add(" Panama" ," PA" )
+$regionlist.Add(" Paraguay" ," PY" )
+$regionlist.Add(" Peru" ," PE" )
+$regionlist.Add(" Philippines" ," PH" )
+$regionlist.Add(" Poland" ," PL" )
+$regionlist.Add(" Portugal" ," PT" )
+$regionlist.Add(" Puerto Rico" ," PR" )
+$regionlist.Add(" Qatar" ," QA" )
+$regionlist.Add(" Romania" ," RO" )
+$regionlist.Add(" Russia" ," RU" )
+$regionlist.Add(" Rwanda" ," RW" )
+$regionlist.Add(" Saint Kitts and Nevis" ," KN" )
+$regionlist.Add(" Saudi Arabia" ," SA" )
+$regionlist.Add(" Senegal" ," SN" )
+$regionlist.Add(" Serbia" ," RS" )
+$regionlist.Add(" Singapore" ," SG" )
+$regionlist.Add(" Slovakia" ," SK" )
+$regionlist.Add(" Slovenia" ," SI" )
+$regionlist.Add(" South Africa" ," ZA" )
+$regionlist.Add(" Spain" ," ES" )
+$regionlist.Add(" Sri Lanka" ," LK" )
+$regionlist.Add(" Sweden" ," SE" )
+$regionlist.Add(" Switzerland" ," CH" )
+$regionlist.Add(" Taiwan" ," TW" )
+$regionlist.Add(" Tajikistan" ," TJ" )
+$regionlist.Add(" Tanzania" ," TZ" )
+$regionlist.Add(" Thailand" ," TH" )
+$regionlist.Add(" Trinidad and Tobago" ," TT" )
+$regionlist.Add(" Tunisia" ," TN" )
+$regionlist.Add(" Turkey" ," TR" )
+$regionlist.Add(" Turkmenistan" ," TM" )
+$regionlist.Add(" U.S. Virgin Islands" ," VI" )
+$regionlist.Add(" Uganda" ," UG" )
+$regionlist.Add(" Ukraine" ," UA" )
+$regionlist.Add(" United Arab Emirates" ," AE" )
+$regionlist.Add(" United Kingdom" ," GB" )
+$regionlist.Add(" United States" ," US" )
+$regionlist.Add(" Uruguay" ," UY" )
+$regionlist.Add(" Uzbekistan" ," UZ" )
+$regionlist.Add(" Venezuela" ," VE" )
+$regionlist.Add(" Vietnam" ," VN" )
+$regionlist.Add(" Yemen" ," YE" )
+$regionlist.Add(" Zambia" ," ZM" )
+$regionlist.Add(" Zimbabwe" ," ZW" ); 
 $WERegionIso=$regionlist.item($regioninfo)
 ; 
-$defaultCurrency=@(" Afghanistan;USD",
-" Albania;USD",
-" Algeria;USD",
-" Angola;USD",
-" Argentina;ARS",
-" Armenia;USD",
-" Australia;AUD",
-" Austria;EUR",
-" Azerbaijan;USD",
-" Bahamas;USD",
-" Bahrain;USD",
-" Bangladesh;USD",
-" Barbados;USD",
-" Belarus;USD",
-" Belgium;EUR",
-" Belize;USD",
-" Bermuda;USD",
-" Bolivia;USD",
-" Bosnia and Herzegovina;USD",
-" Botswana;USD",
-" Brazil;BRL",
-" Brazil;USD",
-" Brunei Darussalam;USD",
-" Bulgaria;EUR",
-" Cameroon;USD",
-" Canada;CAD",
-" Cape Verde;USD",
-" Cayman Islands;USD",
-" Chile;USD",
-" Colombia;USD",
-" Congo;USD",
-" Costa Rica;USD",
-" Côte D'ivoire;USD",
-" Croatia;EUR",
-" Croatia;USD",
-" Curaçao;USD",
-" Cyprus;EUR",
-" Czech Republic;EUR",
-" Denmark;DKK",
-" Dominican Republic;USD",
-" Ecuador;USD",
-" Egypt;USD",
-" El Salvador;USD",
-" Estonia;EUR",
-" Ethiopia;USD",
-" Faroe Islands;EUR",
-" Fiji;USD",
-" Finland;EUR",
-" France;EUR",
-" Georgia;USD",
-" Germany;EUR",
-" Ghana;USD",
-" Greece;EUR",
-" Guatemala;USD",
-" Honduras;USD",
-" Hong Kong;HKD",
-" Hong Kong SAR;USD",
-" Hungary;EUR",
-" Iceland;EUR",
-" India;INR",
-" India;USD",
-" Indonesia;IDR",
-" Iraq;USD",
-" Ireland;EUR",
-" Israel;USD",
-" Italy;EUR",
-" Jamaica;USD",
-" Japan;JPY",
-" Jordan;USD",
-" Kazakhstan;USD",
-" Kenya;USD",
-" Korea;KRW",
-" Kuwait;USD",
-" Kyrgyzstan;USD",
-" Latvia;EUR",
-" Lebanon;USD",
-" Libya;USD",
-" Liechtenstein;CHF",
-" Lithuania;EUR",
-" Luxembourg;EUR",
-" Macao;USD",
-" Macedonia;USD",
-" Malaysia;MYR",
-" Malaysia;USD",
-" Malta;EUR",
-" Mauritius;USD",
-" Mexico;MXN",
-" Mexico;USD",
-" Moldova;USD",
-" Monaco;EUR",
-" Mongolia;USD",
-" Montenegro;USD",
-" Morocco;USD",
-" Namibia;USD",
-" Nepal;USD",
-" Netherlands;EUR",
-" New Zealand;NZD",
-" Nicaragua;USD",
-" Nigeria;USD",
-" Norway;NOK",
-" Oman;USD",
-" Pakistan;USD",
-" Palestinian Territory, Occupied;USD",
-" Panama;USD",
-" Paraguay;USD",
-" Peru;USD",
-" Philippines;USD",
-" Poland;EUR",
-" Portugal;EUR",
-" Puerto Rico;USD",
-" Qatar;USD",
-" Romania;EUR",
-" Russia;RUB",
-" Rwanda;USD",
-" Saint Kitts and Nevis;USD",
-" Saudi Arabia;SAR",
-" Senegal;USD",
-" Serbia;USD",
-" Singapore;USD",
-" Slovakia;EUR",
-" Slovenia;EUR",
-" South Africa;ZAR",
-" Spain;EUR",
-" Sri Lanka;USD",
-" Sweden;SEK",
-" Switzerland;CHF",
-" Taiwan;TWD",
-" Tajikistan;USD",
-" Tanzania;USD",
-" Thailand;USD",
-" Trinidad and Tobago;USD",
-" Tunisia;USD",
-" Turkey;TRY",
-" Turkmenistan;USD",
-" UAE;USD",
-" Uganda;USD",
-" Ukraine;USD",
-" United Kingdom;GBP",
-" United States;USD",
-" Uruguay;USD",
-" Uzbekistan;USD",
-" Venezuela;USD",
-" Viet Nam;USD",
-" Virgin Islands, US;USD",
-" Yemen;USD",
-" Zambia;USD",
-" Zimbabwe;USD")
+$defaultCurrency=@(" Afghanistan;USD" ,
+" Albania;USD" ,
+" Algeria;USD" ,
+" Angola;USD" ,
+" Argentina;ARS" ,
+" Armenia;USD" ,
+" Australia;AUD" ,
+" Austria;EUR" ,
+" Azerbaijan;USD" ,
+" Bahamas;USD" ,
+" Bahrain;USD" ,
+" Bangladesh;USD" ,
+" Barbados;USD" ,
+" Belarus;USD" ,
+" Belgium;EUR" ,
+" Belize;USD" ,
+" Bermuda;USD" ,
+" Bolivia;USD" ,
+" Bosnia and Herzegovina;USD" ,
+" Botswana;USD" ,
+" Brazil;BRL" ,
+" Brazil;USD" ,
+" Brunei Darussalam;USD" ,
+" Bulgaria;EUR" ,
+" Cameroon;USD" ,
+" Canada;CAD" ,
+" Cape Verde;USD" ,
+" Cayman Islands;USD" ,
+" Chile;USD" ,
+" Colombia;USD" ,
+" Congo;USD" ,
+" Costa Rica;USD" ,
+" Côte D'ivoire;USD" ,
+" Croatia;EUR" ,
+" Croatia;USD" ,
+" Curaçao;USD" ,
+" Cyprus;EUR" ,
+" Czech Republic;EUR" ,
+" Denmark;DKK" ,
+" Dominican Republic;USD" ,
+" Ecuador;USD" ,
+" Egypt;USD" ,
+" El Salvador;USD" ,
+" Estonia;EUR" ,
+" Ethiopia;USD" ,
+" Faroe Islands;EUR" ,
+" Fiji;USD" ,
+" Finland;EUR" ,
+" France;EUR" ,
+" Georgia;USD" ,
+" Germany;EUR" ,
+" Ghana;USD" ,
+" Greece;EUR" ,
+" Guatemala;USD" ,
+" Honduras;USD" ,
+" Hong Kong;HKD" ,
+" Hong Kong SAR;USD" ,
+" Hungary;EUR" ,
+" Iceland;EUR" ,
+" India;INR" ,
+" India;USD" ,
+" Indonesia;IDR" ,
+" Iraq;USD" ,
+" Ireland;EUR" ,
+" Israel;USD" ,
+" Italy;EUR" ,
+" Jamaica;USD" ,
+" Japan;JPY" ,
+" Jordan;USD" ,
+" Kazakhstan;USD" ,
+" Kenya;USD" ,
+" Korea;KRW" ,
+" Kuwait;USD" ,
+" Kyrgyzstan;USD" ,
+" Latvia;EUR" ,
+" Lebanon;USD" ,
+" Libya;USD" ,
+" Liechtenstein;CHF" ,
+" Lithuania;EUR" ,
+" Luxembourg;EUR" ,
+" Macao;USD" ,
+" Macedonia;USD" ,
+" Malaysia;MYR" ,
+" Malaysia;USD" ,
+" Malta;EUR" ,
+" Mauritius;USD" ,
+" Mexico;MXN" ,
+" Mexico;USD" ,
+" Moldova;USD" ,
+" Monaco;EUR" ,
+" Mongolia;USD" ,
+" Montenegro;USD" ,
+" Morocco;USD" ,
+" Namibia;USD" ,
+" Nepal;USD" ,
+" Netherlands;EUR" ,
+" New Zealand;NZD" ,
+" Nicaragua;USD" ,
+" Nigeria;USD" ,
+" Norway;NOK" ,
+" Oman;USD" ,
+" Pakistan;USD" ,
+" Palestinian Territory, Occupied;USD" ,
+" Panama;USD" ,
+" Paraguay;USD" ,
+" Peru;USD" ,
+" Philippines;USD" ,
+" Poland;EUR" ,
+" Portugal;EUR" ,
+" Puerto Rico;USD" ,
+" Qatar;USD" ,
+" Romania;EUR" ,
+" Russia;RUB" ,
+" Rwanda;USD" ,
+" Saint Kitts and Nevis;USD" ,
+" Saudi Arabia;SAR" ,
+" Senegal;USD" ,
+" Serbia;USD" ,
+" Singapore;USD" ,
+" Slovakia;EUR" ,
+" Slovenia;EUR" ,
+" South Africa;ZAR" ,
+" Spain;EUR" ,
+" Sri Lanka;USD" ,
+" Sweden;SEK" ,
+" Switzerland;CHF" ,
+" Taiwan;TWD" ,
+" Tajikistan;USD" ,
+" Tanzania;USD" ,
+" Thailand;USD" ,
+" Trinidad and Tobago;USD" ,
+" Tunisia;USD" ,
+" Turkey;TRY" ,
+" Turkmenistan;USD" ,
+" UAE;USD" ,
+" Uganda;USD" ,
+" Ukraine;USD" ,
+" United Kingdom;GBP" ,
+" United States;USD" ,
+" Uruguay;USD" ,
+" Uzbekistan;USD" ,
+" Venezuela;USD" ,
+" Viet Nam;USD" ,
+" Virgin Islands, US;USD" ,
+" Yemen;USD" ,
+" Zambia;USD" ,
+" Zimbabwe;USD" )
 
 
 IF(!($defaultCurrency|where{$_ -match $WERegionInfo -and $_ -match $WECurrency}))
@@ -372,7 +392,7 @@ $sharedKey = Get-AutomationVariable -Name  " AzureUsage-OPSINSIGHTS_WS_KEY"
 $logname='AzureUsage'
 
 [Collections.Arraylist]$instanceResults = @()
-$colltime=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddThh:00:00.000Z")
+$colltime=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddThh:00:00.000Z" )
 
 Function Build-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
@@ -393,7 +413,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	$method = " POST"
 	$contentType = " application/json"
 	$resource = " /api/logs"
-	$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	$contentLength = $body.Length
 	$signature = Build-OMSSignature `
 	-customerId $customerId `
@@ -404,7 +424,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	-method $method `
 	-contentType $contentType `
 	-resource $resource
-	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
 ; 	$WEOMSheaders = @{
 		" Authorization" = $signature;
 		" Log-Type" = $logType;
@@ -537,13 +557,13 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
 $WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)")
-$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/",$WECliCert)
+$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
-$headers = @{" Authorization"=$header;" Accept"=" application/json"}
+$headers = @{" Authorization" =$header;" Accept" =" application/json" }
 $body=$null
 $WEHTTPVerb=" GET"
-$subscriptionInfoUri = " https://management.azure.com/subscriptions/"+$subscriptionid+" ?api-version=2016-02-01"
+$subscriptionInfoUri = " https://management.azure.com/subscriptions/" +$subscriptionid+" ?api-version=2016-02-01"
 $subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
 IF($subscriptionInfo)
 {
@@ -573,7 +593,7 @@ $WEScriptBlock = {
 		$method = " POST"
 		$contentType = " application/json"
 		$resource = " /api/logs"
-		$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+		$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 		$contentLength = $body.Length
 		$signature = Build-OMSSignature `
 		-customerId $customerId `
@@ -584,7 +604,7 @@ $WEScriptBlock = {
 		-method $method `
 		-contentType $contentType `
 		-resource $resource
-		$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+	; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
 	; 	$WEOMSheaders = @{
 			" Authorization" = $signature;
 			" Log-Type" = $logType;
@@ -650,7 +670,7 @@ $WEScriptBlock = {
 				Rates=$billRegion.MeterRates
 			}
 		}
-		$sortedMEter|where {$_.Meterrates -eq $($sortedMEter|Sort-Object -Property Meterrates |select -First 1).Meterrates}|?{$lowestregion = $lowestregion + " $($_.MEterregion),"}
+		$sortedMEter|where {$_.Meterrates -eq $($sortedMEter|Sort-Object -Property Meterrates |select -First 1).Meterrates}|?{$lowestregion = $lowestregion + " $($_.MEterregion)," }
 		If ($lowestregion -match $meter.MeterRegion)
 		{
 			$calcLowestCost=$calcCost
@@ -780,7 +800,7 @@ $WEScriptBlock = {
 			}
 			$WEUsageType=$insdata.additionalInfo.UsageType
 			$WEMeter=($meters|where {$_.meterid -eq $metricitem.meterId})
-			$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
+		; 	$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
 		; 	$cu = New-Object PSObject -Property @{
 				Timestamp = $metricitem.usageStartTime
 				Collectiontime=$colltime 
@@ -821,7 +841,7 @@ $WEScriptBlock = {
 				foreach ($tag in $tags.Keys)
 				{
 					
-					$cu = New-Object PSObject -Property @{
+				; 	$cu = New-Object PSObject -Property @{
 						Timestamp = $metricitem.usageStartTime
 						Collectiontime=$colltime 
 						meterCategory= $meter.meterCategory
@@ -865,13 +885,13 @@ $WEScriptBlock = {
 				$rg=$allrg|where {$_.Name -eq $rgcls}
 			}Else
 			{
-				$rgcls=($resmap|where{$_.Resource -eq " $($metricitem.infoFields.project)"}).Resourcegroup
+				$rgcls=($resmap|where{$_.Resource -eq " $($metricitem.infoFields.project)" }).Resourcegroup
 				$rg=$allrg|where {$_.Name -eq $rgcls}
 			}
 			$project=$metricitem.infoFields.project
 			$price=$null
 			$WEMeter=($meters|where {$_.meterid -eq $metricitem.meterId})
-			$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
+		; 	$price=Calculate-rate -meter $meter -quantity $metricitem.quantity
 		; 	$cu1 = New-Object PSObject -Property @{
 				
 				Timestamp = $metricitem.usageStartTime
@@ -913,7 +933,7 @@ $WEScriptBlock = {
 				{
 					
 					
-					$cu1=$null
+				; 	$cu1=$null
 				; 	$cu1 = New-Object PSObject -Property @{
 						Timestamp = $metricitem.usageStartTime
 						Collectiontime=$colltime                                     
@@ -1045,14 +1065,14 @@ foreach($azres in $resresources.value)
 
 IF($syncInterval -eq 'Hourly')
 {
-	$end=(get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy-MM-dd'T'HH:00:00")
-	$start=(get-date).AddHours(-2).ToUniversalTime().ToString(" yyyy-MM-dd'T'HH:00:00")
+	$end=(get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy-MM-dd'T'HH:00:00" )
+	$start=(get-date).AddHours(-2).ToUniversalTime().ToString(" yyyy-MM-dd'T'HH:00:00" )
 	$WEUri=" https://management.azure.com/subscriptions/$subscriptionid/providers/Microsoft.Commerce/UsageAggregates?api-version=2015-06-01-preview&reportedStartTime=$start&reportedEndTime=$end&aggregationGranularity=$syncInterval&showDetails=true"
 }
 Else
 {
-	$end=(get-date).ToUniversalTime().ToString(" yyyy-MM-dd'T'00:00:00")
-	$start=(get-date).Adddays(-1).ToUniversalTime().ToString(" yyyy-MM-dd'T'00:00:00")
+	$end=(get-date).ToUniversalTime().ToString(" yyyy-MM-dd'T'00:00:00" )
+	$start=(get-date).Adddays(-1).ToUniversalTime().ToString(" yyyy-MM-dd'T'00:00:00" )
 	$WEUri=" https://management.azure.com/subscriptions/$subscriptionid/providers/Microsoft.Commerce/UsageAggregates?api-version=2015-06-01-preview&reportedStartTime=$start&reportedEndTime=$end&aggregationGranularity=$syncInterval&showDetails=true"
 }
 Write-Output " Fetching Usage data for  $start (UTC) and $end (UTC) , Currency :$WECurrency Locate : $WELocale ,Region: $WERegionIso , Azure Subs Type : $WEOfferDurableId "
@@ -1076,19 +1096,19 @@ IF(![string]::IsNullOrEmpty($res.nextLink))
 $metrics=$res.value.Properties
 $metrics=$metrics|Sort-Object -Property metercategory -Descending 
 
-Write-output " $($metrics.count) usage metrics  found "
+Write-output " $($metrics.count) usage metrics  found "; 
 $spltlist=@()
 If($metrics.count -gt 200)
 {
 ; 	$splitSize=200
-	$spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt  $metrics.Count; $WEIndex = $WEIndex + $splitSize)
+; 	$spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt  $metrics.Count; $WEIndex = $WEIndex + $splitSize)
 	{
 		,($metrics[$index..($index+$splitSize-1)])
 	}
 }Elseif($metrics.count -gt 100)
 {
 	$splitSize=100
-	$spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt  $metrics.Count; $WEIndex = $WEIndex + $splitSize)
+; 	$spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt  $metrics.Count; $WEIndex = $WEIndex + $splitSize)
 	{
 		,($metrics[$index..($index+$splitSize-1)])
 	}
@@ -1126,7 +1146,7 @@ $spltlist|foreach{
 	$splitmetrics=$_
 	$WEJob = [powershell]::Create().AddScript($WEScriptBlock).AddArgument($hash).AddArgument($meters).AddArgument($splitmetrics)
 	$WEJob.RunspacePool = $WERunspacePool
-	$WEJobs = $WEJobs + New-Object PSObject -Property @{
+; 	$WEJobs = $WEJobs + New-Object PSObject -Property @{
 		RunNum = $_
 		Pipe = $WEJob
 		Result = $WEJob.BeginInvoke()
@@ -1138,11 +1158,11 @@ Write-Output " Waiting.."
 Do {
 	Start-Sleep -Seconds 60
 } While ( $WEJobs.Result.IsCompleted -contains $false)
-Write-WELog " All jobs completed!" " INFO"; 
+Write-WELog " All jobs completed!" " INFO" ; 
 $WEResults = @()
 ForEach ($WEJob in $WEJobs)
 {
-	$WEResults = $WEResults + $WEJob.Pipe.EndInvoke($WEJob.Result)
+; 	$WEResults = $WEResults + $WEJob.Pipe.EndInvoke($WEJob.Result)
 	if($jobs[0].Pipe.HadErrors)
 	{
 		write-warning " $($jobs.Pipe.Streams.Error.exception)"

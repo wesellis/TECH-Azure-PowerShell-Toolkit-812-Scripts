@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Artifact
+    Run Artifact
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Run Artifact
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
@@ -25,14 +43,14 @@ function ____ExitOne {
 
 function ____Invoke-Artifact {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $____ArtifactName,
         [Parameter(Mandatory = $false)][String] $____ParamsBase64
     )
 
     if ((new-object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        if ($env:USERNAME -eq " $($env:COMPUTERNAME)$") {
+        if ($env:USERNAME -eq " $($env:COMPUTERNAME)$" ) {
             $private:userInfo = " (as SYSTEM)"
         }
         else {
@@ -78,7 +96,7 @@ param(
         }
     }
     catch {
-        $exitCodeMsg = ""
+       ;  $exitCodeMsg = ""
         if ((Test-Path variable:global:LASTEXITCODE) -and ($WELASTEXITCODE -ne 0)) {
            ;  $exitCodeMsg = " (exit code $WELASTEXITCODE)"
         }

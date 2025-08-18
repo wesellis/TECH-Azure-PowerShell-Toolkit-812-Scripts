@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Sql Failoveragclassic
+    Asr Sql Failoveragclassic
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Sql Failoveragclassic
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -50,6 +68,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
          [Object]$WERecoveryPlanContext
      )
@@ -58,18 +77,18 @@ param(
 
      #Connect to Azure
      $WEAzureAccount = Add-AzureAccount -Credential $WECred
-     $WEAzureSubscriptionName = Get-AutomationVariable –Name ‘AzureSubscriptionName’
+    ;  $WEAzureSubscriptionName = Get-AutomationVariable –Name ‘AzureSubscriptionName’
      Select-AzureSubscription -SubscriptionName $WEAzureSubscriptionName
 
      InLineScript
      {
-     ;  $scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery/scripts/SQLAGFailover.ps1"
+     ;  $scriptpath = " https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery/scripts/SQLAGFailover.ps1"
 
 
 
       Write-output " failovertype " + $WEUsing:RecoveryPlanContext.FailoverType;
 
-      if ($WEUsing:RecoveryPlanContext.FailoverType -eq " Test")
+      if ($WEUsing:RecoveryPlanContext.FailoverType -eq " Test" )
             {
                 Write-output " tfo"
 
@@ -79,7 +98,7 @@ param(
 
                 #Update the script with name of the virtual machine recovered using Azure Backup
                 Write-Output " Adding SQL AG Endpoint"
-                Get-AzureVM -ServiceName " SQLAzureVM-Test" -Name " SQLAzureVM-Test"| Add-AzureEndpoint -Name sqlag -LBSetName sqlagset -Protocol tcp -LocalPort 1433 -PublicPort 1433 -ProbePort 59999 -ProbeProtocol tcp -ProbeIntervalInSeconds 10 -InternalLoadBalancerName SQLAGILB | Update-AzureVM
+                Get-AzureVM -ServiceName " SQLAzureVM-Test" -Name " SQLAzureVM-Test" | Add-AzureEndpoint -Name sqlag -LBSetName sqlagset -Protocol tcp -LocalPort 1433 -PublicPort 1433 -ProbePort 59999 -ProbeProtocol tcp -ProbeIntervalInSeconds 10 -InternalLoadBalancerName SQLAGILB | Update-AzureVM
 
                 Write-Output " Added Endpoint"
 
@@ -96,24 +115,24 @@ param(
             }
       else
             {
-            Write-output " pfo/ufo";
+            Write-output " pfo/ufo" ;
             #Get the SQL Azure Replica VM.
             #Update the script to use the name of your VM and Cloud Service
-            $WEVM = Get-AzureVM -Name " SQLAzureVM" -ServiceName " SQLAzureReplica";     
+            $WEVM = Get-AzureVM -Name " SQLAzureVM" -ServiceName " SQLAzureReplica" ;     
 
             Write-Output " Installing custom script extension"
             #Install the Custom Script Extension on teh SQL Replica VM
             Set-AzureVMExtension -ExtensionName CustomScriptExtension -VM $WEVM -Publisher Microsoft.Compute -Version 1.*| Update-AzureVM;
 
-            Write-output " Starting AG Failover";
+            Write-output " Starting AG Failover" ;
             #Execute the SQL Failover script
             #Pass the SQL AG path as the argument.
 
-            $WEAGArgs=" -SQLAvailabilityGroupPath sqlserver:\sql\sqlazureVM\default\availabilitygroups\testag";
+            $WEAGArgs=" -SQLAvailabilityGroupPath sqlserver:\sql\sqlazureVM\default\availabilitygroups\testag" ;
 
             Set-AzureVMCustomScriptExtension -VM $WEVM -FileUri $scriptpath -Run " SQLAGFailover.ps1" -Argument $WEAGArgs | Update-AzureVM;
 
-            Write-output " Completed AG Failover";
+            Write-output " Completed AG Failover" ;
 
             }
 
@@ -121,9 +140,7 @@ param(
  }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw

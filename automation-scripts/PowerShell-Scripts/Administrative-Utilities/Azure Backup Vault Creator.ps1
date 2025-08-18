@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Backup Vault Creator
+    Azure Backup Vault Creator
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Backup Vault Creator
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function Write-WELog {
     [CmdletBinding()
 try {
@@ -25,14 +43,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -40,9 +60,11 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -50,9 +72,13 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVaultName,
     
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WELocation,
@@ -63,7 +89,7 @@ param(
 
 Write-WELog " Creating Recovery Services Vault: $WEVaultName" " INFO"
 
-
+; 
 $WEVault = New-AzRecoveryServicesVault `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WEVaultName `
@@ -84,7 +110,7 @@ Write-WELog "  Storage Type: $WEStorageType" " INFO"
 Write-WELog "  Resource ID: $($WEVault.ID)" " INFO"
 
 
-Write-WELog " `nDefault Backup Policies:" " INFO"; 
+Write-WELog " `nDefault Backup Policies:" " INFO" ; 
 $WEPolicies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $WEVault.ID
 foreach ($WEPolicy in $WEPolicies) {
     Write-WELog "  • $($WEPolicy.Name) [$($WEPolicy.WorkloadType)]" " INFO"
@@ -112,10 +138,8 @@ Write-WELog " • SQL Server in Azure VMs" " INFO"
 Write-WELog " • SAP HANA in Azure VMs" " INFO"
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Csconfiguration
+    Csconfiguration
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Csconfiguration
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿configuration Configuration
 {
    [CmdletBinding()
@@ -23,6 +41,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
         [Parameter(Mandatory)]
         [String]$WEDomainName,
@@ -45,18 +64,18 @@ param(
     )
     Import-DscResource -ModuleName TemplateHelpDSC
     
-    $WELogFolder = "TempLog"
+    $WELogFolder = " TempLog"
     $WECM = " CMCB"
     $WELogPath = " c:\$WELogFolder"
-    $WEDName = $WEDomainName.Split(" .")[0]
+    $WEDName = $WEDomainName.Split(" ." )[0]
     $WEDCComputerAccount = " $WEDName\$WEDCName$"
     $WEPSComputerAccount = " $WEDName\$WEPSName$"
     $WEDPMPComputerAccount = " $WEDName\$WEDPMPName$"
-    [String]$WEClients = [system.String]::Join(" ,", $WEClientName)
-    $WECurrentRole = " CS"
-   ;  $WEPrimarySiteName = $WEPSName.split(" .")[0] + " $"
+    [String]$WEClients = [system.String]::Join(" ," , $WEClientName)
+   ;  $WECurrentRole = " CS"
+   ;  $WEPrimarySiteName = $WEPSName.split(" ." )[0] + " $"
     
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)", $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node LOCALHOST
     {
@@ -204,10 +223,8 @@ param(
     }
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

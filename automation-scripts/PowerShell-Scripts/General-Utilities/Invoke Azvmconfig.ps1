@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azvmconfig
+    Invoke Azvmconfig
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azvmconfig
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzVMConfig {
 }
 
@@ -27,7 +45,7 @@ function WE-Invoke-AzVMConfig {
  
     #Region func New-AzVMConfig
     #Creating the VM Config Object for the VM
-    $newAzVMConfigSplat = @{
+   ;  $newAzVMConfigSplat = @{
         VMName       = $WEVMName
         VMSize       = $WEVMSize
         Tags         = $WETags

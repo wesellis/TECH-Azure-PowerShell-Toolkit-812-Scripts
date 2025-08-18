@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Provision State
+    Check Provision State
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Check Provision State
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdLetBinding()
 try {
     # Main script execution
@@ -30,7 +48,7 @@ $asaServiceName = $env:ASA_SERVICE_NAME
 
 
 if (!$subscriptionId) {
-    throw "The subscription Id is not successfully retrieved, please retry another deployment."
+    throw " The subscription Id is not successfully retrieved, please retry another deployment."
 }
 if (!$resourceGroup) {
     throw " The resource group is not successfully retrieved, please retry another deployment."
@@ -51,7 +69,7 @@ $headers = @{
 $WESucceeded = 'Succeeded'
 while ($sw.Elapsed -lt $timeout) {
     $response = Invoke-WebRequest -Uri $apiUrl -Headers $headers -Method GET
-    $content = $response.Content | ConvertFrom-Json
+   ;  $content = $response.Content | ConvertFrom-Json
    ;  $state = $content.properties.provisioningState
     if ($state -eq $WESucceeded) {
         break
@@ -64,10 +82,8 @@ if ($state -ne $WESucceeded) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

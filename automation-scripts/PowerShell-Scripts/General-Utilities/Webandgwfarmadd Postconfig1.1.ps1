@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Webandgwfarmadd Postconfig1.1
+    Webandgwfarmadd Postconfig1.1
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Webandgwfarmadd Postconfig1.1
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -26,7 +44,7 @@ param(
      [String]$WEDomainNetbios,
      [String]$username,
      [String]$password,
-     [string]$WEServerName = "gateway" ,
+     [string]$WEServerName = " gateway" ,
      [int]$numberofwebServers,
      $validationKey64,
      $decryptionKey24
@@ -34,14 +52,14 @@ param(
     ) 
 
 $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-$username = $WEDomainNetbios + "\" + $WEUsername
+$username = $WEDomainNetbios + " \" + $WEUsername
 $cred = New-Object System.Management.Automation.PSCredential -ArgumentList @($username,(ConvertTo-SecureString -String $password -AsPlainText -Force))
 
 configuration RDWebAccessdeployment
 {
 
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [String]$domainName,
@@ -115,7 +133,7 @@ configuration RDGatewaydeployment
 {
 
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [String]$domainName,
@@ -134,7 +152,7 @@ param(
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = " SessionHost-",
+        [String]$sessionHostNamingPrefix = " SessionHost-" ,
 
         # Collection Name
         [String]$collectionName,
@@ -180,7 +198,7 @@ param(
 
 
 }#End of Configuration RDGatewaydeployment 
-
+; 
 $WEConfigData = @{
     AllNodes = @(
         @{
@@ -220,11 +238,11 @@ Write-WELog " web server Array value $($webServernameArray)" " INFO"
 
 [int]$keylen = 64
        $buff = new-object " System.Byte[]" $keylen
-       $rnd = new-object System.Security.Cryptography.RNGCryptoServiceProvider
+      ;  $rnd = new-object System.Security.Cryptography.RNGCryptoServiceProvider
        $rnd.GetBytes($buff)
       ;  $result =""
        for($i=0; $i -lt $keylen; $i++)  {
-             $result = $result + [System.String]::Format(" {0:X2}",$buff[$i])
+             $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
        $validationkey64 = $result
        # Write-Host $validationkey64
@@ -232,11 +250,11 @@ Write-WELog " web server Array value $($webServernameArray)" " INFO"
 
        $keylen = 24
        $buff1 = new-object " System.Byte[]" $keylen
-       $rnd1 = new-object System.Security.Cryptography.RNGCryptoServiceProvider
+      ;  $rnd1 = new-object System.Security.Cryptography.RNGCryptoServiceProvider
        $rnd1.GetBytes($buff1)
       ;  $result =""
        for($i=0; $i -lt $keylen; $i++)  {
-             $result = $result + [System.String]::Format(" {0:X2}",$buff[$i])
+             $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
        $decryptionKey24 = $result
        # Write-Host $decryptionKey24
@@ -256,7 +274,7 @@ foreach ($item in $webServernameArray)
 
 
 Invoke-Command -session $session -ScriptBlock {[CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($validationkey64,$decryptionKey24)
 
 
@@ -264,7 +282,7 @@ function WE-ValidateWindowsFeature
 {
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
     $WERdsWindowsFeature = Get-WindowsFeature -ComputerName $localhost -Name RDS-Web-Access     
-    if ($WERdsWindowsFeature.InstallState -eq " Installed")
+    if ($WERdsWindowsFeature.InstallState -eq " Installed" )
     {
         Return $true
     }
@@ -287,17 +305,17 @@ if($WEValidationheck -eq $true)
         
         try{
         $xml = [xml](get-content $machineConfig)
-        $xml.Save($machineConfig + " _")
+        $xml.Save($machineConfig + " _" )
         
         $root = $xml.get_DocumentElement()
         $system_web = $root." system.web"
         if ($system_web.machineKey -eq $null) 
              { 
-             $machineKey = $xml.CreateElement(" machineKey") 
-             $a = $system_web.AppendChild($machineKey)
+             $machineKey = $xml.CreateElement(" machineKey" ) 
+            ;  $a = $system_web.AppendChild($machineKey)
              }
-        $system_web.SelectSingleNode(" machineKey").SetAttribute(" validationKey"," $validationKey64")
-        $system_web.SelectSingleNode(" machineKey").SetAttribute(" decryptionKey"," $decryptionKey24")
+        $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" validationKey" ," $validationKey64" )
+        $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" decryptionKey" ," $decryptionKey24" )
        ;  $a = $xml.Save($machineConfig)
         
         }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Virtual Wan Management Tool
+    Azure Virtual Wan Management Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Virtual Wan Management Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -42,7 +60,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .PARAMETER HubLocation
     Location for the virtual hub
 .PARAMETER HubAddressPrefix
-    Address prefix for the virtual hub (e.g., " 10.1.0.0/24")
+    Address prefix for the virtual hub (e.g., " 10.1.0.0/24" )
 .PARAMETER EnableVpnGateway
     Enable VPN Gateway in the hub
 .PARAMETER EnableExpressRouteGateway
@@ -74,9 +92,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -84,24 +104,32 @@ param(
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVirtualWANName,
     
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
     
     [Parameter(Mandatory = $true)]
-    [ValidateSet(" Create", " Configure", " Monitor", " Scale", " Delete", " AddHub", " RemoveHub", " Status")]
+    [ValidateSet(" Create" , " Configure" , " Monitor" , " Scale" , " Delete" , " AddHub" , " RemoveHub" , " Status" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
     
     [Parameter(Mandatory = $false)]
-    [ValidateSet(" Basic", " Standard")]
-    [string]$WEVWANType = " Standard",
+    [ValidateSet(" Basic" , " Standard" )]
+    [string]$WEVWANType = " Standard" ,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEHubName,
@@ -109,9 +137,13 @@ param(
     [Parameter(Mandatory = $false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubLocation,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEHubAddressPrefix,
@@ -138,6 +170,8 @@ param(
     [switch]$WEEnableSecurityBaseline,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WERouteTableName,
@@ -169,8 +203,10 @@ function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMessage,
-        [ValidateSet(" Info", " Warning", " Error", " Success")]
+        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
         [string]$WELevel = " Info"
     )
     
@@ -190,7 +226,7 @@ function WE-New-VirtualWAN {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN '$WEVirtualWANName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN '$WEVirtualWANName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating Virtual WAN: $WEVirtualWANName" " Info"
             
@@ -220,17 +256,23 @@ function WE-New-VirtualHub {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEWANName,
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName,
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEHubLocation,
         [string]$WEAddressPrefix
     )
     
-    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating Virtual Hub: $WEHubName in $WEHubLocation" " Info"
             
@@ -279,10 +321,12 @@ function WE-New-VpnGateway {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName)
     
     $vpnGatewayName = " $WEHubName-vpn-gw"
-    if ($WEPSCmdlet.ShouldProcess(" VPN Gateway '$vpnGatewayName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" VPN Gateway '$vpnGatewayName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating VPN Gateway in hub: $WEHubName" " Info"
             
@@ -305,10 +349,12 @@ function WE-New-ExpressRouteGateway {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName)
     
     $erGatewayName = " $WEHubName-er-gw"
-    if ($WEPSCmdlet.ShouldProcess(" ExpressRoute Gateway '$erGatewayName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" ExpressRoute Gateway '$erGatewayName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating ExpressRoute Gateway in hub: $WEHubName" " Info"
             
@@ -331,10 +377,12 @@ function WE-New-AzureFirewall {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName)
     
     $firewallName = " $WEHubName-azfw"
-    if ($WEPSCmdlet.ShouldProcess(" Azure Firewall '$firewallName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Azure Firewall '$firewallName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating Azure Firewall in hub: $WEHubName" " Info"
             
@@ -362,11 +410,13 @@ function WE-New-VpnSite {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEWANName,
         [string[]]$WESiteNames
     )
     
-    if ($WEPSCmdlet.ShouldProcess(" VPN Sites: $($WESiteNames -join ', ')", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" VPN Sites: $($WESiteNames -join ', ')" , " Create" )) {
         try {
             Write-EnhancedLog " Creating VPN sites..." " Info"
             
@@ -377,7 +427,7 @@ function WE-New-VpnSite {
                 Write-EnhancedLog " Creating VPN site: $siteName" " Info"
                 
                 # Example site configuration - customize as needed
-                $vpnSite = New-AzVpnSite -ResourceGroupName $WEResourceGroupName -Name $siteName -Location $WELocation -VirtualWan $virtualWAN -IpAddress " 203.0.113.1" -AddressSpace @(" 192.168.1.0/24") -DeviceModel " Generic" -DeviceVendor " Generic" -LinkSpeedInMbps 50 -Tag $WETags
+                $vpnSite = New-AzVpnSite -ResourceGroupName $WEResourceGroupName -Name $siteName -Location $WELocation -VirtualWan $virtualWAN -IpAddress " 203.0.113.1" -AddressSpace @(" 192.168.1.0/24" ) -DeviceModel " Generic" -DeviceVendor " Generic" -LinkSpeedInMbps 50 -Tag $WETags
                 
                 $createdSites = $createdSites + $vpnSite
                 Write-EnhancedLog " Successfully created VPN site: $siteName" " Success"
@@ -396,10 +446,12 @@ function WE-Set-P2SVpnConfiguration {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName)
     
     $p2sGatewayName = " $WEHubName-p2s-gw"
-    if ($WEPSCmdlet.ShouldProcess(" Point-to-Site VPN Gateway '$p2sGatewayName'", " Configure")) {
+    if ($WEPSCmdlet.ShouldProcess(" Point-to-Site VPN Gateway '$p2sGatewayName'" , " Configure" )) {
         try {
             Write-EnhancedLog " Configuring Point-to-Site VPN for hub: $WEHubName" " Info"
             
@@ -407,7 +459,7 @@ function WE-Set-P2SVpnConfiguration {
             $virtualHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName
             
             # Configure address pool for P2S clients
-            $p2sConnectionConfig = New-AzP2sVpnGateway -ResourceGroupName $WEResourceGroupName -Name $p2sGatewayName -VirtualHubId $virtualHub.Id -VpnClientAddressPool @(" 172.16.0.0/24") -Tag $WETags
+            $p2sConnectionConfig = New-AzP2sVpnGateway -ResourceGroupName $WEResourceGroupName -Name $p2sGatewayName -VirtualHubId $virtualHub.Id -VpnClientAddressPool @(" 172.16.0.0/24" ) -Tag $WETags
             
             Write-EnhancedLog " Successfully configured Point-to-Site VPN: $p2sGatewayName" " Success"
             return $p2sConnectionConfig
@@ -424,11 +476,13 @@ function WE-New-HubRouteTable {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName,
         [string]$WERouteTableName
     )
     
-    if ($WEPSCmdlet.ShouldProcess(" Route Table '$WERouteTableName' in hub '$WEHubName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Route Table '$WERouteTableName' in hub '$WEHubName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating custom route table: $WERouteTableName" " Info"
             
@@ -436,7 +490,7 @@ function WE-New-HubRouteTable {
             $routeTable = New-AzVHubRouteTable -ResourceGroupName $WEResourceGroupName -VirtualHubName $WEHubName -Name $WERouteTableName
             
             # Example route configuration
-            $route1 = New-AzStaticRoute -Name " DefaultRoute" -AddressPrefix @(" 0.0.0.0/0") -NextHopIpAddress " 10.0.0.1"
+            $route1 = New-AzStaticRoute -Name " DefaultRoute" -AddressPrefix @(" 0.0.0.0/0" ) -NextHopIpAddress " 10.0.0.1"
             $routeTable = Add-AzVHubRoute -VirtualHubRouteTable $routeTable -StaticRoute $route1
             
             Write-EnhancedLog " Successfully created route table: $WERouteTableName" " Success"
@@ -451,7 +505,7 @@ function WE-New-HubRouteTable {
 
 function WE-Get-VirtualWANStatus {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param()
     
     try {
@@ -515,7 +569,7 @@ function WE-Set-VirtualWANMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN monitoring configuration", " Apply")) {
+    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN monitoring configuration" , " Apply" )) {
         try {
             Write-EnhancedLog " Configuring Virtual WAN monitoring..." " Info"
             
@@ -585,7 +639,7 @@ function WE-Set-SecurityBaseline {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN security baseline", " Apply")) {
+    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN security baseline" , " Apply" )) {
         try {
             Write-EnhancedLog " Applying security baseline configurations..." " Info"
             
@@ -611,30 +665,32 @@ function WE-Remove-VirtualHub {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEHubName)
     
-    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName' and all associated resources", " Remove")) {
+    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName' and all associated resources" , " Remove" )) {
         try {
             Write-EnhancedLog " Removing Virtual Hub: $WEHubName" " Warning"
             
             # Remove associated resources first
             $vpnGateway = Get-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-vpn-gw" -ErrorAction SilentlyContinue
             if ($vpnGateway) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove VPN Gateway '$($vpnGateway.Name)'?", " Confirm Gateway Removal")) {
+                if ($WEPSCmdlet.ShouldContinue(" Remove VPN Gateway '$($vpnGateway.Name)'?" , " Confirm Gateway Removal" )) {
                     Remove-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-vpn-gw" -Force
                 }
             }
             
             $erGateway = Get-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-er-gw" -ErrorAction SilentlyContinue
             if ($erGateway) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove ExpressRoute Gateway '$($erGateway.Name)'?", " Confirm Gateway Removal")) {
+                if ($WEPSCmdlet.ShouldContinue(" Remove ExpressRoute Gateway '$($erGateway.Name)'?" , " Confirm Gateway Removal" )) {
                     Remove-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-er-gw" -Force
                 }
             }
             
             $firewall = Get-AzFirewall -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-azfw" -ErrorAction SilentlyContinue
             if ($firewall) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove Azure Firewall '$($firewall.Name)'?", " Confirm Firewall Removal")) {
+                if ($WEPSCmdlet.ShouldContinue(" Remove Azure Firewall '$($firewall.Name)'?" , " Confirm Firewall Removal" )) {
                     Remove-AzFirewall -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-azfw" -Force
                 }
             }
@@ -688,7 +744,7 @@ try {
                 throw " HubName, HubLocation, and HubAddressPrefix are required for AddHub action"
             }
             
-            $virtualHub = New-VirtualHub -WANName $WEVirtualWANName -HubName $WEHubName -HubLocation $WEHubLocation -AddressPrefix $WEHubAddressPrefix
+           ;  $virtualHub = New-VirtualHub -WANName $WEVirtualWANName -HubName $WEHubName -HubLocation $WEHubLocation -AddressPrefix $WEHubAddressPrefix
             
             if ($WEEnableP2SVpn) {
                 Set-P2SVpnConfiguration -HubName $WEHubName

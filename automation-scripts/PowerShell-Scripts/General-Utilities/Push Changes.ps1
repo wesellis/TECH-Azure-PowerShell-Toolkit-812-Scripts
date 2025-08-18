@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Push Changes
+    Push Changes
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,14 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Push Changes
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the path to the sample
-    [string] $WESampleName = $WEENV:SAMPLE_NAME # the name of the sample or folder path from the root of the repo e.g. "sample-type/sample-name"
+    [string] $WESampleName = $WEENV:SAMPLE_NAME # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
 )
 
 $gitStatus = $(git status)
@@ -36,7 +55,7 @@ Write-Output " ^^^^ autocrlf"
 
         
 if($gitStatus -like " *Changes not staged for commit:*" -or 
-   $gitStatus -like " *Untracked files:*"){
+   $gitStatus -like " *Untracked files:*" ){
    
     Write-Output " found changes in $gitStatus"
             
@@ -54,11 +73,11 @@ if($gitStatus -like " *Changes not staged for commit:*" -or
     # not sure we want to always add the PR# to the message but we're using it during testing so we can test multiple runs of the pipeline without another PR merge
     # also add the files that were committed to the msg
     $msg = " for ($WESampleName)"
-    if($gitStatus -like " *azuredeploy.json*"){
+    if($gitStatus -like " *azuredeploy.json*" ){
         $files = " azuredeploy.json"
     }
-    if($gitStatus -like " *readme.md*"){
-        $files = $files + " README.md"
+    if($gitStatus -like " *readme.md*" ){
+       ;  $files = $files + " README.md"
     }
    ;  $msg = " update $files $msg ***NO_CI***" # add ***NO_CI*** so this commit doesn't trigger CI
 
@@ -80,10 +99,8 @@ if($gitStatus -like " *Changes not staged for commit:*" -or
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Tombstonedscnodes
+    Tombstonedscnodes
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Tombstonedscnodes
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#PSScriptInfo
 
@@ -62,8 +80,11 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -77,7 +98,7 @@ $WEUnregisterAction = $false
 $WEUnregisterDays = 3
 
 
-$WEServicePrincipalConnection = Get-AutomationConnection -Name "AzureRunAsConnection"
+$WEServicePrincipalConnection = Get-AutomationConnection -Name " AzureRunAsConnection"
 Add-AzureRmAccount `
     -ServicePrincipal `
     -TenantId $WEServicePrincipalConnection.TenantId `
@@ -85,10 +106,10 @@ Add-AzureRmAccount `
     -CertificateThumbprint $WEServicePrincipalConnection.CertificateThumbprint | Write-Verbose
 $WEContext = Set-AzureRmContext -SubscriptionId $WEServicePrincipalConnection.SubscriptionID | Write-Verbose
 
-
-$WESetTombstonedNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $WEResourceGroupName -AutomationAccountName $WEAutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$WETombstoneDays) -AND $_.NodeConfigurationName -notlike " Tombstoned.*"}
+; 
+$WESetTombstonedNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $WEResourceGroupName -AutomationAccountName $WEAutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$WETombstoneDays) -AND $_.NodeConfigurationName -notlike " Tombstoned.*" }
 Write-Output " Nodes to be tombstoned:"
-if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes"}
+if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes" }
 else {
     $WESetTombstonedNodes | % Name | Write-Output
 }
@@ -97,7 +118,7 @@ Write-Output ""
 ; 
 $WEUnregisterNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $WEResourceGroupName -AutomationAccountName $WEAutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$WEUnregisterDays) -AND $_.NodeConfigurationName -like " Tombstoned.*" }
 Write-Output " Nodes to be unregistered:"
-if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes"}
+if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes" }
 else {
     $WEUnregisterNodes | % Name | Write-Output
 }
@@ -108,10 +129,10 @@ Write-Output ""
 
 if ($true -eq $WETombstoneAction) {
     Write-Output " Taking action: Tombstone nodes"
-    if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes"}
+    if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes" }
     else {
         foreach ($WESetTombstonedNode in $WESetTombstonedNodes) {
-            Write-Output " Setting node configuration to "Tombstoned.$($WESetTombstonedNode.NodeConfigurationName)" for node $($WESetTombstonedNode.Name) with Id $($WESetTombstonedNode.Id) from account $($WESetTombstonedNode.AutomationAccountName)"
+            Write-Output " Setting node configuration to " Tombstoned.$($WESetTombstonedNode.NodeConfigurationName)" for node $($WESetTombstonedNode.Name) with Id $($WESetTombstonedNode.Id) from account $($WESetTombstonedNode.AutomationAccountName)"
             $WESetTombstonedNode | Set-AzureRmAutomationDscNode -NodeConfigurationName " Tombstoned.$($WESetTombstonedNode.NodeConfigurationName)" -Force
         }
     }
@@ -121,7 +142,7 @@ Write-Output ""
 
 if ($true -eq $WEUnregisterAction) {
     Write-Output " Taking action: Unregister nodes"
-    if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes"}
+    if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes" }
     else {
         foreach ($WEUnregisterNode in $WEUnregisterNodes) {
             Write-Output " Unregistering node $($WEUnregisterNode.Name) with Id $($WEUnregisterNode.Id) from account $($WEUnregisterNode.AutomationAccountName)"
@@ -131,10 +152,8 @@ if ($true -eq $WEUnregisterAction) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Artifact.Tests
+    Run Artifact.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Run Artifact.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
@@ -31,7 +49,7 @@ Describe " run-artifact.Tests" {
         Set-Location -Path " $env:SystemDrive\"
 
         Mock ____ExitOne {}
-       ;  $defaultParamsJson = @{StrParam = '`$value1=" str1";`$value2=''str2'''; IntParam = 4; BoolParam = $true } | ConvertTo-Json -Depth 10 -Compress
+       ;  $defaultParamsJson = @{StrParam = '`$value1=" str1" ;`$value2=''str2'''; IntParam = 4; BoolParam = $true } | ConvertTo-Json -Depth 10 -Compress
         $script:defaultParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($defaultParamsJson)))
     }
 
@@ -39,22 +57,22 @@ Describe " run-artifact.Tests" {
         ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $script:defaultParams
         Should -Invoke ____ExitOne -Times 0 -Exactly
         $global:TestResults | Should -Not -BeNullOrEmpty
-        $global:TestResults.StrParam | Should -Be '$value1=" str1";$value2=''str2'''
+        $global:TestResults.StrParam | Should -Be '$value1=" str1" ;$value2=''str2'''
         $global:TestResults.IntParam | Should -Be 4
         $global:TestResults.BoolParam | Should -Be $true
-        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
-        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
+        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
+        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
     }
 
     It " SuccessWithComplexString" {
-       ;  $inputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -Value `" --retry 7`"; Get-Content -Path `$env:USERPROFILE\\.curlrc' } | ConvertTo-Json -Depth 10 -Compress
+       ;  $inputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -Value `" --retry 7`" ; Get-Content -Path `$env:USERPROFILE\\.curlrc' } | ConvertTo-Json -Depth 10 -Compress
         $inputParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($inputParamsJson)))
         ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $inputParams
         Should -Invoke ____ExitOne -Times 0 -Exactly
         $global:TestResults | Should -Not -BeNullOrEmpty
-        $global:TestResults.StrParam | Should -Be 'Set-Content -Path $env:USERPROFILE\\.curlrc -Value " --retry 7"; Get-Content -Path $env:USERPROFILE\\.curlrc'
-        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
-        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
+        $global:TestResults.StrParam | Should -Be 'Set-Content -Path $env:USERPROFILE\\.curlrc -Value " --retry 7" ; Get-Content -Path $env:USERPROFILE\\.curlrc'
+        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
+        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
     }
 
     It " SuccessWithEmptyParams" {
@@ -64,8 +82,8 @@ Describe " run-artifact.Tests" {
         $global:TestResults.StrParam | Should -Be ''
         $global:TestResults.IntParam | Should -Be 0
         $global:TestResults.BoolParam | Should -Be $false
-        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
-        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test")
+        $global:TestResults.PSScriptRoot | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
+        Get-Location | Should -Be (Join-Path $WEPSScriptRoot " run-artifact-test" )
     }
 
     It " ShouldThrow" {

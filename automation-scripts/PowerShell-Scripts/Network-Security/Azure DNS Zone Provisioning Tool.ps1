@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Dns Zone Provisioning Tool
+    Azure Dns Zone Provisioning Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Dns Zone Provisioning Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
 try {
@@ -26,18 +44,20 @@ try {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -45,11 +65,15 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEZoneName,
@@ -60,13 +84,13 @@ Write-WELog " Provisioning DNS Zone: $WEZoneName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 
 
-if ($WEZoneName -notmatch " ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$") {
+if ($WEZoneName -notmatch " ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$" ) {
     throw " Invalid DNS zone name format. Please provide a valid domain name."
 }
 
 
 if ($WETags.Count -gt 0) {
-    $WEDnsZone = New-AzDnsZone -ResourceGroupName $WEResourceGroupName -Name $WEZoneName -Tag $WETags
+   ;  $WEDnsZone = New-AzDnsZone -ResourceGroupName $WEResourceGroupName -Name $WEZoneName -Tag $WETags
 } else {
    ;  $WEDnsZone = New-AzDnsZone -ResourceGroupName $WEResourceGroupName -Name $WEZoneName
 }
@@ -94,10 +118,8 @@ Write-WELog " `nDNS Zone provisioning completed at $(Get-Date)" " INFO"
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

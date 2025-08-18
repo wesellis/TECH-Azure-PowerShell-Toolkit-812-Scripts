@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Autosnooze Stopvm Child
+    Autosnooze Stopvm Child
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Autosnooze Stopvm Child
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -40,7 +58,7 @@ if ($WEWebhookData -ne $null) {
     $WEWebhookHeaders =   $WEWebhookData.RequestHeader
        
     # Information on the webhook name that called This
-    Write-Output "This runbook was started from webhook $WEWebhookName."
+    Write-Output " This runbook was started from webhook $WEWebhookName."
        
     # Obtain the WebhookBody containing the AlertContext
     $WEWebhookBody = (ConvertFrom-Json -InputObject $WEWebhookBody)
@@ -79,7 +97,7 @@ if ($WEWebhookData -ne $null) {
     {
         if (!$servicePrincipalConnection)
         {
-            $WEErrorMessage = " Connection $connectionName not found."
+           ;  $WEErrorMessage = " Connection $connectionName not found."
             throw $WEErrorMessage
         } else{
             Write-Error -Message $_.Exception

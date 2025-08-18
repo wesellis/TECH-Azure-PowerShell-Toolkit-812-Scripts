@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configurespse
+    Configurespse
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configurespse
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 configuration ConfigureSPVM
 {
@@ -56,26 +74,26 @@ param(
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
     
     # Init
-    [String] $WEInterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $WEInterfaceAlias = (Get-NetAdapter | Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
     [String] $WEComputerName = Get-Content env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
-    [String] $WEDomainLDAPPath = " DC=$($WEDomainFQDN.Split("." )[0]),DC=$($WEDomainFQDN.Split("." )[1])"
+    [String] $WEDomainLDAPPath = " DC=$($WEDomainFQDN.Split(" ." )[0]),DC=$($WEDomainFQDN.Split(" ." )[1])"
     [String] $WEAdditionalUsersPath = " OU=AdditionalUsers,DC={0},DC={1}" -f $WEDomainFQDN.Split('.')[0], $WEDomainFQDN.Split('.')[1]
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)", $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)", $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)", $WESPFarmCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)", $WESPSvcCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)", $WESPAppPoolCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)", $WESPADDirSyncCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSvcCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSvcCreds.UserName)" , $WESPSvcCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPAppPoolCreds.UserName)" , $WESPAppPoolCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPADDirSyncCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPADDirSyncCreds.UserName)" , $WESPADDirSyncCreds.Password)
     
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
     [String] $WEDCSetupPath = " \\$WEDCServerName\C$\DSC Data"
     [String] $WEDscStatusFilePath = " $WESetupPath\dsc-status-$WEComputerName.log"
-    [String] $WESharePointBuildLabel = $WESharePointVersion.Split(" -")[1]
-    [String] $WESharePointBitsPath = Join-Path -Path $WESetupPath -ChildPath " Binaries" #[environment]::GetEnvironmentVariable(" temp"," machine")
+    [String] $WESharePointBuildLabel = $WESharePointVersion.Split(" -" )[1]
+    [String] $WESharePointBitsPath = Join-Path -Path $WESetupPath -ChildPath " Binaries" #[environment]::GetEnvironmentVariable(" temp" ," machine" )
     [String] $WESharePointIsoFullPath = Join-Path -Path $WESharePointBitsPath -ChildPath " OfficeServer.iso"
     [String] $WESharePointIsoDriveLetter = " S"
     [String] $WEAdfsDnsEntryName = " adfs"
@@ -88,15 +106,15 @@ param(
     [String] $WESPDBPrefix = " SPDSC_"
     [String] $WEServiceAppPoolName = " SharePoint Service Applications"
     [String] $WEUpaServiceName = " User Profile Service Application"
-    [String] $WEAppDomainFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps", $WEDomainFQDN.Split('.')[1]
-    [String] $WEAppDomainIntranetFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps-Intranet", $WEDomainFQDN.Split('.')[1]
+    [String] $WEAppDomainFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps" , $WEDomainFQDN.Split('.')[1]
+    [String] $WEAppDomainIntranetFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps-Intranet" , $WEDomainFQDN.Split('.')[1]
     [String] $WEMySiteHostAlias = " OhMy"
     [String] $WEHNSC1Alias = " HNSC1"
     [String] $WEAddinsSiteDNSAlias = " addins"
     [String] $WEAddinsSiteName = " Provider-hosted addins"
     [String] $WETrustedIdChar = " e"
     [String] $WESPTeamSiteTemplate = " STS#3"
-    [String] $WEAdfsOidcIdentifier = " fae5bd07-be63-4a64-a28c-7931a4ebf62b"
+    [String];  $WEAdfsOidcIdentifier = " fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     
     Node localhost
     {
@@ -122,16 +140,16 @@ param(
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
         WindowsFeature AddADTools {
-            Name = " RSAT-AD-Tools"; Ensure = " Present"; 
+            Name = " RSAT-AD-Tools" ; Ensure = " Present" ; 
         }
         WindowsFeature AddDnsTools {
-            Name = " RSAT-DNS-Server"; Ensure = " Present"; 
+            Name = " RSAT-DNS-Server" ; Ensure = " Present" ; 
         }
         WindowsFeature AddADLDS {
-            Name = " RSAT-ADLDS"; Ensure = " Present"; 
+            Name = " RSAT-ADLDS" ; Ensure = " Present" ; 
         }
         WindowsFeature AddADCSManagementTools {
-            Name = " RSAT-ADCS-Mgmt"; Ensure = " Present"; 
+            Name = " RSAT-ADCS-Mgmt" ; Ensure = " Present" ; 
         }
         DnsServerAddress SetDNS {
             Address = $WEDNSServerIP; InterfaceAlias = $WEInterfaceAlias; AddressFamily = 'IPv4' 
@@ -140,15 +158,15 @@ param(
 
         # xCredSSP is required forSharePointDsc resources SPUserProfileServiceApp and SPDistributedCacheService
         xCredSSP CredSSPServer {
-            Ensure = " Present"; Role = " Server"; DependsOn = " [DnsServerAddress]SetDNS" 
+            Ensure = " Present" ; Role = " Server" ; DependsOn = " [DnsServerAddress]SetDNS" 
         }
         xCredSSP CredSSPClient {
-            Ensure = " Present"; Role = " Client"; DelegateComputers = " *.$WEDomainFQDN", " localhost"; DependsOn = " [xCredSSP]CredSSPServer" 
+            Ensure = " Present" ; Role = " Client" ; DelegateComputers = " *.$WEDomainFQDN" , " localhost" ; DependsOn = " [xCredSSP]CredSSPServer" 
         }
 
         # Allow NTLM on HTTPS sites when site host name is different than the machine name - https://docs.microsoft.com/en-US/troubleshoot/windows-server/networking/accessing-server-locally-with-fqdn-cname-alias-denied
         Registry DisableLoopBackCheck {
-            Key = " HKLM:\System\CurrentControlSet\Control\Lsa"; ValueName = " DisableLoopbackCheck"; ValueData = " 1"; ValueType = " Dword"; Ensure = " Present" 
+            Key = " HKLM:\System\CurrentControlSet\Control\Lsa" ; ValueName = " DisableLoopbackCheck" ; ValueData = " 1" ; ValueType = " Dword" ; Ensure = " Present" 
         }
 
         # Enable TLS 1.2 - https://learn.microsoft.com/en-us/azure/active-directory/app-proxy/application-proxy-add-on-premises-application#tls-requirements
@@ -193,26 +211,26 @@ param(
         # From https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell :
         # Starting in Windows 10, version 1607, MAX_PATH limitations have been removed from common Win32 file and directory functions. However, you must opt-in to the new behavior.
         Registry SetLongPathsEnabled {
-            Key = " HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"; ValueName = " LongPathsEnabled"; ValueType = " DWORD"; ValueData = " 1"; Force = $true; Ensure = " Present" 
+            Key = " HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" ; ValueName = " LongPathsEnabled" ; ValueType = " DWORD" ; ValueData = " 1" ; Force = $true; Ensure = " Present" 
         }
         
         Registry ShowWindowsExplorerRibbon {
-            Key = " HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"; ValueName = " ExplorerRibbonStartsMinimized"; ValueType = " DWORD"; ValueData = " 4"; Force = $true; Ensure = " Present" 
+            Key = " HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" ; ValueName = " ExplorerRibbonStartsMinimized" ; ValueType = " DWORD" ; ValueData = " 4" ; Force = $true; Ensure = " Present" 
         }
 
         # # Set registry keys to allow OneDrive NGSC to connect to SPS using OIDC - part 1 (machine-wide)
         # Registry OneDriveOIDC_PrioritizeOIDCOverLegacyAuthN {
-        #     Key = " HKLM:\SOFTWARE\Policies\Microsoft\OneDrive"; ValueName = " SharePointOnPremOIDC"; ValueType = " DWORD"; ValueData = " 1"; Ensure = " Present" 
+        #     Key = " HKLM:\SOFTWARE\Policies\Microsoft\OneDrive" ; ValueName = " SharePointOnPremOIDC" ; ValueType = " DWORD" ; ValueData = " 1" ; Ensure = " Present" 
         # }
         # Registry OneDriveOIDC_PrioritizeSPSOverSPO {
-        #     Key = " HKLM:\SOFTWARE\Policies\Microsoft\OneDrive"; ValueName = " SharePointOnPremPrioritization"; ValueType = " DWORD"; ValueData = " 1"; Ensure = " Present" 
+        #     Key = " HKLM:\SOFTWARE\Policies\Microsoft\OneDrive" ; ValueName = " SharePointOnPremPrioritization" ; ValueType = " DWORD" ; ValueData = " 1" ; Ensure = " Present" 
         # }
         # Registry OneDriveOIDC_SPSUrl {
-        #     Key = " HKLM:\Software\Policies\Microsoft\OneDrive"; ValueName = " SharePointOnPremFrontDoorUrl"; ValueType = " String"; ValueData = " https://$WESharePointSitesAuthority.$WEDomainFQDN"; Ensure = " Present" 
+        #     Key = " HKLM:\Software\Policies\Microsoft\OneDrive" ; ValueName = " SharePointOnPremFrontDoorUrl" ; ValueType = " String" ; ValueData = " https://$WESharePointSitesAuthority.$WEDomainFQDN" ; Ensure = " Present" 
         # }
         
         SqlAlias AddSqlAlias {
-            Ensure = " Present"; Name = $WESQLAlias; ServerName = $WESQLServerName; Protocol = " TCP"; TcpPort = 1433 
+            Ensure = " Present" ; Name = $WESQLAlias; ServerName = $WESQLServerName; Protocol = " TCP" ; TcpPort = 1433 
         }
         
         Script EnableFileSharing {
@@ -376,7 +394,7 @@ param(
             DependsOn        = " [SPInstallPrereqs]InstallPrerequisites"
         }
 
-        if ($WESharePointBuildLabel -ne " RTM") {
+        if ($WESharePointBuildLabel -ne " RTM" ) {
             foreach ($package in ($WESharePointBits | Where-Object { $_.Label -eq $WESharePointBuildLabel }).Packages) {
                 $packageUrl = [uri] $package.DownloadUrl
                 $packageFilename = $packageUrl.Segments[$packageUrl.Segments.Count - 1]
@@ -400,7 +418,7 @@ param(
                         $needReboot = $false
                         Write-Verbose -Verbose -Message " Starting installation of SharePoint update '$WESharePointBuildLabel', file '$($packageFile.Name)'..."
                         Unblock-File -Path $packageFile -Confirm:$false
-                        $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
+                       ;  $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
                         if ($exitRebootCodes.Contains($process.ExitCode)) {
                            ;  $needReboot = $true
                         }
@@ -414,9 +432,9 @@ param(
                     }
                     TestScript = {
                         $WESharePointBuildLabel = $using:SharePointBuildLabel
-                        $packageFilePath = $using:packageFilePath
+                       ;  $packageFilePath = $using:packageFilePath
                        ;  $packageFile = Get-ChildItem -Path $packageFilePath
-                        return (Test-Path " HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($WESharePointBuildLabel)_$($packageFile.Name)")
+                        return (Test-Path " HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($WESharePointBuildLabel)_$($packageFile.Name)" )
                     }
                     GetScript  = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                     DependsOn  = " [SPInstall]InstallBinaries"
@@ -440,25 +458,25 @@ param(
 
         # IIS cleanup cannot be executed earlier in SharePoint SE: It uses a base image of Windows Server without IIS (installed by SPInstallPrereqs)
         WebAppPool RemoveDotNet2Pool {
-            Name = " .NET v2.0"; Ensure = " Absent"; 
+            Name = " .NET v2.0" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet2ClassicPool {
-            Name = " .NET v2.0 Classic"; Ensure = " Absent"; 
+            Name = " .NET v2.0 Classic" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet45Pool {
-            Name = " .NET v4.5"; Ensure = " Absent"; 
+            Name = " .NET v4.5" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet45ClassicPool {
-            Name = " .NET v4.5 Classic"; Ensure = " Absent"; 
+            Name = " .NET v4.5 Classic" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveClassicDotNetPool {
-            Name = " Classic .NET AppPool"; Ensure = " Absent"; 
+            Name = " Classic .NET AppPool" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDefaultAppPool {
-            Name = " DefaultAppPool"; Ensure = " Absent"; 
+            Name = " DefaultAppPool" ; Ensure = " Absent" ; 
         }
         WebSite    RemoveDefaultWebSite {
-            Name = " Default Web Site"; Ensure = " Absent"; PhysicalPath = " C:\inetpub\wwwroot"; 
+            Name = " Default Web Site" ; Ensure = " Absent" ; PhysicalPath = " C:\inetpub\wwwroot" ; 
         }
 
         Script CreateSPLOGSFileShare {
@@ -466,7 +484,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'")) {
+                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -480,7 +498,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'")) {
+                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 }
                 else {
@@ -510,7 +528,7 @@ param(
             {
                 $dnsRecordFQDN = " $($using:AdfsDnsEntryName).$($using:DomainFQDN)"
                 $dnsRecordFound = $false
-                $sleepTime = 15
+               ;  $sleepTime = 15
                 do {
                     try {
                         [Net.DNS]::GetHostEntry($dnsRecordFQDN)
@@ -524,7 +542,7 @@ param(
                 } while ($false -eq $dnsRecordFound)
             }
             GetScript  = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
+            TestScript = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)" ); return $true } catch { return $false } }
             DependsOn  = " [DnsServerAddress]SetDNS"
         }
 
@@ -561,21 +579,21 @@ param(
         }
 
         Registry ShowFileExtensions {
-            Key = " HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; ValueName = " HideFileExt"; ValueType = " DWORD"; ValueData = " 0"; Force = $true;
+            Key = " HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" ; ValueName = " HideFileExt" ; ValueType = " DWORD" ; ValueData = " 0" ; Force = $true;
             PsDscRunAsCredential = $WEDomainAdminCredsQualified; Ensure = " Present"
         }
 
         # # Set registry keys to allow OneDrive NGSC to connect to SPS using OIDC - part 2 (user-specific settings)
         # Registry OneDriveOIDC_EnableOIDCForSPS {
-        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInRampOverrides"; ValueName = " 2086"; ValueType = " DWORD"; ValueData = " 1"
+        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInRampOverrides" ; ValueName = " 2086" ; ValueType = " DWORD" ; ValueData = " 1"
         #     PsDscRunAsCredential = $WEDomainAdminCredsQualified; Ensure = " Present" 
         # }
         # Registry OneDriveOIDC_EnableOneAuthorSPS {
-        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInRampOverrides"; ValueName = " 2042"; ValueType = " DWORD"; ValueData = " 1"
+        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInRampOverrides" ; ValueName = " 2042" ; ValueType = " DWORD" ; ValueData = " 1"
         #     PsDscRunAsCredential = $WEDomainAdminCredsQualified; Ensure = " Present" 
         # }
         # Registry OneDriveOIDC_IniFileNamingForEmailAndUpn {
-        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInSettingsOverrides"; ValueName = " 204"; ValueType = " String"; ValueData = " -1835"
+        #     Key = " HKCU:\Software\Microsoft\OneDrive\PreSignInSettingsOverrides" ; ValueName = " 204" ; ValueType = " String" ; ValueData = " -1835"
         #     PsDscRunAsCredential = $WEDomainAdminCredsQualified; Ensure = " Present" 
         # }
 
@@ -708,7 +726,7 @@ param(
         Group AddSPSetupAccountToAdminGroup {
             GroupName            = " Administrators"
             Ensure               = " Present"
-            MembersToInclude     = @(" $($WESPSetupCredsQualified.UserName)")
+            MembersToInclude     = @(" $($WESPSetupCredsQualified.UserName)" )
             Credential           = $WEDomainAdminCredsQualified
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
             DependsOn            = " [ADUser]CreateSPSetupAccount"
@@ -732,7 +750,7 @@ param(
             Password              = $WESPAppPoolCreds
             PasswordNeverExpires  = $true
             Ensure                = " Present"
-            ServicePrincipalNames = @(" HTTP/$WESharePointSitesAuthority.$($WEDomainFQDN)", " HTTP/$WEMySiteHostAlias.$($WEDomainFQDN)", " HTTP/$WEHNSC1Alias.$($WEDomainFQDN)", " HTTP/$WESharePointSitesAuthority", " HTTP/$WEMySiteHostAlias", " HTTP/$WEHNSC1Alias")
+            ServicePrincipalNames = @(" HTTP/$WESharePointSitesAuthority.$($WEDomainFQDN)" , " HTTP/$WEMySiteHostAlias.$($WEDomainFQDN)" , " HTTP/$WEHNSC1Alias.$($WEDomainFQDN)" , " HTTP/$WESharePointSitesAuthority" , " HTTP/$WEMySiteHostAlias" , " HTTP/$WEHNSC1Alias" )
             PsDscRunAsCredential  = $WEDomainAdminCredsQualified
             DependsOn             = " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
@@ -788,7 +806,7 @@ param(
             Name                 = " fiddler"
             Ensure               = " Present"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [cChocoInstaller]InstallChoco", " [PendingReboot]RebootOnSignalFromJoinDomain"
+            DependsOn            = " [cChocoInstaller]InstallChoco" , " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         # Install ULSViewer as $WEDomainAdminCredsQualified to ensure that the shortcut is visible on the desktop
@@ -814,7 +832,7 @@ param(
                 $retrySleep = 30
                 $server = $using:SQLAlias
                 $db = " master"
-                $retry = $true
+               ;  $retry = $true
                 while ($retry) {
                    ;  $sqlConnection = New-Object System.Data.SqlClient.SqlConnection " Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
                     try {
@@ -860,7 +878,7 @@ param(
             IsSingleInstance                   = " Yes"
             SkipRegisterAsDistributedCacheHost = $false
             Ensure                             = " Present"
-            DependsOn                          = " [Script]WaitForSQL", " [Group]AddSPSetupAccountToAdminGroup", " [ADUser]CreateSParmAccount", " [ADUser]CreateSPSvcAccount", " [ADUser]CreateSPAppPoolAccount", " [ADUser]CreateSPSuperUserAccount", " [ADUser]CreateSPSuperReaderAccount", " [ADObjectPermissionEntry]GrantReplicatingDirectoryChanges", " [Script]CreateWSManSPNsIfNeeded"
+            DependsOn                          = " [Script]WaitForSQL" , " [Group]AddSPSetupAccountToAdminGroup" , " [ADUser]CreateSParmAccount" , " [ADUser]CreateSPSvcAccount" , " [ADUser]CreateSPAppPoolAccount" , " [ADUser]CreateSPSuperUserAccount" , " [ADUser]CreateSPSuperReaderAccount" , " [ADObjectPermissionEntry]GrantReplicatingDirectoryChanges" , " [Script]CreateWSManSPNsIfNeeded"
         }
 
         Script AddRequiredDatabasesPermissions {
@@ -1035,7 +1053,7 @@ param(
         #     DependsOn            = " [SPWebApplication]CreateMainWebApp"
         # }
 
-        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\", otherwise certificate request will fail
+        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\" , otherwise certificate request will fail
         Script UpdateGPOToTrustRootCACert {
             SetScript            =
             {
@@ -1172,7 +1190,7 @@ param(
             )
             ClaimProviderName       = $WELdapcpSolutionName
             Ensure                  = " Present" 
-            DependsOn               = " [Script]SetFarmPropertiesForOIDC", " [Script]InstallLdapcpFeatures"
+            DependsOn               = " [Script]SetFarmPropertiesForOIDC" , " [Script]InstallLdapcpFeatures"
             PsDscRunAsCredential    = $WEDomainAdminCredsQualified
         }
 
@@ -1244,7 +1262,7 @@ param(
                 }
             )
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPWebApplicationExtension]ExtendMainWebApp", " [SPTrustedIdentityTokenIssuer]CreateSPTrust"
+            DependsOn            = " [SPWebApplicationExtension]ExtendMainWebApp" , " [SPTrustedIdentityTokenIssuer]CreateSPTrust"
         }
 
         # Use SharePoint SE to generate the CSR and give the private key so it can manage it
@@ -1263,7 +1281,7 @@ param(
 
                 Write-Verbose -Verbose -Message " Creating certificate request for CN=$sharePointSitesAuthority.$domainFQDN..."
                 # Generate CSR
-                New-SPCertificate -FriendlyName " $sharePointSitesAuthority Certificate" -KeySize 2048 -CommonName " $sharePointSitesAuthority.$domainFQDN" -AlternativeNames @(" *.$domainFQDN", " *.$appDomainIntranetFQDN") -Organization " $domainNetbiosName" -Exportable -HashAlgorithm SHA256 -Path " $setupPath\$sharePointSitesAuthority.csr"
+                New-SPCertificate -FriendlyName " $sharePointSitesAuthority Certificate" -KeySize 2048 -CommonName " $sharePointSitesAuthority.$domainFQDN" -AlternativeNames @(" *.$domainFQDN" , " *.$appDomainIntranetFQDN" ) -Organization " $domainNetbiosName" -Exportable -HashAlgorithm SHA256 -Path " $setupPath\$sharePointSitesAuthority.csr"
 
                 # Submit CSR to CA
                 & certreq.exe -submit -config " $dcName.$domainFQDN\$domainNetbiosName-$dcName-CA" -attrib " CertificateTemplate:Webserver" " $setupPath\$sharePointSitesAuthority.csr" " $setupPath\$sharePointSitesAuthority.cer" " $setupPath\$sharePointSitesAuthority.p7b" " $setupPath\$sharePointSitesAuthority.rsp"
@@ -1296,7 +1314,7 @@ param(
                 $domainNetbiosName = $using:DomainNetbiosName
                 $sharePointSitesAuthority = $using:SharePointSitesAuthority
                 
-                # $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq " CN=$sharePointSitesAuthority.$domainFQDN, O=$domainNetbiosName" }
+                #;  $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq " CN=$sharePointSitesAuthority.$domainFQDN, O=$domainNetbiosName" }
                ;  $cert = Get-SPCertificate -Identity " $sharePointSitesAuthority Certificate" -ErrorAction SilentlyContinue
                 if ($null -eq $cert) {
                     return $false   # Run SetScript
@@ -1305,7 +1323,7 @@ param(
                     return $true    # Certificate is already created
                 }
             }
-            DependsOn            = " [Script]UpdateGPOToTrustRootCACert", " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+            DependsOn            = " [Script]UpdateGPOToTrustRootCACert" , " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
         }
 
@@ -1378,7 +1396,7 @@ param(
             SyncDBName           = $WESPDBPrefix + " UPA_Sync"
             EnableNetBIOS        = $false
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPServiceAppPool]MainServiceAppPool", " [SPServiceInstance]UPAServiceInstance", " [SPSite]CreateMySiteHost"
+            DependsOn            = " [SPServiceAppPool]MainServiceAppPool" , " [SPServiceInstance]UPAServiceInstance" , " [SPSite]CreateMySiteHost"
         }
 
         # Creating this site takes about 1 min but it is not so useful, skip it
@@ -1417,7 +1435,7 @@ param(
             ApplicationPool      = $WEServiceAppPoolName
             DatabaseName         = " $($WESPDBPrefix)SubscriptionSettings"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPServiceAppPool]MainServiceAppPool", " [SPServiceInstance]StartSubscriptionSettingsServiceInstance"
+            DependsOn            = " [SPServiceAppPool]MainServiceAppPool" , " [SPServiceInstance]StartSubscriptionSettingsServiceInstance"
         }
 
         SPAppManagementServiceApp CreateAppManagementServiceApp {
@@ -1425,7 +1443,7 @@ param(
             ApplicationPool      = $WEServiceAppPoolName
             DatabaseName         = " $($WESPDBPrefix)AppManagement"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPServiceAppPool]MainServiceAppPool", " [SPServiceInstance]StartAppManagementServiceInstance"
+            DependsOn            = " [SPServiceAppPool]MainServiceAppPool" , " [SPServiceInstance]StartAppManagementServiceInstance"
         }
 
         SPServiceAppSecurity SetUserProfileServiceSecurity {
@@ -1435,11 +1453,11 @@ param(
                 # Grant spsvc full control to UPA to allow newsfeeds to work properly
                 MSFT_SPServiceAppSecurityEntry {
                     Username     = $WESPSvcCredsQualified.UserName
-                    AccessLevels = @(" Full Control")
+                    AccessLevels = @(" Full Control" )
                 };
                 MSFT_SPServiceAppSecurityEntry {
                     Username     = $WEDomainAdminCredsQualified.UserName
-                    AccessLevels = @(" Full Control")
+                    AccessLevels = @(" Full Control" )
                 }
             )
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
@@ -1451,7 +1469,7 @@ param(
         # - In User Profile Service:
         #    - Create a synchronization connection that uses the authentication type " Trusted Claims Provider Authentication"
         #    - Edit profile property " Claim User Identifier" to remove default mapping, and readd one that uses the LDAP attribute " userPrincipalName"
-        # - In the trust: Associate the claims provider: $trust = Get-SPTrustedIdentityTokenIssuer " contoso.local"; $trust.ClaimProviderName = " contoso.local"; $trust.Update();
+        # - In the trust: Associate the claims provider: $trust = Get-SPTrustedIdentityTokenIssuer " contoso.local" ; $trust.ClaimProviderName = " contoso.local" ; $trust.Update();
         Script ConfigureUPAClaimProvider {
             SetScript            = 
             {
@@ -1463,7 +1481,7 @@ param(
                     # LanguageSynchronizationJob must be executed before updating profile properties, to ensure their property DisplayNameLocalized is set with a localized value
                     # LanguageSynchronizationJob basically populates SQL table [SPDSC_UPA_Profiles].[upa].[PropertyListLoc]
                     # If this job is not run, $property.CoreProperty.Commit() will throw: Exception calling " Commit" with " 0" argument(s): " The display name must be specified in order to create a property." 
-                    $job = Get-SPTimerJob -Type " Microsoft.Office.Server.Administration.UserProfileApplication+LanguageSynchronizationJob"
+                   ;  $job = Get-SPTimerJob -Type " Microsoft.Office.Server.Administration.UserProfileApplication+LanguageSynchronizationJob"
                     $job.Execute()
                     
                     # Gets the trust
@@ -1523,7 +1541,7 @@ param(
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 return $false
             }
-            DependsOn            = " [SPTrustedIdentityTokenIssuer]CreateSPTrust", " [SPSite]CreateRootSite", " [SPUserProfileServiceApp]CreateUserProfileServiceApp"
+            DependsOn            = " [SPTrustedIdentityTokenIssuer]CreateSPTrust" , " [SPSite]CreateRootSite" , " [SPUserProfileServiceApp]CreateUserProfileServiceApp"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
         }
 
@@ -1535,7 +1553,7 @@ param(
             Server                = $WEDomainLDAPPath
             UseSSL                = $true
             Port                  = 636
-            IncludedOUs           = @(" CN=Users,$WEDomainLDAPPath", $WEAdditionalUsersPath)
+            IncludedOUs           = @(" CN=Users,$WEDomainLDAPPath" , $WEAdditionalUsersPath)
             Force                 = $false
             ConnectionType        = " ActiveDirectory"
             UseDisabledFilter     = $true
@@ -1558,7 +1576,7 @@ param(
             AppDomain            = $WEAppDomainFQDN
             Prefix               = " addin"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPSubscriptionSettingsServiceApp]CreateSubscriptionServiceApp", " [SPAppManagementServiceApp]CreateAppManagementServiceApp"
+            DependsOn            = " [SPSubscriptionSettingsServiceApp]CreateSubscriptionServiceApp" , " [SPAppManagementServiceApp]CreateAppManagementServiceApp"
         }        
 
         SPWebApplicationAppDomain ConfigureAppDomainDefaultZone {
@@ -1584,7 +1602,7 @@ param(
         SPAppCatalog SetAppCatalogUrl {
             SiteUrl              = " http://$WESharePointSitesAuthority/sites/AppCatalog"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPSite]CreateAppCatalog", " [SPAppManagementServiceApp]CreateAppManagementServiceApp"
+            DependsOn            = " [SPSite]CreateAppCatalog" , " [SPAppManagementServiceApp]CreateAppManagementServiceApp"
         }
         
         # This team site is tested by VM FE to wait before joining the farm, so it acts as a milestone and it should be created only when all SharePoint services are created
@@ -1597,7 +1615,7 @@ param(
             Template             = $WESPTeamSiteTemplate
             CreateDefaultGroups  = $true
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication", " [SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone", " [SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone", " [SPAppCatalog]SetAppCatalogUrl"
+            DependsOn            = " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication" , " [SPWebApplicationAppDomain]ConfigureAppDomainDefaultZone" , " [SPWebApplicationAppDomain]ConfigureAppDomainIntranetZone" , " [SPAppCatalog]SetAppCatalogUrl"
         }
 
         CertReq GenerateAddinsSiteCertificate {
@@ -1608,7 +1626,7 @@ param(
             SubjectAltName      = " dns=$WEAddinsSiteDNSAlias.$($WEDomainFQDN)"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider"'
+            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
@@ -1660,7 +1678,7 @@ param(
             )
             Ensure               = " Present"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [CertReq]GenerateAddinsSiteCertificate", " [File]CreateAddinsSiteDirectory", " [WebAppPool]CreateAddinsSiteApplicationPool"
+            DependsOn            = " [CertReq]GenerateAddinsSiteCertificate" , " [File]CreateAddinsSiteDirectory" , " [WebAppPool]CreateAddinsSiteApplicationPool"
         }
 
         Script CopyIISWelcomePageToAddinsSite {
@@ -1675,7 +1693,7 @@ param(
             }
             TestScript           = 
             {
-                if ( (Get-ChildItem -Path " C:\inetpub\wwwroot\addins" -Name " iisstart*") -eq $null) {
+                if ( (Get-ChildItem -Path " C:\inetpub\wwwroot\addins" -Name " iisstart*" ) -eq $null) {
                     return $false
                 }
                 else {
@@ -1693,7 +1711,7 @@ param(
             FriendlyName        = " Sign OAuth tokens of high-trust add-ins"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider"'
+            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
@@ -1791,7 +1809,7 @@ param(
                     try {
                         $site = Get-SPSite -Identity $uri -ErrorAction SilentlyContinue
                         $context = Get-SPServiceContext $site -ErrorAction SilentlyContinue
-                        $upm = New-Object Microsoft.Office.Server.UserProfiles.UserProfileManager($context)
+                       ;  $upm = New-Object Microsoft.Office.Server.UserProfiles.UserProfileManager($context)
                         Write-Verbose -Verbose -Message " Got UserProfileManager"
                     }
                     catch {
@@ -1813,22 +1831,22 @@ param(
                         }
                     )
                     
-                    $directoryUsers = Get-ADUser -Filter " objectClass -like 'user'" -Properties @(" SamAccountName", " displayName") -SearchBase $directoryBase #-ResultSetSize 5
+                    $directoryUsers = Get-ADUser -Filter " objectClass -like 'user'" -Properties @(" SamAccountName" , " displayName" ) -SearchBase $directoryBase #-ResultSetSize 5
                     foreach ($directoryUser in $directoryUsers) {
-                        $accounts = $accounts + @{
+                       ;  $accounts = $accounts + @{
                             " AccountName"   = $accountPattern_WinClaims -f $directoryUser.SamAccountName;
-                            " PreferredName" = $directoryUser[" displayName"];
+                            " PreferredName" = $directoryUser[" displayName" ];
                         },
                         @{
                             " AccountName"   = $accountPattern_Trusted -f $directoryUser.SamAccountName;
-                            " PreferredName" = $directoryUser[" displayName"];
+                            " PreferredName" = $directoryUser[" displayName" ];
                         }
                     }
 
                     foreach ($account in $accounts) {
                         $userProfile = $null
                         try {
-                            $userProfile = $upm.GetUserProfile($account.AccountName)
+                           ;  $userProfile = $upm.GetUserProfile($account.AccountName)
                             Write-Verbose -Verbose -Message " Got existing user profile for '$($account.AccountName)'"
                         }
                         catch {
@@ -1863,17 +1881,17 @@ param(
                     # $job.Execute()
 
                     # $psm = [Microsoft.Office.Server.UserProfiles.ProfileSubTypeManager]::Get($context)
-                    # $ps = $psm.GetProfileSubtype([Microsoft.Office.Server.UserProfiles.ProfileSubtypeManager]::GetDefaultProfileName([Microsoft.Office.Server.UserProfiles.ProfileType]::User))
+                    #;  $ps = $psm.GetProfileSubtype([Microsoft.Office.Server.UserProfiles.ProfileSubtypeManager]::GetDefaultProfileName([Microsoft.Office.Server.UserProfiles.ProfileType]::User))
                     #;  $properties = $ps.Properties
                     # $properties.Count # will call LoadProperties()
-                    # #$properties.GetType().GetMethod(" LoadProperties", [System.Reflection.BindingFlags]" NonPublic, Instance").Invoke($properties, $null);
+                    # #$properties.GetType().GetMethod(" LoadProperties" , [System.Reflection.BindingFlags]" NonPublic, Instance" ).Invoke($properties, $null);
                     # $WEPropertyNames = @('FirstName', 'LastName', 'SPS-ClaimID', 'PreferredName')
                     # foreach ($propertyName in $WEPropertyNames) { 
                     #     $property = $properties.GetPropertyByName($propertyName)
                     #     if ($property) {
                     #         Write-Verbose -Verbose -Message " Checking property $($propertyName)"
                     #         $property.CoreProperty.DisplayNameLocalized # Test to avoid error " The display name must be specified in order to create a property."
-                    #         $m_DisplayNamesValue = $property.CoreProperty.GetType().GetField(" m_DisplayNames", [System.Reflection.BindingFlags]" NonPublic, Instance").GetValue($property.CoreProperty)
+                    #         $m_DisplayNamesValue = $property.CoreProperty.GetType().GetField(" m_DisplayNames" , [System.Reflection.BindingFlags]" NonPublic, Instance" ).GetValue($property.CoreProperty)
                     #         if ($m_DisplayNamesValue) {
                     #             Write-Verbose -Verbose -Message " Property $($propertyName) has m_DisplayNamesValue.DefaultLanguage $($m_DisplayNamesValue.DefaultLanguage) and m_DisplayNamesValue.Count $($m_DisplayNamesValue.Count)"
                     #         }
@@ -1900,25 +1918,25 @@ param(
             {
                 $WEWshShell = New-Object -comObject WScript.Shell
                 # Shortcut to the setup folder
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\Setup data.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\Setup data.lnk" )
                 $WEShortcut.TargetPath = $using:SetupPath
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Central Administration
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Central Administration.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Central Administration.lnk" )
                 $WEShortcut.TargetPath = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
                 $WEShortcut.Arguments = " -cmd showcentraladmin"
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Products Configuration Wizard
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Products Configuration Wizard.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Products Configuration Wizard.lnk" )
                 $WEShortcut.TargetPath = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Management Shell
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Management Shell.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Management Shell.lnk" )
                 $WEShortcut.TargetPath = " C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe"
-                $WEShortcut.Arguments = " -NoExit -Command "" & 'C:\Program Files\WindowsPowerShell\Modules\SharePointServer\SharePoint.ps1'"
+                $WEShortcut.Arguments = " -NoExit -Command "" & '${env:ProgramFiles}\WindowsPowerShell\Modules\SharePointServer\SharePoint.ps1'"
                 $WEShortcut.Save()
             }
             GetScript            = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
@@ -1941,23 +1959,23 @@ param(
         #             $downloader.DownloadFile($url, $localScriptPath)
 
         #             $dscExtensionPath = " C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC"
-        #             $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match " ^[\d\.]+$"} | Sort-Object -Descending -Property Name | Select-Object -First 1
+        #             $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match " ^[\d\.]+$" } | Sort-Object -Descending -Property Name | Select-Object -First 1
         #             $fullPathToDscLogs = [System.IO.Path]::Combine($dscExtensionPath, $folderWithMaxVersionNumber)
                     
         #             # Start python script
-        #             Write-Verbose -Verbose -Message " Run python `"$localScriptPath`" `" $fullPathToDscLogs`"..."
-        #             #Start-Process -FilePath " powershell" -ArgumentList " python `"$localScriptPath`" `" $fullPathToDscLogs`""
+        #             Write-Verbose -Verbose -Message " Run python `" $localScriptPath`" `" $fullPathToDscLogs`" ..."
+        #             #Start-Process -FilePath " powershell" -ArgumentList " python `" $localScriptPath`" `" $fullPathToDscLogs`""
         #             #invoke-expression " cmd /c start powershell -Command { $localScriptPath $fullPathToDscLogs }"
         #             python " $localScriptPath" " $fullPathToDscLogs"
 
         #             # Create a shortcut to the DSC logs folder
         #             $WEWshShell = New-Object -comObject WScript.Shell
-        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC logs.lnk")
+        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC logs.lnk" )
         #             $WEShortcut.TargetPath = $fullPathToDscLogs
         #             $WEShortcut.Save()
 
         #             # Create shortcut to DSC configuration folder
-        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC config.lnk")
+        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC config.lnk" )
         #             $WEShortcut.TargetPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\{0}\DSCWork\ConfigureSPSE.0" -f $folderWithMaxVersionNumber
         #             $WEShortcut.Save()
         #         }
@@ -1981,7 +1999,7 @@ param(
 function WE-Get-LatestGitHubRelease {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string] $WERepo,
         [string] $WEArtifact,
@@ -2000,7 +2018,7 @@ param(
 function WE-Get-NetBIOSName {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string]$WEDomainFQDN
     )
@@ -2026,15 +2044,15 @@ param(
 help ConfigureSPVM
 
 $password = ConvertTo-SecureString -String " mytopsecurepassword" -AsPlainText -Force
-$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand", $password
-$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup", $password
-$WESPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spfarm", $password
-$WESPSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsvc", $password
-$WESPAppPoolCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spapppool", $password
-$WESPADDirSyncCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spaddirsync", $password
-$WESPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " Passphrase", $password
-$WESPSuperUserCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spSuperUser", $password
-$WESPSuperReaderCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spSuperReader", $password
+$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
+$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup" , $password
+$WESPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spfarm" , $password
+$WESPSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsvc" , $password
+$WESPAppPoolCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spapppool" , $password
+$WESPADDirSyncCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spaddirsync" , $password
+$WESPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " Passphrase" , $password
+$WESPSuperUserCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spSuperUser" , $password
+$WESPSuperReaderCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spSuperReader" , $password
 $WEDNSServerIP = " 10.1.1.4"
 $WEDomainFQDN = " contoso.local"
 $WEDCServerName = " DC"
@@ -2042,30 +2060,30 @@ $WESQLServerName = " SQL"
 $WESQLAlias = " SQLAlias"
 $WESharePointVersion = " Subscription-RTM"
 $WESharePointSitesAuthority = " spsites"
-$WESharePointCentralAdminPort = 5000
+$WESharePointCentralAdminPort = 5000; 
 $WEEnableAnalysis = $true; 
 $WESharePointBits = @(
     @{
-        Label = " RTM"; 
+        Label = " RTM" ; 
         Packages = @(
-            @{ DownloadUrl = " https://go.microsoft.com/fwlink/?linkid=2171943"; ChecksumType = " SHA256"; Checksum = " C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
+            @{ DownloadUrl = " https://go.microsoft.com/fwlink/?linkid=2171943" ; ChecksumType = " SHA256" ; Checksum = " C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
         )
     },
     @{
-        Label = " 22H2"; 
+        Label = " 22H2" ; 
         Packages = @(
-            @{ DownloadUrl = " https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe"; ChecksumType = " SHA256"; Checksum = " 7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
-            @{ DownloadUrl = " https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe"; ChecksumType = " SHA256"; Checksum = " 247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
+            @{ DownloadUrl = " https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe" ; ChecksumType = " SHA256" ; Checksum = " 7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
+            @{ DownloadUrl = " https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe" ; ChecksumType = " SHA256" ; Checksum = " 247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
         )
     },
     {
-        Label = " 23H1",
+        Label = " 23H1" ,
         Packages = @(
             @{ DownloadUrl = " https://download.microsoft.com/download/c/6/a/c6a17105-3d86-42ad-888d-49b22383bfa1/uber-subscription-kb5002355-fullfile-x64-glb.exe" }
         )
     },
     @{
-        Label = " Latest"; 
+        Label = " Latest" ; 
         Packages = @(
             @{ DownloadUrl = " https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe" },
             @{ DownloadUrl = " https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe" }
@@ -2074,7 +2092,7 @@ $WESharePointBits = @(
 )
 
 $outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSPSE.0\ConfigureSPVM"
-ConfigureSPVM -DomainAdminCreds $WEDomainAdminCreds -SPSetupCreds $WESPSetupCreds -SPFarmCreds $WESPFarmCreds -SPSvcCreds $WESPSvcCreds -SPAppPoolCreds $WESPAppPoolCreds -SPADDirSyncCreds $WESPADDirSyncCreds -SPPassphraseCreds $WESPPassphraseCreds -SPSuperUserCreds $WESPSuperUserCreds -SPSuperReaderCreds $WESPSuperReaderCreds -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DCServerName $WEDCServerName -SQLServerName $WESQLServerName -SQLAlias $WESQLAlias -SharePointVersion $WESharePointVersion -SharePointSitesAuthority $WESharePointSitesAuthority -SharePointCentralAdminPort $WESharePointCentralAdminPort -EnableAnalysis $WEEnableAnalysis -SharePointBits $WESharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigureSPVM -DomainAdminCreds $WEDomainAdminCreds -SPSetupCreds $WESPSetupCreds -SPFarmCreds $WESPFarmCreds -SPSvcCreds $WESPSvcCreds -SPAppPoolCreds $WESPAppPoolCreds -SPADDirSyncCreds $WESPADDirSyncCreds -SPPassphraseCreds $WESPPassphraseCreds -SPSuperUserCreds $WESPSuperUserCreds -SPSuperReaderCreds $WESPSuperReaderCreds -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DCServerName $WEDCServerName -SQLServerName $WESQLServerName -SQLAlias $WESQLAlias -SharePointVersion $WESharePointVersion -SharePointSitesAuthority $WESharePointSitesAuthority -SharePointCentralAdminPort $WESharePointCentralAdminPort -EnableAnalysis $WEEnableAnalysis -SharePointBits $WESharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 

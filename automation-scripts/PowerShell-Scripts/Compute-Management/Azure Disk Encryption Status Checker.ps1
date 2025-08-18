@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Disk Encryption Status Checker
+    Azure Disk Encryption Status Checker
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Disk Encryption Status Checker
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -37,7 +57,7 @@ param(
     [string]$WEOutputPath = " .\encryption-status-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Disk Encryption Status Checker" -Version " 1.0" -Description " Check disk and VM encryption status"
 
 try {
@@ -100,7 +120,7 @@ try {
     }
 
     $totalResources = $encryptionStatus.Count
-    $encryptedResources = ($encryptionStatus | Where-Object { $_.OSEncrypted -eq $true -or $_.OSEncrypted -eq " Encrypted" }).Count
+   ;  $encryptedResources = ($encryptionStatus | Where-Object { $_.OSEncrypted -eq $true -or $_.OSEncrypted -eq " Encrypted" }).Count
    ;  $encryptionRate = if ($totalResources -gt 0) { [math]::Round(($encryptedResources / $totalResources) * 100, 2) } else { 0 }
 
     Write-WELog " Encryption Summary:" " INFO" -ForegroundColor Green

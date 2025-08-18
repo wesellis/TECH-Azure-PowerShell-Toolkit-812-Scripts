@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 14.5 New Azbastion
+    14.5 New Azbastion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 14.5 New Azbastion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -44,7 +62,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 $WELocationName = 'CanadaCentral'
 $WECustomerName = 'FGCHealth'
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Createdby"         = 'Abdullah Ollivierre'
@@ -65,7 +83,7 @@ $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
 
 }
 
-
+; 
 $newAzBastionSplat = @{
     ResourceGroupName = " FGC_Prod_Bastion_RG"
     Name              = " FGC_Prod_Bastion"

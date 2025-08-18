@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Arotoolkit Autoupdate
+    Arotoolkit Autoupdate
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Arotoolkit Autoupdate
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -68,14 +86,14 @@ try
     $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
     $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
 
-    #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions")
+    #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions" )
 
     $WEWebClient = New-Object System.Net.WebClient
 
     Write-Output " Download the AutoUpdateWorker script from GitHub..."
 
-    $WEWebClient.DownloadFile($($WEGithubFullPath)," $WEPSScriptRoot\$($WEFileName)")    
-    $psScriptPath = " $WEPSScriptRoot\$($WEFileName)"
+    $WEWebClient.DownloadFile($($WEGithubFullPath)," $WEPSScriptRoot\$($WEFileName)" )    
+   ;  $psScriptPath = " $WEPSScriptRoot\$($WEFileName)"
    ;  $WERunbookName = $WEFileName.Substring(0,$WEFileName.Length-4).Trim()
 
     Write-Output " Creating the worker runbook in the Automation Account..." 

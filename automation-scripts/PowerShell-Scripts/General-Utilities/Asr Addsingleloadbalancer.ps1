@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Addsingleloadbalancer
+    Asr Addsingleloadbalancer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Addsingleloadbalancer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -60,9 +78,9 @@ Write-output $WERecoveryPlanContext
 
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 
-if ($WERecoveryPlanContext.FailoverDirection -ne " PrimaryToSecondary") 
+if ($WERecoveryPlanContext.FailoverDirection -ne " PrimaryToSecondary" ) 
     {
         Write-Output " Failover Direction is not Azure, and the script will stop."
     }
@@ -136,7 +154,7 @@ Try
             Write-Output " Availability Set is present for VM: `n" $WEAzureVm.Name
         }
         #Join the VMs NICs to backend pool of the Load Balancer
-        $WEARMNic = Get-AzureRmResource -ResourceId $WEAzureVm.NetworkInterfaceIDs[0]
+       ;  $WEARMNic = Get-AzureRmResource -ResourceId $WEAzureVm.NetworkInterfaceIDs[0]
        ;  $WENic = Get-AzureRmNetworkInterface -Name $WEARMNic.Name -ResourceGroupName $WEARMNic.ResourceGroupName
         $WENic.IpConfigurations[0].LoadBalancerBackendAddressPools.Add($WELoadBalancer.BackendAddressPools[0]);        
         $WENic | Set-AzureRmNetworkInterface    
@@ -148,17 +166,15 @@ Catch
     $WEErrorMessage = 'Failed to associate the VM with the Load Balancer.'
     $WEErrorMessage = $WEErrorMessage + " `n"
     $WEErrorMessage = $WEErrorMessage + 'Error: '
-    $WEErrorMessage = $WEErrorMessage + $_
+   ;  $WEErrorMessage = $WEErrorMessage + $_
     Write-Error -Message $WEErrorMessage `
                    -ErrorAction Stop
  }
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

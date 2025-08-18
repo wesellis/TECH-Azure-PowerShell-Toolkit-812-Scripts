@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Build Images
+    Build Images
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Build Images
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
@@ -48,14 +66,15 @@ $deploymentResult = (az deployment group show --subscription $WEEnv:SUBSCRIPTION
 
 $deploymentResultProps = $deploymentResult.PSobject.Properties | Where-Object { $_.Name -eq 'properties' } | Select-Object -ExpandProperty Value
 $outputResources = $deploymentResultProps | Select-Object -ExpandProperty outputResources
+
 # Pattern matching for validation
 $imageTemplates = @($outputResources | Where-Object { $_ -match 'Microsoft.VirtualMachineImages' })
-
+; 
 $failuresCount = 0
 foreach ($imageTemplate in $imageTemplates) {
     Write-WELog " === Validating build result for image $($imageTemplate.id)" " INFO"
    ;  $templateInfo = (az image builder show --ids $imageTemplate.Id) | ConvertFrom-Json
-    if ($templateInfo.lastRunStatus.runState -ne " Succeeded") {
+    if ($templateInfo.lastRunStatus.runState -ne " Succeeded" ) {
         $failuresCount++
         Write-Warning " !!! [ERROR] Image build failed with status '$($templateInfo.lastRunStatus.runState)', message '$($templateInfo.lastRunStatus.message)'"
     }

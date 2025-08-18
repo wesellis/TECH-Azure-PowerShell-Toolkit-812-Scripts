@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 21 New Azvm(Linux Without New Vnet)
+    21 New Azvm(Linux Without New Vnet)
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 21 New Azvm(Linux Without New Vnet)
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ."$WEPSScriptRoot\13-Set-AzVMAutoShutdown.ps1"
 
 
@@ -28,11 +46,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 $WELocationName = 'CanadaCentral'
 $WECustomerName = 'FGCHealth'
 $WEVMName = 'Prod-Nifi1'
-$WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
 
 
 
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Autoshutown"       = 'OFF'
@@ -90,27 +108,27 @@ $WEOSCreateOption = " FromImage"
 
 
 $WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName", " _OSDisk", " _1", " _$WEGUID")
+$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
 
 
-$WEDNSNameLabel = -join (" $WEVMName", " DNS").ToLower() # mydnsname.westus.cloudapp.azure.com
+$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
 
 
 
 
 $WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName", " _$WENICPrefix").ToLower()
-$WEIPConfigName = -join (" $WEVMName", " $WENICName", " _IPConfig1").ToLower()
+$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
+$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
 
 
-$WEPublicIPAddressName = -join (" $WEVMName", " -ip")
+$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
 
 
-$WESubnetName = -join (" $WEVMName", " -subnet")
+$WESubnetName = -join (" $WEVMName" , " -subnet" )
 
 
 
-$WENSGName = -join (" $WEVMName", " -nsg")
+$WENSGName = -join (" $WEVMName" , " -nsg" )
 
 
 
@@ -148,7 +166,7 @@ $WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
 
 
 
-$WEASGName = -join (" $WEVMName", " _ASG1")
+$WEASGName = -join (" $WEVMName" , " _ASG1" )
 $newAzApplicationSecurityGroupSplat = @{
     ResourceGroupName = " $WEResourceGroupName"
     Name              = " $WEASGName"
@@ -261,7 +279,7 @@ $setAzVMOSDiskSplat = @{
     CreateOption = $WEOSCreateOption
     # Windows = $true
     DiskSizeInGB = '100'
-}
+}; 
 $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
 
 ; 

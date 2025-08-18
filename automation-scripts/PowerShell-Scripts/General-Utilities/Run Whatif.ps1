@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Whatif
+    Run Whatif
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Run Whatif
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     $url,
     $ttkFolder = $WEENV:TTK_FOLDER,
@@ -28,16 +47,16 @@ param(
     $sampleName = $WEENV:SAMPLE_NAME,
     $paramFileName = $WEENV:GEN_PARAMETERS_FILENAME,
     $resourceGroupName = $WEENV:RESOURCEGROUP_NAME,
-    $filename = "PSWhatIf.zip" ,
+    $filename = " PSWhatIf.zip" ,
     $WEStorageAccountKey, 
-    $txtFileName = "results.txt" ,
-    $jsonFileName = "results.json" ,
+    $txtFileName = " results.txt" ,
+    $jsonFileName = " results.json" ,
     [switch]$uploadResults
 )
 
 if (!$uploadResults) {
 
-    Invoke-WebRequest -uri "$url" -OutFile " $ttkFolder/$filename" -Verbose
+    Invoke-WebRequest -uri " $url" -OutFile " $ttkFolder/$filename" -Verbose
     Get-ChildItem " $ttkFolder/$filename"
 
     # Unzip Module
@@ -66,8 +85,8 @@ if (!$uploadResults) {
 }
 else { # these need to be done in separate runs due to compatibility problems with the modules
 
-    $ctx = New-AzStorageContext -StorageAccountName " azurequickstartsservice" -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
-   ;  $WERowKey = $WESampleName.Replace(" \", " @").Replace(" /", " @")
+   ;  $ctx = New-AzStorageContext -StorageAccountName " azurequickstartsservice" -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
+   ;  $WERowKey = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
     Write-WELog " RowKey: $WERowKey" " INFO"
 
     Set-AzStorageBlobContent -Container " whatif" `
@@ -84,10 +103,8 @@ else { # these need to be done in separate runs due to compatibility problems wi
 
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

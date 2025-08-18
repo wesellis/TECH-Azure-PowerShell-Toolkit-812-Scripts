@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Dns Updateip
+    Asr Dns Updateip
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Dns Updateip
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -39,9 +57,9 @@
          
         Input Parameters
         Create an input parameter using the following powershell script. 
-        $WEInputObject = @{"#VMIdAsAvailableINASRVMProperties" =@{"Zone" ="#ZoneFortheVirtualMachine" ;"VMName" ="#HostNameofTheVirtualMachine" };"#VMIdAsAvailableINASRVMProperties2" =@{"Zone" ="#ZoneFortheVirtualMachine2" ;"VMName" ="#HostNameofTheVirtualMachine2" }}
+        $WEInputObject = @{"#VMIdAsAvailableINASRVMProperties" =@{" Zone" =" #ZoneFortheVirtualMachine" ;" VMName" =" #HostNameofTheVirtualMachine" };" #VMIdAsAvailableINASRVMProperties2" =@{" Zone" =" #ZoneFortheVirtualMachine2" ;" VMName" =" #HostNameofTheVirtualMachine2" }}
         $WERPDetails = New-Object -TypeName PSObject -Property $WEInputObject  | ConvertTo-Json
-        New-AzureRmAutomationVariable -Name "#RecoveryPlanName" -ResourceGroupName " #AutomationAccountResourceGroup" -AutomationAccountName " #AutomationAccountName" -Value $WERPDetails -Encrypted $false  
+        New-AzureRmAutomationVariable -Name " #RecoveryPlanName" -ResourceGroupName " #AutomationAccountResourceGroup" -AutomationAccountName " #AutomationAccountName" -Value $WERPDetails -Encrypted $false  
 
         Replace all strings starting with a '#' with appropriate value
 
@@ -65,7 +83,7 @@ try {
 workflow ASR-DNS-UpdateIP
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [parameter(Mandatory=$false)] 
         [Object]$WERecoveryPlanContext 
@@ -105,7 +123,7 @@ Catch
     $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
     $vmMap = $WERecoveryPlanContext.VmMap
 
-    if ($WERecoveryPlanContext.FailoverType -ne " Test") { 
+    if ($WERecoveryPlanContext.FailoverType -ne " Test" ) { 
          $WEDNSVMRG =   $WEProdDNSVMRG
          $WEDNSVMName =   $WEProdDNSVMName   
     }
@@ -143,8 +161,8 @@ Catch
                 $argument = " -Zone " + $WEZone + " -name " + $WEVMName + " -IP " + $WEIP
 
                 Write-Output " Removing older custom script extension"
-                $WEDNSVM = Get-AzureRMVM -ResourceGroupName $WEUsing:DNSVMRG -Name $WEUsing:DNSVMName
-               ;  $csextension = $WEDNSVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType -eq " CustomScriptExtension"}
+               ;  $WEDNSVM = Get-AzureRMVM -ResourceGroupName $WEUsing:DNSVMRG -Name $WEUsing:DNSVMName
+               ;  $csextension = $WEDNSVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType -eq " CustomScriptExtension" }
                 Remove-AzureRmVMCustomScriptExtension -ResourceGroupName $WEUsing:DNSVMRG -VMName $WEUsing:DNSVMName -Name $csextension.Name -Force
 
                 Write-output " Updating DNS with arguments:" $argument
@@ -157,10 +175,8 @@ Catch
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

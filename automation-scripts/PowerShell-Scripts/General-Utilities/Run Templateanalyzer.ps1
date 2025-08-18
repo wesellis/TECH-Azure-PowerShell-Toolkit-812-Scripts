@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Templateanalyzer
+    Run Templateanalyzer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Run Templateanalyzer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -38,7 +56,7 @@ param(
     [string] $templateAnalyzerOutputFilePath = $WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH
 )
 
-$templateAnalyzerFolderPath = "$ttkFolder\templateAnalyzer"
+$templateAnalyzerFolderPath = " $ttkFolder\templateAnalyzer"
 New-Item -ItemType Directory -Path $templateAnalyzerFolderPath -Force
 Invoke-WebRequest -OutFile " $templateAnalyzerFolderPath\TemplateAnalyzer.zip" $templateAnalyzerReleaseUrl
 Expand-Archive -LiteralPath " $templateAnalyzerFolderPath\TemplateAnalyzer.zip" -DestinationPath " $templateAnalyzerFolderPath"
@@ -55,18 +73,20 @@ function WE-Analyze-Template {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -74,7 +94,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         $templateFilePath,
         $parametersFilePath
@@ -83,7 +103,7 @@ param(
     if ($templateFilePath -and (Test-Path $templateFilePath)) {
         $params = @{}
         if ($parametersFilePath -and (Test-Path $parametersFilePath)) {
-            $params.Add(" p", $parametersFilePath)
+            $params.Add(" p" , $parametersFilePath)
         } 
         $testOutput = & $templateAnalyzer analyze-template $templateFilePath @params
     }
@@ -115,23 +135,21 @@ Get-ChildItem $sampleFolder -Recurse -Filter *.json |
             }
 
             $params = @{ " templateFilePath" = $_.FullName }
-            if ($_.FullName -eq " $preReqsFolder\$prereqTemplateFilename") {
-                $params.Add(" parametersFilePath", $preReqsParamsFilePath)
-            } elseif ($_.FullName -eq " $sampleFolder\$mainTemplateFilename") {
-                $params.Add(" parametersFilePath", $mainParamsFilePath)
+            if ($_.FullName -eq " $preReqsFolder\$prereqTemplateFilename" ) {
+                $params.Add(" parametersFilePath" , $preReqsParamsFilePath)
+            } elseif ($_.FullName -eq " $sampleFolder\$mainTemplateFilename" ) {
+                $params.Add(" parametersFilePath" , $mainParamsFilePath)
             }
 
-            $newAnalysisPassed = Analyze-Template @params
+           ;  $newAnalysisPassed = Analyze-Template @params
            ;  $passed = $passed -and $newAnalysisPassed # evaluation done in two lines to avoid PowerShell's lazy evaluation
         }
 
 Write-WELog " ##vso[task.setvariable variable=template.analyzer.result]$passed" " INFO"
 exit [int]!$passed
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

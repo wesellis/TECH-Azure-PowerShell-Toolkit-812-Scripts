@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Create Devenv Shortcut
+    Windows Create Devenv Shortcut
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Create Devenv Shortcut
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -67,7 +85,7 @@ param(
     [Parameter(Mandatory = $false)][bool] $WEShortcutRunAsAdmin = $false,
     [Parameter(Mandatory = $false)][String] $WEDesktopShortcutIconPath,
     [Parameter(Mandatory = $false)][String] $WEDesktopShortcutName,
-    [Parameter(Mandatory = $false)][String] $WEDesktopShortcutHost = "Console"
+    [Parameter(Mandatory = $false)][String] $WEDesktopShortcutHost = " Console"
 )
 
 $WEErrorActionPreference = " Stop"
@@ -104,7 +122,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
     if (![string]::IsNullOrEmpty($WEDesktopShortcutScriptPath)) {     
         # If the path is relative then calculate the full path
         if (!([System.IO.Path]::IsPathRooted($WEDesktopShortcutScriptPath))) {
-            $WEDesktopShortcutScriptPath = " $WERepoRoot\$WEDesktopShortcutScriptPath"
+           ;  $WEDesktopShortcutScriptPath = " $WERepoRoot\$WEDesktopShortcutScriptPath"
         }
     }
     
@@ -117,7 +135,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
         $WEShortcutIcon = Join-Path -Path $WERepoRoot -ChildPath $WEDesktopShortcutIconPath
     }
     else {
-        $WEShortcutIcon = $WEDesktopShortcutIconPath
+       ;  $WEShortcutIcon = $WEDesktopShortcutIconPath
     }
 
     [String];  $WEShortcutName = '';
@@ -126,7 +144,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
         $WEShortcutName = $WEDesktopShortcutName
     }
     else {
-       ;  $WEShortcutName = $WERepoRoot.Split(" \") | Where-Object { $_ -ne '' } | Select-Object -Last 1;
+       ;  $WEShortcutName = $WERepoRoot.Split(" \" ) | Where-Object { $_ -ne '' } | Select-Object -Last 1;
     }
 
     [String] $shortcutTargetPath = '';
@@ -138,7 +156,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
         $shortcutTargetPath = $env:ComSpec
         $shortcutArguments = " /k cd /d $WERepoRoot"
     }
-    elseif (($WEDesktopShortcutScriptPath -Like " *.cmd") -or ($WEDesktopShortcutScriptPath -Like " *.bat")) {
+    elseif (($WEDesktopShortcutScriptPath -Like " *.cmd" ) -or ($WEDesktopShortcutScriptPath -Like " *.bat" )) {
         $shortcutTargetPath = $env:ComSpec
         if (!$isTerminalHost) {
             $shortcutArguments = " /k cd /d $WERepoRoot&"" $WEDesktopShortcutScriptPath"""
@@ -148,7 +166,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
             $shortcutArguments = " /k "" cd /d $WERepoRoot&"" $WEDesktopShortcutScriptPath"""""""
         }
     }
-    elseif ($WEDesktopShortcutScriptPath -Like " *.ps1") {
+    elseif ($WEDesktopShortcutScriptPath -Like " *.ps1" ) {
         $shortcutTargetPath = " powershell.exe"
         $shortcutArguments = " -NoExit -File "" $WEDesktopShortcutScriptPath"""
     }
@@ -157,7 +175,7 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
     }
     if ($isTerminalHost) {
         $shortcutArguments = $shortcutTargetPath + " " + $shortcutArguments
-        $shortcutTargetPath = " %LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe"
+       ;  $shortcutTargetPath = " %LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe"
     }
 
     Write-WELog " Creating shortcut with Target path: $shortcutTargetPath and Arguments: $shortcutArguments " " INFO" 

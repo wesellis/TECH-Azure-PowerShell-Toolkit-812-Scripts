@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Create Gen Staticwebsite
+    Create Gen Staticwebsite
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Create Gen Staticwebsite
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] $WEResourceGroupName = 'ttk-gen-artifacts',
     [string] [Parameter(mandatory = $true)] $WELocation
@@ -40,7 +59,7 @@ $errorDocumentContents = '<h1>Example 404 error page</h1>'
 
 $staticWebsiteStorageAccount = (Get-AzStorageAccount | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
 if ($staticWebsiteStorageAccount -eq $null) {
-    $staticWebsiteStorageAccount = New-AzStorageAccount -StorageAccountName $staticWebsiteStorageAccountName -Kind StorageV2 -Type 'Standard_LRS' -ResourceGroupName $WEResourceGroupName -Location "$WELocation" -Verbose
+    $staticWebsiteStorageAccount = New-AzStorageAccount -StorageAccountName $staticWebsiteStorageAccountName -Kind StorageV2 -Type 'Standard_LRS' -ResourceGroupName $WEResourceGroupName -Location " $WELocation" -Verbose
 }
 
 
@@ -62,19 +81,17 @@ $tempErrorDocument404File = New-TemporaryFile
 Set-Content $tempErrorDocument404File $errorDocumentContents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempErrorDocument404File -Blob $errorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force -Verbose
 
-
+; 
 $json = New-Object System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable; 
 $hostName = (($staticWebsiteStorageAccount.PrimaryEndpoints.Web) -Replace 'https://', '')  -Replace '/', ''
-$json.Add(" STATIC-WEBSITE-URL", $staticWebsiteStorageAccount.PrimaryEndpoints.Web)
-$json.Add(" STATIC-WEBSITE-HOST-NAME", $hostName)
+$json.Add(" STATIC-WEBSITE-URL" , $staticWebsiteStorageAccount.PrimaryEndpoints.Web)
+$json.Add(" STATIC-WEBSITE-HOST-NAME" , $hostName)
 
 
 Write-Output $($json | ConvertTo-json -Depth 30)
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Sql Failoverag
+    Asr Sql Failoverag
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Sql Failoverag
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -35,7 +53,7 @@
          
         Input Parameters
         Create an input parameter using the following powershell script. 
-        $WEInputObject = @{"TestSQLVMName" = " #TestSQLVMName" ; " TestSQLVMRG" = " #TestSQLVMRG" ; " ProdSQLVMName" = " #ProdSQLVMName" ; " ProdSQLVMRG" = " #ProdSQLVMRG"; " Paths" = @{" 1"=" #sqlserver:\sql\sqlazureVM\default\availabilitygroups\ag1";" 2"=" #sqlserver:\sql\sqlazureVM\default\availabilitygroups\ag2"}}
+        $WEInputObject = @{"TestSQLVMName" = " #TestSQLVMName" ; " TestSQLVMRG" = " #TestSQLVMRG" ; " ProdSQLVMName" = " #ProdSQLVMName" ; " ProdSQLVMRG" = " #ProdSQLVMRG" ; " Paths" = @{" 1" =" #sqlserver:\sql\sqlazureVM\default\availabilitygroups\ag1" ;" 2" =" #sqlserver:\sql\sqlazureVM\default\availabilitygroups\ag2" }}
         $WERPDetails = New-Object -TypeName PSObject -Property $WEInputObject  | ConvertTo-Json
         New-AzureRmAutomationVariable -Name " #RecoveryPlanName" -ResourceGroupName " #AutomationAccountResourceGroup" -AutomationAccountName " #AutomationAccountName" -Value $WERPDetails -Encrypted $false  
 
@@ -65,7 +83,8 @@ workflow ASR-SQL-FailoverAG
 try {
     # Main script execution
 ]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
+[CmdletBinding()]
 param(
         [parameter(Mandatory=$false)] 
         [Object]$WERecoveryPlanContext 
@@ -103,7 +122,7 @@ Catch
 
     Write-Output $WERPVariable
 
-    if ($WERecoveryPlanContext.FailoverType -ne " Test") { 
+    if ($WERecoveryPlanContext.FailoverType -ne " Test" ) { 
          $WESQLVMRG =   $WERPVariable.ProdSQLVMRG
          $WESQLVMName =   $WERPVariable.ProdSQLVMName   
     }
@@ -121,7 +140,7 @@ Catch
     { 
 
 
-      If(!(($sqno -eq " PSComputerName") -Or ($sqno -eq " PSShowComputerName") -Or ($sqno -eq " PSSourceJobInstanceId")))
+      If(!(($sqno -eq " PSComputerName" ) -Or ($sqno -eq " PSShowComputerName" ) -Or ($sqno -eq " PSSourceJobInstanceId" )))
       {  
   
            $WEAGPath = $WEPathDetails.$sqno
@@ -132,7 +151,7 @@ Catch
 
                 Write-Output " Removing older custom script extension"
                 $WESQLVM = Get-AzureRMVM -ResourceGroupName $WEUsing:SQLVMRG -Name $WEUsing:SQLVMName
-                $csextension = $WESQLVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType -eq " CustomScriptExtension"}
+               ;  $csextension = $WESQLVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType -eq " CustomScriptExtension" }
                 Remove-AzureRmVMCustomScriptExtension -ResourceGroupName $WEUsing:SQLVMRG -VMName $WEUsing:SQLVMName -Name $csextension.Name -Force
 
                ;  $argument = " -Path " + $WEUsing:AGPath
@@ -147,10 +166,8 @@ Catch
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

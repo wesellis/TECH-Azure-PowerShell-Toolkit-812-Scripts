@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 22 Attach Azvmdisk
+    22 Attach Azvmdisk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 22 Attach Azvmdisk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEVMName = 'Prod-PAS2'
 
 
@@ -25,13 +43,13 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 $WEVMName = 'Prod-PAS2'
 $WELocationName = 'CanadaCentral'
-$WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
 $WEGUID = [guid]::NewGuid()
-$WEAttachedDiskName = -join (" $WEVMName", " _AttachedDisk", " _1", " _$WEGUID")
+$WEAttachedDiskName = -join (" $WEVMName" , " _AttachedDisk" , " _1" , " _$WEGUID" )
 $WEAttacchedDiskSizeinGiB = '500'
 
 
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Autoshutown"       = 'OFF'
@@ -81,7 +99,7 @@ $getAzVMSplat = @{
     ResourceGroupName = $WEResourceGroupName
     Name = $WEVMName
 }
-$WEVirtualMachine = Get-AzVM @getAzVMSplat
+$WEVirtualMachine = Get-AzVM @getAzVMSplat; 
 $addAzVMDataDiskSplat = @{
     VM = $WEVirtualMachine
     Name = $WEAttachedDiskName

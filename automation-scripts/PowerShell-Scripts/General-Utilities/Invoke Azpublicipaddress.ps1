@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azpublicipaddress
+    Invoke Azpublicipaddress
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azpublicipaddress
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzPublicIpAddress {
 
 
@@ -25,7 +43,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function WE-Invoke-AzPublicIpAddress {
  #Region func New-AzPublicIpAddress
-
+; 
 $newAzPublicIpAddressSplat = @{
     Name              = $WEPublicIPAddressName
     DomainNameLabel   = $WEDNSNameLabel

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Autosnooze Createalert Parent
+    Autosnooze Createalert Parent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Autosnooze Createalert Parent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .SYNOPSIS  
  Runbook for shutdown the Azure VM based on CPU usage
 .DESCRIPTION  
@@ -30,7 +48,7 @@ v1.0   - Initial Release
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-[Parameter(Mandatory=$false,HelpMessage="Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
+[Parameter(Mandatory=$false,HelpMessage=" Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
 )
 
 function WE-CheckExcludeVM ($WEFilterVMList)
@@ -65,7 +83,7 @@ function WE-CheckExcludeVM ($WEFilterVMList)
 
     if($invalidvm -ne $null)
     {
-        Write-Output "Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
+        Write-Output " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         Write-Warning " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         exit
     }
@@ -123,7 +141,7 @@ try
         if([string]::IsNullOrEmpty($WEExcludeVMNames) -ne $true)
         {
             Write-Output " Exclude VM's added so validating the resource(s)..."            
-            $WEExAzureVMList = CheckExcludeVM -FilterVMList $WEVMfilterList
+           ;  $WEExAzureVMList = CheckExcludeVM -FilterVMList $WEVMfilterList
         } 
 
         if ($WEExAzureVMList -ne $null -and $WEWhatIf -eq $false)
@@ -133,7 +151,7 @@ try
                 try
                 {
                         Write-Output " Disabling the alert rules for VM : $($WEVM.Name)" 
-                       ;  $params = @{" VMObject"=$WEVM;" AlertAction"=" Disable";" WebhookUri"=$webhookUri}                    
+                       ;  $params = @{" VMObject" =$WEVM;" AlertAction" =" Disable" ;" WebhookUri" =$webhookUri}                    
                         $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
                 }
                 catch
@@ -194,7 +212,7 @@ try
         }
         else
         {
-            $WEActualAzureVMList = $WEAzureVMList
+           ;  $WEActualAzureVMList = $WEAzureVMList
         }
 
         if($WEWhatIf -eq $false)
@@ -202,7 +220,7 @@ try
             foreach($WEVM in $WEActualAzureVMList)
             {  
                     Write-Output " Creating alert rules for the VM : $($WEVM.Name)"
-                   ;  $params = @{" VMObject"=$WEVM;" AlertAction"=" Create";" WebhookUri"=$webhookUri}                    
+                   ;  $params = @{" VMObject" =$WEVM;" AlertAction" =" Create" ;" WebhookUri" =$webhookUri}                    
                     $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
             }
             Write-Output " Note: All the alert rules creation are processed in parallel. Please check the child runbook (AutoSnooze_CreateAlert_Child) job status..."

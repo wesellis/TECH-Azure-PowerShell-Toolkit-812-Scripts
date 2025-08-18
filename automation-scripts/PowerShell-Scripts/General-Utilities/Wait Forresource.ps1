@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Wait Forresource
+    Wait Forresource
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Wait Forresource
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -39,9 +57,9 @@ $headers = @{
 
 
 $locations = @()
-$azureLocations = ((Invoke-AzRestMethod -Method GET -Path "/locations?api-version=2022-01-01" ).content | ConvertFrom-Json -Depth 100).value
+$azureLocations = ((Invoke-AzRestMethod -Method GET -Path " /locations?api-version=2022-01-01" ).content | ConvertFrom-Json -Depth 100).value
 foreach($l in $azureLocations){
-    if($l.metadata.RegionType -eq "Physical" ){
+    if($l.metadata.RegionType -eq " Physical" ){
         $locations = $locations + $l.name
         #Write-Host $l.name + $l.metadata.RegionType
     }
@@ -59,7 +77,7 @@ $locations | ForEach-Object -Parallel {
 
     # AzureGov regional endpoints are seemingly random, so we need to MAP those...
     switch ($_) {
-        "usgovvirginia" {  
+        " usgovvirginia" {  
             $region = " usgoveast"
         }
         " usgovtexas" { 
@@ -84,7 +102,7 @@ $locations | ForEach-Object -Parallel {
     While ($r -eq $null -and $(Get-Date) -lt $stopTime) {
         try {
             Write-Host $uri
-            $r = Invoke-RestMethod -Headers $using:headers -Method " GET" $uri
+           ;  $r = Invoke-RestMethod -Headers $using:headers -Method " GET" $uri
         }
         catch {}
 

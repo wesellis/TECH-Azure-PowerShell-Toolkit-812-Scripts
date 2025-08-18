@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Copy Badges
+    Copy Badges
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Copy Badges
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 
 This script is used to copy the badges from the "prs" container to the " badges" container.  
 The badges are created in the " prs" container when the pipleline test is executed on the PR, but we don't want to copy those results until approved
@@ -28,12 +46,13 @@ Then, when the PR is merged, the CI pipeline copies the badges to the " badges" 
 try {
     # Main script execution
 ]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
+[CmdletBinding()]
 param(
     [string]$WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
     [string]$WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    [string]$WETableName = " QuickStartsMetadataService",
-    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs",
+    [string]$WETableName = " QuickStartsMetadataService" ,
+    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs" ,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
 
@@ -44,7 +63,7 @@ else {
     Write-WELog " SampleName: $WESampleName" " INFO"
 }
 
-$storageFolder = $WESampleName.Replace(" \", " @").Replace(" /", " @")
+$storageFolder = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
 $WERowKey = $storageFolder
 Write-WELog " RowKey: $WERowKey" " INFO"
 
@@ -54,7 +73,7 @@ $cloudTable = (Get-AzStorageTable -Name $tableName -Context $ctx).CloudTable
 $cloudTablePRs = (Get-AzStorageTable -Name $tableNamePRs -Context $ctx).CloudTable
 
 
-$blobs = Get-AzStorageBlob -Context $ctx -Container " prs" -Prefix $storageFolder.Replace(" @", " /") 
+$blobs = Get-AzStorageBlob -Context $ctx -Container " prs" -Prefix $storageFolder.Replace(" @" , " /" ) 
 $blobs | Start-AzStorageBlobCopy -DestContainer " badges" -Verbose -Force
 $blobs | Remove-AzStorageBlob -Verbose -Force
 
@@ -81,12 +100,12 @@ $r | Format-List *
 
 $p = @{ }
 foreach ($i in $r.PSObject.Properties) {
-    if ($i.Name -ne " Etag") {
-        if ($i.value -eq " true") {
+    if ($i.Name -ne " Etag" ) {
+        if ($i.value -eq " true" ) {
             $newValue = " PASS"
         }
-        elseif ($i.value -eq " false") {
-            $newValue = " FAIL"
+        elseif ($i.value -eq " false" ) {
+           ;  $newValue = " FAIL"
         }
         else { 
            ;  $newValue = $i.Value
@@ -111,10 +130,8 @@ $r | Remove-AzTableRow -Table $cloudTablePRs
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

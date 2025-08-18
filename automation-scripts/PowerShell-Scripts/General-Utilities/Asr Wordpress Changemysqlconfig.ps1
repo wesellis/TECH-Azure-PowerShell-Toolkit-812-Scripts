@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Wordpress Changemysqlconfig
+    Asr Wordpress Changemysqlconfig
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Wordpress Changemysqlconfig
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
     .DESCRIPTION
@@ -43,11 +61,11 @@ param(
         [Object]$WERecoveryPlanContext
     )
 
-	$connectionName = "AzureRunAsConnection"
+	$connectionName = " AzureRunAsConnection"
     $recoveryLocation = " southeastasia"
 
     # This is special code only added for this test run to avoid creating public IPs in S2S VPN network
-    #if ($WERecoveryPlanContext.FailoverType -ne " Test") {
+    #if ($WERecoveryPlanContext.FailoverType -ne " Test" ) {
     #    exit
     #}
 
@@ -77,7 +95,7 @@ param(
 		}
 	} 
     
-    $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
+   ;  $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
 	
     Write-output $WERecoveryPlanContext.VmMap
     Write-output $WERecoveryPlanContext
@@ -93,7 +111,7 @@ param(
 
         if( !(($WEVM -eq $WENull) -Or ($WEVM.ResourceGroupName -eq $WENull) -Or ($WEVM.RoleName -eq $WENull))) {
             #this is when some data is anot available and it will fail
-            Write-output " Resource group name ", $WEVM.ResourceGroupName
+            Write-output " Resource group name " , $WEVM.ResourceGroupName
             Write-output " Rolename " = $WEVM.RoleName
 
             InlineScript { 

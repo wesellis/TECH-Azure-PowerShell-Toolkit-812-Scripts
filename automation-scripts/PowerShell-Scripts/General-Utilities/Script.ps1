@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Script
+    Script
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Script
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [cmdletbinding()
 try {
     # Main script execution
@@ -25,29 +43,45 @@ $ErrorActionPreference = "Stop"
 param(
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$appId,
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$appPassword,
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$tenantId,
 
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$vaultName,
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$secretName,
 
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$adminUsername,
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$adminPassword,
 
     [parameter(mandatory = $true)][ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$adDomainName,
 
@@ -58,12 +92,14 @@ param(
     function log
     {
         [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$message)
 
-        "`n`n$(get-date -f o)  $message" 
+        " `n`n$(get-date -f o)  $message" 
     }
 
 
@@ -137,7 +173,7 @@ param([Parameter(Mandatory=$false)]
 
 	#  apply certificate
 	#
-	$roles = @(" RDGateway", " RDWebAccess", " RDRedirector", " RDPublishing")
+	$roles = @(" RDGateway" , " RDWebAccess" , " RDRedirector" , " RDPublishing" )
 
 	$roles | % `
 	{
@@ -156,7 +192,7 @@ param([Parameter(Mandatory=$false)]
 	if ($gatewayConfig -and $gatewayConfig.GatewayExternalFqdn)
 	{
 		$externalFqdn = $gatewayConfig.GatewayExternalFqdn
-		$externalDomainSuffix = $externalFqdn.substring($externalFqdn.IndexOf('.') + 1)
+	; 	$externalDomainSuffix = $externalFqdn.substring($externalFqdn.IndexOf('.') + 1)
 
 	; 	$clientAccessName = $env:COMPUTERNAME + '.' + $externalDomainSuffix
 
@@ -175,10 +211,8 @@ param([Parameter(Mandatory=$false)]
 	log " done."
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

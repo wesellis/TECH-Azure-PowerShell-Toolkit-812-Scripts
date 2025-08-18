@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Customextensionwindows
+    Customextensionwindows
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Customextensionwindows
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Invoke-WebRequest -Uri https://swupdate.openvpn.org/community/releases/OpenVPN-2.5-rc2-I601-2-amd64.msi -OutFile "C:\ovpn.msi"
 Start-Process -FilePath " C:\ovpn.msi" -ArgumentList " /qn"
@@ -41,7 +59,7 @@ return true;
 }
 }
 " @
-Write-WELog "TrustAllCertsPolicy type added." " INFO" -ForegroundColor White
+Write-WELog " TrustAllCertsPolicy type added." " INFO" -ForegroundColor White
 }
 catch
 {
@@ -57,14 +75,14 @@ $pass = " VNS3Controller-10.10.10.10"
 $pair = " ${user}:${pass}"
 $bytes = [System.Text.Encoding]::ASCII.GetBytes($pair)
 $base64 = [System.Convert]::ToBase64String($bytes)
-$basicAuthValue = " Basic $base64"
+$basicAuthValue = " Basic $base64"; 
 $headers = New-Object " System.Collections.Generic.Dictionary[[String],[String]]"
-$headers.Add( " Authorization", $basicAuthValue )
-$headers.Add( " Accept", " application/octet-stream" )
+$headers.Add( " Authorization" , $basicAuthValue )
+$headers.Add( " Accept" , " application/octet-stream" )
 ; 
 $clientpack1 = " 100_127_255_193"
 
-Invoke-WebRequest -Uri https://" $ip1":8000/api/clientpack?name=$clientpack1" &"fileformat=ovpn -UseBasicParsing -Headers $WEHeaders -ContentType " application/json" -Method GET -o " c:\Program Files\OpenVPN\config\$clientpack1.ovpn"
+Invoke-WebRequest -Uri https://" $ip1" :8000/api/clientpack?name=$clientpack1" &" fileformat=ovpn -UseBasicParsing -Headers $WEHeaders -ContentType " application/json" -Method GET -o " c:\Program Files\OpenVPN\config\$clientpack1.ovpn"
 
 Start-Service -Name " OpenVPNServiceInteractive" 
 

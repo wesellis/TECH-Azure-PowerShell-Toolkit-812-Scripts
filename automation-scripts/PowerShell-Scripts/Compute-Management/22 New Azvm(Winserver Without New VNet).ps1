@@ -1,5 +1,23 @@
 <#
 .SYNOPSIS
+    22 New Azvm(Winserver Without New Vnet)
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+#>
+
+<#
+.SYNOPSIS
     We Enhanced 22 New Azvm(Winserver Without New Vnet)
 try {
     # Main script execution
@@ -15,14 +33,14 @@ try {
 
 .NOTES
     Requires appropriate permissions and modules
-#>
+
 
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 function WE-New-IaaCAzVM {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -49,95 +67,133 @@ $ErrorActionPreference = "Stop"
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVMSize,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOSDiskCaching,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOSCreateOption,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEGUID,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOSDiskName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEASGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WENSGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDNSNameLabel,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WENICPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WENICName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEIPConfigName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPublicIPAddressName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPublicIPAllocation,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPublisherName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOffer,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESkus,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVersion,
         [Parameter(Mandatory = $true)]
@@ -283,7 +339,7 @@ $ErrorActionPreference = "Stop"
 $WELocationName = 'CanadaCentral'
 $WECustomerName = 'CanadaComputing'
 $WEVMName = 'VEEAM-CCGW1'
-$WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
 
 
 
@@ -292,20 +348,20 @@ $WEVMSize = " Standard_B2MS"
 $WEOSDiskCaching = " ReadWrite"
 $WEOSCreateOption = " FromImage"
 $WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName", " _OSDisk", " _1", " _$WEGUID")
+$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
 
 
-$WEASGName = -join (" $WEVMName", " _ASG1")
+$WEASGName = -join (" $WEVMName" , " _ASG1" )
 
 
-$WENSGName = -join (" $WEVMName", " -nsg")
+$WENSGName = -join (" $WEVMName" , " -nsg" )
 
 
-$WEDNSNameLabel = -join (" $WEVMName", " DNS").ToLower() # mydnsname.westus.cloudapp.azure.com
+$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
 $WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName", " _$WENICPrefix").ToLower()
-$WEIPConfigName = -join (" $WEVMName", " $WENICName", " _IPConfig1").ToLower()
-$WEPublicIPAddressName = -join (" $WEVMName", " -ip")
+$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
+$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
+$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
 $WEVnetName = 'VEEAM1-POC_group-vnet'
 $WESubnetName = 'VEEAM1-POC-subnet'
 $WEPublicIPAllocation = 'Static'
@@ -321,8 +377,8 @@ $WEVersion = " latest"
 $WEDiskSizeInGB = '127'
 
 
-
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+; 
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Autoshutown"       = 'OFF'
@@ -402,10 +458,8 @@ New-IaaCAzVM @NewIaaCAzVMSplat
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

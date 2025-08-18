@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Import Azpfxcertazkeyvault
+    Import Azpfxcertazkeyvault
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Import Azpfxcertazkeyvault
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -74,7 +92,7 @@ Id            : https://miaqbrdskv1.vault.azure.net:443/certificates/MIASSLRDSCE
 
 
 Connect-AzAccount
-
+; 
 $WECertPassword = Read-Host -AsSecureString -Prompt 'Enter your cert password'; 
 $WEPassword = ConvertTo-SecureString -String $WECertPassword -AsPlainText -Force
 Import-AzKeyVaultCertificate -VaultName " MIAQBRDSKV1" -Name " MIASSLRDSCERT1" -FilePath " C:\Users\Abdullah.Ollivierre\AzureRepos2\Git-HubRepositry\Functions\Export-CertToPFX\PlaceZeroSSLCertfileshere\rds.miaonline.org\cert.pfx" -Password $WEPassword

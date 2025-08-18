@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deploy Azureresourcegroup
+    Deploy Azureresourcegroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Deploy Azureresourcegroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿#Requires -Version 3.0
 
 
@@ -23,7 +41,7 @@
 $ErrorActionPreference = "Stop"
 param(
     [string] [Parameter(Mandatory = $true)] $WEArtifactStagingDirectory,
-    [string] [Parameter(Mandatory = $true)][alias("ResourceGroupLocation" )] $WELocation,
+    [string] [Parameter(Mandatory = $true)][alias(" ResourceGroupLocation" )] $WELocation,
     [string] $WEResourceGroupName = (Split-Path $WEArtifactStagingDirectory -Leaf),
     [switch] $WEUploadArtifacts,
     [string] $WEStorageAccountName,
@@ -33,13 +51,13 @@ param(
     [string] $WEDSCSourceFolder = $WEArtifactStagingDirectory + '.\DSC',
     [switch] $WEBuildDscPackage,
     [switch] $WEValidateOnly,
-    [string] $WEDebugOptions = "None" ,
+    [string] $WEDebugOptions = " None" ,
     [string] $WEDeploymentName = ([IO.Path]::GetFileNameWithoutExtension($WETemplateFile) + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')),
     [switch] $WEDev
 )
 
 try {
-    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent("AzureQuickStarts-$WEUI$($host.name)" .replace(" " , "_" ), "1.0" )
+    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
 } 
 catch { }
 
@@ -51,18 +69,20 @@ function WE-Format-ValidationOutput {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -176,9 +196,9 @@ if ($WEUploadArtifacts -Or $WEArtifactsLocationParameter -ne $null) {
     $WEArtifactFilePaths = Get-ChildItem $WEArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
     foreach ($WESourcePath in $WEArtifactFilePaths) {
         
-        if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*")) {
+        if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*" )) {
             #When using DSC, just copy the DSC archive, not all the modules and source files
-            $blobName = ($WESourcePath -ireplace [regex]::Escape($WEArtifactStagingDirectory), "" ).TrimStart("/" ).TrimStart("\" )
+            $blobName = ($WESourcePath -ireplace [regex]::Escape($WEArtifactStagingDirectory), "" ).TrimStart(" /" ).TrimStart(" \" )
             Set-AzureStorageBlobContent -File $WESourcePath -Blob $blobName -Container $WEStorageContainerName -Context $WEStorageAccount.Context -Force
         }
     }
@@ -201,15 +221,15 @@ else {
 $WETemplateArgs.Add('TemplateParameterFile', $WETemplateParametersFile)
 
 
-if ($deploymentScope -eq "ResourceGroup" ) {
+if ($deploymentScope -eq " ResourceGroup" ) {
     if ((Get-AzureRmResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue) -eq $null) {
         New-AzureRmResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -Force -ErrorAction Stop
     }
 }
 if ($WEValidateOnly) {
-    if ($deploymentScope -eq "Subscription" ) {
+    if ($deploymentScope -eq " Subscription" ) {
         #subscription scoped deployment
-        $WEErrorMessages = Format-ValidationOutput (Test-AzureRmDeployment -Location $WELocation @TemplateArgs @OptionalParameters)
+       ;  $WEErrorMessages = Format-ValidationOutput (Test-AzureRmDeployment -Location $WELocation @TemplateArgs @OptionalParameters)
     }
     else {
         #resourceGroup deployment 
@@ -223,7 +243,7 @@ if ($WEValidateOnly) {
     }
 }
 else {
-    if ($deploymentScope -eq "Subscription" ) {
+    if ($deploymentScope -eq " Subscription" ) {
         #subscription scoped deployment
         New-AzureRmDeployment -Name $WEDeploymentName `
             -Location $WELocation `
@@ -241,7 +261,7 @@ else {
             -ErrorVariable ErrorMessages
     }
     if ($WEErrorMessages) {
-        Write-Output '', 'Template deployment returned the following errors:', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message.TrimEnd("`r`n" ) })
+        Write-Output '', 'Template deployment returned the following errors:', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message.TrimEnd(" `r`n" ) })
     }
 }
 

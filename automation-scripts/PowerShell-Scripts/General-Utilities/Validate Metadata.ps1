@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Validate Metadata
+    Validate Metadata
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Validate Metadata
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER,
     [string] $WECloudEnvironment = $WEENV:ENVIRONMENT,
@@ -28,7 +47,7 @@ param(
 )
 
 
-Write-host "Validating metadata file: $WESampleFolder\metadata.json"
+Write-host " Validating metadata file: $WESampleFolder\metadata.json"
 $metadata = Get-Content -Path " $WESampleFolder\metadata.json" -Raw 
 
 
@@ -36,9 +55,9 @@ Write-host " Validating contents against JSON schema from https://aka.ms/azure-q
 $schema = Invoke-WebRequest -Uri " https://aka.ms/azure-quickstart-templates-metadata-schema" -UseBasicParsing
 $metadata | Test-Json -Schema $schema.content
 
-if ($WEENV:BUILD_REASON -eq " PullRequest") {
+if ($WEENV:BUILD_REASON -eq " PullRequest" ) {
     #When running the scheduled tests, we don't want to check the date
-    if($($metadata | ConvertFrom-Json).itemDisplayName.EndsWith(" .")){
+    if($($metadata | ConvertFrom-Json).itemDisplayName.EndsWith(" ." )){
         Write-Error " itemDisplayName in metadata.json must not end with a period (.)"
     }
 }
@@ -55,7 +74,7 @@ if ($null -ne $environments) {
 }
 else {
     $WEIsCloudSupported = $true
-    $supportedEnvironments = @(" AzureCloud", " AzureUSGovernment") # Default is all clouds are supported
+    $supportedEnvironments = @(" AzureCloud" , " AzureUSGovernment" ) # Default is all clouds are supported
 }
 
 
@@ -65,7 +84,7 @@ if ($null -ne $docOwner) {
     $msg = " @$docOwner - check this PR for updates that may be needed to documentation that references this sample.  [This is an automated message. You are receiving it because you are listed as the docOwner in metadata.json.]"
     Write-WELog " ##vso[task.setvariable variable=docOwner.message]$msg" " INFO"
 }
-
+; 
 $s = $supportedEnvironments | ConvertTo-Json -Compress
 Write-WELog " ##vso[task.setvariable variable=supported.environments]$s" " INFO"
 
@@ -79,7 +98,7 @@ if (!$WEIsCloudSupported) {
 $validationType = ($metadata | convertfrom-json).validationType
 Write-Output " Validation type from metadata.json: $validationType"
 
-if ($validationType -eq " Manual") {
+if ($validationType -eq " Manual" ) {
     Write-WELog " ##vso[task.setvariable variable=validation.type]$validationType" " INFO"
     Write-WELog " ##vso[task.setvariable variable=result.deployment]Not Supported" " INFO" # set this so the pipeline does not run deployment will be overridden in the test results step
 }
@@ -91,10 +110,8 @@ if ($error.count -eq 0) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Chaos Engineering Platform
+    Azure Chaos Engineering Platform
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Chaos Engineering Platform
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -61,19 +79,23 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" NetworkLatency", " ResourceFailure", " ZoneFailure", " FullDR", " ApplicationStress", " DatabaseFailover")]
+    [ValidateSet(" NetworkLatency" , " ResourceFailure" , " ZoneFailure" , " FullDR" , " ApplicationStress" , " DatabaseFailover" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEChaosMode,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" ResourceGroup", " Subscription", " Region")]
-    [string]$WETargetScope = " ResourceGroup",
+    [ValidateSet(" ResourceGroup" , " Subscription" , " Region" )]
+    [string]$WETargetScope = " ResourceGroup" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETargetResourceGroup,
@@ -119,7 +141,11 @@ class ChaosEngineeringPlatform {
     
     ChaosEngineeringPlatform([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMode, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEScope, [int]$WEDurationMinutes, [bool]$WESafety) {
         $this.ExperimentId = " chaos-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
@@ -171,6 +197,8 @@ class ChaosEngineeringPlatform {
     
     [void]DiscoverTargetResources([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName) {
         Write-WELog " Discovering target resources in scope: $($this.TargetScope)" " INFO" -ForegroundColor Yellow
         
@@ -203,8 +231,8 @@ class ChaosEngineeringPlatform {
             " NetworkLatency" {
                 $this.TargetResources = $this.TargetResources | Where-Object { 
                     $_.ResourceType -in @(
-                        " Microsoft.Compute/virtualMachines",
-                        " Microsoft.Web/sites",
+                        " Microsoft.Compute/virtualMachines" ,
+                        " Microsoft.Web/sites" ,
                         " Microsoft.ContainerInstance/containerGroups"
                     )
                 }
@@ -212,8 +240,8 @@ class ChaosEngineeringPlatform {
             " ResourceFailure" {
                 $this.TargetResources = $this.TargetResources | Where-Object { 
                     $_.ResourceType -in @(
-                        " Microsoft.Compute/virtualMachines",
-                        " Microsoft.Web/sites",
+                        " Microsoft.Compute/virtualMachines" ,
+                        " Microsoft.Web/sites" ,
                         " Microsoft.Storage/storageAccounts"
                     )
                 }
@@ -221,8 +249,8 @@ class ChaosEngineeringPlatform {
             " DatabaseFailover" {
                 $this.TargetResources = $this.TargetResources | Where-Object { 
                     $_.ResourceType -in @(
-                        " Microsoft.Sql/servers",
-                        " Microsoft.DocumentDB/databaseAccounts",
+                        " Microsoft.Sql/servers" ,
+                        " Microsoft.DocumentDB/databaseAccounts" ,
                         " Microsoft.DBforPostgreSQL/servers"
                     )
                 }
@@ -230,8 +258,8 @@ class ChaosEngineeringPlatform {
             " ApplicationStress" {
                 $this.TargetResources = $this.TargetResources | Where-Object { 
                     $_.ResourceType -in @(
-                        " Microsoft.Web/sites",
-                        " Microsoft.ContainerService/managedClusters",
+                        " Microsoft.Web/sites" ,
+                        " Microsoft.ContainerService/managedClusters" ,
                         " Microsoft.ServiceFabric/clusters"
                     )
                 }
@@ -367,7 +395,7 @@ class ChaosEngineeringPlatform {
         Write-WELog " Injecting network latency..." " INFO" -ForegroundColor Red
         
         foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines") {
+            if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines" ) {
                 if ($WEDryRun) {
                     Write-WELog " DRY RUN: Would inject 200ms latency on VM: $($resource.Name)" " INFO" -ForegroundColor Yellow
                 } else {
@@ -410,7 +438,7 @@ class ChaosEngineeringPlatform {
                     }
                 }
                 
-                $result = @{
+               ;  $result = @{
                     ResourceId = $resource.ResourceId
                     Action = " ResourceFailure"
                     Parameters = @{ Type = " Stop" }
@@ -427,7 +455,7 @@ class ChaosEngineeringPlatform {
         Write-WELog " Injecting application stress..." " INFO" -ForegroundColor Red
         
         foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq " Microsoft.Web/sites") {
+            if ($resource.ResourceType -eq " Microsoft.Web/sites" ) {
                 if ($WEDryRun) {
                     Write-WELog " DRY RUN: Would stress test app: $($resource.Name)" " INFO" -ForegroundColor Yellow
                 } else {
@@ -437,7 +465,7 @@ class ChaosEngineeringPlatform {
                    ;  $result = @{
                         ResourceId = $resource.ResourceId
                         Action = " ApplicationStress"
-                        Parameters = @{ CPULoad = " 80%"; MemoryLoad = " 70%" }
+                        Parameters = @{ CPULoad = " 80%" ; MemoryLoad = " 70%" }
                         Timestamp = Get-Date
                         Success = $true
                     }
@@ -515,7 +543,7 @@ class ChaosEngineeringPlatform {
                 }
             }
             
-            $remainingMinutes = [math]::Ceiling(($WEEndTime - (Get-Date)).TotalMinutes)
+           ;  $remainingMinutes = [math]::Ceiling(($WEEndTime - (Get-Date)).TotalMinutes)
             Write-WELog " Experiment running... $remainingMinutes minutes remaining" " INFO" -ForegroundColor Cyan
             
             Start-Sleep -Seconds 30
@@ -545,7 +573,7 @@ class ChaosEngineeringPlatform {
         foreach ($breaker in $this.SafetyBreakers) {
             foreach ($resourceId in $WECurrentMetrics.Keys) {
                 $metrics = $WECurrentMetrics[$resourceId]
-                $metricValue = $metrics[$breaker.MetricName]
+               ;  $metricValue = $metrics[$breaker.MetricName]
                 
                 if ($metricValue -ne $null) {
                    ;  $thresholdBreached = switch ($breaker.MetricName) {
@@ -581,7 +609,7 @@ class ChaosEngineeringPlatform {
                     } else {
                         # Restart stopped resources
                         $resource = Get-AzResource -ResourceId $result.ResourceId
-                        if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines") {
+                        if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines" ) {
                             Write-WELog " Restarting VM: $($resource.Name)" " INFO" -ForegroundColor Green
                             Start-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -NoWait
                         }
@@ -600,7 +628,7 @@ class ChaosEngineeringPlatform {
             $postMetrics = $this.CollectResourceMetrics($resource)
             $baselineMetrics = $this.BaselineMetrics[$resource.ResourceId]
             
-            $recovery = @{
+           ;  $recovery = @{
                 ResourceId = $resource.ResourceId
                 BaselineAvailability = $baselineMetrics.Availability
                 PostExperimentAvailability = $postMetrics.Availability
@@ -641,34 +669,34 @@ class ChaosEngineeringPlatform {
     </style>
 </head>
 <body>
-    <div class=" container">
-        <div class=" header">
+    <div class=" container" >
+        <div class=" header" >
             <h1>Chaos Engineering Experiment Report</h1>
             <p>Experiment ID: $($this.ExperimentId)</p>
             <p>Mode: $($this.ChaosMode) | Duration: $($this.Duration) minutes</p>
             <p>Generated: $(Get-Date)</p>
         </div>
         
-        <div class=" summary">
-            <div class=" metric-card">
-                <div class=" metric-value">$($this.TargetResources.Count)</div>
+        <div class=" summary" >
+            <div class=" metric-card" >
+                <div class=" metric-value" >$($this.TargetResources.Count)</div>
                 <div>Resources Tested</div>
             </div>
-            <div class=" metric-card">
-                <div class=" metric-value">$($this.ExperimentResults.Count)</div>
+            <div class=" metric-card" >
+                <div class=" metric-value" >$($this.ExperimentResults.Count)</div>
                 <div>Actions Executed</div>
             </div>
-            <div class=" metric-card">
-                <div class=" metric-value">$(($this.ExperimentResults | Where-Object { $_.Success }).Count)</div>
+            <div class=" metric-card" >
+                <div class=" metric-value" >$(($this.ExperimentResults | Where-Object { $_.Success }).Count)</div>
                 <div>Successful Actions</div>
             </div>
-            <div class=" metric-card">
-                <div class=" metric-value">$($this.SafetyBreakers.Count)</div>
+            <div class=" metric-card" >
+                <div class=" metric-value" >$($this.SafetyBreakers.Count)</div>
                 <div>Safety Breakers</div>
             </div>
         </div>
         
-        <div class=" section">
+        <div class=" section" >
             <h2>Experiment Actions</h2>
             <table>
                 <thead>
@@ -685,7 +713,7 @@ class ChaosEngineeringPlatform {
         
         foreach ($result in $this.ExperimentResults) {
             $resource = Get-AzResource -ResourceId $result.ResourceId -ErrorAction SilentlyContinue
-            $resourceName = $resource ? $resource.Name : "Unknown"
+            $resourceName = $resource ? $resource.Name : " Unknown"
             $status = $result.Success ? " Success" : " Failed"
             $statusClass = $result.Success ? " success" : " failure"
             $params = ($result.Parameters.GetEnumerator() | ForEach-Object { " $($_.Key): $($_.Value)" }) -join " , "
@@ -696,7 +724,7 @@ class ChaosEngineeringPlatform {
                         <td>$resourceName</td>
                         <td>$($result.Action)</td>
                         <td>$params</td>
-                        <td class=" $statusClass">$status</td>
+                        <td class=" $statusClass" >$status</td>
                     </tr>
 " @
         }
@@ -706,9 +734,9 @@ class ChaosEngineeringPlatform {
             </table>
         </div>
         
-        <div class=" section">
+        <div class=" section" >
             <h2>Key Findings</h2>
-            <div class=" timeline">
+            <div class=" timeline" >
                 <h3>Resilience Assessment</h3>
                 <ul>
                     <li>System demonstrated $(if ($this.ExperimentResults.Count -gt 0) { " good" } else { " untested" }) resilience to $($this.ChaosMode) failures</li>
@@ -737,14 +765,14 @@ class ChaosEngineeringPlatform {
 
 
 try {
-    Write-WELog "Azure Chaos Engineering Platform v1.0" " INFO" -ForegroundColor Red
+    Write-WELog " Azure Chaos Engineering Platform v1.0" " INFO" -ForegroundColor Red
     Write-WELog " ====================================" " INFO" -ForegroundColor Red
     Write-WELog " ⚠️  WARNING: This tool introduces controlled failures!" " INFO" -ForegroundColor Yellow
     Write-WELog " ⚠️  Use with extreme caution in production environments!" " INFO" -ForegroundColor Yellow
     
     if (!$WEDryRun) {
         $confirmation = Read-Host " `nAre you sure you want to proceed with chaos engineering? (yes/no)"
-        if ($confirmation -ne " yes") {
+        if ($confirmation -ne " yes" ) {
             Write-WELog " Chaos engineering cancelled by user." " INFO" -ForegroundColor Yellow
             exit 0
         }
@@ -780,7 +808,7 @@ try {
     
     # Generate report
     if ($WEDocumentResults) {
-        $report = $chaosEngine.GenerateExperimentReport()
+       ;  $report = $chaosEngine.GenerateExperimentReport()
        ;  $reportPath = " .\ChaosEngineering-Report-$($chaosEngine.ExperimentId).html"
         $report | Out-File -FilePath $reportPath -Encoding UTF8
         Write-WELog " `nExperiment report saved to: $reportPath" " INFO" -ForegroundColor Green

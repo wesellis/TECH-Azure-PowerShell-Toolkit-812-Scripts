@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deployscaleset
+    Deployscaleset
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,14 +16,36 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Deployscaleset
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$location,
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$resourceGroupName,
@@ -33,8 +55,12 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$newStorageAccountName,
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$newStorageAccountType,
@@ -45,13 +71,19 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$scaleSetName,
     [int]$scaleSetInstanceCount=2,
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$scaleSetVMSize,
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$scaleSetDNSPrefix,
@@ -111,11 +143,11 @@ try
     {
         if (Test-AzureName -Storage -Name $newStorageAccountName -ErrorAction Stop)
         {
-            throw "Storage Account Name in use "
+            throw " Storage Account Name in use "
         }
     }
 
-    $scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
+   ;  $scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
 
     if (-not (Get-AzurePublicIpAddress  -ResourceGroupName $resourceGroupName|where Location -eq $location).DnsSettings.DomainNameLabel -eq  $scaleSetDNSPrefix)
     {
@@ -127,7 +159,7 @@ try
 
     # Create a new Storage Account for the image
     
-   ;  $parameters=@{" location"=" $location";" newStorageAccountName"=" $newStorageAccountName";" storageAccountType"=" $newStorageAccountType"}
+   ;  $parameters=@{" location" =" $location" ;" newStorageAccountName" =" $newStorageAccountName" ;" storageAccountType" =" $newStorageAccountType" }
     $templateUri=" $repoUri$storageAccountTemplate"
 
     New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createstorageaccount'
@@ -151,11 +183,11 @@ try
 
     # Deploy the scale set using the new custom image as the target
 
-    $sourceImageVhdUri=(Get-AzureStorageBlob -Container $newImageContainer -Context $destContext -Blob $newImageBlobName).ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
+   ;  $sourceImageVhdUri=(Get-AzureStorageBlob -Container $newImageContainer -Context $destContext -Blob $newImageBlobName).ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
 
     Switch-AzureResourceManagement
 
-   ;  $parameters=@{" vmSSName"=" $scaleSetName";" instanceCount"=$scaleSetInstanceCount;" vmSize"=" $scaleSetVMSize";" dnsNamePrefix"=" $scaleSetDNSPrefix";" adminUsername"=$scaleSetVMCredentials.UserName;" adminPassword"=$scaleSetVMCredentials.GetNetworkCredential().Password;" location"=" $location";" sourceImageVhdUri"=" $sourceImageVhdUri"}
+   ;  $parameters=@{" vmSSName" =" $scaleSetName" ;" instanceCount" =$scaleSetInstanceCount;" vmSize" =" $scaleSetVMSize" ;" dnsNamePrefix" =" $scaleSetDNSPrefix" ;" adminUsername" =$scaleSetVMCredentials.UserName;" adminPassword" =$scaleSetVMCredentials.GetNetworkCredential().Password;" location" =" $location" ;" sourceImageVhdUri" =" $sourceImageVhdUri" }
     $templateUri=" $repoUri$scaleSetTemplate"
 
     New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createscaleset'

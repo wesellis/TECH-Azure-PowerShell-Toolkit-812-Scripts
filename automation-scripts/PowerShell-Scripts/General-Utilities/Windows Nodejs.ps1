@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Nodejs
+    Windows Nodejs
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,16 +16,34 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Nodejs
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string]$WEVersion = "18.20.2" ,
+    [string]$WEVersion = " 18.20.2" ,
     [bool]$WEUninstallExistingNodeVersion = $false
 )
 
 function WE-Uninstall-ExistingNode {
     if ($WEUninstallExistingNodeVersion) {
-        Write-WELog "Checking for existing Node.js installations..." " INFO"
+        Write-WELog " Checking for existing Node.js installations..." " INFO"
         $node = Get-CimInstance -Class Win32_Product | Where-Object { $_.Name -match " Node.js" }
         if ($node -ne $null) {
             Write-WELog " Existing Node.js installation found: $($node.Name), Version: $($node.Version). Uninstalling..." " INFO"
@@ -51,9 +69,9 @@ try {
     $WEErrorActionPreference = 'Stop'
     $WEProgressPreference = 'SilentlyContinue'
     $source = " https://nodejs.org/dist/v$WEVersion/node-v$WEVersion-x64.msi"
-    $destination = " $env:TEMP\node-$WEVersion-x64.msi"
+   ;  $destination = " $env:TEMP\node-$WEVersion-x64.msi"
 
-   ;  $WEInstallerArgs = " /i `"$destination`" /qn"
+   ;  $WEInstallerArgs = " /i `" $destination`" /qn"
 
     Write-WELog " Downloading NodeJS" " INFO"
     Write-WELog " Source: $source" " INFO"

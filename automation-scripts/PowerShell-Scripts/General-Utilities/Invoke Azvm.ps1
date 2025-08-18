@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azvm
+    Invoke Azvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,29 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzVM {
 }
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 function WE-Invoke-AzVM {

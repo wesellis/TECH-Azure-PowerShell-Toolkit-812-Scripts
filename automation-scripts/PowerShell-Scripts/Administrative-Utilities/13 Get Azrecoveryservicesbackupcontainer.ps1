@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 13 Get Azrecoveryservicesbackupcontainer
+    13 Get Azrecoveryservicesbackupcontainer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 13 Get Azrecoveryservicesbackupcontainer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -41,9 +59,9 @@ Outlook1                                 canprintequip_outlook_rg               
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join ("$WECustomerName" , "_Outlook" , "_RG" )
+$WEResourceGroupName = -join ("$WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join ("$WEVMName" , "ARSV1" )
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $WEResourceGroupName
@@ -53,9 +71,9 @@ $getAzRecoveryServicesVaultSplat = @{
 $targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
 
 
-
+; 
 $getAzRecoveryServicesBackupContainerSplat = @{
-    ContainerType = "AzureVM"
+    ContainerType = " AzureVM"
     Status = " Registered"
     FriendlyName = $WEVMName
     VaultId = $targetVault.ID

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configuration
+    Configuration
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configuration
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 configuration DomainJoin 
 { 
@@ -37,7 +55,7 @@ param(
     
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xNetworking
 
-    $domainCreds = New-Object System.Management.Automation.PSCredential ("$domainName\$($adminCreds.UserName)" , $adminCreds.Password)
+    $domainCreds = New-Object System.Management.Automation.PSCredential (" $domainName\$($adminCreds.UserName)" , $adminCreds.Password)
    
     Node localhost
     {
@@ -48,7 +66,7 @@ param(
 
         WindowsFeature ADPowershell
         {
-            Name = "RSAT-AD-PowerShell"
+            Name = " RSAT-AD-PowerShell"
             Ensure = " Present"
         } 
 
@@ -112,7 +130,7 @@ param(
 configuration Gateway
 {
    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [String]$domainName,
@@ -168,7 +186,7 @@ param(
 configuration SessionHost
 {
    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [String]$domainName,
@@ -218,7 +236,7 @@ Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xNetworkin
 configuration RDSDeployment
 {
    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [String]$domainName,
@@ -237,7 +255,7 @@ param(
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = " SessionHost-",
+        [String]$sessionHostNamingPrefix = " SessionHost-" ,
 
         # Collection Name
         [String]$collectionName,
@@ -254,21 +272,21 @@ param(
     $externalFqdn = $webAccessServer
 
     $username = $adminCreds.UserName -split '\\' | select -last 1
-    $domainCreds = New-Object System.Management.Automation.PSCredential (" $domainName\$username", $adminCreds.Password)
+    $domainCreds = New-Object System.Management.Automation.PSCredential (" $domainName\$username" , $adminCreds.Password)
 
     if (-not $connectionBroker)   { $connectionBroker = $localhost }
     if (-not $webAccessServer)    { $webAccessServer  = $localhost }
 
     if ($sessionHostNamingPrefix)
     { 
-        $sessionHosts = @( 0..($numberOfRdshInstances-1) | % { " $sessionHostNamingPrefix$_.$domainname"} )
+        $sessionHosts = @( 0..($numberOfRdshInstances-1) | % { " $sessionHostNamingPrefix$_.$domainname" } )
     }
     else
     {
         $sessionHosts = @( $localhost )
     }
 
-    if (-not $collectionName)         { $collectionName = " Desktop Collection" }
+    if (-not $collectionName)         {;  $collectionName = " Desktop Collection" }
     if (-not $collectionDescription)  {;  $collectionDescription = " A sample RD Session collection up in cloud." }
 
 
@@ -384,10 +402,8 @@ param(
     }
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

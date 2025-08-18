@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Backup Status Checker
+    Azure Backup Status Checker
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,15 +16,37 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Backup Status Checker
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVaultName,
@@ -33,8 +55,8 @@ param(
     [switch]$WEShowUnprotected
 )
 
-Import-Module (Join-Path $WEPSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
-Show-Banner -ScriptName "Azure Backup Status Checker" -Version " 1.0" -Description " Verify backup protection status"
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+Show-Banner -ScriptName " Azure Backup Status Checker" -Version " 1.0" -Description " Verify backup protection status"
 
 try {
     if (-not (Test-AzureConnection -RequiredModules @('Az.RecoveryServices'))) {
@@ -63,7 +85,7 @@ try {
 
     if ($WEShowUnprotected) {
         $allVMs = Get-AzVM
-        $protectedVMs = $vaults | ForEach-Object {
+       ;  $protectedVMs = $vaults | ForEach-Object {
             Set-AzRecoveryServicesVaultContext -Vault $_
             Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM
         }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Arc Server Onboarding Tool
+    Azure Arc Server Onboarding Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Arc Server Onboarding Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -56,7 +74,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .EXAMPLE
     .\Azure-Arc-Server-Onboarding-Tool.ps1 -ResourceGroupName " arc-servers-rg" -Location " East US" -ServerName " web-server-01" -EnableMonitoring -ConfigureCompliance
 .EXAMPLE
-    .\Azure-Arc-Server-Onboarding-Tool.ps1 -ResourceGroupName " arc-servers-rg" -ServerListPath " C:\servers.csv" -InstallExtensions @(" MicrosoftMonitoringAgent", " DependencyAgent") -EnableMonitoring
+    .\Azure-Arc-Server-Onboarding-Tool.ps1 -ResourceGroupName " arc-servers-rg" -ServerListPath " C:\servers.csv" -InstallExtensions @(" MicrosoftMonitoringAgent" , " DependencyAgent" ) -EnableMonitoring
 .NOTES
     Author: Wesley Ellis
     Version: 2.0
@@ -69,9 +87,13 @@ param(
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
@@ -79,9 +101,13 @@ param(
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEServerName,
@@ -89,9 +115,13 @@ param(
     [Parameter(Mandatory = $false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEServerListPath,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEServicePrincipalId,
@@ -100,6 +130,8 @@ param(
     [SecureString]$WEServicePrincipalSecret,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETenantId,
@@ -121,7 +153,7 @@ param(
     [switch]$WEConfigureCompliance,
     
     [Parameter(Mandatory = $false)]
-    [ValidateSet(" Windows", " Linux", " Both")]
+    [ValidateSet(" Windows" , " Linux" , " Both" )]
     [string]$WEOperatingSystem = " Both"
 )
 
@@ -141,8 +173,10 @@ function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMessage,
-        [ValidateSet(" Info", " Warning", " Error", " Success")]
+        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
         [string]$WELevel = " Info"
     )
     
@@ -186,6 +220,8 @@ function WE-New-ArcOnboardingScript {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEServerName,
         [string]$WEOperatingSystem
     )
@@ -209,7 +245,7 @@ function WE-New-ArcOnboardingScript {
         # Generate onboarding command based on OS
         $secretText = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($WEServicePrincipalSecret))
         
-        if ($WEOperatingSystem -eq " Windows" -or $WEOperatingSystem -eq " Both") {
+        if ($WEOperatingSystem -eq " Windows" -or $WEOperatingSystem -eq " Both" ) {
             $windowsScript = @"
 
 Invoke-WebRequest -Uri " https://aka.ms/AzureConnectedMachineAgent" -OutFile " AzureConnectedMachineAgent.msi"
@@ -224,15 +260,15 @@ msiexec /i AzureConnectedMachineAgent.msi /l*v installationlog.txt /qn
     --resource-group " $WEResourceGroupName" ``
     --location " $WELocation" ``
     --resource-name " $WEServerName" ``
-    --tags " $(($WETags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ',')"
+    --tags " $(($WETags.GetEnumerator() | ForEach-Object { " $($_.Key)=$($_.Value)" }) -join ',')"
 
 Write-WELog " Azure Arc onboarding completed for $WEServerName" " INFO"
 " @
-            $windowsScript | Out-File -FilePath ".\Arc-Onboarding-Windows-$WEServerName.ps1" -Encoding UTF8
+            $windowsScript | Out-File -FilePath " .\Arc-Onboarding-Windows-$WEServerName.ps1" -Encoding UTF8
             Write-EnhancedLog " Generated Windows onboarding script: Arc-Onboarding-Windows-$WEServerName.ps1" " Success"
         }
         
-        if ($WEOperatingSystem -eq " Linux" -or $WEOperatingSystem -eq " Both") {
+        if ($WEOperatingSystem -eq " Linux" -or $WEOperatingSystem -eq " Both" ) {
             $linuxScript = @"
 
 
@@ -250,11 +286,11 @@ sudo azcmagent connect \
     --resource-group " $WEResourceGroupName" \
     --location " $WELocation" \
     --resource-name " $WEServerName" \
-    --tags " $(($WETags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ',')"
+    --tags " $(($WETags.GetEnumerator() | ForEach-Object { " $($_.Key)=$($_.Value)" }) -join ',')"
 
 echo " Azure Arc onboarding completed for $WEServerName"
 " @
-            $linuxScript | Out-File -FilePath ".\Arc-Onboarding-Linux-$WEServerName.sh" -Encoding UTF8
+            $linuxScript | Out-File -FilePath " .\Arc-Onboarding-Linux-$WEServerName.sh" -Encoding UTF8
             Write-EnhancedLog " Generated Linux onboarding script: Arc-Onboarding-Linux-$WEServerName.sh" " Success"
         }
         
@@ -271,6 +307,8 @@ function WE-Install-ArcExtension {
     [CmdletBinding(SupportsShouldProcess)]
     param(
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEServerName,
         [string[]]$WEExtensions
@@ -305,6 +343,8 @@ function WE-Install-ArcExtension {
 
 function WE-Enable-ArcMonitoring {
     param([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEServerName)
     
@@ -348,6 +388,8 @@ function WE-Set-ComplianceConfiguration {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEServerName)
     
     try {
@@ -355,8 +397,8 @@ function WE-Set-ComplianceConfiguration {
         
         # Common compliance policies for Arc servers
         $policies = @(
-            " Audit machines with insecure password security settings",
-            " Deploy prerequisites to audit Windows VMs configurations in 'Security Settings - Account Policies'",
+            " Audit machines with insecure password security settings" ,
+            " Deploy prerequisites to audit Windows VMs configurations in 'Security Settings - Account Policies'" ,
             " Audit Windows machines missing any of specified members in the Administrators group"
         )
         
@@ -380,6 +422,8 @@ function WE-Set-ComplianceConfiguration {
 function WE-Start-BulkOnboarding {
     [CmdletBinding(SupportsShouldProcess)]
     param([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WECsvPath)
     
@@ -437,7 +481,7 @@ try {
     $rg = Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-EnhancedLog " Creating resource group: $WEResourceGroupName" " Info"
-        $rg = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Tag $WETags
+       ;  $rg = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Tag $WETags
         Write-EnhancedLog " Successfully created resource group" " Success"
     }
     

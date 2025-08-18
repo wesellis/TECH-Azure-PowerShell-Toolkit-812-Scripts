@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Add To Path
+    Windows Add To Path
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Add To Path
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -24,8 +42,8 @@ param(
 )
 
 try {
-    Write-WELog "Adding '$newPath' to system's Path environment variable" " INFO"
-    if ($newPath.Contains(" ;")) {
+    Write-WELog " Adding '$newPath' to system's Path environment variable" " INFO"
+    if ($newPath.Contains(" ;" )) {
         Write-WELog " WARNING: Cannot add path that contains ';' (semicolon) to system's Path environment variable" " INFO"
         Write-WELog " Not making any changes" " INFO"
         exit 0
@@ -38,7 +56,7 @@ try {
     }
     else {
         $modifiedPath = $path + " ;" + $newPath
-        [Environment]::SetEnvironmentVariable(" Path", $modifiedPath, 'Machine')
+        [Environment]::SetEnvironmentVariable(" Path" , $modifiedPath, 'Machine')
         Write-WELog " '$newPath' added to system's Path environment variable" " INFO"
     }
 }

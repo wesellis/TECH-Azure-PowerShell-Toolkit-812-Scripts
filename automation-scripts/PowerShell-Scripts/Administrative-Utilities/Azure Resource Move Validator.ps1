@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Move Validator
+    Azure Resource Move Validator
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,18 +16,40 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Move Validator
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESourceResourceGroupName,
     
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETargetResourceGroupName,
@@ -38,13 +60,15 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETargetSubscriptionId,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEValidateOnly
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Resource Move Validator" -Version " 1.0" -Description " Validate resource move operations"
 
 try {
@@ -59,7 +83,7 @@ try {
 
     Write-WELog " Validating move for $($resources.Count) resources..." " INFO" -ForegroundColor Cyan
     
-    $targetResourceId = " /subscriptions/$(if($WETargetSubscriptionId){$WETargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$WETargetResourceGroupName"
+   ;  $targetResourceId = " /subscriptions/$(if($WETargetSubscriptionId){$WETargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$WETargetResourceGroupName"
     
    ;  $validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action " validateMoveResources" -Parameters @{
         resources = $resources.ResourceId

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Group Cloner
+    Azure Resource Group Cloner
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Group Cloner
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESourceResourceGroupName,
@@ -30,9 +50,13 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETargetResourceGroupName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETargetLocation,
@@ -44,7 +68,7 @@ param(
     [string]$WEExportPath = " .\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Resource Group Cloner" -Version " 1.0" -Description " Clone resource groups and their contents"
 
 try {
@@ -59,13 +83,13 @@ try {
 
     if (-not $WEExportOnly) {
         Write-Log " 🏗️ Creating target resource group..." -Level INFO
-        $null = New-AzResourceGroup -Name $WETargetResourceGroupName -Location $WETargetLocation -Tag $sourceRG.Tags
+       ;  $null = New-AzResourceGroup -Name $WETargetResourceGroupName -Location $WETargetLocation -Tag $sourceRG.Tags
         Write-Log " ✓ Target resource group created: $WETargetResourceGroupName" -Level SUCCESS
         
         Write-Log " 🚀 Deploying resources to target..." -Level INFO
        ;  $deployment = New-AzResourceGroupDeployment -ResourceGroupName $WETargetResourceGroupName -TemplateFile $WEExportPath
         
-        if ($deployment.ProvisioningState -eq " Succeeded") {
+        if ($deployment.ProvisioningState -eq " Succeeded" ) {
             Write-Log " ✅ Resource group cloned successfully!" -Level SUCCESS
         } else {
             Write-Log " ❌ Deployment failed: $($deployment.ProvisioningState)" -Level ERROR

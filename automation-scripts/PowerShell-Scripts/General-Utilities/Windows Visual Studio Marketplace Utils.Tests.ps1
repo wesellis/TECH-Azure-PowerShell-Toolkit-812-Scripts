@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Visual Studio Marketplace Utils.Tests
+    Windows Visual Studio Marketplace Utils.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Visual Studio Marketplace Utils.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
@@ -25,10 +43,10 @@ BeforeAll {
     Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
 try {
     # Main script execution
-" _common/$retryModuleName.psm1")
+" _common/$retryModuleName.psm1" )
     
     $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'  
-    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1")
+    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1" )
     
     # Mock a x64 processor by default
     function WE-Get-CimInstance { }
@@ -47,14 +65,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -72,8 +92,8 @@ Describe " Get-ApiHeaders Tests" {
         $headers = Get-ApiHeaders
 
         $headers | Should -Not -BeNullOrEmpty
-        $headers[" Accept"] | Should -Be " application/json;api-version=3.0-preview.1"
-        $headers[" Content-Type"] | Should -Be " application/json"
+        $headers[" Accept" ] | Should -Be " application/json;api-version=3.0-preview.1"
+        $headers[" Content-Type" ] | Should -Be " application/json"
     }
 }
 
@@ -101,21 +121,21 @@ Describe " Import-ExtensionByMetadata Tests" {
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEPath)
                 return $false
             } -Verifiable -ModuleName $marketplaceModuleName
 
             Mock Copy-Item {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEPath, $WEDestination)
                 Write-WELog " Mocked: Copying $WEPath to $WEDestination" " INFO"
             } -Verifiable -ModuleName $marketplaceModuleName
 
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEVsixUrl, $WELocalFilePath)
                 Write-WELog " Mocked: Downloading $WEVsixUrl to $WELocalFilePath" " INFO"
             } -Verifiable -ModuleName $marketplaceModuleName
@@ -141,21 +161,21 @@ param($WEVsixUrl, $WELocalFilePath)
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEPath)
                 $true
             } -Verifiable -ModuleName $marketplaceModuleName
 
             Mock Copy-Item {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEPath, $WEDestination)
                 Write-WELog " Mocked: Copying $WEPath to $WEDestination" " INFO"
             } -Verifiable -ModuleName $marketplaceModuleName
 
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEVsixUrl, $WELocalFilePath)
                 Write-WELog " Mocked: Downloading $WEVsixUrl to $WELocalFilePath" " INFO"
             } -Verifiable -ModuleName $marketplaceModuleName
@@ -181,14 +201,14 @@ param($WEVsixUrl, $WELocalFilePath)
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEPath)
                 return $false
             } -Verifiable -ModuleName $marketplaceModuleName
 
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEVsixUrl, $WELocalFilePath)
                 throw " Simulated error"
             } -Verifiable -ModuleName $marketplaceModuleName
@@ -215,18 +235,20 @@ Describe " Get-ExtensionMetadata" {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -241,18 +263,20 @@ param ($WEExtensionReference, $WEFlags)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -266,17 +290,17 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                             @{
                                 versions = @(
                                     [PSCustomObject]@{
-                                        version        = " 1.0.0";
-                                        targetPlatform = " x64";
+                                        version        = " 1.0.0" ;
+                                        targetPlatform = " x64" ;
                                         files          = @(
                                             @{
-                                                assetType = " Microsoft.VisualStudio.Services.VSIXPackage";
+                                                assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                 source    = " http://localhost/vsix"
                                             }
                                         );
                                         properties     = @(
                                             @{
-                                                key   = " Microsoft.VisualStudio.Code.PreRelease";
+                                                key   = " Microsoft.VisualStudio.Code.PreRelease" ;
                                                 value = " false"
                                             }
                                         )
@@ -305,18 +329,20 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -330,17 +356,17 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                 @{
                                     versions = @(
                                         [PSCustomObject]@{
-                                            version        = " 2.0.0";
-                                            targetPlatform = " x64";
+                                            version        = " 2.0.0" ;
+                                            targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage";
+                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-2.0.0"
                                                 }
                                             );
                                             properties     = @(
                                                 @{
-                                                    key   = " Microsoft.VisualStudio.Code.PreRelease";
+                                                    key   = " Microsoft.VisualStudio.Code.PreRelease" ;
                                                     value = " false"
                                                 }
                                             )
@@ -364,18 +390,20 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -389,22 +417,22 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                 @{
                                     versions = @(
                                         [PSCustomObject]@{
-                                            version        = " 1.0.0";
-                                            targetPlatform = " x64";
+                                            version        = " 1.0.0" ;
+                                            targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage";
+                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-x64"
                                                 }
                                             );
                                             properties     = @()
                                         },
                                         [PSCustomObject]@{
-                                            version        = " 1.0.0";
-                                            targetPlatform = " arm64";
+                                            version        = " 1.0.0" ;
+                                            targetPlatform = " arm64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage";
+                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-arm64"
                                                 }
                                             );
@@ -431,18 +459,20 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -471,18 +501,20 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -496,7 +528,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                 @{
                                     versions = @(
                                         @{
-                                            version    = " 1.0.0";
+                                            version    = " 1.0.0" ;
                                             files      = @(
                                                 # Missing VSIXPackage
                                             );
@@ -519,18 +551,20 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -544,17 +578,17 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                 @{
                                     versions = @(
                                         [PSCustomObject]@{
-                                            version        = " 2.0.0";
-                                            targetPlatform = " x64";
+                                            version        = " 2.0.0" ;
+                                            targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage";
+                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-2.0.0"
                                                 }
                                             );
                                             properties     = @(
                                                 @{
-                                                    key   = " Microsoft.VisualStudio.Code.PreRelease";
+                                                    key   = " Microsoft.VisualStudio.Code.PreRelease" ;
                                                     value = " true"
                                                 }
                                             )
@@ -591,7 +625,7 @@ Describe 'Get-CurrentPlatform' {
             [pscustomobject]@{ Architecture = 9 }
         } -Verifiable -ModuleName $marketplaceModuleName
 
-        $result = Get-CurrentPlatform
+       ;  $result = Get-CurrentPlatform
         $result | Should -Be 'win32-x64'
 
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
@@ -611,10 +645,8 @@ Describe 'Get-CurrentPlatform' {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

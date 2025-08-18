@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 1 Install Hyperv
+    1 Install Hyperv
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,7 +16,25 @@
     Requires appropriate permissions and modules
 #>
 
-$WEErrorActionPreference = "Stop"; 
+<#
+.SYNOPSIS
+    We Enhanced 1 Install Hyperv
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+$WEErrorActionPreference = "Stop" ; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V

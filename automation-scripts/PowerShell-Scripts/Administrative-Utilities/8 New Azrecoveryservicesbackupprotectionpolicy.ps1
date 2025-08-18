@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 8 New Azrecoveryservicesbackupprotectionpolicy
+    8 New Azrecoveryservicesbackupprotectionpolicy
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 8 New Azrecoveryservicesbackupprotectionpolicy
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -41,7 +59,7 @@ The schedule and retention policy objects are used as inputs to the New-AzRecove
 
 
 $WERetPol = Get-AzRecoveryServicesBackupRetentionPolicyObject -WorkloadType 'AzureVM'
-$WERetPol.DailySchedule.DurationCountInDays = '365'
+$WERetPol.DailySchedule.DurationCountInDays = '365'; 
 $WESchPol = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType 'AzureVM'
 ; 
 $newAzRecoveryServicesBackupProtectionPolicySplat = @{

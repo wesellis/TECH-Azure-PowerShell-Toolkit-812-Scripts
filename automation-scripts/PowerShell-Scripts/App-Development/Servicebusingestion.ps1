@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Servicebusingestion
+    Servicebusingestion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Servicebusingestion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 
@@ -74,7 +92,7 @@ $WESelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $WEConn.Subscri
 
  Function CalculateFreeSpacePercentage{
  [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
 [Parameter(Mandatory=$true)]
 [int]$WEMaxSizeMB,
@@ -105,7 +123,7 @@ return $sbNamespace
 Function Publish-SbQueueMetrics
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param([parameter(mandatory=$true)]
     [object]$sbNamespace)
 
@@ -120,7 +138,7 @@ param([parameter(mandatory=$true)]
         {
         $WESBqueue = $null
 
-        " Going through service bus instance `"$($sb.Name)`" ..."
+        " Going through service bus instance `" $($sb.Name)`" ..."
 
         #Get Resource Group Name for the service bus instance
         $sbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
@@ -132,7 +150,7 @@ param([parameter(mandatory=$true)]
             " *** Number of queues found: $($WESBqueue.name.count) *** `n"
         }
         catch
-        {Write-Output (" Error in getting queue information for namespace:  " + $sb.name + " `n")}
+        {Write-Output (" Error in getting queue information for namespace:  " + $sb.name + " `n" )}
         
         if($WESBqueue -ne $null) #We have Queues, so we can continue
         {
@@ -171,12 +189,12 @@ param([parameter(mandatory=$true)]
                     else
                     {
                         " QueueSizeInBytes is 0, so we are setting the percentage to 100"
-                        $queueFreeSpacePercentage = 100
+                       ;  $queueFreeSpacePercentage = 100
                     }
                     
 
 			       ;  $sx = New-Object PSObject -Property @{
-                        TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ"));
+                        TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
 			            #SubscriptionName = $subscriptionName;
                         ServiceBusName = $sb.Name;
                         QueueName = $queue.Name;
@@ -235,10 +253,10 @@ param([parameter(mandatory=$true)]
 		    	    #Uncomment below to troubleshoot
 		    	    #$jsonQueueTable
                 }
-                catch {Throw " Ingestion of Queue data has failed!"}
+                catch {Throw " Ingestion of Queue data has failed!" }
         
         }
-        else{Write-Output (" No service bus queues found in namespace: " + $sb.name + " `n")}
+        else{Write-Output (" No service bus queues found in namespace: " + $sb.name + " `n" )}
     
         }
     " ----------------- End Queue section -----------------`n"
@@ -246,7 +264,7 @@ param([parameter(mandatory=$true)]
 
 Function Publish-SbTopicMetrics{
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param([parameter(mandatory=$true)]
     [object]$sbNamespace)
 
@@ -309,14 +327,14 @@ param([parameter(mandatory=$true)]
                     else
                     {
                         " TopicSizeInBytes is 0, so we are setting the percentage to 100"
-                        $topicFreeSpacePercentage = 100
+                       ;  $topicFreeSpacePercentage = 100
                     }
 
 			            
                         
                         #Construct the ingestion table
                        ;  $sx = New-Object PSObject -Property @{
-                        TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ"));
+                        TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                         TopicName = $topic.name;
                         DefaultMessageTimeToLive = $topic.DefaultMessageTimeToLive;
                         MaxSizeInMegabytes = $topic.MaxSizeInMegabytes;
@@ -339,7 +357,7 @@ param([parameter(mandatory=$true)]
 			        # Convert table to a JSON document for ingestion 
 			        $jsonTopicTable = ConvertTo-Json -InputObject $topicTable
 				}
-                else{" No topics found."}
+                else{" No topics found." }
 		    	
                 try
                 {
@@ -348,7 +366,7 @@ param([parameter(mandatory=$true)]
 		    	    #Uncomment below to troubleshoot
 		    	    #$jsonTopicTable
                 }
-                catch {Throw " Error ingesting Topic data!"}
+                catch {Throw " Error ingesting Topic data!" }
 			}
 		}
 	} 
@@ -361,7 +379,7 @@ param([parameter(mandatory=$true)]
 
 Function Publish-SbTopicSubscriptions{
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param([parameter(mandatory=$true)]
     [object]$sbNamespace)
 
@@ -403,18 +421,18 @@ param([parameter(mandatory=$true)]
                 #Getting Subscriptions for each topic
                 foreach($topic in $topicList)
                 {
-                    $topicSubscriptions = Get-AzureRmServiceBusSubscription -ResourceGroup $sbResourceGroup -NamespaceName $sb.Name -TopicName $topic.Name
-                    " Found $($topicSubscriptions.name.Count) Subscriptions for Topic `"$($topic.Name)`" - service bus instance `" $($sb.Name)`"....`n"
+                   ;  $topicSubscriptions = Get-AzureRmServiceBusSubscription -ResourceGroup $sbResourceGroup -NamespaceName $sb.Name -TopicName $topic.Name
+                    " Found $($topicSubscriptions.name.Count) Subscriptions for Topic `" $($topic.Name)`" - service bus instance `" $($sb.Name)`" ....`n"
 
                     if($topicSubscriptions.Name.count -gt 0) #if we don't have subscriptions, we need to skip this step
                     {
                         foreach($topicSubscription in $topicSubscriptions)
                         {
-                            " Processing Subscription: `"$($topicSubscription.Name)`" for Topic: `" $($topic.Name)`"`n"
+                            " Processing Subscription: `" $($topicSubscription.Name)`" for Topic: `" $($topic.Name)`" `n"
 
                              #Construct the ingestion table
                              ;  $sx = New-Object PSObject -Property @{
-                                TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ"));
+                                TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                                 ServiceBusName=$sb.Name;
                                 TopicName = $topic.Name;
                                 SubscriptionName = $topicSubscription.Name
@@ -441,7 +459,7 @@ param([parameter(mandatory=$true)]
 		    	            #Uncomment below to troubleshoot
 		    	            #$jsonSubscriptionTable
                         }
-                        catch {Throw " Error trying to ingest Topic Subscription data!"}
+                        catch {Throw " Error trying to ingest Topic Subscription data!" }
                     }
                 }
             }
@@ -450,11 +468,11 @@ param([parameter(mandatory=$true)]
     
     }
    
-   "----------------- End Topic Subscription section -----------------`n"
+   " ----------------- End Topic Subscription section -----------------`n"
 }
 
 $sbNameSpace = $null
-$topic = $null
+$topic = $null; 
 $sx = $null
 ; 
 $sbNameSpace = Get-SbNameSpace

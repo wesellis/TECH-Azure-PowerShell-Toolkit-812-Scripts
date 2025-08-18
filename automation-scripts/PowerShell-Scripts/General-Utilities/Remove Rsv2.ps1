@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Remove Rsv2
+    Remove Rsv2
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Remove Rsv2
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -25,13 +43,13 @@ $WENWmodule = Get-Module -Name Az.Network -ListAvailable
 $WERSversion = $WERSmodule.Version.ToString()
 $WENWversion = $WENWmodule.Version.ToString()
 
-if($WERSversion -lt " 5.3.0") {
+if($WERSversion -lt " 5.3.0" ) {
 	Uninstall-Module -Name Az.RecoveryServices
 	Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 	Install-Module -Name Az.RecoveryServices -Repository PSGallery -Force -AllowClobber
 }
 
-if($WENWversion -lt " 4.15.0") {
+if($WENWversion -lt " 4.15.0" ) {
 	Uninstall-Module -Name Az.Network
 	Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 	Install-Module -Name Az.Network -Repository PSGallery -Force -AllowClobber
@@ -53,13 +71,13 @@ if($isVaultSoftDeleteFeatureEnabled -eq $false) {
 	Set-AzRecoveryServicesVaultProperty -VaultId $WEVaultToDelete.ID -SoftDeleteFeatureState Disable #disable soft delete
 	Write-WELog " Soft delete disabled for the vault" " INFO" $WEVaultName
 
-	$containerSoftDelete = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted"} #fetch backup items in soft delete state
+	$containerSoftDelete = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted" } #fetch backup items in soft delete state
 	foreach ($softitem in $containerSoftDelete) {
 		Undo-AzRecoveryServicesBackupItemDeletion -Item $softitem -VaultId $WEVaultToDelete.ID -Force #undelete items in soft delete state
 	}
 
 	#fetch MSSQL backup items in soft delete state
-	$containerSoftDeleteSql = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted"}
+	$containerSoftDeleteSql = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted" }
 	foreach ($softitemsql in $containerSoftDeleteSql) {
 		Undo-AzRecoveryServicesBackupItemDeletion -Item $softitemsql -VaultId $WEVaultToDelete.ID -Force #undelete items in soft delete state
 	}
@@ -74,9 +92,9 @@ $backupItemsVM = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM 
 $backupItemsSQL = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID
 $backupItemsAFS = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureStorage -WorkloadType AzureFiles -VaultId $WEVaultToDelete.ID
 $backupItemsSAP = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType SAPHanaDatabase -VaultId $WEVaultToDelete.ID
-$backupContainersSQL = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL"}
+$backupContainersSQL = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL" }
 $protectableItemsSQL = Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID | Where-Object {$_.IsAutoProtected -eq $true}
-$backupContainersSAP = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana"}
+$backupContainersSAP = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana" }
 $WEStorageAccounts = Get-AzRecoveryServicesBackupContainer -ContainerType AzureStorage -VaultId $WEVaultToDelete.ID
 $backupServersMARS = Get-AzRecoveryServicesBackupContainer -ContainerType " Windows" -BackupManagementType MAB -VaultId $WEVaultToDelete.ID
 $backupServersMABS = Get-AzRecoveryServicesBackupManagementServer -VaultId $WEVaultToDelete.ID| Where-Object { $_.BackupManagementType -eq " AzureBackupServer" }
@@ -183,7 +201,7 @@ if ($null -ne $fabricObjects) {
 }
 Write-WELog " Warning: This script will only remove the replication configuration from Azure Site Recovery and not from the source. Please cleanup the source manually. Visit https://go.microsoft.com/fwlink/?linkid=2182781 to learn more." " INFO" -ForegroundColor Yellow
 foreach($item in $pvtendpoints) {
-	$penamesplit = $item.Name.Split(" .")
+	$penamesplit = $item.Name.Split(" ." )
 	$pename = $penamesplit[0]
 	Remove-AzPrivateEndpointConnection -ResourceId $item.Id -Force #remove private endpoint connections
 	Remove-AzPrivateEndpoint -Name $pename -ResourceGroupName $WEResourceGroup -Force #remove private endpoints
@@ -214,10 +232,10 @@ if ($null -ne $fabricObjects) {
 
 $backupItemsVMFin = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $WEVaultToDelete.ID
 $backupItemsSQLFin = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID
-$backupContainersSQLFin = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL"}
+$backupContainersSQLFin = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL" }
 $protectableItemsSQLFin = Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID | Where-Object {$_.IsAutoProtected -eq $true}
 $backupItemsSAPFin = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType SAPHanaDatabase -VaultId $WEVaultToDelete.ID
-$backupContainersSAPFin = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana"}
+$backupContainersSAPFin = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana" }
 $backupItemsAFSFin = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureStorage -WorkloadType AzureFiles -VaultId $WEVaultToDelete.ID
 $WEStorageAccountsFin = Get-AzRecoveryServicesBackupContainer -ContainerType AzureStorage -VaultId $WEVaultToDelete.ID
 $backupServersMARSFin = Get-AzRecoveryServicesBackupContainer -ContainerType " Windows" -BackupManagementType MAB -VaultId $WEVaultToDelete.ID
@@ -248,7 +266,7 @@ $authHeader = @{
     'Content-Type'='application/json'
     'Authorization'='Bearer ' + $token
 }
-$restUri = " https://management.azure.com//subscriptions/"+$WESubscriptionId+'/resourcegroups/'+$WEResourceGroup+'/providers/Microsoft.RecoveryServices/vaults/'+$WEVaultName+'?api-version=2021-06-01&operation=DeleteVaultUsingPS'
+$restUri = " https://management.azure.com//subscriptions/" +$WESubscriptionId+'/resourcegroups/'+$WEResourceGroup+'/providers/Microsoft.RecoveryServices/vaults/'+$WEVaultName+'?api-version=2021-06-01&operation=DeleteVaultUsingPS'; 
 $response = Invoke-RestMethod -Uri $restUri -Headers $authHeader -Method DELETE
 ; 
 $WEVaultDeleted = Get-AzRecoveryServicesVault -Name $WEVaultName -ResourceGroupName $WEResourceGroup -erroraction 'silentlycontinue'

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Compare Templates.Tests
+    Compare Templates.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Compare Templates.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿Describe "Compare-Templates" {
     BeforeAll {
         $WEErrorActionPreference = 'Stop'    
@@ -26,7 +44,7 @@
             [string][Parameter(mandatory = $true)] $templateFilePathActual,
             [switch][Parameter(Mandatory = $false)] $removeGeneratorMetadata
         ) {
-            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Compare-Templates.ps1".Replace('.Tests.ps1', '.ps1')
+            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Compare-Templates.ps1" .Replace('.Tests.ps1', '.ps1')
             . $cmdlet $templateFilePathExpected $templateFilePathActual -removeGeneratorMetadata:$removeGeneratorMetadata -WriteToHost
         }
     }
@@ -58,7 +76,7 @@
     }
 
     It 'Shows a hash difference between bicep versions only if not using -RemoveGeneratorMetadata' {
-        $same = Compare-Templates " $dataFolder/TemplateWithMetadata.json" " $dataFolder/TemplateWithoutMetadata.json"
+       ;  $same = Compare-Templates " $dataFolder/TemplateWithMetadata.json" " $dataFolder/TemplateWithoutMetadata.json"
         $same | Should -Be $false
 
        ;  $same = Compare-Templates " $dataFolder/TemplateWithMetadata.json" " $dataFolder/TemplateWithoutMetadata.json" -RemoveGeneratorMetadata

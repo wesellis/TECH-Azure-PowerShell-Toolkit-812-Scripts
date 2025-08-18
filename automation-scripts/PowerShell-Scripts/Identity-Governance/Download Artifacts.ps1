@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Download Artifacts
+    Download Artifacts
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Download Artifacts
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $WEProgressPreference = 'SilentlyContinue'
@@ -25,7 +43,8 @@ function WE-Get-ManagedIdentityAccessToken {
 try {
     # Main script execution
 ]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
+[CmdletBinding()]
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $resource
     )
@@ -35,7 +54,7 @@ param(
     Write-WELog " Retrieving access token from $requestUri" " INFO"
     $response = Invoke-WebRequest -Uri $requestUri -Headers @{Metadata = " true" } -UseBasicParsing
 
-    if ($response.Content -imatch " access_token") {
+    if ($response.Content -imatch " access_token" ) {
         $jsonContent = $response.Content | ConvertFrom-Json
         $accessToken = $jsonContent.access_token
     }
@@ -74,7 +93,7 @@ if ($scriptsRepoUrl.StartsWith('https://github.com/')) {
 }
 elseif ($scriptsRepoUrl.StartsWith('https://dev.azure.com/')) {
     Write-WELog " === Downloading artifacts from $scriptsRepoPath of branch $scriptsRepoBranch in repo $scriptsRepoUrl" " INFO"
-    $requestUri = " $scriptsRepoUrl/items?path=$scriptsRepoPath&`$format=zip&versionDescriptor.version=$scriptsRepoBranch&versionDescriptor.versionType=branch&api-version=5.0-preview.1"
+   ;  $requestUri = " $scriptsRepoUrl/items?path=$scriptsRepoPath&`$format=zip&versionDescriptor.version=$scriptsRepoBranch&versionDescriptor.versionType=branch&api-version=5.0-preview.1"
    ;  $aadToken = Get-AzureDevOpsAccessToken
     Invoke-RestMethod -Uri $requestUri -Method Get -Headers @{" Authorization" = " Bearer $aadToken" } -OutFile $zip
 
@@ -92,10 +111,8 @@ Get-ChildItem $toolsRoot -Recurse
 Write-WELog " === Completed downloading artifacts" " INFO"
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

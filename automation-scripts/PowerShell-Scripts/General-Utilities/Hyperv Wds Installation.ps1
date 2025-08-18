@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Hyperv Wds Installation
+    Hyperv Wds Installation
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Hyperv Wds Installation
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -30,8 +48,8 @@ Set-NetFirewallRule -Name " Remote Event Log Management (RPC)" -Enabled True
 
 
 Write-Output " Downloading Microsoft Deployment Toolkit..."
-$mdtInstallerPath = " C:\Temp\MDT\MicrosoftDeploymentToolkit_x64.msi"
-$mdtInstallerUrl = " https://download.microsoft.com/download/3/3/9/339BE62D-B4B8-4956-B58D-73C4685FC492/MicrosoftDeploymentToolkit_x64.msi"; 
+$mdtInstallerPath = " C:\Temp\MDT\MicrosoftDeploymentToolkit_x64.msi"; 
+$mdtInstallerUrl = " https://download.microsoft.com/download/3/3/9/339BE62D-B4B8-4956-B58D-73C4685FC492/MicrosoftDeploymentToolkit_x64.msi" ; 
 $mdtInstallerFolder = Split-Path $mdtInstallerPath -Parent
 if (!(Test-Path $mdtInstallerFolder)) {
     Write-Output " Creating directory $mdtInstallerFolder..."
@@ -41,7 +59,7 @@ Invoke-WebRequest -Uri $mdtInstallerUrl -OutFile $mdtInstallerPath
 
 
 Write-Output " Installing Microsoft Deployment Toolkit..."
-Start-Process -FilePath msiexec.exe -ArgumentList " /i `"$mdtInstallerPath`" /qn" -Wait
+Start-Process -FilePath msiexec.exe -ArgumentList " /i `" $mdtInstallerPath`" /qn" -Wait
 
 
 Write-Output " Configuring firewall rules for Microsoft Deployment Toolkit..."

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installorupdatedockerengine
+    Installorupdatedockerengine
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,29 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Installorupdatedockerengine
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [switch] $force,
-    [string] $envScope = "User"
+    [string] $envScope = " User"
 )
 
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -28,7 +46,7 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
     throw " This script needs to run as admin"
 }
 
-if ((Test-Path (Join-Path $env:ProgramFiles " Docker Desktop")) -or (Test-Path (Join-Path $env:ProgramFiles " DockerDesktop"))) {
+if ((Test-Path (Join-Path $env:ProgramFiles " Docker Desktop" )) -or (Test-Path (Join-Path $env:ProgramFiles " DockerDesktop" ))) {
     throw " Docker Desktop is installed on this Computer, cannot run this script"
 }
 
@@ -41,11 +59,11 @@ if (!(Get-WindowsOptionalFeature -FeatureName containers -Online).State -eq 'Ena
     }
 }
 
-
-$latestZipFile = (Invoke-WebRequest -UseBasicParsing -uri " https://download.docker.com/win/static/stable/x86_64/").Content.split(" `r`n") | 
+; 
+$latestZipFile = (Invoke-WebRequest -UseBasicParsing -uri " https://download.docker.com/win/static/stable/x86_64/" ).Content.split(" `r`n" ) | 
                  Where-Object { $_ -like " <a href="" docker-*"" >docker-*" } | 
                  ForEach-Object {;  $zipName = $_.Split('" ')[1]; [Version]($zipName.SubString(7,$zipName.Length-11).Split('-')[0]) } | 
-                 Sort-Object | Select-Object -Last 1 | ForEach-Object { "docker-$_.zip" }
+                 Sort-Object | Select-Object -Last 1 | ForEach-Object { " docker-$_.zip" }
 
 if (-not $latestZipFile) {
     throw " Unable to locate latest stable docker download"
@@ -57,8 +75,8 @@ Write-WELog " Latest stable available Docker Engine version is $latestVersion" "
 
 $dockerService = get-service docker -ErrorAction SilentlyContinue
 if ($dockerService) {
-    if ($dockerService.Status -eq " Running") {
-        $dockerVersion = [Version](docker version -f " {{.Server.Version}}")
+    if ($dockerService.Status -eq " Running" ) {
+        $dockerVersion = [Version](docker version -f " {{.Server.Version}}" )
         Write-WELog " Current installed Docker Engine version $dockerVersion" " INFO"
         if ($latestVersion -le $dockerVersion) {
             Write-WELog " No new Docker Engine available" " INFO"
@@ -82,25 +100,25 @@ if ($dockerService) {
     Stop-Service docker
 }
 
-
+; 
 $tempFile = " $([System.IO.Path]::GetTempFileName()).zip"
 Invoke-WebRequest -UseBasicParsing -Uri $latestZipFileUrl -OutFile $tempFile
 Expand-Archive $tempFile -DestinationPath $env:ProgramFiles -Force
-Remove-Item $tempFil -Forcee -Force
+Remove-Item $tempFi -Forcel -Forcee -Force
 ; 
-$path = [System.Environment]::GetEnvironmentVariable(" Path", $envScope)
-if (" ;$path;" -notlike " *;$($env:ProgramFiles)\docker;*") {
-    [Environment]::SetEnvironmentVariable(" Path", " $path;$env:ProgramFiles\docker", $envScope)
+$path = [System.Environment]::GetEnvironmentVariable(" Path" , $envScope)
+if (" ;$path;" -notlike " *;$($env:ProgramFiles)\docker;*" ) {
+    [Environment]::SetEnvironmentVariable(" Path" , " $path;$env:ProgramFiles\docker" , $envScope)
 }
 
 
 if (-not $dockerService) {
-    $dockerdExe = 'C:\Program Files\docker\dockerd.exe'
+    $dockerdExe = '${env:ProgramFiles}\docker\dockerd.exe'
     & $dockerdExe --register-service
 }
 
 New-Item 'c:\ProgramData\Docker' -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
-Remove-Item 'c:\ProgramData\Docker\panic.log -Force' -Force -ErrorAction SilentlyContinue | Out-Null
+Remove-Item 'c:\ProgramData\Docker\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
 New-Item 'c:\ProgramData\Docker\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
 
 try {

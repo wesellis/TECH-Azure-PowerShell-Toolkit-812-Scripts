@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Communication Services Manager
+    Azure Communication Services Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Communication Services Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,32 +50,36 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WECommunicationServiceName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " Global",
+    [string]$WELocation = " Global" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Create", " Delete", " GetInfo", " ConfigureDomain", " ManagePhoneNumbers", " SendSMS", " SendEmail", " CreateIdentity")]
-    [string]$WEAction = " Create",
+    [ValidateSet(" Create" , " Delete" , " GetInfo" , " ConfigureDomain" , " ManagePhoneNumbers" , " SendSMS" , " SendEmail" , " CreateIdentity" )]
+    [string]$WEAction = " Create" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDomainName,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" AzureManaged", " CustomerManaged")]
-    [string]$WEDomainManagement = " AzureManaged",
+    [ValidateSet(" AzureManaged" , " CustomerManaged" )]
+    [string]$WEDomainManagement = " AzureManaged" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEPhoneNumberType = " TollFree",
+    [string]$WEPhoneNumberType = " TollFree" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEPhoneNumberAssignmentType = " Application",
+    [string]$WEPhoneNumberAssignmentType = " Application" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WECountryCode = " US",
+    [string]$WECountryCode = " US" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WEPhoneNumberQuantity = 1,
@@ -63,9 +87,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESMSTo,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESMSFrom,
@@ -73,9 +101,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESMSMessage,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEEmailTo,
@@ -83,9 +115,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEEmailFrom,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEEmailSubject,
@@ -93,9 +129,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEEmailContent,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEUserIdentityName,
@@ -111,7 +151,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Communication Services Manager" -Version " 1.0" -Description " Enterprise communication platform automation"
@@ -192,7 +232,7 @@ try {
             Write-Log " ✓ Email domain configured: $WEDomainName" -Level SUCCESS
             Write-Log " ✓ Domain management: $WEDomainManagement" -Level INFO
             
-            if ($WEDomainManagement -eq " CustomerManaged") {
+            if ($WEDomainManagement -eq " CustomerManaged" ) {
                 Write-WELog "" " INFO"
                 Write-WELog " 📋 DNS Configuration Required" " INFO" -ForegroundColor Yellow
                 Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Yellow
@@ -281,7 +321,7 @@ try {
             $connectionString = Get-AzCommunicationServiceKey -ResourceGroupName $WEResourceGroupName -Name $WECommunicationServiceName
             
             # Send SMS using REST API
-            $smsResult = Invoke-AzureOperation -Operation {
+           ;  $smsResult = Invoke-AzureOperation -Operation {
                ;  $endpoint = ($connectionString.PrimaryConnectionString -split ';')[0] -replace 'endpoint=', ''
                 $accessKey = ($connectionString.PrimaryConnectionString -split ';')[1] -replace 'accesskey=', ''
                 
@@ -366,7 +406,7 @@ try {
                 }
                 
                 $body = @{
-                    createTokenWithScopes = @(" chat", " voip")
+                    createTokenWithScopes = @(" chat" , " voip" )
                 } | ConvertTo-Json
                 
                 $uri = " https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$WEResourceGroupName/providers/Microsoft.Communication/CommunicationServices/$WECommunicationServiceName/identities" + " ?api-version=2023-04-01"
@@ -459,7 +499,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName " Service Deletion" -Status " Removing Communication Services resource"
             
             $confirmation = Read-Host " Are you sure you want to delete the Communication Service '$WECommunicationServiceName'? (yes/no)"
-            if ($confirmation.ToLower() -ne " yes") {
+            if ($confirmation.ToLower() -ne " yes" ) {
                 Write-Log " Deletion cancelled by user" -Level WARN
                 return
             }
@@ -473,7 +513,7 @@ try {
     }
 
     # Configure Event Grid integration if enabled
-    if ($WEEnableEventGrid -and $WEAction.ToLower() -eq " create") {
+    if ($WEEnableEventGrid -and $WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 4 -TotalSteps 10 -StepName " Event Grid Setup" -Status " Configuring Event Grid integration"
         
         Invoke-AzureOperation -Operation {
@@ -485,7 +525,7 @@ try {
     }
 
     # Configure monitoring if enabled
-    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create") {
+    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 5 -TotalSteps 10 -StepName " Monitoring Setup" -Status " Configuring diagnostic settings"
         
         $diagnosticSettings = Invoke-AzureOperation -Operation {
@@ -499,8 +539,8 @@ try {
                     Name = " $WECommunicationServiceName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" ChatOperational", " SMSOperational", " CallSummary", " CallDiagnostics")
-                    MetricCategory = @(" AllMetrics")
+                    Category = @(" ChatOperational" , " SMSOperational" , " CallSummary" , " CallDiagnostics" )
+                    MetricCategory = @(" AllMetrics" )
                 }
                 
                 Set-AzDiagnosticSetting @diagnosticParams
@@ -516,7 +556,7 @@ try {
     }
 
     # Apply enterprise tags if creating service
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName " Tagging" -Status " Applying enterprise tags"
         $tags = @{
             'Environment' = 'Production'
@@ -540,13 +580,13 @@ try {
     Write-ProgressStep -StepNumber 7 -TotalSteps 10 -StepName " Capabilities Analysis" -Status " Analyzing communication capabilities"
     
     $capabilities = @(
-        " 📞 Voice calling (VoIP) - Make and receive voice calls",
-        " 💬 Chat - Real-time messaging and group chat",
-        " 📱 SMS - Send and receive text messages",
-        " 📧 Email - Transactional and marketing emails",
-        " 📹 Video calling - HD video communication",
-        " 🔐 Identity management - User authentication and tokens",
-        " 📊 Call analytics - Call quality and usage metrics",
+        " 📞 Voice calling (VoIP) - Make and receive voice calls" ,
+        " 💬 Chat - Real-time messaging and group chat" ,
+        " 📱 SMS - Send and receive text messages" ,
+        " 📧 Email - Transactional and marketing emails" ,
+        " 📹 Video calling - HD video communication" ,
+        " 🔐 Identity management - User authentication and tokens" ,
+        " 📊 Call analytics - Call quality and usage metrics" ,
         " 🌍 Global reach - Worldwide communication coverage"
     )
 
@@ -557,9 +597,9 @@ try {
     $maxScore = 5
     $securityFindings = @()
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         # Check data location
-        if ($WELocation -in @(" United States", " Europe", " Asia Pacific")) {
+        if ($WELocation -in @(" United States" , " Europe" , " Asia Pacific" )) {
             $securityScore++
             $securityFindings = $securityFindings + " ✓ Data stored in compliant region"
         }
@@ -594,7 +634,7 @@ try {
     # Cost analysis
     Write-ProgressStep -StepNumber 9 -TotalSteps 10 -StepName " Cost Analysis" -Status " Analyzing cost components"
     
-    $costComponents = @{
+   ;  $costComponents = @{
         " SMS" = " $0.0075 per message (US)"
         " Voice Calling" = " $0.004 per minute (outbound)"
         " Phone Numbers" = " $1-15 per month depending on type"
@@ -608,7 +648,7 @@ try {
     # Final validation
     Write-ProgressStep -StepNumber 10 -TotalSteps 10 -StepName " Validation" -Status " Validating communication service"
     
-    if ($WEAction.ToLower() -ne " delete") {
+    if ($WEAction.ToLower() -ne " delete" ) {
        ;  $serviceStatus = Invoke-AzureOperation -Operation {
             Get-AzCommunicationService -ResourceGroupName $WEResourceGroupName -Name $WECommunicationServiceName
         } -OperationName " Validate Service Status"
@@ -621,7 +661,7 @@ try {
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog " 📡 Communication Service Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Service Name: $WECommunicationServiceName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White

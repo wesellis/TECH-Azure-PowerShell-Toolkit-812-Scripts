@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 2.1 Fetch Vaultid
+    2.1 Fetch Vaultid
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 2.1 Fetch Vaultid
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -52,10 +70,10 @@ We plan on deprecating the vault context setting in accordance with Azure PowerS
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join (" $WECustomerName", " _Outlook", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join (" $WEVMName", " ARSV1")
-
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
+; 
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $WEResourceGroupName
     Name = $WEVaultname

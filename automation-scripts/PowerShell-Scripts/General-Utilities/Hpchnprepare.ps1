@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Hpchnprepare
+    Hpchnprepare
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Hpchnprepare
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .Synopsis
@@ -39,7 +57,7 @@
     Prepare the HPC head node with remote DB server instance " MyRemoteDB\ComputeCluster"
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     # Specifies the database server instance
     [Parameter(Mandatory=$true)]
@@ -47,23 +65,23 @@ param(
     
     # (Optional) specifies the database name for HPC Management DB. If not specified, the default value is " HPCManagement"
     [Parameter(Mandatory=$false)]
-    [String] $WEManagementDB = " HPCManagement",
+    [String] $WEManagementDB = " HPCManagement" ,
 
     # (Optional) specifies the database name for HPC Scheduler DB. If not specified, the default value is " HPCScheduler"
     [Parameter(Mandatory=$false)]
-    [String] $WESchedulerDB = " HPCScheduler",
+    [String] $WESchedulerDB = " HPCScheduler" ,
 
     # (Optional) specifies the database name for HPC Monitoring DB. If not specified, the default value is " HPCMonitoring"
     [Parameter(Mandatory=$false)]
-    [String] $WEMonitoringDB = " HPCMonitoring",
+    [String] $WEMonitoringDB = " HPCMonitoring" ,
 
     # (Optional) specifies the database name for HPC Reporting DB. If not specified, the default value is " HPCReporting"
     [Parameter(Mandatory=$false)]
-    [String] $WEReportingDB = " HPCReporting",
+    [String] $WEReportingDB = " HPCReporting" ,
 
     # (Optional) specifies the database name for HPC Diagnostics DB. If not specified, the default value is " HPCDiagnostics"
     [Parameter(Mandatory=$false)]
-    [String] $WEDiagnosticsDB = " HPCDiagnostics",
+    [String] $WEDiagnosticsDB = " HPCDiagnostics" ,
 
     # (Optional) specifies this parameter if the database server is a remote server.
     [Parameter(Mandatory=$false)]
@@ -89,18 +107,18 @@ if(Test-Path -Path $WEScript:LogFilePath -PathType Leaf)
 function WE-WriteLog
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$true, Position=0)]
         [ValidateNotNullOrEmpty()]
         [String] $WEMessage,
 
         [Parameter(Mandatory=$false)]
-        [ValidateSet(" Error"," Warning"," Verbose")]
+        [ValidateSet(" Error" ," Warning" ," Verbose" )]
         [String] $WELogLevel = " Verbose"
     )
     
-    $timestr = Get-Date -Format 'MM/dd/yyyy HH:mm:ss'
+   ;  $timestr = Get-Date -Format 'MM/dd/yyyy HH:mm:ss'
    ;  $WENewMessage = " $timestr - $WEMessage"
     switch($WELogLevel)
     {
@@ -135,9 +153,9 @@ try
     WriteLog " Updating Cluster Name"
     Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC -Name ClusterName -Value $env:COMPUTERNAME
     Set-ItemProperty -Path HKLM:\SOFTWARE\Wow6432Node\Microsoft\HPC -Name ClusterName -Value $env:COMPUTERNAME
-    [Environment]::SetEnvironmentVariable(" CCP_SCHEDULER", $env:COMPUTERNAME, [System.EnvironmentVariableTarget]::Machine)
-    [Environment]::SetEnvironmentVariable(" CCP_SCHEDULER", $env:COMPUTERNAME, [System.EnvironmentVariableTarget]::Process)
-    $WEHPCBinPath = [System.IO.Path]::Combine($env:CCP_HOME, " Bin")
+    [Environment]::SetEnvironmentVariable(" CCP_SCHEDULER" , $env:COMPUTERNAME, [System.EnvironmentVariableTarget]::Machine)
+    [Environment]::SetEnvironmentVariable(" CCP_SCHEDULER" , $env:COMPUTERNAME, [System.EnvironmentVariableTarget]::Process)
+   ;  $WEHPCBinPath = [System.IO.Path]::Combine($env:CCP_HOME, " Bin" )
 
    ;  $WEDBDic = @{
         " HPCManagement"  = $WEManagementDB; 
@@ -152,7 +170,7 @@ try
     {
         $regDbServerName = $db.Substring(3) + " DbServerName"
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC -Name $regDbServerName -Value $WEDBServerInstance
-        $regConnStrName = $db.Substring(3) + " DbConnectionString"
+       ;  $regConnStrName = $db.Substring(3) + " DbConnectionString"
        ;  $regConnStrValue = " Data Source={0};Initial Catalog={1};Integrated Security=True;" -f $WEDBServerInstance, $WEDBDic[$db]
         Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\Security -Name $regConnStrName -Value $regConnStrValue
     }
@@ -160,7 +178,7 @@ try
 
     if($WERemoteDB.IsPresent)
     {
-        $domainNetbiosName = $computeInfo.Domain.Split(" .")[0].ToUpper()
+        $domainNetbiosName = $computeInfo.Domain.Split(" ." )[0].ToUpper()
         $machineAccount = " $domainNetbiosName\$env:COMPUTERNAME$"
         Import-Module " sqlps" -DisableNameChecking -Force
         foreach($db in $WEDBDic.Keys)
@@ -168,26 +186,26 @@ try
             WriteLog (" Configuring Database " + $WEDBDic[$db])
             $dbNameVar = $db + " DBName"
             $sqlfilename = $db + " DB.sql"
-            Get-Content " $WEHPCBinPath\$sqlfilename" | %{$_.Replace(" `$($dbNameVar)", $WEDBDic[$db])} | Set-Content " $env:temp\$sqlfilename" -Force
+            Get-Content " $WEHPCBinPath\$sqlfilename" | %{$_.Replace(" `$($dbNameVar)" , $WEDBDic[$db])} | Set-Content " $env:temp\$sqlfilename" -Force
             Invoke-Sqlcmd -ServerInstance $WEDBServerInstance -Database $WEDBDic[$db] -InputFile " $env:temp\$sqlfilename" -QueryTimeout 300 -ErrorAction SilentlyContinue
             Invoke-Sqlcmd -ServerInstance $WEDBServerInstance -Database $WEDBDic[$db] -InputFile " $WEHPCBinPath\AddDbUserForHpcService.sql" -Variable " TargetAccount=$machineAccount" -QueryTimeout 300
         }
 
         WriteLog " Inserting SDM Documents to HpcManagment database"
         $sdmDocs = @(
-            " Microsoft.Ccp.ClusterModel.sdmDocument", 
-            " Microsoft.Ccp.TemplateModel.sdmDocument", 
-            " Microsoft.Ccp.NetworkModel.sdmDocument", 
-            " Microsoft.Ccp.WdsModel.sdmDocument", 
-            " Microsoft.Ccp.ComputerModel.sdmDocument", 
+            " Microsoft.Ccp.ClusterModel.sdmDocument" , 
+            " Microsoft.Ccp.TemplateModel.sdmDocument" , 
+            " Microsoft.Ccp.NetworkModel.sdmDocument" , 
+            " Microsoft.Ccp.WdsModel.sdmDocument" , 
+            " Microsoft.Ccp.ComputerModel.sdmDocument" , 
             " Microsoft.Hpc.NetBootModel.sdmDocument"
         )
 
         $sdmLArgs = @()
-        $sdmLArgs = $sdmLArgs + " -sql:`"`""
+        $sdmLArgs = $sdmLArgs + " -sql:`" `""
         foreach($doc in $sdmDocs)
         {
-            $docFullPath = [System.IO.Path]::Combine($env:CCP_HOME, " Conf\$doc")
+            $docFullPath = [System.IO.Path]::Combine($env:CCP_HOME, " Conf\$doc" )
             $sdmLArgs = $sdmLArgs + " `" $docFullPath`""
         }
 
@@ -205,8 +223,8 @@ try
         $WESQLServices | Start-Service
     }
 
-    $WEHNServiceList = @(" HpcSdm", " HpcManagement", " HpcReporting", " HpcMonitoringClient", " HpcNodeManager", " msmpi", " HpcBroker", `
-        " HpcDiagnostics", " HpcScheduler", " HpcMonitoringServer", " HpcSession", " HpcSoaDiagMon")
+    $WEHNServiceList = @(" HpcSdm" , " HpcManagement" , " HpcReporting" , " HpcMonitoringClient" , " HpcNodeManager" , " msmpi" , " HpcBroker" , `
+        " HpcDiagnostics" , " HpcScheduler" , " HpcMonitoringServer" , " HpcSession" , " HpcSoaDiagMon" )
 
     foreach($svcname in $WEHNServiceList)
     {
@@ -221,7 +239,7 @@ try
             Set-Service -Name $svcname -StartupType Automatic
 
             # HpcBroker service will be started later
-            if($svcname -ne " HpcBroker")
+            if($svcname -ne " HpcBroker" )
             {
                 $retry = 0
                 while($retry -lt 100)
@@ -253,7 +271,7 @@ try
     while($retry -lt 100)
     {
         WriteLog " Setting SpoolDir"
-        $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setparams SpoolDir=`"\\$env:COMPUTERNAME\CcpSpoolDir`"" -NoNewWindow -Wait -PassThru
+        $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setparams SpoolDir=`" \\$env:COMPUTERNAME\CcpSpoolDir`"" -NoNewWindow -Wait -PassThru
         if($p.ExitCode -ne 0)
         {
             if($retry -lt 100)
@@ -276,7 +294,7 @@ try
     while($retry -lt 100)
     {
         WriteLog " Setting CCP_SERVICEREGISTRATION_PATH"
-        $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setenvs CCP_SERVICEREGISTRATION_PATH=`"\\$env:COMPUTERNAME\HpcServiceRegistration`"" -NoNewWindow -Wait -PassThru
+        $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setenvs CCP_SERVICEREGISTRATION_PATH=`" \\$env:COMPUTERNAME\HpcServiceRegistration`"" -NoNewWindow -Wait -PassThru
         if($p.ExitCode -ne 0)
         {
             if($retry -lt 100)
@@ -342,17 +360,17 @@ try
     Start-Service -Name " HpcBroker"
 
     WriteLog " importing diagnostics test cases"
-    Start-Process -FilePath " test.exe" -ArgumentList " add `"$WEHPCBinPath\microsofttests.xml`"" -NoNewWindow -Wait
-    Start-Process -FilePath " test.exe" -ArgumentList " add `"$WEHPCBinPath\exceltests.xml`"" -NoNewWindow -Wait
+    Start-Process -FilePath " test.exe" -ArgumentList " add `" $WEHPCBinPath\microsofttests.xml`"" -NoNewWindow -Wait
+    Start-Process -FilePath " test.exe" -ArgumentList " add `" $WEHPCBinPath\exceltests.xml`"" -NoNewWindow -Wait
 
     WriteLog " Configuring monitoring service"
     Start-Process -FilePath " HpcMonUtil.exe" -ArgumentList " configure /v" -NoNewWindow -Wait
 
-    $retry = 0
+   ;  $retry = 0
     while($retry -lt 100)
     {
         WriteLog " Publishing HPC runtime data share"
-       ;  $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setenvs HPC_RUNTIMESHARE=`"\\$env:COMPUTERNAME\Runtime$`"" -NoNewWindow -Wait -PassThru
+       ;  $p = Start-Process -FilePath " cluscfg.exe" -ArgumentList " setenvs HPC_RUNTIMESHARE=`" \\$env:COMPUTERNAME\Runtime$`"" -NoNewWindow -Wait -PassThru
         if($p.ExitCode -ne 0)
         {
             if($retry -lt 100)

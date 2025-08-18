@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 16 Get Azrecoveryservicesbackuprecoverypoint
+    16 Get Azrecoveryservicesbackuprecoverypoint
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 16 Get Azrecoveryservicesbackuprecoverypoint
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -37,7 +55,7 @@
 
 
 $startDate = (Get-Date).AddDays(-7)
-$endDate = Get-Date
+$endDate = Get-Date; 
 $getAzRecoveryServicesBackupRecoveryPointSplat = @{
     Item = $backupitem
     StartDate = $startdate.ToUniversalTime()

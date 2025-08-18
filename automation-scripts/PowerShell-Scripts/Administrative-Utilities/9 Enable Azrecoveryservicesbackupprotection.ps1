@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 9 Enable Azrecoveryservicesbackupprotection
+    9 Enable Azrecoveryservicesbackupprotection
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 9 Enable Azrecoveryservicesbackupprotection
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -44,18 +62,18 @@ The following examples enable protection for the item, V2VM, using the policy, N
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join ("$WECustomerName" , "_Outlook" , "_RG" )
+$WEResourceGroupName = -join ("$WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join ("$WEVMName" , "ARSV1" )
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 
 $targetVault = Get-AzRecoveryServicesVault -ResourceGroupName $WEResourceGroupName -Name $WEVaultname
 
 
 $getAzRecoveryServicesBackupProtectionPolicySplat = @{
-    Name = "DefaultPolicy"
+    Name = " DefaultPolicy"
     VaultId = $targetVault.ID
 }
-
+; 
 $pol = Get-AzRecoveryServicesBackupProtectionPolicy @getAzRecoveryServicesBackupProtectionPolicySplat
 ; 
 $enableAzRecoveryServicesBackupProtectionSplat = @{

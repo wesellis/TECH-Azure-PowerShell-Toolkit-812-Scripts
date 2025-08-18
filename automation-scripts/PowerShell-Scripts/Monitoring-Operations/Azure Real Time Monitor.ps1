@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Real Time Monitor
+    Azure Real Time Monitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Real Time Monitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -25,14 +43,16 @@ function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -43,8 +63,10 @@ param(
     [Parameter(Mandatory=$false)][string[]]$WEResourceGroups = @(),
     [Parameter(Mandatory=$false)][string[]]$WEResourceTypes = @(),
     [Parameter(Mandatory=$false)][int]$WERefreshIntervalSeconds = 30,
-    [Parameter(Mandatory=$false)][string]$WEDashboardPort = " 8080",
+    [Parameter(Mandatory=$false)][string]$WEDashboardPort = " 8080" ,
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAlertWebhookUrl,
     [Parameter(Mandatory=$false)][switch]$WEStartWebDashboard,
@@ -52,7 +74,7 @@ param(
     [Parameter(Mandatory=$false)][switch]$WEExportMetrics
 )
 
-$modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " ..", " modules", " AzureAutomationCommon"
+$modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " .." , " modules" , " AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
 Show-Banner -ScriptName " Azure Real-time Monitor" -Description " Live monitoring with web dashboard and alerts"
@@ -147,7 +169,7 @@ function WE-Get-ResourceHealthMetric {
                 $vm = Get-AzVM -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -Status -ErrorAction SilentlyContinue
                 if ($vm) {
                     $powerState = ($vm.Statuses | Where-Object { $_.Code -like " PowerState/*" }).DisplayStatus
-                    $metric.Status = if ($powerState -eq " VM running") { " Healthy" } else { " Unhealthy" }
+                    $metric.Status = if ($powerState -eq " VM running" ) { " Healthy" } else { " Unhealthy" }
                     $metric.Details = $powerState
                     $metric.Metrics.PowerState = $powerState
                 }
@@ -155,7 +177,7 @@ function WE-Get-ResourceHealthMetric {
             " Microsoft.Storage/storageAccounts" {
                 $storage = Get-AzStorageAccount -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -ErrorAction SilentlyContinue
                 if ($storage) {
-                    $metric.Status = if ($storage.ProvisioningState -eq " Succeeded") { " Healthy" } else { " Unhealthy" }
+                    $metric.Status = if ($storage.ProvisioningState -eq " Succeeded" ) { " Healthy" } else { " Unhealthy" }
                     $metric.Details = $storage.ProvisioningState
                     $metric.Metrics.ProvisioningState = $storage.ProvisioningState
                     $metric.Metrics.Tier = $storage.Sku.Tier
@@ -164,7 +186,7 @@ function WE-Get-ResourceHealthMetric {
             " Microsoft.Web/sites" {
                 $webapp = Get-AzWebApp -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -ErrorAction SilentlyContinue
                 if ($webapp) {
-                    $metric.Status = if ($webapp.State -eq " Running") { " Healthy" } else { " Unhealthy" }
+                    $metric.Status = if ($webapp.State -eq " Running" ) { " Healthy" } else { " Unhealthy" }
                     $metric.Details = $webapp.State
                     $metric.Metrics.State = $webapp.State
                     $metric.Metrics.DefaultHostName = $webapp.DefaultHostName
@@ -185,25 +207,25 @@ function WE-Get-ResourceHealthMetric {
 
 function WE-Test-ResourceAlert {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param($WEMetric)
     
     $alertTriggered = $false
     $alertMessage = ""
     
     # Check for common alert conditions
-    if ($WEMetric.Status -eq " Unhealthy") {
+    if ($WEMetric.Status -eq " Unhealthy" ) {
         $alertTriggered = $true
         $alertMessage = " Resource $($WEMetric.Name) is unhealthy: $($WEMetric.Details)"
     }
     
-    if ($WEMetric.Type -eq " Microsoft.Compute/virtualMachines" -and $WEMetric.Metrics.PowerState -eq " VM deallocated") {
+    if ($WEMetric.Type -eq " Microsoft.Compute/virtualMachines" -and $WEMetric.Metrics.PowerState -eq " VM deallocated" ) {
         $alertTriggered = $true
         $alertMessage = " VM $($WEMetric.Name) has been deallocated"
     }
     
     if ($alertTriggered) {
-        $alert = @{
+       ;  $alert = @{
             Timestamp = Get-Date
             Resource = $WEMetric.Name
             Type = $WEMetric.Type

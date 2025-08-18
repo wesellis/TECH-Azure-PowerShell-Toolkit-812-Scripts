@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Subscription Usage Monitor
+    Azure Subscription Usage Monitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,19 +16,39 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Subscription Usage Monitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WEWarningThreshold = 80,
@@ -44,7 +64,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 Show-Banner -ScriptName " Azure Subscription Usage Monitor" -Version " 1.0" -Description " Monitor subscription limits, quotas, and resource usage"
 
@@ -118,12 +138,12 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 5 -StepName " Summary" -Status " Displaying results"
 
     # Display critical and warning items
-    $criticalItems = @()
+   ;  $criticalItems = @()
    ;  $warningItems = @()
     
     $usageReport.ComputeUsage + $usageReport.NetworkUsage | ForEach-Object {
-        if ($_.Status -eq " Critical") { $criticalItems = $criticalItems + $_ }
-        elseif ($_.Status -eq " Warning") { $warningItems = $warningItems + $_ }
+        if ($_.Status -eq " Critical" ) { $criticalItems = $criticalItems + $_ }
+        elseif ($_.Status -eq " Warning" ) {;  $warningItems = $warningItems + $_ }
     }
 
     Write-WELog "" " INFO"

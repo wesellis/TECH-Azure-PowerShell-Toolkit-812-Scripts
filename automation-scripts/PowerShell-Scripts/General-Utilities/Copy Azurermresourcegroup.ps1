@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Copy Azurermresourcegroup
+    Copy Azurermresourcegroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Copy Azurermresourcegroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -105,37 +123,45 @@ Copies Resource Group CONTOSO from Azure Government to Azure Government
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(mandatory=$WETrue,
-      HelpMessage=" Enter the name of the Azure Resource Group you want to copy and Press <Enter> e.g. CONTOSO")]
+      HelpMessage=" Enter the name of the Azure Resource Group you want to copy and Press <Enter> e.g. CONTOSO" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
 
     [Parameter(mandatory=$WETrue,
-      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the source subscription. e.g. AzureUSGovernment")]
+      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the source subscription. e.g. AzureUSGovernment" )]
     [AllowEmptyString()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOptionalSourceEnvironment,
     
     [Parameter(mandatory=$WETrue,
-      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the target subscription. e.g. AzureGermanCloud")]
+      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the target subscription. e.g. AzureGermanCloud" )]
     [AllowEmptyString()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOptionalTargetEnvironment,
 
    [Parameter(mandatory=$WETrue,
-    HelpMessage=" Press <Enter> to create the new resource in the same region as the source or enter a new location/region for the target.")]
+    HelpMessage=" Press <Enter> to create the new resource in the same region as the source or enter a new location/region for the target." )]
     [AllowEmptyString()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOptionalNewLocation,
 
     [Parameter(mandatory=$WEFalse,
-      HelpMessage=" Use this switch to resume the script after waiting for the blob copy to complete")]
+      HelpMessage=" Use this switch to resume the script after waiting for the blob copy to complete" )]
     [switch]$WEResume
 
 
@@ -150,7 +176,7 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 6.7.0") {
+if ((Get-Module AzureRM).Version -lt " 6.7.0" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 6.7 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -161,7 +187,7 @@ if ((Get-Module AzureRM).Version -lt " 6.7.0") {
 
 function WE-Get-StorageObject 
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI, $srcName) 
     
     $split = $srcURI.Split('/')
@@ -210,7 +236,7 @@ param($resourceGroupName, $srcURI, $srcName)
 
 function get-availableResources
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($resourceType, $location)
 
     $resource = Get-AzureRmVMUsage -Location $location | Where-Object{$_.Name.value -eq $resourceType}
@@ -223,7 +249,7 @@ param($resourceType, $location)
 
 function WE-Get-BlobCopyStatus
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($context, $containerName, $blobName)
     
     if($blobName)
@@ -264,15 +290,15 @@ param($context, $containerName, $blobName)
 
 function copy-azureBlob 
 {  [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($srcUri, $srcContext, $destContext, $containerName)
 
 
     $split = $srcURI.Split('/')
     $blobName = $split[($split.count -1)]
-    $blobSplit = $blobName.Split('.')
+   ;  $blobSplit = $blobName.Split('.')
    ;  $extension = $blobSplit[($blobSplit.count -1)]
-    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped";return}
+    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped" ;return}
 
     if(! $containerName){$containerName = $split[3]}
 
@@ -289,7 +315,7 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
         $blobName= $path + '/' + $blobName
         $blobName = $blobName.Trim()
-        $blobName = $blobName.Substring(1, $blobName.Length-1)
+       ;  $blobName = $blobName.Substring(1, $blobName.Length-1)
       }
     
     
@@ -401,9 +427,9 @@ $resourceGroupNSGs = Get-AzureRmNetworkSecurityGroup -ResourceGroupName $resourc
 $resourceGroupAvSets = Get-AzureRmAvailabilitySet -ResourceGroupName $resourceGroupName 
 $resourceGroupVMs = Get-AzureRMVM -ResourceGroupName $resourceGroupName
 $resourceGroupPIPs = Get-AzureRmPublicIpAddress -ResourceGroupName $resourceGroupName
-$resourceGroupNICs = Get-AzureRmNetworkInterface -ResourceGroupName $resourceGroupName
+$resourceGroupNICs = Get-AzureRmNetworkInterface -ResourceGroupName $resourceGroupName; 
 $resourceGroupLBs = Get-AzureRmLoadBalancer -ResourceGroupName $resourceGroupName
-if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName"}
+if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName" }
 
 
 
@@ -424,7 +450,7 @@ write-host " Current status of VMs:" -f DarkGreen
 $resourceGroupVMs | %{
   ;  $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|Where-Object{$_.Code -like 'PowerState*'}).DisplayStatus
    write-output " $($_.name) status is $status" 
-   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again"; break}
+   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again" ; break}
 }
 
 write-host " Virtual networks:" -f DarkGreen
@@ -743,7 +769,7 @@ if(! $resume)
             }
 
             [string] $guid = (New-Guid).Guid
-            [string] $WEDeststorageAccountName = " $($first16.ToLower())"+($guid.Substring(0,8))
+            [string] $WEDeststorageAccountName = " $($first16.ToLower())" +($guid.Substring(0,8))
         }
         else
         {
@@ -767,14 +793,14 @@ if(! $resume)
         # add AccessTier if kind is BlobStorage.
         if($kind -ne 'Storage') 
         {
-            $storageParams.Add(" Kind", $kind)
-            $storageParams.Add(" AccessTier", $accessTier)
+            $storageParams.Add(" Kind" , $kind)
+            $storageParams.Add(" AccessTier" , $accessTier)
         }
 
         # add CustomDomainName if present.
         if($WECustomDomain) 
         {
-            $storageParams.Add(" CustomDomainName", $WECustomDomain)
+            $storageParams.Add(" CustomDomainName" , $WECustomDomain)
         }
 
         # add CustomDomainName if present.
@@ -784,10 +810,10 @@ if(! $resume)
             if($WEEncryption.Services.File){$encryptionFile  = 'File'}
             if($encryptionBlob){$WEEncryptionType = $encryptionBlob}
             if($encryptionFile){$WEEncryptionType = $encryptionFile}
-            if($encryptionBlob -and $encryptionFile){$WEEncryptionType = " $encryptionBlob,$encryptionFile"}
+            if($encryptionBlob -and $encryptionFile){$WEEncryptionType = " $encryptionBlob,$encryptionFile" }
            # remarked for newer modules, prior to 6.7, this was required
            
-           #  $storageParams.Add(" EnableEncryptionService", $WEEncryptionType)
+           #  $storageParams.Add(" EnableEncryptionService" , $WEEncryptionType)
         }
         
 
@@ -857,7 +883,7 @@ if(! $resume)
     # create temporary blob storage account to stage managed disks that will be copied 
     if($resourceGroupManagedDisks)
     {
-        $cleanResourceGroupName = $resourceGroupName -replace " [^a-z0-9]", ""
+        $cleanResourceGroupName = $resourceGroupName -replace " [^a-z0-9]" , ""
 
         if($resourceGroupName.Length -gt 16)
         {
@@ -870,7 +896,7 @@ if(! $resume)
 
            
         [string] $guid = (New-Guid).Guid
-        [string] $tempStorageAccountName = " $($first16.ToLower())"+($guid.Substring(0,8))
+        [string] $tempStorageAccountName = " $($first16.ToLower())" +($guid.Substring(0,8))
 
         $storageParams = @{
         " ResourceGroupName" = $resourceGroupName 
@@ -964,7 +990,7 @@ if(! $resume)
 
             if($nsgRule.Description)
             {
-                $nsgRuleParams.Add(" Description", $nsgRule.Description)
+                $nsgRuleParams.Add(" Description" , $nsgRule.Description)
             }
 
            $nsgRules = $nsgRules + New-AzureRmNetworkSecurityRuleConfig @nsgRuleParams
@@ -1081,7 +1107,7 @@ if(! $resume)
         if($pipDomainNameLabel)
         {
           $WENewPipDomainNameLabel = $pipDomainNameLabel + 'new'
-          $pipParams.Add(" DomainNameLabel", $WENewPipDomainNameLabel)
+          $pipParams.Add(" DomainNameLabel" , $WENewPipDomainNameLabel)
         }
         
 
@@ -1122,7 +1148,7 @@ if(! $resume)
             $newLBipConfig = $null
               
             $WELBipConfigName =  $WELBipConfig.name
-            $lbConfigParams = @{" Name"= $WELBipConfigName} 
+            $lbConfigParams = @{" Name" = $WELBipConfigName} 
 
             # get new vnet and subnet from old vnet and subnet names
             if($WELBipConfig.Subnet) 
@@ -1139,7 +1165,7 @@ if(! $resume)
                 }
                 catch{}
 
-                $lbConfigParams.Add(" SubnetId", $subnet.id)
+                $lbConfigParams.Add(" SubnetId" , $subnet.id)
             }
 
             # add PublicIpAddress if present.
@@ -1156,13 +1182,13 @@ if(! $resume)
                 
                 if($lbPubIP)
                 {
-                  $lbConfigParams.Add(" PublicIpAddress", $lbPubIP) 
+                  $lbConfigParams.Add(" PublicIpAddress" , $lbPubIP) 
                 }
             }
             
             if($WELBipConfig.PrivateIpAddress) 
             {
-              $lbConfigParams.Add(" PrivateIpAddress", $WELBipConfig.PrivateIpAddress)  
+              $lbConfigParams.Add(" PrivateIpAddress" , $WELBipConfig.PrivateIpAddress)  
             }   
 
 
@@ -1203,7 +1229,7 @@ if(! $resume)
 
                     if($WEInboundNatRule.EnableFloatingIP)
                     {
-                        $inboundNatRuleParams.Add(" EnableFloatingIP", $null)
+                        $inboundNatRuleParams.Add(" EnableFloatingIP" , $null)
                     }
                     
                     $newNatRuleConfig = New-AzureRmLoadBalancerInboundNatRuleConfig @inboundNatRuleParams  
@@ -1232,12 +1258,12 @@ if(! $resume)
 
         if($newLBipConfigs)
         {
-         $WELBparams.Add(" FrontendIpConfiguration", $newLBipConfigs)
+         $WELBparams.Add(" FrontendIpConfiguration" , $newLBipConfigs)
         }
 
         if($newNatRuleConfigs)
         {
-         $WELBparams.Add(" InboundNatRule", $newNatRuleConfigs)
+         $WELBparams.Add(" InboundNatRule" , $newNatRuleConfigs)
         }
          
         try
@@ -1337,7 +1363,7 @@ if(! $resume)
             # add subnet if present.
             if($subnet) 
             {
-                $ipConfigParams.Add( " Subnet", $subnet)
+                $ipConfigParams.Add( " Subnet" , $subnet)
             }
             
             # add public IP if present.
@@ -1346,7 +1372,7 @@ if(! $resume)
                 $ipipsplit = $ipConfig.PublicIpAddress.id.split('/')
                 $ipipName = $ipipsplit[$ipipsplit.Length -1]
                 $WEPublicIP = Get-AzureRmPublicIpAddress -Name $ipipName -ResourceGroupName $WEResourceGroupName
-                $ipConfigParams.Add(" PublicIpAddress", $WEPublicIP)
+                $ipConfigParams.Add(" PublicIpAddress" , $WEPublicIP)
             }
 
             # add LoadBalancerBackendAddressPools if present.
@@ -1362,7 +1388,7 @@ if(! $resume)
                 }
                 catch{}
                 
-                if($lbbe){ $ipConfigParams.Add(" LoadBalancerBackendAddressPool", $lbbe) }
+                if($lbbe){ $ipConfigParams.Add(" LoadBalancerBackendAddressPool" , $lbbe) }
             }
             
             # add LoadBalancerInboundNatRules if present.
@@ -1378,14 +1404,14 @@ if(! $resume)
                 }
                 catch{}
             
-                if($lbINR){$ipConfigParams.Add(" LoadBalancerInboundNatRule", $lbINR)}
+                if($lbINR){$ipConfigParams.Add(" LoadBalancerInboundNatRule" , $lbINR)}
             }
             
             # add ApplicationGatewayBackendAddressPools if present.
             # TODO:  need to very this can be added as is
             if($ipConfig.ApplicationGatewayBackendAddressPools) 
             {
-                $ipConfigParams.Add(" ApplicationGatewayBackendAddressPool", $ipConfig.ApplicationGatewayBackendAddressPools)
+                $ipConfigParams.Add(" ApplicationGatewayBackendAddressPool" , $ipConfig.ApplicationGatewayBackendAddressPools)
             }
 
 
@@ -1420,7 +1446,7 @@ if(! $resume)
         # add DNS if present.
         if($WENicDNS) 
         {
-            $WENICparams.Add(" DnsServer", $WENicDNS)
+            $WENICparams.Add(" DnsServer" , $WENicDNS)
         }
 
 
@@ -1433,7 +1459,7 @@ if(! $resume)
             try
             { 
                 $newNSG = Get-AzureRmNetworkSecurityGroup -Name $srcNSGname -ResourceGroupName $WEResourceGroupName
-                $WENICparams.Add(" NetworkSecurityGroup", $newNSG)
+                $WENICparams.Add(" NetworkSecurityGroup" , $newNSG)
             }
             catch
             {
@@ -1445,7 +1471,7 @@ if(! $resume)
         # TODO:  need to verify this switch can be splatted with explicit value of $true
         if($srcNIC.EnableIPForwarding) 
         {
-            $WENICparams.Add(" EnableIPForwarding", $true)
+            $WENICparams.Add(" EnableIPForwarding" , $true)
         }
 
         
@@ -1515,8 +1541,8 @@ else # if not resume
     
     try
     {
-        $resourceGroupVMs = (get-content $resourceGroupVMresumePath -ea Stop) -Join " `n"| ConvertFrom-Json 
-        $resourceGroupVMSizes = (get-content $resourceGroupVMSizeresumePath -ea Stop) -Join " `n"| ConvertFrom-Json 
+        $resourceGroupVMs = (get-content $resourceGroupVMresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
+        $resourceGroupVMSizes = (get-content $resourceGroupVMSizeresumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
     } 
     catch
     {
@@ -1526,7 +1552,7 @@ else # if not resume
 
     try 
     {
-        $WEVHDstorageObjects = (get-content $WEVHDstorageObjectsResumePath -ea Stop) -Join " `n"| ConvertFrom-Json 
+        $WEVHDstorageObjects = (get-content $WEVHDstorageObjectsResumePath -ea Stop) -Join " `n" | ConvertFrom-Json 
     }
     catch
     {
@@ -1748,7 +1774,7 @@ foreach($srcVM in $resourceGroupVMs)
             {
                 $mdDataDisk = Get-AzureRmDisk -ResourceGroupName $resourceGroupName -DiskName $dataDiskName
                  # Write-Host ('Disk Provisioning State -> [ ' + ($mdDataDisk.ProvisioningState) + ' ]')
-                 $dataDiskId = $mdDataDisk.id
+                ;  $dataDiskId = $mdDataDisk.id
                 ;  $dataDiskSku = $mdDataDisk.sku.Name
 
                 Add-AzureRmVMDataDisk -VM $WEVirtualMachine -Name $dataDiskName -Lun $dataDiskLUN -ManagedDiskId $dataDiskId -StorageAccountType $dataDiskSku -Caching $diskCaching -CreateOption $WECreateOption | out-null

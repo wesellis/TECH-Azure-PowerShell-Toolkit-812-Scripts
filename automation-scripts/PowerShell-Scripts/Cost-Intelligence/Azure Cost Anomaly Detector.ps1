@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Cost Anomaly Detector
+    Azure Cost Anomaly Detector
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Cost Anomaly Detector
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
@@ -37,7 +57,7 @@ param(
     [switch]$WEAlertOnAnomalies
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Cost Anomaly Detector" -Version " 1.0" -Description " Detect unusual spending patterns"
 
 try {
@@ -62,7 +82,7 @@ try {
     } | Sort-Object Date
 
     # Calculate average and detect anomalies
-    $avgCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
+   ;  $avgCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
    ;  $anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $WEAnomalyThreshold) }
 
     Write-WELog " Cost Anomaly Analysis:" " INFO" -ForegroundColor Cyan
@@ -73,7 +93,7 @@ try {
 
     if ($anomalies.Count -gt 0) {
         Write-WELog " `nAnomalous Days:" " INFO" -ForegroundColor Red
-        $anomalies | Format-Table Date, @{Name=" Cost";Expression={" $" + " {0:F2}" -f $_.TotalCost}}
+        $anomalies | Format-Table Date, @{Name=" Cost" ;Expression={" $" + " {0:F2}" -f $_.TotalCost}}
     }
 
 } catch {

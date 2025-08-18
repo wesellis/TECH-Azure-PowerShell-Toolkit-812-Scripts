@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Validate Readme
+    Validate Readme
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,26 +16,45 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Validate Readme
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the path to the sample
-    [string] $WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo e.g. "sample-type/sample-name"
+    [string] $WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
     [string] $WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    [string] $WEReadMeFileName = " README.md",
+    [string] $WEReadMeFileName = " README.md" ,
     [string] $supportedEnvironmentsJson = $WEENV:SUPPORTED_ENVIRONMENTS, # the minified json array from metadata.json
-    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true"),
+    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" ),
     [switch] $WEFix # If true, README will be fixed if possible
 )
 
 Write-WELog " StorageAccountName: $WEStorageAccountName" " INFO"
 Write-WELog " bicepSupported: $bicepSupported" " INFO"
 
-$s = $sampleName.Replace(" \", " /")
-$sEncoded = $sampleName.Replace(" \", " %2F").Replace(" /", " %2F")
+$s = $sampleName.Replace(" \" , " /" )
+$sEncoded = $sampleName.Replace(" \" , " %2F" ).Replace(" /" , " %2F" )
 
 $WEPublicLinkMarkDown = @(
     " https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true"
@@ -51,11 +70,11 @@ $WEARMVizMarkDown = @(
 )
 
 $badgeLinks = @(
-    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/PublicLastTestDate.svg",
-    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/PublicDeployment.svg",
-    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/FairfaxLastTestDate.svg",
-    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/FairfaxDeployment.svg",
-    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/BestPracticeResult.svg",
+    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/PublicLastTestDate.svg" ,
+    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/PublicDeployment.svg" ,
+    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/FairfaxLastTestDate.svg" ,
+    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/FairfaxDeployment.svg" ,
+    " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/BestPracticeResult.svg" ,
     " https://$WEStorageAccountName.blob.core.windows.net/badges/$s/CredScanResult.svg"
 )
 if ($bicepSupported) {
@@ -73,12 +92,12 @@ Write-WELog " Supported Environments Found: $supportedEnvironmentsJson" " INFO"
 $supportedEnvironments = ($supportedEnvironmentsJson | ConvertFrom-JSON -AsHashTable)
 
 
-if ($supportedEnvironments.Contains(" AzureCloud")) {
+if ($supportedEnvironments.Contains(" AzureCloud" )) {
     $WEPublicLinks = $WEPublicLinkMarkDown
     $WEPublicButton = " [![Deploy To Azure]($($WEPublicLinks[0]))]($($WEPublicLinks[1]))"
 }
 
-if ($supportedEnvironments.Contains(" AzureUSGovernment")) {
+if ($supportedEnvironments.Contains(" AzureUSGovernment" )) {
     $WEGovLinks = $WEGovLinkMarkDown
     $WEGovButton = " [![Deploy To Azure US Gov]($($WEGovLinks[0]))]($($WEGovLinks[1]))"
 }
@@ -113,21 +132,21 @@ function WE-Note-FixableError([string] $error) {
 `n**** SEE BELOW FOR EXPECTED MARKUP TO COPY AND PASTE INTO THE README ****
 " Pass in -Fix flag to attempt fix"
 " @
-        Write-Error "$error`n$helpMessage"
+        Write-Error " $error`n$helpMessage"
     }
 
     $script:badgesError = $true
 }
 
 
-if (-not ($readme.StartsWith(" # ")) -and
-    -not ($readme.StartsWith(" ---"))) {
+if (-not ($readme.StartsWith(" # " )) -and
+    -not ($readme.StartsWith(" ---" ))) {
     Write-Error " Readme must start with # header or YAML block '---', not: $($readme[0])"
 }
 
 
 foreach ($badge in $badgeLinks) {
-    if (-not ($readme -clike " *$badge*")) {        
+    if (-not ($readme -clike " *$badge*" )) {        
         Note-FixableError " Readme is missing badge: $badge"
     }
 }
@@ -135,7 +154,7 @@ foreach ($badge in $badgeLinks) {
 
 foreach ($link in $links) {
     #Write-Host $link
-    if (-not ($readme -clike " *$link*")) {
+    if (-not ($readme -clike " *$link*" )) {
         Note-FixableError " Readme must have a button with the link: $link"
     }
 }
@@ -143,10 +162,10 @@ foreach ($link in $links) {
 
 
 
-if (!$supportedEnvironments.Contains(" AzureUSGovernment") -and $readme -like " *$($WEGovLinkMarkDown[1])*") {
+if (!$supportedEnvironments.Contains(" AzureUSGovernment" ) -and $readme -like " *$($WEGovLinkMarkDown[1])*" ) {
     Note-FixableError " Readme contains link to $($WEGovLinkMarkDown[1]) but sample is not supported in AzureUSGovernment"
 }
-if (!$supportedEnvironments.Contains(" AzureCloud") -and $readme -like " *$($WEPublicLinkMarkDown[1])*") {
+if (!$supportedEnvironments.Contains(" AzureCloud" ) -and $readme -like " *$($WEPublicLinkMarkDown[1])*" ) {
     Note-FixableError " Readme contains link to $($WEPublicLinkMarkDown[1]) but sample is not supported in AzureCloud"
 }
 
@@ -174,7 +193,7 @@ $WEARMVizButton
 " @
 
     if ($WEFix) {
-        $fixed = & $WEPSScriptRoot/Get-FixedReadMe.ps1 `
+       ;  $fixed = & $WEPSScriptRoot/Get-FixedReadMe.ps1 `
             -ReadmeContents $readme `
             -ExpectedMarkdown $md
 
@@ -185,7 +204,7 @@ $WEARMVizButton
         # Write new readme
         Set-Content $readmePath $fixed
 
-        Write-Warning "***************************************************************************************"
+        Write-Warning " ***************************************************************************************"
         Write-Warning " Fixes have been made to $readmePath"
         Write-Warning " Previous file was written to $backup"
         Write-Warning " ***************************************************************************************"
@@ -212,10 +231,8 @@ if ($error.count -eq 0) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

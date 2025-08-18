@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Gatewayinstall
+    Gatewayinstall
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Gatewayinstall
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -24,7 +42,7 @@ param(
 )
 
 
-$logLoc = "$env:SystemDrive\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\"
+$logLoc = " $env:SystemDrive\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\"
 if (! (Test-Path($logLoc)))
 {
     New-Item -path $logLoc -type directory -Force
@@ -34,7 +52,7 @@ $logPath = " $logLoc\tracelog.log"
 
 function WE-Now-Value()
 {
-    return (Get-Date -Format " yyyy-MM-dd HH:mm:ss")
+    return (Get-Date -Format " yyyy-MM-dd HH:mm:ss" )
 }
 
 function WE-Throw-Error([string] $msg)
@@ -88,15 +106,15 @@ function WE-Run-Process([string] $process, [string] $arguments)
 			-RedirectStandardError $errorFile -RedirectStandardOutput $outFile -ErrorVariable errVariable
 	}
 	
-	$errContent = [string] (Get-Content -Path $errorFile -Delimiter " !!!DoesNotExist!!!")
-	$outContent = [string] (Get-Content -Path $outFile -Delimiter " !!!DoesNotExist!!!")
+	$errContent = [string] (Get-Content -Path $errorFile -Delimiter " !!!DoesNotExist!!!" )
+; 	$outContent = [string] (Get-Content -Path $outFile -Delimiter " !!!DoesNotExist!!!" )
 
-	Remove-Item $errorFile -Force
-	Remove-Item $outFile -Force
+	Remove-Item $errorFil -Forcee -Force
+	Remove-Item $outFil -Forcee -Force
 
 	if($proc.ExitCode -ne 0 -or $errVariable -ne "" )
 	{		
-		Throw-Error "Failed to run process: exitCode=$($proc.ExitCode), errVariable=$errVariable, errContent=$errContent, outContent=$outContent."
+		Throw-Error " Failed to run process: exitCode=$($proc.ExitCode), errVariable=$errVariable, errContent=$errContent, outContent=$outContent."
 	}
 
 	Trace-Log " Run-Process: ExitCode=$($proc.ExitCode), output=$outContent"
@@ -114,7 +132,7 @@ function WE-Download-Gateway([string] $url, [string] $gwPath)
     try
     {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-       ;  $WEErrorActionPreference = " Stop";
+       ;  $WEErrorActionPreference = " Stop" ;
         $client = New-Object System.Net.WebClient
         $client.DownloadFile($url, $gwPath)
         Trace-Log " Download gateway successfully. Gateway loc: $gwPath"
@@ -188,9 +206,9 @@ function WE-Register-Gateway([string] $instanceKey)
 
 
 
-Trace-Log " Log file: $logLoc"
+Trace-Log " Log file: $logLoc"; 
 $uri = " https://go.microsoft.com/fwlink/?linkid=839822"
-Trace-Log " Gateway download fw link: $uri"; 
+Trace-Log " Gateway download fw link: $uri" ; 
 $gwPath= " $WEPWD\gateway.msi"
 Trace-Log " Gateway download location: $gwPath"
 

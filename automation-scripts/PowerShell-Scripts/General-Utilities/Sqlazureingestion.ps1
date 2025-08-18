@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Sqlazureingestion
+    Sqlazureingestion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Sqlazureingestion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 
@@ -64,7 +82,7 @@ if($WESQLServers -ne $WENull)
 		{
 			foreach ($db in $dbList)
 			{
-                		if($db.Edition -ne " None")
+                		if($db.Edition -ne " None" )
                 		{
 		                    	$WEDBCount++
 		                    	$WEMetrics = @()
@@ -86,13 +104,13 @@ if($WESQLServers -ne $WENull)
 						$WEFailedConnections = $WEFailedConnections + " Failed to connect to $($db.DatabaseName) on SQL Server $($db.ServerName)"
 					}		
 					# Format metrics into a table.
-                    			$table = @()
+                    		; 	$table = @()
                     			foreach($metric in $WEMetrics)
                     			{ 
                 				foreach($metricValue in $metric.MetricValues)
 	                        		{
         	                		; 	$sx = New-Object PSObject -Property @{
-                	                		Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                	                		Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                         	        		MetricName = $metric.Name; 
                                 			Average = $metricValue.Average;
                                 			SubscriptionID = $WEConn.SubscriptionID;

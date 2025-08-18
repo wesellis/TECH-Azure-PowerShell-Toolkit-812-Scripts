@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Connect
+    Connect
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Connect
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -27,10 +45,10 @@ param(
 )
 
 $script:ErrorActionPreference = 'Stop'
-echo "Start to connect Arc server!"
+echo " Start to connect Arc server!"; 
 $count = 0
 
-if ($authType -eq " CredSSP") {
+if ($authType -eq " CredSSP" ) {
     try {
         Enable-WSManCredSSP -Role Client -DelegateComputer $ip -Force
     }
@@ -41,7 +59,7 @@ if ($authType -eq " CredSSP") {
 for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
-        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList " .\$username", $secpasswd
+        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList " .\$username" , $secpasswd
         $session = New-PSSession -ComputerName $ip -Port $port -Authentication $authType -Credential $cred
 
         Invoke-Command -Session $session -ScriptBlock {
@@ -54,6 +72,8 @@ $ErrorActionPreference = "Stop"
 param(
                     [Parameter(Mandatory = $true)]
                     [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEName,
                     [string]$WERepository = 'PSGallery',
@@ -82,7 +102,7 @@ param(
             $job = Start-BitsTransfer -Source https://aka.ms -Destination $env:TEMP -TransferType Download -Asynchronous
             $count = 0
             while ($job.JobState -ne " Transferred" -and $count -lt 30) {
-                if ($job.JobState -eq " TransientError") {
+                if ($job.JobState -eq " TransientError" ) {
                     throw " BITS transfer failed"
                 }
                 sleep 6
@@ -124,8 +144,8 @@ param(
             $ready = $false
             while (!$ready) {
                 Connect-AzAccount -Subscription $subscriptionId -Tenant $tenant -Credential $creds -ServicePrincipal
-                $extension = Get-AzConnectedMachineExtension -Name " AzureEdgeLifecycleManager" -ResourceGroup $resourceGroupName -MachineName $env:COMPUTERNAME -SubscriptionId $subscriptionId
-                if ($extension.ProvisioningState -eq " Succeeded") {
+               ;  $extension = Get-AzConnectedMachineExtension -Name " AzureEdgeLifecycleManager" -ResourceGroup $resourceGroupName -MachineName $env:COMPUTERNAME -SubscriptionId $subscriptionId
+                if ($extension.ProvisioningState -eq " Succeeded" ) {
                    ;  $ready = $true
                 }
                 else {

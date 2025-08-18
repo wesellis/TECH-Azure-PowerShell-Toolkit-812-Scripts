@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azuresametricsenabler Ms Mgmt Sa
+    Azuresametricsenabler Ms Mgmt Sa
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azuresametricsenabler Ms Mgmt Sa
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WETimestampfield = "Timestamp" 
 
@@ -41,7 +59,7 @@ $WEAAResourceGroup = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomat
 
 
 $varQueueList=" AzureSAIngestion-List-Queues"
-$varFilesList=" AzureSAIngestion-List-Files"
+$varFilesList=" AzureSAIngestion-List-Files"; 
 $varTableList=" AzureSAIngestion-List-Tables"
 
 
@@ -53,12 +71,12 @@ $varTableList=" AzureSAIngestion-List-Tables"
 Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
-; 	$str=  New-Object -TypeName " System.Text.StringBuilder";
-	$builder=  [System.Text.StringBuilder]::new(" /")
+; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
+	$builder=  [System.Text.StringBuilder]::new(" /" )
 	$builder.Append($resource) |out-null
 	$builder.Append($uri.AbsolutePath) | out-null
 	$str.Append($builder.ToString()) | out-null
-	$values2=@{}
+; 	$values2=@{}
 	IF($service -eq 'Table')
 	{
 	; 	$values= [System.Web.HttpUtility]::ParseQueryString($uri.query)  
@@ -73,7 +91,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 			{
 				if ($builder2.Length -gt 0)
 				{
-					$builder2.Append(" ,");
+					$builder2.Append(" ," );
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
@@ -89,11 +107,11 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 		{
 			IF($str3 -eq 'comp')
 			{
-				$builder3=[System.Text.StringBuilder]::new()
+			; 	$builder3=[System.Text.StringBuilder]::new()
 				$builder3.Append($str3) |out-null
-				$builder3.Append(" =") |out-null
+				$builder3.Append(" =" ) |out-null
 				$builder3.Append($values2[$str3]) |out-null
-				$str.Append(" ?") |out-null
+				$str.Append(" ?" ) |out-null
 				$str.Append($builder3.ToString())|out-null
 			}
 		}
@@ -112,7 +130,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 			{
 				if ($builder2.Length -gt 0)
 				{
-					$builder2.Append(" ,");
+					$builder2.Append(" ," );
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
@@ -129,29 +147,29 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 			
 		; 	$builder3=[System.Text.StringBuilder]::new()
 			$builder3.Append($str3) |out-null
-			$builder3.Append(" :") |out-null
+			$builder3.Append(" :" ) |out-null
 			$builder3.Append($values2[$str3]) |out-null
-			$str.Append(" `n") |out-null
+			$str.Append(" `n" ) |out-null
 			$str.Append($builder3.ToString())|out-null
 		}
 	} 
-	#    $stringToHash = $stringToHash + $str.ToString();
+	#   ;  $stringToHash = $stringToHash + $str.ToString();
 	#$str.ToString()
 	############
 	$xHeaders = " x-ms-date:" + $date+ " `n" +" x-ms-version:$WEApiStorage"
 	if ($service -eq 'Table')
 	{
-		$stringToHash= $method + " `n" + " `n" + " `n"+$date+" `n"+$str.ToString()
+		$stringToHash= $method + " `n" + " `n" + " `n" +$date+" `n" +$str.ToString()
 	}
 	Else
 	{
 		IF ($method -eq 'GET' -or $method -eq 'HEAD')
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n"+" application/xml"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+$xHeaders+" `n"+$str.ToString()
+			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" +$xHeaders+" `n" +$str.ToString()
 		}
 		Else
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" +$bodylength+ " `n" + " `n"+" application/xml"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+$xHeaders+" `n"+$str.ToString()
+			$stringToHash = $method + " `n" + " `n" + " `n" +$bodylength+ " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" +$xHeaders+" `n" +$str.ToString()
 		}     
 	}
 	##############
@@ -171,7 +189,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 {
 
-	$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 
 	
 	If ($method -eq 'PUT')
@@ -182,7 +200,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	}Else
 	{
 
-		$signature = Build-StorageSignature `
+	; 	$signature = Build-StorageSignature `
 		-sharedKey $sharedKey `
 		-date  $rfc1123date `
 		-method $method -resource $resource -uri $uri -body $body -service $svc
@@ -219,7 +237,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 		}Else
 		{  $resp1=Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method   -UseBasicParsing -Body $msgbody 
 
-			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
 		} 
 		return $xresp
 
@@ -232,7 +250,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 		{
 			$resp1= Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody 
 
-			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
 			return $xresp
 		}Elseif($method -eq 'HEAD')
 		{
@@ -264,7 +282,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	$method = " POST"
 	$contentType = " application/json"
 	$resource = " /api/logs"
-	$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	$contentLength = $body.Length
 	$signature = Build-OMSSignature `
 	-customerId $customerId `
@@ -275,7 +293,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	-method $method `
 	-contentType $contentType `
 	-resource $resource
-	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
 ; 	$WEOMSheaders = @{
 		" Authorization" = $signature;
 		" Log-Type" = $logType;
@@ -351,13 +369,13 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
 $WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)")
-$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/",$WECliCert)
+$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
-$headers = @{" Authorization"=$header;" Accept"=" application/json"}
+$headers = @{" Authorization" =$header;" Accept" =" application/json" }
 $body=$null
 $WEHTTPVerb=" GET"
-$subscriptionInfoUri = " https://management.azure.com/subscriptions/"+$subscriptionid+" ?api-version=2016-02-01"
+$subscriptionInfoUri = " https://management.azure.com/subscriptions/" +$subscriptionid+" ?api-version=2016-02-01"
 $subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
 IF($subscriptionInfo)
 {
@@ -399,7 +417,7 @@ if ($getAsmHeader) {
         Set-AzureSubscription -SubscriptionName $WEAsmConn.SubscriptionName -SubscriptionId $WEAsmConn.SubscriptionId -Certificate $WEAzureCert
         Select-AzureSubscription -SubscriptionId $WEAsmConn.SubscriptionId
         #finally create the headers for ASM REST 
-        $headerasm = @{" x-ms-version"=" 2013-08-01"}
+        $headerasm = @{" x-ms-version" =" 2013-08-01" }
         }
     }
 
@@ -407,7 +425,7 @@ if ($getAsmHeader) {
 
 
 $logname  = " AzureStorage"
-$timestamp=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:00.000Z")
+$timestamp=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:00.000Z" )
 
 $services=@('Blob','Table','Queue','File')
 $sacount=0
@@ -477,7 +495,7 @@ Foreach($sa in $salist)
 			
 			[xml]$fresponse= invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $uriLBlobs
 			
-			$blobs=$fresponse.EnumerationResults.Blobs.blob
+		; 	$blobs=$fresponse.EnumerationResults.Blobs.blob
 			Foreach($blob in $blobs)
 			{
 				IF($blob.name -match '.vhd')
@@ -518,9 +536,9 @@ Else
 
 
 
-$settingon='<?xml version=" 1.0" encoding=" utf-8"?><StorageServiceProperties><MinuteMetrics><Version>1.0</Version><Enabled>true</Enabled><RetentionPolicy><Enabled>true</Enabled><Days>1</Days></RetentionPolicy><IncludeAPIs>true</IncludeAPIs></MinuteMetrics></StorageServiceProperties>'
-
-$settingoff='<?xml version=" 1.0" encoding=" utf-8"?><StorageServiceProperties><MinuteMetrics><Version>1.0</Version><Enabled>false</Enabled><RetentionPolicy><Enabled>true</Enabled><Days>1</Days></RetentionPolicy></MinuteMetrics></StorageServiceProperties>'
+$settingon='<?xml version=" 1.0" encoding=" utf-8" ?><StorageServiceProperties><MinuteMetrics><Version>1.0</Version><Enabled>true</Enabled><RetentionPolicy><Enabled>true</Enabled><Days>1</Days></RetentionPolicy><IncludeAPIs>true</IncludeAPIs></MinuteMetrics></StorageServiceProperties>'
+; 
+$settingoff='<?xml version=" 1.0" encoding=" utf-8" ?><StorageServiceProperties><MinuteMetrics><Version>1.0</Version><Enabled>false</Enabled><RetentionPolicy><Enabled>true</Enabled><Days>1</Days></RetentionPolicy></MinuteMetrics></StorageServiceProperties>'
 Foreach($sa in $salist|Where{$_.properties.accountType -notmatch 'premium' -and $_.sku.tier -ne 'Premium'})
 {
 	Foreach ($svc in $services)

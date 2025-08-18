@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Addmultipleloadbalancers
+    Asr Addmultipleloadbalancers
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Addmultipleloadbalancers
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -32,7 +50,7 @@ try {
         - A complex Automation Variable, containing the VMGUID for each VM, ResourceGroupName for the Load Balancer(s) and the Load Balancer(s) name.
         Example:
         
-        $WERPdetails = @{"6949b3a9-ae82-5e90-882c-30e48dffdcd8" =@{"ResourceGroupName" ="knlb" ;"LBName" ="knextlb" };"6dce5d61-2416-546c-9bcd-c1bc79a5a678" =@{"ResourceGroupName" ="knlb" ;"LBName" ="knintlb" }}
+        $WERPdetails = @{"6949b3a9-ae82-5e90-882c-30e48dffdcd8" =@{" ResourceGroupName" =" knlb" ;" LBName" =" knextlb" };" 6dce5d61-2416-546c-9bcd-c1bc79a5a678" =@{" ResourceGroupName" =" knlb" ;" LBName" =" knintlb" }}
 
         $myASRobject = New-Object -TypeName PSObject -Property $WERPdetails
 
@@ -54,7 +72,7 @@ try {
         LASTEDIT: 20 March, 2017 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Object]$WERecoveryPlanContext 
       ) 
@@ -63,9 +81,9 @@ Write-output $WERecoveryPlanContext
 
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 
-if ($WERecoveryPlanContext.FailoverDirection -ne " PrimaryToSecondary") 
+if ($WERecoveryPlanContext.FailoverDirection -ne " PrimaryToSecondary" ) 
     {
         Write-Output " Failover Direction is not Azure, and the script will stop."
     }
@@ -146,7 +164,7 @@ Try
                 Write-Output " Availability Set is present for VM: `n" $WEAzureVm.Name
             }
             #Join the VMs NICs to backend pool of the Load Balancer
-            $WEARMNic = Get-AzureRmResource -ResourceId $WEAzureVm.NetworkInterfaceIDs[0]
+           ;  $WEARMNic = Get-AzureRmResource -ResourceId $WEAzureVm.NetworkInterfaceIDs[0]
            ;  $WENic = Get-AzureRmNetworkInterface -Name $WEARMNic.Name -ResourceGroupName $WEARMNic.ResourceGroupName
             $WENic.IpConfigurations[0].LoadBalancerBackendAddressPools.Add($WELoadBalancer.BackendAddressPools[0]);        
             $WENic | Set-AzureRmNetworkInterface    
@@ -159,17 +177,15 @@ Catch
     $WEErrorMessage = 'Failed to associate the VM with the Load Balancer.'
     $WEErrorMessage = $WEErrorMessage + " `n"
     $WEErrorMessage = $WEErrorMessage + 'Error: '
-    $WEErrorMessage = $WEErrorMessage + $_
+   ;  $WEErrorMessage = $WEErrorMessage + $_
     Write-Error -Message $WEErrorMessage `
                    -ErrorAction Stop
  }
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

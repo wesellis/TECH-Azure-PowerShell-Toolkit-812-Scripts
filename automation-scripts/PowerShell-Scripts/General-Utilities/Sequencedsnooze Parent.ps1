@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Sequencedsnooze Parent
+    Sequencedsnooze Parent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Sequencedsnooze Parent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .SYNOPSIS  
  This runbook used to perform sequenced start or stop Azure RM VM
 .DESCRIPTION  
@@ -27,11 +45,11 @@ Version History
 v1.0   - <Team-A> - Initial Release  
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
-[Parameter(Mandatory=$true,HelpMessage=" Enter the value for Action. Values can be either stop or start")][String]$WEAction,
-[Parameter(Mandatory=$false,HelpMessage=" Enter the value for WhatIf. Values can be either true or false")][bool]$WEWhatIf = $false,
-[Parameter(Mandatory=$false,HelpMessage=" Enter the value for ContinueOnError. Values can be either true or false")][bool]$WEContinueOnError = $false
+[Parameter(Mandatory=$true,HelpMessage=" Enter the value for Action. Values can be either stop or start" )][String]$WEAction,
+[Parameter(Mandatory=$false,HelpMessage=" Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false,
+[Parameter(Mandatory=$false,HelpMessage=" Enter the value for ContinueOnError. Values can be either true or false" )][bool]$WEContinueOnError = $false
 )
 
 $connectionName = " AzureRunAsConnection"
@@ -61,6 +79,8 @@ catch
 
 function WE-CheckVMState ($WEVMObject,[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAction)
 {
     [bool]$WEIsValid = $false
@@ -85,7 +105,7 @@ try
 {
     $WEAction = $WEAction.Trim().ToLower()
 
-    if(!($WEAction -eq " start" -or $WEAction -eq " stop"))
+    if(!($WEAction -eq " start" -or $WEAction -eq " stop" ))
     {
         Write-Output " `$WEAction parameter value is : $($WEAction). Value should be either start or stop!"
         Write-Output " Completed the runbook execution..."
@@ -121,12 +141,12 @@ try
         if($WEWhatIf -eq $false)
         {
             Write-Output " Performing the $($WEAction) for the sequence-$($seq) VM's..."
-            $WEAzureVMList=Find-AzureRmResource -TagName $tagValue.ToLower() -TagValue $seq | Where-Object {$_.ResourceType -eq “Microsoft.Compute/virtualMachines”} | Select Name, ResourceGroupName
+           ;  $WEAzureVMList=Find-AzureRmResource -TagName $tagValue.ToLower() -TagValue $seq | Where-Object {$_.ResourceType -eq “Microsoft.Compute/virtualMachines”} | Select Name, ResourceGroupName
         
             foreach($vmObj in $WEAzureVMList)
             {                
                 Write-Output " Performing the $($WEAction) action on VM: $($vmobj.Name)"
-               ;  $params = @{" VMName"=" $($vmObj.Name)";" Action"=$WEAction;" ResourceGroupName"=" $($vmObj.ResourceGroupName)"}                    
+               ;  $params = @{" VMName" =" $($vmObj.Name)" ;" Action" =$WEAction;" ResourceGroupName" =" $($vmObj.ResourceGroupName)" }                    
                 Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'ScheduledSnooze_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params                
             }
 
@@ -157,7 +177,7 @@ try
                         Write-Output " Unable to $($WEAction) the VM $($vmObjStatus.Name). ContinueOnError is set to True, hence moving to the next resource..."
                         break
                     }
-                    $WECheckVMStatus = CheckVMState -VMObject $vmObjStatus -Action $WEAction
+                   ;  $WECheckVMStatus = CheckVMState -VMObject $vmObjStatus -Action $WEAction
                 }
             }
         }

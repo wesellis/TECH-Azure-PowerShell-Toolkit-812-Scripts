@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Npm Global
+    Windows Npm Global
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,10 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Npm Global
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$packages,
@@ -28,8 +48,8 @@ param(
 )
 
 try {
-    $packageArray = $packages.split("," )
-   ;  $npmPrefix = "C:\npm"
+   ;  $packageArray = $packages.split(" ," )
+   ;  $npmPrefix = " C:\npm"
     npm config set prefix $npmPrefix
 
     for ($i = 0; $i -lt $packageArray.count; $i++) {
@@ -42,7 +62,7 @@ try {
 
     if ($addToPath) {
         Write-WELog " Adding npm prefix to PATH" " INFO"
-	[Environment]::SetEnvironmentVariable(" PATH", $env:Path + " ;$npmPrefix", " Machine")
+	[Environment]::SetEnvironmentVariable(" PATH" , $env:Path + " ;$npmPrefix" , " Machine" )
         Write-WELog " npm prefix added to PATH" " INFO"
     }
 } catch {

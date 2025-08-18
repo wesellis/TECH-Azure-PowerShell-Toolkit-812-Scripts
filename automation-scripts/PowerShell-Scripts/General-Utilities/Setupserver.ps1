@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Setupserver
+    Setupserver
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Setupserver
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 mkdir c:\temp -Force
 Get-Date > c:\temp\hello.txt
 
@@ -29,7 +47,7 @@ if ($WELastExitCode -ne 0)
 
 
 $range = $args[1]
-$bits = $range.Split(" /")
+$bits = $range.Split(" /" )
 $ip = $bits[0]
 $net = $bits[1]
 $ipbits = $ip.Split('.')
@@ -38,7 +56,7 @@ switch ($net)
 {
     8       { $zone = " $($ipbits[0]).in-addr.arpa." }
     16      { $zone = " $($ipbits[1]).$($ipbits[0]).in-addr.arpa." }
-    24      { $zone = " $($ipbits[2]).$($ipbits[1]).$($ipbits[0]).in-addr.arpa." }
+    24      {;  $zone = " $($ipbits[2]).$($ipbits[1]).$($ipbits[0]).in-addr.arpa." }
     default { 
                 Write-Warning " Vnet should be /8 /16 or /24, treating as /8"
                ;  $zone = " $($ipbits[0]).in-addr.arpa." 

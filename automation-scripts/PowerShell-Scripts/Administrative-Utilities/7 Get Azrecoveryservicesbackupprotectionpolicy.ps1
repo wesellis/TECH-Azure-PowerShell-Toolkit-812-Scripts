@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 7 Get Azrecoveryservicesbackupprotectionpolicy
+    7 Get Azrecoveryservicesbackupprotectionpolicy
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 7 Get Azrecoveryservicesbackupprotectionpolicy
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -75,15 +93,15 @@ Retain backup taken every day at 4:00 PM for 30 Day(s)
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join ("$WECustomerName" , "_Outlook" , "_RG" )
+$WEResourceGroupName = -join ("$WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join ("$WEVMName" , "ARSV1" )
-
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
+; 
 $targetVault = Get-AzRecoveryServicesVault -ResourceGroupName $WEResourceGroupName -Name $WEVaultname
 $targetVault.ID
 ; 
 $getAzRecoveryServicesBackupProtectionPolicySplat = @{
-    WorkloadType = "AzureVM" #you may ommit this parameter if you want to get all the current Backup policies
+    WorkloadType = " AzureVM" #you may ommit this parameter if you want to get all the current Backup policies
     VaultId = $targetVault.ID
 }
 

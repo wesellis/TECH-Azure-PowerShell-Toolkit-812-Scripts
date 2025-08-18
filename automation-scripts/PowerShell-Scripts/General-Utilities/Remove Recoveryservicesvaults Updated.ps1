@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Remove Recoveryservicesvaults Updated
+    Remove Recoveryservicesvaults Updated
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Remove Recoveryservicesvaults Updated
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -24,18 +42,20 @@ function WE-Remove-SingleVault {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -43,7 +63,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)]
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault] $WEVault
@@ -67,7 +87,7 @@ param(
     Write-WELog " Soft delete disabled for the vault" " INFO"
 
     # Handle soft-deleted items
-    $containerSoftDelete = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted"}
+    $containerSoftDelete = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -VaultId $WEVaultToDelete.ID | Where-Object {$_.DeleteState -eq " ToBeDeleted" }
     foreach ($softitem in $containerSoftDelete) {
         Undo-AzRecoveryServicesBackupItemDeletion -Item $softitem -VaultId $WEVaultToDelete.ID -Force
     }
@@ -77,9 +97,9 @@ param(
     $backupItemsSQL = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID
     $backupItemsAFS = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureStorage -WorkloadType AzureFiles -VaultId $WEVaultToDelete.ID
     $backupItemsSAP = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureWorkload -WorkloadType SAPHanaDatabase -VaultId $WEVaultToDelete.ID
-    $backupContainersSQL = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL"}
+    $backupContainersSQL = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SQL" }
     $protectableItemsSQL = Get-AzRecoveryServicesBackupProtectableItem -WorkloadType MSSQL -VaultId $WEVaultToDelete.ID | Where-Object {$_.IsAutoProtected -eq $true}
-    $backupContainersSAP = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana"}
+    $backupContainersSAP = Get-AzRecoveryServicesBackupContainer -ContainerType AzureVMAppContainer -VaultId $WEVaultToDelete.ID | Where-Object {$_.ExtendedInfo.WorkloadType -eq " SAPHana" }
     $WEStorageAccounts = Get-AzRecoveryServicesBackupContainer -ContainerType AzureStorage -VaultId $WEVaultToDelete.ID
     $backupServersMARS = Get-AzRecoveryServicesBackupContainer -ContainerType " Windows" -BackupManagementType MAB -VaultId $WEVaultToDelete.ID
     $backupServersMABS = Get-AzRecoveryServicesBackupManagementServer -VaultId $WEVaultToDelete.ID| Where-Object { $_.BackupManagementType -eq " AzureBackupServer" }
@@ -176,7 +196,7 @@ param(
 function WE-Remove-AllRecoveryServicesVaults {
     [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='High')]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param()
 
     try {
@@ -195,12 +215,12 @@ param()
         $allVaults = @()
         foreach ($sub in $subscriptions) {
             try {
-                $null = Set-AzContext -Subscription $sub.Id -Force
+               ;  $null = Set-AzContext -Subscription $sub.Id -Force
                 Write-WELog " Scanning subscription: $($sub.Name) ($($sub.Id))" " INFO" -ForegroundColor Yellow
                ;  $vaults = Get-AzRecoveryServicesVault
                 if ($vaults) {
                     Write-WELog "  Found $($vaults.Count) vaults" " INFO" -ForegroundColor Cyan
-                    $allVaults = $allVaults + $vaults
+                   ;  $allVaults = $allVaults + $vaults
                 }
                 else {
                     Write-WELog "  No vaults found" " INFO" -ForegroundColor Gray
@@ -220,9 +240,9 @@ param()
         Write-WELog " `nFound $($allVaults.Count) Recovery Services vaults across all subscriptions:" " INFO" -ForegroundColor Cyan
         $allVaults | Format-Table -Property Name, ResourceGroupName, @{l='Subscription';e={$_.SubscriptionId}} -AutoSize
 
-        if ($WEPSCmdlet.ShouldProcess(" All Recovery Services vaults", " Delete")) {
+        if ($WEPSCmdlet.ShouldProcess(" All Recovery Services vaults" , " Delete" )) {
             $confirmation = Read-Host " Are you sure you want to delete all these vaults? (yes/no)"
-            if ($confirmation -ne " yes") {
+            if ($confirmation -ne " yes" ) {
                 Write-WELog " Operation cancelled by user." " INFO" -ForegroundColor Yellow
                 return
             }

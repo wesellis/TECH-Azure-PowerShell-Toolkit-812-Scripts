@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Restore Azurermvm
+    Restore Azurermvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Restore Azurermvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -73,9 +91,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -95,7 +115,7 @@ $resourceGroupVMjsonPath = " $env:TEMP\$WEResourceGroupName.resourceGroupVMs.jso
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1") {
+if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -106,7 +126,7 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1") {
 
 function WE-Get-StorageObject 
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI) 
     
     $split = $srcURI.Split('/')
@@ -128,15 +148,15 @@ param($resourceGroupName, $srcURI)
 
 function copy-azureBlob 
 {  [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($srcUri, $srcContext, $destContext, $containerName)
 
 
     $split = $srcURI.Split('/')
     $blobName = $split[($split.count -1)]
-    $blobSplit = $blobName.Split('.')
+   ;  $blobSplit = $blobName.Split('.')
    ;  $extension = $blobSplit[($blobSplit.count -1)]
-    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped";return}
+    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped" ;return}
 
     if(! $containerName){$containerName = $split[3]}
 
@@ -153,7 +173,7 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
         $blobName= $path + '/' + $blobName
         $blobName = $blobName.Trim()
-        $blobName = $blobName.Substring(1, $blobName.Length-1)
+       ;  $blobName = $blobName.Substring(1, $blobName.Length-1)
       }
     
     
@@ -229,16 +249,16 @@ if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup  -ResourceGroupName $re
 
 
 
-[string] $location = $sourceResourceGroup.location; 
+[string];  $location = $sourceResourceGroup.location; 
 $resourceGroupVMs = Get-AzureRMVM -ResourceGroupName $resourceGroupName
 
 
-if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName"; break}
+if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName" ; break}
 
 $resourceGroupVMs | %{
    $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
    write-output " $($_.name) status is $status" 
-   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again"; break}
+   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again" ; break}
 }
 
 
@@ -360,7 +380,7 @@ foreach($srcVM in $resourceGroupVMs)
             # check copy status
             do
             { 
-              $drtn = $null
+             ;  $drtn = $null
              ;  $drtn = Get-AzureStorageBlob -Context $diskStorageContext -container $diskContainerName -Blob $diskBlobName | Get-AzureStorageBlobCopyState
               $drtn| select Source, Status, BytesCopied, TotalBytes|fl
               if($rtn.status  -ne 'Success')

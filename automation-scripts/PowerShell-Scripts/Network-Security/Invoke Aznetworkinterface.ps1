@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Aznetworkinterface
+    Invoke Aznetworkinterface
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Aznetworkinterface
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzNetworkInterface {
 }
 
@@ -29,7 +47,7 @@ function WE-Invoke-AzNetworkInterface {
 
     #Region func New-AzNetworkInterface
     #Creating the NIC for the VM
-    $newAzNetworkInterfaceSplat = @{
+   ;  $newAzNetworkInterfaceSplat = @{
         Name                   = $WENICName
         ResourceGroupName      = $WEResourceGroupName
         Location               = $WELocationName

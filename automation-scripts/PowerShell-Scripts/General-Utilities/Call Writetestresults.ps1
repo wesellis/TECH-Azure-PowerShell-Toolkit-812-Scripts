@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Call Writetestresults
+    Call Writetestresults
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Call Writetestresults
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEENV:SAMPLE_FOLDER = "."
 $WEENV:SAMPLE_NAME = Split-Path (Resolve-Path $WEENV:SAMPLE_FOLDER) -Leaf
@@ -33,7 +51,7 @@ $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = " 123"
 $WEENV:BUILD_BUILDNUMBER = " 1234.56"
 
 if (($WEStorageAccountKey -eq "" ) -or ($null -eq $WEStorageAccountKey)) {
-    Write-Error "Missing StorageAccountKey"
+    Write-Error " Missing StorageAccountKey"
     return
 }
 ; 

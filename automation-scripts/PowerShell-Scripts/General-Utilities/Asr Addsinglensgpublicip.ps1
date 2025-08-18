@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Addsinglensgpublicip
+    Asr Addsinglensgpublicip
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Addsinglensgpublicip
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -56,12 +74,12 @@ param(
         [Object]$WERecoveryPlanContext 
     ) 
  
-    $connectionName = "AzureRunAsConnection" 
+    $connectionName = " AzureRunAsConnection" 
     $WEAutomationAccountName = "" #Fill this up with you Azure Automation Account Name 
     $WEAutomationAccountRg = ""    #Fill this up with you Azure Automation Account Resource Group 
  
     # This is special code only added for this test run to avoid creating public IPs in S2S VPN network 
-    if ($WERecoveryPlanContext.FailoverType -ne " Test") { 
+    if ($WERecoveryPlanContext.FailoverType -ne " Test" ) { 
         exit 
     } 
  
@@ -110,7 +128,7 @@ param(
  
  
     $WENSGname = $WENSGnameVar.value 
-    $WENSGRGname = $WERGnameVar.value 
+   ;  $WENSGRGname = $WERGnameVar.value 
     Write-Output $WENSGname 
     Write-Output $WENSGRGname 
  
@@ -126,20 +144,20 @@ param(
  
         if( !(($WEVM -eq $WENull) -Or ($WEVM.ResourceGroupName -eq $WENull) -Or ($WEVM.RoleName -eq $WENull))) { 
             #this is when some data is anot available and it will fail 
-            Write-output " Resource group name ", $WEVM.ResourceGroupName 
+            Write-output " Resource group name " , $WEVM.ResourceGroupName 
             Write-output " Rolename " = $WEVM.RoleName 
  
             InlineScript {  
                              
                 $azurevm = Get-AzureRMVM -ResourceGroupName $WEUsing:VM.ResourceGroupName -Name $WEUsing:VM.RoleName 
-                write-output " Azure VM Id", $azurevm.Id 
+                write-output " Azure VM Id" , $azurevm.Id 
                 $WENicArmObject = Get-AzureRmResource -ResourceId $azurevm.NetworkInterfaceIDs[0] 
-                write-output " Nic Arm Object Id = ", $WENicArmObject.Id 
+                write-output " Nic Arm Object Id = " , $WENicArmObject.Id 
                 $WEVMNetworkInterfaceObject = Get-AzureRmNetworkInterface -Name $WENicArmObject.Name -ResourceGroupName $WENicArmObject.ResourceGroupName 
-                write-output " Nic Interface Id", $WEVMNetworkInterfaceObject.Id  
-                $WEPIP = New-AzureRmPublicIpAddress -Name $azurevm.Name -ResourceGroupName $WEUsing:VM.ResourceGroupName -Location $azurevm.Location -AllocationMethod Dynamic -Confirm:$false 
+                write-output " Nic Interface Id" , $WEVMNetworkInterfaceObject.Id  
+               ;  $WEPIP = New-AzureRmPublicIpAddress -Name $azurevm.Name -ResourceGroupName $WEUsing:VM.ResourceGroupName -Location $azurevm.Location -AllocationMethod Dynamic -Confirm:$false 
                 If($WEPIP -ne $WENull) { 
-                    Write-output " Public IP Id = ", $WEPIP.Id 
+                    Write-output " Public IP Id = " , $WEPIP.Id 
                     $WEVMNetworkInterfaceObject.IpConfigurations[0].PublicIpAddress = $WEPIP  
                 } 
                 if (($WEUsing:NSGname -ne $WENull) -And ($WEUsing:NSGRGname -ne $WENull)) { 

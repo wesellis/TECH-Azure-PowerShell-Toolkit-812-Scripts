@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Winget
+    Windows Install Winget
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Winget
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -97,7 +115,7 @@ try {
     # Set https://github.com/microsoft/winget-cli/blob/master/doc/Settings.md#archive-extraction-method to work around https://github.com/microsoft/winget-cli/issues/4153
     # This setting is only needed during image creation since there is no an active user session during that process.
     # The file will be lost when the final image is captured because the file is located under LOCALAPPDATA of the local user used for image building.
-    $settingsJson = @{
+   ;  $settingsJson = @{
         installBehavior = @{
             archiveExtractionMethod = 'tar'
         }

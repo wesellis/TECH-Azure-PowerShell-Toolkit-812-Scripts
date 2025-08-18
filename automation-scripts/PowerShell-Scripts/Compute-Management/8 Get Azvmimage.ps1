@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 8 Get Azvmimage
+    8 Get Azvmimage
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 8 Get Azvmimage
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -713,7 +731,7 @@ $WEImageSkus = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'micr
 $WEImageSkus | Get-AzVMImage | Where-Object {$_.Skus -like '*'} | Sort-Object -Property Version -Descending
 
 
-
+; 
 $getAzVMImageSplat = @{
     Location = 'CanadaCentral'
     PublisherName = 'Canonical'

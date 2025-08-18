@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configurewinrm
+    Configurewinrm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configurewinrm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -32,9 +50,9 @@ function WE-Delete-WinRMListener
         $config = Winrm enumerate winrm/config/listener
         foreach($conf in $config)
         {
-            if($conf.Contains("HTTPS" ))
+            if($conf.Contains(" HTTPS" ))
             {
-                Write-Verbose "HTTPS is already configured. Deleting the exisiting configuration."
+                Write-Verbose " HTTPS is already configured. Deleting the exisiting configuration."
     
                 winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
                 break
@@ -50,7 +68,7 @@ function WE-Delete-WinRMListener
 function WE-Create-Certificate
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string]$hostname
     )
@@ -62,7 +80,7 @@ param(
     # Dynamically generate the end date for the certificate 
     	# validity period to be a year from the date the
 	# script is run
-    $endDate = (Get-Date).AddYears(1).ToString(" MM/dd/yyyy")
+    $endDate = (Get-Date).AddYears(1).ToString(" MM/dd/yyyy" )
     .\makecert -r -pe -n CN=$hostname -b 01/01/2012 -e $endDate -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp " Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
 
     $thumbprint=(Get-ChildItem cert:\Localmachine\my | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1).Thumbprint
@@ -78,7 +96,7 @@ param(
 function WE-Configure-WinRMHttpsListener
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param([string] $WEHostName,
           [string] $port)
 
@@ -96,13 +114,13 @@ param([string] $WEHostName,
     {
         # The private key is missing - could have been sysprepped
         # Delete the certificate
-        Remove-Item Cert:\LocalMachine\My\$thumbprin -Forcet -Force
-        $thumbprint = Create-Certificate -hostname $WEHostName
+        Remove-Item Cert:\LocalMachine\My\$thumbpri -Forcen -Forcet -Force
+       ;  $thumbprint = Create-Certificate -hostname $WEHostName
     }
 
-   ;  $WEWinrmCreate= " winrm create --% winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`"$hostName`" ;CertificateThumbprint=`"$thumbPrint`" }"
+   ;  $WEWinrmCreate= " winrm create --% winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`" $hostName`" ;CertificateThumbprint=`" $thumbPrint`" }"
     invoke-expression $WEWinrmCreate
-    winrm set winrm/config/service/auth '@{Basic=" true"}'
+    winrm set winrm/config/service/auth '@{Basic=" true" }'
 }
 
 function WE-Add-FirewallException
@@ -120,11 +138,11 @@ param([string] $port)
 
 
 
-
+; 
 $winrmHttpsPort=5986
 
 
-winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192"}'
+winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192" }'
 
 
 Configure-WinRMHttpsListener $WEHostName $port

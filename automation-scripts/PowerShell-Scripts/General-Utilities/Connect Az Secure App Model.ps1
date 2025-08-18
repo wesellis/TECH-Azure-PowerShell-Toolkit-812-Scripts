@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Connect Az Secure App Model
+    Connect Az Secure App Model
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Connect Az Secure App Model
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
@@ -74,7 +92,7 @@ $newPartnerAccessTokenSplat_graphToken_3001 = @{
 $graphToken_3001 = $null
 $graphToken_3001 = New-PartnerAccessToken @newPartnerAccessTokenSplat_graphToken_3001
 
-
+; 
 $connectAzAccountSplat_3001 = $null; 
 $connectAzAccountSplat_3001 = @{
     AccessToken      = $azuretoken_3001.AccessToken

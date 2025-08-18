@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Start
+    Start
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,9 +16,27 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Start
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $userPrincipalName = Read-Host "Please enter user principal name e.g. alias@xxx.com"
-$resourceGroupName = Read-Host " Please enter resource group name e.g. rg-devbox-dev"
-$location = Read-Host " Please enter region name e.g. eastus"; 
+$resourceGroupName = Read-Host " Please enter resource group name e.g. rg-devbox-dev"; 
+$location = Read-Host " Please enter region name e.g. eastus" ; 
 $userPrincipalId=(Get-AzADUser -UserPrincipalName $userPrincipalName).Id
 if($userPrincipalId){
     Write-WELog " Start provisioning..." " INFO"

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Omsasrmonitoring
+    Omsasrmonitoring
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Omsasrmonitoring
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .Synopsis
@@ -153,7 +171,7 @@ foreach ($WEVault in $WEVaults)
                                            -Location $WELocation | Where-Object {$_.Name -eq $WERecoveryVm.RecoveryAzureVMSize}
                 
                 # Detect VMs protected by InMageAzureV2 Replication Provider
-                if ($WERecoveryVm.ReplicationProvider -eq " InMageAzureV2")
+                if ($WERecoveryVm.ReplicationProvider -eq " InMageAzureV2" )
                 {
                     $vNetInfo = " None"
                     $vNetRgName = " None"
@@ -167,12 +185,12 @@ foreach ($WEVault in $WEVaults)
                 else
                 {
                     # Detect VMs that are connected to storage and vNet in Azure
-                    if($WERecoveryVm.SelectedRecoveryAzureNetworkId -ne $null -and $WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2")
+                    if($WERecoveryVm.SelectedRecoveryAzureNetworkId -ne $null -and $WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2" )
                     {
-                        $vNetInfo = $WERecoveryVm.SelectedRecoveryAzureNetworkId.split(" /")
+                        $vNetInfo = $WERecoveryVm.SelectedRecoveryAzureNetworkId.split(" /" )
                         $vNetRgName = $vNetInfo[4]
                         $vNetName = $vNetInfo[8]
-                        $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /")
+                        $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /" )
                         $WEStorageRgName = $WEStorageInfo[4]
                         $WEStorageName = $WEStorageInfo[8]
                         
@@ -181,11 +199,11 @@ foreach ($WEVault in $WEVaults)
                     # Detect VMs that are missing vNet connection in Azure
                     else
                     {
-                        if ($WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.SelectedRecoveryAzureNetworkId -eq $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2")
+                        if ($WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.SelectedRecoveryAzureNetworkId -eq $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2" )
                         {
                             $vNetRgName = " None"
                             $vNetName = " None"
-                            $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /")
+                            $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /" )
                             $WEStorageRgName = $WEStorageInfo[4]
                             $WEStorageName = $WEStorageInfo[8]
 
@@ -194,7 +212,7 @@ foreach ($WEVault in $WEVaults)
                         # Ignoring On-Prem 2 On-Prem scenario for now
                         else
                         {
-                            if ($WERecoveryVm.ReplicationProvider -eq " HyperVReplica2012R2")
+                            if ($WERecoveryVm.ReplicationProvider -eq " HyperVReplica2012R2" )
                             {
                                     $vNetRgName = " None"
                                     $vNetName = " None"
@@ -220,14 +238,14 @@ foreach ($WEVault in $WEVaults)
                     }
             #Constructing the data log for OMS Log Analytics
 
-            $WEASRVMs = @()
+           ;  $WEASRVMs = @()
                ;  $WEData = New-Object psobject -Property @{
                     LogType = 'VM';
                     ASRResourceGroupName = $WEVault.ResourceGroupName;
                     ASRVaultName = $vault.Name;
                     ASRVaultLocation = $WELocation;
                     VMName = $WERecoveryVm.FriendlyName;
-                    VMId = $WERecoveryVm.ID.Split(" /")[14];
+                    VMId = $WERecoveryVm.ID.Split(" /" )[14];
                     ProtectionStatus = $WERecoveryVm.ProtectionStatus;
                     ActiveLocation = $WERecoveryVm.ActiveLocation;
                     ReplicationHealth = $WERecoveryVm.ReplicationHealth;
@@ -258,7 +276,7 @@ foreach ($WEVault in $WEVaults)
          $WEASRVMs = $WEASRVMs + $WEData
          write-output $WEASRVMs
          
-         $WEASRVMsJson = ConvertTo-Json -InputObject $WEASRVMs
+        ;  $WEASRVMsJson = ConvertTo-Json -InputObject $WEASRVMs
 
         ;  $WELogType = " RecoveryServices"
 

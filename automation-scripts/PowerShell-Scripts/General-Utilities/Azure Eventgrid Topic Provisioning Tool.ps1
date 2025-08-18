@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Eventgrid Topic Provisioning Tool
+    Azure Eventgrid Topic Provisioning Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Eventgrid Topic Provisioning Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -23,18 +41,20 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -42,18 +62,24 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETopicName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
-    [string]$WEInputSchema = " EventGridSchema",
+    [string]$WEInputSchema = " EventGridSchema" ,
     [hashtable]$WETags = @{}
 )
 
@@ -62,7 +88,7 @@ Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " Input Schema: $WEInputSchema" " INFO"
 
-
+; 
 $WEEventGridTopic = New-AzEventGridTopic `
     -ResourceGroupName $WEResourceGroupName `
     -Name $WETopicName `
@@ -107,20 +133,20 @@ Write-WELog " `nSample Event Format (EventGridSchema):" " INFO"
 Write-Host @"
 [
   {
-    " id": " unique-id",
-    " eventType": " Custom.Event.Type",
-    " subject": " /myapp/vehicles/motorcycles",
-    " eventTime": " $(Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" )",
-    " data": {
-      " make": " Ducati",
-      " model": " Monster"
+    " id" : " unique-id" ,
+    " eventType" : " Custom.Event.Type" ,
+    " subject" : " /myapp/vehicles/motorcycles" ,
+    " eventTime" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
+    " data" : {
+      " make" : " Ducati" ,
+      " model" : " Monster"
     },
-    " dataVersion": " 1.0"
+    " dataVersion" : " 1.0"
   }
 ]
 " @
 
-Write-WELog "`nEvent Grid Topic provisioning completed at $(Get-Date)" " INFO"
+Write-WELog " `nEvent Grid Topic provisioning completed at $(Get-Date)" " INFO"
 
 
 

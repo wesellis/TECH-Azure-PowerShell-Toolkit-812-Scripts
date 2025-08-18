@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Appdscsql
+    Appdscsql
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Appdscsql
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Configuration Main
 {
@@ -95,7 +113,7 @@ Node $nodeName
             $dest = " C:\WindowsAzure\WebDeploy_amd64_en-US.msi"
             Invoke-WebRequest $source -OutFile $dest
         }
-        GetScript = {@{Result = " DownloadWebDeploy"}}
+        GetScript = {@{Result = " DownloadWebDeploy" }}
         DependsOn = " [WindowsFeature]WebServerRole"
     }
     Package InstallWebDeploy
@@ -155,11 +173,11 @@ Node $nodeName
 		[system.io.directory]::CreateDirectory($logs)
 		[system.io.directory]::CreateDirectory($data)
 		[system.io.directory]::CreateDirectory($backups)
-		[system.io.directory]::CreateDirectory(" C:\SQDATA")
+		[system.io.directory]::CreateDirectory(" C:\SQDATA" )
 
 	# Setup the data, backup and log directories as well as mixed mode authentication
 	Import-Module " sqlps" -DisableNameChecking
-	[System.Reflection.Assembly]::LoadWithPartialName(" Microsoft.SqlServer.Smo")
+	[System.Reflection.Assembly]::LoadWithPartialName(" Microsoft.SqlServer.Smo" )
 	$sqlesq = new-object ('Microsoft.SqlServer.Management.Smo.Server') Localhost
 	$sqlesq.Settings.LoginMode = [Microsoft.SqlServer.Management.Smo.ServerLoginMode]::Mixed
 	$sqlesq.Settings.DefaultFile = $data
@@ -178,8 +196,8 @@ Node $nodeName
 	$dbdestination = " C:\SQDATA\AdventureWorks2012.bak"
 	Invoke-WebRequest $dbsource -OutFile $dbdestination 
 
-	$mdf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Data", " F:\Data\AdventureWorks2012.mdf")
-; 	$ldf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Log", " F:\Logs\AdventureWorks2012.ldf")
+; 	$mdf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Data" , " F:\Data\AdventureWorks2012.mdf" )
+; 	$ldf = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Log" , " F:\Logs\AdventureWorks2012.ldf" )
 
 	# Restore the database from the backup
 	Restore-SqlDatabase -ServerInstance Localhost -Database AdventureWorks `
@@ -188,7 +206,7 @@ Node $nodeName
 
 	}
   }
-        GetScript = {@{Result = " ConfigureSql"}}
+        GetScript = {@{Result = " ConfigureSql" }}
 }
 
   }

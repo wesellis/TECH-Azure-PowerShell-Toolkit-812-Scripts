@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 20.4 Azvm Windows Param
+    20.4 Azvm Windows Param
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 20.4 Azvm Windows Param
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEHelpers2 = "$WEPsScriptRoot\Helpers\"
 New-IaaCAzVMWindows @NewIaaCAzVMWindowsSplat
@@ -31,7 +49,7 @@ Get-ChildItem -Path $WEHelpers2 -Recurse -Filter '*.ps1' | ForEach-Object { . $_
 $WELocationName = 'CanadaCentral'
 $WECustomerName = 'CanadaComputing'
 $WEVMName = 'client1'
-$WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
 
 
 
@@ -40,27 +58,27 @@ $WEVMSize = " Standard_B2MS"
 $WEOSDiskCaching = " ReadWrite"
 $WEOSCreateOption = " FromImage"
 $WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName", " _OSDisk", " _1", " _$WEGUID")
+$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
 
 
-$WEASGName = -join (" $WEVMName", " _ASG1")
+$WEASGName = -join (" $WEVMName" , " _ASG1" )
 
 
-$WENSGName = -join (" $WEVMName", " -nsg")
+$WENSGName = -join (" $WEVMName" , " -nsg" )
 
 
-$WEDNSNameLabel = -join (" $WEVMName", " DNS").ToLower() # mydnsname.westus.cloudapp.azure.com
-$WEVnetName = -join (" $WEVMName", " _group-vnet")
+$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
+$WEVnetName = -join (" $WEVMName" , " _group-vnet" )
 $WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName", " _$WENICPrefix").ToLower()
-$WEIPConfigName = -join (" $WEVMName", " $WENICName", " _IPConfig1").ToLower()
-$WEPublicIPAddressName = -join (" $WEVMName", " -ip")
+$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
+$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
+$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
 $WEPublicIPAllocation = 'Dynamic'
-$WESubnetName = -join (" $WEVMName", " -subnet")
+$WESubnetName = -join (" $WEVMName" , " -subnet" )
 $WESubnetAddressPrefix = " 10.0.0.0/24"
 $WEVnetAddressPrefix = " 10.0.0.0/16"
-$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip").Content #Gets the public IP of the current machine
-$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix", " /32")
+$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine
+$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix" , " /32" )
 
 
 
@@ -92,8 +110,8 @@ $WETime = '23:59'
 $WETimeZone = " Central Standard Time"
 $WEEmail = " abdullah@canadacomputing.ca"
 
-
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+; 
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Autoshutown"     = 'ON'

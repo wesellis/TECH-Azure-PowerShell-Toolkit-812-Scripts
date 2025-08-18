@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installros
+    Installros
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Installros
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco source add -n=ros-win -s="https://aka.ms/ros/public" --priority=1
@@ -36,8 +54,8 @@ $command = " winrm create winrm/config/Listener?Address=*+Transport=HTTPS @{Host
 cmd.exe /C $command
 
 
-$localDeviceIdPath = " HKLM:SOFTWARE\Microsoft\SQMClient"
-$localDeviceIdName = " MachineId"; 
+$localDeviceIdPath = " HKLM:SOFTWARE\Microsoft\SQMClient"; 
+$localDeviceIdName = " MachineId" ; 
 $localDeviceIdValue = " {df713376-9b62-46d6-a363-cede5b1bf2c5}"
 New-ItemProperty -Path $localDeviceIdPath -Name $localDeviceIdName -Value $localDeviceIdValue -PropertyType String -Force | Out-Null
 

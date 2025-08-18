@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Event Grid Subscription Manager
+    Azure Event Grid Subscription Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,19 +16,41 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Event Grid Subscription Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" CreateTopic", " CreateSubscription", " ListEvents", " DeleteTopic")]
+    [ValidateSet(" CreateTopic" , " CreateSubscription" , " ListEvents" , " DeleteTopic" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
@@ -36,14 +58,20 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETopicName,
     
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEEndpointUrl,
@@ -52,7 +80,7 @@ param(
     [string]$WELocation = " East US"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Event Grid Subscription Manager" -Version " 1.0" -Description " Manage Event Grid topics and subscriptions"
 
 try {
@@ -73,7 +101,7 @@ try {
         }
         
         " ListEvents" {
-            $topic = Get-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $WETopicName
+           ;  $topic = Get-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $WETopicName
            ;  $subscriptions = Get-AzEventGridSubscription -ResourceGroupName $WEResourceGroupName -TopicName $WETopicName
             
             Write-WELog " Topic: $($topic.Name)" " INFO" -ForegroundColor Cyan

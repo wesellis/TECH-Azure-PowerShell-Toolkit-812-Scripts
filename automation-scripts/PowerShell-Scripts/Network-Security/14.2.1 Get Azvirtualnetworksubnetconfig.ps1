@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 14.2.1 Get Azvirtualnetworksubnetconfig
+    14.2.1 Get Azvirtualnetworksubnetconfig
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 14.2.1 Get Azvirtualnetworksubnetconfig
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -43,7 +61,7 @@ ProvisioningState                 : Succeeded
 AddressPrefix                     : {10.0.0.0/24}
 IpConfigurations                  : [
                                       {
-                                        " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/provider 
+                                        " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/provider 
                                     s/Microsoft.Network/networkInterfaces/ProdFortiGate-Nic0-jml4cp2jxyius/ipConfigurations/ipconfig1"    
                                       }
                                     ]
@@ -51,8 +69,8 @@ ResourceNavigationLinks           : []
 ServiceAssociationLinks           : []
 NetworkSecurityGroup              : null
 RouteTable                        : {
-                                      " DisableBgpRoutePropagation": false,
-                                      " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/ 
+                                      " DisableBgpRoutePropagation" : false,
+                                      " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/ 
                                     Microsoft.Network/routeTables/ProdFortiGate-PublicFacingSubnet-routes-jml4cp2jxyius"
                                     }
 NatGateway                        : null
@@ -70,7 +88,7 @@ ProvisioningState                 : Succeeded
 AddressPrefix                     : {10.0.1.0/24}
 IpConfigurations                  : [
                                       {
-                                        " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/provider 
+                                        " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/provider 
                                     s/Microsoft.Network/networkInterfaces/ProdFortiGate-Nic1-jml4cp2jxyius/ipConfigurations/ipconfig1"    
                                       }
                                     ]
@@ -78,8 +96,8 @@ ResourceNavigationLinks           : []
 ServiceAssociationLinks           : []
 NetworkSecurityGroup              : null
 RouteTable                        : {
-                                      " DisableBgpRoutePropagation": false,
-                                      " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/ 
+                                      " DisableBgpRoutePropagation" : false,
+                                      " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/ 
                                     Microsoft.Network/routeTables/ProdFortiGate-InsideSubnet-routes-jml4cp2jxyius"
                                     }
 NatGateway                        : null
@@ -102,7 +120,7 @@ AddressPrefix Name
 .NOTES
     General notes
 
-
+; 
 $getAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }

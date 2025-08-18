@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deploycertha
+    Deploycertha
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,34 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Deploycertha
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAdminUser,
@@ -30,9 +51,13 @@ param(
     [Parameter(Mandatory)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPasswd,    
 
     [Parameter(Mandatory)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEMainConnectionBroker,
@@ -40,9 +65,13 @@ param(
     [Parameter(Mandatory)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEBrokerFqdn,
 
     [Parameter(Mandatory)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEWebGatewayFqdn,
@@ -50,14 +79,20 @@ param(
     [Parameter(Mandatory)]    
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureSQLFQDN,
 
     [Parameter(Mandatory)]    
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureSQLDBName,
 
     [Parameter(Mandatory)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEWebAccessServerName,
@@ -68,12 +103,16 @@ param(
     [Parameter(Mandatory)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESessionHostName,
 
     [Parameter(Mandatory)]
     [int]$WESessionHostCount,
 
     [Parameter(Mandatory)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WELicenseServerName,
@@ -84,8 +123,8 @@ param(
     [bool]$WEEnableDebug = $WEFalse
 )
 
-If (-Not (Test-Path "C:\temp" )) {
-    New-Item -ItemType Directory -Path "C:\temp" -Force
+If (-Not (Test-Path " C:\temp" )) {
+    New-Item -ItemType Directory -Path " C:\temp" -Force
 }
 
 If ($WEEnableDebug) { Start-Transcript -Path " C:\temp\DeployCertHA.log" }
@@ -95,9 +134,9 @@ $WEServerName = $WEServerObj.DNSHostName
 $WEDomainName = $WEServerObj.Domain
 $WEServerFQDN = $WEServerName + " ." + $WEDomainName
 $WECertPasswd = ConvertTo-SecureString -String $WEPasswd -Force -AsPlainText
-$WEAzureSQLUserID = $WEAdminUser
+$WEAzureSQLUserID = $WEAdminUser; 
 $WEAzureSQLPasswd = $WEPasswd
-[System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdminUser)", $WECertPasswd)
+[System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdminUser)" , $WECertPasswd)
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
@@ -109,18 +148,20 @@ $WEWebGatewayServers = @()
 For($WEI=1;$WEI -le $WEWebAccessServerCount;$WEI++){
     $WEWebGatewayServers = $WEWebGatewayServers + $($WEWebAccessServerName + $WEI + " ." + $WEDomainName)
 }
-
+; 
 $WESessionHosts = @()
 For($WEI=1;$WEI -le $WESessionHostCount;$WEI++){
     $WESessionHosts = $WESessionHosts + $($WESessionHostName + $WEI + " ." + $WEDomainName)
 }
-
+; 
 $WELicenseServers = @()
 For($WEI=1;$WEI -le $WELicenseServerCount;$WEI++){
     $WELicenseServers = $WELicenseServers + $($WELicenseServerName + $WEI + " ." + $WEDomainName)
 }
 
 Function RequestCert([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEFqdn) {
     $WECertMaxRetries = 30
@@ -136,7 +177,7 @@ Function RequestCert([Parameter(Mandatory=$false)]
         $WEAcmePath = " C:\Inetpub\wwwroot\.well-known\acme-challenge"
         New-Item -ItemType Directory -Path $WEAcmePath -Force
         New-Item -Path $WEAcmePath -Name $auth.HTTP01Token -ItemType File -Value $WEAcmeBody
-        If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+        If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
             Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$"
         }
     } -ArgumentList $auth, $WEAcmeBody, $WEServerName, $WEDomainName
@@ -148,9 +189,9 @@ Function RequestCert([Parameter(Mandatory=$false)]
         Write-WELog " Waiting for validation. Sleeping 30 seconds..." " INFO"
         Start-Sleep -Seconds 30
         $WERetries++
-    } While (((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid") -And ($WERetries -ne $WECertMaxRetries))
+    } While (((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid" ) -And ($WERetries -ne $WECertMaxRetries))
 
-    If ((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid"){
+    If ((Get-PAOrder | Get-PAAuthorizations).HTTP01Status -ne " valid" ){
         Write-Error " Certificate for $($WEFqdn) not ready in 15 minutes. Exiting..."
         [Environment]::Exit(-1)
     }
@@ -158,7 +199,7 @@ Function RequestCert([Parameter(Mandatory=$false)]
     New-PACertificate $WEFqdn -Install
     $WEThumbprint = (Get-PACertificate $WEFqdn).Thumbprint
     
-    $WECertFullPath = (Join-path " C:\temp" $($WEFqdn + " .pfx"))
+    $WECertFullPath = (Join-path " C:\temp" $($WEFqdn + " .pfx" ))
     Export-PfxCertificate -Cert Cert:\LocalMachine\My\$WEThumbprint -FilePath $WECertFullPath -Password $WECertPasswd -Force
 }
 
@@ -236,7 +277,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     ForEach($WENewServer In $WEWebGatewayServers) {
         Invoke-Command -ComputerName $WENewServer -Credential $WEDomainCreds -ScriptBlock {
             Param($WEDomainName,$WEBrokerName)
-            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                 Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$" -ErrorAction SilentlyContinue
             }
         } -ArgumentList $WEDomainName, $WEServerName
@@ -249,7 +290,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     ForEach($WENewServer In $WEWebGatewayServers) {
         Invoke-Command -ComputerName $WENewServer -Credential $WEDomainCreds -ScriptBlock {
             Param($WEDomainName,$WEBrokerName)
-            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                 Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$" -ErrorAction SilentlyContinue
             }
         } -ArgumentList $WEDomainName, $WEServerName
@@ -262,7 +303,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     ForEach($WENewServer In $WESessionHosts) {
         Invoke-Command -ComputerName $WENewServer -Credential $WEDomainCreds -ScriptBlock {
             Param($WEDomainName,$WEBrokerName)
-            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                 Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$" -ErrorAction SilentlyContinue
             }
         } -ArgumentList $WEDomainName, $WEServerName
@@ -275,7 +316,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     ForEach($WENewServer In $WELicenseServers) {
         Invoke-Command -ComputerName $WENewServer -Credential $WEDomainCreds -ScriptBlock {
             Param($WEDomainName,$WEBrokerName)
-            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                 Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$" -ErrorAction SilentlyContinue
             }
         } -ArgumentList $WEDomainName, $WEServerName
@@ -287,8 +328,8 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     #End of add remaining servers
 
     #Request Certs for web access, gateway, broker and publishing    
-    $WECertWebGatewayPath = (Join-path " C:\temp" $($WEWebGatewayFqdn + " .pfx"))
-    $WECertBrokerPath = (Join-path " C:\temp" $($WEBrokerFqdn + " .pfx"))
+    $WECertWebGatewayPath = (Join-path " C:\temp" $($WEWebGatewayFqdn + " .pfx" ))
+   ;  $WECertBrokerPath = (Join-path " C:\temp" $($WEBrokerFqdn + " .pfx" ))
 
     If (-Not (Get-RDCertificate -Role RDGateway).IssuedTo) {
         RequestCert $WEWebGatewayFqdn
@@ -306,7 +347,7 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
     Invoke-Command -ComputerName $WEWebGatewayServers -Credential $WEDomainCreds -ScriptBlock {
         Param($WERedirectPage)
         Import-Module WebAdministration
-        Set-WebConfiguration System.WebServer/HttpRedirect " IIS:\sites\Default Web Site" -Value @{Enabled=" True";Destination=" $WERedirectPage";ExactDestination=" True";HttpResponseStatus=" Found"}
+        Set-WebConfiguration System.WebServer/HttpRedirect " IIS:\sites\Default Web Site" -Value @{Enabled=" True" ;Destination=" $WERedirectPage" ;ExactDestination=" True" ;HttpResponseStatus=" Found" }
     } -ArgumentList $WERedirectPage
     #End of https redirect
 
@@ -333,7 +374,7 @@ Else {
         #As we're executing via SYSTEM, make sure the broker is able to manage servers
         Invoke-Command -ComputerName $WEMainConnectionBroker -Credential $WEDomainCreds -ScriptBlock {
             Param($WEDomainName,$WEBrokerName)
-            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+            If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                 Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$"
             }
         } -ArgumentList $WEDomainName, $WEServerName
@@ -354,7 +395,7 @@ Else {
         Get-RDServer -ConnectionBroker $WEMainBrokerFQDN | ForEach-Object {
             Invoke-Command -ComputerName $_.Server -Credential $WEDomainCreds -ScriptBlock {
                 Param($WEDomainName,$WEBrokerName)
-                If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)"} -ErrorAction SilentlyContinue)) {
+                If (-Not (Get-LocalGroupMember -Group " Administrators" | Where-Object {$_.Name -match " $($WEBrokerName)" } -ErrorAction SilentlyContinue)) {
                     Add-LocalGroupMember -Group " Administrators" -Member " $($WEDomainName)\$($WEBrokerName)$" -ErrorAction SilentlyContinue
                 }
             } -ArgumentList $WEDomainName, $WEServerName
@@ -364,8 +405,8 @@ Else {
         Add-RDServer -Role " RDS-CONNECTION-BROKER" -ConnectionBroker $WEMainBrokerFQDN -Server $WEServerFQDN
         
         #Since we've added another broker, we have to import the cert again
-        $WECertRemotePath = (Join-path " \\$WEMainConnectionBroker\C$\temp" " *.pfx")
-       ;  $WECertBrokerPath = (Join-path " C:\temp" $($WEBrokerFqdn + " .pfx"))
+       ;  $WECertRemotePath = (Join-path " \\$WEMainConnectionBroker\C$\temp" " *.pfx" )
+       ;  $WECertBrokerPath = (Join-path " C:\temp" $($WEBrokerFqdn + " .pfx" ))
 
         #Copy the certs locally from first broker
         Copy-Item -Path $WECertRemotePath -Destination " C:\Temp"
@@ -378,10 +419,8 @@ Else {
 If ($WEEnableDebug) { Stop-Transcript }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

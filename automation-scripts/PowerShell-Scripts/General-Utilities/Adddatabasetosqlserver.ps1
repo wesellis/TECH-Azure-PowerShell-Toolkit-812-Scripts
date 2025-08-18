@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Adddatabasetosqlserver
+    Adddatabasetosqlserver
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Adddatabasetosqlserver
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string]
     $userName,
@@ -57,7 +76,7 @@ $fileList = Invoke-Sqlcmd `
                     -ServerInstance . `
                     -UserName $username `
                     -Password $password `
-                    -Query "restore filelistonly from disk='$($pwd)\AdventureWorks2016.bak'" ;
+                    -Query " restore filelistonly from disk='$($pwd)\AdventureWorks2016.bak'" ;
 
 
 $relocateFiles = @();
@@ -69,7 +88,7 @@ foreach ($nextBackupFile in $fileList)
     $relocateFiles = $relocateFiles + New-Object `
         Microsoft.SqlServer.Management.Smo.RelocateFile( `
             $nextBackupFile.LogicalName,
-            "$env:temp\$($nextBackupFileName)" );
+            " $env:temp\$($nextBackupFileName)" );
 }
 
 $securePassword = ConvertTo-SecureString $password -AsPlainText -Force; 
@@ -77,16 +96,14 @@ $credentials = New-Object System.Management.Automation.PSCredential ($username, 
 Restore-SqlDatabase `
 	-ReplaceDatabase `
 	-ServerInstance . `
-	-Database "SampleDatabase" `
+	-Database " SampleDatabase" `
 	-BackupFile " $pwd\AdventureWorks2016.bak" `
 	-RelocateFile $relocateFiles `
 	-Credential $credentials; 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

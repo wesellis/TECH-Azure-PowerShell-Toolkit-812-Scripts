@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Autosnooze Createalert Child
+    Autosnooze Createalert Child
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Autosnooze Createalert Child
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
         $WEVMObject,
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAlertAction,
         [string]$WEWebhookUri
@@ -33,7 +53,7 @@ function WE-Generate-AlertName
     param ([string] $WEOldAlertName , 
      [string] $WEVMName)
          
-    [string[]] $WEAlertSplit = $WEOldAlertName -split "-"
+    [string[]] $WEAlertSplit = $WEOldAlertName -split " -"
     [int] $WENumber =$WEAlertSplit[$WEAlertSplit.Length-1]
     $WENumber++
     $WENewalertname = " Alert-$($WEVMName)-$WENumber"
@@ -91,7 +111,7 @@ try
     $resourceId = " /subscriptions/$($WESubId)/resourceGroups/$WEResourceGroupName/providers/Microsoft.Compute/virtualMachines/$($WEVMObject.Name.Trim())"
     $WENewAlertName =" Alert-$($WEVMObject.Name)-1"
                                                  
-    if($WEAlertAction -eq " Disable")
+    if($WEAlertAction -eq " Disable" )
     {
         $WEExVMAlerts = Get-AzureRmAlertRule -ResourceGroup $WEVMObject.ResourceGroupName -DetailedOutput -ErrorAction SilentlyContinue
                  if($WEExVMAlerts -ne $null)
@@ -123,7 +143,7 @@ try
                            
                     }
     }
-    elseif($WEAlertAction -eq " Create")
+    elseif($WEAlertAction -eq " Create" )
     {
         #Getting ResourcegroupName and Location based on VM  
                     
@@ -151,7 +171,7 @@ try
                                             Do
                                             {
                                                #Start-Sleep 10    
-                                               $WEGetAlert=Get-AzureRmAlertRule -ResourceGroup $WEResourceGroupName -Name $WEAlert.Name -DetailedOutput -ErrorAction SilentlyContinue                                       
+                                              ;  $WEGetAlert=Get-AzureRmAlertRule -ResourceGroup $WEResourceGroupName -Name $WEAlert.Name -DetailedOutput -ErrorAction SilentlyContinue                                       
                                                         
                                             }
                                             while($WEGetAlert -ne $null)

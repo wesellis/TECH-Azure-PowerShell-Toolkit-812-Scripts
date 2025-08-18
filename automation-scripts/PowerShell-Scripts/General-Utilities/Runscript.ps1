@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Runscript
+    Runscript
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Runscript
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Write-WELog "Starting script to apply Azure baseline to Windows" " INFO"
 
@@ -45,7 +63,7 @@ Expand-Archive -Path $pwshZipDownloadPath -DestinationPath $WEZipDestinationPath
 $pwshExePath = Join-Path -Path (Join-Path -Path $gcFolder -ChildPath $pwshZipFileName.replace('.zip', '')) -ChildPath 'pwsh.exe'
 
 
-Write-WELog " Saving GuestConfiguration module" " INFO"
+Write-WELog " Saving GuestConfiguration module" " INFO"; 
 $modulesFolder = New-Item -Path 'c:\ProgramData\GuestConfig' -Name 'modules' -ItemType 'Directory'
 Install-PackageProvider -Name " NuGet" -Scope CurrentUser -Force
 Save-Module -Name GuestConfiguration -path $modulesFolder
@@ -56,7 +74,7 @@ Save-Module -Name GuestConfiguration -path $modulesFolder
     Import-Module 'GuestConfiguration'
     Get-Module 'GuestConfiguration'
 }
-$gcModule = & $pwshExePath -Command $gcModuleDetails
+$gcModule = & $pwshExePath -Command $gcModuleDetails; 
 $gcModulePath = Join-Path -Path $gcModule.ModuleBase -ChildPath $gcModule.RootModule
 (Get-Content -Path $gcModulePath).replace('metaConfig.Type', 'true') | Set-Content -Path $gcModulePath
 
@@ -90,14 +108,14 @@ Write-WELog " Applying Azure baseline" " INFO"
 ; 
 $command = @'
 Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name FilterAdministratorToken -Value 1 -Type DWord;
-$schedServiceCom = New-Object -ComObject " Schedule.Service";
+$schedServiceCom = New-Object -ComObject " Schedule.Service" ;
 $schedServiceCom.Connect();
 $rootTaskFolder = $schedServiceCom.GetFolder('\');
 $rootTaskFolder.DeleteTask('FilterAdministratorTokenEnablement', 0)
 '@
 $encodedCommand = [convert]::ToBase64String([System.Text.encoding]::Unicode.GetBytes($command))
 $taskDefinition = @'
-<Task version=" 1.4" xmlns=" http://schemas.microsoft.com/windows/2004/02/mit/task">
+<Task version=" 1.4" xmlns=" http://schemas.microsoft.com/windows/2004/02/mit/task" >
   <RegistrationInfo>
     <URI>\FilterAdministratorTokenEnablement</URI>
   </RegistrationInfo>
@@ -107,7 +125,7 @@ $taskDefinition = @'
     </BootTrigger>
   </Triggers>
   <Principals>
-    <Principal id=" Author">
+    <Principal id=" Author" >
       <RunLevel>HighestAvailable</RunLevel>
     </Principal>
   </Principals>
@@ -132,7 +150,7 @@ $taskDefinition = @'
     <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
     <Priority>7</Priority>
   </Settings>
-  <Actions Context=" Author">
+  <Actions Context=" Author" >
     <Exec>
       <Command>C:\Windows\System32\cmd.exe</Command>
       <Arguments>/c PowerShell -ExecutionPolicy Bypass -OutputFormat Text -EncodedCommand #REPLACE</Arguments>
@@ -142,7 +160,7 @@ $taskDefinition = @'
 '@ -replace '#REPLACE',$encodedCommand
 
 $schedServiceCom = New-Object -ComObject " Schedule.Service"
-$schedServiceCom.Connect()
+$schedServiceCom.Connect(); 
 $filterAdminTokenTask = $schedServiceCom.NewTask($null)
 $filterAdminTokenTask.XmlText = $taskDefinition; 
 $rootTaskFolder = $schedServiceCom.GetFolder('\')

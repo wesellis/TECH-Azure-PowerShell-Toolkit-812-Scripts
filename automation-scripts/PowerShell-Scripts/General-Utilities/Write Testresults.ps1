@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Write Testresults
+    Write Testresults
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Write Testresults
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿<#
 
 This script is used to update the table where the test results for each sample are stored.
@@ -27,31 +45,33 @@ Typical scenario is that results will be passed in for only one cloud Public or 
 $ErrorActionPreference = "Stop"
 param(
     [string]$WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the full absolute path to the sample
-    [string]$WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo (i.e. relative path) e.g. "sample-type/sample-name"
+    [string]$WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo (i.e. relative path) e.g. " sample-type/sample-name"
     [string]$WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    [string]$WETableName = " QuickStartsMetadataService",
-    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs",
-    [string]$WEBadgesContainerName = " badges",
-    [string]$WEPRsContainerName = " prs",
-    [string]$WERegressionsTableName = " Regressions",
+    [string]$WETableName = " QuickStartsMetadataService" ,
+    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs" ,
+    [string]$WEBadgesContainerName = " badges" ,
+    [string]$WEPRsContainerName = " prs" ,
+    [string]$WERegressionsTableName = " Regressions" ,
     [Parameter(mandatory = $true)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEStorageAccountKey, 
-    [string]$WEBestPracticeResult = " $WEENV:RESULT_BEST_PRACTICE",
-    [string]$WECredScanResult = " $WEENV:RESULT_CREDSCAN",
-    [string]$WEBuildReason = " $WEENV:BUILD_REASON",
-    [string]$WEAgentJobStatus = " $WEENV:AGENT_JOBSTATUS",
-    [string]$WEValidationType = " $WEENV:VALIDATION_TYPE",
-    [string]$supportedEnvironmentsJson = " $WEENV:SUPPORTED_ENVIRONMENTS", # the minified json array from metadata.json
-    [string]$WEResultDeploymentParameter = " $WEENV:RESULT_DEPLOYMENT_PARAMETER", #also cloud specific
+    [string]$WEBestPracticeResult = " $WEENV:RESULT_BEST_PRACTICE" ,
+    [string]$WECredScanResult = " $WEENV:RESULT_CREDSCAN" ,
+    [string]$WEBuildReason = " $WEENV:BUILD_REASON" ,
+    [string]$WEAgentJobStatus = " $WEENV:AGENT_JOBSTATUS" ,
+    [string]$WEValidationType = " $WEENV:VALIDATION_TYPE" ,
+    [string]$supportedEnvironmentsJson = " $WEENV:SUPPORTED_ENVIRONMENTS" , # the minified json array from metadata.json
+    [string]$WEResultDeploymentParameter = " $WEENV:RESULT_DEPLOYMENT_PARAMETER" , #also cloud specific
     [string]$WEFairfaxDeployment = "" ,
-    [string]$WEFairfaxLastTestDate = (Get-Date -Format "yyyy-MM-dd" ).ToString(),
+    [string]$WEFairfaxLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
     [string]$WEPublicDeployment = "" ,
-    [string]$WEPublicLastTestDate = (Get-Date -Format "yyyy-MM-dd" ).ToString(),
+    [string]$WEPublicLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
     [string]$WEBicepVersion = $WEENV:BICEP_VERSION, # empty if bicep not supported by the sample
-    [string]$WETemplateAnalyzerResult = "$WEENV:TEMPLATE_ANALYZER_RESULT" ,
-    [string]$WETemplateAnalyzerOutputFilePath = "$WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
-    [string]$WETemplateAnalyzerLogsContainerName = "$WEENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
+    [string]$WETemplateAnalyzerResult = " $WEENV:TEMPLATE_ANALYZER_RESULT" ,
+    [string]$WETemplateAnalyzerOutputFilePath = " $WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
+    [string]$WETemplateAnalyzerLogsContainerName = " $WEENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
 )
 
 function WE-Get-Regression(
@@ -81,7 +101,7 @@ function WE-Convert-EntityToHashtable([PSCustomObject] $entity) {
     $hashtable = New-Object -Type Hashtable
     $entity | Get-Member -MemberType NoteProperty | ForEach-Object {
         $name = $_.Name
-        if ($name -ne " PartitionKey" -and $name -ne " RowKey" -and $name -ne " Etag" -and $name -ne " TableTimestamp") {
+        if ($name -ne " PartitionKey" -and $name -ne " RowKey" -and $name -ne " Etag" -and $name -ne " TableTimestamp" ) {
             $hashtable[$name] = $entity.$WEName
         }
     }
@@ -94,7 +114,7 @@ Write-WELog " Storage account name: $WEStorageAccountName" " INFO"
 $ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
 
 $isPullRequest = $false
-if ($WEBuildReason -eq " PullRequest") {
+if ($WEBuildReason -eq " PullRequest" ) {
     $isPullRequest = $true
     $t = $WETableNamePRs
 }
@@ -103,8 +123,8 @@ else {
 }
 Write-WELog " Writing to table $t" " INFO"
 
-if (($WEBicepVersion -ne "" ) -and !($WEBicepVersion -match "^[0-9]+\.[-0-9a-z.]+$" )) {
-    Write-Error "Unexpected bicep version format: $WEBicepVersion.  This may be caused by a previous error in the pipeline"
+if (($WEBicepVersion -ne "" ) -and !($WEBicepVersion -match " ^[0-9]+\.[-0-9a-z.]+$" )) {
+    Write-Error " Unexpected bicep version format: $WEBicepVersion.  This may be caused by a previous error in the pipeline"
 }
 
 $cloudTable = (Get-AzStorageTable -Name $t -Context $ctx).CloudTable
@@ -113,7 +133,7 @@ $cloudTable = (Get-AzStorageTable -Name $t -Context $ctx).CloudTable
 $WEPathToMetadata = " $WESampleFolder\metadata.json"
 Write-WELog " PathToMetadata: $WEPathToMetadata" " INFO"
 
-$WERowKey = $WESampleName.Replace(" \", " @").Replace(" /", " @")
+$WERowKey = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
 Write-WELog " RowKey: $WERowKey" " INFO"
 
 $WEMetadata = Get-Content $WEPathToMetadata -Raw | ConvertFrom-Json
@@ -160,7 +180,7 @@ if ($isPullRequest) {
 }
 
 
-if ($null -ne $r -and $WEAgentJobStatus -eq " Canceled" -and $WEBuildReason -ne " PullRequest") {
+if ($null -ne $r -and $WEAgentJobStatus -eq " Canceled" -and $WEBuildReason -ne " PullRequest" ) {
     if ($null -eq $r.status) {
         Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue " Live"
     }
@@ -172,26 +192,26 @@ if ($null -ne $r -and $WEAgentJobStatus -eq " Canceled" -and $WEBuildReason -ne 
     exit
 }
 
-$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" true"), " PASS"
-$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" false"), " FAIL"
-$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" true"), " PASS"
-$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" false"), " FAIL"
-$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" true"), " PASS"
-$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" false"), " FAIL"
-$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" true"), " PASS"
-$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" false"), " FAIL"
-$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" true"), " PASS"
-$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" false"), " FAIL"
+$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" true" ), " PASS"
+$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" false" ), " FAIL"
+$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" true" ), " PASS"
+$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" false" ), " FAIL"
+$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" true" ), " PASS"
+$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" false" ), " FAIL"
+$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" true" ), " PASS"
+$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" false" ), " FAIL"
+$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" true" ), " PASS"
+$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" false" ), " FAIL"
 
 Write-WELog " Supported Environments Found: $supportedEnvironmentsJson" " INFO"
 $supportedEnvironments = ($supportedEnvironmentsJson | ConvertFrom-JSON -AsHashTable)
 
 
-if ($WEValidationType -eq " Manual") {
-    if ($supportedEnvironments.Contains(" AzureUSGovernment")) {
+if ($WEValidationType -eq " Manual" ) {
+    if ($supportedEnvironments.Contains(" AzureUSGovernment" )) {
         $WEFairfaxDeployment = " Manual Test" 
     }
-    if ($supportedEnvironments.Contains(" AzureCloud")) {
+    if ($supportedEnvironments.Contains(" AzureCloud" )) {
         $WEPublicDeployment = " Manual Test"
     }
 }
@@ -204,42 +224,42 @@ if ($null -eq $r) {
     Write-WELog " BP Result: $WEBestPracticeResult" " INFO"
     if (![string]::IsNullOrWhiteSpace($WEBestPracticeResult)) {
         Write-WELog " Adding BP results to hashtable..." " INFO"
-        $results.Add(" BestPracticeResult", $WEBestPracticeResult)
+        $results.Add(" BestPracticeResult" , $WEBestPracticeResult)
     }
     Write-WELog " Adding Bicep version to hashtable..." " INFO"
-    $results.Add(" BicepVersion", $WEBicepVersion)
+    $results.Add(" BicepVersion" , $WEBicepVersion)
     Write-WELog " CredScan Result: $WECredScanResult" " INFO"
     if (![string]::IsNullOrWhiteSpace($WECredScanResult)) {
-        $results.Add(" CredScanResult", $WECredScanResult)
+        $results.Add(" CredScanResult" , $WECredScanResult)
     }
     Write-WELog " TemplateAnalyzer result: $WETemplateAnalyzerResult" " INFO"
     if (![string]::IsNullOrWhiteSpace($WETemplateAnalyzerResult)) {
-        $results.Add(" TemplateAnalyzerResult", $WETemplateAnalyzerResult)
+        $results.Add(" TemplateAnalyzerResult" , $WETemplateAnalyzerResult)
     }
     # set the values for Fairfax only if a result was passed
     Write-WELog " FF Result" " INFO"
     if (![string]::IsNullOrWhiteSpace($WEFairfaxDeployment)) { 
-        $results.Add(" FairfaxDeployment", $WEFairfaxDeployment) 
-        $results.Add(" FairfaxLastTestDate", $WEFairfaxLastTestDate) 
+        $results.Add(" FairfaxDeployment" , $WEFairfaxDeployment) 
+        $results.Add(" FairfaxLastTestDate" , $WEFairfaxLastTestDate) 
     }
     # set the values for MAC only if a result was passed
     Write-WELog " Mac Result" " INFO"
     if (![string]::IsNullOrWhiteSpace($WEPublicDeployment)) {
-        $results.Add(" PublicDeployment", $WEPublicDeployment) 
-        $results.Add(" PublicLastTestDate", $WEPublicLastTestDate) 
+        $results.Add(" PublicDeployment" , $WEPublicDeployment) 
+        $results.Add(" PublicLastTestDate" , $WEPublicLastTestDate) 
     }
     # add metadata columns
     Write-WELog " New Record: adding metadata" " INFO"
-    $results.Add(" itemDisplayName", $WEMetadata.itemDisplayName)
-    $results.Add(" description", $WEMetadata.description)
-    $results.Add(" summary", $WEMetadata.summary)
-    $results.Add(" githubUsername", $WEMetadata.githubUsername)
-    $results.Add(" dateUpdated", $WEMetadata.dateUpdated)
+    $results.Add(" itemDisplayName" , $WEMetadata.itemDisplayName)
+    $results.Add(" description" , $WEMetadata.description)
+    $results.Add(" summary" , $WEMetadata.summary)
+    $results.Add(" githubUsername" , $WEMetadata.githubUsername)
+    $results.Add(" dateUpdated" , $WEMetadata.dateUpdated)
 
-    if ($WEBuildReason -eq " PullRequest") {
-        $results.Add(" status", $WEBuildReason)
-        $results.Add($($WEResultDeploymentParameter + " BuildNumber"), $WEENV:BUILD_BUILDNUMBER)
-        $results.Add(" pr", $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)
+    if ($WEBuildReason -eq " PullRequest" ) {
+        $results.Add(" status" , $WEBuildReason)
+        $results.Add($($WEResultDeploymentParameter + " BuildNumber" ), $WEENV:BUILD_BUILDNUMBER)
+        $results.Add(" pr" , $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)
     }
 
     Write-WELog " New Record: Dump results variable" " INFO"
@@ -314,7 +334,7 @@ else {
         }
     }
 
-    if ($WEBuildReason -eq " PullRequest") {
+    if ($WEBuildReason -eq " PullRequest" ) {
         if ($null -eq $r.status) {
             Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue $WEBuildReason            
         }
@@ -327,11 +347,11 @@ else {
         }
         
         # if it's a PR, set the build number, since it's not set before this outside of a scheduled build
-        if ($null -eq $r.($WEResultDeploymentParameter + " BuildNumber")) {
-            Add-Member -InputObject $r -NotePropertyName ($WEResultDeploymentParameter + " BuildNumber") -NotePropertyValue $WEENV:BUILD_BUILDNUMBER           
+        if ($null -eq $r.($WEResultDeploymentParameter + " BuildNumber" )) {
+            Add-Member -InputObject $r -NotePropertyName ($WEResultDeploymentParameter + " BuildNumber" ) -NotePropertyValue $WEENV:BUILD_BUILDNUMBER           
         }
         else {
-            $r.($WEResultDeploymentParameter + " BuildNumber") = $WEENV:BUILD_BUILDNUMBER
+            $r.($WEResultDeploymentParameter + " BuildNumber" ) = $WEENV:BUILD_BUILDNUMBER
         }
         if ($null -eq $r.pr) {
             Add-Member -InputObject $r -NotePropertyName " pr" -NotePropertyValue $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
@@ -437,7 +457,7 @@ $na = " Not%20Tested"
 
 
 if ($null -ne $r.PublicLastTestDate) {
-    $WEPublicLastTestDate = $r.PublicLastTestDate.Replace(" -", " .")
+    $WEPublicLastTestDate = $r.PublicLastTestDate.Replace(" -" , " ." )
     $WEPublicLastTestDateColor = " black"
 }
 else {
@@ -446,7 +466,7 @@ else {
 }
 
 if ($null -ne $r.FairfaxLastTestDate) {
-    $WEFairfaxLastTestDate = $r.FairfaxLastTestDate.Replace(" -", " .")
+    $WEFairfaxLastTestDate = $r.FairfaxLastTestDate.Replace(" -" , " ." )
     $WEFairfaxLastTestDateColor = " black"
 }
 else {
@@ -456,7 +476,7 @@ else {
 
 if ($null -ne $r.FairfaxDeployment) {
     # TODO can be removed when table is updated to string
-    $WEFairfaxDeployment = ($r.FairfaxDeployment).ToString().ToLower().Replace(" true", " PASS").Replace(" false", " FAIL")
+    $WEFairfaxDeployment = ($r.FairfaxDeployment).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
 }
 switch ($WEFairfaxDeployment) {
     " PASS" { $WEFairfaxDeploymentColor = " brightgreen" }
@@ -471,7 +491,7 @@ switch ($WEFairfaxDeployment) {
 
 if ($null -ne $r.PublicDeployment) {
     # TODO can be removed when table is updated to string
-    $WEPublicDeployment = ($r.PublicDeployment).ToString().ToLower().Replace(" true", " PASS").Replace(" false", " FAIL")
+    $WEPublicDeployment = ($r.PublicDeployment).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
 }
 switch ($WEPublicDeployment) {
     " PASS" { $WEPublicDeploymentColor = " brightgreen" }
@@ -486,7 +506,7 @@ switch ($WEPublicDeployment) {
 
 if ($null -ne $r.BestPracticeResult) {
     # TODO can be removed when table is updated to string
-    $WEBestPracticeResult = ($r.BestPracticeResult).ToString().ToLower().Replace(" true", " PASS").Replace(" false", " FAIL")
+    $WEBestPracticeResult = ($r.BestPracticeResult).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
 }
 switch ($WEBestPracticeResult) {
     " PASS" { $WEBestPracticeResultColor = " brightgreen" }
@@ -499,7 +519,7 @@ switch ($WEBestPracticeResult) {
 
 if ($null -ne $r.CredScanResult) {
     # TODO can be removed when table is updated to string
-    $WECredScanResult = ($r.CredScanResult).ToString().ToLower().Replace(" true", " PASS").Replace(" false", " FAIL")
+    $WECredScanResult = ($r.CredScanResult).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
 }
 switch ($WECredScanResult) {
     " PASS" { $WECredScanResultColor = " brightgreen" }
@@ -515,45 +535,45 @@ switch ($WETemplateAnalyzerResult) {
     " FAIL" { $WETemplateAnalyzerResultColor = " red" }
     default {
         $WETemplateAnalyzerResult = $na
-        $WETemplateAnalyzerResultColor = " inactive"    
+       ;  $WETemplateAnalyzerResultColor = " inactive"    
     }
 }
 ; 
-$WEBicepVersionColor = " brightgreen";
-if ($WEBicepVersion -eq "" ) { $WEBicepVersion = "n/a" } # make sure the badge value is not empty
+$WEBicepVersionColor = " brightgreen" ;
+if ($WEBicepVersion -eq "" ) { $WEBicepVersion = " n/a" } # make sure the badge value is not empty
 ; 
 $badges = @(
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Date-$WEPublicLastTestDate-/?color=$WEPublicLastTestDateColor";
-        " filename" = " PublicLastTestDate.svg";
+        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Date-$WEPublicLastTestDate-/?color=$WEPublicLastTestDateColor" ;
+        " filename" = " PublicLastTestDate.svg" ;
     },
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Result-$WEPublicDeployment-/?color=$WEPublicDeploymentColor";
+        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Result-$WEPublicDeployment-/?color=$WEPublicDeploymentColor" ;
         " filename" = " PublicDeployment.svg"
 
     },
     @{ 
-        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Date-$WEFairfaxLastTestDate-/?color=$WEFairfaxLastTestDateColor";
+        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Date-$WEFairfaxLastTestDate-/?color=$WEFairfaxLastTestDateColor" ;
         " filename" = " FairfaxLastTestDate.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Result-$WEFairfaxDeployment-/?color=$WEFairfaxDeploymentColor";
+        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Result-$WEFairfaxDeployment-/?color=$WEFairfaxDeploymentColor" ;
         " filename" = " FairfaxDeployment.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Best%20Practice%20Check-$WEBestPracticeResult-/?color=$WEBestPracticeResultColor";
+        " url"      = " https://img.shields.io/badge/Best%20Practice%20Check-$WEBestPracticeResult-/?color=$WEBestPracticeResultColor" ;
         " filename" = " BestPracticeResult.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/CredScan%20Check-$WECredScanResult-/?color=$WECredScanResultColor";
+        " url"      = " https://img.shields.io/badge/CredScan%20Check-$WECredScanResult-/?color=$WECredScanResultColor" ;
         " filename" = " CredScanResult.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Bicep%20Version-$WEBicepVersion-/?color=$WEBicepVersionColor";
+        " url"      = " https://img.shields.io/badge/Bicep%20Version-$WEBicepVersion-/?color=$WEBicepVersionColor" ;
         " filename" = " BicepVersion.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Template%20Analyzer%20Check-$WETemplateAnalyzerResult-/?color=$WETemplateAnalyzerResultColor";
+        " url"      = " https://img.shields.io/badge/Template%20Analyzer%20Check-$WETemplateAnalyzerResult-/?color=$WETemplateAnalyzerResultColor" ;
         " filename" = " TemplateAnalyzerResult.svg"
     }
 )
@@ -568,14 +588,14 @@ foreach ($badge in $badges) {
         just create the badges in the " pr" folder and they will be copied over by a CI build when merged
         scheduled builds should be put into the " live" container (i.e. badges)
     #>
-    if ($WEBuildReason -eq " PullRequest") {
+    if ($WEBuildReason -eq " PullRequest" ) {
         $containerName = $WEPRsContainerName
     }
     else {
         $containerName = $WEBadgesContainerName
     }
 
-    $badgePath = $WERowKey.Replace(" @", " /")
+   ;  $badgePath = $WERowKey.Replace(" @" , " /" )
 
    ;  $blobName = " $badgePath/$($badge.filename)"
     Write-Output " Uploading badge to storage account '$($WEStorageAccountName)', container '$($containerName)', name '$($blobName)':"
@@ -584,7 +604,7 @@ foreach ($badge in $badges) {
         -File $badgeTempPath `
         -Blob $blobName `
         -Context $ctx `
-        -Properties @{" ContentType" = " image/svg+xml"; " CacheControl" = " no-cache" } `
+        -Properties @{" ContentType" = " image/svg+xml" ; " CacheControl" = " no-cache" } `
         -Force -Verbose
 }
 
@@ -609,7 +629,7 @@ catch {
 ; 
 $WEHTML = " <HTML>"
 foreach ($badge in $badges) {
-    $WEHTML = $WEHTML + " <IMG SRC=`"$($badge.url)`" />&nbsp;"
+   ;  $WEHTML = $WEHTML + " <IMG SRC=`" $($badge.url)`" />&nbsp;"
 }
 $WEHTML = $WEHTML + " </HTML>"
 $WEHTML | Set-Content -path " test.html"

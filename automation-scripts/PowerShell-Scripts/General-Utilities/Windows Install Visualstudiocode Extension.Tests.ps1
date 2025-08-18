@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Visualstudiocode Extension.Tests
+    Windows Install Visualstudiocode Extension.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Visualstudiocode Extension.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
@@ -25,12 +43,12 @@ BeforeAll {
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
 try {
     # Main script execution
-" _common/$retryModuleName.psm1") -DisableNameChecking
+" _common/$retryModuleName.psm1" ) -DisableNameChecking
     
     $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'  
-    Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1") -DisableNameChecking
+    Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1" ) -DisableNameChecking
     
-    . (Join-Path $WEPSScriptRoot " windows-install-visualstudiocode-extension.ps1")
+    . (Join-Path $WEPSScriptRoot " windows-install-visualstudiocode-extension.ps1" )
 
     $script:currentAttempt = 0
     $script:sleepTimes = @()
@@ -42,14 +60,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -121,7 +141,7 @@ Describe " Import-ExtensionToLocalPath Tests" {
     }
 
     It " Should call Get-VisualStudioExtension for ExtensionName" {
-        $result = Import-ExtensionToLocalPath -extensionName " test-name" -extensionVersion " 1.0.0" -downloadLocation " C:\\Temp"
+       ;  $result = Import-ExtensionToLocalPath -extensionName " test-name" -extensionVersion " 1.0.0" -downloadLocation " C:\\Temp"
 
         $result | Should -Be " C:\\Temp\\mocked-extension.vsix"
         Assert-MockCalled Get-VisualStudioExtension -Exactly 1 -Scope It
@@ -147,7 +167,7 @@ Describe " Main Function Tests" {
         }
         function WE-Get-ChildItem {}
         Mock Get-ChildItem -MockWith {
-            return @(" mocked-extension1", " mocked-extension2")
+            return @(" mocked-extension1" , " mocked-extension2" )
         }
         Mock Test-Path -MockWith { return $true }
     }
@@ -167,10 +187,8 @@ Describe " Main Function Tests" {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

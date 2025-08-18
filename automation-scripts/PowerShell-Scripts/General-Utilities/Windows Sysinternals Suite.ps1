@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Sysinternals Suite
+    Windows Sysinternals Suite
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -18,6 +18,24 @@
 
 <#
 .SYNOPSIS
+    We Enhanced Windows Sysinternals Suite
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
+.SYNOPSIS
     Installs the Sysinternals Suite
 .DESCRIPTION
     Downloads and installs the Sysinternals Suite
@@ -30,15 +48,15 @@ param(
     [Parameter(Mandatory = $false)]
     [bool] $WEAddShortcuts = $false,
     [Parameter()]
-    [string] $WESoftwareDir = "C:\.tools"
+    [string] $WESoftwareDir = " C:\.tools"
 )
-
+; 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 ; 
-$WESysinternalsSuiteUrl = " https://download.sysinternals.com/files/SysinternalsSuite.zip";
+$WESysinternalsSuiteUrl = " https://download.sysinternals.com/files/SysinternalsSuite.zip" ;
 
-filter timestamp {" $(Get-Date ([datetime]::UtcNow) -Format G) UTC: $_"}
+filter timestamp {" $(Get-Date ([datetime]::UtcNow) -Format G) UTC: $_" }
 
 if (!(Test-Path -Path $WESoftwareDir)) {
     Write-Output " Path $WESoftwareDir doesn't exist. Creating new path" | timestamp
@@ -56,7 +74,7 @@ try{
     if(!(Test-Path -Path $WEDestinationDirectory)){
         New-Item -Path $WEDestinationDirectory -Type Directory
     }
-    $WEZip = Join-Path -Path $WESoftwareDir -ChildPath $fileName
+   ;  $WEZip = Join-Path -Path $WESoftwareDir -ChildPath $fileName
     Write-Output " Extracting $fileName to $WEDestinationDirectory" | timestamp
     Expand-Archive -Path $WEZip -DestinationPath $WEDestinationDirectory -Force
     Write-Output " Extraction of $fileName to $WEDestinationDirectory done" | timestamp

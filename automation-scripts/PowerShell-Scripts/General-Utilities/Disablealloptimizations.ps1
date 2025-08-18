@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Disablealloptimizations
+    Disablealloptimizations
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Disablealloptimizations
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -83,7 +101,7 @@ try
     Set-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $sequencedStop -ResourceGroupName $aroResourceGroupName -IsEnabled $false
 
     #Schedules for ScheduleSnooze
-    $scheduleStart = " ScheduledSnooze-StartVM"
+   ;  $scheduleStart = " ScheduledSnooze-StartVM"
    ;  $scheduleStop = " ScheduledSnooze-StopVM"        
 
     Write-Output " Disabling the Schedules for ScheduleSnooze..."

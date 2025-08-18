@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Sideload Createuidefinition
+    Sideload Createuidefinition
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Sideload Createuidefinition
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿#Requires -Version 3.0
 
 
@@ -25,7 +43,7 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string] $WEArtifactsStagingDirectory = "." ,
+    [string] $WEArtifactsStagingDirectory = " ." ,
     [string] $createUIDefFile='createUIDefinition.json',
     [string] $storageContainerName='createuidef',
     [string] $WEStorageResourceGroupLocation, # this must be specified only when the staging resource group needs to be created - first run or if the account has been deleted
@@ -39,7 +57,7 @@ try {
 
     # Create the storage account if it doesn't already exist
     if ($WEStorageAccount -eq $null) {
-        if ($WEStorageResourceGroupLocation -eq "" ) { throw "The StorageResourceGroupLocation parameter is required on first run in a subscription." }
+        if ($WEStorageResourceGroupLocation -eq "" ) { throw " The StorageResourceGroupLocation parameter is required on first run in a subscription." }
         $WEStorageResourceGroupName = 'ARM_Deploy_Staging'
         New-AzureRmResourceGroup -Location " $WEStorageResourceGroupLocation" -Name $WEStorageResourceGroupName -Force
         $WEStorageAccount = New-AzureRmStorageAccount -StorageAccountName $WEStorageAccountName -Type 'Standard_LRS' -ResourceGroupName $WEStorageResourceGroupName -Location " $WEStorageResourceGroupLocation"
@@ -53,22 +71,22 @@ try {
     $encodedurl = [uri]::EscapeDataString($uidefurl)
 
 if ($WEGov) {
-
+; 
 $target=@"
-https://portal.azure.us/#blade/Microsoft_Azure_Compute/CreateMultiVmWizardBlade/internal_bladeCallId/anything/internal_bladeCallerParams/{" providerConfig":{" createUiDefinition":" $encodedurl"}}
+https://portal.azure.us/#blade/Microsoft_Azure_Compute/CreateMultiVmWizardBlade/internal_bladeCallId/anything/internal_bladeCallerParams/{" providerConfig" :{" createUiDefinition" :" $encodedurl" }}
 " @
 
 }
 else {
 ; 
 $target=@"
-https://portal.azure.com/#blade/Microsoft_Azure_Compute/CreateMultiVmWizardBlade/internal_bladeCallId/anything/internal_bladeCallerParams/{" providerConfig":{" createUiDefinition":" $encodedurl"}}
+https://portal.azure.com/#blade/Microsoft_Azure_Compute/CreateMultiVmWizardBlade/internal_bladeCallId/anything/internal_bladeCallerParams/{" providerConfig" :{" createUiDefinition" :" $encodedurl" }}
 " @
 
 }
 
-Write-Host `n"File: " $uidefurl `n
-Write-WELog "Target URL: " " INFO"$target
+Write-Host `n" File: " $uidefurl `n
+Write-WELog " Target URL: " " INFO" $target
 
 
 Start-Process " microsoft-edge:$target"

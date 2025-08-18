@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 2.1 List Backup Vaults And Monitor Backup Job
+    2.1 List Backup Vaults And Monitor Backup Job
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 2.1 List Backup Vaults And Monitor Backup Job
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 function WE-Get-AzureBackupVaultDetails {
     try {
@@ -58,14 +76,16 @@ function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -126,14 +146,16 @@ function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -181,21 +203,23 @@ param(
 
 function WE-Watch-AzureBackupJob {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     
 
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -205,6 +229,8 @@ function Write-WELog {
 param(
         [Parameter(Mandatory = $true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEJobId,
         
@@ -240,7 +266,7 @@ param(
             Write-WELog " --------------------------------------------------" " INFO" -ForegroundColor Gray
             
             # Status Information
-            $statusColor = switch ($job.Status) {
+           ;  $statusColor = switch ($job.Status) {
                 " InProgress" { " Yellow" }
                 " Completed" { " Green" }
                 " Failed" { " Red" }
@@ -276,7 +302,7 @@ param(
             Write-WELog " --------------------------------------------------" " INFO" -ForegroundColor Gray
             
             # Update job history
-            $jobHistory = $jobHistory + [PSCustomObject]@{
+           ;  $jobHistory = $jobHistory + [PSCustomObject]@{
                 TimeStamp = Get-Date
                 Status = $job.Status
                 WorkloadName = $job.WorkloadName
@@ -285,7 +311,7 @@ param(
                 SubTasks = ($job.SubTasks | ForEach-Object { " $($_.Name): $($_.Status)" }) -join " ; "
             }
 
-            if ($job.Status -in @(" Completed", " Failed", " CompletedWithWarnings")) {
+            if ($job.Status -in @(" Completed" , " Failed" , " CompletedWithWarnings" )) {
                 $completed = $true
                 
                 # Generate final reports
@@ -344,7 +370,7 @@ try {
     $jobs = Get-BackupJobsList -Vault $selectedVault
     if ($jobs) {
       
-        $selectedJob = Select-BackupJob -Jobs $jobs
+       ;  $selectedJob = Select-BackupJob -Jobs $jobs
         Write-WELog " `nMonitoring backup job:" " INFO" -ForegroundColor Cyan
         Write-WELog " Job ID: $($selectedJob.JobId)" " INFO" -ForegroundColor Cyan
         Write-WELog " Workload: $($selectedJob.WorkloadName)" " INFO" -ForegroundColor Cyan

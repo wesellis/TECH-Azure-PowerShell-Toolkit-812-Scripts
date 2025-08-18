@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced S2Dmon
+    S2Dmon
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced S2Dmon
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
   .SYNOPSIS
@@ -168,7 +186,7 @@ Function Now {
   $now = $now + " {0:00}:{1:00}:{2:00}" -f $WEDate.Hour, $WEDate.Minute, $WEDate.Second
   $nsSuffix = ""
   if ($ns) {
-    if (" $($WEDate.TimeOfDay)" -match " \.\d\d\d\d\d\d") {
+    if (" $($WEDate.TimeOfDay)" -match " \.\d\d\d\d\d\d" ) {
       $now = $now + $matches[0]
       $ms = $false
     } else {
@@ -216,7 +234,7 @@ Function Start-PSThread () {
     [Parameter(Mandatory=$true, Position=0)]
     [ScriptBlock]$WEScriptBlock,          # The script block to run in a new thread
     [Parameter(Mandatory=$false)]
-    [String]$WEName = "" ,                 # Optional thread name. Default: "PSThread$WEId"
+    [String]$WEName = "" ,                 # Optional thread name. Default: " PSThread$WEId"
     [Parameter(Mandatory=$false)]
     [String]$WEEvent = "" ,                # Optional thread completion event name. Default: None
     [Parameter(Mandatory=$false)]
@@ -230,7 +248,7 @@ Function Start-PSThread () {
   $WEId = $script:PSThreadCount
   $script:PSThreadCount += 1
   if (!$WEName.Length) {
-    $WEName = "PSThread$WEId"
+    $WEName = " PSThread$WEId"
   }
   $WEInitialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
   foreach ($WEVarName in $WEVariables.Keys) { # Copy the specified variables into the script initial context
@@ -241,7 +259,7 @@ Function Start-PSThread () {
   }
   foreach ($WEFuncName in $WEFunctions) { # Copy the specified functions into the script initial context
     $WEBody = Get-Content function:$WEFuncName
-    Write-Debug "Adding function $WEFuncName () {$WEBody}"
+    Write-Debug " Adding function $WEFuncName () {$WEBody}"
     $func = New-Object System.Management.Automation.Runspaces.SessionStateFunctionEntry($WEFuncName, $WEBody)
     $WEInitialSessionState.Commands.Add($func)
   }
@@ -274,7 +292,7 @@ Function Start-PSThread () {
 
 Function Receive-PSThread () {
   [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
   param(
     [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
     [PSObject]$WEPSThread,                # Thread descriptor object
@@ -301,7 +319,7 @@ $ErrorActionPreference = "Stop"
 
 Function Remove-PSThread () {
   [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
   param(
     [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
     [PSObject]$WEPSThread                 # Thread descriptor object
@@ -326,7 +344,7 @@ Function Send-PipeMessage () {
   $pipe = $null # Named pipe stream
   $sw = $null   # Stream Writer
   try {
-    $pipe = new-object System.IO.Pipes.NamedPipeClientStream(" .", $WEPipeName, $WEPipeDir, $WEPipeOpt)
+    $pipe = new-object System.IO.Pipes.NamedPipeClientStream(" ." , $WEPipeName, $WEPipeDir, $WEPipeOpt)
     $sw = new-object System.IO.StreamWriter($pipe)
     $pipe.Connect(1000)
     if (!$pipe.IsConnected) {
@@ -382,7 +400,7 @@ Function Receive-PipeMessage () {
 }
 
 
-
+; 
 $pipeThreadName = " Control Pipe Handler"
 
 Function Start-PipeHandlerThread () {
@@ -419,7 +437,7 @@ Function Receive-PipeHandlerThread () {
 
 
 ; 
-$scriptCopyCname = $scriptCopy -replace " \\", " \\" # Double backslashes. (The first \\ is a regexp with \ escaped; The second is a plain string.)
+$scriptCopyCname = $scriptCopy -replace " \\" , " \\" # Double backslashes. (The first \\ is a regexp with \ escaped; The second is a plain string.)
 $source = @"
   using System;
   using System.ServiceProcess;
@@ -468,25 +486,25 @@ $source = @"
     private ServiceStatus serviceStatus;                                // SET STATUS
 
     public Service_$serviceName() {
-      ServiceName = " $serviceName";
+      ServiceName = " $serviceName" ;
       CanStop = true;
       CanPauseAndContinue = false;
       AutoLog = true;
 
       eventLog = new System.Diagnostics.EventLog();                     // EVENT LOG [
       if (!System.Diagnostics.EventLog.SourceExists(ServiceName)) {         
-        System.Diagnostics.EventLog.CreateEventSource(ServiceName, " $logName");
+        System.Diagnostics.EventLog.CreateEventSource(ServiceName, " $logName" );
       }
       eventLog.Source = ServiceName;
-      eventLog.Log = " $logName";                                        // EVENT LOG ]
-      EventLog.WriteEntry(ServiceName, " $exeName $serviceName()");      // EVENT LOG
+      eventLog.Log = " $logName" ;                                        // EVENT LOG ]
+      EventLog.WriteEntry(ServiceName, " $exeName $serviceName()" );      // EVENT LOG
     }
 
-    [DllImport(" advapi32.dll", SetLastError=true)]                      // SET STATUS
+    [DllImport(" advapi32.dll" , SetLastError=true)]                      // SET STATUS
     private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
 
     protected override void OnStart(string [] args) {
-      EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Entry. Starting script '$scriptCopyCname' -Start"); // EVENT LOG
+      EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Entry. Starting script '$scriptCopyCname' -Start" ); // EVENT LOG
       // Set the service state to Start Pending.                        // SET STATUS [
       // Only useful if the startup time is long. Not really necessary here for a 2s startup time.
       serviceStatus.dwServiceType = ServiceType.SERVICE_WIN32_OWN_PROCESS;
@@ -500,8 +518,8 @@ $source = @"
         // Redirect the output stream of the child process.
         p.StartInfo.UseShellExecute = false;
         p.StartInfo.RedirectStandardOutput = true;
-        p.StartInfo.FileName = " PowerShell.exe";
-        p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Start"; // Works if path has spaces, but not if it contains ' quotes.
+        p.StartInfo.FileName = " PowerShell.exe" ;
+        p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Start" ; // Works if path has spaces, but not if it contains ' quotes.
         p.Start();
         // Read the output stream first and then wait. (To avoid deadlocks says Microsoft!)
         string output = p.StandardOutput.ReadToEnd();
@@ -526,19 +544,19 @@ $source = @"
       } finally {
         serviceStatus.dwWaitHint = 0;                                   // SET STATUS
         SetServiceStatus(ServiceHandle, ref serviceStatus);             // SET STATUS
-        EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Exit"); // EVENT LOG
+        EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Exit" ); // EVENT LOG
       }
     }
 
     protected override void OnStop() {
-      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Entry");   // EVENT LOG
+      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Entry" );   // EVENT LOG
       // Start a child process with another copy of ourselves
       Process p = new Process();
       // Redirect the output stream of the child process.
       p.StartInfo.UseShellExecute = false;
       p.StartInfo.RedirectStandardOutput = true;
-      p.StartInfo.FileName = " PowerShell.exe";
-      p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Stop"; // Works if path has spaces, but not if it contains ' quotes.
+      p.StartInfo.FileName = " PowerShell.exe" ;
+      p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Stop" ; // Works if path has spaces, but not if it contains ' quotes.
       p.Start();
       // Read the output stream first and then wait.
       string output = p.StandardOutput.ReadToEnd();
@@ -547,7 +565,7 @@ $source = @"
       // Change the service state back to Stopped.                      // SET STATUS
       serviceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;      // SET STATUS
       SetServiceStatus(ServiceHandle, ref serviceStatus);               // SET STATUS
-      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Exit");    // EVENT LOG
+      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Exit" );    // EVENT LOG
     }
 
     public static void Main() {
@@ -560,9 +578,9 @@ $source = @"
 
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$userName = $identity.Name      # Ex: "NT AUTHORITY\SYSTEM" or " Domain\Administrator"
+$userName = $identity.Name      # Ex: " NT AUTHORITY\SYSTEM" or " Domain\Administrator"
 $authority,$name = $username -split " \\"
-$isSystem = $identity.IsSystem	# Do not test ($userName -eq " NT AUTHORITY\SYSTEM"), as this fails in non-English systems.
+$isSystem = $identity.IsSystem	# Do not test ($userName -eq " NT AUTHORITY\SYSTEM" ), as this fails in non-English systems.
 
 
 if ($WESetup) {Log "" }    # Insert one blank line to separate test sessions logs
@@ -577,9 +595,9 @@ $WEStatus = ($WEPSCmdlet.ParameterSetName -eq 'Status')
 if ($WEStart) {                   # Start the service
   if ($isSystem) { # If running as SYSTEM, ie. invoked as a service
     # Do whatever is necessary to start the service script instance
-    Log "$scriptName -Start: Starting script '$scriptFullName' -Service"
+    Log " $scriptName -Start: Starting script '$scriptFullName' -Service"
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1001 -EntryType Information -Message " $scriptName -Start: Starting script '$scriptFullName' -Service"
-    Start-Process PowerShell.exe -ArgumentList (" -c & '$scriptFullName' -Service")
+    Start-Process PowerShell.exe -ArgumentList (" -c & '$scriptFullName' -Service" )
   } else {
     Write-Verbose " Starting service $serviceName"
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1002 -EntryType Information -Message " $scriptName -Start: Starting service $serviceName"
@@ -618,7 +636,7 @@ if ($WEStatus) {                  # Get the current service status
     $spid = $process.ProcessId
     Write-Verbose " $serviceName Process ID = $spid"
   }
-  # if (Test-Path " HKLM:\SYSTEM\CurrentControlSet\services\$serviceName") {}
+  # if (Test-Path " HKLM:\SYSTEM\CurrentControlSet\services\$serviceName" ) {}
   try {
     $pss = Get-Service $serviceName -ea stop # Will error-out if not installed
   } catch {
@@ -626,7 +644,7 @@ if ($WEStatus) {                  # Get the current service status
     return
   }
   $pss.Status
-  if (($pss.Status -eq " Running") -and (!$spid)) { # This happened during the debugging phase
+  if (($pss.Status -eq " Running" ) -and (!$spid)) { # This happened during the debugging phase
     Write-Error " The Service Control Manager thinks $serviceName is started, but $serviceName.ps1 -Service is not running."
     exit 1
   }
@@ -707,16 +725,16 @@ if ($WERemove) {                  # Uninstall the service
   }
   # Remove the installed files
   if (Test-Path $installDir) {
-    foreach ($ext in (" exe", " pdb", " ps1", " cred", " id", " key")) {
+    foreach ($ext in (" exe" , " pdb" , " ps1" , " cred" , " id" , " key" )) {
       $file = " $installDir\$serviceName.$ext"
       if (Test-Path $file) {
         Write-Verbose " Deleting file $file"
-        Remove-Item $file -Force
+        Remove-Item $fil -Forcee -Force
       }
     }
     if (!(@(Get-ChildItem $installDir -ea SilentlyContinue)).Count) {
       Write-Verbose " Removing directory $installDir"
-      Remove-Item $installDir -Force
+      Remove-Item $installDi -Forcer -Force
     }
   }
   return
@@ -758,7 +776,7 @@ if ($WEService) {                 # Run the service
             " Completed" {
               $message = Receive-PipeHandlerThread $pipeThread
               Log " $scriptName -Service # Received control message: $WEMessage"
-              if ($message -ne " exit") { # Start another thread waiting for control messages
+              if ($message -ne " exit" ) { # Start another thread waiting for control messages
                 $pipeThread = Start-PipeHandlerThread $pipeName -Event " ControlMessage"
               }
             }
@@ -864,13 +882,13 @@ if ($WEService) {                 # Run the service
                       }
                       if ($s2drecord.Units -eq 4)
                       {
-                          $WEUnitType = " Percentage"
+                         ;  $WEUnitType = " Percentage"
                       }
                       
                      ;  $sx = New-Object PSObject -Property @{
                         
                         Timestamp = $WENowTime
-                        MetricLevel = " Cluster";
+                        MetricLevel = " Cluster" ;
                         MetricName = $s2drecord.Name;
                         MetricValue = $s2drecord.Value;
                         UnitType = $WEUnitType;
@@ -933,13 +951,13 @@ if ($WEService) {                 # Run the service
                               }
                               if ($s2drecord.Units -eq 4)
                               {
-                                  $WEUnitType = " Percentage"
+                                 ;  $WEUnitType = " Percentage"
                               }
 
                              ;  $sx = New-Object PSObject -Property @{
                                 
                                 Timestamp = $WENowTime
-                                MetricLevel = " Node";
+                                MetricLevel = " Node" ;
                                 MetricName = $s2drecord.Name;
                                 MetricValue = $s2drecord.Value;
                                 UnitType = $WEUnitType;
@@ -1004,13 +1022,13 @@ if ($WEService) {                 # Run the service
                             }
                             if ($s2drecord.Units -eq 4)
                             {
-                                $WEUnitType = " Percentage"
+                               ;  $WEUnitType = " Percentage"
                             }
 
                            ;  $sx = New-Object PSObject -Property @{
                           
                              Timestamp = $WENowTime
-                             MetricLevel = " Volume";
+                             MetricLevel = " Volume" ;
                              VolumeLabel = $WEVolumeLabel;
                              FileSystemType = $WEFileSystemType;
                              OperationalStatus = $WEOperationalStatus;
@@ -1057,27 +1075,27 @@ if ($WEService) {                 # Run the service
                         {
                             $WESeverityNumber = 0
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Information")
+                        if ($s2dFault.PerceivedSeverity -eq " Information" )
                         {
                             $WESeverityNumber = 2
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning")
+                        if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
                         {
                             $WESeverityNumber = 3
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Minor")
+                        if ($s2dFault.PerceivedSeverity -eq " Minor" )
                         {
                             $WESeverityNumber = 4
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Major")
+                        if ($s2dFault.PerceivedSeverity -eq " Major" )
                         {
                             $WESeverityNumber = 5
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Critical")
+                        if ($s2dFault.PerceivedSeverity -eq " Critical" )
                         {
                             $WESeverityNumber = 6
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable")
+                        if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
                         {
                             $WESeverityNumber = 7
                         }
@@ -1086,7 +1104,7 @@ if ($WEService) {                 # Run the service
                         foreach ($recommendedAction in $s2dFault.RecommendedActions)
                         {
                             $action = $action + $recommendedAction
-                            $action = $action + " | "
+                           ;  $action = $action + " | "
                         }
 
                        ;  $sx = New-Object PSObject -Property @{
@@ -1095,7 +1113,7 @@ if ($WEService) {                 # Run the service
                             SecondTimeStamp = $WENowTime;
                             Severity = $s2dFault.PerceivedSeverity;
                             SeverityNumber = $WESeverityNumber;
-                            FaultLevel = " Cluster";
+                            FaultLevel = " Cluster" ;
                             FaultId = $s2dFault.FaultId;
                             FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                             FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
@@ -1146,27 +1164,27 @@ if ($WEService) {                 # Run the service
                                 {
                                     $WESeverityNumber = 0
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Information")
+                                if ($s2dFault.PerceivedSeverity -eq " Information" )
                                 {
                                     $WESeverityNumber = 2
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning")
+                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
                                 {
                                     $WESeverityNumber = 3
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Minor")
+                                if ($s2dFault.PerceivedSeverity -eq " Minor" )
                                 {
                                     $WESeverityNumber = 4
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Major")
+                                if ($s2dFault.PerceivedSeverity -eq " Major" )
                                 {
                                     $WESeverityNumber = 5
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Critical")
+                                if ($s2dFault.PerceivedSeverity -eq " Critical" )
                                 {
                                     $WESeverityNumber = 6
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable")
+                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
                                 {
                                     $WESeverityNumber = 7
                                 }
@@ -1175,7 +1193,7 @@ if ($WEService) {                 # Run the service
                                 foreach ($recommendedAction in $s2dFault.RecommendedActions)
                                 {
                                     $action = $action + $recommendedAction
-                                    $action = $action + " | "
+                                   ;  $action = $action + " | "
                                 }
                                 
                                ;  $sx = New-Object PSObject -Property @{
@@ -1185,7 +1203,7 @@ if ($WEService) {                 # Run the service
                                     Severity = $s2dFault.PerceivedSeverity;
                                     SeverityNumber = $WESeverityNumber;
                                     FaultId = $s2dFault.FaultId;
-                                    FaultLevel = " Volume";
+                                    FaultLevel = " Volume" ;
                                     VolumeLabel = $WEVolumeLabel;
                                     FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                                     FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
@@ -1237,27 +1255,27 @@ if ($WEService) {                 # Run the service
                                 {
                                     $WESeverityNumber = 0
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Information")
+                                if ($s2dFault.PerceivedSeverity -eq " Information" )
                                 {
                                     $WESeverityNumber = 2
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning")
+                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
                                 {
                                     $WESeverityNumber = 3
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Minor")
+                                if ($s2dFault.PerceivedSeverity -eq " Minor" )
                                 {
                                     $WESeverityNumber = 4
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Major")
+                                if ($s2dFault.PerceivedSeverity -eq " Major" )
                                 {
                                     $WESeverityNumber = 5
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Critical")
+                                if ($s2dFault.PerceivedSeverity -eq " Critical" )
                                 {
                                     $WESeverityNumber = 6
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable")
+                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
                                 {
                                     $WESeverityNumber = 7
                                 }
@@ -1266,7 +1284,7 @@ if ($WEService) {                 # Run the service
                                 foreach ($recommendedAction in $s2dFault.RecommendedActions)
                                 {
                                     $action = $action + $recommendedAction
-                                    $action = $action + " | "
+                                   ;  $action = $action + " | "
                                 }
                                 
                                ;  $sx = New-Object PSObject -Property @{
@@ -1276,7 +1294,7 @@ if ($WEService) {                 # Run the service
                                     Severity = $s2dFault.PerceivedSeverity;
                                     SeverityNumber = $WESeverityNumber;
                                     FaultId = $s2dFault.FaultId;
-                                    FaultLevel = " Share";
+                                    FaultLevel = " Share" ;
                                     ShareName = $shareName;
                                     FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                                     FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
@@ -1318,10 +1336,10 @@ if ($WEService) {                 # Run the service
           Log " $scriptName -Service # Unexpected event from ${source}: $WEMessage"
         }
       }
-    } while ($message -ne " exit")
+    } while ($message -ne " exit" )
   } catch { # An exception occurred while runnning the service
     $msg = $_.Exception.Message
-    $line = $_.InvocationInfo.ScriptLineNumber
+   ;  $line = $_.InvocationInfo.ScriptLineNumber
     Log " $scriptName -Service # Error at line ${line}: $msg"
   } finally { # Invoked in all cases: Exception or normally by -Stop
     # Cleanup the periodic timer used in the above example

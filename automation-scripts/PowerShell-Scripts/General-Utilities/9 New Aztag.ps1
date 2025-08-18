@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 9 New Aztag
+    9 New Aztag
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 9 New Aztag
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WETag = @{
 
 
 
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+; 
 $WETag = @{
 
     " Autoshutown"     = 'OFF'
@@ -40,12 +58,12 @@ $WETag = @{
 
 }
 ; 
-$tags = @{" Team"=" Compliance"; " Environment"=" Production"}
+$tags = @{" Team" =" Compliance" ; " Environment" =" Production" }
 New-AzTag -ResourceId $resource.id -Tag $tags
 
 
 
-$tags = @{" Dept"=" Finance"; " Status"=" Normal"}
+$tags = @{" Dept" =" Finance" ; " Status" =" Normal" }
 Update-AzTag -ResourceId $resource.id -Tag $tags -Operation Merge
 
 

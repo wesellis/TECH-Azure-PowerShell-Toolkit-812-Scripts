@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Validate Deploymentfile
+    Validate Deploymentfile
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Validate Deploymentfile
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -33,30 +51,34 @@ $ErrorActionPreference = "Stop" # Cmdlet binding needed to enable using -ErrorAc
 
 
 function Write-WELog {
-    param(
+    [CmdletBinding()]
+param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
 
+[CmdletBinding()]
 param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER,
     [string] $WEMainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME,
 
     [string] $WEBicepPath = $WEENV:BICEP_PATH,
 
-    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true")
+    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" )
 )
 
 $WEError.Clear()
@@ -76,17 +98,17 @@ if ($bicepSupported) {
     Start-Process $WEBicepPath -ArgumentList @('build', $WEMainTemplatePathBicep, '--outfile', $WECompiledJsonPath) -RedirectStandardError $errorFile -Wait
     $errorOutput = [string[]](Get-Content $errorFile)
 
-    Remove-Item $errorFile -Force
+    Remove-Item $errorFil -Forcee -Force
     
     $warnings = 0
     $errors = 0
     foreach ($item in $errorOutput) {
-        if ($item -imatch " : Warning ") {
+        if ($item -imatch " : Warning " ) {
             $warnings = $warnings + 1
             Write-Warning $item
         }
-        elseif ($item -imatch " : Error BCP") {
-            $errors = $errors + 1
+        elseif ($item -imatch " : Error BCP" ) {
+           ;  $errors = $errors + 1
             Write-Error $item
         }
         else {
@@ -97,7 +119,7 @@ if ($bicepSupported) {
             else {
                 # This should only occur on the last line (the error/warnings summary line)
                 if ($item -ne $errorOutput[-1]) {
-                    throw "Only the last error output line should not be a warning or error"
+                    throw " Only the last error output line should not be a warning or error"
                 }
             }
         }
@@ -131,7 +153,7 @@ if ($bicepSupported) {
     #         -ErrorAction Ignore # Ignore so we can write the following error message instead
     #     if (!$templatesMatch) {
     #         Write-Error (" The JSON in the sample does not match the JSON built from bicep.`n" `
-    #                 + " Either copy the expected output from the log into $WEMainTemplateFilenameJson or run the command ``bicep build $mainTemplateFilenameBicep --outfile $WEMainTemplateFilenameJson`` in your sample folder using bicep version $WEBicepVersion")
+    #                 + " Either copy the expected output from the log into $WEMainTemplateFilenameJson or run the command ``bicep build $mainTemplateFilenameBicep --outfile $WEMainTemplateFilenameJson`` in your sample folder using bicep version $WEBicepVersion" )
     #     }
     # }
     
@@ -139,7 +161,7 @@ if ($bicepSupported) {
     #$fileToDeploy = $WEMainTemplateFilenameJson
 
     # Delete the temporary built JSON file
-    Remove-Item $WECompiledJsonPath -Force
+    Remove-Item $WECompiledJsonPat -Forceh -Force
 }
 
     # Just deploy the JSON file included in the sample
@@ -150,10 +172,8 @@ if ($bicepSupported) {
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Certificate Monitor
+    Azure Certificate Monitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,29 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Certificate Monitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
     [int]$WEExpirationWarningDays = 30,
@@ -32,7 +50,7 @@ param(
     [switch]$WECheckAppGatewayCertificates
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Certificate Monitor" -Version " 1.0" -Description " Monitor SSL certificate expiration"
 
 try {
@@ -46,13 +64,13 @@ try {
         
         foreach ($vault in $keyVaults) {
             try {
-                $certificates = Get-AzKeyVaultCertificate -VaultName $vault.VaultName
+               ;  $certificates = Get-AzKeyVaultCertificate -VaultName $vault.VaultName
                 
                 foreach ($cert in $certificates) {
                    ;  $certDetails = Get-AzKeyVaultCertificate -VaultName $vault.VaultName -Name $cert.Name
                     
                     if ($certDetails.Expires -and $certDetails.Expires -le $warningDate) {
-                        $expiringCertificates = $expiringCertificates + [PSCustomObject]@{
+                       ;  $expiringCertificates = $expiringCertificates + [PSCustomObject]@{
                             Service = " Key Vault"
                             VaultName = $vault.VaultName
                             CertificateName = $cert.Name

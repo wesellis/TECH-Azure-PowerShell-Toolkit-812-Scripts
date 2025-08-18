@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Tagging Enforcer
+    Azure Resource Tagging Enforcer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,18 +16,40 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Tagging Enforcer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -47,8 +69,8 @@ param(
     },
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Audit", " Enforce", " Fix")]
-    [string]$WEAction = " Audit",
+    [ValidateSet(" Audit" , " Enforce" , " Fix" )]
+    [string]$WEAction = " Audit" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEIncludeResourceGroups,
@@ -58,7 +80,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 Show-Banner -ScriptName " Azure Resource Tagging Enforcer" -Version " 1.0" -Description " Enforce consistent resource tagging for governance and compliance"
 
@@ -105,13 +127,13 @@ try {
             } elseif ($WERequiredTags[$requiredTag].Count -gt 0) {
                 # Check if value is in allowed list
                 if ($resource.Tags[$requiredTag] -notin $WERequiredTags[$requiredTag]) {
-                    $invalidTags = $invalidTags + ";  $requiredTag=$($resource.Tags[$requiredTag])"
+                   ;  $invalidTags = $invalidTags + " ;  $requiredTag=$($resource.Tags[$requiredTag])"
                 }
             }
         }
         
         if ($missingTags.Count -gt 0 -or $invalidTags.Count -gt 0) {
-            $nonCompliantResources = $nonCompliantResources + [PSCustomObject]@{
+           ;  $nonCompliantResources = $nonCompliantResources + [PSCustomObject]@{
                 ResourceName = $resource.Name
                 ResourceType = $resource.ResourceType
                 ResourceGroup = $resource.ResourceGroupName
@@ -137,7 +159,7 @@ try {
             foreach ($resource in $nonCompliantResources) {
                 try {
                     $resourceObj = Get-AzResource -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup
-                    $newTags = if ($resourceObj.Tags) { $resourceObj.Tags.Clone() } else { @{} }
+                   ;  $newTags = if ($resourceObj.Tags) { $resourceObj.Tags.Clone() } else { @{} }
                     
                     # Add missing required tags with default values
                     foreach ($missingTag in ($resource.MissingTags -split ', ')) {

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Stop Azurev2Vmrunbook
+    Stop Azurev2Vmrunbook
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Stop Azurev2Vmrunbook
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -33,7 +51,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 .PARAMETER automationConnectionName
-   Optional with default of " AzureRunAsConnection".
+   Optional with default of " AzureRunAsConnection" .
    The name of an Automation Connection used to authenticate
 
 .PARAMETER ResourceGroupName
@@ -105,7 +123,7 @@ foreach ($WEVM in $WEVMs)
 {
 	$vmName = $vm.Name
     $WEResourceGroupName = $vm.resourceGroupName
-    $status = ((Get-AzureRmVm -ResourceGroupName $WEResourceGroupName -Name $vmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
+   ;  $status = ((Get-AzureRmVm -ResourceGroupName $WEResourceGroupName -Name $vmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
 
     if($status -ne 'VM deallocated')
     {

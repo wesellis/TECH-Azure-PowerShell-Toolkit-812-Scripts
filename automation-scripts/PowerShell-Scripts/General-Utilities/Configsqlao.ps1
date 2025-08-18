@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configsqlao
+    Configsqlao
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configsqlao
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 configuration ConfigSQLAO
 {
@@ -80,9 +98,9 @@ param(
     )
 
     Import-DscResource -ModuleName xComputerManagement, xFailOverCluster,CDisk,xActiveDirectory,xDisk,xNetworking,xSql
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($WESQLServiceCreds.UserName)" , $WESQLServiceCreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServiceCreds.UserName)" , $WESQLServiceCreds.Password)
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12    
 
     Enable-CredSSPNTLM -DomainName $WEDomainName
@@ -95,7 +113,7 @@ param(
     }
 
     #Finding the next avaiable disk letter for Add disk
-    $WENewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1 
+   ;  $WENewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1 
    ;  $WENextAvailableDiskLetter = $WENewDiskLetter[0]
 
     [System.Collections.ArrayList]$WENodes=@()
@@ -122,7 +140,7 @@ param(
 
         WindowsFeature FC
         {
-            Name = "Failover-Clustering"
+            Name = " Failover-Clustering"
             Ensure = " Present"
         }
 
@@ -150,7 +168,7 @@ param(
         {
             SetScript = '[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; Install-PackageProvider -Name NuGet -Force; Install-Module -Name SqlServer -AllowClobber -Force; Import-Module -Name SqlServer -ErrorAction SilentlyContinue'
             TestScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; if (Get-Module -Name SqlServer) { $WETrue } else { $WEFalse }'
-            GetScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; @{Ensure = if (Get-Module -Name SqlServer) {" Present"} else {" Absent"}}'
+            GetScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; @{Ensure = if (Get-Module -Name SqlServer) {" Present" } else {" Absent" }}'
         }
 
         xWaitForADDomain DscForestWait 
@@ -269,7 +287,7 @@ param(
             PsDscRunAsCredential = $WEDomainCreds
             Nodes = $WENodes
             ClusterIPAddresses = $WEClusterIpAddresses
-            DependsOn = @(" [WindowsFeature]FCPS"," [xComputer]DomainJoin")
+            DependsOn = @(" [WindowsFeature]FCPS" ," [xComputer]DomainJoin" )
         }
 
         Script CloudWitness
@@ -392,13 +410,13 @@ function WE-Get-NetBIOSName
 { 
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string]$WEDomainName
     )
 
     if ($WEDomainName.Contains('.')) {
-        $length=$WEDomainName.IndexOf('.')
+       ;  $length=$WEDomainName.IndexOf('.')
         if ( $length -ge 16) {
            ;  $length=15
         }
@@ -416,8 +434,8 @@ param(
 
 function WE-Enable-CredSSPNTLM
 { 
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    [CmdletBinding()]; 
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$true)]
         [string]$WEDomainName

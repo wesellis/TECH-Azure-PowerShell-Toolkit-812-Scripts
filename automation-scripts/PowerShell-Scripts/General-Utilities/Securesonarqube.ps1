@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Securesonarqube
+    Securesonarqube
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Securesonarqube
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
     .SYNOPSIS
         Secure SonarQube installation
 
@@ -25,14 +43,21 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
       [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$serverName,
       [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$websiteName,
       [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$installationType,
       [string]$reverseProxyType
@@ -45,16 +70,16 @@ if($installationType -eq 'Secure')
     #Create Web Site
      
     #Install ARR
-    Invoke-Expression ((new-object net.webclient).DownloadString("https://chocolatey.org/install.ps1" ))
+    Invoke-Expression ((new-object net.webclient).DownloadString(" https://chocolatey.org/install.ps1" ))
     cinst urlrewrite -y --force
     cinst iis-arr -y --force
     #Update web site binding
-    $existingCertificate =Get-ChildItem cert:\LocalMachine\CA | Where-Object subject -eq 'CN=$serverName'
+   ;  $existingCertificate =Get-ChildItem cert:\LocalMachine\CA | Where-Object subject -eq 'CN=$serverName'
     if($existingCertificate -eq $null)
         {
             Import-Module WebAdministration
             Set-Location IIS:\SslBindings
-            New-WebBinding -Name $websiteName -IP "*" -Port 443 -Protocol https
+            New-WebBinding -Name $websiteName -IP " *" -Port 443 -Protocol https
            ;  $c = New-SelfSignedCertificate -DnsName " $serverName" -CertStoreLocation " cert:\LocalMachine\My"
             $c | New-Item 0.0.0.0!443
             #Remove HTTP binding 
@@ -67,8 +92,8 @@ if($installationType -eq 'Secure')
             Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST'  -filter " system.webServer/proxy" -name " reverseRewriteHostInResponseHeaders" -value " False"
             Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST'  -filter " system.webServer/rewrite/allowedServerVariables" -name " reverseRewriteHostInResponseHeaders" -value " False"
             #Add Server Variables 
-            Add-WebConfiguration  -pspath 'MACHINE/WEBROOT/APPHOST' -filter '/system.webServer/rewrite/allowedServerVariables' -atIndex 0 -value @{name=" X_FORWARDED_PROTO";value=" https"}
-            Add-WebConfiguration  -pspath 'MACHINE/WEBROOT/APPHOST' -filter '/system.webServer/rewrite/allowedServerVariables' -atIndex 0 -value @{name=" ORIGINAL_URL";value=" {HTTP_HOST}"}
+            Add-WebConfiguration  -pspath 'MACHINE/WEBROOT/APPHOST' -filter '/system.webServer/rewrite/allowedServerVariables' -atIndex 0 -value @{name=" X_FORWARDED_PROTO" ;value=" https" }
+            Add-WebConfiguration  -pspath 'MACHINE/WEBROOT/APPHOST' -filter '/system.webServer/rewrite/allowedServerVariables' -atIndex 0 -value @{name=" ORIGINAL_URL" ;value=" {HTTP_HOST}" }
             #Create rewrite rules
             $site = " IIS:\Sites\$websiteName"
             #Add inbound rule
@@ -77,8 +102,8 @@ if($installationType -eq 'Secure')
             Set-WebConfigurationProperty -pspath $site -filter " $filterRoot/match" -name " url" -value " (.*)" 
             Set-WebConfigurationProperty -pspath $site -filter " $filterRoot/action" -name " type" -value " Rewrite"
             Set-WebConfigurationProperty -pspath $site -filter " $filterRoot/action" -name " url" -value " http://localhost:9000/{R:1}"
-            Add-WebConfiguration  -pspath $site -filter " $filterRoot/serverVariables" -atIndex 0 -value @{name=" X_FORWARDED_PROTO";value=" https"}
-            Add-WebConfiguration  -pspath $site -filter " $filterRoot/serverVariables" -atIndex 0 -value @{name=" ORIGINAL_URL";value=" {HTTP_HOST}"}
+            Add-WebConfiguration  -pspath $site -filter " $filterRoot/serverVariables" -atIndex 0 -value @{name=" X_FORWARDED_PROTO" ;value=" https" }
+            Add-WebConfiguration  -pspath $site -filter " $filterRoot/serverVariables" -atIndex 0 -value @{name=" ORIGINAL_URL" ;value=" {HTTP_HOST}" }
             #Add outbound rule
             $filterRoot = " /system.webserver/rewrite/outboundRules/rule[@name='ReverseProxyOutboundRule1']"
             Add-WebConfigurationProperty -pspath $site -filter '/system.webserver/rewrite/outboundRules' -name " ." -value @{name='ReverseProxyOutboundRule1'; patternSyntax='Regular Expresessions'; stopProcessing='True'; preCondition='IsRedirection'} 
@@ -96,10 +121,8 @@ if($installationType -eq 'Secure')
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

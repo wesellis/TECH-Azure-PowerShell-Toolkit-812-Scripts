@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Install Octopusdeploy
+    Install Octopusdeploy
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Install Octopusdeploy
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -28,7 +46,7 @@ param(
 )
 
 $config = @{}
-$octopusDeployVersion = "Octopus.3.0.12.2366-x64"
+$octopusDeployVersion = " Octopus.3.0.12.2366-x64"
 $msiFileName = " Octopus.3.0.12.2366-x64.msi"
 $downloadBaseUrl = " https://download.octopusdeploy.com/octopus/"
 $downloadUrl = $downloadBaseUrl + $msiFileName
@@ -42,19 +60,19 @@ $WEOFS = " `r`n"
 function WE-Write-Log
 {
   [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [string] $message
   )
   
-  $timestamp = ([System.DateTime]::UTCNow).ToString(" yyyy'-'MM'-'dd'T'HH':'mm':'ss")
+  $timestamp = ([System.DateTime]::UTCNow).ToString(" yyyy'-'MM'-'dd'T'HH':'mm':'ss" )
   Write-Output " [$timestamp] $message"
 }
 
 function WE-Write-CommandOutput 
 {
   [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [string] $output
   )    
@@ -62,7 +80,7 @@ param(
   if ($output -eq "" ) { return }
   
   Write-Output ""
-  $output.Trim().Split(" `n") |% { Write-Output " `t| $($_.Trim())" }
+  $output.Trim().Split(" `n" ) |% { Write-Output " `t| $($_.Trim())" }
   Write-Output ""
 }
 
@@ -73,12 +91,12 @@ function WE-Get-Config
   Write-Log ""    
   Write-Log " Parsing script parameters ..."
     
-  $config.Add(" sqlDbConnectionString", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WESqlDbConnectionString)))
-  $config.Add(" licenseFullName", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseFullName)))
-  $config.Add(" licenseOrganisationName", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseOrganisationName)))
-  $config.Add(" licenseEmailAddress", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseEmailAddress)))
-  $config.Add(" octopusAdminUsername", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEOctopusAdminUsername)))
-  $config.Add(" octopusAdminPassword", [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEOctopusAdminPassword)))
+  $config.Add(" sqlDbConnectionString" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WESqlDbConnectionString)))
+  $config.Add(" licenseFullName" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseFullName)))
+  $config.Add(" licenseOrganisationName" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseOrganisationName)))
+  $config.Add(" licenseEmailAddress" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WELicenseEmailAddress)))
+  $config.Add(" octopusAdminUsername" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEOctopusAdminUsername)))
+  $config.Add(" octopusAdminPassword" , [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEOctopusAdminPassword)))
   
   Write-Log " done."
   Write-Log ""
@@ -134,7 +152,7 @@ function WE-Configure-OctopusDeploy
   Write-Log " Configure Octopus Deploy"
   Write-Log ""
     
-  $exe = 'C:\Program Files\Octopus Deploy\Octopus\Octopus.Server.exe'
+  $exe = '${env:ProgramFiles}\Octopus Deploy\Octopus\Octopus.Server.exe'
     
   $count = 0
   while(!(Test-Path $exe) -and $count -lt 5)
@@ -203,12 +221,12 @@ function WE-Configure-OctopusDeploy
     '--username', $($config.octopusAdminUserName), 
     '--password', $($config.octopusAdminPassword)
   )
-  $output = .$exe $args
+ ;  $output = .$exe $args
   Write-CommandOutput $output
   Write-Log " done."  
 
   Write-Log " Obtaining a trial license for Full Name: $($config.licenseFullName), Organisation Name: $($config.licenseOrganisationName), Email Address: $($config.licenseEmailAddress) ..."
- ;  $postParams = @{ FullName=" $($config.licenseFullName)";Organization=" $($config.licenseOrganisationName)";EmailAddress=" $($config.licenseEmailAddress)" }
+ ;  $postParams = @{ FullName=" $($config.licenseFullName)" ;Organization=" $($config.licenseOrganisationName)" ;EmailAddress=" $($config.licenseEmailAddress)" }
   $response = Invoke-WebRequest -UseBasicParsing -Uri " $octopusLicenseUrl" -Method POST -Body $postParams
   $utf8NoBOM = New-Object System.Text.UTF8Encoding($false)
   $bytes  = $utf8NoBOM.GetBytes($response.Content)
@@ -253,7 +271,7 @@ function WE-Configure-Firewall
   if ((Get-NetFirewallRule -Name $firewallRuleName -ErrorAction Ignore) -eq $null)
   {
     Write-Log " Creating firewall rule to allow port 80 HTTP traffic ..."
-    $firewallRule = @{
+   ;  $firewallRule = @{
       Name=$firewallRuleName
       DisplayName =" Allow Port 80 (HTTP)"
       Description=" Port 80 for HTTP traffic"

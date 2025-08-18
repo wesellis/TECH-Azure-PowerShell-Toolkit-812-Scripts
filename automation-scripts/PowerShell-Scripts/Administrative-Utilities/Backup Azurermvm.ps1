@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Backup Azurermvm
+    Backup Azurermvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Backup Azurermvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -68,6 +86,8 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
 
 
@@ -76,13 +96,13 @@ param(
 
      
     [Parameter(Mandatory=$false)]
-    [string]$WEEnvironment= "AzureCloud"
+    [string]$WEEnvironment= " AzureCloud"
 )
 $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1") {
+if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -93,7 +113,7 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1") {
 
 function WE-Get-StorageObject 
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI) 
     
     $split = $srcURI.Split('/')
@@ -115,14 +135,14 @@ param($resourceGroupName, $srcURI)
 
 function copy-azureBlob 
 {  [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($srcUri, $srcContext, $destContext, $containerName)
 
     $split = $srcURI.Split('/')
     $blobName = $split[($split.count -1)]
-    $blobSplit = $blobName.Split('.')
+   ;  $blobSplit = $blobName.Split('.')
    ;  $extension = $blobSplit[($blobSplit.count -1)]
-    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped";return}
+    if($($extension.tolower()) -eq 'status' ){Write-Output " Status file blob $blobname skipped" ;return}
 
     if(! $containerName){$containerName = $split[3]}
 
@@ -139,7 +159,7 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
         $blobName= $path + '/' + $blobName
         $blobName = $blobName.Trim()
-        $blobName = $blobName.Substring(1, $blobName.Length-1)
+       ;  $blobName = $blobName.Substring(1, $blobName.Length-1)
       }
     
     
@@ -194,7 +214,7 @@ if($sub.count -gt 1)
     $WESubscriptionId = (Get-AzureRmSubscription | select * | Out-GridView -title " Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $WESubscriptionId| Out-Null
     $sub = Get-AzureRmSubscription -SubscriptionId $WESubscriptionId
-    $WESubscriptionId = $sub.Id
+   ;  $WESubscriptionId = $sub.Id
 }
 
    
@@ -211,12 +231,12 @@ write-verbose " Logged into $($sub.Name) with subscriptionID $WESubscriptionId a
 ; 
 $resourceGroupVMs = Get-AzureRMVM -ResourceGroupName $resourceGroupName
 
-if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName"; break}
+if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName" ; break}
 
 $resourceGroupVMs | %{
    $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
    write-output " $($_.name) status is $status" 
-   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again"; break}
+   if($status -eq 'VM running'){write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again" ; break}
 }
 
 
@@ -231,7 +251,7 @@ foreach($vm in $resourceGroupVMs)
     {
        foreach($disk in $vm.storageProfile.datadisks) 
        {
-         $diskURI = $disk.vhd.uri
+        ;  $diskURI = $disk.vhd.uri
         ;  $context = Get-StorageObject -resourceGroupName $resourceGroupName -srcURI $diskURI
          copy-azureBlob -srcUri $diskURI -srcContext $context -destContext $context -containerName $backupContainer
        }

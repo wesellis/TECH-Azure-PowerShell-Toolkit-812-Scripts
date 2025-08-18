@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azureusage Schedules Ms Mgmt
+    Azureusage Schedules Ms Mgmt
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azureusage Schedules Ms Mgmt
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -28,7 +46,7 @@ param(
 [Parameter(Mandatory=$false)] [bool] $clearLocks=$false                
 )
 
-Write-Verbose "Logging in to Azure..."
+Write-Verbose " Logging in to Azure..."
 $WEConn = Get-AutomationConnection -Name AzureRunAsConnection 
 
 $retry = 6
@@ -77,7 +95,7 @@ $checkschdl=@(get-AzureRmAutomationScheduledRunbook -RunbookName $WERunbookName 
 If ([string]::IsNullOrEmpty($checkschdl))
 {
 	$sch=$null
-	$WERBsch=Get-AzureRmAutomationSchedule -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup|where{$_.name -match $WEScheduleName}
+; 	$WERBsch=Get-AzureRmAutomationSchedule -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup|where{$_.name -match $WEScheduleName}
 	IF($WERBsch)
 	{
 		foreach ($sch in $WERBsch)
@@ -87,10 +105,10 @@ If ([string]::IsNullOrEmpty($checkschdl))
 		}
 	}
 }
-Write-Verbose " Creating $syncInterval schedule "; 
-$params= @{" Currency"=$WECurrency ;" Locale"=$WELocale;" RegionInfo" = $WERegionInfo;OfferDurableId=$WEOfferDurableId;propagatetags=$propagatetags;syncInterval=$syncInterval}
+Write-Verbose " Creating $syncInterval schedule " ; 
+$params= @{" Currency" =$WECurrency ;" Locale" =$WELocale;" RegionInfo" = $WERegionInfo;OfferDurableId=$WEOfferDurableId;propagatetags=$propagatetags;syncInterval=$syncInterval}
 $WECount = 0
-Write-Verbose " Creating schedule $WEScheduleName for $WERunbookScheduleTime for runbook $WERunbookName"
+Write-Verbose " Creating schedule $WEScheduleName for $WERunbookScheduleTime for runbook $WERunbookName"; 
 $WESchedule = New-AzureRmAutomationSchedule -Name " $WEScheduleName" -StartTime $WERunbookScheduleTime -HourInterval $interval -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup; 
 $WESch = Register-AzureRmAutomationScheduledRunbook -RunbookName $WERunbookName -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup -ScheduleName $WEScheduleName -Parameters $params
 Start-AzureRmAutomationRunbook -AutomationAccountName $WEAAAccount -Name $WERunbookName -ResourceGroupName $WEAAResourceGroup -Parameters $params

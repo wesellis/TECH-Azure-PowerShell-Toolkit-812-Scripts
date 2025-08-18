@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azuresaingestionlogs Ms Mgmt Sa
+    Azuresaingestionlogs Ms Mgmt Sa
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,10 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azuresaingestionlogs Ms Mgmt Sa
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $false)] [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionidFilter,
     [Parameter(Mandatory = $false)] [bool] $collectionFromAllSubscriptions = $false,
@@ -27,7 +47,7 @@ param(
 
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 
 Write-Output " RB Initial Memory  : $([System.gc]::gettotalmemory('forcefullcollection') /1MB) MB" 
 
@@ -37,7 +57,7 @@ $WEStartTime = [dateTime]::Now
 $WETimestampfield = " Timestamp"
 
 
-$timestamp = $WEStartTime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:45:00.000Z")
+$timestamp = $WEStartTime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:45:00.000Z" )
 
 
 
@@ -91,19 +111,19 @@ Function Build-tableSignature ($customerId, $sharedKey, $date, $method, $resourc
     $sha256.Key = $keyBytes
     $calculatedHash = $sha256.ComputeHash($bytesToHash)
     $encodedHash = [Convert]::ToBase64String($calculatedHash)
-    $authorization = 'SharedKey {0}:{1}' -f $resource, $encodedHash
+   ;  $authorization = 'SharedKey {0}:{1}' -f $resource, $encodedHash
     return $authorization
 	
 }
 
 Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
     Add-Type -AssemblyName System.Web
-   ;  $str = New-Object -TypeName " System.Text.StringBuilder";
-    $builder = [System.Text.StringBuilder]::new(" /")
+   ;  $str = New-Object -TypeName " System.Text.StringBuilder" ;
+    $builder = [System.Text.StringBuilder]::new(" /" )
     $builder.Append($resource) |out-null
     $builder.Append($uri.AbsolutePath) | out-null
     $str.Append($builder.ToString()) | out-null
-    $values2 = @{}
+   ;  $values2 = @{}
     IF ($service -eq 'Table') {
        ;  $values = [System.Web.HttpUtility]::ParseQueryString($uri.query)  
         #    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
@@ -114,7 +134,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
 			
             foreach ($obj2 in $list) {
                 if ($builder2.Length -gt 0) {
-                    $builder2.Append(" ,");
+                    $builder2.Append(" ," );
                 }
                 $builder2.Append($obj2.ToString()) |Out-Null
             }
@@ -127,11 +147,11 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
         $list2.sort()
         foreach ($str3 in $list2) {
             IF ($str3 -eq 'comp') {
-                $builder3 = [System.Text.StringBuilder]::new()
+               ;  $builder3 = [System.Text.StringBuilder]::new()
                 $builder3.Append($str3) |out-null
-                $builder3.Append(" =") |out-null
+                $builder3.Append(" =" ) |out-null
                 $builder3.Append($values2[$str3]) |out-null
-                $str.Append(" ?") |out-null
+                $str.Append(" ?" ) |out-null
                 $str.Append($builder3.ToString())|out-null
             }
         }
@@ -146,7 +166,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
 			
             foreach ($obj2 in $list) {
                 if ($builder2.Length -gt 0) {
-                    $builder2.Append(" ,");
+                    $builder2.Append(" ," );
                 }
                 $builder2.Append($obj2.ToString()) |Out-Null
             }
@@ -161,13 +181,13 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
 			
            ;  $builder3 = [System.Text.StringBuilder]::new()
             $builder3.Append($str3) |out-null
-            $builder3.Append(" :") |out-null
+            $builder3.Append(" :" ) |out-null
             $builder3.Append($values2[$str3]) |out-null
-            $str.Append(" `n") |out-null
+            $str.Append(" `n" ) |out-null
             $str.Append($builder3.ToString())|out-null
         }
     } 
-    #    $stringToHash = $stringToHash + $str.ToString();
+    #   ;  $stringToHash = $stringToHash + $str.ToString();
     #$str.ToString()
     ############
     $xHeaders = " x-ms-date:" + $date + " `n" + " x-ms-version:$WEApiStorage"
@@ -198,7 +218,7 @@ Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resou
 
 Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc, $download) {
 
-    $rfc1123date = [DateTime]::UtcNow.ToString(" r")
+    $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 
 	
     If ($method -eq 'PUT') {
@@ -209,7 +229,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
     }
     Else {
 
-        $signature = Build-StorageSignature `
+       ;  $signature = Build-StorageSignature `
             -sharedKey $sharedKey `
             -date  $rfc1123date `
             -method $method -resource $resource -uri $uri -body $body -service $svc
@@ -257,7 +277,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
             Else {
                 $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method   -UseBasicParsing -Body $msgbody 
 
-                $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+                $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
             } 
             return $xresp
 
@@ -270,7 +290,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
             Elseif ($method -eq 'GET') {
                 $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody -ea 0
 
-                $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+                $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
                 return $xresp
             }
             Elseif ($method -eq 'HEAD') {
@@ -335,7 +355,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType) {
     $method = " POST"
     $contentType = " application/json"
     $resource = " /api/logs"
-    $rfc1123date = [DateTime]::UtcNow.ToString(" r")
+    $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
     $contentLength = $body.Length
     $signature = Build-OMSSignature `
         -customerId $customerId `
@@ -346,7 +366,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType) {
         -method $method `
         -contentType $contentType `
         -resource $resource
-    $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+   ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
    ;  $WEOMSheaders = @{
         " Authorization"        = $signature;
         " Log-Type"             = $logType;
@@ -357,7 +377,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType) {
     Try {
         $response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $WEOMSheaders -Body $body -UseBasicParsing
     }catch [Net.WebException] {
-        $ex = $_.Exception
+       ;  $ex = $_.Exception
         If ($_.Exception.Response.StatusCode.value__) {
            ;  $exrespcode = ($_.Exception.Response.StatusCode.value__ ).ToString().Trim();
             #Write-Output $crap;
@@ -446,13 +466,13 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
 $WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)")
-$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/",$WECliCert)
+$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
-$headers = @{" Authorization"=$header;" Accept"=" application/json"}
+$headers = @{" Authorization" =$header;" Accept" =" application/json" }
 $body=$null
 $WEHTTPVerb=" GET"
-$subscriptionInfoUri = " https://management.azure.com/subscriptions/"+$subscriptionid+" ?api-version=2016-02-01"
+$subscriptionInfoUri = " https://management.azure.com/subscriptions/" +$subscriptionid+" ?api-version=2016-02-01"
 $subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
 IF($subscriptionInfo)
 {
@@ -494,7 +514,7 @@ if ($getAsmHeader) {
         Set-AzureSubscription -SubscriptionName $WEAsmConn.SubscriptionName -SubscriptionId $WEAsmConn.SubscriptionId -Certificate $WEAzureCert
         Select-AzureSubscription -SubscriptionId $WEAsmConn.SubscriptionId
         #finally create the headers for ASM REST 
-        $headerasm = @{" x-ms-version"=" 2013-08-01"}
+        $headerasm = @{" x-ms-version" =" 2013-08-01" }
         }
     }
 
@@ -521,7 +541,7 @@ IF ($collectionFromAllSubscriptions -and $WESubscriptions.count -gt 1 ) {
     #$n=$WESubscriptions.count-1
     #$subslist=$WESubscriptions[-$n..-1]
 	
-    $subslist = $subscriptions|where {$_.subscriptionId -ne $subscriptionId}
+   ;  $subslist = $subscriptions|where {$_.subscriptionId -ne $subscriptionId}
     Foreach ($item in $subslist) {
 
        ;  $params1 = @{" SubscriptionidFilter" = $item.subscriptionId; " collectionFromAllSubscriptions" = $false; " getAsmHeader" = $false}
@@ -561,11 +581,11 @@ $colParamsforChild = @()
 
 foreach ($sa in $saArmList|where {$_.Sku.tier -ne 'Premium'}) {
 
-    $rg = $sku = $null
+    $rg =;  $sku = $null
 
    ;  $rg = $sa.id.Split('/')[4]
 
-    $colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);ARM;$($sa.sku.tier);$($sa.Kind)"
+   ;  $colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);ARM;$($sa.sku.tier);$($sa.Kind)"
 	
 }
 
@@ -575,13 +595,13 @@ $sa = $rg = $null
 foreach ($sa in $saAsmList|where {$_.properties.accounttype -notmatch 'Premium'}) {
 
     $rg = $sa.id.Split('/')[4]
-    $tier = $null
+   ;  $tier = $null
 
     # array  wth SAName,ReouceGroup,Prikey,Tier 
 
     If ( $sa.properties.accountType -notmatch 'premium') {
        ;  $tier = 'Standard'
-        $colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);Classic;$tier;$($sa.Kind)"
+       ;  $colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);Classic;$tier;$($sa.Kind)"
     }
 
 	
@@ -601,7 +621,7 @@ if ($colParamsforChild.count -eq 0) {
 
 $sa = $null
 $logTracker = @()
-$blobdate = (Get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy/MM/dd/HH00")
+$blobdate = (Get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy/MM/dd/HH00" )
 
 
 
@@ -696,19 +716,19 @@ $scriptBlock = {
         $sha256.Key = $keyBytes
         $calculatedHash = $sha256.ComputeHash($bytesToHash)
         $encodedHash = [Convert]::ToBase64String($calculatedHash)
-        $authorization = 'SharedKey {0}:{1}' -f $resource, $encodedHash
+       ;  $authorization = 'SharedKey {0}:{1}' -f $resource, $encodedHash
         return $authorization
 		
     }
     # Create the function to create the authorization signature
     Function Build-StorageSignature ($sharedKey, $date, $method, $bodylength, $resource, $uri , $service) {
         Add-Type -AssemblyName System.Web
-       ;  $str = New-Object -TypeName " System.Text.StringBuilder";
-        $builder = [System.Text.StringBuilder]::new(" /")
+       ;  $str = New-Object -TypeName " System.Text.StringBuilder" ;
+        $builder = [System.Text.StringBuilder]::new(" /" )
         $builder.Append($resource) |out-null
         $builder.Append($uri.AbsolutePath) | out-null
         $str.Append($builder.ToString()) | out-null
-        $values2 = @{}
+       ;  $values2 = @{}
         IF ($service -eq 'Table') {
            ;  $values = [System.Web.HttpUtility]::ParseQueryString($uri.query)  
             #    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
@@ -719,7 +739,7 @@ $scriptBlock = {
 				
                 foreach ($obj2 in $list) {
                     if ($builder2.Length -gt 0) {
-                        $builder2.Append(" ,");
+                        $builder2.Append(" ," );
                     }
                     $builder2.Append($obj2.ToString()) |Out-Null
                 }
@@ -732,11 +752,11 @@ $scriptBlock = {
             $list2.sort()
             foreach ($str3 in $list2) {
                 IF ($str3 -eq 'comp') {
-                    $builder3 = [System.Text.StringBuilder]::new()
+                   ;  $builder3 = [System.Text.StringBuilder]::new()
                     $builder3.Append($str3) |out-null
-                    $builder3.Append(" =") |out-null
+                    $builder3.Append(" =" ) |out-null
                     $builder3.Append($values2[$str3]) |out-null
-                    $str.Append(" ?") |out-null
+                    $str.Append(" ?" ) |out-null
                     $str.Append($builder3.ToString())|out-null
                 }
             }
@@ -751,7 +771,7 @@ $scriptBlock = {
 				
                 foreach ($obj2 in $list) {
                     if ($builder2.Length -gt 0) {
-                        $builder2.Append(" ,");
+                        $builder2.Append(" ," );
                     }
                     $builder2.Append($obj2.ToString()) |Out-Null
                 }
@@ -766,13 +786,13 @@ $scriptBlock = {
 				
                ;  $builder3 = [System.Text.StringBuilder]::new()
                 $builder3.Append($str3) |out-null
-                $builder3.Append(" :") |out-null
+                $builder3.Append(" :" ) |out-null
                 $builder3.Append($values2[$str3]) |out-null
-                $str.Append(" `n") |out-null
+                $str.Append(" `n" ) |out-null
                 $str.Append($builder3.ToString())|out-null
             }
         } 
-        #    $stringToHash = $stringToHash + $str.ToString();
+        #   ;  $stringToHash = $stringToHash + $str.ToString();
         #$str.ToString()
         ############
         $xHeaders = " x-ms-date:" + $date + " `n" + " x-ms-version:$WEApiStorage"
@@ -803,7 +823,7 @@ $scriptBlock = {
     # Create the function to create and post the request
     Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc, $download) {
 
-        $rfc1123date = [DateTime]::UtcNow.ToString(" r")
+        $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 
 		
         If ($method -eq 'PUT') {
@@ -814,7 +834,7 @@ $scriptBlock = {
         }
         Else {
 
-            $signature = Build-StorageSignature `
+           ;  $signature = Build-StorageSignature `
                 -sharedKey $sharedKey `
                 -date  $rfc1123date `
                 -method $method -resource $resource -uri $uri -body $body -service $svc
@@ -862,7 +882,7 @@ $scriptBlock = {
                 Else {
                     $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method   -UseBasicParsing -Body $msgbody 
 
-                    $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+                    $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
                 } 
                 return $xresp
 
@@ -875,7 +895,7 @@ $scriptBlock = {
                 Elseif ($method -eq 'GET') {
                     $resp1 = Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody -ea 0
 
-                    $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+                    $xresp = $resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
                     return $xresp
                 }
                 Elseif ($method -eq 'HEAD') {
@@ -940,7 +960,7 @@ $scriptBlock = {
         $method = " POST"
         $contentType = " application/json"
         $resource = " /api/logs"
-        $rfc1123date = [DateTime]::UtcNow.ToString(" r")
+        $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
         $contentLength = $body.Length
         $signature = Build-OMSSignature `
             -customerId $customerId `
@@ -951,7 +971,7 @@ $scriptBlock = {
             -method $method `
             -contentType $contentType `
             -resource $resource
-        $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+       ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
        ;  $WEOMSheaders = @{
             " Authorization"        = $signature;
             " Log-Type"             = $logType;
@@ -962,7 +982,7 @@ $scriptBlock = {
         Try {
             $response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $WEOMSheaders -Body $body -UseBasicParsing
         }catch [Net.WebException] {
-            $ex = $_.Exception
+           ;  $ex = $_.Exception
             If ($_.Exception.Response.StatusCode.value__) {
                ;  $exrespcode = ($_.Exception.Response.StatusCode.value__ ).ToString().Trim();
                 #Write-Output $crap;
@@ -986,7 +1006,7 @@ $scriptBlock = {
 
 
 
-    $prikey = $storageaccount = $rg = $type = $null
+    $prikey = $storageaccount = $rg =;  $type = $null
    ;  $storageaccount = $sa.Split(';')[0]
     $rg = $sa.Split(';')[1]
     $type = $sa.Split(';')[2]
@@ -1167,7 +1187,7 @@ Write-Output " Memory After Initial pool for keys : $([System.gc]::gettotalmemor
 
 $sa = $null
 $logTracker = @()
-$blobdate = (Get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy/MM/dd/HH00")
+$blobdate = (Get-date).AddHours(-1).ToUniversalTime().ToString(" yyyy/MM/dd/HH00" )
 
 $s = 1
 
@@ -1236,12 +1256,12 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
                 $auditlog = invoke-StorageREST -sharedKey $prikey -method GET -resource $storageaccount -uri $uriLogs3 -download $true 
 
                 if (Test-Path $auditlog) {
-                    $file = New-Object System.IO.StreamReader -Arg $auditlog
+                   ;  $file = New-Object System.IO.StreamReader -Arg $auditlog
 					
                     while ($line = $file.ReadLine()) {
 						
 
-                       ;  $splitline = [regex]::Split( $line , ';(?=(?:[^" ]|"[^" ]*")*$)' )
+                       ;  $splitline = [regex]::Split( $line , ';(?=(?:[^" ]|" [^" ]*" )*$)' )
 
                         $logArray = $logArray + New-Object PSObject -Property @{
                             Timestamp          = $splitline[1]
@@ -1257,7 +1277,7 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
                             Requesteraccount   = $splitline[8]
                             Resource           = $splitline[12].Replace('" ', '')
                             RequesterIP        = $splitline[15].Split(':')[0]
-                            UserAgent          = $splitline[27].Replace('"', '')
+                            UserAgent          = $splitline[27].Replace('" ', '')
                             SubscriptionId     = $WEArmConn.SubscriptionId;
                             AzureSubscription  = $subscriptionInfo.displayName;
                         }
@@ -1268,7 +1288,7 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
                     $file = get-item $auditlog 
                     $WELogcount++
                     $WELogSize = $WELogSize + [Math]::Round($file.Length / 1024, 0)
-                    Remove-Item $auditlo -Forceg -Force
+                    Remove-Item $auditl -Forceo -Forceg -Force
 
 
                     #push data into oms if specific thresholds are reached 
@@ -1307,10 +1327,10 @@ foreach ($sa in @($hash.SAInfo|Where {$_.Logging -eq 'True' -and $_.key -ne $nul
 
 
 If ($logArray) {
-    $splitSize = 5000
+   ;  $splitSize = 5000
     If ($logArray.count -gt $splitSize) {
        ;  $spltlist = @()
-        $spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt $logArray.count; $WEIndex = $WEIndex + $splitSize) {
+       ;  $spltlist = $spltlist + for ($WEIndex = 0; $WEIndex -lt $logArray.count; $WEIndex = $WEIndex + $splitSize) {
             , ($logArray[$index..($index + $splitSize - 1)])
         }
 		
@@ -1318,7 +1338,7 @@ If ($logArray) {
         $spltlist|foreach {
             $splitLogs = $null
             $splitLogs = $_
-            $jsonlogs = ConvertTo-Json -InputObject $splitLogs
+           ;  $jsonlogs = ConvertTo-Json -InputObject $splitLogs
             Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonlogs)) -logType $logname
 
         }

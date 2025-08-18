@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Writeblob
+    Writeblob
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Writeblob
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"   
+[CmdletBinding()]
 param(
     # The subcription Id to log in to
     [Parameter(Mandatory=$true)]
@@ -56,7 +75,7 @@ Install-Module Az.Storage -AllowClobber -Verbose -Force
 Connect-AzAccount -Identity -Verbose
 
 $WEContainerName=$WEContainerName.ToLowerInvariant()
-$WEBlobName=$env:COMPUTERNAME.ToLowerInvariant()
+$WEBlobName=$env:COMPUTERNAME.ToLowerInvariant(); 
 $WEFileName=[System.IO.Path]::GetTempFileName()
 Get-Date | Out-File $WEFileName  
 ; 
@@ -65,10 +84,8 @@ $ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAc
 Set-AzStorageBlobContent -Container $WEContainerName -File $WEFileName -Blob $WEBlobName -Context $ctx -Force
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

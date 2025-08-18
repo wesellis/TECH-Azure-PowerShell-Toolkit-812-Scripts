@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 4 Creat Azdisk
+    4 Creat Azdisk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 4 Creat Azdisk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -24,7 +42,7 @@ $imageName = 'FGC_Kroll_Image'
 $rgName = 'FGC_Kroll_Image_RG'
 $WEDiskname = 'FGC_Kroll_Image_Disk'
 
-
+; 
 $newAzDiskConfigSplat = @{
     # SkuName = 'Standard_LRS'
     SkuName = 'Premium_LRS'

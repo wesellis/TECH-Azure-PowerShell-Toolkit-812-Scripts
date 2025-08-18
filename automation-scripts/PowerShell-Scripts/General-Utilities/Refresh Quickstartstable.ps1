@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Refresh Quickstartstable
+    Refresh Quickstartstable
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,12 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Refresh Quickstartstable
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    $WEBuildSourcesDirectory = "$WEENV:BUILD_SOURCESDIRECTORY" , # absolute path to the clone
+    $WEBuildSourcesDirectory = " $WEENV:BUILD_SOURCESDIRECTORY" , # absolute path to the clone
     [string]$WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    $WETableName = "QuickStartsMetadataService" ,
+    $WETableName = " QuickStartsMetadataService" ,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
 <#
@@ -34,21 +52,21 @@ Remove old row and create new table row (i.e. update if exists)
 
 
 
-while($WEBuildSourcesDirectory.EndsWith("/" )){
-    $WEBuildSourcesDirectory = $WEBuildSourcesDirectory.TrimEnd("/" )
+while($WEBuildSourcesDirectory.EndsWith(" /" )){
+    $WEBuildSourcesDirectory = $WEBuildSourcesDirectory.TrimEnd(" /" )
 }
-while($WEBuildSourcesDirectory.EndsWith("\" )){
-    $WEBuildSourcesDirectory = $WEBuildSourcesDirectory.TrimEnd("\" )
+while($WEBuildSourcesDirectory.EndsWith(" \" )){
+   ;  $WEBuildSourcesDirectory = $WEBuildSourcesDirectory.TrimEnd(" \" )
 }
 ; 
 $badges = @{
-    PublicLastTestDate  = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicLastTestDate.svg" ;
-    PublicDeployment    = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicDeployment.svg" ;
-    FairfaxLastTestDate = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxLastTestDate.svg" ;
-    FairfaxDeployment   = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxDeployment.svg" ;
-    BestPracticeResult  = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/BestPracticeResult.svg" ;
-    CredScanResult      = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/CredScanResult.svg" ;
-    BicepVersion        = "https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/BicepVersion.svg"
+    PublicLastTestDate  = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicLastTestDate.svg" ;
+    PublicDeployment    = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicDeployment.svg" ;
+    FairfaxLastTestDate = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxLastTestDate.svg" ;
+    FairfaxDeployment   = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxDeployment.svg" ;
+    BestPracticeResult  = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/BestPracticeResult.svg" ;
+    CredScanResult      = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/CredScanResult.svg" ;
+    BicepVersion        = " https://$WEStorageAccountName.blob.core.windows.net/badges/%sample.folder%/BicepVersion.svg"
 }
 
 
@@ -71,7 +89,7 @@ $t = Get-AzTableRow -table $cloudTable
 Write-WELog " Checking table to see if this is a new sample (does the row exist?)" " INFO"
 foreach ($WESourcePath in $WEArtifactFilePaths) {
     
-    if ($WESourcePath -like " *\test\*") {
+    if ($WESourcePath -like " *\test\*" ) {
         Write-host " Skipping..."
         continue
     }
@@ -80,9 +98,9 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     $WEMetadataJson = Get-Content $WESourcePath -Raw | ConvertFrom-Json
 
     # Get the sample's path off of the root, replace any path chars with " @" since the rowkey for table storage does not allow / or \ (among other things)
-    $WERowKey = (Split-Path $WESourcePath -Parent).Replace(" $(Resolve-Path $WEBuildSourcesDirectory)\", "" ).Replace("\" , "@" ).Replace("/" , "@" )
+    $WERowKey = (Split-Path $WESourcePath -Parent).Replace(" $(Resolve-Path $WEBuildSourcesDirectory)\" , "" ).Replace(" \" , " @" ).Replace(" /" , " @" )
 
-    Write-WELog "RowKey from path: $WERowKey" " INFO"
+    Write-WELog " RowKey from path: $WERowKey" " INFO"
 
     $r = Get-AzTableRow -table $cloudTable -ColumnName " RowKey" -Value $WERowKey -Operator Equal
 
@@ -93,27 +111,27 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     # if the row isn't found in the table, it could be a new sample, add it with the data found in metadata.json
     Write-WELog " Updating: $WERowkey" " INFO"
         
-    $p.Add(" itemDisplayName", $WEMetadataJson.itemDisplayName)
-    $p.Add(" description", $WEMetadataJson.description)
-    $p.Add(" summary", $WEMetadataJson.summary)
-    $p.Add(" githubUsername", $WEMetadataJson.githubUsername)
-    $p.Add(" dateUpdated", $WEMetadataJson.dateUpdated)
+    $p.Add(" itemDisplayName" , $WEMetadataJson.itemDisplayName)
+    $p.Add(" description" , $WEMetadataJson.description)
+    $p.Add(" summary" , $WEMetadataJson.summary)
+    $p.Add(" githubUsername" , $WEMetadataJson.githubUsername)
+    $p.Add(" dateUpdated" , $WEMetadataJson.dateUpdated)
 
-    $p.Add(" status", " Live") # if it's in master, it's live
-    # $p.Add($($WEResultDeploymentParameter + " BuildNumber"), " 0)
+    $p.Add(" status" , " Live" ) # if it's in master, it's live
+    # $p.Add($($WEResultDeploymentParameter + " BuildNumber" ), " 0)
 
     #update the row if it's live or no status
-    #if ($r.status -eq "Live" -or $r.status -eq $null) {
+    #if ($r.status -eq " Live" -or $r.status -eq $null) {
 
         #add status from badges
 
         $badges.GetEnumerator() | ForEach-Object {
-            $uri = $($_.Value).replace(" %sample.folder%", $WERowKey.Replace(" @", " /"))
+            $uri = $($_.Value).replace(" %sample.folder%" , $WERowKey.Replace(" @" , " /" ))
             #Write-Host $uri
             $svg = $null
             try { $svg = (Invoke-WebRequest -Uri $uri -ErrorAction SilentlyContinue) } catch { }
             if ($svg) {
-                $xml = $svg.content.replace('xmlns=" http://www.w3.org/2000/svg"', '')
+                $xml = $svg.content.replace('xmlns=" http://www.w3.org/2000/svg" ', '')
                 #Write-Host $xml
                 $t = Select-XML -Content $xml -XPath " //text"
                 #$t | Out-string                
@@ -141,12 +159,12 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                     }
                     default {
                         # must be a date or bicep version, fix that below
-                        #$v = $v.Replace(" .", " -")
+                        #$v = $v.Replace(" ." , " -" )
                     }
                 }
-                if ($_.Key -like " *Date") { 
-                    # $v = $WEMetadataJson.dateUpdated
-                   ;  $v = $v.Replace(" .", " -")
+                if ($_.Key -like " *Date" ) { 
+                    #;  $v = $WEMetadataJson.dateUpdated
+                   ;  $v = $v.Replace(" ." , " -" )
                 }
                 if ($v -ne $null) {
                     $p.Add($_.Key, $v)
@@ -161,24 +179,24 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     
     # if we didn't get the date from the badge, then add it from metadata.json
     if ([string]::IsNullOrWhiteSpace($p.FairfaxLastTestDate)) { 
-        $p.Add(" FairfaxLastTestDate", $WEMetadataJson.dateUpdated) 
+        $p.Add(" FairfaxLastTestDate" , $WEMetadataJson.dateUpdated) 
     }
     if ([string]::IsNullOrWhiteSpace($p.PublicLastTestDate)) { 
-        $p.Add(" PublicLastTestDate", $WEMetadataJson.dateUpdated) 
+        $p.Add(" PublicLastTestDate" , $WEMetadataJson.dateUpdated) 
     }
 
     # preserve the build number if possible
     if ([string]::IsNullOrWhiteSpace($r.FairfaxDeploymentBuildNumber)) { 
-        $p.Add(" FairfaxDeploymentBuildNumber", " 0") 
+        $p.Add(" FairfaxDeploymentBuildNumber" , " 0" ) 
     }
     else {
-        $p.Add(" FairfaxDeploymentBuildNumber", $r.FairfaxDeploymentBuildNumber) 
+        $p.Add(" FairfaxDeploymentBuildNumber" , $r.FairfaxDeploymentBuildNumber) 
     }
     if ([string]::IsNullOrWhiteSpace($r.PublicDeploymentBuildNumber)) { 
-        $p.Add(" PublicDeploymentBuildNumber", " 0") 
+        $p.Add(" PublicDeploymentBuildNumber" , " 0" ) 
     }
     else {
-        $p.Add(" PublicDeploymentBuildNumber", $r.PublicDeploymentBuildNumber) 
+        $p.Add(" PublicDeploymentBuildNumber" , $r.PublicDeploymentBuildNumber) 
     }
 
     Write-WELog " Removing... $($r.RowKey)" " INFO"

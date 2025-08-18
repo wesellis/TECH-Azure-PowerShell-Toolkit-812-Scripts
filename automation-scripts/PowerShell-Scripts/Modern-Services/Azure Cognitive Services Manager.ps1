@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Cognitive Services Manager
+    Azure Cognitive Services Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Cognitive Services Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,27 +50,31 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAccountName,
     
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" Create", " GetKeys", " RegenerateKey", " Delete", " ListUsage")]
+    [ValidateSet(" Create" , " GetKeys" , " RegenerateKey" , " Delete" , " ListUsage" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" ComputerVision", " Face", " LUIS", " QnAMaker", " SpeechServices", " TextAnalytics", " Translator", " AnomalyDetector", " ContentModerator", " CustomVision", " FormRecognizer", " Personalizer")]
-    [string]$WEKind = " TextAnalytics",
+    [ValidateSet(" ComputerVision" , " Face" , " LUIS" , " QnAMaker" , " SpeechServices" , " TextAnalytics" , " Translator" , " AnomalyDetector" , " ContentModerator" , " CustomVision" , " FormRecognizer" , " Personalizer" )]
+    [string]$WEKind = " TextAnalytics" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" F0", " S0", " S1", " S2", " S3", " S4")]
+    [ValidateSet(" F0" , " S0" , " S1" , " S2" , " S3" , " S4" )]
     [string]$WESku = " S0"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Cognitive Services Manager" -Version " 1.0" -Description " Manage AI and machine learning services"
 
 try {
@@ -73,7 +97,7 @@ try {
         }
         
         " RegenerateKey" {
-            $newKeys = New-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEAccountName -KeyName Key1
+           ;  $newKeys = New-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEAccountName -KeyName Key1
             Write-Log " ✓ Key regenerated successfully" -Level SUCCESS
             Write-WELog " New Key 1: $($newKeys.Key1)" " INFO" -ForegroundColor Green
             Write-WELog " Key 2: $($newKeys.Key2)" " INFO" -ForegroundColor Cyan

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Compare Templates
+    Compare Templates
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Compare Templates
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 ﻿
 <# 
@@ -31,7 +49,7 @@ param(
     [switch] $WEWriteToHost
 )
 
-Import-Module "$WEPSScriptRoot/Local.psm1" -Force
+Import-Module " $WEPSScriptRoot/Local.psm1" -Force
 
 if ($WEWriteToHost) {
     Write-WELog " Comparing $WETemplateFilePathExpected and $WETemplateFilePathActual" " INFO"
@@ -45,7 +63,7 @@ if ($WERemoveGeneratorMetadata) {
     $templateContentsActualRaw = Remove-GeneratorMetadata $templateContentsActualRaw
 }
 
-$templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw
+$templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw; 
 $templateContentsActual = Convert-StringToLines $templateContentsActualRaw
 
 
@@ -77,10 +95,8 @@ else {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

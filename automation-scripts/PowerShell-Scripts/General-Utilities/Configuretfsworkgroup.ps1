@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configuretfsworkgroup
+    Configuretfsworkgroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Configuretfsworkgroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
 )
 
@@ -28,7 +47,7 @@ $WEErrorActionPreference = 'Stop'
 
 
 $WETfsDownloadUrl = 'https://go.microsoft.com/fwlink/?LinkId=857132'
-$WEInstallDirectory = 'C:\Program Files\Microsoft Team Foundation Server 15.0'
+$WEInstallDirectory = '${env:ProgramFiles}\Microsoft Team Foundation Server 15.0'
 $WEInstallKey = 'HKLM:\SOFTWARE\Microsoft\DevDiv\tfs\Servicing\15.0\serverCore'
 
 
@@ -40,7 +59,7 @@ function WE-Ensure-TfsInstalled()
     if(Test-Path $WEInstallKey)
     {
         $key = Get-Item $WEInstallKey
-        $value = $key.GetValue("Install" , $null)
+        $value = $key.GetValue(" Install" , $null)
 
         if(($value -ne $null) -and $value -eq 1)
         {
@@ -50,7 +69,7 @@ function WE-Ensure-TfsInstalled()
 
     if(-not $tfsInstalled)
     {
-        Write-Verbose "Installing TFS using ISO"
+        Write-Verbose " Installing TFS using ISO"
         # Download TFS and mount it
         $parent = [System.IO.Path]::GetTempPath()
         [string] $name = [System.Guid]::NewGuid()
@@ -72,7 +91,7 @@ function WE-Ensure-TfsInstalled()
         finally 
         {
             Dismount-DiskImage -ImagePath $fullPath\tfsserver2017.3.1_enu.iso
-            Remove-Item $fullPath\tfsserver2017.3.1_enu.iso -Force -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item $fullPath\tfsserver2017.3.1_enu.is -Forceo -Force -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
     else
@@ -85,8 +104,8 @@ function WE-Ensure-TfsInstalled()
 function WE-Configure-TfsWorkgroup()
 {
     # Run tfsconfig to do the unattend install
-    $path = Join-Path $WEInstallDirectory '\Tools\tfsconfig.exe'
-   ;  $tfsConfigArgs = 'unattend /configure /type:Basic /inputs:" InstallSqlExpress=True"'
+   ;  $path = Join-Path $WEInstallDirectory '\Tools\tfsconfig.exe'
+   ;  $tfsConfigArgs = 'unattend /configure /type:Basic /inputs:" InstallSqlExpress=True" '
 
     Write-Verbose " Running tfsconfig..."
 
@@ -102,10 +121,8 @@ Ensure-TfsInstalled
 Configure-TfsWorkgroup
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Purview Data Governance Manager
+    Azure Purview Data Governance Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Purview Data Governance Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,16 +50,20 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPurviewAccountName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Create", " Delete", " GetInfo", " RegisterDataSource", " CreateCollection", " ScanDataSource", " ManageClassifications")]
-    [string]$WEAction = " Create",
+    [ValidateSet(" Create" , " Delete" , " GetInfo" , " RegisterDataSource" , " CreateCollection" , " ScanDataSource" , " ManageClassifications" )]
+    [string]$WEAction = " Create" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEManagedStorageAccountName,
@@ -47,32 +71,40 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEManagedEventHubNamespace,
     
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEDataSourceName,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" AzureBlob", " AzureDataLakeGen2", " AzureSqlDatabase", " AzureSynapseAnalytics", " PowerBI")]
-    [string]$WEDataSourceType = " AzureBlob",
+    [ValidateSet(" AzureBlob" , " AzureDataLakeGen2" , " AzureSqlDatabase" , " AzureSynapseAnalytics" , " PowerBI" )]
+    [string]$WEDataSourceType = " AzureBlob" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDataSourceEndpoint,
     
     [Parameter(Mandatory=$false)]
-    [string]$WECollectionName = " Default",
+    [string]$WECollectionName = " Default" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEScanName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEScanRulesetName = " AdlsGen2",
+    [string]$WEScanRulesetName = " AdlsGen2" ,
     
     [Parameter(Mandatory=$false)]
     [string[]]$WEClassificationRules = @(),
@@ -94,7 +126,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Purview Data Governance Manager" -Version " 1.0" -Description " Enterprise data catalog and governance automation"
@@ -161,9 +193,9 @@ try {
                 Start-Sleep -Seconds 30
                 $accountStatus = Get-AzPurviewAccount -ResourceGroupName $WEResourceGroupName -Name $WEPurviewAccountName
                 Write-Log " Provisioning state: $($accountStatus.ProvisioningState)" -Level INFO
-            } while ($accountStatus.ProvisioningState -eq " Provisioning")
+            } while ($accountStatus.ProvisioningState -eq " Provisioning" )
             
-            if ($accountStatus.ProvisioningState -eq " Succeeded") {
+            if ($accountStatus.ProvisioningState -eq " Succeeded" ) {
                 Write-Log " ✓ Purview account fully provisioned and ready" -Level SUCCESS
             } else {
                 throw " Purview account provisioning failed with state: $($accountStatus.ProvisioningState)"
@@ -324,16 +356,16 @@ try {
             Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
             
             $systemClassifications = @(
-                " MICROSOFT.GOVERNMENT.AUSTRALIA.DRIVERS_LICENSE_NUMBER",
-                " MICROSOFT.GOVERNMENT.AUSTRALIA.PASSPORT_NUMBER",
-                " MICROSOFT.GOVERNMENT.AUSTRIA.IDENTITY_CARD_NUMBER",
-                " MICROSOFT.GOVERNMENT.AUSTRIA.PASSPORT_NUMBER",
-                " MICROSOFT.FINANCIAL.CREDIT_CARD_NUMBER",
-                " MICROSOFT.FINANCIAL.US.ROUTING_NUMBER",
-                " MICROSOFT.PERSONAL.EMAIL",
-                " MICROSOFT.PERSONAL.IPADDRESS",
-                " MICROSOFT.PERSONAL.NAME",
-                " MICROSOFT.PERSONAL.PHONENUMBER",
+                " MICROSOFT.GOVERNMENT.AUSTRALIA.DRIVERS_LICENSE_NUMBER" ,
+                " MICROSOFT.GOVERNMENT.AUSTRALIA.PASSPORT_NUMBER" ,
+                " MICROSOFT.GOVERNMENT.AUSTRIA.IDENTITY_CARD_NUMBER" ,
+                " MICROSOFT.GOVERNMENT.AUSTRIA.PASSPORT_NUMBER" ,
+                " MICROSOFT.FINANCIAL.CREDIT_CARD_NUMBER" ,
+                " MICROSOFT.FINANCIAL.US.ROUTING_NUMBER" ,
+                " MICROSOFT.PERSONAL.EMAIL" ,
+                " MICROSOFT.PERSONAL.IPADDRESS" ,
+                " MICROSOFT.PERSONAL.NAME" ,
+                " MICROSOFT.PERSONAL.PHONENUMBER" ,
                 " MICROSOFT.PERSONAL.US.SOCIAL_SECURITY_NUMBER"
             )
             
@@ -422,7 +454,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName " Purview Account Deletion" -Status " Removing Purview account"
             
             $confirmation = Read-Host " Are you sure you want to delete the Purview account '$WEPurviewAccountName' and all its data? (yes/no)"
-            if ($confirmation.ToLower() -ne " yes") {
+            if ($confirmation.ToLower() -ne " yes" ) {
                 Write-Log " Deletion cancelled by user" -Level WARN
                 return
             }
@@ -436,7 +468,7 @@ try {
     }
 
     # Configure monitoring if enabled and creating account
-    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create") {
+    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 4 -TotalSteps 10 -StepName " Monitoring Setup" -Status " Configuring diagnostic settings"
         
         $diagnosticSettings = Invoke-AzureOperation -Operation {
@@ -450,8 +482,8 @@ try {
                     Name = " $WEPurviewAccountName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" ScanStatusLogEvent", " DataSensitivityLogEvent")
-                    MetricCategory = @(" AllMetrics")
+                    Category = @(" ScanStatusLogEvent" , " DataSensitivityLogEvent" )
+                    MetricCategory = @(" AllMetrics" )
                 }
                 
                 Set-AzDiagnosticSetting @diagnosticParams
@@ -467,7 +499,7 @@ try {
     }
 
     # Apply enterprise tags if creating account
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 5 -TotalSteps 10 -StepName " Tagging" -Status " Applying enterprise tags"
         $tags = @{
             'Environment' = 'Production'
@@ -491,13 +523,13 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName " Governance Analysis" -Status " Analyzing data governance setup"
     
     $governanceRecommendations = @(
-        " 📊 Establish data stewardship roles and responsibilities",
-        " 📊 Define data classification and sensitivity policies",
-        " 📊 Implement automated scanning schedules for data sources",
-        " 📊 Set up lineage tracking for critical data pipelines",
-        " 📊 Configure glossary terms for business context",
-        " 📊 Establish data quality rules and monitoring",
-        " 📊 Create custom classifications for organization-specific data types",
+        " 📊 Establish data stewardship roles and responsibilities" ,
+        " 📊 Define data classification and sensitivity policies" ,
+        " 📊 Implement automated scanning schedules for data sources" ,
+        " 📊 Set up lineage tracking for critical data pipelines" ,
+        " 📊 Configure glossary terms for business context" ,
+        " 📊 Establish data quality rules and monitoring" ,
+        " 📊 Create custom classifications for organization-specific data types" ,
         " 📊 Implement access policies based on data sensitivity"
     )
 
@@ -508,7 +540,7 @@ try {
     $maxScore = 5
     $securityFindings = @()
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         # Check managed VNet
         if ($WEEnableManagedVNet) {
             $securityScore++
@@ -554,19 +586,19 @@ try {
     Write-ProgressStep -StepNumber 8 -TotalSteps 10 -StepName " Compliance Analysis" -Status " Evaluating compliance capabilities"
     
     $complianceFrameworks = @(
-        " GDPR - General Data Protection Regulation",
-        " CCPA - California Consumer Privacy Act", 
-        " SOX - Sarbanes-Oxley Act",
-        " HIPAA - Health Insurance Portability and Accountability Act",
-        " PCI DSS - Payment Card Industry Data Security Standard",
-        " ISO 27001 - Information Security Management",
+        " GDPR - General Data Protection Regulation" ,
+        " CCPA - California Consumer Privacy Act" , 
+        " SOX - Sarbanes-Oxley Act" ,
+        " HIPAA - Health Insurance Portability and Accountability Act" ,
+        " PCI DSS - Payment Card Industry Data Security Standard" ,
+        " ISO 27001 - Information Security Management" ,
         " NIST - National Institute of Standards and Technology Framework"
     )
 
     # Cost analysis
     Write-ProgressStep -StepNumber 9 -TotalSteps 10 -StepName " Cost Analysis" -Status " Analyzing cost components"
     
-    $costComponents = @{
+   ;  $costComponents = @{
         " Purview Account" = " ~$1,212/month base cost"
         " Managed Storage" = " ~$25-50/month depending on metadata volume"
         " Managed Event Hub" = " ~$100-200/month for event processing"
@@ -578,7 +610,7 @@ try {
     # Final validation
     Write-ProgressStep -StepNumber 10 -TotalSteps 10 -StepName " Validation" -Status " Validating data governance setup"
     
-    if ($WEAction.ToLower() -ne " delete") {
+    if ($WEAction.ToLower() -ne " delete" ) {
        ;  $accountStatus = Invoke-AzureOperation -Operation {
             Get-AzPurviewAccount -ResourceGroupName $WEResourceGroupName -Name $WEPurviewAccountName
         } -OperationName " Validate Account Status"
@@ -591,7 +623,7 @@ try {
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog " 📊 Purview Account Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Account Name: $WEPurviewAccountName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White

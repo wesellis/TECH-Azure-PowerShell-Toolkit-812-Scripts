@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Scheduledsnooze Parent
+    Scheduledsnooze Parent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Scheduledsnooze Parent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .SYNOPSIS  
  Wrapper script for get all the VM's in all RG's or subscription level and then call the Start or Stop runbook
 .DESCRIPTION  
@@ -27,22 +45,24 @@ Version History
 v1.0   - Initial Release  
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory = $true, HelpMessage = " Enter the value for Action. Values can be either stop or start")][String]$WEAction,
-    [Parameter(Mandatory = $false, HelpMessage = " Enter the value for WhatIf. Values can be either true or false")][bool]$WEWhatIf = $false
+    [Parameter(Mandatory = $true, HelpMessage = " Enter the value for Action. Values can be either stop or start" )][String]$WEAction,
+    [Parameter(Mandatory = $false, HelpMessage = " Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
 )
 
 function WE-ScheduleSnoozeAction ($WEVMObject, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction) {
     
     Write-Output " Calling the ScheduledSnooze_Child wrapper (Action = $($WEAction))..."
     if ($WEAction.ToLower() -eq 'start') {
-       ;  $params = @{" VMName" = " $($WEVMObject.Name)"; " Action" = " start"; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }   
+       ;  $params = @{" VMName" = " $($WEVMObject.Name)" ; " Action" = " start" ; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }   
     }    
     elseif ($WEAction.ToLower() -eq 'stop') {
-        $params = @{" VMName" = " $($WEVMObject.Name)"; " Action" = " stop"; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }                    
+        $params = @{" VMName" = " $($WEVMObject.Name)" ; " Action" = " stop" ; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }                    
     }    
 
     Write-Output " Performing the schedule $($WEAction) for the VM : $($WEVMObject.Name)"
@@ -116,7 +136,7 @@ $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupN
 try {  
     $WEAction = $WEAction.Trim().ToLower()
 
-    if (!($WEAction -eq " start" -or $WEAction -eq " stop")) {
+    if (!($WEAction -eq " start" -or $WEAction -eq " stop" )) {
         Write-Output " `$WEAction parameter value is : $($WEAction). Value should be either start or stop!"
         Write-Output " Completed the runbook execution..."
         exit
@@ -164,7 +184,7 @@ try {
         }
     }
     else {
-        $WEActualAzureVMList = $WEAzureVMList
+       ;  $WEActualAzureVMList = $WEAzureVMList
     }
 
     Write-Output " The current action is $($WEAction)"

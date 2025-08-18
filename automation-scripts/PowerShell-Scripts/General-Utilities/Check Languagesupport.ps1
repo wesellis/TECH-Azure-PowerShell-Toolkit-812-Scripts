@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Languagesupport
+    Check Languagesupport
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Check Languagesupport
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 
     Detect/validate which languages are supported by inspecting the files that are in the sample folder
 
@@ -27,12 +45,13 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     $sampleFolder = $WEENV:SAMPLE_FOLDER,
     $mainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME
 )
 
-Write-WELog "Checking languages supported by sample: $sampleFolder" " INFO"
+Write-WELog " Checking languages supported by sample: $sampleFolder" " INFO"
 
 $bicepFullPath = " $sampleFolder\$mainTemplateFilenameBicep"
 $isBicepFileFound = Test-Path $bicepFullPath
@@ -61,7 +80,7 @@ Write-WELog " Found ${mainTemplateFilenameJson}: $isJsonFileFound" " INFO"
 
 
 if($isBicepFileFound){
-    $mainTemplateDeploymentFilename = $mainTemplateFilenameBicep
+   ;  $mainTemplateDeploymentFilename = $mainTemplateFilenameBicep
 }else{
    ;  $mainTemplateDeploymentFilename = $mainTemplateFilenameJson
 }
@@ -72,10 +91,8 @@ Write-WELog " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

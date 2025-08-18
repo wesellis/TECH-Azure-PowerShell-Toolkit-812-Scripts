@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Install Bicep
+    Install Bicep
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Install Bicep
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 
 Installs the bicep CLI
 
@@ -27,6 +45,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     $ttkFolder = $WEENV:TTK_FOLDER,
     $bicepUri = $WEENV:BICEP_URI
@@ -35,8 +54,8 @@ param(
 
 
 
-$installPath = "$ttkFolder\bicep"
-$bicepFolder = New-Item -ItemType Directory -Path $installPath -Force
+$installPath = " $ttkFolder\bicep"
+$bicepFolder = New-Item -ItemType Directory -Path $installPath -Force; 
 $bicepPath = " $bicepFolder\bicep.exe"
 Write-WELog " $bicepPath" " INFO"
 (New-Object Net.WebClient).DownloadFile($bicepUri, $bicepPath)
@@ -66,10 +85,8 @@ Write-WELog " Using bicep version: $bicepVersion" " INFO"
 Write-WELog " ##vso[task.setvariable variable=bicep.version]$bicepVersion" " INFO"
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

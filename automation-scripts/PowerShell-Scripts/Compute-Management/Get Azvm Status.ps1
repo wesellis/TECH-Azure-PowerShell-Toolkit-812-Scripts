@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Get Azvm Status
+    Get Azvm Status
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Get Azvm Status
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 function WE-Get-ARMVM {
 
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param(
         [Parameter()]
         [String]$WERGNAME,
@@ -49,11 +67,11 @@ $ErrorActionPreference = "Stop"
 
                         if ($WEVM.name -eq $WEVMNAME ) {
                             $WEVMDetail = Get-AzVM -ResourceGroupName $WERG.ResourceGroupName -Name $WEVM.Name -Status
-                            $WERGN = $WEVMDetail.ResourceGroupName  
+                           ;  $WERGN = $WEVMDetail.ResourceGroupName  
                             foreach ($WEVMStatus in $WEVMDetail.Statuses) { 
                                ;  $WEVMStatusDetail = $WEVMStatus.DisplayStatus
                             }
-                            Write-Output " Resource Group: $WERGN", (" VM Name: " + $WEVM.Name), " Status: $WEVMStatusDetail" `n
+                            Write-Output " Resource Group: $WERGN" , (" VM Name: " + $WEVM.Name), " Status: $WEVMStatusDetail" `n
                         }
                     }
                 }

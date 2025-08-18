@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Create Refs
+    Windows Create Refs
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -18,9 +18,27 @@
 
 <#
 .SYNOPSIS
+    We Enhanced Windows Create Refs
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
+.SYNOPSIS
     Create ReFS or Dev Drive "x" drive volume. 
 .DESCRIPTION
-    Create ReFS or Dev Drive " x" drive volume. If " x" volume already exists then delete it before creating " x".
+    Create ReFS or Dev Drive " x" drive volume. If " x" volume already exists then delete it before creating " x" .
 .PARAMETER DevBoxRefsDrive (optional)
     Drive letter. Defaults to 'Q' to avoid the low drive letters that may already be taken by an Azure VM.
 .PARAMETER OsDriveMinSizeGB (optional)
@@ -44,7 +62,7 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string] $WEDevBoxRefsDrive = " Q",
+    [string] $WEDevBoxRefsDrive = " Q" ,
     [int] $WEOsDriveMinSizeGB = 160,
     [bool] $WEIsDevDrive = $false
 )
@@ -91,7 +109,7 @@ function WE-FindOrCreateReFSOrDevDriveVolume([string] $WEDevBoxRefsDrive, [int] 
 
     $targetReFSSizeMB = $targetReFSSizeGB * 1024
 
-    if ((Get-PSDrive).Name -match " ^" + $WEDevBoxRefsDrive + " $") {
+    if ((Get-PSDrive).Name -match " ^" + $WEDevBoxRefsDrive + " $" ) {
         $WEDiskPartDeleteScriptPath = $WETempDir + " /CreateReFSDelExistingVolume.txt"
         $rmcmd = " SELECT DISK 0 `r`n SELECT VOLUME=$WEDevBoxRefsDrive `r`n DELETE VOLUME OVERRIDE"
         $rmcmd | Set-Content -Path $WEDiskPartDeleteScriptPath
@@ -124,7 +142,7 @@ function WE-FindOrCreateReFSOrDevDriveVolume([string] $WEDevBoxRefsDrive, [int] 
     $WEDevDriveParam = ""
     $WEDriveLabel = " ReFS"
     if ($WEIsDevDrive) {
-        $WEDevDriveParam = " /DevDrv"
+       ;  $WEDevDriveParam = " /DevDrv"
        ;  $WEDriveLabel = " DevDrive"
     }
     Run-Program format " $WEDevBoxDriveWithColon /q /y /FS:ReFS $WEDevDriveParam /V:$WEDriveLabel" -RetryAttempts 1

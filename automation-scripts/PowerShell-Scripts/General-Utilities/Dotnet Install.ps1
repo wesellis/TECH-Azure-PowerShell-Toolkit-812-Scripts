@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Dotnet Install
+    Dotnet Install
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Dotnet Install
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -97,27 +115,35 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-   [string]$WEChannel="LTS" ,
-   [string]$WEVersion="Latest" ,
+   [string]$WEChannel=" LTS" ,
+   [string]$WEVersion=" Latest" ,
    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEJSonFile,
-   [string]$WEInstallDir="<auto>" ,
-   [string]$WEArchitecture="<auto>" ,
-   [ValidateSet("dotnet" , "aspnetcore" , "windowsdesktop" , IgnoreCase = $false)]
+   [string]$WEInstallDir=" <auto>" ,
+   [string]$WEArchitecture=" <auto>" ,
+   [ValidateSet(" dotnet" , " aspnetcore" , " windowsdesktop" , IgnoreCase = $false)]
    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WERuntime,
-   [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'." )]
+   [Obsolete(" This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'." )]
    [switch]$WESharedRuntime,
    [switch]$WEDryRun,
    [switch]$WENoPath,
-   [string]$WEAzureFeed="https://dotnetcli.azureedge.net/dotnet" ,
-   [string]$WEUncachedFeed="https://dotnetcli.blob.core.windows.net/dotnet" ,
+   [string]$WEAzureFeed=" https://dotnetcli.azureedge.net/dotnet" ,
+   [string]$WEUncachedFeed=" https://dotnetcli.blob.core.windows.net/dotnet" ,
    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEFeedCredential,
    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEProxyAddress,
    [switch]$WEProxyUseDefaultCredentials,
@@ -128,7 +154,7 @@ param(
 )
 
 Set-StrictMode -Version Latest
-$WEErrorActionPreference="Stop"
+$WEErrorActionPreference=" Stop"
 $WEProgressPreference=" SilentlyContinue"
 
 if ($WENoCdn) {
@@ -142,7 +168,7 @@ if ($WESharedRuntime -and (-not $WERuntime)) {
 }
 
 
-$WEVersionRegEx=" /\d+\.\d+[^/]+/"
+$WEVersionRegEx=" /\d+\.\d+[^/]+/"; 
 $WEOverrideNonVersionedFiles = !$WESkipNonVersionedFiles
 
 function WE-Say($str) {
@@ -169,7 +195,7 @@ function WE-Say-Warning($str) {
 function WE-Say-Error($str) {
     try {
         # Write-Error is quite oververbose for the purpose of the function, let's write one line with error style settings.
-        $WEHost.UI.WriteErrorLine(" dotnet-install: $str")
+        $WEHost.UI.WriteErrorLine(" dotnet-install: $str" )
     }
     catch {
         Write-Output " dotnet-install: Error: $str"
@@ -188,8 +214,8 @@ function WE-Say-Verbose($str) {
 
 function WE-Say-Invocation($WEInvocation) {
    ;  $command = $WEInvocation.MyCommand;
-    $args = (($WEInvocation.BoundParameters.Keys | foreach { " -$_ `"$($WEInvocation.BoundParameters[$_])`"" }) -join " " )
-    Say-Verbose "$command $args"
+    $args = (($WEInvocation.BoundParameters.Keys | foreach { " -$_ `" $($WEInvocation.BoundParameters[$_])`"" }) -join " " )
+    Say-Verbose " $command $args"
 }
 
 function WE-Invoke-With-Retry([ScriptBlock]$WEScriptBlock, [int]$WEMaxAttempts = 3, [int]$WESecondsBetweenAttempts = 1) {
@@ -229,12 +255,14 @@ function WE-Get-Machine-Architecture() {
 
 function WE-Get-CLIArchitecture-From-Architecture([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEArchitecture) {
     Say-Invocation $WEMyInvocation
 
     switch ($WEArchitecture.ToLower()) {
         { $_ -eq " <auto>" } { return Get-CLIArchitecture-From-Architecture $(Get-Machine-Architecture) }
-        { ($_ -eq " amd64") -or ($_ -eq " x64") } { return " x64" }
+        { ($_ -eq " amd64" ) -or ($_ -eq " x64" ) } { return " x64" }
         { $_ -eq " x86" } { return " x86" }
         { $_ -eq " arm" } { return " arm" }
         { $_ -eq " arm64" } { return " arm64" }
@@ -244,6 +272,8 @@ function WE-Get-CLIArchitecture-From-Architecture([Parameter(Mandatory=$false)]
 
 
 function WE-Get-Version-Info-From-Version-Text([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVersionText) {
     Say-Invocation $WEMyInvocation
@@ -272,7 +302,7 @@ function WE-GetHTTPResponse([Uri] $WEUri)
     Invoke-With-Retry(
     {
 
-        $WEHttpClient = $null
+       ;  $WEHttpClient = $null
 
         try {
             # HttpClient is used vs Invoke-WebRequest in order to support Nano Server which doesn't support the Invoke-WebRequest cmdlet.
@@ -289,8 +319,8 @@ function WE-GetHTTPResponse([Uri] $WEUri)
                 } catch {
                     # Eat the exception and move forward as the above code is an attempt
                     #    at resolving the DefaultProxy that may not have been a problem.
-                    $WEProxyAddress = $null
-                    Say-Verbose(" Exception ignored: $_.Exception.Message - moving forward...")
+                   ;  $WEProxyAddress = $null
+                    Say-Verbose(" Exception ignored: $_.Exception.Message - moving forward..." )
                 }
             }
 
@@ -305,12 +335,12 @@ function WE-GetHTTPResponse([Uri] $WEUri)
             }
             else {
 
-                $WEHttpClient = New-Object System.Net.Http.HttpClient
+               ;  $WEHttpClient = New-Object System.Net.Http.HttpClient
             }
             # Default timeout for HttpClient is 100s.  For a 50 MB download this assumes 500 KB/s average, any less will time out
             # 20 minutes allows it to work over much slower connections.
             $WEHttpClient.Timeout = New-TimeSpan -Minutes 20
-           ;  $WETask = $WEHttpClient.GetAsync(" ${Uri}${FeedCredential}").ConfigureAwait(" false");
+           ;  $WETask = $WEHttpClient.GetAsync(" ${Uri}${FeedCredential}" ).ConfigureAwait(" false" );
             $WEResponse = $WETask.GetAwaiter().GetResult();
 
             if (($null -eq $WEResponse) -or (-not ($WEResponse.IsSuccessStatusCode))) {
@@ -318,8 +348,8 @@ function WE-GetHTTPResponse([Uri] $WEUri)
                 $WEDownloadException = [System.Exception] " Unable to download $WEUri."
 
                 if ($null -ne $WEResponse) {
-                    $WEDownloadException.Data[" StatusCode"] = [int] $WEResponse.StatusCode
-                    $WEDownloadException.Data[" ErrorMessage"] = " Unable to download $WEUri. Returned HTTP status code: " + $WEDownloadException.Data[" StatusCode"]
+                    $WEDownloadException.Data[" StatusCode" ] = [int] $WEResponse.StatusCode
+                    $WEDownloadException.Data[" ErrorMessage" ] = " Unable to download $WEUri. Returned HTTP status code: " + $WEDownloadException.Data[" StatusCode" ]
                 }
 
                 throw $WEDownloadException
@@ -339,11 +369,11 @@ function WE-GetHTTPResponse([Uri] $WEUri)
             }
 
             # Check if there is an issue concerning TLS.
-            if ($WEErrorMsg -like " *SSL/TLS*") {
+            if ($WEErrorMsg -like " *SSL/TLS*" ) {
                 $WEErrorMsg = $WEErrorMsg + " Ensure that TLS 1.2 or higher is enabled to use this script.`r`n"
             }
 
-            $WEDownloadException.Data[" ErrorMessage"] = $WEErrorMsg
+            $WEDownloadException.Data[" ErrorMessage" ] = $WEErrorMsg
             throw $WEDownloadException
         }
         finally {
@@ -356,19 +386,23 @@ function WE-GetHTTPResponse([Uri] $WEUri)
 
 function WE-Get-Latest-Version-Info([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureFeed, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEChannel) {
     Say-Invocation $WEMyInvocation
 
     $WEVersionFileUrl = $null
-    if ($WERuntime -eq " dotnet") {
+    if ($WERuntime -eq " dotnet" ) {
         $WEVersionFileUrl = " $WEUncachedFeed/Runtime/$WEChannel/latest.version"
     }
-    elseif ($WERuntime -eq " aspnetcore") {
+    elseif ($WERuntime -eq " aspnetcore" ) {
         $WEVersionFileUrl = " $WEUncachedFeed/aspnetcore/Runtime/$WEChannel/latest.version"
     }
-    elseif ($WERuntime -eq " windowsdesktop") {
+    elseif ($WERuntime -eq " windowsdesktop" ) {
         $WEVersionFileUrl = " $WEUncachedFeed/WindowsDesktop/$WEChannel/latest.version"
     }
     elseif (-not $WERuntime) {
@@ -387,9 +421,9 @@ function WE-Get-Latest-Version-Info([Parameter(Mandatory=$false)]
     $WEStringContent = $WEResponse.Content.ReadAsStringAsync().Result
 
     switch ($WEResponse.Content.Headers.ContentType) {
-        { ($_ -eq " application/octet-stream") } { $WEVersionText = $WEStringContent }
-        { ($_ -eq " text/plain") } {;  $WEVersionText = $WEStringContent }
-        { ($_ -eq " text/plain; charset=UTF-8") } { $WEVersionText = $WEStringContent }
+        { ($_ -eq " application/octet-stream" ) } {;  $WEVersionText = $WEStringContent }
+        { ($_ -eq " text/plain" ) } {;  $WEVersionText = $WEStringContent }
+        { ($_ -eq " text/plain; charset=UTF-8" ) } { $WEVersionText = $WEStringContent }
         default { throw " ``$WEResponse.Content.Headers.ContentType`` is an unknown .version file content type." }
     }
 
@@ -399,6 +433,8 @@ function WE-Get-Latest-Version-Info([Parameter(Mandatory=$false)]
 }
 
 function WE-Parse-Jsonfile-For-Version([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEJSonFile) {
     Say-Invocation $WEMyInvocation
@@ -417,7 +453,7 @@ function WE-Parse-Jsonfile-For-Version([Parameter(Mandatory=$false)]
         try {
             $WEJSonContent.PSObject.Properties | ForEach-Object {
                 $WEPropertyName = $_.Name
-                if ($WEPropertyName -eq " version") {
+                if ($WEPropertyName -eq " version" ) {
                     $WEVersion = $_.Value
                     Say-Verbose " Version = $WEVersion"
                 }
@@ -439,17 +475,25 @@ function WE-Parse-Jsonfile-For-Version([Parameter(Mandatory=$false)]
 
 function WE-Get-Specific-Version-From-Version([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureFeed, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEChannel, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVersion, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEJSonFile) {
     Say-Invocation $WEMyInvocation
 
     if (-not $WEJSonFile) {
-        if ($WEVersion.ToLower() -eq " latest") {
+        if ($WEVersion.ToLower() -eq " latest" ) {
             $WELatestVersionInfo = Get-Latest-Version-Info -AzureFeed $WEAzureFeed -Channel $WEChannel
             return $WELatestVersionInfo.Version
         }
@@ -464,9 +508,15 @@ function WE-Get-Specific-Version-From-Version([Parameter(Mandatory=$false)]
 
 function WE-Get-Download-Link([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureFeed, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESpecificVersion, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WECLIArchitecture) {
     Say-Invocation $WEMyInvocation
@@ -474,13 +524,13 @@ function WE-Get-Download-Link([Parameter(Mandatory=$false)]
     # If anything fails in this lookup it will default to $WESpecificVersion
     $WESpecificProductVersion = Get-Product-Version -AzureFeed $WEAzureFeed -SpecificVersion $WESpecificVersion
 
-    if ($WERuntime -eq " dotnet") {
+    if ($WERuntime -eq " dotnet" ) {
         $WEPayloadURL = " $WEAzureFeed/Runtime/$WESpecificVersion/dotnet-runtime-$WESpecificProductVersion-win-$WECLIArchitecture.zip"
     }
-    elseif ($WERuntime -eq " aspnetcore") {
+    elseif ($WERuntime -eq " aspnetcore" ) {
         $WEPayloadURL = " $WEAzureFeed/aspnetcore/Runtime/$WESpecificVersion/aspnetcore-runtime-$WESpecificProductVersion-win-$WECLIArchitecture.zip"
     }
-    elseif ($WERuntime -eq " windowsdesktop") {
+    elseif ($WERuntime -eq " windowsdesktop" ) {
         # The windows desktop runtime is part of the core runtime layout prior to 5.0
         $WEPayloadURL = " $WEAzureFeed/Runtime/$WESpecificVersion/windowsdesktop-runtime-$WESpecificProductVersion-win-$WECLIArchitecture.zip"
         if ($WESpecificVersion -match '^(\d+)\.(.*)$')
@@ -506,9 +556,15 @@ function WE-Get-Download-Link([Parameter(Mandatory=$false)]
 
 function WE-Get-LegacyDownload-Link([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureFeed, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESpecificVersion, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WECLIArchitecture) {
     Say-Invocation $WEMyInvocation
@@ -516,7 +572,7 @@ function WE-Get-LegacyDownload-Link([Parameter(Mandatory=$false)]
     if (-not $WERuntime) {
         $WEPayloadURL = " $WEAzureFeed/Sdk/$WESpecificVersion/dotnet-dev-win-$WECLIArchitecture.$WESpecificVersion.zip"
     }
-    elseif ($WERuntime -eq " dotnet") {
+    elseif ($WERuntime -eq " dotnet" ) {
         $WEPayloadURL = " $WEAzureFeed/Runtime/$WESpecificVersion/dotnet-win-$WECLIArchitecture.$WESpecificVersion.zip"
     }
     else {
@@ -530,18 +586,22 @@ function WE-Get-LegacyDownload-Link([Parameter(Mandatory=$false)]
 
 function WE-Get-Product-Version([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAzureFeed, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESpecificVersion) {
     Say-Invocation $WEMyInvocation
 
-    if ($WERuntime -eq " dotnet") {
+    if ($WERuntime -eq " dotnet" ) {
         $WEProductVersionTxtURL = " $WEAzureFeed/Runtime/$WESpecificVersion/productVersion.txt"
     }
-    elseif ($WERuntime -eq " aspnetcore") {
+    elseif ($WERuntime -eq " aspnetcore" ) {
         $WEProductVersionTxtURL = " $WEAzureFeed/aspnetcore/Runtime/$WESpecificVersion/productVersion.txt"
     }
-    elseif ($WERuntime -eq " windowsdesktop") {
+    elseif ($WERuntime -eq " windowsdesktop" ) {
         # The windows desktop runtime is part of the core runtime layout prior to 5.0
         $WEProductVersionTxtURL = " $WEAzureFeed/Runtime/$WESpecificVersion/productVersion.txt"
         if ($WESpecificVersion -match '^(\d+)\.(.*)')
@@ -598,10 +658,12 @@ function WE-Get-User-Share-Path() {
 
 function WE-Resolve-Installation-Path([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEInstallDir) {
     Say-Invocation $WEMyInvocation
 
-    if ($WEInstallDir -eq " <auto>") {
+    if ($WEInstallDir -eq " <auto>" ) {
         return Get-User-Share-Path
     }
     return $WEInstallDir
@@ -609,9 +671,15 @@ function WE-Resolve-Installation-Path([Parameter(Mandatory=$false)]
 
 function WE-Is-Dotnet-Package-Installed([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEInstallRoot, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WERelativePathToPackage, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESpecificVersion) {
     Say-Invocation $WEMyInvocation
@@ -622,6 +690,8 @@ function WE-Is-Dotnet-Package-Installed([Parameter(Mandatory=$false)]
 }
 
 function WE-Get-Absolute-Path([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WERelativeOrAbsolutePath) {
     # Too much spam
@@ -641,6 +711,8 @@ function WE-Get-Path-Prefix-With-Version($path) {
 
 function WE-Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([System.IO.Compression.ZipArchive]$WEZip, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOutPath) {
     Say-Invocation $WEMyInvocation
 
@@ -655,7 +727,7 @@ function WE-Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([
         }
     }
 
-    $ret = $ret | Sort-Object | Get-Unique
+   ;  $ret = $ret | Sort-Object | Get-Unique
 
    ;  $values = ($ret | foreach { " $_" }) -join " ;"
     Say-Verbose " Directories to unpack: $values"
@@ -666,7 +738,11 @@ function WE-Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([
 
 function WE-Extract-Dotnet-Package([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEZipPath, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOutPath) {
     Say-Invocation $WEMyInvocation
@@ -684,7 +760,7 @@ function WE-Extract-Dotnet-Package([Parameter(Mandatory=$false)]
                 $WEDestinationPath = Get-Absolute-Path $(Join-Path -Path $WEOutPath -ChildPath $entry.FullName)
                 $WEDestinationDir = Split-Path -Parent $WEDestinationPath
                 $WEOverrideFiles=$WEOverrideNonVersionedFiles -Or (-Not (Test-Path $WEDestinationPath))
-                if ((-Not $WEDestinationPath.EndsWith(" \")) -And $WEOverrideFiles) {
+                if ((-Not $WEDestinationPath.EndsWith(" \" )) -And $WEOverrideFiles) {
                     New-Item -ItemType Directory -Force -Path $WEDestinationDir | Out-Null
                     [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $WEDestinationPath, $WEOverrideNonVersionedFiles)
                 }
@@ -700,8 +776,10 @@ function WE-Extract-Dotnet-Package([Parameter(Mandatory=$false)]
 
 function WE-DownloadFile($WESource, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOutPath) {
-    if ($WESource -notlike " http*") {
+    if ($WESource -notlike " http*" ) {
         #  Using System.IO.Path.GetFullPath to get the current directory
         #    does not work in this context - $pwd gives the current directory
         if (![System.IO.Path]::IsPathRooted($WESource)) {
@@ -732,33 +810,37 @@ function WE-DownloadFile($WESource, [Parameter(Mandatory=$false)]
 function WE-SafeRemoveFile($WEPath) {
     try {
         if (Test-Path $WEPath) {
-            Remove-Item $WEPath -Force
-            Say-Verbose " The temporary file `"$WEPath`" was removed."
+            Remove-Item $WEPat -Forceh -Force
+            Say-Verbose " The temporary file `" $WEPath`" was removed."
         }
         else
         {
-            Say-Verbose " The temporary file `"$WEPath`" does not exist, therefore is not removed."
+            Say-Verbose " The temporary file `" $WEPath`" does not exist, therefore is not removed."
         }
     }
     catch
     {
-        Say-Warning " Failed to remove the temporary file: `"$WEPath`" , remove it manually."
+        Say-Warning " Failed to remove the temporary file: `" $WEPath`" , remove it manually."
     }
 }
 
 function WE-Prepend-Sdk-InstallRoot-To-Path([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEInstallRoot, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEBinFolderRelativePath) {
-    $WEBinPath = Get-Absolute-Path $(Join-Path -Path $WEInstallRoot -ChildPath $WEBinFolderRelativePath)
+   ;  $WEBinPath = Get-Absolute-Path $(Join-Path -Path $WEInstallRoot -ChildPath $WEBinFolderRelativePath)
     if (-Not $WENoPath) {
        ;  $WESuffixedBinPath = " $WEBinPath;"
         if (-Not $env:path.Contains($WESuffixedBinPath)) {
-            Say " Adding to current process PATH: `"$WEBinPath`" . Note: This change will not be visible if PowerShell was run as a child process."
+            Say " Adding to current process PATH: `" $WEBinPath`" . Note: This change will not be visible if PowerShell was run as a child process."
             $env:path = $WESuffixedBinPath + $env:path
         } else {
-            Say-Verbose " Current process PATH already contains `"$WEBinPath`""
+            Say-Verbose " Current process PATH already contains `" $WEBinPath`""
         }
     }
     else {
@@ -786,15 +868,15 @@ if ($WEDryRun) {
     if ($WELegacyDownloadLink) {
         Say " Legacy named payload URL: $WELegacyDownloadLink"
     }
-    $WERepeatableCommand = " .\$WEScriptName -Version `"$WESpecificVersion`" -InstallDir `" $WEInstallRoot`" -Architecture `" $WECLIArchitecture`""
-    if ($WERuntime -eq " dotnet") {
+    $WERepeatableCommand = " .\$WEScriptName -Version `" $WESpecificVersion`" -InstallDir `" $WEInstallRoot`" -Architecture `" $WECLIArchitecture`""
+    if ($WERuntime -eq " dotnet" ) {
        $WERepeatableCommand = $WERepeatableCommand + " -Runtime `" dotnet`""
     }
-    elseif ($WERuntime -eq " aspnetcore") {
+    elseif ($WERuntime -eq " aspnetcore" ) {
        $WERepeatableCommand = $WERepeatableCommand + " -Runtime `" aspnetcore`""
     }
     foreach ($key in $WEMyInvocation.BoundParameters.Keys) {
-        if (-not (@(" Architecture"," Channel"," DryRun"," InstallDir"," Runtime"," SharedRuntime"," Version") -contains $key)) {
+        if (-not (@(" Architecture" ," Channel" ," DryRun" ," InstallDir" ," Runtime" ," SharedRuntime" ," Version" ) -contains $key)) {
             $WERepeatableCommand = $WERepeatableCommand + " -$key `" $($WEMyInvocation.BoundParameters[$key])`""
         }
     }
@@ -807,15 +889,15 @@ if ($WEDryRun) {
     return
 }
 
-if ($WERuntime -eq " dotnet") {
+if ($WERuntime -eq " dotnet" ) {
     $assetName = " .NET Core Runtime"
     $dotnetPackageRelativePath = " shared\Microsoft.NETCore.App"
 }
-elseif ($WERuntime -eq " aspnetcore") {
+elseif ($WERuntime -eq " aspnetcore" ) {
     $assetName = " ASP.NET Core Runtime"
     $dotnetPackageRelativePath = " shared\Microsoft.AspNetCore.App"
 }
-elseif ($WERuntime -eq " windowsdesktop") {
+elseif ($WERuntime -eq " windowsdesktop" ) {
     $assetName = " .NET Core Windows Desktop Runtime"
     $dotnetPackageRelativePath = " shared\Microsoft.WindowsDesktop.App"
 }
@@ -833,7 +915,7 @@ if ($WESpecificVersion -ne $WEEffectiveVersion)
    $WESpecificVersion = $WEEffectiveVersion
 }
 
-
+; 
 $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $WEInstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $WESpecificVersion
 if ((!$WEOverrideVersion) -and ($isAssetInstalled)) {
     Say " $assetName version $WESpecificVersion is already installed."
@@ -865,12 +947,12 @@ try {
     DownloadFile -Source $WEDownloadLink -OutPath $WEZipPath
 }
 catch {
-    if ($WEPSItem.Exception.Data.Contains(" StatusCode")) {
-        $WEPrimaryDownloadStatusCode = $WEPSItem.Exception.Data[" StatusCode"]
+    if ($WEPSItem.Exception.Data.Contains(" StatusCode" )) {
+        $WEPrimaryDownloadStatusCode = $WEPSItem.Exception.Data[" StatusCode" ]
     }
 
-    if ($WEPSItem.Exception.Data.Contains(" ErrorMessage")) {
-        $WEPrimaryDownloadFailedMsg = $WEPSItem.Exception.Data[" ErrorMessage"]
+    if ($WEPSItem.Exception.Data.Contains(" ErrorMessage" )) {
+        $WEPrimaryDownloadFailedMsg = $WEPSItem.Exception.Data[" ErrorMessage" ]
     } else {
         $WEPrimaryDownloadFailedMsg = $WEPSItem.Exception.Message
     }
@@ -892,12 +974,12 @@ catch {
             DownloadFile -Source $WEDownloadLink -OutPath $WEZipPath
         }
         catch {
-            if ($WEPSItem.Exception.Data.Contains(" StatusCode")) {
-                $WELegacyDownloadStatusCode = $WEPSItem.Exception.Data[" StatusCode"]
+            if ($WEPSItem.Exception.Data.Contains(" StatusCode" )) {
+                $WELegacyDownloadStatusCode = $WEPSItem.Exception.Data[" StatusCode" ]
             }
 
-            if ($WEPSItem.Exception.Data.Contains(" ErrorMessage")) {
-                $WELegacyDownloadFailedMsg = $WEPSItem.Exception.Data[" ErrorMessage"]
+            if ($WEPSItem.Exception.Data.Contains(" ErrorMessage" )) {
+                $WELegacyDownloadFailedMsg = $WEPSItem.Exception.Data[" ErrorMessage" ]
             } else {
                 $WELegacyDownloadFailedMsg = $WEPSItem.Exception.Message
             }
@@ -919,17 +1001,17 @@ catch {
 
 if ($WEDownloadFailed) {
     if (($WEPrimaryDownloadStatusCode -eq 404) -and ((-not $WELegacyDownloadLink) -or ($WELegacyDownloadStatusCode -eq 404))) {
-        throw " Could not find `"$assetName`" with version = $WESpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+        throw " Could not find `" $assetName`" with version = $WESpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
     } else {
         # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
         # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
         if ($WEPrimaryDownloadStatusCode -ne 404) {
-            throw " Could not download `"$assetName`" with version = $WESpecificVersion`r`n$WEPrimaryDownloadFailedMsg"
+            throw " Could not download `" $assetName`" with version = $WESpecificVersion`r`n$WEPrimaryDownloadFailedMsg"
         }
         if (($WELegacyDownloadLink) -and ($WELegacyDownloadStatusCode -ne 404)) {
-            throw " Could not download `"$assetName`" with version = $WESpecificVersion`r`n$WELegacyDownloadFailedMsg"
+            throw " Could not download `" $assetName`" with version = $WESpecificVersion`r`n$WELegacyDownloadFailedMsg"
         }
-        throw " Could not download `"$assetName`" with version = $WESpecificVersion"
+        throw " Could not download `" $assetName`" with version = $WESpecificVersion"
     }
 }
 
@@ -940,8 +1022,8 @@ Extract-Dotnet-Package -ZipPath $WEZipPath -OutPath $WEInstallRoot
 $isAssetInstalled = $false
 
 
-if ($WESpecificVersion -Match " rtm" -or $WESpecificVersion -Match " servicing") {
-    $WEReleaseVersion = $WESpecificVersion.Split(" -")[0]
+if ($WESpecificVersion -Match " rtm" -or $WESpecificVersion -Match " servicing" ) {
+    $WEReleaseVersion = $WESpecificVersion.Split(" -" )[0]
     Say-Verbose " Checking installation: version = $WEReleaseVersion"
     $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $WEInstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $WEReleaseVersion
 }
@@ -949,13 +1031,13 @@ if ($WESpecificVersion -Match " rtm" -or $WESpecificVersion -Match " servicing")
 
 if (!$isAssetInstalled) {
     Say-Verbose " Checking installation: version = $WESpecificVersion"
-    $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $WEInstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $WESpecificVersion
+   ;  $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $WEInstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $WESpecificVersion
 }
 
 
 if (!$isAssetInstalled) {
-    Say-Error " Failed to verify the version of installed `"$assetName`" .`nInstallation source: $WEDownloadLink.`nInstallation location: $WEInstallRoot.`nReport the bug at https://github.com/dotnet/install-scripts/issues."
-    throw " `"$assetName`" with version = $WESpecificVersion failed to install with an unknown error."
+    Say-Error " Failed to verify the version of installed `" $assetName`" .`nInstallation source: $WEDownloadLink.`nInstallation location: $WEInstallRoot.`nReport the bug at https://github.com/dotnet/install-scripts/issues."
+    throw " `" $assetName`" with version = $WESpecificVersion failed to install with an unknown error."
 }
 
 SafeRemoveFile -Path $WEZipPath

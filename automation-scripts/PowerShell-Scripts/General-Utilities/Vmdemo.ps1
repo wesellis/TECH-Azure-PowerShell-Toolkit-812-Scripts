@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Vmdemo
+    Vmdemo
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Vmdemo
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 Configuration vmDemo
 {
 
@@ -24,6 +42,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
 	[string]$WENodeName = 'localhost'
 )
@@ -38,7 +57,7 @@ Node $WENodeName
 
 			}
 		cChocoinstaller InstallChoco {
-				InstallDir  = "C:\Choco"	   
+				InstallDir  = " C:\Choco"	   
 			}
 		cChocoPackageInstaller installIometer {
 				Name        = " iometer"
@@ -121,10 +140,8 @@ Node $WENodeName
 vmDemo
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

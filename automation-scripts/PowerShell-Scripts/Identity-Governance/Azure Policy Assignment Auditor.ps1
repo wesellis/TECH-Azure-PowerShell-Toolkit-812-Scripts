@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Policy Assignment Auditor
+    Azure Policy Assignment Auditor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Policy Assignment Auditor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
@@ -30,11 +50,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPolicyName,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" All", " Compliant", " NonCompliant")]
-    [string]$WEComplianceState = " All",
+    [ValidateSet(" All" , " Compliant" , " NonCompliant" )]
+    [string]$WEComplianceState = " All" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEExportReport,
@@ -43,7 +65,7 @@ param(
     [string]$WEOutputPath = " .\policy-audit-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Policy Assignment Auditor" -Version " 1.0" -Description " Audit policy compliance and assignments"
 
 try {
@@ -62,7 +84,7 @@ try {
         
         $compliantCount = ($states | Where-Object { $_.ComplianceState -eq " Compliant" }).Count
         $nonCompliantCount = ($states | Where-Object { $_.ComplianceState -eq " NonCompliant" }).Count
-        $totalResources = $states.Count
+       ;  $totalResources = $states.Count
         
         [PSCustomObject]@{
             PolicyName = $assignment.Properties.DisplayName

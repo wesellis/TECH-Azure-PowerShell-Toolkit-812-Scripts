@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Runmonitor
+    Runmonitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Runmonitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -39,18 +57,20 @@ function Write-WELog {
 try {
     # Main script execution
 ]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -58,7 +78,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [string] $resourceGroupName,
     [string] $WEDataFactoryName
@@ -69,7 +89,7 @@ if(-not($WEDataFactoryName)) { Throw " You must supply a value for -DataFactoryN
 
 $runId = Invoke-AzureRmDataFactoryV2Pipeline -DataFactoryName $WEDataFactoryName -ResourceGroupName $resourceGroupName -PipelineName " ArmtemplateSampleCopyPipeline"
 
-while ($WETrue) {
+while ($WETrue) {; 
 $run = Get-AzureRmDataFactoryV2PipelineRun -ResourceGroupName $resourceGroupName -DataFactoryName $WEDataFactoryName -PipelineRunId $runId
 if ($run) {
 if ($run.Status -ne 'InProgress') {
@@ -84,7 +104,7 @@ Start-Sleep -Seconds 20
 
 
 
-Write-WELog " Activity run details:" " INFO" -foregroundcolor " Yellow"; 
+Write-WELog " Activity run details:" " INFO" -foregroundcolor " Yellow" ; 
 $result = Get-AzureRmDataFactoryV2ActivityRun -DataFactoryName $WEDataFactoryName -ResourceGroupName $resourceGroupName -PipelineRunId $runId -RunStartedAfter (Get-Date).AddMinutes(-30) -RunStartedBefore (Get-Date).AddMinutes(30)
 $result
 
@@ -95,10 +115,8 @@ Write-WELog " \nActivity 'Error' section:" " INFO" -foregroundcolor " Yellow"
 $result.Error -join " `r`n"
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

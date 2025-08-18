@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Lock Manager
+    Azure Resource Lock Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,14 +16,34 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Lock Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" Create", " List", " Remove", " Audit")]
+    [ValidateSet(" Create" , " List" , " Remove" , " Audit" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
@@ -31,9 +51,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceName,
@@ -41,21 +65,23 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELockName,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" ReadOnly", " Delete")]
-    [string]$WELockLevel = " Delete",
+    [ValidateSet(" ReadOnly" , " Delete" )]
+    [string]$WELockLevel = " Delete" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELockNotes = " Created by Azure Automation",
+    [string]$WELockNotes = " Created by Azure Automation" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEForce
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 Show-Banner -ScriptName " Azure Resource Lock Manager" -Version " 1.0" -Description " Manage resource locks for protection and governance"
 
@@ -107,7 +133,7 @@ try {
         }
         
         " Audit" {
-            $allLocks = Get-AzResourceLock
+           ;  $allLocks = Get-AzResourceLock
            ;  $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name

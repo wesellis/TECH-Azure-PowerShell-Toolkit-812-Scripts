@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Duplicatefoldername
+    Check Duplicatefoldername
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Check Duplicatefoldername
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -37,7 +55,7 @@ param(
 if($WESampleName.StartsWith('modules')){
    # for modules we use version numbers, e.g. 0.9 so will have dupes, the the urlFragment will be the full path for a module and not an issue
 }else{
-    $fragment = $WESampleName.Split('\')[-1] # if the filesystem uses forward slashes, this won't work, which is true of other scripts as well
+   ;  $fragment = $WESampleName.Split('\')[-1] # if the filesystem uses forward slashes, this won't work, which is true of other scripts as well
 }
 ; 
 $d = Get-ChildItem -Directory -Recurse -filter $fragment
@@ -45,17 +63,15 @@ $d = Get-ChildItem -Directory -Recurse -filter $fragment
 Write-Host $d
 
 if($d.count -gt 1){ # there should be at least one since this sample should be found
-    Write-WELog "Duplicate folder names found:" " INFO" -ForegroundColor Yellow
+    Write-WELog " Duplicate folder names found:" " INFO" -ForegroundColor Yellow
     Write-Host $d
     Write-WELog " ##vso[task.setvariable variable=duplicate.folderName]$true" " INFO"
 }
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

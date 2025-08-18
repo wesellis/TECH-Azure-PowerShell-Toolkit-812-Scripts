@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 20.3 New Azvm Windows V2
+    20.3 New Azvm Windows V2
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 20.3 New Azvm Windows V2
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEHelpers = "$WEPsScriptRoot\Helpers\"
 Write-Host 'DNSName:' $WEDNSNameLabel
@@ -31,11 +49,11 @@ $WELocationName = 'CanadaCentral'
 
 $WEVMName = 'TeamViewer'
 $WECustomerName = 'CanadaComputing'
-$WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
 
 
 
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$WETags = @{
 
     " Autoshutown"     = 'ON'
@@ -87,29 +105,29 @@ $WEOSCreateOption = " FromImage"
 
 
 $WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName", " _OSDisk", " _1", " _$WEGUID")
+$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
 
 
-$WEDNSNameLabel = -join (" $WEVMName", " DNS").ToLower() # mydnsname.westus.cloudapp.azure.com
+$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
 
 
-$WENetworkName = -join (" $WEVMName", " _group-vnet")
+$WENetworkName = -join (" $WEVMName" , " _group-vnet" )
 
 
 $WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName", " _$WENICPrefix").ToLower()
-$WEIPConfigName = -join (" $WEVMName", " $WENICName", " _IPConfig1").ToLower()
+$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
+$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
 
 
-$WEPublicIPAddressName = -join (" $WEVMName", " -ip")
+$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
 
 
-$WESubnetName = -join (" $WEVMName", " -subnet")
+$WESubnetName = -join (" $WEVMName" , " -subnet" )
 $WESubnetAddressPrefix = " 10.0.0.0/24"
 $WEVnetAddressPrefix = " 10.0.0.0/16"
 
 
-$WENSGName = -join (" $WEVMName", " -nsg")
+$WENSGName = -join (" $WEVMName" , " -nsg" )
 
 
 $newAzVirtualNetworkSubnetConfigSplat = @{
@@ -155,14 +173,14 @@ $WEPIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
 
 
 
-$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip").Content #Gets the public IP of the current machine
-$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix", " /32")
+$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine
+$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix" , " /32" )
 
 
 
 
 
-$WEASGName = -join (" $WEVMName", " _ASG1")
+$WEASGName = -join (" $WEVMName" , " _ASG1" )
 $newAzApplicationSecurityGroupSplat = @{
     ResourceGroupName = " $WEResourceGroupName"
     Name              = " $WEASGName"
@@ -240,7 +258,7 @@ $newAzNetworkInterfaceSplat = @{
 $WENIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
 
 
-$WEVMLocalAdminPassword = Generate-Password -length 16
+$WEVMLocalAdminPassword = Generate-Password -length 16; 
 $WEVMLocalAdminSecurePassword = $WEVMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
 ; 
 $WECredential = New-Object PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
@@ -356,7 +374,7 @@ New-AzRoleAssignment -ObjectId $WEObjectID -RoleDefinitionName 'Virtual Machine 
 $WEAdminsGroupName = " Azure VM - Admins"
 
 $WEObjectID = (Get-AzADGroup -SearchString $WEAdminsGroupName).ID
-
+; 
 $vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
 
 New-AzRoleAssignment -ObjectId $WEObjectID -RoleDefinitionName 'Virtual Machine Administrator Login' -ResourceGroupName $WEResourceGroupName -ResourceName $WEVMName -ResourceType $vmtype

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Autosnooze Disable
+    Autosnooze Disable
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Autosnooze Disable
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -103,7 +121,7 @@ try
     else
     {
         Write-Output " Getting all the VM's from the subscription..."  
-        $WEAzureVMList=Get-AzureRmVM -ErrorAction SilentlyContinue
+       ;  $WEAzureVMList=Get-AzureRmVM -ErrorAction SilentlyContinue
     }
 
     Write-Output " Calling child runbook to disable the alert on all the VM's..."    
@@ -112,7 +130,7 @@ try
     {
         try
         {
-           ;  $params = @{" VMObject"=$WEVM;" AlertAction"=" Disable";" WebhookUri"=$webhookUri}                    
+           ;  $params = @{" VMObject" =$WEVM;" AlertAction" =" Disable" ;" WebhookUri" =$webhookUri}                    
             $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
         }
         catch

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deployo365Silentwithversion
+    Deployo365Silentwithversion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,20 +16,39 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Deployo365Silentwithversion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
-param([Parameter(Mandatory=$false)][string]$WEOfficeVersion = "Office2016" )
+[CmdletBinding()]
+param([Parameter(Mandatory=$false)][string]$WEOfficeVersion = " Office2016" )
 
 Process {
- $scriptPath = "."
+ $scriptPath = " ."
 
  if ($WEPSScriptRoot) {
    $scriptPath = $WEPSScriptRoot
  } else {
-   $scriptPath = split-path -parent $WEMyInvocation.MyCommand.Definition
+  ;  $scriptPath = split-path -parent $WEMyInvocation.MyCommand.Definition
  }
 
 
@@ -49,10 +68,8 @@ Generate-ODTConfigurationXml -Languages AllInUseLanguages -TargetFilePath $targe
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

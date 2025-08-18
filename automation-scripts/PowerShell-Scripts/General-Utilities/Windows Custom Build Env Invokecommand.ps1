@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Custom Build Env Invokecommand
+    Windows Custom Build Env Invokecommand
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Custom Build Env Invokecommand
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -39,7 +57,7 @@ param(
 )
 
 try {
-    $WEErrorActionPreference = "Stop"
+   ;  $WEErrorActionPreference = " Stop"
     Set-StrictMode -Version Latest
 
     Set-Location $WERepoRoot

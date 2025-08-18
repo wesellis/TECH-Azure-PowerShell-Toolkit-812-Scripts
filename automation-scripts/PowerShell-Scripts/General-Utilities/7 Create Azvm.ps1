@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 7 Create Azvm
+    7 Create Azvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,10 +16,28 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 7 Create Azvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 
 $location = 'Canada Central'
 $imageName = 'FGC_Kroll_Image'
@@ -27,7 +45,7 @@ $rgName = 'FGC_Kroll_Image_RG'
 
 
 $WEImage = Get-AzImage -ResourceGroupName $rgName -ImageName $imageName
-
+; 
 $WETag = @{
 
     Autoshutown     = 'OFF'

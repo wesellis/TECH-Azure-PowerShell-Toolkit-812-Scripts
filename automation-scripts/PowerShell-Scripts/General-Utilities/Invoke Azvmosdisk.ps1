@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azvmosdisk
+    Invoke Azvmosdisk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azvmosdisk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-FunctionName {
 
 
@@ -26,7 +44,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 function WE-FunctionName {
     #Region func Set-AzVMOSDisk
     #Setting the VM OS Disk to the VM
-    $setAzVMOSDiskSplat = @{
+   ;  $setAzVMOSDiskSplat = @{
         VM           = $WEVirtualMachine
         Name         = $WEOSDiskName
         # VhdUri = $WEOSDiskUri

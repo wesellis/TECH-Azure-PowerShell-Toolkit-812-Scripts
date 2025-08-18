@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deleteresourcegroups Parent
+    Deleteresourcegroups Parent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Deleteresourcegroups Parent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .SYNOPSIS  
  Script for deleting the resource groups
 .DESCRIPTION  
@@ -31,9 +49,9 @@ v1.0   - Initial Release
 $ErrorActionPreference = "Stop"
 param(
     [String]$WERGNames,
-    [Parameter(Mandatory=$false,HelpMessage="Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
+    [Parameter(Mandatory=$false,HelpMessage=" Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
 )
-$connectionName = "AzureRunAsConnection"
+$connectionName = " AzureRunAsConnection"
 try
 {
     # Get the connection " AzureRunAsConnection "
@@ -81,10 +99,10 @@ try
                 if($WEWhatIf -eq $false)
                 {
                     Write-Output " Calling the child runbook DeleteRG to delete the resource group $($WEResource)..."
-                    $params = @{" RGName"=$WEResource}                  
+                   ;  $params = @{" RGName" =$WEResource}                  
                    ;  $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name " DeleteResourceGroup_Child" -Parameters $params
                 }                
-                $WEResources = $WEResources + $WEResource                
+               ;  $WEResources = $WEResources + $WEResource                
             }
         }
         if($WEWhatIf -eq $true)

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Build State Reporter
+    Build State Reporter
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,12 +17,30 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Build State Reporter
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .DESCRIPTION
     Reports information about the current build environment.
     The script is expected to be launched from the same environment from where a build is about to be executed right before its start.
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = "Stop"; 
 $WEEnvVarExclusionList = @()
 Set-StrictMode -Version Latest
 

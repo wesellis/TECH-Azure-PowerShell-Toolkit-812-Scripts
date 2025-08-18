@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Start Triggers
+    Start Triggers
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Start Triggers
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [switch] $WEStop
 )
@@ -39,8 +58,8 @@ $env:Triggers.Split('|') `
     $trigger = $_
     if ($WEStop)
     {
-        Write-Output "Stopping trigger $trigger..."
-        $triggerOutput = Stop-AzDataFactoryV2Trigger `
+        Write-Output " Stopping trigger $trigger..."
+       ;  $triggerOutput = Stop-AzDataFactoryV2Trigger `
             -ResourceGroupName $env:DataFactoryResourceGroup `
             -DataFactoryName $env:DataFactoryName `
             -Name $trigger `
@@ -85,10 +104,8 @@ if (-not [string]::IsNullOrWhiteSpace($env:Pipelines))
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

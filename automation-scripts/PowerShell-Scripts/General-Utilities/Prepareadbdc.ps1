@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Prepareadbdc
+    Prepareadbdc
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Prepareadbdc
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 configuration PrepareADBDC
 {
    [CmdletBinding()
@@ -23,6 +41,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
         [Parameter(Mandatory)]
         [String]$WEDNSServer,
@@ -32,7 +51,7 @@ param(
     )
 
     Import-DscResource -ModuleName  xStorage, xNetworking
-    $WEInterface=Get-NetAdapter|Where Name -Like "Ethernet*" |Select-Object -First 1
+   ;  $WEInterface=Get-NetAdapter|Where Name -Like " Ethernet*" |Select-Object -First 1
    ;  $WEInterfaceAlias=$($WEInterface.Name)
 
     Node localhost
@@ -52,7 +71,7 @@ param(
         xDisk ADDataDisk
         {
             DiskNumber = 2
-            DriveLetter = "F"
+            DriveLetter = " F"
             DependsOn = " [xWaitForDisk]Disk2"
         }
 
@@ -87,10 +106,8 @@ param(
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installiis
+    Installiis
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Installiis
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Configuration InstallIIS
 
@@ -96,7 +114,7 @@ Node $nodeName
             $dest = " C:\WindowsAzure\WebDeploy_amd64_en-US.msi"
             Invoke-WebRequest $source -OutFile $dest
         }
-        GetScript = {@{Result = " DownloadWebDeploy"}}
+        GetScript = {@{Result = " DownloadWebDeploy" }}
         DependsOn = " [WindowsFeature]WebServerRole"
     }
     Package InstallWebDeploy
@@ -128,8 +146,8 @@ Node $nodeName
         SetScript ={
 		$WEDestination= " C:\WindowsAzure\WebApplication.zip" 
         Invoke-WebRequest -Uri $using:WebDeployPackagePath -OutFile $WEDestination -Verbose
-        $WEArgument = '-source:package=" C:\WindowsAzure\WebApplication.zip" -dest:auto,ComputerName=" localhost", -verb:sync -allowUntrusted'
-	; 	$WEMSDeployPath = (Get-ChildItem " HKLM:\SOFTWARE\Microsoft\IIS Extensions\MSDeploy" | Select -Last 1).GetValue(" InstallPath")
+       ;  $WEArgument = '-source:package=" C:\WindowsAzure\WebApplication.zip" -dest:auto,ComputerName=" localhost" , -verb:sync -allowUntrusted'
+	; 	$WEMSDeployPath = (Get-ChildItem " HKLM:\SOFTWARE\Microsoft\IIS Extensions\MSDeploy" | Select -Last 1).GetValue(" InstallPath" )
         Start-Process " $WEMSDeployPath\msdeploy.exe" $WEArgument -Verb runas 
         }
 	}

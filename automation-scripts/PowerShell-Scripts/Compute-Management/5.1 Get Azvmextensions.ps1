@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 5.1 Get Azvmextensions
+    5.1 Get Azvmextensions
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 5.1 Get Azvmextensions
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -103,7 +121,7 @@ Get-AzVMExtensionImage @getAzVMExtensionImageSplat | Select-Object *
 
 
 $WEVMName = " TrueSky1"
-
+; 
 $WEResourceGroupName = " CCI_TrueSky1_RG"
 ; 
 $getAzVMSplat = @{

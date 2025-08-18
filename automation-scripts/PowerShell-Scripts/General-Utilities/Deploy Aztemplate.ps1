@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deploy Aztemplate
+    Deploy Aztemplate
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,29 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Deploy Aztemplate
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [string] [Parameter(Mandatory = $true)] $WEArtifactStagingDirectory,
-    [string] [Parameter(Mandatory = $true)][alias("ResourceGroupLocation" )] $WELocation,
+    [string] [Parameter(Mandatory = $true)][alias(" ResourceGroupLocation" )] $WELocation,
     [string] $WEResourceGroupName = (Split-Path $WEArtifactStagingDirectory -Leaf),
     [switch] $WEUploadArtifacts,
     [string] $WEStorageAccountName,
@@ -30,8 +48,8 @@ param(
     [string] $WEDSCSourceFolder = $WEArtifactStagingDirectory + '.\DSC',
     [switch] $WEBuildDscPackage,
     [switch] $WEValidateOnly,
-    [string] $WEDebugOptions = "None" ,
-    [string] $WEMode = "Incremental" ,
+    [string] $WEDebugOptions = " None" ,
+    [string] $WEMode = " Incremental" ,
     [string] $WEDeploymentName = ((Split-Path $WETemplateFile -LeafBase) + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')),
     [string] $WEManagementGroupId,
     [switch] $WEDev,
@@ -40,7 +58,7 @@ param(
 )
 
 try {
-    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent("AzQuickStarts-$WEUI$($host.name)" .replace(" " , "_" ), "1.0" )
+    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
 }
 catch { }
 
@@ -52,18 +70,20 @@ function WE-Format-ValidationOutput {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -226,9 +246,9 @@ if ($WEUploadArtifacts -Or $useAbsolutePathStaging -or $WEArtifactsLocationSasTo
     $WEArtifactFilePaths = Get-ChildItem $WEArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
     foreach ($WESourcePath in $WEArtifactFilePaths) {
         
-        if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*")) {
+        if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*" )) {
             #When using DSC, just copy the DSC archive, not all the modules and source files
-            $blobName = ($WESourcePath -ireplace [regex]::Escape($WEArtifactStagingDirectory), "" ).TrimStart("/" ).TrimStart("\" )
+            $blobName = ($WESourcePath -ireplace [regex]::Escape($WEArtifactStagingDirectory), "" ).TrimStart(" /" ).TrimStart(" \" )
             Set-AzStorageBlobContent -File $WESourcePath -Blob $blobName -Container $WEStorageContainerName -Context $WEStorageAccount.Context -Force
         }
     }
@@ -244,7 +264,7 @@ if ($WEUploadArtifacts -Or $useAbsolutePathStaging -or $WEArtifactsLocationSasTo
         $WEOptionalParameters[$WEArtifactsLocationSasTokenName] = ConvertTo-SecureString $sasToken -AsPlainText -Force
         $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem $WETemplateFile).Name + $sasToken)
     }elseif (!$useAbsolutePathStaging) {
-        $WEOptionalParameters['QueryString'] = $sasToken.TrimStart("?" ) # remove leading ? as it is not part of the QueryString
+        $WEOptionalParameters['QueryString'] = $sasToken.TrimStart(" ?" ) # remove leading ? as it is not part of the QueryString
         $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem $WETemplateFile).Name)
     }
 }
@@ -261,7 +281,7 @@ Write-Host ($WETemplateArgs | Out-String)
 Write-Host ($WEOptionalParameters | Out-String)
 
 
-if ($deploymentScope -eq "ResourceGroup" ) {
+if ($deploymentScope -eq " ResourceGroup" ) {
     if ((Get-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue) -eq $null) {
         New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -Force -ErrorAction Stop
     }
@@ -270,7 +290,7 @@ if ($deploymentScope -eq "ResourceGroup" ) {
 if ($WEValidateOnly) {
     
     switch ($deploymentScope) {
-        "resourceGroup" {
+        " resourceGroup" {
             $WEErrorMessages = Format-ValidationOutput (Test-AzResourceGroupDeployment -ResourceGroupName $WEResourceGroupName @TemplateArgs @OptionalParameters)
         }
         " Subscription" {
@@ -294,7 +314,7 @@ if ($WEValidateOnly) {
 
 else {
 
-    $WEErrorActionPreference = 'Continue' # Switch to Continue" so multiple errors can be formatted and output
+   ;  $WEErrorActionPreference = 'Continue' # Switch to Continue" so multiple errors can be formatted and output
     
     switch ($deploymentScope) {
         " resourceGroup" {

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Aznetworksecurityruleconfig
+    Invoke Aznetworksecurityruleconfig
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Aznetworksecurityruleconfig
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzNetworkSecurityRuleConfig {
 }
 
@@ -25,7 +43,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function WE-Invoke-AzNetworkSecurityRuleConfig {
 
-    #Region func New-AzNetworkSecurityRuleConfig
+    #Region func New-AzNetworkSecurityRuleConfig; 
 $newAzNetworkSecurityRuleConfigSplat = @{
     # Name = 'rdp-rule'
     Name                                = 'RDP-rule'

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Uploadcerts
+    Uploadcerts
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,26 +16,44 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Uploadcerts
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
 	[string[]] $targets,
-	[string] $userpwd="CA_admin:CA_admin" ,
-	[string] $skbase="/safekit"
+	[string] $userpwd=" CA_admin:CA_admin" ,
+	[string] $skbase=" /safekit"
 )
 
 $curlcmd=" $skbase/private/bin/curl.exe"
 $safeweb=" $skbase/web"
 
-if (Test-Path " $safeweb/conf/ca"){
+if (Test-Path " $safeweb/conf/ca" ){
 	Write-WELog " CA already initialized, skipping certificate generation" " INFO"
 }else{
 $caname = " /CN=Safekit CA"
 
 try{
-	$meta = Invoke-RestMethod -Headers @{" Metadata"=" true"} -URI " http://169.254.169.254/metadata/instance?api-version=2017-08-01" -Method get
+	$meta = Invoke-RestMethod -Headers @{" Metadata" =" true" } -URI " http://169.254.169.254/metadata/instance?api-version=2017-08-01" -Method get
 	if($meta) {
-		$caname = " /CN=SafeKit CA for Azure $($meta.compute.resourceGroupName) cluster"
+	; 	$caname = " /CN=SafeKit CA for Azure $($meta.compute.resourceGroupName) cluster"
 	}
 }catch{}
 ; 

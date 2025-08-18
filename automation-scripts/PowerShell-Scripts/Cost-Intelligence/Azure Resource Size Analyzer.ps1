@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Size Analyzer
+    Azure Resource Size Analyzer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Size Analyzer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -34,7 +54,7 @@ param(
     [switch]$WEIncludeRecommendations
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Resource Size Analyzer" -Version " 1.0" -Description " Analyze resource utilization and sizing"
 
 try {
@@ -69,7 +89,7 @@ try {
     Write-WELog " VM Size Analysis:" " INFO" -ForegroundColor Cyan
     $sizeAnalysis | Format-Table VMName, CurrentSize, Cores, MemoryMB, PowerState, Recommendation
 
-    $totalVMs = $sizeAnalysis.Count
+   ;  $totalVMs = $sizeAnalysis.Count
    ;  $runningVMs = ($sizeAnalysis | Where-Object { $_.PowerState -eq " VM running" }).Count
     
     Write-WELog " Summary:" " INFO" -ForegroundColor Green

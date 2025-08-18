@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Environment Cloner
+    Azure Environment Cloner
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,24 +16,48 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Environment Cloner
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESourceResourceGroup,
     [Parameter(Mandatory=$true)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETargetResourceGroup,
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETargetLocation,
     [Parameter(Mandatory=$false)][string[]]$WEExcludeResourceTypes = @(),
     [Parameter(Mandatory=$false)][hashtable]$WETagOverrides = @{},
-    [Parameter(Mandatory=$false)][string]$WENamingConvention = " {OriginalName}",
+    [Parameter(Mandatory=$false)][string]$WENamingConvention = " {OriginalName}" ,
     [Parameter(Mandatory=$false)][switch]$WEIncludeSecrets,
     [Parameter(Mandatory=$false)][switch]$WEWhatIf,
     [Parameter(Mandatory=$false)][switch]$WEForce
@@ -68,7 +92,7 @@ try {
     $dependencyMap = @{}
     
     foreach ($resource in $filteredResources) {
-        $newName = $WENamingConvention.Replace(" {OriginalName}", $resource.Name)
+        $newName = $WENamingConvention.Replace(" {OriginalName}" , $resource.Name)
         $dependencyMap[$resource.ResourceId] = @{
             OriginalResource = $resource
             NewName = $newName
@@ -159,7 +183,7 @@ try {
     
     # Apply tag overrides
     if ($WETagOverrides.Count -gt 0 -and -not $WEWhatIf) {
-        $newResources = Get-AzResource -ResourceGroupName $WETargetResourceGroup
+       ;  $newResources = Get-AzResource -ResourceGroupName $WETargetResourceGroup
         foreach ($resource in $newResources) {
             try {
                ;  $currentTags = $resource.Tags ?? @{}

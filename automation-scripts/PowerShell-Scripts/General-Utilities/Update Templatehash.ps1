@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Update Templatehash
+    Update Templatehash
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,28 +16,48 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Update Templatehash
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string]$WEStorageAccountResourceGroupName = "azure-quickstarts-template-hash" ,
-    [string]$WEStorageAccountName = "azurequickstartshash" ,
-    [string]$WETableName = "QuickStartsTemplateHash" ,
+    [string]$WEStorageAccountResourceGroupName = " azure-quickstarts-template-hash" ,
+    [string]$WEStorageAccountName = " azurequickstartshash" ,
+    [string]$WETableName = " QuickStartsTemplateHash" ,
     [string]$WERepoRoot = $WEENV:BUILD_REPOSITORY_LOCALPATH,
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the path to the sample
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$bearerToken,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
 
-If(!$WERepoRoot.EndsWith("\" )){
-    $WERepoRoot = "$WERepoRoot\"
+If(!$WERepoRoot.EndsWith(" \" )){
+    $WERepoRoot = " $WERepoRoot\"
 }
 
 
 if ($bearerToken -eq "" ) {
-    Write-WELog "Getting token..." " INFO"
+    Write-WELog " Getting token..." " INFO"
     Import-Module Az.Accounts
     $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
     $azContext = Get-AzContext
@@ -58,7 +78,7 @@ Get-AzStorageTable -Name $tableName -Context $ctx -Verbose
 $cloudTable = (Get-AzStorageTable -Name $tableName -Context $ctx).CloudTable
 
 
-if ($WEENV:BUILD_REASON -eq " Schedule" -or $WEENV:BUILD_REASON -eq " Manual") { # calculate hash for everything in the repo on the scheduled build
+if ($WEENV:BUILD_REASON -eq " Schedule" -or $WEENV:BUILD_REASON -eq " Manual" ) { # calculate hash for everything in the repo on the scheduled build
     
     $WEArtifactFilePaths = Get-ChildItem -Path $WERepoRoot .\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
 
@@ -70,7 +90,7 @@ if ($WEENV:BUILD_REASON -eq " Schedule" -or $WEENV:BUILD_REASON -eq " Manual") {
 
 foreach ($WESourcePath in $WEArtifactFilePaths) {
 
-    if ($WESourcePath -like " *\test\*") {
+    if ($WESourcePath -like " *\test\*" ) {
         Write-host " Skipping... $WESourcePath"
         continue
     }
@@ -80,13 +100,13 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     #Write-Output " MetadataPath: $metadataPath"
     $sampleName = $metadataPath -ireplace [regex]::Escape($WERepoRoot), ""
     #Write-output " SampleName: $sampleName"
-    $partitionKey = $sampleName.Replace(" /", " @").Replace(" \", " @")
+    $partitionKey = $sampleName.Replace(" /" , " @" ).Replace(" \" , " @" )
     #Write-Output " PartitionKey: $partitionKey"
     
     # Find each template file in the sample (prereqs, nested, etc.)
     $WEJsonFilePaths = Get-ChildItem -Path $metadataPath .\*.json -Recurse -File | ForEach-Object -Process { $_.FullName }
     foreach ($file in $WEJsonFilePaths) {
-        if ($file -like " *\test\*") {
+        if ($file -like " *\test\*" ) {
             Write-host " Skipping..."
             continue
         }
@@ -95,7 +115,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
         $json = Get-Content -Path $file -Raw
 
         # Check the schema to see if this is a template, then get the hash and update the table
-        if ($json -like " *deploymentTemplate.json#*") {
+        if ($json -like " *deploymentTemplate.json#*" ) {
     
             # Get TemplateHash
             Write-WELog " Requesting Hash for file: $file" " INFO"
@@ -109,7 +129,7 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                 Write-Error " Failed to get hash for: $file"
             }
             
-            $templateHash = $response.templateHash
+           ;  $templateHash = $response.templateHash
 
             # Find row in table if it exists, if it doesn't exist, add a new row with the new hash
             Write-Output " Fetching row for: *$templateHash*"
@@ -123,8 +143,8 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                     -partitionKey $partitionKey `
                     -rowKey $templateHash `
                     -property @{
-                    " version"  = " $templateHash-$(Get-Date -Format 'yyyy-MM-dd')"; `
-                        " file" = " $($file -ireplace [regex]::Escape("$WERepoRoot$sampleName\" ), '')"
+                    " version"  = " $templateHash-$(Get-Date -Format 'yyyy-MM-dd')" ; `
+                        " file" = " $($file -ireplace [regex]::Escape(" $WERepoRoot$sampleName\" ), '')"
                     }
             }
         }

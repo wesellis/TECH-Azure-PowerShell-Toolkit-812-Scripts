@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azvmsourceimage
+    Invoke Azvmsourceimage
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azvmsourceimage
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzVMSourceImage {
 }
 
@@ -25,7 +43,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function WE-Invoke-AzVMSourceImage {
     #Region func Set-AzVMSourceImage 
-    $setAzVMSourceImageSplat = @{
+   ;  $setAzVMSourceImageSplat = @{
         VM            = $WEVirtualMachine
         # PublisherName = " Canonical"
         # Offer         = " 0001-com-ubuntu-server-focal"

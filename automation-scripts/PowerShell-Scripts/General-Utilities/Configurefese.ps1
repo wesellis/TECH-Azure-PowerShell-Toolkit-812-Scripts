@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configurefese
+    Configurefese
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configurefese
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 configuration ConfigureFEVM
 {
@@ -49,21 +67,21 @@ param(
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.2.1
 
     # Init
-    [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
     [String] $WEComputerName = Get-Content env:computername
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
 
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)", $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)", $WESPSetupCreds.Password)
-    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)", $WESPFarmCreds.Password)
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPSetupCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPSetupCreds.UserName)" , $WESPSetupCreds.Password)
+    [System.Management.Automation.PSCredential] $WESPFarmCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WESPFarmCreds.UserName)" , $WESPFarmCreds.Password)
     
     # Setup settings
     [String] $WESetupPath = " C:\DSC Data"
     [String] $WEDCSetupPath = " \\$WEDCServerName\C$\DSC Data"
     [String] $WEDscStatusFilePath = " $WESetupPath\dsc-status-$WEComputerName.log"
-    [String] $WESharePointBuildLabel = $WESharePointVersion.Split(" -")[1]
-    [String] $WESharePointBitsPath = Join-Path -Path $WESetupPath -ChildPath " Binaries" #[environment]::GetEnvironmentVariable(" temp"," machine")
+    [String] $WESharePointBuildLabel = $WESharePointVersion.Split(" -" )[1]
+    [String] $WESharePointBitsPath = Join-Path -Path $WESetupPath -ChildPath " Binaries" #[environment]::GetEnvironmentVariable(" temp" ," machine" )
     [String] $WESharePointIsoFullPath = Join-Path -Path $WESharePointBitsPath -ChildPath " OfficeServer.iso"
     [String] $WESharePointIsoDriveLetter = " S"
     [String] $WEAdfsDnsEntryName = " adfs"
@@ -71,7 +89,7 @@ param(
     # SharePoint settings
     [String] $WESPDBPrefix = " SPDSC_"
     [String] $WEMySiteHostAlias = " OhMy"
-    [String] $WEHNSC1Alias = " HNSC1"
+    [String];  $WEHNSC1Alias = " HNSC1"
 
     Node localhost
     {
@@ -97,17 +115,17 @@ param(
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
         WindowsFeature AddADTools {
-            Name = " RSAT-AD-Tools"; Ensure = " Present"; 
+            Name = " RSAT-AD-Tools" ; Ensure = " Present" ; 
         }
         
         WindowsFeature AddDnsTools {
-            Name = " RSAT-DNS-Server"; Ensure = " Present"; 
+            Name = " RSAT-DNS-Server" ; Ensure = " Present" ; 
         }
         WindowsFeature AddADLDS {
-            Name = " RSAT-ADLDS"; Ensure = " Present"; 
+            Name = " RSAT-ADLDS" ; Ensure = " Present" ; 
         }
         WindowsFeature AddADCSManagementTools {
-            Name = " RSAT-ADCS-Mgmt"; Ensure = " Present"; 
+            Name = " RSAT-ADCS-Mgmt" ; Ensure = " Present" ; 
         }
         DnsServerAddress SetDNS {
             Address = $WEDNSServerIP; InterfaceAlias = $WEInterfaceAlias; AddressFamily = 'IPv4' 
@@ -115,12 +133,12 @@ param(
         
 
         # # xCredSSP is required for SharePointDsc resources SPUserProfileServiceApp and SPDistributedCacheService
-        # xCredSSP CredSSPServer { Ensure = " Present"; Role = " Server"; DependsOn = " [DnsServerAddress]SetDNS" }
-        # xCredSSP CredSSPClient { Ensure = " Present"; Role = " Client"; DelegateComputers = " *.$WEDomainFQDN", " localhost"; DependsOn = " [xCredSSP]CredSSPServer" }
+        # xCredSSP CredSSPServer { Ensure = " Present" ; Role = " Server" ; DependsOn = " [DnsServerAddress]SetDNS" }
+        # xCredSSP CredSSPClient { Ensure = " Present" ; Role = " Client" ; DelegateComputers = " *.$WEDomainFQDN" , " localhost" ; DependsOn = " [xCredSSP]CredSSPServer" }
 
         # Allow NTLM on HTTPS sites when site host name is different than the machine name - https://docs.microsoft.com/en-US/troubleshoot/windows-server/networking/accessing-server-locally-with-fqdn-cname-alias-denied
         Registry DisableLoopBackCheck {
-            Key = " HKLM:\System\CurrentControlSet\Control\Lsa"; ValueName = " DisableLoopbackCheck"; ValueData = " 1"; ValueType = " Dword"; Ensure = " Present" 
+            Key = " HKLM:\System\CurrentControlSet\Control\Lsa" ; ValueName = " DisableLoopbackCheck" ; ValueData = " 1" ; ValueType = " Dword" ; Ensure = " Present" 
         }
 
         # Enable TLS 1.2 - https://learn.microsoft.com/en-us/azure/active-directory/app-proxy/application-proxy-add-on-premises-application#tls-requirements
@@ -165,15 +183,15 @@ param(
         # From https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell :
         # Starting in Windows 10, version 1607, MAX_PATH limitations have been removed from common Win32 file and directory functions. However, you must opt-in to the new behavior.
         Registry SetLongPathsEnabled {
-            Key = " HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"; ValueName = " LongPathsEnabled"; ValueType = " DWORD"; ValueData = " 1"; Force = $true; Ensure = " Present" 
+            Key = " HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" ; ValueName = " LongPathsEnabled" ; ValueType = " DWORD" ; ValueData = " 1" ; Force = $true; Ensure = " Present" 
         }
         
         Registry ShowWindowsExplorerRibbon {
-            Key = " HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"; ValueName = " ExplorerRibbonStartsMinimized"; ValueType = " DWORD"; ValueData = " 4"; Force = $true; Ensure = " Present" 
+            Key = " HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer" ; ValueName = " ExplorerRibbonStartsMinimized" ; ValueType = " DWORD" ; ValueData = " 4" ; Force = $true; Ensure = " Present" 
         }
         
         SqlAlias AddSqlAlias {
-            Ensure = " Present"; Name = $WESQLAlias; ServerName = $WESQLServerName; Protocol = " TCP"; TcpPort = 1433 
+            Ensure = " Present" ; Name = $WESQLAlias; ServerName = $WESQLServerName; Protocol = " TCP" ; TcpPort = 1433 
         }
         
         Script EnableFileSharing {
@@ -349,7 +367,7 @@ param(
             DependsOn        = " [SPInstallPrereqs]InstallPrerequisites"
         }
 
-        if ($WESharePointBuildLabel -ne " RTM") {
+        if ($WESharePointBuildLabel -ne " RTM" ) {
             foreach ($package in ($WESharePointBits | Where-Object { $_.Label -eq $WESharePointBuildLabel }).Packages) {
                 $packageUrl = [uri] $package.DownloadUrl
                 $packageFilename = $packageUrl.Segments[$packageUrl.Segments.Count - 1]
@@ -373,7 +391,7 @@ param(
                         $needReboot = $false
                         Write-Verbose -Verbose -Message " Starting installation of SharePoint update '$WESharePointBuildLabel', file '$($packageFile.Name)'..."
                         Unblock-File -Path $packageFile -Confirm:$false
-                        $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
+                       ;  $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
                         if ($exitRebootCodes.Contains($process.ExitCode)) {
                            ;  $needReboot = $true
                         }
@@ -387,9 +405,9 @@ param(
                     }
                     TestScript = {
                         $WESharePointBuildLabel = $using:SharePointBuildLabel
-                        $packageFilePath = $using:packageFilePath
+                       ;  $packageFilePath = $using:packageFilePath
                        ;  $packageFile = Get-ChildItem -Path $packageFilePath
-                        return (Test-Path " HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($WESharePointBuildLabel)_$($packageFile.Name)")
+                        return (Test-Path " HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($WESharePointBuildLabel)_$($packageFile.Name)" )
                     }
                     GetScript  = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                     DependsOn  = " [SPInstall]InstallBinaries"
@@ -405,25 +423,25 @@ param(
 
         # IIS cleanup cannot be executed earlier in SharePoint SE: It uses a base image of Windows Server without IIS (installed by SPInstallPrereqs)
         WebAppPool RemoveDotNet2Pool {
-            Name = " .NET v2.0"; Ensure = " Absent"; 
+            Name = " .NET v2.0" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet2ClassicPool {
-            Name = " .NET v2.0 Classic"; Ensure = " Absent"; 
+            Name = " .NET v2.0 Classic" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet45Pool {
-            Name = " .NET v4.5"; Ensure = " Absent"; 
+            Name = " .NET v4.5" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDotNet45ClassicPool {
-            Name = " .NET v4.5 Classic"; Ensure = " Absent"; 
+            Name = " .NET v4.5 Classic" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveClassicDotNetPool {
-            Name = " Classic .NET AppPool"; Ensure = " Absent"; 
+            Name = " Classic .NET AppPool" ; Ensure = " Absent" ; 
         }
         WebAppPool RemoveDefaultAppPool {
-            Name = " DefaultAppPool"; Ensure = " Absent"; 
+            Name = " DefaultAppPool" ; Ensure = " Absent" ; 
         }
         WebSite    RemoveDefaultWebSite {
-            Name = " Default Web Site"; Ensure = " Absent"; PhysicalPath = " C:\inetpub\wwwroot"; 
+            Name = " Default Web Site" ; Ensure = " Absent" ; PhysicalPath = " C:\inetpub\wwwroot" ; 
         }
 
         Script CreateSPLOGSFileShare {
@@ -431,7 +449,7 @@ param(
             { 
                 $foldername = " C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
                 $shareName = " SPLOGS"
-                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'")) {
+                # if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
                 $shares = [WMICLASS]" WIN32_Share"
                 if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
                     Write-Verbose -Verbose -Message " Failed to create file share '$sharename' for folder '$foldername'"
@@ -444,7 +462,7 @@ param(
             TestScript = 
             {
                 $shareName = " SPLOGS"
-                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'")) {
+                if (!(Get-CimInstance Win32_Share -Filter " name='$sharename'" )) {
                     return $false
                 } else {
                     return $true
@@ -472,7 +490,7 @@ param(
             {
                 $dnsRecordFQDN = " $($using:AdfsDnsEntryName).$($using:DomainFQDN)"
                 $dnsRecordFound = $false
-                $sleepTime = 15
+               ;  $sleepTime = 15
                 do {
                     try {
                         [Net.DNS]::GetHostEntry($dnsRecordFQDN)
@@ -486,7 +504,7 @@ param(
                 } while ($false -eq $dnsRecordFound)
             }
             GetScript  = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
+            TestScript = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)" ); return $true } catch { return $false } }
             DependsOn  = " [DnsServerAddress]SetDNS"
         }
 
@@ -523,7 +541,7 @@ param(
         }
 
         Registry ShowFileExtensions {
-            Key = " HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; ValueName = " HideFileExt"; ValueType = " DWORD"; ValueData = " 0"; Force = $true; Ensure = " Present"; PsDscRunAsCredential = $WEDomainAdminCredsQualified 
+            Key = " HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" ; ValueName = " HideFileExt" ; ValueType = " DWORD" ; ValueData = " 0" ; Force = $true; Ensure = " Present" ; PsDscRunAsCredential = $WEDomainAdminCredsQualified 
         }
         
         # This script is still needed
@@ -567,7 +585,7 @@ param(
             Name                 = " fiddler"
             Ensure               = " Present"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [cChocoInstaller]InstallChoco", " [PendingReboot]RebootOnSignalFromJoinDomain"
+            DependsOn            = " [cChocoInstaller]InstallChoco" , " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         # Install ULSViewer as $WEDomainAdminCredsQualified to ensure that the shortcut is visible on the desktop
@@ -575,7 +593,7 @@ param(
             Name                 = " ulsviewer"
             Ensure               = " Present"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
-            DependsOn            = " [cChocoInstaller]InstallChoco", " [PendingReboot]RebootOnSignalFromJoinDomain"
+            DependsOn            = " [cChocoInstaller]InstallChoco" , " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         #********************************************************************
@@ -639,13 +657,13 @@ param(
         Group AddSPSetupAccountToAdminGroup {
             GroupName            = " Administrators"
             Ensure               = " Present"
-            MembersToInclude     = @(" $($WESPSetupCredsQualified.UserName)")
+            MembersToInclude     = @(" $($WESPSetupCredsQualified.UserName)" )
             Credential           = $WEDomainAdminCredsQualified
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
             DependsOn            = " [Script]WaitForSPFarmReadyToJoin"
         }
 
-        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\", otherwise certificate request will fail
+        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\" , otherwise certificate request will fail
         # At this point it is safe to assume that the DC finished provisioning AD CS
         Script UpdateGPOToTrustRootCACert {
             SetScript            =
@@ -832,25 +850,25 @@ param(
             {
                 $WEWshShell = New-Object -comObject WScript.Shell
                 # Shortcut to the setup folder
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\Setup data.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\Setup data.lnk" )
                 $WEShortcut.TargetPath = $using:SetupPath
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Central Administration
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Central Administration.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Central Administration.lnk" )
                 $WEShortcut.TargetPath = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
                 $WEShortcut.Arguments = " -cmd showcentraladmin"
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Products Configuration Wizard
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Products Configuration Wizard.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Products Configuration Wizard.lnk" )
                 $WEShortcut.TargetPath = " C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
                 $WEShortcut.Save()
 
                 # Shortcut for SharePoint Management Shell
-                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Management Shell.lnk")
+                $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\SharePoint Management Shell.lnk" )
                 $WEShortcut.TargetPath = " C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe"
-                $WEShortcut.Arguments = " -NoExit -Command "" & 'C:\Program Files\WindowsPowerShell\Modules\SharePointServer\SharePoint.ps1'"
+                $WEShortcut.Arguments = " -NoExit -Command "" & '${env:ProgramFiles}\WindowsPowerShell\Modules\SharePointServer\SharePoint.ps1'"
                 $WEShortcut.Save()
             }
             GetScript            = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
@@ -873,23 +891,23 @@ param(
         #             $downloader.DownloadFile($url, $localScriptPath)
 
         #             $dscExtensionPath = " C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC"
-        #             $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match " ^[\d\.]+$"} | Sort-Object -Descending -Property Name | Select-Object -First 1
+        #             $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match " ^[\d\.]+$" } | Sort-Object -Descending -Property Name | Select-Object -First 1
         #             $fullPathToDscLogs = [System.IO.Path]::Combine($dscExtensionPath, $folderWithMaxVersionNumber)
                     
         #             # Start python script
-        #             Write-Verbose -Verbose -Message " Run python `"$localScriptPath`" `" $fullPathToDscLogs`"..."
-        #             #Start-Process -FilePath " powershell" -ArgumentList " python `"$localScriptPath`" `" $fullPathToDscLogs`""
+        #             Write-Verbose -Verbose -Message " Run python `" $localScriptPath`" `" $fullPathToDscLogs`" ..."
+        #             #Start-Process -FilePath " powershell" -ArgumentList " python `" $localScriptPath`" `" $fullPathToDscLogs`""
         #             #invoke-expression " cmd /c start powershell -Command { $localScriptPath $fullPathToDscLogs }"
         #             python " $localScriptPath" " $fullPathToDscLogs"
 
         #             # Create a shortcut to the DSC logs folder
         #             $WEWshShell = New-Object -comObject WScript.Shell
-        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC logs.lnk")
+        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC logs.lnk" )
         #             $WEShortcut.TargetPath = $fullPathToDscLogs
         #             $WEShortcut.Save()
 
         #             # Create shortcut to DSC configuration folder
-        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC config.lnk")
+        #             $WEShortcut = $WEWshShell.CreateShortcut(" $WEHome\Desktop\DSC config.lnk" )
         #             $WEShortcut.TargetPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\{0}\DSCWork\ConfigureFESE.0" -f $folderWithMaxVersionNumber
         #             $WEShortcut.Save()
         #         }
@@ -913,7 +931,7 @@ param(
 function WE-Get-NetBIOSName {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string]$WEDomainFQDN
     )
@@ -939,34 +957,34 @@ param(
 help ConfigureFEVM
 
 $password = ConvertTo-SecureString -String " mytopsecurepassword" -AsPlainText -Force
-$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand", $password
-$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup", $password
-$WESPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spfarm", $password
-$WESPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " Passphrase", $password
+$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
+$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup" , $password
+$WESPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spfarm" , $password
+$WESPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " Passphrase" , $password
 $WEDNSServerIP = " 10.1.1.4"
 $WEDomainFQDN = " contoso.local"
 $WEDCServerName = " DC"
 $WESQLServerName = " SQL"
 $WESQLAlias = " SQLAlias"
 $WESharePointVersion = " Subscription-Latest"
-$WESharePointSitesAuthority = " spsites"
+$WESharePointSitesAuthority = " spsites"; 
 $WEEnableAnalysis = $true; 
 $WESharePointBits = @(
     @{
-        Label = " RTM"; 
+        Label = " RTM" ; 
         Packages = @(
-            @{ DownloadUrl = " https://go.microsoft.com/fwlink/?linkid=2171943"; ChecksumType = " SHA256"; Checksum = " C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
+            @{ DownloadUrl = " https://go.microsoft.com/fwlink/?linkid=2171943" ; ChecksumType = " SHA256" ; Checksum = " C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05" }
         )
     },
     @{
-        Label = " 22H2"; 
+        Label = " 22H2" ; 
         Packages = @(
-            @{ DownloadUrl = " https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe"; ChecksumType = " SHA256"; Checksum = " 7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
-            @{ DownloadUrl = " https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe"; ChecksumType = " SHA256"; Checksum = " 247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
+            @{ DownloadUrl = " https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe" ; ChecksumType = " SHA256" ; Checksum = " 7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC" },
+            @{ DownloadUrl = " https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe" ; ChecksumType = " SHA256" ; Checksum = " 247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636" }
         )
     },
     @{
-        Label = " Latest"; 
+        Label = " Latest" ; 
         Packages = @(
             @{ DownloadUrl = " https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe" },
             @{ DownloadUrl = " https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe" }
@@ -975,7 +993,7 @@ $WESharePointBits = @(
 )
 
 $outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureFESE.0\ConfigureFEVM"
-ConfigureFEVM -DomainAdminCreds $WEDomainAdminCreds -SPSetupCreds $WESPSetupCreds -SPFarmCreds $WESPFarmCreds -SPPassphraseCreds $WESPPassphraseCreds -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DCServerName $WEDCServerName -SQLServerName $WESQLServerName -SQLAlias $WESQLAlias -SharePointVersion $WESharePointVersion -SharePointSitesAuthority $WESharePointSitesAuthority -EnableAnalysis $WEEnableAnalysis -SharePointBits $WESharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigureFEVM -DomainAdminCreds $WEDomainAdminCreds -SPSetupCreds $WESPSetupCreds -SPFarmCreds $WESPFarmCreds -SPPassphraseCreds $WESPPassphraseCreds -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DCServerName $WEDCServerName -SQLServerName $WESQLServerName -SQLAlias $WESQLAlias -SharePointVersion $WESharePointVersion -SharePointSitesAuthority $WESharePointSitesAuthority -EnableAnalysis $WEEnableAnalysis -SharePointBits $WESharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 

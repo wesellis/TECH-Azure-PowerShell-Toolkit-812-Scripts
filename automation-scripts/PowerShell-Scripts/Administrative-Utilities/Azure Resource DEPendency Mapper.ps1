@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Dependency Mapper
+    Azure Resource Dependency Mapper
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Dependency Mapper
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -34,7 +54,7 @@ param(
     [string]$WEOutputPath = " .\resource-dependencies.json"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Resource Dependency Mapper" -Version " 1.0" -Description " Map resource dependencies"
 
 try {
@@ -51,7 +71,7 @@ try {
             " Microsoft.Compute/virtualMachines" {
                 $vm = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $resource.Name
                 $dependsOn = $dependsOn + $vm.NetworkProfile.NetworkInterfaces.Id
-                $dependsOn = $dependsOn + $vm.StorageProfile.OsDisk.ManagedDisk.Id
+               ;  $dependsOn = $dependsOn + $vm.StorageProfile.OsDisk.ManagedDisk.Id
             }
             " Microsoft.Network/networkInterfaces" {
                ;  $nic = Get-AzNetworkInterface -ResourceGroupName $WEResourceGroupName -Name $resource.Name
@@ -63,7 +83,7 @@ try {
         }
         
         if ($dependsOn.Count -gt 0) {
-            $dependencies = $dependencies + [PSCustomObject]@{
+           ;  $dependencies = $dependencies + [PSCustomObject]@{
                 ResourceName = $resource.Name
                 ResourceType = $resource.ResourceType
                 DependsOn = $dependsOn

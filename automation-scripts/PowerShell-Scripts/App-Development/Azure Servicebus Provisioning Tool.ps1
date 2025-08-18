@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Servicebus Provisioning Tool
+    Azure Servicebus Provisioning Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Servicebus Provisioning Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -23,18 +41,20 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -42,18 +62,24 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WENamespaceName,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
-    [string]$WESkuName = " Standard",
+    [string]$WESkuName = " Standard" ,
     [int]$WECapacity = 1,
     [bool]$WEZoneRedundant = $false,
     [hashtable]$WETags = @{}
@@ -67,7 +93,7 @@ Write-WELog " Capacity: $WECapacity" " INFO"
 Write-WELog " Zone Redundant: $WEZoneRedundant" " INFO"
 
 
-$WEValidSkus = @(" Basic", " Standard", " Premium")
+$WEValidSkus = @(" Basic" , " Standard" , " Premium" )
 if ($WESkuName -notin $WEValidSkus) {
     throw " Invalid SKU. Valid options are: $($WEValidSkus -join ', ')"
 }
@@ -84,7 +110,7 @@ $WEServiceBusParams = @{
     SkuName = $WESkuName
 }
 
-if ($WESkuName -eq " Premium") {
+if ($WESkuName -eq " Premium" ) {
     $WEServiceBusParams.SkuCapacity = $WECapacity
     if ($WEZoneRedundant) {
         $WEServiceBusParams.ZoneRedundant = $true
@@ -143,7 +169,7 @@ try {
             Write-WELog "  • $($WERule.Name): $($WERule.Rights -join ', ')" " INFO"
         }
         
-        $WEDefaultRule = $WEAuthRules | Where-Object { $_.Name -eq " RootManageSharedAccessKey" }
+       ;  $WEDefaultRule = $WEAuthRules | Where-Object { $_.Name -eq " RootManageSharedAccessKey" }
         if ($WEDefaultRule) {
            ;  $WEKeys = Get-AzServiceBusKey -ResourceGroupName $WEResourceGroupName -Namespace $WENamespaceName -Name $WEDefaultRule.Name
             Write-WELog " `nConnection Strings:" " INFO"

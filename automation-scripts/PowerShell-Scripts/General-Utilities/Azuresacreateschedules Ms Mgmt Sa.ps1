@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azuresacreateschedules Ms Mgmt Sa
+    Azuresacreateschedules Ms Mgmt Sa
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azuresacreateschedules Ms Mgmt Sa
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 param ($collectAuditLogs,$collectionFromAllSubscriptions)
 
@@ -72,13 +90,13 @@ $certs= Get-ChildItem -Path Cert:\Currentuser\my -Recurse | Where{$_.Thumbprint 
 [System.Security.Cryptography.X509Certificates.X509Certificate2]$mycert=$certs[0]
 
 $WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)")
-$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/",$WECliCert)
+$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert); 
 $header = " Bearer " + $result.AccessToken; 
-$headers = @{" Authorization"=$header;" Accept"=" application/json"}
+$headers = @{" Authorization" =$header;" Accept" =" application/json" }
 $body=$null
 $WEHTTPVerb=" GET"
-$subscriptionInfoUri = " https://management.azure.com/subscriptions/"+$subscriptionid+" ?api-version=2016-02-01"
+$subscriptionInfoUri = " https://management.azure.com/subscriptions/" +$subscriptionid+" ?api-version=2016-02-01"
 $subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
 IF($subscriptionInfo)
 {
@@ -181,34 +199,34 @@ foreach ($sch in  $allSchedules|where{$_.Name -match $WEMetricsScheduleName -or 
 } 
 
 Write-output  " Creating schedule $WEMetricsScheduleName for runbook $WEMetricsRunbookName"
-
+; 
 $i=1
 Do {
 	New-AzureRmAutomationSchedule `
 	-AutomationAccountName $WEAAAccount `
 	-HourInterval 1 `
-	-Name $($WEMetricsScheduleName+" -$i") `
+	-Name $($WEMetricsScheduleName+" -$i" ) `
 	-ResourceGroupName $WEAAResourceGroup `
-	-StartTime (Get-Variable -Name RBStart" $i").Value
+	-StartTime (Get-Variable -Name RBStart" $i" ).Value
 
 	IF ($collectionFromAllSubscriptions  -match 'Enabled')
 	{
-	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader"=$getAsmHeader}
+	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
 
 		Register-AzureRmAutomationScheduledRunbook `
 		-AutomationAccountName $WEAAAccount `
 		-ResourceGroupName  $WEAAResourceGroup `
 		-RunbookName $WEMetricsRunbookName `
-		-ScheduleName $($WEMetricsScheduleName+" -$i") -Parameters $WEParams
+		-ScheduleName $($WEMetricsScheduleName+" -$i" ) -Parameters $WEParams
 	}Else
 	{
 
-		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader"=$getAsmHeader}
+		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
 		Register-AzureRmAutomationScheduledRunbook `
 		-AutomationAccountName $WEAAAccount `
 		-ResourceGroupName  $WEAAResourceGroup `
 		-RunbookName $WEMetricsRunbookName `
-		-ScheduleName $($WEMetricsScheduleName+" -$i")  -Parameters $WEParams 
+		-ScheduleName $($WEMetricsScheduleName+" -$i" )  -Parameters $WEParams 
 	}
 
 	$i++
@@ -227,7 +245,7 @@ IF($collectAuditLogs -eq 'Enabled')
 	$WERunbookStartTime = $WEDate =(get-date -Minute 05 -Second 00).AddHours(1).ToUniversalTime()
 	IF (($runbookstarttime-(Get-date).ToUniversalTime()).TotalMinutes -lt 6)
 	{
-		$WERunbookStartTime=((Get-date).ToUniversalTime()).AddMinutes(7)
+	; 	$WERunbookStartTime=((Get-date).ToUniversalTime()).AddMinutes(7)
 
 	}
 	Write-Output " Creating schedule $WELogsScheduleName for $WERunbookStartTime for runbook $WELogsRunbookName"
@@ -241,7 +259,7 @@ IF($collectAuditLogs -eq 'Enabled')
 
 	IF ($collectionFromAllSubscriptions  -match 'Enabled')
 	{
-	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader"=$getAsmHeader}
+	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
 		Register-AzureRmAutomationScheduledRunbook `
 		-AutomationAccountName $WEAAAccount `
 		-ResourceGroupName  $WEAAResourceGroup `
@@ -252,7 +270,7 @@ IF($collectAuditLogs -eq 'Enabled')
 	}Else
 	{
 		
-		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader"=$getAsmHeader}
+		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
 		
 		Register-AzureRmAutomationScheduledRunbook `
 		-AutomationAccountName $WEAAAccount `

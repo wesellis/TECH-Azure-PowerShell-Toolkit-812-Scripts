@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Disable Write Cache Flushing
+    Windows Disable Write Cache Flushing
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Disable Write Cache Flushing
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -44,7 +62,7 @@ Set-StrictMode -Version Latest
 
 foreach ($diskKey in (Get-ChildItem -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\SCSI\Disk&Ven_Msft&Prod_Virtual_Disk')) {
     Write-Output " Examining regkey: $diskKey"
-    $deviceParamsKey = " $($diskKey.Name)\Device Parameters" -replace " HKEY_LOCAL_MACHINE", " HKLM:"
+   ;  $deviceParamsKey = " $($diskKey.Name)\Device Parameters" -replace " HKEY_LOCAL_MACHINE" , " HKLM:"
    ;  $diskParamsKey = " $deviceParamsKey\Disk"
     Write-Output " Ensuring regkey exists: $diskParamsKey"
     New-Item -Path $deviceParamsKey -Name Disk -Force

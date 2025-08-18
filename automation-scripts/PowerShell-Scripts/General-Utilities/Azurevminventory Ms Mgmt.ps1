@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azurevminventory Ms Mgmt
+    Azurevminventory Ms Mgmt
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azurevminventory Ms Mgmt
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -32,7 +50,7 @@ param(
 
 
 $WEStartTime = [dateTime]::Now
-$WETimestampfield = "Timestamp" 
+$WETimestampfield = " Timestamp" 
 
 
 $customerID = Get-AutomationVariable -Name  " AzureVMInventory-OPSINSIGHTS_WS_ID"
@@ -50,18 +68,18 @@ $apiverVM='2016-02-01'
 
 
 
-
+; 
 $logname='AzureVMInventory'
 
 
 ; 
 $WEVMstates = @{
-" StoppedDeallocated"=" Deallocated";
-" ReadyRole"=" Running";
-" PowerState/deallocated"=" Deallocated";
-" PowerState/stopped" =" Stopped";
-" StoppedVM" =" Stopped";
-" PowerState/running" =" Running"}
+" StoppedDeallocated" =" Deallocated" ;
+" ReadyRole" =" Running" ;
+" PowerState/deallocated" =" Deallocated" ;
+" PowerState/stopped" =" Stopped" ;
+" StoppedVM" =" Stopped" ;
+" PowerState/running" =" Running" }
 
 
 
@@ -70,104 +88,104 @@ $vmiolimits = Get-AutomationVariable -Name 'VMinfo_-IOPSLimits'  -ea 0
 
 IF(!$vmiolimits)
 {; 
-$vmiolimits=@{" Basic_A0"=300;
-" Basic_A1"=300;
-" Basic_A2"=300;
-" Basic_A3"=300;
-" Basic_A4"=300;
-" ExtraSmall"=500;
-" Small"=500;
-" Medium"=500;
-" Large"=500;
-" ExtraLarge"=500;
-" Standard_A0"=500;
-" Standard_A1"=500;
-" Standard_A2"=500;
-" Standard_A3"=500;
-" Standard_A4"=500;
-" Standard_A5"=500;
-" Standard_A6"=500;
-" Standard_A7"=500;
-" Standard_A8"=500;
-" Standard_A9"=500;
-" Standard_A10"=500;
-" Standard_A11"=500;
-" Standard_A1_v2"=500;
-" Standard_A2_v2"=500;
-" Standard_A4_v2"=500;
-" Standard_A8_v2"=500;
-" Standard_A2m_v2"=500;
-" Standard_A4m_v2"=500;
-" Standard_A8m_v2"=500;
-" Standard_D1"=500;
-" Standard_D2"=500;
-" Standard_D3"=500;
-" Standard_D4"=500;
-" Standard_D11"=500;
-" Standard_D12"=500;
-" Standard_D13"=500;
-" Standard_D14"=500;
-" Standard_D1_v2"=500;
-" Standard_D2_v2"=500;
-" Standard_D3_v2"=500;
-" Standard_D4_v2"=500;
-" Standard_D5_v2"=500;
-" Standard_D11_v2"=500;
-" Standard_D12_v2"=500;
-" Standard_D13_v2"=500;
-" Standard_D14_v2"=500;
-" Standard_D15_v2"=500;
-" Standard_DS1"=3200;
-" Standard_DS2"=6400;
-" Standard_DS3"=12800;
-" Standard_DS4"=25600;
-" Standard_DS11"=6400;
-" Standard_DS12"=12800;
-" Standard_DS13"=25600;
-" Standard_DS14"=51200;
-" Standard_DS1_v2"=3200;
-" Standard_DS2_v2"=6400;
-" Standard_DS3_v2"=12800;
-" Standard_DS4_v2"=25600;
-" Standard_DS5_v2"=51200;
-" Standard_DS11_v2"=6400;
-" Standard_DS12_v2"=12800;
-" Standard_DS13_v2"=25600;
-" Standard_DS14_v2"=51200;
-" Standard_DS15_v2"=64000;
-" Standard_F1"=500;
-" Standard_F2"=500;
-" Standard_F4"=500;
-" Standard_F8"=500;
-" Standard_F16"=500;
-" Standard_F1s"=3200;
-" Standard_F2s"=6400;
-" Standard_F4s"=12800;
-" Standard_F8s"=25600;
-" Standard_F16s"=51200;
-" Standard_G1"=500;
-" Standard_G2"=500;
-" Standard_G3"=500;
-" Standard_G4"=500;
-" Standard_G5"=500;
-" Standard_GS1"=5000;
-" Standard_GS2"=10000;
-" Standard_GS3"=20000;
-" Standard_GS4"=40000;
-" Standard_GS5"=80000;
-" Standard_H8"=500;
-" Standard_H16"=500;
-" Standard_H8m"=500;
-" Standard_H16m"=500;
-" Standard_H16r"=500;
-" Standard_H16mr"=500;
-" Standard_NV6"=500;
-" Standard_NV12"=500;
-" Standard_NV24"=500;
-" Standard_NC6"=500;
-" Standard_NC12"=500;
-" Standard_NC24"=500;
-" Standard_NC24r"=500}
+$vmiolimits=@{" Basic_A0" =300;
+" Basic_A1" =300;
+" Basic_A2" =300;
+" Basic_A3" =300;
+" Basic_A4" =300;
+" ExtraSmall" =500;
+" Small" =500;
+" Medium" =500;
+" Large" =500;
+" ExtraLarge" =500;
+" Standard_A0" =500;
+" Standard_A1" =500;
+" Standard_A2" =500;
+" Standard_A3" =500;
+" Standard_A4" =500;
+" Standard_A5" =500;
+" Standard_A6" =500;
+" Standard_A7" =500;
+" Standard_A8" =500;
+" Standard_A9" =500;
+" Standard_A10" =500;
+" Standard_A11" =500;
+" Standard_A1_v2" =500;
+" Standard_A2_v2" =500;
+" Standard_A4_v2" =500;
+" Standard_A8_v2" =500;
+" Standard_A2m_v2" =500;
+" Standard_A4m_v2" =500;
+" Standard_A8m_v2" =500;
+" Standard_D1" =500;
+" Standard_D2" =500;
+" Standard_D3" =500;
+" Standard_D4" =500;
+" Standard_D11" =500;
+" Standard_D12" =500;
+" Standard_D13" =500;
+" Standard_D14" =500;
+" Standard_D1_v2" =500;
+" Standard_D2_v2" =500;
+" Standard_D3_v2" =500;
+" Standard_D4_v2" =500;
+" Standard_D5_v2" =500;
+" Standard_D11_v2" =500;
+" Standard_D12_v2" =500;
+" Standard_D13_v2" =500;
+" Standard_D14_v2" =500;
+" Standard_D15_v2" =500;
+" Standard_DS1" =3200;
+" Standard_DS2" =6400;
+" Standard_DS3" =12800;
+" Standard_DS4" =25600;
+" Standard_DS11" =6400;
+" Standard_DS12" =12800;
+" Standard_DS13" =25600;
+" Standard_DS14" =51200;
+" Standard_DS1_v2" =3200;
+" Standard_DS2_v2" =6400;
+" Standard_DS3_v2" =12800;
+" Standard_DS4_v2" =25600;
+" Standard_DS5_v2" =51200;
+" Standard_DS11_v2" =6400;
+" Standard_DS12_v2" =12800;
+" Standard_DS13_v2" =25600;
+" Standard_DS14_v2" =51200;
+" Standard_DS15_v2" =64000;
+" Standard_F1" =500;
+" Standard_F2" =500;
+" Standard_F4" =500;
+" Standard_F8" =500;
+" Standard_F16" =500;
+" Standard_F1s" =3200;
+" Standard_F2s" =6400;
+" Standard_F4s" =12800;
+" Standard_F8s" =25600;
+" Standard_F16s" =51200;
+" Standard_G1" =500;
+" Standard_G2" =500;
+" Standard_G3" =500;
+" Standard_G4" =500;
+" Standard_G5" =500;
+" Standard_GS1" =5000;
+" Standard_GS2" =10000;
+" Standard_GS3" =20000;
+" Standard_GS4" =40000;
+" Standard_GS5" =80000;
+" Standard_H8" =500;
+" Standard_H16" =500;
+" Standard_H8m" =500;
+" Standard_H16m" =500;
+" Standard_H16r" =500;
+" Standard_H16mr" =500;
+" Standard_NV6" =500;
+" Standard_NV12" =500;
+" Standard_NV24" =500;
+" Standard_NC6" =500;
+" Standard_NC12" =500;
+" Standard_NC24" =500;
+" Standard_NC24r" =500}
 
 
 }
@@ -261,13 +279,13 @@ do
 IF ($mycert)
 {
 		$WECliCert=new-object   Microsoft.IdentityModel.Clients.ActiveDirectory.ClientAssertionCertificate($WEArmConn.ApplicationId,$mycert)
-	$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)")
-	$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/",$WECliCert)
-	$header = " Bearer " + $result.AccessToken
-; 	$headers = @{" Authorization"=$header;" Accept"=" application/json"}
+	$WEAuthContext = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext(" https://login.windows.net/$($WEArmConn.tenantid)" )
+	$result = $WEAuthContext.AcquireToken(" https://management.core.windows.net/" ,$WECliCert)
+; 	$header = " Bearer " + $result.AccessToken
+; 	$headers = @{" Authorization" =$header;" Accept" =" application/json" }
     $body=$null
 	$WEHTTPVerb=" GET"
-	$subscriptionInfoUri = " https://management.azure.com/subscriptions/"+$WEArmConn.SubscriptionId+" ?api-version=$apiverVM"
+; 	$subscriptionInfoUri = " https://management.azure.com/subscriptions/" +$WEArmConn.SubscriptionId+" ?api-version=$apiverVM"
 ; 	$subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
 
 
@@ -298,7 +316,7 @@ Else
 
 Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resource,$uri)
 {
-    $stringToHash = $method + " `n" + " `n" + " `n"+$date+" `n"+" /"+$resource+$uri.AbsolutePath
+    $stringToHash = $method + " `n" + " `n" + " `n" +$date+" `n" +" /" +$resource+$uri.AbsolutePath
 	Add-Type -AssemblyName System.Web
 	$query = [System.Web.HttpUtility]::ParseQueryString($uri.query)  
 	$querystr=''
@@ -308,7 +326,7 @@ Function Build-tableSignature ($customerId, $sharedKey, $date,  $method,  $resou
 	$sha256.Key = $keyBytes
 	$calculatedHash = $sha256.ComputeHash($bytesToHash)
 	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $resource,$encodedHash
+; 	$authorization = 'SharedKey {0}:{1}' -f $resource,$encodedHash
 	return $authorization
 }
 
@@ -317,12 +335,12 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 {
 	Add-Type -AssemblyName System.Web
 
-; 	$str=  New-Object -TypeName " System.Text.StringBuilder";
-	$builder=  [System.Text.StringBuilder]::new(" /")
+; 	$str=  New-Object -TypeName " System.Text.StringBuilder" ;
+	$builder=  [System.Text.StringBuilder]::new(" /" )
 	$builder.Append($resource) |out-null
 	$builder.Append($uri.AbsolutePath) | out-null
 	$str.Append($builder.ToString()) | out-null
-	$values2=@{}
+; 	$values2=@{}
 
 	IF($service -eq 'Table')
 	{
@@ -338,7 +356,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 			{
 				if ($builder2.Length -gt 0)
 				{
-					$builder2.Append(" ,");
+					$builder2.Append(" ," );
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
@@ -356,11 +374,11 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 		{
 			IF($str3 -eq 'comp')
 			{
-				$builder3=[System.Text.StringBuilder]::new()
+			; 	$builder3=[System.Text.StringBuilder]::new()
 				$builder3.Append($str3) |out-null
-				$builder3.Append(" =") |out-null
+				$builder3.Append(" =" ) |out-null
 				$builder3.Append($values2[$str3]) |out-null
-				$str.Append(" ?") |out-null
+				$str.Append(" ?" ) |out-null
 				$str.Append($builder3.ToString())|out-null
 			}
 		}
@@ -379,7 +397,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 			{
 				if ($builder2.Length -gt 0)
 				{
-					$builder2.Append(" ,");
+					$builder2.Append(" ," );
 				}
 				$builder2.Append($obj2.ToString()) |Out-Null
 			}
@@ -397,9 +415,9 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 		{
 			$builder3=[System.Text.StringBuilder]::new()
 			$builder3.Append($str3) |out-null
-			$builder3.Append(" :") |out-null
+			$builder3.Append(" :" ) |out-null
 			$builder3.Append($values2[$str3]) |out-null
-			$str.Append(" `n") |out-null
+			$str.Append(" `n" ) |out-null
 			$str.Append($builder3.ToString())|out-null
 		}
 	} 
@@ -408,17 +426,17 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 
 	if ($service -eq 'Table')
 	{
-		$stringToHash= $method + " `n" + " `n" + " `n"+$date+" `n"+$str.ToString()
+		$stringToHash= $method + " `n" + " `n" + " `n" +$date+" `n" +$str.ToString()
 	}
 	Else
 	{
 		IF ($method -eq 'GET' -or $method -eq 'HEAD')
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n"+" application/xml"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+$xHeaders+" `n"+$str.ToString()
+			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" +$xHeaders+" `n" +$str.ToString()
 		}
 		Else
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" +$bodylength+ " `n" + " `n"+" application/xml"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+ " `n"+$xHeaders+" `n"+$str.ToString()
+			$stringToHash = $method + " `n" + " `n" + " `n" +$bodylength+ " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" +$xHeaders+" `n" +$str.ToString()
 		}     
 	}
 
@@ -438,7 +456,7 @@ Function Build-StorageSignature ($sharedKey, $date,  $method, $bodylength, $reso
 Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 {
 
-	$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 
 	
 	If ($method -eq 'PUT')
@@ -449,7 +467,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	}Else
 	{
 
-		$signature = Build-StorageSignature `
+	; 	$signature = Build-StorageSignature `
 		-sharedKey $sharedKey `
 		-date  $rfc1123date `
 		-method $method -resource $resource -uri $uri -body $body -service $svc
@@ -486,7 +504,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 		}Else
 		{  $resp1=Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method   -UseBasicParsing -Body $msgbody 
 
-			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
 		} 
 		return $xresp
 
@@ -499,7 +517,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 		{
 			$resp1= Invoke-WebRequest -Uri $uri -Headers $headersforsa -Method $method -ContentType application/xml -UseBasicParsing -Body $msgbody 
 
-			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <")) 
+			$xresp=$resp1.Content.Substring($resp1.Content.IndexOf(" <" )) 
 			return $xresp
 		}Elseif($method -eq 'HEAD')
         {
@@ -533,7 +551,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	$method = " POST"
 	$contentType = " application/json"
 	$resource = " /api/logs"
-	$rfc1123date = [DateTime]::UtcNow.ToString(" r")
+	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	$contentLength = $body.Length
 	$signature = Build-OMSSignature `
 	-customerId $customerId `
@@ -544,7 +562,7 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	-method $method `
 	-contentType $contentType `
 	-resource $resource
-	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
 
 ; 	$WEOMSheaders = @{
 		" Authorization" = $signature;
@@ -604,7 +622,7 @@ Return [math]::round($vhdblob.Headers.'Content-Length'/1024/1024/1024,0)
 
 
 
-$timestamp=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddT$($hour):$($min):00.000Z")
+$timestamp=(get-date).ToUniversalTime().ToString(" yyyy-MM-ddT$($hour):$($min):00.000Z" )
 
 " Starting $(get-date)"
 
@@ -637,11 +655,11 @@ $colParamsforChild=@()
 foreach($sa in $saArmList|where {$_.Sku.tier -ne 'Premium'})
 {
 
-	$rg=$sku=$null
+; 	$rg=$sku=$null
 
 ; 	$rg=$sa.id.Split('/')[4]
 
-	$colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);ARM;$($sa.sku.tier)"
+; 	$colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);ARM;$($sa.sku.tier)"
 	
 }
 
@@ -652,14 +670,14 @@ foreach($sa in $saAsmList|where{$_.properties.accounttype -notmatch 'Premium'})
 {
 
 	$rg=$sa.id.Split('/')[4]
-	$tier=$null
+; 	$tier=$null
 
 
 
 	If( $sa.properties.accountType -notmatch 'premium')
 	{
 	; 	$tier='Standard'
-		$colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);Classic;$tier"
+	; 	$colParamsforChild = $colParamsforChild + " $($sa.name);$($sa.id.Split('/')[4]);Classic;$tier"
 	}
 
 	
@@ -671,13 +689,13 @@ $WESAInventory=@()
 foreach($sa in $saArmList)
 {
 	$rg=$sa.id.Split('/')[4]
-	$cu=$null
+; 	$cu=$null
 ; 	$cu = New-Object PSObject -Property @{
 		Timestamp = $timestamp
 		MetricName = 'Inventory';
 		InventoryType='StorageAccount'
 		StorageAccount=$sa.name
-		Uri=" https://management.azure.com"+$sa.id
+		Uri=" https://management.azure.com" +$sa.id
 		DeploymentType='ARM'
 		Location=$sa.location
 		Kind=$sa.kind
@@ -709,7 +727,7 @@ foreach($sa in $saAsmList)
 		MetricName = 'Inventory'
 		InventoryType='StorageAccount'
 		StorageAccount=$sa.name
-		Uri=" https://management.azure.com"+$sa.id
+		Uri=" https://management.azure.com" +$sa.id
 		DeploymentType='Classic'
 		Location=$sa.location
 		Kind='Storage'
@@ -742,14 +760,14 @@ Write-output " Starting API Limits collection "
 
 
 $r = Invoke-WebRequest -Uri " https://management.azure.com$($subscriptionInfo.id)/resourcegroups?api-version=2016-09-01" -Method GET -Headers $WEHeaders -UseBasicParsing
- 
-$remaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads"]
+ ; 
+$remaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads" ]
 
 " API reads remaining: $remaining"
 
 ;  $apidatafirst = New-Object PSObject -Property @{
                              MetricName = 'ARMAPILimits';
-                            APIReadsRemaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads"]
+                            APIReadsRemaining=$r.Headers[" x-ms-ratelimit-remaining-subscription-reads" ]
                                                    
                             SubscriptionID = $subscriptionInfo.id
                             AzureSubscription = $subscriptionInfo.displayName
@@ -773,7 +791,7 @@ $content= ConvertFrom-Json -InputObject $resultarm.Content
 
 $rglist=$content.value
 
-$uri=" https://management.azure.com"+$subscriptionInfo.id+" /providers?api-version=$apiverVM"
+$uri=" https://management.azure.com" +$subscriptionInfo.id+" /providers?api-version=$apiverVM"
 
 $resultarm = Invoke-WebRequest -Method $WEHTTPVerb -Uri $uri -Headers $headers -UseBasicParsing
 
@@ -782,7 +800,7 @@ $content= ConvertFrom-Json -InputObject $resultarm.Content
 
 
 
-
+; 
 $providers=@()
 
 Foreach($item in $content.value)
@@ -815,7 +833,7 @@ $vmlist=@()
 Foreach ($prvitem in $providers|where{$_.resourcetype -eq 'virtualMachines'})
 {
 
-$uri=" https://management.azure.com"+$prvitem.id+" /$($prvitem.Resourcetype)?api-version=$($prvitem.apiversion)"
+$uri=" https://management.azure.com" +$prvitem.id+" /$($prvitem.Resourcetype)?api-version=$($prvitem.apiversion)"
 
 $resultarm = Invoke-WebRequest -Method $WEHTTPVerb -Uri $uri -Headers $headers -UseBasicParsing
 $content=$resultarm.Content
@@ -855,7 +873,7 @@ $allvhds=@()
 $invendpoints=@()
 $invnsg=@()
 $invnic=@() 
-$invextensions=@()
+$invextensions=@(); 
 $colltime=get-date
 
 
@@ -869,10 +887,10 @@ Foreach ($vm in $vmsclassic)
 
 ; 
 $extlist=$null
-$vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
+$vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;" }
 
   $cuvm = New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMInventory';
                             ResourceGroup=$vm.id.Split('/')[4]
                             HWProfile=$vm.properties.hardwareProfile.size.ToString()
@@ -910,8 +928,8 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
     Foreach ($extobj in $vm.properties.extensions)
         {
 
-        $invextensions = $invextensions + New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+       ;  $invextensions = $invextensions + New-Object PSObject -Property @{
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMExtensions';
                            VmName=$vm.Name
                           Extension=$extobj.Extension
@@ -919,7 +937,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
                         version=$extobj.version
                         state=$extobj.state
                         referenceName=$extobj.referenceName
-                        ID=$vm.id+" /extensions/"+$extobj.Extension
+                        ID=$vm.id+" /extensions/" +$extobj.Extension
                         SubscriptionId = $subscriptioninfo.subscriptionId
                              AzureSubscription = $subscriptionInfo.displayName
                           
@@ -940,8 +958,8 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
         Foreach($ep in $vm.properties.networkProfile.inputEndpoints)
         {
             
-             $invendpoints = $invendpoints + New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+            ;  $invendpoints = $invendpoints + New-Object PSObject -Property @{
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMEndpoint';
                            VmName=$vm.Name
                            endpointName=$ep.endpointName
@@ -981,12 +999,12 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
         $WEIOtype=$safordisk.Tier
 
 	    $sizeingb=$null
-        $sizeingb=Get-BlobSize -bloburi $([uri]$vm.properties.storageProfile.operatingSystemDisk.vhdUri) -storageaccount $safordisk.StorageAccount -rg $safordisk.ResourceGroup -type Classic
+       ;  $sizeingb=Get-BlobSize -bloburi $([uri]$vm.properties.storageProfile.operatingSystemDisk.vhdUri) -storageaccount $safordisk.StorageAccount -rg $safordisk.ResourceGroup -type Classic
 
 
 
 	        ;  $cudisk = New-Object PSObject -Property @{
-		Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+		Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		MetricName = 'VMDisk';
         DiskType='Unmanaged'
 		Deploymentname=$vm.properties.hardwareProfile.deploymentName.ToString()
@@ -1042,7 +1060,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
             {	
 			        $safordisk=$null
 			        $safordisk=$WESAInventory|where {$_ -match $disk.storageAccount.Name}
-			        $WEIOtype=$safordisk.Tier
+			       ;  $WEIOtype=$safordisk.Tier
 
 			       ;  $cudisk = New-Object PSObject -Property @{
 				        Timestamp = $timestamp
@@ -1093,7 +1111,7 @@ $vm.properties.extensions|?{$extlist = $extlist + $_.extension+" ;"}
 }
 
 
-
+; 
 $vm=$cuvm=$cudisk=$osdisk=$nic=$nsg=$null
 Foreach ($vm in $vmsarm)
 {
@@ -1104,7 +1122,7 @@ Foreach ($vm in $vmsarm)
  
         
        ;  $cuvm = New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMInventory';
                             ResourceGroup=$vm.id.split('/')[4]
                             HWProfile=$vm.properties.hardwareProfile.vmSize.ToString()
@@ -1122,7 +1140,7 @@ Foreach ($vm in $vmsarm)
 
               If([int]$remaining -gt [int]$apireadlimit -and $getarmvmstatus)
                 {
-        $uriinsview=" https://management.azure.com"+$vm.id+" /InstanceView?api-version=2015-06-15"
+        $uriinsview=" https://management.azure.com" +$vm.id+" /InstanceView?api-version=2015-06-15"
 
         $resiview = Invoke-WebRequest -Method Get -Uri $uriinsview -Headers $headers -UseBasicParsing
       
@@ -1140,17 +1158,17 @@ Foreach ($vm in $vmsarm)
 
 Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 {
-  $urinic=" https://management.azure.com"+$nicobj.id+" ?api-version=2015-06-15"
+  $urinic=" https://management.azure.com" +$nicobj.id+" ?api-version=2015-06-15"
 
         $nicresult = Invoke-WebRequest -Method Get -Uri $urinic -Headers $headers -UseBasicParsing
       
         
         $WENic= ConvertFrom-Json -InputObject $nicresult.Content
         
-        $cunic=$null
+       ;  $cunic=$null
      
       ;  $cuNic= New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMNIC';
                             VmName=$vm.Name
                             ID=$nic.id
@@ -1171,7 +1189,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 
             IF (![string]::IsNullOrEmpty($cunic.publicIPAddress))
             {
-                  $uripip=" https://management.azure.com"+$cunic.publicIPAddress+" ?api-version=2015-06-15"
+                  $uripip=" https://management.azure.com" +$cunic.publicIPAddress+" ?api-version=2015-06-15"
                   $pipresult = Invoke-WebRequest -Method Get -Uri $uripip -Headers $headers -UseBasicParsing
                 $pip= ConvertFrom-Json -InputObject $pipresult.Content
                 If($pip)
@@ -1193,8 +1211,8 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
         {
             Foreach($nsgobj in $nic.properties.networkSecurityGroup)
             {
-                 $urinsg=" https://management.azure.com"+$nsgobj.id+" ?api-version=2015-06-15"
-                  $nsgresult = Invoke-WebRequest -Method Get -Uri $urinsg -Headers $headers -UseBasicParsing
+                 $urinsg=" https://management.azure.com" +$nsgobj.id+" ?api-version=2015-06-15"
+                 ;  $nsgresult = Invoke-WebRequest -Method Get -Uri $urinsg -Headers $headers -UseBasicParsing
                ;  $nsg= ConvertFrom-Json -InputObject $nsgresult.Content
              
 
@@ -1203,8 +1221,8 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
                     foreach($rule in $WENsg.properties.securityRules)
                     {
 
-                      $invnsg = $invnsg + New-Object PSObject -Property @{
-                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                     ;  $invnsg = $invnsg + New-Object PSObject -Property @{
+                            Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                             MetricName = 'VMNSGrule';
                             VmName=$vm.Name
                             ID=$nsg.id
@@ -1243,7 +1261,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
                         if($extobj.id.Split('/')[9] -eq 'extensions')
                         {
                             $invextensions = $invextensions + New-Object PSObject -Property @{
-                                        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+                                        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                                         MetricName = 'VMExtensions';
                            VmName=$vm.Name
                           Extension=$extobj.Extension
@@ -1313,10 +1331,10 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 		$WEIOtype=$saforvm.tier
 	}
 	    $sizeingb=$null
-        $sizeingb=Get-BlobSize -bloburi $([uri]$vm.properties.storageProfile.osDisk.vhd.uri) -storageaccount $saforvm.StorageAccount -rg $saforVm.ResourceGroup -type ARM
+       ;  $sizeingb=Get-BlobSize -bloburi $([uri]$vm.properties.storageProfile.osDisk.vhd.uri) -storageaccount $saforvm.StorageAccount -rg $saforVm.ResourceGroup -type ARM
 
 	    ;  $cudisk = New-Object PSObject -Property @{
-		        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+		        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		        MetricName = 'VMDisk';
 		        DiskType='Unmanaged'
 		        Deploymentname=$vm.id.split('/')[4]   # !!! consider chnaging this to ResourceGroup here or in query
@@ -1359,10 +1377,10 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
     }
     Else
     {
-    $cudisk=$null
+   ;  $cudisk=$null
 
        ;  $cudisk = New-Object PSObject -Property @{
-		    Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+		    Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 		    MetricName = 'VMDisk';
 		    DiskType='Unmanaged'
 		    Deploymentname=$vm.id.split('/')[4]   # !!! consider chnaging this to ResourceGroup here or in query
@@ -1407,9 +1425,9 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
 			        $diskuri=$safordisk=$WEIOtype=$null
 			        $diskuri=[uri]$disk.vhd.uri
 			        $safordisk=$WESAInventory|where {$_ -match $diskuri.host.Substring(0,$diskuri.host.IndexOf('.')) }
-			        $WEIOtype=$safordisk.Tier
+			       ;  $WEIOtype=$safordisk.Tier
 			       ;  $cudisk = New-Object PSObject -Property @{
-				        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+				        Timestamp = $colltime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 				        MetricName = 'VMDisk';
 				        DiskType='Unmanaged'
 				        Deploymentname=$vm.id.split('/')[4] 
@@ -1451,7 +1469,7 @@ Foreach ($nicobj in $vm.properties.networkProfile.networkInterfaces)
     		}
             Else
             {
-                 $cudisk = New-Object PSObject -Property @{
+                ;  $cudisk = New-Object PSObject -Property @{
 		            Timestamp = $timestamp
 		            MetricName = 'Inventory';
 		            DiskType='Managed'
@@ -1509,7 +1527,7 @@ $locations=$loclistcontent=$cu=$null
 $allvmusage=@()
 
 
-$loclisturi=" https://management.azure.com/"+$subscriptionInfo.id+" /locations?api-version=2016-09-01"
+$loclisturi=" https://management.azure.com/" +$subscriptionInfo.id+" /locations?api-version=2016-09-01"
 
 
 $loclist = Invoke-WebRequest -Uri $loclisturi -Method GET -Headers $WEHeaders -UseBasicParsing
@@ -1522,10 +1540,10 @@ Foreach($loc in $loclistcontent.value.name)
 {
 
 $usgdata=$cu=$usagecontent=$null
-$usageuri=" https://management.azure.com/"+$subscriptionInfo.id+" /providers/Microsoft.Compute/locations/"+$loc+" /usages?api-version=2015-06-15"
+$usageuri=" https://management.azure.com/" +$subscriptionInfo.id+" /providers/Microsoft.Compute/locations/" +$loc+" /usages?api-version=2015-06-15"
 
 $usageapi = Invoke-WebRequest -Uri $usageuri -Method GET -Headers $WEHeaders  -UseBasicParsing
-
+; 
 $usagecontent= ConvertFrom-Json -InputObject $usageapi.Content
 
 
@@ -1566,7 +1584,7 @@ $allvmusage = $allvmusage + $cu
   $jsonVHDData= ConvertTo-Json -InputObject $allvhds
   $jsonallvmusage = ConvertTo-Json -InputObject $allvmusage
   $jsoninvnic = ConvertTo-Json -InputObject $invnic
-$jsoninvnsg = ConvertTo-Json -InputObject $invnsg
+$jsoninvnsg = ConvertTo-Json -InputObject $invnsg; 
 $jsoninvendpoint = ConvertTo-Json -InputObject $invendpoints; 
 $jsoninveextensions = ConvertTo-Json -InputObject $invextensions
 

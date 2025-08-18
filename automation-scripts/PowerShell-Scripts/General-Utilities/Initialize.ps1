@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Initialize
+    Initialize
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Initialize
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -24,19 +42,19 @@ param(
 
 $WEProgressPreference = 'SilentlyContinue'  
 
-[DownloadWithRetry]::DoDownloadWithRetry("https://chocolatey.org/install.ps1" , 5, 10, $null, ".\chocoInstall.ps1" , $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10, $null, " .\chocoInstall.ps1" , $false)
 & .\chocoInstall.ps1
 choco feature enable -n allowGlobalConfirmation
 choco install --no-progress --limit-output vim
 choco install --no-progress --limit-output pwsh
-choco install --no-progress --limit-output openssh -params '"/SSHServerFeature" '
+choco install --no-progress --limit-output openssh -params '" /SSHServerFeature" '
 
 
-Copy-Item '.\sshd_config_wopwd' 'C:\ProgramData\ssh\sshd_config'
-$path = "c:\ProgramData\ssh\administrators_authorized_keys"
+Copy-Item '.\sshd_config_wopwd' 'C:\ProgramData\ssh\sshd_config'; 
+$path = " c:\ProgramData\ssh\administrators_authorized_keys"
 " $publicSshKey" | Out-File -Encoding utf8 -FilePath $path; 
 $acl = Get-Acl -Path $path
-$acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)")
+$acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)" )
 Set-Acl -Path $path -AclObject $acl
 New-ItemProperty -Path " HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value " C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
 'function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
@@ -60,7 +78,7 @@ class DownloadWithRetry {
             try {
                 if ($headers.Count -ne 0) {
                     if ([string]::IsNullOrEmpty($outFile)) {
-                        $result = Invoke-WebRequest -Uri $uri -Headers $headers -UseBasicParsing
+                       ;  $result = Invoke-WebRequest -Uri $uri -Headers $headers -UseBasicParsing
                         return $result.Content
                     }
                     else {

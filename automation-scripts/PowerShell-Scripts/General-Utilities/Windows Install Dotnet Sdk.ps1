@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Dotnet Sdk
+    Windows Install Dotnet Sdk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Dotnet Sdk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -40,6 +58,8 @@ param(
 $logfilepath = $null
 Function ProcessRunner([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$command, $arguments) {
     <#
   .SYNOPSIS
@@ -52,11 +72,11 @@ Function ProcessRunner([Parameter(Mandatory=$false)]
   The arguments required to run the supplied command
   #>
 
-    $errLog = [System.IO.Path]::GetTempFileName()
+   ;  $errLog = [System.IO.Path]::GetTempFileName()
    ;  $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -Wait
     # If $process variable is null, something is wrong
     if (!$process) {			
-        Write-Error "ERROR command failed to start: $command $arguments"
+        Write-Error " ERROR command failed to start: $command $arguments"
         return;
     }
  
@@ -97,11 +117,11 @@ try {
         Write-WELog " Attempting to read global.json" " INFO"
         $globalJsonFullPath = ""
     
-        if ($globalJsonPath.EndsWith(" global.json")) {
+        if ($globalJsonPath.EndsWith(" global.json" )) {
             $globalJsonFullPath = $globalJsonPath
         }
         else {
-            $globalJsonFullPath = [System.IO.Path]::Combine($globalJsonPath, " global.json")
+            $globalJsonFullPath = [System.IO.Path]::Combine($globalJsonPath, " global.json" )
         }
 
         if ($true -eq [System.IO.File]::Exists($globalJsonFullPath)) {
@@ -116,7 +136,7 @@ try {
             
         }
     }
-    $WEErrorActionPreference = 'Stop'
+   ;  $WEErrorActionPreference = 'Stop'
  
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-retry-utils.psm1')
 
@@ -129,8 +149,8 @@ try {
         & " $scriptLocation" -Version $dotnet_sdk_version -InstallDir $WEInstallDir -Architecture $WEArch -Runtime $runtime
     }
 
-    & ([System.IO.Path]::Combine($WEInstallDir, " dotnet.exe")) --list-sdks
-    & ([System.IO.Path]::Combine($WEInstallDir, " dotnet.exe")) --list-runtimes
+    & ([System.IO.Path]::Combine($WEInstallDir, " dotnet.exe" )) --list-sdks
+    & ([System.IO.Path]::Combine($WEInstallDir, " dotnet.exe" )) --list-runtimes
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop

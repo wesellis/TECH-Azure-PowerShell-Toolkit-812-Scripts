@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Archive Azurermvm
+    Archive Azurermvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Archive Azurermvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -68,20 +86,22 @@ Rehydrates the VMs using the saved configuration and remaining resource group co
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(mandatory=$WETrue,
-      HelpMessage=" Enter the name of the Azure Resource Group you want to target and Press <Enter> e.g. CONTOSO")]
+      HelpMessage=" Enter the name of the Azure Resource Group you want to target and Press <Enter> e.g. CONTOSO" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
 
     [Parameter(mandatory=$WEFalse,
-      HelpMessage=" Use this switch to rebuild the script after waiting for the blob copy to complete")]
+      HelpMessage=" Use this switch to rebuild the script after waiting for the blob copy to complete" )]
     [switch]$WERehydrate,
 
     [Parameter(mandatory=$WETrue,
-      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the subscription. e.g. AzureUSGovernment")]
+      HelpMessage=" Press <Enter> to default to AzureCloud or enter the Azure Environment name of the subscription. e.g. AzureUSGovernment" )]
     [AllowEmptyString()]
     [string]$WEOptionalEnvironment
 
@@ -91,7 +111,7 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1") {
+if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -102,7 +122,7 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1") {
 
 function WE-Get-StorageObject 
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($resourceGroupName, $srcURI) 
     
     $split = $srcURI.Split('/')
@@ -125,7 +145,7 @@ param($resourceGroupName, $srcURI)
 
 function WE-New-VM
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($vmObj) 
 
     $created = $false
@@ -324,7 +344,7 @@ if($WERehydrate)
         { 
             $WEStorageContainerName = $WEStorageContainer.Name
             write-verbose " Searching for rehydrate files in container $WEStorageContainerName)..." -verbose
-            $rehydrateBlobs = Get-AzureStorageBlob -Container $WEStorageContainerName -Context $WEStorageContext | Where-Object{$_.name -like " *.rehydrate.json"}
+            $rehydrateBlobs = Get-AzureStorageBlob -Container $WEStorageContainerName -Context $WEStorageContext | Where-Object{$_.name -like " *.rehydrate.json" }
             foreach($rehydrateBlob in $rehydrateBlobs)
             {
                 write-verbose " Retreiving rehydrate file $($rehydrateBlob.name)..." -verbose
@@ -334,7 +354,7 @@ if($WERehydrate)
                     $WETempRehydratefileName = $WETempRehydratefile.Name
                     $fileContent = get-content " $env:temp\$WETempRehydratefileName" -ea Stop
                     $fileContent | Where-Object{$_ -ne ''} | out-file " $env:temp\$WETempRehydratefileName"
-                    $rehydrateVM = (get-content " $env:temp\$WETempRehydratefileName" -ea Stop) -Join " `n"| ConvertFrom-Json -ea Stop
+                    $rehydrateVM = (get-content " $env:temp\$WETempRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json -ea Stop
                 }
                 catch
                 {
@@ -352,7 +372,7 @@ if($WERehydrate)
                         try
                         {
                             write-verbose " Searching for Diagnostics config file in container $WEStorageContainerName..." -verbose
-                            $rehydrateDiagBlob = Get-AzureStorageBlob -Container $WEStorageContainerName -Context $WEStorageContext -ea Stop | Where-Object{$_.name -like " *$($rehydrateVM.Name).rehydratediag.xml"}  
+                            $rehydrateDiagBlob = Get-AzureStorageBlob -Container $WEStorageContainerName -Context $WEStorageContext -ea Stop | Where-Object{$_.name -like " *$($rehydrateVM.Name).rehydratediag.xml" }  
                             if($rehydrateDiagBlob)
                             {
                                 write-verbose " Retreiving Diagnostics config file $($rehydrateDiagBlob.name)..." -verbose
@@ -360,7 +380,7 @@ if($WERehydrate)
                                 $WETempDiagRehydratefileName = $WETempDiagRehydratefile.Name
                                 $WEDiagfileContent = get-content " $env:temp\$WETempDiagRehydratefileName" -ea Stop
                                 $WEDiagfileContent | Where-Object{$_ -ne ''} | out-file " $env:temp\$WETempDiagRehydratefileName"
-                                $rehydrateVMDiag = (get-content " $env:temp\$WETempDiagRehydratefileName" -ea Stop) -Join " `n"| ConvertFrom-Json
+                                $rehydrateVMDiag = (get-content " $env:temp\$WETempDiagRehydratefileName" -ea Stop) -Join " `n" | ConvertFrom-Json
                                 $wadCfg = $rehydrateVMDiag.wadCfg
                                 $wadStorageAccount = $rehydrateVMDiag.StorageAccount
                                 $wadStorageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $resourceGroupName -Name $wadStorageAccount -ea Stop).Value[0]
@@ -385,17 +405,17 @@ else
 {
     
     # get configuration details for all VMs
-    [string] $location = $sourceResourceGroup.location
+    [string];  $location = $sourceResourceGroup.location
    ;  $resourceGroupVMs = Get-AzureRMVM -ResourceGroupName $resourceGroupName
 
 
-    if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName"; break}
+    if(! $resourceGroupVMs){write-warning " No virtual machines found in resource group $resourceGroupName" ; break}
 
     $resourceGroupVMs | %{
     $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
     write-output " $($_.name) status is $status" 
     if($status -eq 'VM running')
-        {write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again"; break}
+        {write-warning " All virtual machines in this resource group are not stopped.  Please stop all VMs and try again" ; break}
     }
 
     
@@ -414,7 +434,7 @@ else
         $diagSettings = (Get-AzureRmVMDiagnosticsExtension -ResourceGroupName $WEResourceGroupName -VMName $vmName).PublicSettings
         if($diagSettings)
         {
-            $WERehydrateDiagFile = (" $WEResourceGroupName.$vmName.rehydrateDiag.xml").ToLower()
+            $WERehydrateDiagFile = (" $WEResourceGroupName.$vmName.rehydrateDiag.xml" ).ToLower()
             $tempDiagFilePath = " $env:TEMP\$WERehydrateDiagFile"
             $diagSettings | Out-File -FilePath $tempDiagFilePath -Force
             # expand file size to 20KB for Page blob write if we experience Premium_LRS storage
@@ -427,12 +447,12 @@ else
         }
 
         #save off VM config to temp drive before copying it back to cloud storage
-        $WERehydrateFile = (" $WEResourceGroupName.$vmName.rehydrate.json").ToLower()
+        $WERehydrateFile = (" $WEResourceGroupName.$vmName.rehydrate.json" ).ToLower()
         $tempFilePath = " $env:TEMP\$WERehydrateFile"
         $srcVM | ConvertTo-Json -depth 10 | Out-File -FilePath $tempFilePath -Force
 
         # expand file size to 20KB for Page blob write if we experience Premium_LRS storage
-        $file = [System.IO.File]::OpenWrite($tempFilePath)
+       ;  $file = [System.IO.File]::OpenWrite($tempFilePath)
         $file.SetLength(20480)
         $file.Close()
         

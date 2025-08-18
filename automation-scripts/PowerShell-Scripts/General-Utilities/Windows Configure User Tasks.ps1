@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Configure User Tasks
+    Windows Configure User Tasks
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Windows Configure User Tasks
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .DESCRIPTION
     Configures a set of tasks that will run when a user logs into a VM.
 
@@ -27,7 +45,7 @@ param(
     [Parameter(Mandatory = $false)][string] $WEFirstLogonTasksBase64
 )
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 
 function WE-GetTaskID {
@@ -35,18 +53,20 @@ function WE-GetTaskID {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -54,7 +74,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][PSObject] $taskObj
     )
@@ -76,7 +96,7 @@ try {
 
     if (Test-Path -Path $setupScriptsDir) {
         Write-WELog " === To avoid scripts versioning issues remove $setupScriptsDir in case it was created by the base image build" " INFO"
-        Remove-Item $setupScriptsDir -Force -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $setupScriptsDi -Forcer -Force -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     Write-WELog " === Create $setupScriptsDir before copying scripts there" " INFO"
@@ -129,7 +149,7 @@ try {
         foreach ($baseImageLogonTask in $baseImageLogonTasks) {
             $baseImageTaskID = GetTaskID $baseImageLogonTask
             if ($null -eq ($firstLogonTasks | Where-Object { (GetTaskID $_) -eq $baseImageTaskID })) {
-                $uniqueBaseImageLogonTasks = $uniqueBaseImageLogonTasks + $baseImageLogonTask
+               ;  $uniqueBaseImageLogonTasks = $uniqueBaseImageLogonTasks + $baseImageLogonTask
             }
             else {
                 Write-WELog " == Skipped base image task $($baseImageLogonTask | ConvertTo-Json -Depth 10)" " INFO"

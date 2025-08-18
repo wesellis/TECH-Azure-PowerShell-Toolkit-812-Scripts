@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Copy Filetoazureblob
+    Copy Filetoazureblob
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Copy Filetoazureblob
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Write-Output "Updating settings.json file..."
 Write-Output "  Storage account: $env:storageAccountName"
@@ -110,19 +128,19 @@ if (!$json)
 if (!($json.retention))
 {
     # In case the retention object is not present in the settings.json file (versions before 0.4), add it with default values
-    $retention = @"
+   ;  $retention = @"
     {
-        " msexports": {
-            " days": 0
+        " msexports" : {
+            " days" : 0
         },
-        " ingestion": {
-            " months": 13
+        " ingestion" : {
+            " months" : 13
         },
-        " raw": {
-            " days": 0
+        " raw" : {
+            " days" : 0
         },
-        " final": {
-            " months": 13
+        " final" : {
+            " months" : 13
         }
     }
 " @
@@ -132,7 +150,7 @@ if (!($json.retention))
 
 if (!($json.retention.msexports))
 {
-    $json.retention | Add-Member -Name msexports -Value (ConvertFrom-Json "{"" days"" :$($env:msexportRetentionInDays)}") -MemberType NoteProperty
+    $json.retention | Add-Member -Name msexports -Value (ConvertFrom-Json " {"" days"" :$($env:msexportRetentionInDays)}" ) -MemberType NoteProperty
 }
 else
 {
@@ -142,7 +160,7 @@ else
 
 if (!($json.retention.ingestion))
 {
-    $json.retention | Add-Member -Name ingestion -Value (ConvertFrom-Json " {"" months"" :$($env:ingestionRetentionInMonths)}") -MemberType NoteProperty
+    $json.retention | Add-Member -Name ingestion -Value (ConvertFrom-Json " {"" months"" :$($env:ingestionRetentionInMonths)}" ) -MemberType NoteProperty
 }
 else
 {
@@ -152,7 +170,7 @@ else
 
 if (!($json.retention.raw))
 {
-    $json.retention | Add-Member -Name raw -Value (ConvertFrom-Json " {"" days"" :$($env:rawRetentionInDays)}") -MemberType NoteProperty
+    $json.retention | Add-Member -Name raw -Value (ConvertFrom-Json " {"" days"" :$($env:rawRetentionInDays)}" ) -MemberType NoteProperty
 }
 else
 {
@@ -162,7 +180,7 @@ else
 
 if (!($json.retention.final))
 {
-    $json.retention | Add-Member -Name final -Value (ConvertFrom-Json " {"" months"" :$($env:finalRetentionInMonths)}") -MemberType NoteProperty
+    $json.retention | Add-Member -Name final -Value (ConvertFrom-Json " {"" months"" :$($env:finalRetentionInMonths)}" ) -MemberType NoteProperty
 }
 else
 {

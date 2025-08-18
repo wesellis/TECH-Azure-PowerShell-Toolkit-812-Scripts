@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure App Configuration Manager
+    Azure App Configuration Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure App Configuration Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,13 +50,17 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEConfigStoreName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" Create", " AddKey", " GetKey", " DeleteKey", " ListKeys", " ImportFromFile")]
+    [ValidateSet(" Create" , " AddKey" , " GetKey" , " DeleteKey" , " ListKeys" , " ImportFromFile" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
@@ -44,9 +68,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEKeyName,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEKeyValue,
@@ -54,10 +82,12 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELabel,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEContentType = " text/plain",
+    [string]$WEContentType = " text/plain" ,
     
     [Parameter(Mandatory=$false)]
     [hashtable]$WETags = @{},
@@ -65,15 +95,17 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEImportFilePath,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Free", " Standard")]
+    [ValidateSet(" Free" , " Standard" )]
     [string]$WESku = " Standard"
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 Show-Banner -ScriptName " Azure App Configuration Service Manager" -Version " 1.0" -Description " Centralized configuration management for modern applications"
 
@@ -128,7 +160,7 @@ try {
         " ListKeys" {
             Write-Log " 📋 Listing all configuration keys..." -Level INFO
             
-            $keys = Get-AzAppConfigurationKeyValue -Endpoint " https://$WEConfigStoreName.azconfig.io"
+           ;  $keys = Get-AzAppConfigurationKeyValue -Endpoint " https://$WEConfigStoreName.azconfig.io"
             $keys | Format-Table Key, Value, Label, ContentType
         }
     }

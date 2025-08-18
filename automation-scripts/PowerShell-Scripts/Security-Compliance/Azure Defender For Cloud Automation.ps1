@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Defender For Cloud Automation
+    Azure Defender For Cloud Automation
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,14 +16,34 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Defender For Cloud Automation
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" EnableDefender", " ConfigureDefender", " GetSecurityScore", " GetRecommendations", " GetAlerts", " EnableAutoProvisioning", " ConfigurePricing")]
+    [ValidateSet(" EnableDefender" , " ConfigureDefender" , " GetSecurityScore" , " GetRecommendations" , " GetAlerts" , " EnableAutoProvisioning" , " ConfigurePricing" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
@@ -31,16 +51,20 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [string[]]$WEDefenderPlans = @(" VirtualMachines", " AppService", " SqlServers", " StorageAccounts", " KeyVaults", " ContainerRegistry", " KubernetesService"),
+    [string[]]$WEDefenderPlans = @(" VirtualMachines" , " AppService" , " SqlServers" , " StorageAccounts" , " KeyVaults" , " ContainerRegistry" , " KubernetesService" ),
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Free", " Standard")]
-    [string]$WEPricingTier = " Standard",
+    [ValidateSet(" Free" , " Standard" )]
+    [string]$WEPricingTier = " Standard" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEWorkspaceResourceId,
@@ -48,15 +72,17 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEEmailContact,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Off", " On")]
-    [string]$WEEmailNotifications = " On",
+    [ValidateSet(" Off" , " On" )]
+    [string]$WEEmailNotifications = " On" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" All", " High", " Medium", " Low")]
-    [string]$WEMinimumAlertSeverity = " Medium",
+    [ValidateSet(" All" , " High" , " Medium" , " Low" )]
+    [string]$WEMinimumAlertSeverity = " Medium" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEEnableMonitoring,
@@ -66,7 +92,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Defender for Cloud Automation Tool" -Version " 1.0" -Description " Comprehensive cloud security automation with advanced threat protection"
@@ -169,12 +195,12 @@ try {
         " GetAlerts" {
             Write-Log " 🚨 Retrieving security alerts..." -Level INFO
             
-            $alerts = Invoke-AzureOperation -Operation {
+           ;  $alerts = Invoke-AzureOperation -Operation {
                 Get-AzSecurityAlert
             } -OperationName " Get Security Alerts"
             
             # Filter by severity if specified
-            if ($WEMinimumAlertSeverity -ne " All") {
+            if ($WEMinimumAlertSeverity -ne " All" ) {
                ;  $severityOrder = @{" Low" = 1; " Medium" = 2; " High" = 3}
                 $minSeverityValue = $severityOrder[$WEMinimumAlertSeverity]
                 $alerts = $alerts | Where-Object { $severityOrder[$_.AlertSeverity] -ge $minSeverityValue }
@@ -190,7 +216,7 @@ try {
         " EnableAutoProvisioning" {
             Write-Log " 🔄 Enabling auto-provisioning agents..." -Level INFO
             
-            $agents = @(" MicrosoftMonitoringAgent", " MicrosoftDependencyAgent", " LogAnalyticsForLinux")
+            $agents = @(" MicrosoftMonitoringAgent" , " MicrosoftDependencyAgent" , " LogAnalyticsForLinux" )
             
             foreach ($agent in $agents) {
                 try {
@@ -241,7 +267,7 @@ try {
         Write-Log " 📊 Setting up continuous monitoring..." -Level INFO
         
         # Get current security state
-        $currentPricings = Invoke-AzureOperation -Operation {
+       ;  $currentPricings = Invoke-AzureOperation -Operation {
             Get-AzSecurityPricing
         } -OperationName " Get All Security Pricings"
         

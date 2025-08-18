@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Ad
+    Ad
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Ad
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -30,30 +48,30 @@ param(
     $deploymentUserPassword
 )
 
-$script:ErrorActionPreference = 'Stop'
+$script:ErrorActionPreference = 'Stop'; 
 $count = 0
 
 for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
-        $domainShort = $domainFqdn.Split("." )[0]
-        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList "$domainShort\$username" , $secpasswd
+        $domainShort = $domainFqdn.Split(" ." )[0]
+        $cred = New-Object System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" , $secpasswd
         
-        if ($authType -eq "CredSSP" ) {
+        if ($authType -eq " CredSSP" ) {
             try {
                 Enable-WSManCredSSP -Role Client -DelegateComputer $ip -Force
             }
             catch {
-                echo "Enable-WSManCredSSP failed"
+                echo " Enable-WSManCredSSP failed"
             }
         }
         
         $session = New-PSSession -ComputerName $ip -Port $port -Authentication $authType -Credential $cred
         if ($ifdeleteadou) {
             Invoke-Command -Session $session -ScriptBlock {
-                $WEOUPrefixList = @(" OU=Computers,", " OU=Users,", "" )
+                $WEOUPrefixList = @(" OU=Computers," , " OU=Users," , "" )
                 foreach ($prefix in $WEOUPrefixList) {
-                    $ouname = "$prefix$WEUsing:adouPath"
+                    $ouname = " $prefix$WEUsing:adouPath"
                     echo " try to get OU: $ouname"
                     Try {
                         $ou = Get-ADOrganizationalUnit -Identity $ouname
@@ -70,7 +88,7 @@ for ($count = 0; $count -lt 6; $count++) {
             }
             
         }
-        $deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
+       ;  $deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
        ;  $lcmCred = New-Object System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
         Invoke-Command -Session $session -ScriptBlock {
             echo " Install Nuget Provider"

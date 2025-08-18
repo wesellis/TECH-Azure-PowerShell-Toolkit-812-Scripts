@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Image Build
+    Run Image Build
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Run Image Build
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
@@ -74,22 +92,22 @@ while ($global:status -ne 'Succeeded' -and $global:status -ne 'Failed' -and $glo
 $buildStatusShort = " status '$global:status', message '$($global:info.LastRunStatusMessage)'"
 Log " === Image build completed with $buildStatusShort"
 
-$ignoreBuildFailure = [bool]::Parse(" ${env:ignoreBuildFailure}")
+$ignoreBuildFailure = [bool]::Parse(" ${env:ignoreBuildFailure}" )
 if ( (!$ignoreBuildFailure) -and ($global:status -ne 'Succeeded')) {
     Start-Sleep -Seconds 15 # Appears to help with the script output being captured in full
     Log -asError " !!! [ERROR] Image build failed with $buildStatusShort"
 }
 
-$printCustomizationLogLastLines = [int]::Parse(" ${env:printCustomizationLogLastLines}")
+$printCustomizationLogLastLines = [int]::Parse(" ${env:printCustomizationLogLastLines}" )
 if ($printCustomizationLogLastLines -ne 0) {
 
     $stagingResourceGroupName = ${env:stagingResourceGroupName}
     $logsFile = 'customization.log'
     Log " === Looking for storage account in staging RG '$stagingResourceGroupName'"
-    $stagingStorageAccountName = (Get-AzResource -ResourceGroupName $stagingResourceGroupName -ResourceType " Microsoft.Storage/storageAccounts")[0].Name
+    $stagingStorageAccountName = (Get-AzResource -ResourceGroupName $stagingResourceGroupName -ResourceType " Microsoft.Storage/storageAccounts" )[0].Name
 
     $stagingStorageAccountKey = $(Get-AzStorageAccountKey -StorageAccountName $stagingStorageAccountName -ResourceGroupName $stagingResourceGroupName)[0].value
-    $ctx = New-AzStorageContext -StorageAccountName $stagingStorageAccountName -StorageAccountKey $stagingStorageAccountKey
+   ;  $ctx = New-AzStorageContext -StorageAccountName $stagingStorageAccountName -StorageAccountKey $stagingStorageAccountKey
    ;  $logsBlob = Get-AzStorageBlob -Context $ctx -Container packerlogs | Where-Object { $_.Name -like " */$logsFile" }
     if ($logsBlob) {
         Log " === Downloading $logsFile from storage account '$stagingStorageAccountName'"

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Test Localsample
+    Test Localsample
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Test Localsample
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -44,10 +62,10 @@ Usage:
 $ErrorActionPreference = "Stop"
 param(
     [string][Parameter(Mandatory = $true)][AllowEmptyString()] $WESampleFolder, # this is the path to the sample
-    [string] $WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME ? $WEENV:STORAGE_ACCOUNT_NAME : "azurequickstartsservice" ,
-    [string] $WECloudEnvironment = "AzureCloud" , # AzureCloud/AzureUSGovernment
+    [string] $WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME ? $WEENV:STORAGE_ACCOUNT_NAME : " azurequickstartsservice" ,
+    [string] $WECloudEnvironment = " AzureCloud" , # AzureCloud/AzureUSGovernment
     [string] $WETtkFolder = $WEENV:TTK_FOLDER,
-    [string] $WEBicepPath = $WEENV:BICEP_PATH ? $WEENV:BICEP_PATH : "bicep" ,
+    [string] $WEBicepPath = $WEENV:BICEP_PATH ? $WEENV:BICEP_PATH : " bicep" ,
     [switch] $WEFix # If true, fixes will be made if possible
 )
 
@@ -67,7 +85,7 @@ $WESampleFolder = $WEResolvedSampleFolder
 
 $WESampleName = SampleNameFromFolderPath $WESampleFolder
 
-if (!(Test-Path (Join-Path $WESampleFolder " metadata.json"))) {
+if (!(Test-Path (Join-Path $WESampleFolder " metadata.json" ))) {
     $WEErrorActionPreference = $WEPreviousErrorPreference
     Write-Error " Test-LocalSample must be run from within a sample folder. This folder contains no metadata.json file."
     return
@@ -83,9 +101,9 @@ $checkLanguageHostOutput = & $WEPSScriptRoot/Check-LanguageSupport.ps1 `
     6>&1
 Write-Output $checkLanguageHostOutput
 $vars = Find-VarsFromWriteHostOutput $checkLanguageHostOutput
-$bicepSupported = $vars[" BICEP_SUPPORTED"] -eq 'true'
-$bicepVersion = $vars[" BICEP_VERSION"]
-$mainTemplateFilenameJson = $vars[" MAINTEMPLATE_FILENAME_JSON"]
+$bicepSupported = $vars[" BICEP_SUPPORTED" ] -eq 'true'
+$bicepVersion = $vars[" BICEP_VERSION" ]
+$mainTemplateFilenameJson = $vars[" MAINTEMPLATE_FILENAME_JSON" ]
 Assert-NotEmptyOrNull $mainTemplateFilenameJson " mainTemplateFilenameJson"
 
 
@@ -102,10 +120,10 @@ $buildHostOutput = & $WEPSScriptRoot/Validate-DeploymentFile.ps1 `
     6>&1
 Write-Output $buildHostOutput
 $vars = Find-VarsFromWriteHostOutput $buildHostOutput
-$mainTemplateDeploymentFilename = $vars[" MAINTEMPLATE_DEPLOYMENT_FILENAME"]
+$mainTemplateDeploymentFilename = $vars[" MAINTEMPLATE_DEPLOYMENT_FILENAME" ]
 Assert-NotEmptyOrNull $mainTemplateDeploymentFilename " mainTemplateDeploymentFilename"
-$WECompiledJsonFilename = $vars[" COMPILED_JSON_FILENAME"] # $null if not bicep sample
-$labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS"] -eq " TRUE"
+$WECompiledJsonFilename = $vars[" COMPILED_JSON_FILENAME" ] # $null if not bicep sample
+$labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ] -eq " TRUE"
 
 
 Write-WELog " Validating metadata.json" " INFO"
@@ -117,7 +135,7 @@ $metadataHostOutput =
     6>&1
 Write-Output $metadataHostOutput
 $vars = Find-VarsFromWriteHostOutput $metadataHostOutput
-$supportedEnvironmentsJson = $vars[" SUPPORTED_ENVIRONMENTS"]
+$supportedEnvironmentsJson = $vars[" SUPPORTED_ENVIRONMENTS" ]
 Assert-NotEmptyOrNull $supportedEnvironmentsJson " supportedEnvironmentsJson"
 
 
@@ -134,8 +152,8 @@ $validateReadMeHostOutput =
     6>&1
 Write-Output $validateReadMeHostOutput
 $vars = Find-VarsFromWriteHostOutput $validateReadMeHostOutput
-$resultReadMe = $vars[" RESULT_README"] # will be null if fails
-$fixedReadme = $vars[" FIXED_README"] -eq " TRUE"
+$resultReadMe = $vars[" RESULT_README" ] # will be null if fails
+$fixedReadme = $vars[" FIXED_README" ] -eq " TRUE"
 
 
 if (!$WETtkFolder) {
@@ -168,17 +186,17 @@ $miscLabelsHostOutput =
     6>&1
 Write-Output $miscLabelsHostOutput
 $vars = Find-VarsFromWriteHostOutput $miscLabelsHostOutput
-$isRootSample = $vars[" ISROOTSAMPLE"] -eq " true"
-$sampleHasUpperCase = $vars[" SampleHasUpperCase"] -eq " true"
-$isPortalSample = $vars[" IsPortalSample"] -eq " true"
+$isRootSample = $vars[" ISROOTSAMPLE" ] -eq " true"
+$sampleHasUpperCase = $vars[" SampleHasUpperCase" ] -eq " true"
+$isPortalSample = $vars[" IsPortalSample" ] -eq " true"
 
 
 if ($null -ne $WECompiledJsonFilename -and (Test-Path $WECompiledJsonFilename)) {
-    Remove-Item $WECompiledJsonFilename -Force
+    Remove-Item $WECompiledJsonFilenam -Forcee -Force
 }
 
 Write-host " Validation complete."
-
+; 
 $fixesMade = $fixedReadme
 if ($fixedReadme) {
     Write-Warning " A fix has been made in the README. See details above."
@@ -208,10 +226,8 @@ if ($isPortalSample) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

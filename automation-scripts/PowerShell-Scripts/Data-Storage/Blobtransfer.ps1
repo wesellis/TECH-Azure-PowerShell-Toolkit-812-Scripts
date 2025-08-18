@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Blobtransfer
+    Blobtransfer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Blobtransfer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -49,7 +67,7 @@
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
 	[Parameter(Mandatory=$true)]
 	[string]$WESourceImage ,
@@ -57,10 +75,14 @@ param(
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESourceSAKey,
 
 	[Parameter(Mandatory=$true)]
 	[Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDestinationURI,
 
@@ -77,11 +99,11 @@ function getBlobName
 		[string]$url
 	)
 
-	$startIndex = 0
+; 	$startIndex = 0
 
 	for ($i=0;$i -lt 4;$i++)
 	{
-		[int]$startIndex = $url.IndexOf(" /",$startIndex)
+		[int]$startIndex = $url.IndexOf(" /" ,$startIndex)
 	    $startIndex++  
 	}
 
@@ -99,7 +121,7 @@ function getPathUpToContainerLevelfromUrl
 
 	for ($i=0;$i -lt 4;$i++)
 	{
-		[int]$startIndex = $url.IndexOf(" /",$startIndex)
+		[int]$startIndex = $url.IndexOf(" /" ,$startIndex)
 	    $startIndex++  
 	}
 
@@ -114,15 +136,15 @@ function getBlobCompletionStatus
 	)
 
 ; 	$resultObject = New-Object -TypeName PSObject -Property `
-		@{ " TotalFilesTransfered"=0;
-			" TransferSuccessfully"=0;
-			" TransferSkipped"=0;
-			" TransferFailed"=0;
-			" UserCancelled"=$false;
-			" Success"=$false;
-			" SummaryFound"=$false;
-			" ErrorMessage"=[string]::Empty;
-			" ElapsedTime"=[string]::Empty }
+		@{ " TotalFilesTransfered" =0;
+			" TransferSuccessfully" =0;
+			" TransferSkipped" =0;
+			" TransferFailed" =0;
+			" UserCancelled" =$false;
+			" Success" =$false;
+			" SummaryFound" =$false;
+			" ErrorMessage" =[string]::Empty;
+			" ElapsedTime" =[string]::Empty }
 
 
 	# Parsing log file for errors
@@ -131,33 +153,33 @@ function getBlobCompletionStatus
 	for ($i=$azCopyOutput.Count-1 ;$i -ge 0; $i--)
 	{
 		$line = $azCopyOutput[$i]
-		if ($line.Contains(" Transfer failed"))
+		if ($line.Contains(" Transfer failed" ))
 		{
-			$resultObject.TransferFailed = $line.Split(" :")[1].Trim()
+			$resultObject.TransferFailed = $line.Split(" :" )[1].Trim()
 		}
-		elseif ($line.Contains(" Transfer skipped"))
+		elseif ($line.Contains(" Transfer skipped" ))
 		{
-			$resultObject.TransferSkipped = $line.Split(" :")[1].Trim()
+			$resultObject.TransferSkipped = $line.Split(" :" )[1].Trim()
 		}
-		elseif ($line.Contains(" Transfer successfully"))
+		elseif ($line.Contains(" Transfer successfully" ))
 		{
-			$resultObject.TransferSuccessfully = $line.Split(" :")[1].Trim()
+			$resultObject.TransferSuccessfully = $line.Split(" :" )[1].Trim()
 		}
-		elseif ($line.Contains(" Total files transferred"))
+		elseif ($line.Contains(" Total files transferred" ))
 		{
-			$resultObject.TotalFilesTransfered = $line.Split(" :")[1].Trim()
+			$resultObject.TotalFilesTransfered = $line.Split(" :" )[1].Trim()
 		}
-		elseif ($line.Contains(" Transfer summary"))
+		elseif ($line.Contains(" Transfer summary" ))
 		{
 			$resultObject.SummaryFound = $true
 		}
-		elseif ($line.Contains(" User canceled this process") -or $line.Contains(" A task was canceled"))
+		elseif ($line.Contains(" User canceled this process" ) -or $line.Contains(" A task was canceled" ))
 		{
 			$resultObject.UserCancelled = $true
 		}
-		elseif ($line.Contains(" Elapsed time"))
+		elseif ($line.Contains(" Elapsed time" ))
 		{
-			$resultObject.ElapsedTime = $line.Substring($line.IndexOf(" :")).Trim()
+			$resultObject.ElapsedTime = $line.Substring($line.IndexOf(" :" )).Trim()
 		}
 	}
 		
@@ -180,7 +202,7 @@ function getBlobCompletionStatus
 
 try
 {
-	$sourceImageList = $WESourceImage.Split(" ,",[StringSplitOptions]::RemoveEmptyEntries)
+	$sourceImageList = $WESourceImage.Split(" ," ,[StringSplitOptions]::RemoveEmptyEntries)
 
 	$scriptName = [System.IO.Path]::GetFileNameWithoutExtension($WEMyInvocation.MyCommand.Definition)
 	$currentScriptFolder = [System.IO.Path]::GetDirectoryName($WEMyInvocation.MyCommand.Definition)
@@ -209,7 +231,8 @@ try
 
 	$installLog = Get-Content $azCopyInstallLogFileName
 	# Pattern matching for validation
-$installFolder = ($installLog | ? {$_ -match " AZURESTORAGETOOLSFOLDER"}).Split(" =")[1].Trim()
+# Pattern matching for validation
+$installFolder = ($installLog | ? {$_ -match " AZURESTORAGETOOLSFOLDER" }).Split(" =" )[1].Trim()
 
 	$azCopyTool = Join-Path $installFolder " AzCopy\Azcopy.exe"
 
@@ -237,12 +260,12 @@ $installFolder = ($installLog | ? {$_ -match " AZURESTORAGETOOLSFOLDER"}).Split(
 		$blobName = getBlobName -url $url
 		"   BlobName = $blobName" | Out-File " c:\$scriptName.txt" -Append
 
-		$azCopyLogFile = " $WEPSScriptRoot\azcopylog-$blobName.txt"
+	; 	$azCopyLogFile = " $WEPSScriptRoot\azcopylog-$blobName.txt"
 		"   azCopyLogFile = $azCopyLogFile" | Out-File " c:\$scriptName.txt" -Append
 
 		"   Running AzCopy Tool..." | Out-File " c:\$scriptName.txt" -Append
 
-		& $WEAzCopyTool " /Source:$WESourceURIContainer", " /S", " /Dest:$WEDestinationURI", " /DestKey:$WEDestinationSAKey", " /Pattern:$blobName", " /Y" , " /V:$azCopyLogFile", " /NC:20"
+		& $WEAzCopyTool " /Source:$WESourceURIContainer" , " /S" , " /Dest:$WEDestinationURI" , " /DestKey:$WEDestinationSAKey" , " /Pattern:$blobName" , " /Y" , " /V:$azCopyLogFile" , " /NC:20"
 
 		"   Checking blob copy status..." | Out-File " c:\$scriptName.txt" -Append
 		# Checking blob copy status

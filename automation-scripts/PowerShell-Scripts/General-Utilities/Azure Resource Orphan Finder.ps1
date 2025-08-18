@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Orphan Finder
+    Azure Resource Orphan Finder
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Orphan Finder
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
@@ -30,11 +50,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" All", " NetworkInterfaces", " PublicIPs", " Disks", " Snapshots", " LoadBalancers", " NetworkSecurityGroups", " StorageAccounts", " KeyVaults")]
-    [string]$WEResourceType = " All",
+    [ValidateSet(" All" , " NetworkInterfaces" , " PublicIPs" , " Disks" , " Snapshots" , " LoadBalancers" , " NetworkSecurityGroups" , " StorageAccounts" , " KeyVaults" )]
+    [string]$WEResourceType = " All" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WEDaysUnused = 30,
@@ -46,7 +68,7 @@ param(
     [switch]$WEGenerateReport,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEOutputPath = " .\orphaned-resources-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv",
+    [string]$WEOutputPath = " .\orphaned-resources-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEIncludeCostAnalysis,
@@ -56,7 +78,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Resource Orphan Finder Tool" -Version " 1.0" -Description " Identify and cleanup unused Azure resources for cost optimization"
@@ -90,7 +112,7 @@ try {
     # Analyze orphaned Network Interfaces
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Network Analysis" -Status " Finding orphaned network interfaces"
     
-    if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkInterfaces") {
+    if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkInterfaces" ) {
         $networkInterfaces = Get-AzNetworkInterface
         foreach ($nic in $networkInterfaces) {
             if (-not $nic.VirtualMachine -and -not $nic.LoadBalancerBackendAddressPools) {
@@ -108,10 +130,10 @@ try {
     }
 
     # Analyze orphaned Public IPs
-    if ($WEResourceType -eq " All" -or $WEResourceType -eq " PublicIPs") {
+    if ($WEResourceType -eq " All" -or $WEResourceType -eq " PublicIPs" ) {
         $publicIPs = Get-AzPublicIpAddress
         foreach ($pip in $publicIPs) {
-            if (-not $pip.IpConfiguration -and $pip.PublicIpAllocationMethod -eq " Static") {
+            if (-not $pip.IpConfiguration -and $pip.PublicIpAllocationMethod -eq " Static" ) {
                 $orphanedResources = $orphanedResources + [PSCustomObject]@{
                     ResourceType = " PublicIP"
                     ResourceName = $pip.Name
@@ -128,7 +150,7 @@ try {
     # Analyze orphaned Disks
     Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Storage Analysis" -Status " Finding orphaned disks and snapshots"
     
-    if ($WEResourceType -eq " All" -or $WEResourceType -eq " Disks") {
+    if ($WEResourceType -eq " All" -or $WEResourceType -eq " Disks" ) {
         $disks = Get-AzDisk
         foreach ($disk in $disks) {
             if (-not $disk.ManagedBy) {
@@ -155,7 +177,7 @@ try {
     }
 
     # Analyze old Snapshots
-    if ($WEResourceType -eq " All" -or $WEResourceType -eq " Snapshots") {
+    if ($WEResourceType -eq " All" -or $WEResourceType -eq " Snapshots" ) {
         $snapshots = Get-AzSnapshot
         $cutoffDate = (Get-Date).AddDays(-$WEDaysUnused)
         
@@ -181,7 +203,7 @@ try {
     # Analyze orphaned NSGs
     Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName " Security Analysis" -Status " Finding orphaned security groups"
     
-    if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkSecurityGroups") {
+    if ($WEResourceType -eq " All" -or $WEResourceType -eq " NetworkSecurityGroups" ) {
         $nsgs = Get-AzNetworkSecurityGroup
         foreach ($nsg in $nsgs) {
             if (-not $nsg.Subnets -and -not $nsg.NetworkInterfaces) {
@@ -213,7 +235,7 @@ try {
 
     # Remove orphans if requested and explicitly disabled dry run mode  
     # Default behavior is safe (dry run mode) unless user explicitly disables it
-    $isDryRunMode = if ($WEPSBoundParameters.ContainsKey('DryRun')) { $WEDryRun } else { $true }
+   ;  $isDryRunMode = if ($WEPSBoundParameters.ContainsKey('DryRun')) { $WEDryRun } else { $true }
     
     if ($WERemoveOrphans -and -not $isDryRunMode) {
         Write-Log " 🗑️ Removing orphaned resources..." -Level WARNING

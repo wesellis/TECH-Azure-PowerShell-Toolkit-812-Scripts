@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Disable Reservedstorage
+    Windows Disable Reservedstorage
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Disable Reservedstorage
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -35,12 +53,12 @@ param(
     [Parameter(Mandatory = $false)] [bool] $WEIgnoreFailure = $false
 )
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 
 $onFailureBlock = {
     $dismLog = 'C:\WINDOWS\Logs\DISM\dism.log'
-    $logTailLines = 200
+   ;  $logTailLines = 200
     if (Test-Path -Path $dismLog -PathType Leaf) {
         Write-WELog " === Tail of $dismLog :" " INFO"
         try {

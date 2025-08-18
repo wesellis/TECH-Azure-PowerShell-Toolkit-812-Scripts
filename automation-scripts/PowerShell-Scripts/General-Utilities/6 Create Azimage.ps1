@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 6 Create Azimage
+    6 Create Azimage
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 6 Create Azimage
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
@@ -46,7 +64,7 @@ $setAzImageOsDiskSplat = @{
 
 $imageConfig = Set-AzImageOsDisk @setAzImageOsDiskSplat
 
-
+; 
 $newAzImageSplat = @{
     ImageName = $imageName
     ResourceGroupName = $rgName

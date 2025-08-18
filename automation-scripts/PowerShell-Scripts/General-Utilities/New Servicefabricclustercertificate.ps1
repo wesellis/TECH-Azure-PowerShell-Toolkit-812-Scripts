@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced New Servicefabricclustercertificate
+    New Servicefabricclustercertificate
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced New Servicefabricclustercertificate
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] [Parameter(Mandatory=$true)] $WEPassword,
     [string] [Parameter(Mandatory=$true)] $WECertDNSName,
@@ -29,7 +48,7 @@ param(
 )
 
 $WESecurePassword = ConvertTo-SecureString -String $WEPassword -AsPlainText -Force
-$WECertFileFullPath = $(Join-Path (Split-Path -Parent $WEMyInvocation.MyCommand.Definition) "\$WECertDNSName.pfx" )
+$WECertFileFullPath = $(Join-Path (Split-Path -Parent $WEMyInvocation.MyCommand.Definition) " \$WECertDNSName.pfx" )
 
 $WENewCert = New-SelfSignedCertificate -CertStoreLocation Cert:\CurrentUser\My -DnsName $WECertDNSName 
 Export-PfxCertificate -FilePath $WECertFileFullPath -Password $WESecurePassword -Cert $WENewCert
@@ -45,19 +64,17 @@ $WEJSONBlob = @{
 
 $WEContentBytes = [System.Text.Encoding]::UTF8.GetBytes($WEJSONBlob)
 $WEContent = [System.Convert]::ToBase64String($WEContentBytes)
-
+; 
 $WESecretValue = ConvertTo-SecureString -String $WEContent -AsPlainText -Force; 
 $WENewSecret = Set-AzureKeyVaultSecret -VaultName $WEKeyVaultName -Name $WEKeyVaultSecretName -SecretValue $WESecretValue -Verbose
 
 Write-Host
-Write-WELog "Source Vault Resource Id: " " INFO"$(Get-AzureRmKeyVault -VaultName $WEKeyVaultName).ResourceId
-Write-WELog " Certificate URL : " " INFO"$WENewSecret.Id
-Write-WELog " Certificate Thumbprint : " " INFO"$WENewCert.Thumbprint
+Write-WELog " Source Vault Resource Id: " " INFO" $(Get-AzureRmKeyVault -VaultName $WEKeyVaultName).ResourceId
+Write-WELog " Certificate URL : " " INFO" $WENewSecret.Id
+Write-WELog " Certificate Thumbprint : " " INFO" $WENewCert.Thumbprint
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw

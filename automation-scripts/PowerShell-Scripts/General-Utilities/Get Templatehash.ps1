@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Get Templatehash
+    Get Templatehash
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Get Templatehash
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿[CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -25,11 +43,11 @@ param(
     [switch][Parameter(Mandatory = $false)] $removeGeneratorMetadata
 )
 
-Import-Module "$WEPSScriptRoot/Local.psm1" -Force
+Import-Module " $WEPSScriptRoot/Local.psm1" -Force
 
 
 if ($bearerToken -eq "" ) {
-    Write-WELog "Getting token..." " INFO"
+    Write-WELog " Getting token..." " INFO"
     Import-Module Az.Accounts
     $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
     $azContext = Get-AzContext
@@ -55,14 +73,14 @@ else {
 }
 
 if ($null -eq $withoutGeneratorMetadata -or $withoutGeneratorMetadata -eq "" ) {
-    Write-Error "JSON is empty"
+    Write-Error " JSON is empty"
 }
 
 
 Write-WELog " Requesting Hash for file: $templateFilePath" " INFO"
 try {
     #fail the build for now so we can find issues
-    $response = Invoke-RestMethod -Uri $uri `
+   ;  $response = Invoke-RestMethod -Uri $uri `
         -Method " POST" `
         -Headers $WEHeaders `
         -Body $withoutGeneratorMetadata
@@ -70,7 +88,7 @@ try {
 }
 catch {
     Write-Warning $WEError[0]
-    Write-Warning ($response ? $response : " (no response)")
+    Write-Warning ($response ? $response : " (no response)" )
     Write-Error " Failed to get hash for: $templateFilePath"
 }
 

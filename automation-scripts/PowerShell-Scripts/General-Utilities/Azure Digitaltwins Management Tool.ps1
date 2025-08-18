@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Digitaltwins Management Tool
+    Azure Digitaltwins Management Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Digitaltwins Management Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -62,9 +80,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -72,20 +92,28 @@ param(
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEInstanceName,
     
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
     
     [Parameter(Mandatory = $true)]
-    [ValidateSet(" Create", " Delete", " Update", " Configure", " Monitor", " Deploy")]
+    [ValidateSet(" Create" , " Delete" , " Update" , " Configure" , " Monitor" , " Deploy" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEModelDefinitions,
@@ -99,10 +127,12 @@ param(
     [Parameter(Mandatory = $false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEEventHubNamespace,
     
     [Parameter(Mandatory = $false)]
-    [string]$WEEventHubName = " digitaltwins-telemetry",
+    [string]$WEEventHubName = " digitaltwins-telemetry" ,
     
     [Parameter(Mandatory = $false)]
     [switch]$WEEnableTimeSeriesInsights,
@@ -138,8 +168,10 @@ function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMessage,
-        [ValidateSet(" Info", " Warning", " Error", " Success")]
+        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
         [string]$WELevel = " Info"
     )
     
@@ -159,7 +191,7 @@ function WE-New-DigitalTwinsInstance {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if ($WEPSCmdlet.ShouldProcess(" Digital Twins instance '$WEInstanceName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Digital Twins instance '$WEInstanceName'" , " Create" )) {
         try {
             Write-EnhancedLog " Creating Azure Digital Twins instance: $WEInstanceName" " Info"
         
@@ -186,9 +218,9 @@ function WE-New-DigitalTwinsInstance {
             Start-Sleep -Seconds 30
             $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $WEResourceGroupName -ResourceName $WEInstanceName
             Write-EnhancedLog " Instance provisioning state: $($instance.ProvisioningState)" " Info"
-        } while ($instance.ProvisioningState -eq " Provisioning")
+        } while ($instance.ProvisioningState -eq " Provisioning" )
         
-        if ($instance.ProvisioningState -eq " Succeeded") {
+        if ($instance.ProvisioningState -eq " Succeeded" ) {
             Write-EnhancedLog " Digital Twins instance is ready for use" " Success"
             return $instance
         } else {
@@ -207,7 +239,7 @@ function WE-New-PrivateEndpoint {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
-    if ($WEPSCmdlet.ShouldProcess(" Private endpoint for '$WEInstanceName'", " Create")) {
+    if ($WEPSCmdlet.ShouldProcess(" Private endpoint for '$WEInstanceName'" , " Create" )) {
         try {
             Write-EnhancedLog " Configuring private endpoint for Digital Twins instance" " Info"
         
@@ -246,7 +278,7 @@ function WE-Set-EventRouting {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
-    if ($WEPSCmdlet.ShouldProcess(" Event routing for '$WEInstanceName'", " Configure")) {
+    if ($WEPSCmdlet.ShouldProcess(" Event routing for '$WEInstanceName'" , " Configure" )) {
         try {
             Write-EnhancedLog " Configuring event routing for Digital Twins instance" " Info"
         
@@ -275,7 +307,7 @@ function WE-Set-EventRouting {
             ResourceName = $WEInstanceName
             EndpointName = $endpointName
             EndpointType = " EventHub"
-            ConnectionString = (Get-AzEventHubKey -ResourceGroupName $WEResourceGroupName -NamespaceName $WEEventHubNamespace -AuthorizationRuleName " RootManageSharedAccessKey").PrimaryConnectionString
+            ConnectionString = (Get-AzEventHubKey -ResourceGroupName $WEResourceGroupName -NamespaceName $WEEventHubNamespace -AuthorizationRuleName " RootManageSharedAccessKey" ).PrimaryConnectionString
             EventHubName = $WEEventHubName
         }
         
@@ -283,7 +315,7 @@ function WE-Set-EventRouting {
         
         # Create event route
         $routeName = " telemetry-route"
-        $filter = " type = 'Microsoft.DigitalTwins.Twin.Telemetry'"
+       ;  $filter = " type = 'Microsoft.DigitalTwins.Twin.Telemetry'"
         
         New-AzDigitalTwinsEventRoute -ResourceGroupName $WEResourceGroupName -ResourceName $WEInstanceName -EventRouteName $routeName -EndpointName $endpointName -Filter $filter
         
@@ -367,7 +399,7 @@ function WE-Deploy-DigitalTwinsModel {
             
             # Deploy models using Azure CLI (as Az.DigitalTwins doesn't have direct model upload)
             $factoryModelJson = $factoryModel | ConvertTo-Json -Depth 10
-            $productionLineModelJson = $productionLineModel | ConvertTo-Json -Depth 10
+           ;  $productionLineModelJson = $productionLineModel | ConvertTo-Json -Depth 10
             
             $factoryModelJson | Out-File -FilePath " .\factory-model.json" -Encoding UTF8
             $productionLineModelJson | Out-File -FilePath " .\production-line-model.json" -Encoding UTF8
@@ -430,7 +462,7 @@ function WE-Set-DiagnosticSetting {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
-    if ($WEPSCmdlet.ShouldProcess(" Diagnostic settings for '$WEInstanceName'", " Configure")) {
+    if ($WEPSCmdlet.ShouldProcess(" Diagnostic settings for '$WEInstanceName'" , " Configure" )) {
         try {
             Write-EnhancedLog " Configuring diagnostic settings for Digital Twins instance" " Info"
         
@@ -506,7 +538,7 @@ function WE-Set-RoleAssignment {
     [CmdletBinding(SupportsShouldProcess)]
     param([object]$WEDigitalTwinsInstance)
     
-    if ($WEPSCmdlet.ShouldProcess(" RBAC roles for '$WEInstanceName'", " Configure")) {
+    if ($WEPSCmdlet.ShouldProcess(" RBAC roles for '$WEInstanceName'" , " Configure" )) {
         try {
             Write-EnhancedLog " Configuring RBAC roles for Digital Twins instance" " Info"
         
@@ -542,11 +574,11 @@ function WE-Get-DigitalTwinsStatus {
         Write-EnhancedLog "  Created Time: $($instance.CreatedTime)" " Info"
         
         # Get models count
-        $modelsCount = (az dt model list --dt-name $WEInstanceName --query " length(@)") 
+        $modelsCount = (az dt model list --dt-name $WEInstanceName --query " length(@)" ) 
         Write-EnhancedLog "  Models Count: $modelsCount" " Info"
         
         # Get twins count
-        $twinsCount = (az dt twin query --dt-name $WEInstanceName --query-command " SELECT COUNT() FROM DIGITALTWINS" --query " result[0].COUNT")
+        $twinsCount = (az dt twin query --dt-name $WEInstanceName --query-command " SELECT COUNT() FROM DIGITALTWINS" --query " result[0].COUNT" )
         Write-EnhancedLog "  Twins Count: $twinsCount" " Info"
         
         Write-EnhancedLog " Digital Twins monitoring completed" " Success"
@@ -598,7 +630,7 @@ try {
         }
         
         " Monitor" {
-            $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $WEResourceGroupName -ResourceName $WEInstanceName
+           ;  $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $WEResourceGroupName -ResourceName $WEInstanceName
             Get-DigitalTwinsStatus -DigitalTwinsInstance $instance
         }
         

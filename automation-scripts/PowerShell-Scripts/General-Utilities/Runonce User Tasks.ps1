@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Runonce User Tasks
+    Runonce User Tasks
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Runonce User Tasks
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -41,7 +59,7 @@ Set-StrictMode -Version Latest
 
         # Copy machine specific metadata from C:\Program Files\Microsoft Dev Box Agent\...\appsettings.Production.json to C:\.tools\Setup\DevBoxAgent.json.
         Write-WELog " === Copying DevBoxAgent.json" " INFO"
-        $devBoxAgentInstallLocation = 'C:\Program Files\Microsoft Dev Box Agent'
+        $devBoxAgentInstallLocation = '${env:ProgramFiles}\Microsoft Dev Box Agent'
         if (Test-Path $devBoxAgentInstallLocation -PathType Container) {
             $devBoxSettingsFiles = @(Get-ChildItem -Recurse -File -Path $devBoxAgentInstallLocation -Filter 'appsettings.Production.json')
             if ($devBoxSettingsFiles.Count -gt 0) {
@@ -55,7 +73,7 @@ Set-StrictMode -Version Latest
         Write-Host -Object $_.ScriptStackTrace
     }
     finally {
-        $WEErrorActionPreference = " SilentlyContinue"
+       ;  $WEErrorActionPreference = " SilentlyContinue"
         Stop-Transcript | Out-Null
        ;  $WEErrorActionPreference = " Stop"
     }

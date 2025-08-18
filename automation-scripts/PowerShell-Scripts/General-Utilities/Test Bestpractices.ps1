@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Test Bestpractices
+    Test Bestpractices
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Test Bestpractices
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -36,14 +54,16 @@ $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -51,13 +71,13 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER,
     [string] $WEMainTemplateDeploymentFilename = $WEENV:MAINTEMPLATE_DEPLOYMENT_FILENAME,
     [string] $ttkFolder = $WEENV:TTK_FOLDER,
     [string[]] $WESkip = $WEENV:TTK_SKIP_TESTS,
-    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true")
+    [switch];  $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" )
 )
 
 Import-Module " $($ttkFolder)/arm-ttk/arm-ttk.psd1"
@@ -67,8 +87,8 @@ if($bicepSupported){
     bicep build " $($WESampleFolder)/$WEMainTemplateDeploymentFilename" --outfile " $($WESampleFolder)/azuredeploy.json"
 }
 
-Write-WELog " Calling Test-AzureTemplate on $WESampleFolder" " INFO"; 
-$testOutput = @(Test-AzTemplate -TemplatePath $WESampleFolder -Skip " $WESkip")
+Write-WELog " Calling Test-AzureTemplate on $WESampleFolder" " INFO" ; 
+$testOutput = @(Test-AzTemplate -TemplatePath $WESampleFolder -Skip " $WESkip" )
 $testOutput
 
 if ($testOutput | ? { $_.Errors }) {
@@ -85,10 +105,8 @@ if($bicepSupported){
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

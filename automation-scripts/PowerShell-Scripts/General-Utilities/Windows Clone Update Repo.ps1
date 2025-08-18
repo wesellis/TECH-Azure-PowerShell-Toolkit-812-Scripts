@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Clone Update Repo
+    Windows Clone Update Repo
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Clone Update Repo
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -73,11 +91,15 @@ enum SourceControl {
 }
 
 $logfilepath = $null
-$global:varLogArray = New-Object -TypeName "PSCustomObject"
+$global:varLogArray = New-Object -TypeName " PSCustomObject"
 Function ProcessRunner(
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$command,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$arguments,
@@ -105,7 +127,7 @@ Function ProcessRunner(
     $errLog = [System.IO.Path]::GetTempFileName()
 
     if ($waitForDependents) {
-        $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+       ;  $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
     }
     else {
        ;  $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
@@ -128,7 +150,7 @@ Function ProcessRunner(
         # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
         # The below is the workaround for the defect
         $process.HasExited  # This will calculate the exitCode
-        $WEExitCode = $process.GetType().GetField(" exitCode", " NonPublic,Instance").GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+        $WEExitCode = $process.GetType().GetField(" exitCode" , " NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     
     if ($WEExitCode -ne 0) {
@@ -158,7 +180,7 @@ Function ProcessRunner(
 
 function WE-GvfsCloneGitRepo {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()] $gitExeLocation,
         [ValidateNotNullOrEmpty()] $gvfsExeLocation,
@@ -168,7 +190,7 @@ param(
         [string] $msiClientId
     )
     # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://")) {
+    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
         $errMsg = $(" Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
         Write-Host $errMsg
         Throw $errMsg
@@ -185,15 +207,15 @@ param(
     # Known Issue: gvfs clone does not work with -b <branch> option.
     # So, first gvfs clone without -b <branch> option
     # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
+    Write-Host $(" Gvfs cloning the git repo..." )
 
     # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using "git config"
+    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
     $prevCredentialHelper = &$gitExeLocation config --system credential.helper
 
     # Configure credential.helper using " git config"
-    $WEGitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-   ;  $WECredentialHelper = " `"!f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$WEGitAccessToken; }; f`""
+   ;  $WEGitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
+   ;  $WECredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$WEGitAccessToken; }; f`""
     ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $WECredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
 
     $runBlock = {
@@ -208,7 +230,7 @@ param(
 
 function WE-Get-CanUseManagedIdentityForRepo {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $WERepoUrl
     )
@@ -222,7 +244,7 @@ param(
 
 function WE-CloneGitRepo {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()] $gitExeLocation,
         [ValidateNotNullOrEmpty()] $gitRepoLocation,
@@ -233,7 +255,7 @@ param(
         [Parameter(Mandatory = $false)][string] $msiClientId
     )
     # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://")) {
+    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
         $errMsg = $(" Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
         Write-Host $errMsg
         Throw $errMsg
@@ -269,18 +291,18 @@ param(
 
     $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
 
-    Write-Host $("Cloning the git repo..." )
+    Write-Host $(" Cloning the git repo..." )
     $runBlock = {
         # Remove existing repo folder in case it was created by the previous clone attempt
         if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item $gitLocalRepoLocation -Force -Recurse -Force
+            Remove-Item $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
 
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd "clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
     }
     RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
 
-    Write-Host Changing to repo location: $(" '$gitLocalRepoLocation'")
+    Write-Host Changing to repo location: $(" '$gitLocalRepoLocation'" )
     Set-Location $gitLocalRepoLocation
 
     # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
@@ -299,7 +321,7 @@ param(
 
 function WE-UpdateGitRepo {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()] $gitExeLocation,
         [ValidateNotNullOrEmpty()] $gitRepoLocation,
@@ -312,7 +334,7 @@ param(
     )
 
     # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://")) {
+    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
         $errMsg = $(" Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
         Write-Error $errMsg
         Throw $errMsg
@@ -390,7 +412,7 @@ param(
 
 function WE-ExecuteGitCmd {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()][string] $gitExeLocation,
         [ValidateNotNullOrEmpty()][string] $gitCmd,
@@ -406,7 +428,7 @@ param(
     }
 
     Write-Host $(" Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = "$($authHeader)$gitCmd $gitCmdArgs"
+    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
     ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
 }
 
@@ -416,7 +438,7 @@ param(
 
 function WE-ExecuteGvfsCmd {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
         [ValidateNotNullOrEmpty()][string] $gvfsCmd,
@@ -431,7 +453,7 @@ param(
     }
 
     Write-Host $(" Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = "$gvfsCmd $gvfsCmdArgs"
+    $arguments = " $gvfsCmd $gvfsCmdArgs"
     # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
     # So, dont -Wait during Start-Process for gvfs clone
     ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
@@ -440,7 +462,7 @@ param(
 
 function WE-ConfigureGitRepoBeforeClone {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()] $gitExeLocation
     )
@@ -455,7 +477,7 @@ param(
 
 function WE-ConfigureGitRepoAfterClone {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()] $gitExeLocation,
         [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
@@ -476,7 +498,7 @@ param(
 
 function WE-UpdateOrCloneRepo {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [ValidateNotNullOrEmpty()][string] $repoUrl,
         [ValidateNotNullOrEmpty()][string] $targetDirectory,
@@ -509,7 +531,7 @@ param(
 
     # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'. 
     if ($repoUrl.Contains(" " )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+        $repoUrl = $repoUrl.Replace(" " , " %20" )
     }
 
     # If the Folder exists
@@ -518,7 +540,7 @@ param(
             $shouldCloneRepo = $true
         }
         else {
-            Write-WELog "folder not found at '$targetDirectory'." " INFO"
+            Write-WELog " folder not found at '$targetDirectory'." " INFO"
             throw " folder not found."
         }
     }
@@ -540,7 +562,7 @@ param(
 
                 if ($? -eq $true) {
                     # gvfs repository is always at " src" folder
-                    Set-Location (Join-Path $targetDirectory " src")
+                    Set-Location (Join-Path $targetDirectory " src" )
 
                     # git remote will return an error if this is not a git repository
                     $repo_originUrl = &$WEGitExeLocation remote get-url origin 
@@ -576,7 +598,7 @@ param(
             }
         }
 
-        Write-Host Changing to repo location: $(" '$targetDirectory'")
+        Write-Host Changing to repo location: $(" '$targetDirectory'" )
         Set-Location $targetDirectory
     
         # update repo_originUrl to the new location
@@ -688,7 +710,7 @@ function WE-RunScriptSyncRepo(
 
         $formattedSparseCheckoutFolders = ""
         if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '"' }
+            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
             $formattedSparseCheckoutFolders = $quotedFolders -Join " "
         }
 
@@ -701,7 +723,7 @@ function WE-RunScriptSyncRepo(
 
         # Set the file name for logging repo sync variables
         Write-WELog " Derive Repo Log Name" " INFO"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory") + " .json"
+        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
 
         # Write out file to output location
         $outFile = " $repoLogFilePath\$repoLogFileName"
@@ -715,7 +737,7 @@ function WE-RunScriptSyncRepo(
         Write-Host -Object $_.ScriptStackTrace
 
         if (($null -ne $WEError[0]) -and ($null -ne $WEError[0].Exception) -and ($null -ne $WEError[0].Exception.Message)) {
-            $errMsg = $WEError[0].Exception.Message
+           ;  $errMsg = $WEError[0].Exception.Message
             Write-Host $errMsg
             Write-Error $errMsg
         }

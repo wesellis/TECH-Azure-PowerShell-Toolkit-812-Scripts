@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Documentintelligence Service Manager
+    Azure Documentintelligence Service Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Documentintelligence Service Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,26 +50,30 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEServiceName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" F0", " S0")]
-    [string]$WESkuName = " S0",
+    [ValidateSet(" F0" , " S0" )]
+    [string]$WESkuName = " S0" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Create", " Delete", " GetKeys", " ListModels", " TestService")]
-    [string]$WEAction = " Create",
+    [ValidateSet(" Create" , " Delete" , " GetKeys" , " ListModels" , " TestService" )]
+    [string]$WEAction = " Create" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDocumentUrl,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEModelId = " prebuilt-document",
+    [string]$WEModelId = " prebuilt-document" ,
     
     [Parameter(Mandatory=$false)]
     [hashtable]$WENetworkRules = @{},
@@ -65,7 +89,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure AI Document Intelligence Manager" -Version " 1.0" -Description " Enterprise document AI processing automation"
@@ -105,12 +129,12 @@ try {
             }
             
             if ($WENetworkRules.Count -gt 0) {
-                if ($WENetworkRules.ContainsKey(" AllowedIPs")) {
+                if ($WENetworkRules.ContainsKey(" AllowedIPs" )) {
                     $serviceParams.NetworkRuleSet.IpRules = $WENetworkRules.AllowedIPs | ForEach-Object {
                         @{ IpAddress = $_ }
                     }
                 }
-                if ($WENetworkRules.ContainsKey(" VNetRules")) {
+                if ($WENetworkRules.ContainsKey(" VNetRules" )) {
                     $serviceParams.NetworkRuleSet.VirtualNetworkRules = $WENetworkRules.VNetRules
                 }
             }
@@ -156,9 +180,9 @@ try {
             Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
             
             $prebuiltModels = @(
-                " prebuilt-document", " prebuilt-layout", " prebuilt-receipt", 
-                " prebuilt-invoice", " prebuilt-businessCard", " prebuilt-idDocument",
-                " prebuilt-tax.us.w2", " prebuilt-tax.us.1098", " prebuilt-tax.us.1099"
+                " prebuilt-document" , " prebuilt-layout" , " prebuilt-receipt" , 
+                " prebuilt-invoice" , " prebuilt-businessCard" , " prebuilt-idDocument" ,
+                " prebuilt-tax.us.w2" , " prebuilt-tax.us.1098" , " prebuilt-tax.us.1099"
             )
             
             foreach ($model in $prebuiltModels) {
@@ -197,7 +221,7 @@ try {
                 do {
                     Start-Sleep -Seconds 2
                     $result = Invoke-RestMethod -Uri $operationLocation -Method GET -Headers $headers
-                } while ($result.status -eq " running")
+                } while ($result.status -eq " running" )
                 
                 return $result
             } -OperationName " Analyze Document"
@@ -237,7 +261,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Service Deletion" -Status " Removing Document Intelligence service"
             
             $confirmation = Read-Host " Are you sure you want to delete the Document Intelligence service '$WEServiceName'? (yes/no)"
-            if ($confirmation.ToLower() -ne " yes") {
+            if ($confirmation.ToLower() -ne " yes" ) {
                 Write-Log " Deletion cancelled by user" -Level WARN
                 return
             }
@@ -251,7 +275,7 @@ try {
     }
 
     # Configure monitoring if enabled and creating service
-    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create") {
+    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Monitoring Setup" -Status " Configuring diagnostic settings"
         
         $diagnosticSettings = Invoke-AzureOperation -Operation {
@@ -265,8 +289,8 @@ try {
                     Name = " $WEServiceName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" Audit", " RequestResponse", " Trace")
-                    MetricCategory = @(" AllMetrics")
+                    Category = @(" Audit" , " RequestResponse" , " Trace" )
+                    MetricCategory = @(" AllMetrics" )
                 }
                 
                 Set-AzDiagnosticSetting @diagnosticParams
@@ -282,7 +306,7 @@ try {
     }
 
     # Apply enterprise tags if creating service
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Tagging" -Status " Applying enterprise tags"
         $tags = @{
             'Environment' = 'Production'
@@ -308,7 +332,7 @@ try {
     $maxScore = 6
     $securityFindings = @()
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         # Check network access
         if ($WERestrictPublicAccess) {
             $securityScore++
@@ -334,26 +358,26 @@ try {
         }
         
         # Check region compliance
-        if ($WELocation -in @(" East US", " West Europe", " Southeast Asia")) {
+        if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
             $securityScore++
             $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
         }
         
         # Check SKU for production readiness
-        if ($WESkuName -ne " F0") {
+        if ($WESkuName -ne " F0" ) {
             $securityScore++
             $securityFindings = $securityFindings + " ✓ Production-ready SKU selected"
         }
         
         # Check custom subdomain (required for VNet integration)
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Custom subdomain configured"
+       ;  $securityFindings = $securityFindings + " ✓ Custom subdomain configured"
     }
 
     # Final validation
     Write-ProgressStep -StepNumber 7 -TotalSteps 8 -StepName " Validation" -Status " Verifying service health"
     
-    if ($WEAction.ToLower() -ne " delete") {
+    if ($WEAction.ToLower() -ne " delete" ) {
        ;  $serviceStatus = Invoke-AzureOperation -Operation {
             Get-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName
         } -OperationName " Validate Service Status"
@@ -368,7 +392,7 @@ try {
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog " 🤖 Document Intelligence Service Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Service Name: $WEServiceName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White

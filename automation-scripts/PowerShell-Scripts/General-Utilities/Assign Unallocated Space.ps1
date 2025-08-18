@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Assign Unallocated Space
+    Assign Unallocated Space
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Assign Unallocated Space
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -46,25 +64,27 @@ param(
 )
 
 Set-StrictMode -Version latest
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 
 function WE-Invoke-AssignUnallocatedSpace {
     
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -72,7 +92,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][PSObject] $WETaskParams,
         [Parameter(Mandatory = $false)][bool] $WESuppressVerboseOutput
@@ -86,7 +106,7 @@ param(
     $supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter
     $partition = Get-Partition -DriveLetter $driveLetter
 
-    [Int32] $maxSizeMB = $supportedSize.SizeMax / 1MB
+    [Int32];  $maxSizeMB = $supportedSize.SizeMax / 1MB
     [Int32];  $currentSizeMB = $partition.Size / 1MB
 
     # Guard against error 'The size of the extent is less than the minimum of 1MB'

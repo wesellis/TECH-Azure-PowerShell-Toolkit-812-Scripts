@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Configure Onedrive Sync
+    Windows Configure Onedrive Sync
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Windows Configure Onedrive Sync
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
 .DESCRIPTION
     Configures OneDrive sync settings for top level user folders.
 
@@ -30,7 +48,7 @@ param(
     # This can cause having multiple copies of a shortcut or a file on desktop when they are created by an app installer or build env init scripts.
     [Parameter(Mandatory = $false)][bool] $WEEnableDesktopSync = $false
 )
-
+; 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -46,7 +64,7 @@ function WE-ConfigureOnedriveSync($enableDocumentsSync, $enablePicturesSync, $en
         $registryParams | ForEach-Object {
             $registryKey = $_.Key
            ;  $registryValue = $_.Value
-            Write-WELog "=== Setting registry value: HKLM\SOFTWARE\Policies\Microsoft\OneDrive\KFMSilentOptIn$registryKey = $registryValue" " INFO"
+            Write-WELog " === Setting registry value: HKLM\SOFTWARE\Policies\Microsoft\OneDrive\KFMSilentOptIn$registryKey = $registryValue" " INFO"
             reg.exe add " HKLM\SOFTWARE\Policies\Microsoft\OneDrive" /v " KFMSilentOptIn$registryKey" /t REG_DWORD /d $registryValue /f
         }
     }

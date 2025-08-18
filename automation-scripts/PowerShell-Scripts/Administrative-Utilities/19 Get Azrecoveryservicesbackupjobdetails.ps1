@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 19 Get Azrecoveryservicesbackupjobdetails
+    19 Get Azrecoveryservicesbackupjobdetails
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 19 Get Azrecoveryservicesbackupjobdetails
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -78,7 +96,7 @@ $getAzRecoveryServicesBackupJobSplat = @{
 }
 $restorejob = Get-AzRecoveryServicesBackupJob @getAzRecoveryServicesBackupJobSplat | Where-Object {$_.JobId -eq '064ee552-fb05-4d1c-a2c3-80051f40b533'}
 
-
+; 
 $getAzRecoveryServicesBackupJobDetailsSplat = @{
     Job = $restorejob
     VaultId = $targetVault.ID

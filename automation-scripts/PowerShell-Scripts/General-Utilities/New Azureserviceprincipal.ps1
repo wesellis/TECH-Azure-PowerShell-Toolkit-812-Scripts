@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced New Azureserviceprincipal
+    New Azureserviceprincipal
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced New Azureserviceprincipal
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -61,7 +79,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
     [int32]$WECertYearsValid= 3,
@@ -72,7 +90,7 @@ param(
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 4.2.1") {
+if ((Get-Module AzureRM).Version -lt " 4.2.1" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -81,7 +99,7 @@ if ((Get-Module AzureRM).Version -lt " 4.2.1") {
 function WE-Roll-Back 
 {
  [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($thumbprint, $WEApplicationId, $servicePrincipalID)
     
     if($thumbprint) 
@@ -126,7 +144,7 @@ if(! $WESubscriptionId)
    break
 }
 
-
+; 
 $WETenantID = $sub.TenantId 
 
 write-host " Logged into $($sub.Name) with subscriptionID $WESubscriptionId as $loginID" -f Green
@@ -144,7 +162,7 @@ while($WEPassword -ne $confirmpassword )
 
 
 [string] $guid = (New-Guid).Guid
-[string] $WEApplicationDisplayName = " AzureSP"+($guid.Substring(0,8))
+[string] $WEApplicationDisplayName = " AzureSP" +($guid.Substring(0,8))
 
 
 write-verbose " Creating self-signed certificate" -Verbose
@@ -185,7 +203,7 @@ catch
  break
 }
 
-write-verbose " Adding Role to Service Principal $servicePrincipalID" -Verbose
+write-verbose " Adding Role to Service Principal $servicePrincipalID" -Verbose; 
 $WENewRole = $null; 
 $WERetries = 0;
 While ($WENewRole -eq $null -and $WERetries -le 6)

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Create Root And Clients Certificates
+    Create Root And Clients Certificates
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Create Root And Clients Certificates
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $false, HelpMessage = 'password certificate', ValueFromPipeline = $true)]
     [string]$pwdCertificates = '12345'
@@ -37,7 +56,7 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
 
 
     # The variable specifies the local folder to store the digital certificates
-    $certPath = "C:\cert$clientNumb\"
+    $certPath = " C:\cert$clientNumb\"
 
     $pathFolder = [string](Split-Path -Path $certPath -Parent)
     $folderName = [string](Split-Path -Path $certPath -Leaf)
@@ -143,7 +162,7 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
 
     ####### export user certificate in Personal Information Exchange - PKCS #12 (.PFX)
     $mypwd = ConvertTo-SecureString -String $pwdCertificates -Force -AsPlainText
-    $certClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $certSubject }
+   ;  $certClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $certSubject }
     Export-PfxCertificate -cert $certClient -FilePath $certFilePath -Password $mypwd
 
     ### To see the thumbprint of exported user certificate
@@ -158,10 +177,8 @@ for ($selection = 1 ; $selection -le 3 ; $selection++) {
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

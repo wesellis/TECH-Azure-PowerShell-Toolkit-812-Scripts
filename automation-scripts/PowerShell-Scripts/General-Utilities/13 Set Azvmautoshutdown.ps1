@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 13 Set Azvmautoshutdown
+    13 Set Azvmautoshutdown
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 13 Set Azvmautoshutdown
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .SYNOPSIS 
@@ -60,7 +78,7 @@
     .EXAMPLE 
         Set-AzVMAutoShutdown -ResourceGroupName RG-WE-001 -Name MYVM001 -Enable -Time 19:00 -TimeZone " W. Europe Standard Time" -WebhookURL " https://myapp.azurewebsites.net/webhook" 
  
-        Enables auto-shutdown on virtual machine MYVM001 in resource group RG-WE-001 and sets the daily shutdown to take place at 19:00 in " W. Europe Standard Time" time zone. Notifications will be enabled and the WebhookURL will be set to " https://myapp.azurewebsites.net/webhook". 
+        Enables auto-shutdown on virtual machine MYVM001 in resource group RG-WE-001 and sets the daily shutdown to take place at 19:00 in " W. Europe Standard Time" time zone. Notifications will be enabled and the WebhookURL will be set to " https://myapp.azurewebsites.net/webhook" . 
  
     .EXAMPLE 
         Set-AzVMAutoShutdown -ResourceGroupName RG-WE-001 -Name MYVM001 -Enable -Time 19:00 -TimeZone " W. Europe Standard Time" -Email " alerts@mycompany.com" 
@@ -77,7 +95,7 @@
 <#
 
 
-$WEErrorActionPreference = " Stop"; 
+$WEErrorActionPreference = " Stop" ; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 .SYNOPSIS
@@ -113,27 +131,31 @@ Properties        : @{status=Enabled; taskType=ComputeVmShutdownTask; dailyRecur
 function WE-Set-AzVMAutoShutdown {
 
     [CmdletBinding()]
-$ErrorActionPreference = "Stop" 
+$ErrorActionPreference = " Stop" 
     param(
         [Parameter(Mandatory = $true)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName, 
         [Parameter(Mandatory = $true)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEName, 
-        [Parameter(ParameterSetName = " PsDisable", Mandatory = $true)][switch]$WEDisable, 
-        [Parameter(ParameterSetName = " PsEnable", Mandatory = $true)][switch]$WEEnable, 
-        [Parameter(ParameterSetName = " PsEnable", Mandatory = $true)][DateTime]$WETime, 
-        [Parameter(ParameterSetName = " PsEnable", Mandatory = $false)][string]$WETimeZone = (Get-TimeZone | Select-Object -ExpandProperty Id), 
-        [Parameter(ParameterSetName = " PsEnable", Mandatory = $false)][AllowEmptyString()][string]$WEWebhookUrl = "" , 
-        [Parameter(ParameterSetName = "PsEnable" , Mandatory = $false)][string]$WEEmail
+        [Parameter(ParameterSetName = " PsDisable" , Mandatory = $true)][switch]$WEDisable, 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $true)][switch]$WEEnable, 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $true)][DateTime]$WETime, 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][string]$WETimeZone = (Get-TimeZone | Select-Object -ExpandProperty Id), 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][AllowEmptyString()][string]$WEWebhookUrl = "" , 
+        [Parameter(ParameterSetName = " PsEnable" , Mandatory = $false)][string]$WEEmail
     ) 
  
     # Check the loaded modules 
-    # $modules = @("Az.Compute" , "Az.Resources" , "Az.Profile" ) 
+    # $modules = @(" Az.Compute" , " Az.Resources" , " Az.Profile" ) 
     # foreach ($module in $modules) { 
     #     if ((Get-Module -Name $module) -eq $null) { 
-    #         Write-Error -Message "PowerShell module '$module' is not loaded" -RecommendedAction " Please download the Azure PowerShell command-line tools from https://azure.microsoft.com/en-us/downloads/" 
+    #         Write-Error -Message " PowerShell module '$module' is not loaded" -RecommendedAction " Please download the Azure PowerShell command-line tools from https://azure.microsoft.com/en-us/downloads/" 
     #         return 
     #     } 
     # } 
@@ -158,50 +180,50 @@ $ErrorActionPreference = "Stop"
     } 
  
     # Check if Auto-Shutdown needs to be enabled or disabled 
-    $properties = @{} 
-    if ($WEPsCmdlet.ParameterSetName -eq " PsEnable") { 
+   ;  $properties = @{} 
+    if ($WEPsCmdlet.ParameterSetName -eq " PsEnable" ) { 
         # Construct the notifications (only enable if webhook is enabled) 
         if ([string]::IsNullOrEmpty($WEWebhookUrl) -and [string]::IsNullOrEmpty($WEEmail)) { 
            ;  $notificationsettings = @{ 
-                " status"        = " Disabled"; 
+                " status"        = " Disabled" ; 
                 " timeInMinutes" = 30 
             } 
         }
         else { 
             $notificationsettings = @{ 
-                " status"        = " Enabled"; 
+                " status"        = " Enabled" ; 
                 " timeInMinutes" = 30 
             } 
  
             # Add the Webhook URL if defined 
-            if ([string]::IsNullOrEmpty($WEWebhookUrl) -ne $true) { $notificationsettings.Add(" WebhookUrl", $WEWebhookUrl) } 
+            if ([string]::IsNullOrEmpty($WEWebhookUrl) -ne $true) { $notificationsettings.Add(" WebhookUrl" , $WEWebhookUrl) } 
  
             # Add the recipient email address if it is defined 
             if ([string]::IsNullOrEmpty($WEEmail) -ne $true) {  
-                $notificationsettings.Add(" emailRecipient", $WEEmail) 
-                $notificationsettings.Add(" notificationLocale", " en") 
+                $notificationsettings.Add(" emailRecipient" , $WEEmail) 
+                $notificationsettings.Add(" notificationLocale" , " en" ) 
             } 
         } 
  
         # Construct the properties object 
         $properties = @{ 
-            " status"               = " Enabled"; 
-            " taskType"             = " ComputeVmShutdownTask"; 
+            " status"               = " Enabled" ; 
+            " taskType"             = " ComputeVmShutdownTask" ; 
             " dailyRecurrence"      = @{" time" = (" {0:HHmm}" -f $WETime) }; 
             " timeZoneId"           = $WETimeZone; 
             " notificationSettings" = $notificationsettings; 
             " targetResourceId"     = $vm.Id 
         } 
     }
-    elseif ($WEPsCmdlet.ParameterSetName -eq " PsDisable") { 
+    elseif ($WEPsCmdlet.ParameterSetName -eq " PsDisable" ) { 
         # Construct the properties object 
         $properties = @{ 
-            " status"               = " Disabled"; 
-            " taskType"             = " ComputeVmShutdownTask"; 
+            " status"               = " Disabled" ; 
+            " taskType"             = " ComputeVmShutdownTask" ; 
             " dailyRecurrence"      = @{" time" = " 1900" }; 
             " timeZoneId"           = (Get-TimeZone).Id; 
             " notificationSettings" = @{ 
-                " status"        = " Disabled"; 
+                " status"        = " Disabled" ; 
                 " timeInMinutes" = 30 
             }; 
             " targetResourceId"     = $vm.Id 

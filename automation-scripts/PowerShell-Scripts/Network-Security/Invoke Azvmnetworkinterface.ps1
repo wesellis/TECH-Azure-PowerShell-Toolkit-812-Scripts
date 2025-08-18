@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azvmnetworkinterface
+    Invoke Azvmnetworkinterface
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azvmnetworkinterface
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzVMNetworkInterface {
 }
 
@@ -27,7 +45,7 @@ function WE-Invoke-AzVMNetworkInterface {
 
     #Region func Add-AzVMNetworkInterface
     #Adding the NIC to the VM
-    $addAzVMNetworkInterfaceSplat = @{
+   ;  $addAzVMNetworkInterfaceSplat = @{
         VM = $WEVirtualMachine
         Id = $WENIC.Id
     }

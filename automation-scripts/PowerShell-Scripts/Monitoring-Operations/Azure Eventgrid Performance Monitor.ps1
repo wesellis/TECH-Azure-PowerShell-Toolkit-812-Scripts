@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Eventgrid Performance Monitor
+    Azure Eventgrid Performance Monitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Eventgrid Performance Monitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
@@ -23,18 +41,20 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -42,8 +62,10 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -89,7 +111,7 @@ try {
             if ($WESubscription.Destination) {
                 switch ($WESubscription.EndpointType) {
                     " webhook" {
-                        $WEEndpointUrl = $WESubscription.Destination.EndpointUrl
+                       ;  $WEEndpointUrl = $WESubscription.Destination.EndpointUrl
                         if ($WEEndpointUrl) {
                            ;  $WESafeUrl = $WEEndpointUrl.Substring(0, [Math]::Min(50, $WEEndpointUrl.Length))
                             Write-WELog "    Endpoint: $WESafeUrl..." " INFO"
@@ -148,37 +170,37 @@ Write-WELog "  Public Network Access: Enabled" " INFO"
 
 
 Write-WELog " `nSample Event Format ($($WEEventGridTopic.InputSchema)):" " INFO"
-if ($WEEventGridTopic.InputSchema -eq " EventGridSchema") {
+if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
     Write-Host @"
   {
-    " id": " unique-event-id",
-    " eventType": " Custom.Event.Type",
-    " subject": " /myapp/resource/action",
-    " eventTime": " $(Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" )",
-    " data": {
-      " property1": " value1",
-      " property2": " value2"
+    " id" : " unique-event-id" ,
+    " eventType" : " Custom.Event.Type" ,
+    " subject" : " /myapp/resource/action" ,
+    " eventTime" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
+    " data" : {
+      " property1" : " value1" ,
+      " property2" : " value2"
     },
-    " dataVersion": " 1.0"
+    " dataVersion" : " 1.0"
   }
 " @
-} elseif ($WEEventGridTopic.InputSchema -eq "CloudEventSchemaV1_0" ) {
+} elseif ($WEEventGridTopic.InputSchema -eq " CloudEventSchemaV1_0" ) {
     Write-Host @"
   {
-    " specversion": " 1.0",
-    " type": " Custom.Event.Type",
-    " source": " /myapp/resource",
-    " id": " unique-event-id",
-    " time": " $(Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" )",
-    " data": {
-      " property1": " value1",
-      " property2": " value2"
+    " specversion" : " 1.0" ,
+    " type" : " Custom.Event.Type" ,
+    " source" : " /myapp/resource" ,
+    " id" : " unique-event-id" ,
+    " time" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
+    " data" : {
+      " property1" : " value1" ,
+      " property2" : " value2"
     }
   }
 " @
 }
 
-Write-WELog "`nPublishing Events:" " INFO"
+Write-WELog " `nPublishing Events:" " INFO"
 Write-WELog "  POST $($WEEventGridTopic.Endpoint)" " INFO"
 Write-WELog "  Headers:" " INFO"
 Write-WELog "    aeg-sas-key: [access-key]" " INFO"

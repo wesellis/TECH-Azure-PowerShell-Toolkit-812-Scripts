@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Winrm
+    Winrm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,20 +16,38 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Winrm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WECert = New-SelfSignedCertificate -DnsName $WERemoteHostName, $WEComputerName `
     -CertStoreLocation "cert:\LocalMachine\My" `
     -FriendlyName " Test WinRM Cert"
 
 $WECert | Out-String
-
+; 
 $WEThumbprint = $WECert.Thumbprint
 
-Write-WELog " Enable HTTPS in WinRM" " INFO"; 
-$WEWinRmHttps = " @{Hostname=`"$WERemoteHostName`" ; CertificateThumbprint=`"$WEThumbprint`" }"
+Write-WELog " Enable HTTPS in WinRM" " INFO" ; 
+$WEWinRmHttps = " @{Hostname=`" $WERemoteHostName`" ; CertificateThumbprint=`" $WEThumbprint`" }"
 winrm create winrm/config/Listener?Address=*+Transport=HTTPS $WEWinRmHttps
 
 Write-WELog " Set Basic Auth in WinRM" " INFO"
-$WEWinRmBasic = " @{Basic=`"true`" }"
+$WEWinRmBasic = " @{Basic=`" true`" }"
 winrm set winrm/config/service/Auth $WEWinRmBasic
 
 Write-WELog " Open Firewall Port" " INFO"

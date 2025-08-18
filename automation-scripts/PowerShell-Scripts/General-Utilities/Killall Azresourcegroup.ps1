@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Killall Azresourcegroup
+    Killall Azresourcegroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Killall Azresourcegroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
 
@@ -35,9 +53,9 @@ $rgs = @( ... )
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
-    [string] $WETTKPath = " .",
+    [string] $WETTKPath = " ." ,
     [long] $WESleepTime = 600,
     [string] $WEResourceGroupName, # if a single name is passed, use it
     [array] $WEResourceGroupNames, # if an array is passed, use it
@@ -62,7 +80,7 @@ elseif (![string]::IsNullOrWhiteSpace($WEResourceGroupName)) {
 else {
     #if a RG name was not passed remove all with the CI pattern
     $azdoResourceGroups = get-AzResourceGroup | Where-Object { $_.ResourceGroupName -like $WEPattern }
-    $WESecondErrorAction = " SilentlyContinue"
+   ;  $WESecondErrorAction = " SilentlyContinue"
 }
 
 foreach ($rg in $azdoResourceGroups) {
@@ -105,10 +123,8 @@ foreach ($rg in $azdoResourceGroups) {
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

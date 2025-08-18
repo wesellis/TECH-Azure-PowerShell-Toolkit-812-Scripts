@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Refresh Prtable
+    Refresh Prtable
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,19 +16,38 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Refresh Prtable
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
-    $WEGitHubRepository = "$WEENV:BUILD_REPOSITORY_NAME" ,
-    $WEBuildSourcesDirectory = "$WEENV:BUILD_SOURCESDIRECTORY" ,
-    $WETableName = "QuickStartsMetadataServicePRs" ,
-    [string]$WEStorageAccountResourceGroupName = "azure-quickstarts-template-hash" ,
-    [string]$WEStorageAccountName = "azurequickstartsservice" ,
+    $WEGitHubRepository = " $WEENV:BUILD_REPOSITORY_NAME" ,
+    $WEBuildSourcesDirectory = " $WEENV:BUILD_SOURCESDIRECTORY" ,
+    $WETableName = " QuickStartsMetadataServicePRs" ,
+    [string]$WEStorageAccountResourceGroupName = " azure-quickstarts-template-hash" ,
+    [string]$WEStorageAccountName = " azurequickstartsservice" ,
     [Parameter(mandatory = $true)]$WEStorageAccountKey,
-    [string]$basicAuthCreds # if needed to run manually add creds in the format of "user:token"
+    [string]$basicAuthCreds # if needed to run manually add creds in the format of " user:token"
 )
 
 <#
@@ -48,7 +67,7 @@ foreach($r in $rows){
 
     $response = ""
     if($basicAuthCreds){
-        $response = curl -u $basicAuthCreds " $WEPRUri" | ConvertFrom-Json
+       ;  $response = curl -u $basicAuthCreds " $WEPRUri" | ConvertFrom-Json
     } else {
        ;  $response = curl " $WEPRUri" | ConvertFrom-Json
     }
@@ -62,10 +81,8 @@ foreach($r in $rows){
 
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

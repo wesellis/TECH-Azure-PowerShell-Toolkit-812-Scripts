@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Configuresqlvm
+    Configuresqlvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Configuresqlvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 configuration ConfigureSQLVM
 {
@@ -36,13 +54,13 @@ param(
 
     WaitForSqlSetup
     [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
-    $WEInterface = Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1
+    $WEInterface = Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1
     $WEInterfaceAlias = $($WEInterface.Name)
     
-    # Format credentials to be qualified by domain name: "domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)", $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESQLCredsQualified = New-Object PSCredential (" ${DomainNetbiosName}\$($WESqlSvcCreds.UserName)", $WESqlSvcCreds.Password)
-    [String] $WEComputerName = Get-Content env:computername
+    # Format credentials to be qualified by domain name: " domain\username"
+    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $WESQLCredsQualified = New-Object PSCredential (" ${DomainNetbiosName}\$($WESqlSvcCreds.UserName)" , $WESqlSvcCreds.Password)
+    [String];  $WEComputerName = Get-Content env:computername
     [String];  $WEAdfsDnsEntryName = " adfs"
 
     Node localhost
@@ -56,8 +74,8 @@ param(
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        WindowsFeature AddADTools      { Name = " RSAT-AD-Tools";      Ensure = " Present"; }
-        WindowsFeature AddADPowerShell { Name = " RSAT-AD-PowerShell"; Ensure = " Present"; }
+        WindowsFeature AddADTools      { Name = " RSAT-AD-Tools" ;      Ensure = " Present" ; }
+        WindowsFeature AddADPowerShell { Name = " RSAT-AD-PowerShell" ; Ensure = " Present" ; }
         
         DnsServerAddress SetDNS { Address = $WEDNSServerIP; InterfaceAlias = $WEInterfaceAlias; AddressFamily  = 'IPv4' }
         
@@ -86,7 +104,7 @@ param(
             {
                 $dnsRecordFQDN = " $($using:AdfsDnsEntryName).$($using:DomainFQDN)"
                 $dnsRecordFound = $false
-                $sleepTime = 15
+               ;  $sleepTime = 15
                 do {
                     try {
                         [Net.DNS]::GetHostEntry($dnsRecordFQDN)
@@ -100,7 +118,7 @@ param(
                 } while ($false -eq $dnsRecordFound)
             }
             GetScript            = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript           = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
+            TestScript           = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)" ); return $true } catch { return $false } }
             DependsOn            = " [DnsServerAddress]SetDNS"
         }
 
@@ -166,7 +184,7 @@ param(
             UserPrincipalName    = " $($WESqlSvcCreds.UserName)@$WEDomainFQDN"
             Password             = $WESQLCredsQualified
             PasswordNeverExpires = $true
-            ServicePrincipalNames = @(" MSSQLSvc/$WEComputerName.$($WEDomainFQDN):1433", " MSSQLSvc/$WEComputerName.$WEDomainFQDN", " MSSQLSvc/$($WEComputerName):1433", " MSSQLSvc/$WEComputerName")
+            ServicePrincipalNames = @(" MSSQLSvc/$WEComputerName.$($WEDomainFQDN):1433" , " MSSQLSvc/$WEComputerName.$WEDomainFQDN" , " MSSQLSvc/$($WEComputerName):1433" , " MSSQLSvc/$WEComputerName" )
             Ensure               = " Present"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
             DependsOn            = " [Script]RemoveSQLSpnOnSQLMachine"
@@ -175,23 +193,23 @@ param(
         Script EnsureSQLServiceStarted
         {
             GetScript = { }
-            TestScript = { return (Get-Service -Name " MSSQLSERVER").Status -like 'Running' }
+            TestScript = { return (Get-Service -Name " MSSQLSERVER" ).Status -like 'Running' }
             SetScript = { Start-Service -Name " MSSQLSERVER" }
             DependsOn            = " [PendingReboot]RebootOnSignalFromJoinDomain"
             PsDscRunAsCredential = $WEDomainAdminCredsQualified
         }
 
-        SqlMaxDop ConfigureMaxDOP { ServerName = $WEComputerName; InstanceName = " MSSQLSERVER"; MaxDop = 1; DependsOn = " [Script]EnsureSQLServiceStarted" }
+        SqlMaxDop ConfigureMaxDOP { ServerName = $WEComputerName; InstanceName = " MSSQLSERVER" ; MaxDop = 1; DependsOn = " [Script]EnsureSQLServiceStarted" }
 
         # Script WorkaroundErrorInSqlServiceAccountResource
         # {
         #     GetScript = { }
         #     TestScript = { return $false }
         #     SetScript = { 
-        #         [reflection.assembly]::LoadWithPartialName(" Microsoft.SqlServer.SqlWmiManagement")
+        #         [reflection.assembly]::LoadWithPartialName(" Microsoft.SqlServer.SqlWmiManagement" )
         #         $mc = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer
         #     }
-        #     DependsOn      = " [Script]EnsureSQLServiceStarted", " [ADUser]CreateSqlSvcAccount"
+        #     DependsOn      = " [Script]EnsureSQLServiceStarted" , " [ADUser]CreateSqlSvcAccount"
         #     PsDscRunAsCredential = $WEDomainAdminCredsQualified
         # }
 
@@ -202,7 +220,7 @@ param(
             ServiceType    = " DatabaseEngine"
             ServiceAccount = $WESQLCredsQualified
             RestartService = $true
-            DependsOn      = " [Script]EnsureSQLServiceStarted", " [ADUser]CreateSqlSvcAccount"
+            DependsOn      = " [Script]EnsureSQLServiceStarted" , " [ADUser]CreateSqlSvcAccount"
             # DependsOn      = " [Script]WorkaroundErrorInSqlServiceAccountResource"
         }
 
@@ -241,7 +259,7 @@ param(
         SqlRole GrantSQLRoleSysadmin
         {
             ServerRoleName   = " sysadmin"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WEDomainAdminCreds.UserName)")
+            MembersToInclude = @(" ${DomainNetbiosName}\$($WEDomainAdminCreds.UserName)" )
             ServerName       = $WEComputerName
             InstanceName     = " MSSQLSERVER"
             Ensure           = " Present"
@@ -251,7 +269,7 @@ param(
         SqlRole GrantSQLRoleSecurityAdmin
         {
             ServerRoleName   = " securityadmin"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)")
+            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
             ServerName       = $WEComputerName
             InstanceName     = " MSSQLSERVER"
             Ensure           = " Present"
@@ -261,7 +279,7 @@ param(
         SqlRole GrantSQLRoleDBCreator
         {
             ServerRoleName   = " dbcreator"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)")
+            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
             ServerName       = $WEComputerName
             InstanceName     = " MSSQLSERVER"
             Ensure           = " Present"
@@ -359,12 +377,12 @@ param(
         #     DatabaseName         = " tempdb"
         #     Name                 = " db_owner"
         #     Ensure               = " Present"
-        #     MembersToInclude     = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)")
+        #     MembersToInclude     = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
         #     PsDscRunAsCredential = $WESqlAdministratorCredential
         #     DependsOn            = " [SqlLogin]AddSPSetupLogin"
         # }
 
-        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\", otherwise certificate request will fail
+        # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\" , otherwise certificate request will fail
         # $WEDCServerName = Get-ADDomainController | Select-Object -First 1 -Expand Name
         $WEDCServerName = " DC"
         Script UpdateGPOToTrustRootCACert {
@@ -398,7 +416,7 @@ param(
             KeyLength           = '2048'
             Exportable          = $true
             SubjectAltName      = " dns=$WEComputerName.$WEDomainFQDN&dns=$WEComputerName"
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider"'
+            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = 'CERT_KEY_ENCIPHERMENT_KEY_USAGE | CERT_DIGITAL_SIGNATURE_KEY_USAGE'
             CertificateTemplate = 'WebServer'
@@ -471,7 +489,7 @@ function WE-Get-NetBIOSName
 {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [string]$WEDomainFQDN
     )
@@ -514,14 +532,14 @@ function WE-WaitForSqlSetup
 
 <#
 $password = ConvertTo-SecureString -String " mytopsecurepassword" -AsPlainText -Force
-$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand", $password
-$WESqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " sqlsvc", $password
-$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup", $password
-$WEDNSServerIP = " 10.1.1.4"
+$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
+$WESqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " sqlsvc" , $password
+$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup" , $password
+$WEDNSServerIP = " 10.1.1.4"; 
 $WEDomainFQDN = " contoso.local"
 ; 
 $outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
-ConfigureSQLVM -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DomainAdminCreds $WEDomainAdminCreds -SqlSvcCreds $WESqlSvcCreds -SPSetupCreds $WESPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+ConfigureSQLVM -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DomainAdminCreds $WEDomainAdminCreds -SqlSvcCreds $WESqlSvcCreds -SPSetupCreds $WESPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
 

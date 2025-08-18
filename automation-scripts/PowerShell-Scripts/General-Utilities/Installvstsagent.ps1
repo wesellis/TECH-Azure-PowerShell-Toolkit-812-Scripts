@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installvstsagent
+    Installvstsagent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Installvstsagent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -30,10 +48,10 @@ param(
 
 function WE-PrepMachineForAutologon () {
     # Create a PS session for the user to trigger the creation of the registry entries required for autologon
-    $computerName = "localhost"
+    $computerName = " localhost"
     $password = ConvertTo-SecureString $vmAdminPassword -AsPlainText -Force
-    if ($vmAdminUserName.Split(" \").Count -eq 2) {
-        $domain = $vmAdminUserName.Split(" \")[0]
+    if ($vmAdminUserName.Split(" \" ).Count -eq 2) {
+        $domain = $vmAdminUserName.Split(" \" )[0]
         $userName = $vmAdminUserName.Split('\')[1]
     }
     else {
@@ -42,7 +60,7 @@ function WE-PrepMachineForAutologon () {
         Write-Verbose " Username constructed to use for creating a PSSession: $domain\\$userName"
     }
    
-    $credentials = New-Object System.Management.Automation.PSCredential(" $domain\\$userName", $password)
+    $credentials = New-Object System.Management.Automation.PSCredential(" $domain\\$userName" , $password)
     Enter-PSSession -ComputerName $computerName -Credential $credentials
     Exit-PSSession
   
@@ -74,8 +92,8 @@ function WE-PrepMachineForAutologon () {
         $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
         $securityId = $securityId.Value
   
-        if (Test-Path " HKU:\\$securityId") {
-            if (!(Test-Path " HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run")) {
+        if (Test-Path " HKU:\\$securityId" ) {
+            if (!(Test-Path " HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" )) {
                 New-Item -Path " HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" -Force
                 Write-WELog " Created the registry entry path required to enable autologon." " INFO"
             }
@@ -137,9 +155,9 @@ New-Item -ItemType Directory -Force -Path $agentInstallationPath
 
 New-Item -ItemType Directory -Force -Path (Join-Path $agentInstallationPath $WEWorkFolder)
 
-Write-Verbose " Extracting the zip file for the agent" -verbose
-$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath")
-$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip").Items(), 16)
+Write-Verbose " Extracting the zip file for the agent" -verbose; 
+$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath" )
+$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip" ).Items(), 16)
 
 
 Write-Verbose " Unblocking files" -verbose
@@ -160,7 +178,7 @@ Write-Verbose " Configuring agent" -Verbose
 
 Push-Location -Path $agentInstallationPath
 
-if ($runAsAutoLogon -ieq " true") {
+if ($runAsAutoLogon -ieq " true" ) {
     PrepMachineForAutologon
 
     # Setup the agent with autologon enabled

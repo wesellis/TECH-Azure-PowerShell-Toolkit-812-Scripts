@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Validate Deploymentfile.Tests
+    Validate Deploymentfile.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Validate Deploymentfile.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 ﻿Describe "Validate-DeploymentFile" {
     BeforeAll {
@@ -49,7 +67,7 @@
             # Write-Host $buildHostOutput
             $WEErrorActionPreference = 'Stop'
             $vars = Find-VarsFromWriteHostOutput $buildHostOutput
-            $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS"] -eq " True"
+            $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ] -eq " True"
             $hasErrors = $err.Count -gt 0
             $hasWarnings = $warn.Count -gt 0
 
@@ -98,7 +116,7 @@
     }
 
     It 'not bicep' {
-        $folder = " $dataFolder/json-success"
+       ;  $folder = " $dataFolder/json-success"
         $hasErrors, $hasWarnings,;  $labelBicepWarnings = Validate-DeploymentFile `
             -SampleFolder $folder `
             -TemplateFileName " azuredeploy.json"

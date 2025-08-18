@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 20.3 New Iaacazvm
+    20.3 New Iaacazvm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 20.3 New Iaacazvm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-New-IaaCAzVM {
 
 
@@ -28,7 +46,7 @@ try {
 
 function WE-New-IaaCAzVM {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -55,95 +73,133 @@ $ErrorActionPreference = "Stop"
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVMSize,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOSDiskCaching,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOSCreateOption,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEGUID,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOSDiskName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEASGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WENSGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDNSNameLabel,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WENICPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WENICName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEIPConfigName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPublicIPAddressName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEVnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPublicIPAllocation,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPublisherName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEOffer,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESkus,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVersion,
         [Parameter(Mandatory = $true)]
@@ -268,7 +324,7 @@ $ErrorActionPreference = "Stop"
         CreateOption = $WEOSCreateOption
         DiskSizeInGB = $WEDiskSizeInGB
     }
-    $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+   ;  $WEVirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
 
     #Creating the VM
    ;  $newAzVMSplat = @{
@@ -284,10 +340,8 @@ $ErrorActionPreference = "Stop"
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

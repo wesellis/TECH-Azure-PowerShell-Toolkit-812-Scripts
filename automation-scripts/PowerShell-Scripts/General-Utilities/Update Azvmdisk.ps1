@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Update Azvmdisk
+    Update Azvmdisk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,29 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Update Azvmdisk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $diskupdateconfig = New-AzDiskUpdateConfig -DiskSizeGB 10 -SkuName Premium_LRS -OsType Windows -CreateOption Empty -EncryptionSettingsEnabled $true;
 $disk | Update-AzDisk
 
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = "Stop"; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 ; 
 $diskupdateconfig = New-AzDiskUpdateConfig -DiskSizeGB 10 -SkuName Premium_LRS -OsType Windows -CreateOption Empty -EncryptionSettingsEnabled $true;
@@ -91,7 +109,7 @@ $disk | Update-AzDisk
 
 
 $diskName = $WEOSDiskName
-$rgName = $WEResourceGroupName
+$rgName = $WEResourceGroupName; 
 $storageType = 'Standard_LRS'; 
 $disk = Get-AzDisk -DiskName $diskName -ResourceGroupName $rgName
 $disk.Sku = [Microsoft.Azure.Management.Compute.Models.DiskSku]::new($storageType)

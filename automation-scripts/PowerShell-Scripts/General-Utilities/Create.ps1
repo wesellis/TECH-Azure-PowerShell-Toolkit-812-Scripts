@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Create
+    Create
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Create
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $rgname = "DnsForwardExample"
 ; 
 $params = @{
-    " vmName" = " dnsproxy1";
-    " adminUsername"=" mradmin";
-    " adminPassword"=" Admin123!";
-    " storageAccName"=" $($rgname)stor".ToLower();
+    " vmName" = " dnsproxy1" ;
+    " adminUsername" =" mradmin" ;
+    " adminPassword" =" Admin123!" ;
+    " storageAccName" =" $($rgname)stor" .ToLower();
 }
 
 

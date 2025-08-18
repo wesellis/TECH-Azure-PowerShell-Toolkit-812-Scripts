@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Finops Automation Engine
+    Azure Finops Automation Engine
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Finops Automation Engine
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -57,14 +75,14 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
     [string[]]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Analysis", " Recommend", " AutoRemediate")]
-    [string]$WEOptimizationMode = " Recommend",
+    [ValidateSet(" Analysis" , " Recommend" , " AutoRemediate" )]
+    [string]$WEOptimizationMode = " Recommend" ,
     
     [Parameter(Mandatory=$false)]
     [decimal]$WECostThreshold = 10000,
@@ -105,6 +123,8 @@ class FinOpsEngine {
     
     [void]AnalyzeCosts([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         Write-WELog " Analyzing costs for subscription: $WESubscriptionId" " INFO" -ForegroundColor Yellow
         
@@ -116,8 +136,8 @@ class FinOpsEngine {
             type = " Usage"
             timeframe = " Custom"
             timePeriod = @{
-                from = $startDate.ToString(" yyyy-MM-dd")
-                to = $endDate.ToString(" yyyy-MM-dd")
+                from = $startDate.ToString(" yyyy-MM-dd" )
+                to = $endDate.ToString(" yyyy-MM-dd" )
             }
             dataset = @{
                 granularity = " Daily"
@@ -151,6 +171,8 @@ class FinOpsEngine {
     
     [hashtable]IdentifyOptimizations([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $optimizations = @{
             UnusedResources = $this.FindUnusedResources($WESubscriptionId)
@@ -166,13 +188,15 @@ class FinOpsEngine {
     
     [array]FindUnusedResources([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $unusedResources = @()
         
         # Check for unused disks
         $disks = Get-AzDisk
         foreach ($disk in $disks) {
-            if ($disk.DiskState -eq " Unattached") {
+            if ($disk.DiskState -eq " Unattached" ) {
                 $unusedResources = $unusedResources + @{
                     Type = " Disk"
                     Name = $disk.Name
@@ -201,7 +225,7 @@ class FinOpsEngine {
         # Check for stopped VMs still incurring compute charges
         $vms = Get-AzVM -Status
         foreach ($vm in $vms) {
-            if ($vm.PowerState -eq " VM stopped" -and $vm.StatusCode -ne " Stopped (deallocated)") {
+            if ($vm.PowerState -eq " VM stopped" -and $vm.StatusCode -ne " Stopped (deallocated)" ) {
                 $unusedResources = $unusedResources + @{
                     Type = " VM"
                     Name = $vm.Name
@@ -217,6 +241,8 @@ class FinOpsEngine {
     }
     
     [array]AnalyzeRightSizing([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $rightSizingRecommendations = @()
@@ -260,6 +286,8 @@ class FinOpsEngine {
     
     [string]GetSmallerVMSize([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$currentSize) {
         $sizeMap = @{
             " Standard_D4s_v3" = " Standard_D2s_v3"
@@ -273,6 +301,8 @@ class FinOpsEngine {
     }
     
     [array]RecommendReservedInstances([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $riRecommendations = @()
@@ -298,6 +328,8 @@ class FinOpsEngine {
     }
     
     [array]IdentifyAutoShutdownCandidates([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $shutdownCandidates = @()
@@ -327,6 +359,8 @@ class FinOpsEngine {
     
     [array]OptimizeStorage([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $storageOptimizations = @()
         
@@ -349,7 +383,7 @@ class FinOpsEngine {
             }
             
             # Check for redundancy optimization
-            if ($storage.Sku.Name -match " GRS" -and $storage.Tags.Environment -ne " Production") {
+            if ($storage.Sku.Name -match " GRS" -and $storage.Tags.Environment -ne " Production" ) {
                 $storageOptimizations = $storageOptimizations + @{
                     Type = " Storage"
                     Name = $storage.StorageAccountName
@@ -366,6 +400,8 @@ class FinOpsEngine {
     }
     
     [array]OptimizeNetworking([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId) {
         $networkOptimizations = @()
@@ -414,21 +450,21 @@ class FinOpsEngine {
                 } else {
                     switch ($optimization.Type) {
                         " Disk" {
-                            if ($optimization.Action -eq " Delete unattached disk") {
+                            if ($optimization.Action -eq " Delete unattached disk" ) {
                                 Remove-AzDisk -ResourceGroupName $optimization.ResourceGroup `
                                     -DiskName $optimization.Name -Force
                                 Write-WELog " Deleted disk: $($optimization.Name)" " INFO" -ForegroundColor Green
                             }
                         }
                         " PublicIP" {
-                            if ($optimization.Action -eq " Delete unused public IP") {
+                            if ($optimization.Action -eq " Delete unused public IP" ) {
                                 Remove-AzPublicIpAddress -Name $optimization.Name `
                                     -ResourceGroupName $optimization.ResourceGroup -Force
                                 Write-WELog " Deleted public IP: $($optimization.Name)" " INFO" -ForegroundColor Green
                             }
                         }
                         " VM" {
-                            if ($optimization.Action -eq " Deallocate stopped VM") {
+                            if ($optimization.Action -eq " Deallocate stopped VM" ) {
                                 Stop-AzVM -Name $optimization.Name `
                                     -ResourceGroupName $optimization.ResourceGroup -Force
                                 Write-WELog " Deallocated VM: $($optimization.Name)" " INFO" -ForegroundColor Green
@@ -446,7 +482,7 @@ class FinOpsEngine {
         # Simple linear regression for cost prediction
         # In a real implementation, this would use Azure ML or more sophisticated algorithms
         
-        $predictions = @()
+       ;  $predictions = @()
        ;  $currentDate = Get-Date
         
         for ($i = 1; $i -le $WEDaysAhead; $i++) {
@@ -465,8 +501,8 @@ class FinOpsEngine {
 }
 
 function WE-Generate-FinOpsReport {
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    [CmdletBinding()]; 
+$ErrorActionPreference = " Stop"
 param(
         [FinOpsEngine]$WEEngine,
         [hashtable]$WEOptimizations
@@ -504,38 +540,38 @@ param(
         .type-shutdown { background-color: #fff4ce; color: #835c00; }
         .footer { text-align: center; color: #605e5c; margin-top: 40px; padding: 20px; }
     </style>
-    <script src=" https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src=" https://cdn.jsdelivr.net/npm/chart.js" ></script>
 </head>
 <body>
-    <div class=" container">
-        <div class=" header">
+    <div class=" container" >
+        <div class=" header" >
             <h1>Azure FinOps Automation Report</h1>
-            <p>Generated on $(Get-Date -Format " MMMM dd, yyyy HH:mm")</p>
+            <p>Generated on $(Get-Date -Format " MMMM dd, yyyy HH:mm" )</p>
             <p>Optimization Mode: $WEOptimizationMode</p>
         </div>
         
-        <div class=" summary-cards">
-            <div class=" card">
+        <div class=" summary-cards" >
+            <div class=" card" >
                 <h3>Total Potential Savings</h3>
-                <div class=" value">`$$([math]::Round($WEEngine.TotalSavings, 2))</div>
-                <div class=" subtitle">Per month</div>
+                <div class=" value" >`$$([math]::Round($WEEngine.TotalSavings, 2))</div>
+                <div class=" subtitle" >Per month</div>
             </div>
-            <div class=" card">
+            <div class=" card" >
                 <h3>Optimization Opportunities</h3>
-                <div class=" value">$(($WEOptimizations.Values | ForEach-Object { $_.Count } | Measure-Object -Sum).Sum)</div>
-                <div class=" subtitle">Total recommendations</div>
+                <div class=" value" >$(($WEOptimizations.Values | ForEach-Object { $_.Count } | Measure-Object -Sum).Sum)</div>
+                <div class=" subtitle" >Total recommendations</div>
             </div>
-            <div class=" card">
+            <div class=" card" >
                 <h3>Resources Analyzed</h3>
-                <div class=" value">$((Get-AzResource).Count)</div>
-                <div class=" subtitle">Across all subscriptions</div>
+                <div class=" value" >$((Get-AzResource).Count)</div>
+                <div class=" subtitle" >Across all subscriptions</div>
             </div>
-            <div class=" card">
+            <div class=" card" >
                 <h3>Automation Status</h3>
-                <div class=" value" style=" color: $(if ($WEOptimizationMode -eq 'AutoRemediate') { '#107c10' } else { '#ff8c00' })">
+                <div class=" value" style=" color: $(if ($WEOptimizationMode -eq 'AutoRemediate') { '#107c10' } else { '#ff8c00' })" >
                     $WEOptimizationMode
                 </div>
-                <div class=" subtitle">Current mode</div>
+                <div class=" subtitle" >Current mode</div>
             </div>
         </div>
 " @
@@ -544,7 +580,7 @@ param(
     foreach ($category in $WEOptimizations.Keys) {
         if ($WEOptimizations[$category].Count -gt 0) {
             $html = $html + @"
-        <div class=" section">
+        <div class=" section" >
             <h2>$category Optimizations</h2>
             <table>
                 <thead>
@@ -559,7 +595,7 @@ param(
                 <tbody>
 " @
             foreach ($item in $WEOptimizations[$category]) {
-                $savings = if ($item.MonthlyCost) { "`$$($item.MonthlyCost)" } 
+               ;  $savings = if ($item.MonthlyCost) { " `$$($item.MonthlyCost)" } 
                           elseif ($item.EstimatedSavings) { " $($item.EstimatedSavings)%" } 
                           else { " TBD" }
                           
@@ -571,10 +607,10 @@ param(
                 $html = $html + @"
                     <tr>
                         <td>$($item.Name)</td>
-                        <td><span class=" optimization-type type-$(($item.Type -replace '\s', '').ToLower())">$($item.Type)</span></td>
+                        <td><span class=" optimization-type type-$(($item.Type -replace '\s', '').ToLower())" >$($item.Type)</span></td>
                         <td>$details</td>
-                        <td class=" savings">$savings</td>
-                        <td><span class=" action">$($item.Action)</span></td>
+                        <td class=" savings" >$savings</td>
+                        <td><span class=" action" >$($item.Action)</span></td>
                     </tr>
 " @
             }
@@ -588,13 +624,13 @@ param(
     
     # Add ML predictions section if enabled
     if ($WEEnableMLPredictions) {
-        $html = $html + @"
-        <div class=" section">
+       ;  $html = $html + @"
+        <div class=" section" >
             <h2>Cost Predictions (Next 30 Days)</h2>
-            <div class=" chart">
-                <canvas id=" predictionChart"></canvas>
+            <div class=" chart" >
+                <canvas id=" predictionChart" ></canvas>
             </div>
-            <p style=" text-align: center; color: #605e5c;">
+            <p style=" text-align: center; color: #605e5c;" >
                 Based on historical trends and current optimization potential
             </p>
         </div>
@@ -602,7 +638,7 @@ param(
     }
     
     $html = $html + @"
-        <div class=" footer">
+        <div class=" footer" >
             <p>Azure FinOps Automation Engine v1.0 | Enterprise Cost Optimization</p>
         </div>
     </div>
@@ -622,7 +658,7 @@ param(
 
 
 try {
-    Write-WELog "Azure FinOps Automation Engine v1.0" " INFO" -ForegroundColor Cyan
+    Write-WELog " Azure FinOps Automation Engine v1.0" " INFO" -ForegroundColor Cyan
     Write-WELog " ===================================" " INFO" -ForegroundColor Cyan
     
     # Connect to Azure if needed
@@ -689,11 +725,11 @@ try {
     }
     
     # Implement optimizations based on mode
-    if ($WEOptimizationMode -eq " AutoRemediate") {
+    if ($WEOptimizationMode -eq " AutoRemediate" ) {
         Write-WELog " `n=== Auto-Remediation Mode ===" " INFO" -ForegroundColor Red
-        $response = Read-Host " Are you sure you want to automatically implement optimizations? (yes/no)"
+       ;  $response = Read-Host " Are you sure you want to automatically implement optimizations? (yes/no)"
         
-        if ($response -eq " yes") {
+        if ($response -eq " yes" ) {
             $engine.ImplementOptimizations($allOptimizations)
             Write-WELog " `nOptimizations implemented successfully!" " INFO" -ForegroundColor Green
         } else {
@@ -704,7 +740,7 @@ try {
     # Auto-shutdown configuration
     if ($WEAutoShutdownNonProd) {
         Write-WELog " `nConfiguring auto-shutdown for non-production resources..." " INFO" -ForegroundColor Yellow
-        foreach ($candidate in $allOptimizations[" AutoShutdown"]) {
+        foreach ($candidate in $allOptimizations[" AutoShutdown" ]) {
             Write-WELog " Configuring shutdown for: $($candidate.Name)" " INFO" -ForegroundColor Cyan
             # Implementation would go here
         }

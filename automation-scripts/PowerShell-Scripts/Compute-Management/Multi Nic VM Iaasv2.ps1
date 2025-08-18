@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Multi Nic Vm Iaasv2
+    Multi Nic Vm Iaasv2
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Multi Nic Vm Iaasv2
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Switch-AzureMode AzureResourceManager
 
@@ -31,15 +49,15 @@ $backendAddressPoolName = $rgname + 'backend'
 $inboundNatRuleName1 = $rgname + 'nat1' 
 $nicname1 = $rgname + 'nic1' 
 $nicname2 = $rgname + 'nic2' 
-$resourceTypeParent = "Microsoft.Network/loadBalancers" 
+$resourceTypeParent = "Microsoft.Network/loadBalancers" ; 
 $location = 'westus'; 
 $vmsize = 'Standard_D2';  # must be A2 or D2 or above for two nics
 $vmname = $rgname + 'vm';
 $stoname = $rgname.ToLower() + 'sto';
 $stotype = 'Standard_LRS'; 
 $osDiskName = 'osDisk';
-$osDiskVhdUri = " https://$stoname.blob.core.windows.net/vhds/os.vhd"; 
-$user = " ops";
+$osDiskVhdUri = " https://$stoname.blob.core.windows.net/vhds/os.vhd" ; 
+$user = " ops" ;
 $password = 'pass@word2';
  
 
@@ -58,7 +76,7 @@ $backendAddressPool = New-AzureLoadBalancerBackendAddressPoolConfig -Name $backe
 $inboundNatRule1 = New-AzureLoadBalancerInboundNatRuleConfig -Name $inboundNatRuleName1 -FrontendIPConfiguration $frontend -Protocol Tcp -FrontendPort 50001 -BackendPort 3389 -IdleTimeoutInMinutes 15 
 $lb = New-AzureLoadBalancer -Name $lbName -ResourceGroupName $rgname -Location $location -FrontendIpConfiguration $frontend -BackendAddressPool $backendAddressPool -InboundNatRule $inboundNatRule1 
           
-
+; 
 $nic1 = New-AzureNetworkInterface -Name $nicname1 -ResourceGroupName $rgname -Location $location -Subnet $vnet.Subnets[0] -LoadBalancerBackendAddressPool $lb.BackendAddressPools[0] -LoadBalancerInboundNatRule $lb.InboundNatRules[0] ; 
 $nic2 = New-AzureNetworkInterface -Name $nicname2 -ResourceGroupName $rgname -Location $location -SubnetId $vnet.Subnets[0].Id  
 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Servicedscvmss
+    Servicedscvmss
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Servicedscvmss
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Configuration Main
 {
@@ -125,7 +143,7 @@ Node $nodeName
             $dest = " C:\WindowsAzure\WebDeploy_amd64_en-US.msi"
             Invoke-WebRequest $source -OutFile $dest
         }
-        GetScript = {@{Result = " DownloadWebDeploy"}}
+        GetScript = {@{Result = " DownloadWebDeploy" }}
         DependsOn = " [WindowsFeature]WebServerRole"
     }
     Package InstallWebDeploy
@@ -160,17 +178,17 @@ Node $nodeName
 	   
 		Script DeployWebPackage
 		{
-			GetScript = {@{Result = " DeployWebPackage"}}
+			GetScript = {@{Result = " DeployWebPackage" }}
 			TestScript = {$false}
 			SetScript ={
-				[system.io.directory]::CreateDirectory(" C:\WebApp")
+				[system.io.directory]::CreateDirectory(" C:\WebApp" )
 				$dest = " C:\WebApp\Site.zip" 
 				Remove-Item -path " C:\inetpub\wwwroot" -Force -Recurse -ErrorAction SilentlyContinue
 				Invoke-WebRequest $using:webDeployPackage -OutFile $dest
 				Add-Type -assembly " system.io.compression.filesystem"
-				[io.compression.zipfile]::ExtractToDirectory($dest, " C:\inetpub\wwwroot")	
+				[io.compression.zipfile]::ExtractToDirectory($dest, " C:\inetpub\wwwroot" )	
 				$WESourceFolder = " C:\inetpub\wwwroot"
-				$appPaths = @(Get-ChildItem $WESourceFolder -Directory)
+			; 	$appPaths = @(Get-ChildItem $WESourceFolder -Directory)
 				foreach ($appPath in $appPaths) 
 				{ 
 				; 	$x = " IIS:\Sites\Default Web Site\" + $appPath.Name 

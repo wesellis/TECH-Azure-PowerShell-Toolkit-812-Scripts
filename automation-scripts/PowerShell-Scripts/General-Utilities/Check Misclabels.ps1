@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Check Misclabels
+    Check Misclabels
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Check Misclabels
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -32,28 +50,28 @@ param(
     [string]$sampleName = $WEENV:SAMPLE_NAME
 )
 
-Write-WELog "Sample name: $sampleName" " INFO"
+Write-WELog " Sample name: $sampleName" " INFO"
 
 ; 
 $WEPortalSamples = @(
-    " 101-vm-simple-linux",
-    " quickstarts\microsoft.compute\vm-simple-linux",
-    " 101-vm-simple-windows",
-    " quickstarts\microsoft.compute\vm-simple-windows",
-    " 201-cdn-with-web-app",
-    " quickstarts\microsoft.cdn\cdn-with-web-app",
-    " 201-sql-database-transparent-encryption-create",
+    " 101-vm-simple-linux" ,
+    " quickstarts\microsoft.compute\vm-simple-linux" ,
+    " 101-vm-simple-windows" ,
+    " quickstarts\microsoft.compute\vm-simple-windows" ,
+    " 201-cdn-with-web-app" ,
+    " quickstarts\microsoft.cdn\cdn-with-web-app" ,
+    " 201-sql-database-transparent-encryption-create" ,
     " quickstarts\microsoft.sql\sql-database-transparent-encryption-create"
 )
 $WEPortalSamples | out-string
 
-if($WEPortalSamples -contains " $sampleName"){
+if($WEPortalSamples -contains " $sampleName" ){
     Write-WELog " Portal Sample match..." " INFO"
     Write-WELog " ##vso[task.setvariable variable=IsPortalSample]true" " INFO"
 }
 
 
-if(($sampleName.indexOf(" \") -eq -1) -and ($sampleName.IndexOf(" /") -eq -1)){
+if(($sampleName.indexOf(" \" ) -eq -1) -and ($sampleName.IndexOf(" /" ) -eq -1)){
     Write-WELog " Sample is in the root of the repo..." " INFO"
     Write-WELog " ##vso[task.setvariable variable=IsRootSample]true" " INFO"
 } else {
@@ -61,7 +79,7 @@ if(($sampleName.indexOf(" \") -eq -1) -and ($sampleName.IndexOf(" /") -eq -1)){
 }
 
 
-if($sampleName -cmatch " [A-Z]"){
+if($sampleName -cmatch " [A-Z]" ){
     Write-WELog " Sample name has UPPERCASE chars..." " INFO"
     Write-WELog " ##vso[task.setvariable variable=SampleHasUpperCase]true" " INFO"
 } else {
@@ -70,10 +88,8 @@ if($sampleName -cmatch " [A-Z]"){
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

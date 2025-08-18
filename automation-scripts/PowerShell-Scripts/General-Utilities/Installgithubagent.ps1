@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installgithubagent
+    Installgithubagent
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Installgithubagent
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -24,7 +42,7 @@ param(
     [Parameter(Mandatory = $true)]$WEAgentName
 )
 
-Write-Verbose "Entering InstallGitHubAgent.ps1" -verbose
+Write-Verbose " Entering InstallGitHubAgent.ps1" -verbose
 
 $currentLocation = Split-Path -parent $WEMyInvocation.MyCommand.Definition
 Write-Verbose " Current folder: $currentLocation" -verbose
@@ -69,8 +87,8 @@ New-Item -ItemType Directory -Force -Path $agentInstallationPath
 New-Item -ItemType Directory -Force -Path (Join-Path $agentInstallationPath $WEWorkFolder)
 
 Write-Verbose " Extracting the zip file for the agent" -verbose
-$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath")
-$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip").Items(), 16)
+$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath" )
+$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip" ).Items(), 16)
 
 
 Write-Verbose " Unblocking files" -verbose
@@ -94,7 +112,7 @@ Push-Location -Path $agentInstallationPath
 Write-Verbose " Retrieving runner token" -Verbose
 
 $baseUri = " https://api.github.com/orgs"
-if (-1 -ne $WEGitHubRepo.IndexOf(" /")) {
+if (-1 -ne $WEGitHubRepo.IndexOf(" /" )) {
     $baseUri = " https://api.github.com/repos"
 }
 
@@ -102,7 +120,7 @@ $headers = @{
     authorization = " token $WEGitHubPAT"
     accept = " application/vnd.github.everest-preview+json"
 }
-
+; 
 $r = Invoke-RestMethod -Uri " $baseUri/$WEGitHubRepo/actions/runners/registration-token" -Headers $headers -Method POST; 
 $WEGitHubToken = $r.token
 

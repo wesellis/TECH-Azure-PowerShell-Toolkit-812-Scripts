@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Prepare For Sysprep
+    Windows Prepare For Sysprep
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Prepare For Sysprep
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -32,10 +50,10 @@ Write-WELog " === Removing Microsoft.Winget.Source for all users" " INFO"
 Get-AppxPackage -AllUsers Microsoft.Winget.Source* | Remove-AppPackage -ErrorAction Continue
 
 
-$wingetUrl = getNewestLink(" msixbundle")
-$wingetLicenseUrl = getNewestLink(" License1.xml")
+$wingetUrl = getNewestLink(" msixbundle" )
+$wingetLicenseUrl = getNewestLink(" License1.xml" )
 
-Write-WELog " === Downloadng winget bundle from $wingetUrl and its license from $wingetLicenseUrl" " INFO"
+Write-WELog " === Downloadng winget bundle from $wingetUrl and its license from $wingetLicenseUrl" " INFO"; 
 $wingetPath = " $env:TEMP/winget.msixbundle"
 Invoke-WebRequest -Uri $wingetUrl -OutFile $wingetPath; 
 $wingetLicensePath = " $env:TEMP/winget-license.xml"

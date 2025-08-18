@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Dcconfiguration
+    Dcconfiguration
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Dcconfiguration
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿configuration Configuration
 {
    [CmdletBinding()
@@ -23,6 +41,7 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
         [Parameter(Mandatory)]
         [String]$WEDomainName,
@@ -46,20 +65,20 @@ param(
 
     Import-DscResource -ModuleName TemplateHelpDSC
 
-    $WELogFolder = "TempLog"
+    $WELogFolder = " TempLog"
     $WELogPath = " c:\$WELogFolder"
     $WECM = " CMCB"
-    $WEDName = $WEDomainName.Split(" .")[0]
-    if($WEConfiguration -ne " Standalone")
+    $WEDName = $WEDomainName.Split(" ." )[0]
+    if($WEConfiguration -ne " Standalone" )
     {
         $WECSComputerAccount = " $WEDName\$WECSName$"
     }
     $WEPSComputerAccount = " $WEDName\$WEPSName$"
     $WEDPMPComputerAccount = " $WEDName\$WEDPMPName$"
-    $WEClients = [system.String]::Join(" ,", $WEClientName)
+   ;  $WEClients = [system.String]::Join(" ," , $WEClientName)
    ;  $WEClientComputerAccount = " $WEDName\$WEClients$"
 
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)", $WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
 
     Node LOCALHOST
     {
@@ -123,7 +142,7 @@ param(
                 DestinationPath = $WELogPath     
                 Type = 'Directory'            
                 Ensure = 'Present'
-                DependsOn = @(" [VerifyComputerJoinDomain]WaitForPS"," [VerifyComputerJoinDomain]WaitForDPMP"," [VerifyComputerJoinDomain]WaitForClient")
+                DependsOn = @(" [VerifyComputerJoinDomain]WaitForPS" ," [VerifyComputerJoinDomain]WaitForDPMP" ," [VerifyComputerJoinDomain]WaitForClient" )
             }
 
             FileReadAccessShare DomainSMBShare
@@ -141,7 +160,7 @@ param(
                 WriteNode = " DelegateControl"
                 Status = " Passed"
                 Ensure = " Present"
-                DependsOn = @(" [DelegateControl]AddPS"," [DelegateControl]AddDPMP")
+                DependsOn = @(" [DelegateControl]AddPS" ," [DelegateControl]AddDPMP" )
             }
 
             WaitForExtendSchemaFile WaitForExtendSchemaFile
@@ -165,7 +184,7 @@ param(
                 DestinationPath = $WELogPath     
                 Type = 'Directory'            
                 Ensure = 'Present'
-                DependsOn = @(" [VerifyComputerJoinDomain]WaitForCS"," [VerifyComputerJoinDomain]WaitForPS"," [VerifyComputerJoinDomain]WaitForDPMP"," [VerifyComputerJoinDomain]WaitForClient")
+                DependsOn = @(" [VerifyComputerJoinDomain]WaitForCS" ," [VerifyComputerJoinDomain]WaitForPS" ," [VerifyComputerJoinDomain]WaitForDPMP" ," [VerifyComputerJoinDomain]WaitForClient" )
             }
 
             FileReadAccessShare DomainSMBShare
@@ -201,7 +220,7 @@ param(
                 WriteNode = " DelegateControl"
                 Status = " Passed"
                 Ensure = " Present"
-                DependsOn = @(" [DelegateControl]AddCS"," [DelegateControl]AddPS"," [DelegateControl]AddDPMP")
+                DependsOn = @(" [DelegateControl]AddCS" ," [DelegateControl]AddPS" ," [DelegateControl]AddDPMP" )
             }
 
             WaitForExtendSchemaFile WaitForExtendSchemaFile
@@ -261,10 +280,8 @@ param(
     }
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

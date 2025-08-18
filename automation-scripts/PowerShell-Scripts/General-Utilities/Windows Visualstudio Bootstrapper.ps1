@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Visualstudio Bootstrapper
+    Windows Visualstudio Bootstrapper
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Visualstudio Bootstrapper
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -30,7 +48,7 @@ param(
 
 function WE-Configure-WorkLoads {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     param(
         [string] $WEWorkLoads
     )
@@ -76,8 +94,8 @@ function WE-Run-WindowedApplication {
     $maxRetries = 10
     $retry = 0
     while ($retry -le $maxRetries) {
-        $outLog = [System.Guid]::NewGuid().ToString("N" )
-        $errLog = [System.Guid]::NewGuid().ToString("N" )
+        $outLog = [System.Guid]::NewGuid().ToString(" N" )
+        $errLog = [System.Guid]::NewGuid().ToString(" N" )
 
         $startArgs = @{
             FilePath               = $command
@@ -89,23 +107,23 @@ function WE-Run-WindowedApplication {
         }
 
         if ($arguments) {
-            $startArgs["ArgumentList" ] = $arguments
+            $startArgs[" ArgumentList" ] = $arguments
         }
 
         $proc = Start-Process @startArgs
 
         if (Test-Path $outLog) {
             Get-Content $outLog | Out-Host
-            Remove-Item $outLog -Force -ErrorAction SilentlyContinue
+            Remove-Item $outLo -Forceg -Force -ErrorAction SilentlyContinue
         }
 
         if (Test-Path $errLog) {
             Get-Content $errLog | Out-Host
-            Remove-Item $errLog -Force -ErrorAction SilentlyContinue
+            Remove-Item $errLo -Forceg -Force -ErrorAction SilentlyContinue
         }
 
         if ($WERetryableExitStatuses.Contains($proc.ExitCode)) {
-            Write-WELog "Retry-able exit code spotted: $($proc.ExitCode)" " INFO"
+            Write-WELog " Retry-able exit code spotted: $($proc.ExitCode)" " INFO"
             Start-Sleep -Seconds 10
 
             $retry = $retry + 1
@@ -150,7 +168,7 @@ else {
 }
 
 if (![System.String]::IsNullOrWhiteSpace($WEInstallationDirectory)) {
-    Write-WELog "Installing To: $WEInstallationDirectory" " INFO"
+    Write-WELog " Installing To: $WEInstallationDirectory" " INFO"
 
     $WEArguments = $WEArguments + " --installPath "" $WEInstallationDirectory"""
 }
@@ -159,7 +177,7 @@ Run-WindowedApplication -AllowableExitStatuses @(0, 3010) -RetryableExitStatuses
 
 $item = Get-ChildItem 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\' -ErrorAction SilentlyContinue | Where-Object { $_.Name -like " Visual Studio 20*" -and $_.Attributes -like '*Archive*' }
 if ($null -ne $item) {
-    Copy-Item $item.FullName -Destination 'C:\Users\Public\Desktop' -Force -ErrorAction SilentlyContinue
+    Copy-Item $item.FullName -Destination '${env:SystemDrive}\Users\Public\Desktop' -Force -ErrorAction SilentlyContinue
 }
 
 if (!$WESkipNgenAfterInstall) {
@@ -171,7 +189,7 @@ if (!$WESkipNgenAfterInstall) {
             $errFile = Join-Path $env:TEMP " ngen-$timestamp-$_.err"
 
             $command = " C:\Windows\Microsoft.NET\$_\v4.0.30319\ngen.exe"
-            $options = $('eqi')
+           ;  $options = $('eqi')
            ;  $cmdLine = " $command $($options -join ' ')"
             
             Write-WELog " Running $cmdLine" " INFO"

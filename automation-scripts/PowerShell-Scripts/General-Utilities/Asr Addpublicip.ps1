@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Asr Addpublicip
+    Asr Addpublicip
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Asr Addpublicip
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <# 
     .DESCRIPTION 
@@ -59,7 +77,7 @@ else
 
     $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
 
-    Write-Output ("Found the following VMGuid(s): `n" + $WEVMInfo)
+    Write-Output (" Found the following VMGuid(s): `n" + $WEVMInfo)
 
     if ($WEVMInfo -is [system.array])
     {
@@ -114,7 +132,7 @@ Try
     {
         $WEARMNic = Get-AzureRmResource -ResourceId $WEVM.NetworkInterfaceIDs[0]
         $WENIC = Get-AzureRmNetworkInterface -Name $WEARMNic.Name -ResourceGroupName $WEARMNic.ResourceGroupName
-        $WEPIP = New-AzureRmPublicIpAddress -Name $WEVM.Name -ResourceGroupName $WERGName -Location $WEVM.Location -AllocationMethod Dynamic
+       ;  $WEPIP = New-AzureRmPublicIpAddress -Name $WEVM.Name -ResourceGroupName $WERGName -Location $WEVM.Location -AllocationMethod Dynamic
         $WENIC.IpConfigurations[0].PublicIpAddress = $WEPIP
         Set-AzureRmNetworkInterface -NetworkInterface $WENIC     
         Write-Output (" Added public IP address to the following VM: " + $WEVM.Name)  
@@ -126,17 +144,15 @@ Catch
      ;  $WEErrorMessage = 'Failed to add public IP address to the VM.'
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
-      $WEErrorMessage = $WEErrorMessage + $_
+     ;  $WEErrorMessage = $WEErrorMessage + $_
       Write-Error -Message $WEErrorMessage `
                     -ErrorAction Stop
  }
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

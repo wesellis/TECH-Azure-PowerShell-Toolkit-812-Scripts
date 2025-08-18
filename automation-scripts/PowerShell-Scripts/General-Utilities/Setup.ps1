@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Setup
+    Setup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Setup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -37,19 +55,19 @@ New-Item -Path f:\portainerdata -ItemType Directory | Out-Null
 New-Item -Path f:\compose -ItemType Directory | Out-Null
 
 
-[DownloadWithRetry]::DoDownloadWithRetry("https://chocolatey.org/install.ps1" , 5, 10, $null, ".\chocoInstall.ps1" , $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10, $null, " .\chocoInstall.ps1" , $false)
 & .\chocoInstall.ps1
 choco feature enable -n allowGlobalConfirmation
 choco install --no-progress --limit-output vim
 choco install --no-progress --limit-output pwsh
-choco install --no-progress --limit-output openssh -params '"/SSHServerFeature" '
+choco install --no-progress --limit-output openssh -params '" /SSHServerFeature" '
 
 
-Copy-Item "$basePath\sshd_config_wopwd" 'C:\ProgramData\ssh\sshd_config'
+Copy-Item " $basePath\sshd_config_wopwd" 'C:\ProgramData\ssh\sshd_config'; 
 $path = " c:\ProgramData\ssh\administrators_authorized_keys"
 " $publicSshKey" | Out-File -Encoding utf8 -FilePath $path; 
 $acl = Get-Acl -Path $path
-$acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)")
+$acl.SetSecurityDescriptorSddlForm(" O:BAD:PAI(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)" )
 Set-Acl -Path $path -AclObject $acl
 New-ItemProperty -Path " HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell -Value " C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
 'function prompt { " PS [$env:COMPUTERNAME]:$($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) " }' | Out-File -FilePath " $($WEPROFILE.AllUsersAllHosts)" -Encoding utf8
@@ -59,15 +77,15 @@ Restart-Service sshd
 Stop-Service docker
 $dockerDaemonConfig = @"
 {
-    `" data-root`": `" f:\\dockerdata`"
+    `" data-root`" : `" f:\\dockerdata`"
 }
 " @
-$dockerDaemonConfig | Out-File "c:\programdata\docker\config\daemon.json" -Encoding ascii
+$dockerDaemonConfig | Out-File " c:\programdata\docker\config\daemon.json" -Encoding ascii
 
-Remove-Item 'f:\dockerdata\panic.log -Force' -Force -ErrorAction SilentlyContinue | Out-Null
+Remove-Item 'f:\dockerdata\panic.lo -Forceg -Force' -Force -ErrorAction SilentlyContinue | Out-Null
 New-Item 'f:\dockerdata\panic.log' -ItemType File -ErrorAction SilentlyContinue | Out-Null
 
-Add-MpPreference -ExclusionPath 'C:\Program Files\docker\'
+Add-MpPreference -ExclusionPath '${env:ProgramFiles}\docker\'
 Add-MpPreference -ExclusionPath 'f:\dockerdata'
 Start-Service docker
 
@@ -75,10 +93,10 @@ Start-Service docker
 $adminPwd | Out-File -NoNewline -Encoding ascii " f:\portainerdata\passwordfile"
 
 
-[DownloadWithRetry]::DoDownloadWithRetry(" https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe", 5, 10, $null, " $($WEEnv:ProgramFiles)\Docker\docker-compose.exe", $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe" , 5, 10, $null, " $($WEEnv:ProgramFiles)\Docker\docker-compose.exe" , $false)
 
 $template = Get-Content (Join-Path $basepath 'docker-compose.yml.template') -Raw
-$expanded = Invoke-Expression " @`"`r`n$template`r`n`" @"
+$expanded = Invoke-Expression " @`" `r`n$template`r`n`" @"
 $expanded | Out-File " f:\compose\docker-compose.yml" -Encoding ASCII
 
 Set-Location " f:\compose"
@@ -101,7 +119,7 @@ class DownloadWithRetry {
             try {
                 if ($headers.Count -ne 0) {
                     if ([string]::IsNullOrEmpty($outFile)) {
-                        $result = Invoke-WebRequest -Uri $uri -Headers $headers -UseBasicParsing
+                       ;  $result = Invoke-WebRequest -Uri $uri -Headers $headers -UseBasicParsing
                         return $result.Content
                     }
                     else {

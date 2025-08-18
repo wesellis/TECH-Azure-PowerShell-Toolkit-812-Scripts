@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Webappazureingestion
+    Webappazureingestion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Webappazureingestion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 
@@ -62,7 +80,7 @@ if($WEWebApps -ne $WENull)
         $WEMetrics = $WEMetrics + (Get-AzureRmMetric -ResourceId $WEWebApp.ResourceId -TimeGrain ([TimeSpan]::FromMinutes(1)) -StartTime $WEStartTime)
 		
 		# Format metrics into a table.
-        $table = @()
+       ;  $table = @()
         foreach($metric in $WEMetrics)
         { 
 			if($metric.MetricValues.Count -ne 0)
@@ -70,7 +88,7 @@ if($WEWebApps -ne $WENull)
 				foreach($metricValue in $metric.MetricValues)
 				{
 				; 	$sx = New-Object PSObject -Property @{
-						Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ")
+						Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 						MetricName = $metric.Name; 
 						Average = $metricValue.Average;
 						SubscriptionID = $WEConn.SubscriptionID;

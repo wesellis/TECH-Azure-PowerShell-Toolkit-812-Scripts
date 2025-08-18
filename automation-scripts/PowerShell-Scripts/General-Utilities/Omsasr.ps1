@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Omsasr
+    Omsasr
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,31 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Omsasr
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 Configuration OMSASR
 {
   
     $WERemoteAzureAgent = 'http://go.microsoft.com/fwlink/p/?LinkId=394789'
     $WELocalAzureAgent = 'C:\Temp\AzureVmAgent.msi'
     $WEOMSPackageLocalPath = 'C:\MMA\MMASetup-AMD64.exe'
-    $WEOMSWorkspaceId = Get-AutomationVariable -Name 'OMSWorkspaceId'
+   ;  $WEOMSWorkspaceId = Get-AutomationVariable -Name 'OMSWorkspaceId'
    ;  $WEOMSWorkspaceKey = Get-AutomationVariable -Name 'OMSWorkspaceKey'
 
 
@@ -55,11 +73,11 @@ Configuration OMSASR
             } 
 
         Package OMS {
-            Ensure = "Present"
+            Ensure = " Present"
             Path  = $WEOMSPackageLocalPath
             Name = 'Microsoft Monitoring Agent'
             ProductId = '8A7F2C51-4C7D-4BFD-9014-91D11F24AAE2'
-            Arguments = '/C:" setup.exe /qn ADD_OPINSIGHTS_WORKSPACE=1 OPINSIGHTS_WORKSPACE_ID=' + $WEOMSWorkspaceId + ' OPINSIGHTS_WORKSPACE_KEY=' + $WEOMSWorkspaceKey + ' AcceptEndUserLicenseAgreement=1"'
+            Arguments = '/C:" setup.exe /qn ADD_OPINSIGHTS_WORKSPACE=1 OPINSIGHTS_WORKSPACE_ID=' + $WEOMSWorkspaceId + ' OPINSIGHTS_WORKSPACE_KEY=' + $WEOMSWorkspaceKey + ' AcceptEndUserLicenseAgreement=1" '
             DependsOn = '[xRemoteFile]OMSPackage'
         }
     }

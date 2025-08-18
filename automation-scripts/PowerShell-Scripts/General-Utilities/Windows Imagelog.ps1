@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Imagelog
+    Windows Imagelog
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Imagelog
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -38,7 +56,7 @@
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)][String] $WEBicepInfo,
-    [Parameter(Mandatory = $false)][String] $WEUsefulTagsList = "correlationId,createdBy,imageTemplateName,imageTemplateResourceGroupName"
+    [Parameter(Mandatory = $false)][String] $WEUsefulTagsList = " correlationId,createdBy,imageTemplateName,imageTemplateResourceGroupName"
 )
 
 function WE-Add-VarForLogging ($varName, $varValue) {
@@ -65,7 +83,7 @@ $global:varLogArray = New-Object -TypeName " PSCustomObject"
 $newLine = [Environment]::NewLine
 $logBreak = $newLine + '=============================================================================' + $newLine
 $currentTime = Get-Date
-$usefulTags = $WEUsefulTagsList.Split(" ,")
+$usefulTags = $WEUsefulTagsList.Split(" ," )
 $imageInfoJsonDir = " C:\.tools\Setup"
 $imageInfoJsonFile = " $imageInfoJsonDir\ImageInfo.json"
 $imageInfoTextFile = [Environment]::GetFolderPath('CommonDesktopDirectory') + " \ImageBuildReport.txt"
@@ -82,14 +100,14 @@ try {
     Add-VarForLogging -varName " BicepParameters" -varValue $bicepData
 
     Write-WELog " Calling compute API to get image tags." " INFO"
-    $vmTags = (Invoke-RestMethod -Headers @{" Metadata" = " true" } -Uri " http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01").tags
+   ;  $vmTags = (Invoke-RestMethod -Headers @{" Metadata" = " true" } -Uri " http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01" ).tags
     Write-WELog " VM Tags : " " INFO" $vmTags
     Write-WELog " Process image tags." " INFO"
-   ;  $vmTagsList = $vmTags.Split(" ;")
+   ;  $vmTagsList = $vmTags.Split(" ;" )
     $tagOut = New-Object -TypeName " PSCustomObject"
     foreach ($tag in $vmTagsList) {
-        if (($tag.Split(" :", 2))[0] -in $usefulTags) {
-            $tagOut | Add-Member -MemberType NoteProperty -Name ($tag.Split(" :", 2))[0] -Value ($tag.Split(" :", 2))[1]
+        if (($tag.Split(" :" , 2))[0] -in $usefulTags) {
+            $tagOut | Add-Member -MemberType NoteProperty -Name ($tag.Split(" :" , 2))[0] -Value ($tag.Split(" :" , 2))[1]
         }
     }
     Add-VarForLogging -varName " VMTags" -varValue $tagOut
@@ -113,17 +131,17 @@ try {
     Write-WELog " Write text output file to " " INFO" $imageInfoTextFile
     $repoDetail = ""
     $tagsDetail = ""
-    if ([bool]($global:varLogArray.PSobject.Properties.name -match " Repos")) {
-        $repoDetail = $global:varLogArray.Repos | ConvertTo-Json
+    if ([bool]($global:varLogArray.PSobject.Properties.name -match " Repos" )) {
+       ;  $repoDetail = $global:varLogArray.Repos | ConvertTo-Json
     }
-    if ([bool]($global:varLogArray.PSobject.Properties.name -match " VMTags")) {
+    if ([bool]($global:varLogArray.PSobject.Properties.name -match " VMTags" )) {
        ;  $tagsDetail = $global:varLogArray.VMTags 
     }
-    $reportHeader, $logBreak, " Bicep Parameters : ", $($global:varLogArray.BicepParameters | ConvertTo-Json -Depth 10), $logBreak, " VM Image Tags : ", $tagsDetail, $logBreak, " Repos : ", $repoDetail | Out-File -FilePath $imageInfoTextFile
+    $reportHeader, $logBreak, " Bicep Parameters : " , $($global:varLogArray.BicepParameters | ConvertTo-Json -Depth 10), $logBreak, " VM Image Tags : " , $tagsDetail, $logBreak, " Repos : " , $repoDetail | Out-File -FilePath $imageInfoTextFile
     Get-Content $imageInfoTextFile
 
     Write-WELog " Delete RepoLog directory now that it is no longer needed." " INFO"
-    Remove-Item $repoLogFilePath -Force -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $repoLogFilePat -Forceh -Force -Recurse -Force -ErrorAction SilentlyContinue
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop

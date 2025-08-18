@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 14.4 New Azpublicipaddress
+    14.4 New Azpublicipaddress
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 14.4 New Azpublicipaddress
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -38,7 +56,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 Create a public IP address for Azure Bastion. The public IP is the public IP address the Bastion resource on which RDP/SSH will be accessed (over port 443). The public IP address must be in the same region as the Bastion resource you are creating.
 
 
-
+; 
 $newAzPublicIpAddressSplat = @{
     ResourceGroupName = " FGC_Prod_Bastion_RG"
     Name = " FGC_Prod_Bastion_PublicIP"

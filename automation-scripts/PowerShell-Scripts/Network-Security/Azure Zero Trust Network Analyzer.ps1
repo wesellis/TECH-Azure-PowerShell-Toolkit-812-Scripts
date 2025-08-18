@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Zero Trust Network Analyzer
+    Azure Zero Trust Network Analyzer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Zero Trust Network Analyzer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -54,21 +72,23 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEOutputPath = " .\ZeroTrust-Assessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').html",
+    [string]$WEOutputPath = " .\ZeroTrust-Assessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').html" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEIncludeRemediation,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Summary", " Detailed", " Executive")]
+    [ValidateSet(" Summary" , " Detailed" , " Executive" )]
     [string]$WEDetailLevel = " Detailed"
 )
 
@@ -128,7 +148,7 @@ function WE-Test-NetworkSegmentation {
                 HasRouteTable = $null -ne $subnet.RouteTable
             }
             
-            if (!$subnetInfo.HasNSG -and $subnet.Name -ne " AzureFirewallSubnet") {
+            if (!$subnetInfo.HasNSG -and $subnet.Name -ne " AzureFirewallSubnet" ) {
                 $vnetAnalysis.Issues += " Subnet '$($subnet.Name)' lacks NSG association"
                 $vnetAnalysis.Score -= 10
             }
@@ -168,7 +188,7 @@ function WE-Test-IdentityPerimeter {
             Score = 100
         }
         
-        if ($storage.NetworkRuleSet.DefaultAction -eq " Allow") {
+        if ($storage.NetworkRuleSet.DefaultAction -eq " Allow" ) {
             $storageAnalysis.Issues += " Public network access allowed (should use Private Endpoints)"
             $storageAnalysis.Score -= 30
         }
@@ -195,7 +215,7 @@ function WE-Test-IdentityPerimeter {
         $firewallRules = Get-AzSqlServerFirewallRule -ServerName $sql.ServerName -ResourceGroupName $sql.ResourceGroupName
         
         foreach ($rule in $firewallRules) {
-            if ($rule.StartIpAddress -eq " 0.0.0.0" -and $rule.EndIpAddress -eq " 255.255.255.255") {
+            if ($rule.StartIpAddress -eq " 0.0.0.0" -and $rule.EndIpAddress -eq " 255.255.255.255" ) {
                 $sqlAnalysis.Issues += " Firewall rule allows all IP addresses"
                 $sqlAnalysis.Score -= 50
             }
@@ -224,7 +244,7 @@ function WE-Test-EncryptionCompliance {
         
         $diskEncryptionStatus = Get-AzVMDiskEncryptionStatus -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name
         
-        if ($diskEncryptionStatus.OsVolumeEncrypted -ne " Encrypted") {
+        if ($diskEncryptionStatus.OsVolumeEncrypted -ne " Encrypted" ) {
             $vmAnalysis.Issues += " OS disk not encrypted"
             $vmAnalysis.Score -= 30
         }
@@ -257,12 +277,12 @@ function WE-Test-MicroSegmentation {
         
         # Check for overly permissive rules
         foreach ($rule in $nsg.SecurityRules) {
-            if ($rule.SourceAddressPrefix -eq " *" -and $rule.Access -eq " Allow") {
+            if ($rule.SourceAddressPrefix -eq " *" -and $rule.Access -eq " Allow" ) {
                 $nsgAnalysis.Issues += " Rule '$($rule.Name)' allows traffic from any source"
                 $nsgAnalysis.Score -= 15
             }
             
-            if ($rule.DestinationPortRange -eq " *" -and $rule.Access -eq " Allow") {
+            if ($rule.DestinationPortRange -eq " *" -and $rule.Access -eq " Allow" ) {
                 $nsgAnalysis.Issues += " Rule '$($rule.Name)' allows traffic to any port"
                 $nsgAnalysis.Score -= 15
             }
@@ -282,7 +302,7 @@ function WE-Test-MicroSegmentation {
 
 function WE-Generate-RemediationScripts {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEAssessmentResults)
     
     Write-WELog " Generating remediation scripts..." " INFO" -ForegroundColor Green
@@ -321,8 +341,8 @@ Set-AzVirtualNetworkSubnetConfig -Name " $($subnet.Name)" -VirtualNetwork `$vnet
 }
 
 function WE-Generate-HTMLReport {
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    [CmdletBinding()]; 
+$ErrorActionPreference = " Stop"
 param($WEAssessmentResults)
     
    ;  $html = @"
@@ -348,15 +368,15 @@ param($WEAssessmentResults)
     </style>
 </head>
 <body>
-    <div class=" header">
+    <div class=" header" >
         <h1>Zero Trust Network Assessment Report</h1>
         <p>Subscription: $($WEAssessmentResults.SubscriptionId)</p>
         <p>Assessment Date: $($WEAssessmentResults.AssessmentDate)</p>
     </div>
     
-    <div class=" summary">
+    <div class=" summary" >
         <h2>Overall Zero Trust Score</h2>
-        <div class=" score $(if ($WEAssessmentResults.OverallScore -ge 80) {'high'} elseif ($WEAssessmentResults.OverallScore -ge 60) {'medium'} else {'low'})">
+        <div class=" score $(if ($WEAssessmentResults.OverallScore -ge 80) {'high'} elseif ($WEAssessmentResults.OverallScore -ge 60) {'medium'} else {'low'})" >
             $($WEAssessmentResults.OverallScore)%
         </div>
         <p>Your environment's Zero Trust Network maturity level: $(
@@ -368,10 +388,10 @@ param($WEAssessmentResults)
 " @
     
     # Add detailed sections
-    if ($WEDetailLevel -ne "Executive" ) {
+    if ($WEDetailLevel -ne " Executive" ) {
         # Network Segmentation Section
         $html = $html + @"
-    <div class=" section">
+    <div class=" section" >
         <h2>Network Segmentation Analysis</h2>
         <table>
             <tr>
@@ -393,17 +413,17 @@ param($WEAssessmentResults)
             </tr>
 " @
         }
-        $html = $html + "</table></div>"
+        $html = $html + " </table></div>"
     }
     
     $html = $html + @"
-    <div class=" section">
+    <div class=" section" >
         <h2>Recommendations</h2>
 " @
     
     foreach ($rec in $WEAssessmentResults.Recommendations) {
         $html = $html + @"
-        <div class=" recommendation">
+        <div class=" recommendation" >
             <strong>$($rec.Title)</strong>
             <p>$($rec.Description)</p>
             <p><em>Priority: $($rec.Priority) | Impact: $($rec.Impact)</em></p>
@@ -425,7 +445,7 @@ try {
     # Connect to Azure if needed
     $context = Get-AzContext
     if (!$context) {
-        Write-WELog "Connecting to Azure..." " INFO" -ForegroundColor Yellow
+        Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
         Connect-AzAccount
     }
     
@@ -491,7 +511,7 @@ try {
     
     # Generate remediation scripts if requested
     if ($WEIncludeRemediation) {
-        $remediationPath = $WEOutputPath -replace " \.html$", " -remediation.ps1"
+       ;  $remediationPath = $WEOutputPath -replace " \.html$" , " -remediation.ps1"
        ;  $remediationScript = Generate-RemediationScripts -AssessmentResults $assessmentResults
         $remediationScript | Out-File -FilePath $remediationPath -Encoding UTF8
         Write-WELog " Remediation script saved to: $remediationPath" " INFO" -ForegroundColor Cyan

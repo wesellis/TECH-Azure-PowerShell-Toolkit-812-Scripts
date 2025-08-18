@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Scheduleingestion
+    Scheduleingestion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Scheduleingestion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 
@@ -48,11 +66,11 @@ While ($count -lt $WENumberofSchedules)
     {
     " Creating schedule $WEScheduleName-$WECount for $WERunbookStartTime for runbook $WERunbookName"
     $WESchedule = New-AzureRmAutomationSchedule -Name " $WEScheduleName-$WECount" -StartTime $WERunbookStartTime -HourInterval 1 -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup
-    $WESch = Register-AzureRmAutomationScheduledRunbook -RunbookName $WERunbookName -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup -ScheduleName " $WEScheduleName-$WECount"
+   ;  $WESch = Register-AzureRmAutomationScheduledRunbook -RunbookName $WERunbookName -AutomationAccountName $WEAAAccount -ResourceGroupName $WEAAResourceGroup -ScheduleName " $WEScheduleName-$WECount"
    ;  $WERunbookStartTime = $WERunbookStartTime.AddMinutes($WERunFrequency)
     }
     catch
-    {throw " Creation of schedules has failed!"}
+    {throw " Creation of schedules has failed!" }
 }
 
 " Done!"

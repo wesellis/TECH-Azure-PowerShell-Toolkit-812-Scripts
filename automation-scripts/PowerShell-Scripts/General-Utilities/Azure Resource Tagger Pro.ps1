@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Resource Tagger Pro
+    Azure Resource Tagger Pro
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,22 +16,46 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Resource Tagger Pro
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     [Parameter(Mandatory=$true)][hashtable]$WETags,
     [Parameter(Mandatory=$false)][string[]]$WEResourceTypes,
-    [Parameter(Mandatory=$false)][string]$WETaggingStrategy = " Merge", # Merge, Replace, RemoveAll
+    [Parameter(Mandatory=$false)][string]$WETaggingStrategy = " Merge" , # Merge, Replace, RemoveAll
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEExportPath,
     [Parameter(Mandatory=$false)][switch]$WEWhatIf,
@@ -118,7 +142,7 @@ try {
     
     # Execute tagging operations
     $successCount = 0
-    $errorCount = 0
+   ;  $errorCount = 0
     
     if ($WEParallel -and $operations.Count -gt 10) {
         # Parallel execution for large operations
@@ -146,7 +170,7 @@ try {
                 Write-Log " ✓ Tagged: $($operation.Resource.Name)" -Level SUCCESS
             } catch {
                 Write-Log " ✗ Failed: $($operation.Resource.Name) - $($_.Exception.Message)" -Level ERROR
-                $errorCount = $errorCount + 1
+               ;  $errorCount = $errorCount + 1
             }
         }
     }
@@ -155,10 +179,10 @@ try {
     
     # Export results if requested
     if ($WEExportPath) {
-       ;  $results = $operations | Select-Object @{N=" ResourceName";E={$_.Resource.Name}}, 
-                                             @{N=" ResourceType";E={$_.Resource.ResourceType}},
-                                             @{N=" Action";E={$_.Action}},
-                                             @{N=" TagCount";E={$_.NewTags.Count}}
+       ;  $results = $operations | Select-Object @{N=" ResourceName" ;E={$_.Resource.Name}}, 
+                                             @{N=" ResourceType" ;E={$_.Resource.ResourceType}},
+                                             @{N=" Action" ;E={$_.Action}},
+                                             @{N=" TagCount" ;E={$_.NewTags.Count}}
         $results | Export-Csv -Path $WEExportPath -NoTypeInformation
         Write-Log " Results exported to: $WEExportPath" -Level INFO
     }

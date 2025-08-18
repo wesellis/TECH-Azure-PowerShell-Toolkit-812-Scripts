@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 19.9 Generate Password
+    19.9 Generate Password
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced 19.9 Generate Password
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Generate-Password {
 
 
@@ -25,21 +43,23 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function WE-Generate-Password {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     
 
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -69,6 +89,8 @@ param(
          
         function WE-Scramble-String([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$inputString) {     
             $characterArray = $inputString.ToCharArray()   
             $scrambledStringArray = $characterArray | Get-Random -Count $characterArray.Length     
@@ -77,11 +99,11 @@ param(
             return $outputString
         }
          
-        $password = @()
+       ;  $password = @()
        ;  $WEMulticharacterlist = @(
-            "abcdefghiklmnoprstuvwxyz" ,
-            "ABCDEFGHKLMNOPRSTUVWXYZ" ,
-            "1234567890"
+            " abcdefghiklmnoprstuvwxyz" ,
+            " ABCDEFGHKLMNOPRSTUVWXYZ" ,
+            " 1234567890"
             '`~!@#$%^&*()_+-={}|[]\:" ;<>?,.'
         )
 
@@ -89,7 +111,7 @@ param(
             Get-RandomCharacters -length $lengthdivided -characters $WESingleCharacterlist
         }
 
-        $password = Scramble-String $WEMultiPasswordrandom
+       ;  $password = Scramble-String $WEMultiPasswordrandom
         
     }
     
@@ -98,7 +120,7 @@ param(
         try {
             # Write-Host $password -ForegroundColor Green
            ;  $length = $password.length
-            # Write-WELog "Generating an O365 Password of length" " INFO" $length -ForegroundColor Green
+            # Write-WELog " Generating an O365 Password of length" " INFO" $length -ForegroundColor Green
             $WEScript:O365Password = $password
             # $password | Out-File -FilePath " C:\1.txt"
             # $password

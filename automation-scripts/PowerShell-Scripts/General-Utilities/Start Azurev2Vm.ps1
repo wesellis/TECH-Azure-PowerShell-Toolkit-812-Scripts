@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Start Azurev2Vm
+    Start Azurev2Vm
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Start Azurev2Vm
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -76,9 +94,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -86,9 +106,13 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WECertificateThumbprint,
     
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEApplicationId,
@@ -96,10 +120,12 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETenantId,
 
     [Parameter(Mandatory=$false)]
-    [string]$WEEnvironment= " AzureCloud",
+    [string]$WEEnvironment= " AzureCloud" ,
 
     [Parameter(Mandatory=$false)]
     [string]$WEFirstServer
@@ -119,7 +145,7 @@ $WEProgressPreference = 'SilentlyContinue'
 
 import-module AzureRM 
 
-if ((Get-Module AzureRM).Version -lt " 5.5.0") {
+if ((Get-Module AzureRM).Version -lt " 5.5.0" ) {
    Write-warning " Old version of Azure PowerShell module  $((Get-Module AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
    BREAK
 }
@@ -127,7 +153,7 @@ if ((Get-Module AzureRM).Version -lt " 5.5.0") {
 function WE-Start-Vm 
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($vmName, $resourceGroupName)
              
     Write-Output " Starting $vmName..." 
@@ -165,7 +191,7 @@ param($vmName, $resourceGroupName)
 
 Workflow Start-VMs 
 { [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param($WEVMs, $WEResourceGroupName, $loginParams)
 
   foreach -parallel ($vm in $WEVMs)
@@ -230,7 +256,7 @@ Start-VMs -VMs $remainingVMs -ResourceGroupName $resourceGroupName -loginParams 
     {
         $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
         " $($vm.Name) - $status"
-        $allStatus = $allStatus + $status
+       ;  $allStatus = $allStatus + $status
     }
     sleep 3
  }

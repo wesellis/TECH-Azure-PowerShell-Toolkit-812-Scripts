@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Elasticsearch Windows Install
+    Elasticsearch Windows Install
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Elasticsearch Windows Install
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 	.SYNOPSIS
@@ -49,29 +67,47 @@ $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory=$true)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$elasticSearchVersion,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$jdkDownloadLocation,
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$elasticSearchBaseFolder,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$discoveryEndpoints,
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$elasticClusterName,
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$storageKey,
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$marvelEndpoints,
 	[Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$po,
 	[Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$r,
     [switch]$marvelOnlyNode,
@@ -93,7 +129,7 @@ function WE-Log-Error(){
 	$args | Write-Host -ForegroundColor Red
 }
 
-Set-Alias -Name lmsg -Value Log-Output -Description "Displays an informational message in green color" 
+Set-Alias -Name lmsg -Value Log-Output -Description " Displays an informational message in green color" 
 Set-Alias -Name lerr -Value Log-Error -Description " Displays an error message in red color" 
 
 function WE-Initialize-Disks{
@@ -128,9 +164,11 @@ function WE-Initialize-Disks{
 
 function WE-Create-DataFolders([int]$numDrives, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$folder)
 {
-    $letters = 70..90 | ForEach-Object { ([char]$_) }
+   ;  $letters = 70..90 | ForEach-Object { ([char]$_) }
 
    ;  $pathSet = @(0) * $numDrives
     for($i=0;$i -lt $numDrives;$i++)
@@ -149,10 +187,12 @@ function WE-Create-DataFolders([int]$numDrives, [Parameter(Mandatory=$false)]
 function WE-Download-Jdk
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$targetDrive,
         [string]$downloadLocation
@@ -187,10 +227,12 @@ param(
 function WE-Install-Jdk
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$sourceLoc,
         [Parameter(Mandatory=$true)]
@@ -206,7 +248,7 @@ param(
 
 	try{
         lmsg " Installing java on the box under $installPath..."
-		$proc = Start-Process -FilePath $sourceLoc -ArgumentList " /s INSTALLDIR=`"$installPath`" /L `" $logPath`"" -Wait -PassThru -RedirectStandardOutput $psLog -RedirectStandardError $psErr -NoNewWindow
+		$proc = Start-Process -FilePath $sourceLoc -ArgumentList " /s INSTALLDIR=`" $installPath`" /L `" $logPath`"" -Wait -PassThru -RedirectStandardOutput $psLog -RedirectStandardError $psErr -NoNewWindow
         $proc.WaitForExit()
         lmsg " JDK installed under $installPath" " Log file location: $logPath"
         
@@ -226,10 +268,12 @@ param(
 function WE-Download-ElasticSearch
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$true)]
         [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$elasticVersion,
         [Parameter(Mandatory=$true)]
@@ -237,7 +281,7 @@ param(
     )
 	# download Elasticsearch from a given source URL to destination folder
 	try{
-			$source = if ($elasticVersion -match '2.') {" https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/$elasticVersion/elasticsearch-$elasticVersion.zip"} else { " https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-$elasticVersion.zip" }
+			$source = if ($elasticVersion -match '2.') {" https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/zip/elasticsearch/$elasticVersion/elasticsearch-$elasticVersion.zip" } else { " https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-$elasticVersion.zip" }
 			$destination = " $targetDrive`:\Downloads\ElasticSearch\Elastic-Search.zip"
             
             # create folder if doesn't exists and suppress the output
@@ -290,13 +334,13 @@ function WE-SetEnv-JavaHome($jdkInstallLocation)
     Set-Item Env:JAVA_HOME " $homePath" | Out-Null
 
     # Additional check
-    if ([environment]::GetEnvironmentVariable(" JAVA_HOME"," machine") -eq $null)
+    if ([environment]::GetEnvironmentVariable(" JAVA_HOME" ," machine" ) -eq $null)
 	{
-	    [environment]::setenvironmentvariable(" JAVA_HOME",$homePath," machine") | Out-Null
+	    [environment]::setenvironmentvariable(" JAVA_HOME" ,$homePath," machine" ) | Out-Null
 	}
 
     lmsg 'Modifying path variable to point to java executable...'
-    $currentPath = (Get-ItemProperty -Path $regEnvPath -Name PATH).Path
+   ;  $currentPath = (Get-ItemProperty -Path $regEnvPath -Name PATH).Path
    ;  $currentPath = $currentPath + ';' + " $homePath\bin"
     Set-ItemProperty -Path $regEnvPath -Name PATH -Value $currentPath
     Set-Item Env:PATH " $currentPath"
@@ -317,9 +361,9 @@ function WE-SetEnv-HeapSize
     Set-Item Env:ES_HEAP_SIZE $halfRam | Out-Null
 
     # Additional check
-    if ([environment]::GetEnvironmentVariable(" ES_HEAP_SIZE"," machine") -eq $null)
+    if ([environment]::GetEnvironmentVariable(" ES_HEAP_SIZE" ," machine" ) -eq $null)
 	{
-	    [environment]::setenvironmentvariable(" ES_HEAP_SIZE",$halfRam," machine") | Out-Null
+	    [environment]::setenvironmentvariable(" ES_HEAP_SIZE" ,$halfRam," machine" ) | Out-Null
 	}
 }
 
@@ -337,6 +381,8 @@ function WE-Install-ElasticSearch ($driveLetter, $elasticSearchZip, $subFolder =
 
 function WE-Implode-Host([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$discoveryHost)
 {
     # Discovery host must be in a given format e.g. 10.0.0.4-3 for the below code to work
@@ -345,13 +391,13 @@ function WE-Implode-Host([Parameter(Mandatory=$false)]
     $ipPrefix = $discoveryHost.Substring(0, $discoveryHost.LastIndexOf('.'))
     $dotSplitArr = $discoveryHost.Split('.')
     $lastDigit = $dotSplitArr[$dotSplitArr.Length-1].Split('-')[0]
-    $loop = $dotSplitArr[$dotSplitArr.Length-1].Split('-')[1]
+   ;  $loop = $dotSplitArr[$dotSplitArr.Length-1].Split('-')[1]
 
    ;  $ipRange = @(0) * $loop
     for($i=0; $i -lt $loop; $i++)
     {
         $format = " $ipPrefix." + ($i+ $lastDigit)
-        $ipRange[$i] = '" ' +$format + '"'
+        $ipRange[$i] = '" ' +$format + '" '
     }
 
     $addresses = $ipRange -join ','
@@ -359,6 +405,8 @@ function WE-Implode-Host([Parameter(Mandatory=$false)]
 }
 
 function WE-Implode-Host2([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$discoveryHost)
 {
@@ -368,13 +416,13 @@ function WE-Implode-Host2([Parameter(Mandatory=$false)]
 
     $dashSplitArr = $discoveryHost.Split('-')
     $prefixAddress = $dashSplitArr[0]
-    $loop = $dashSplitArr[1]
+   ;  $loop = $dashSplitArr[1]
 
    ;  $ipRange = @(0) * $loop
     for($i=0; $i -lt $loop; $i++)
     {
         $format = " $prefixAddress$i"
-        $ipRange[$i] = '" ' +$format + '"'
+        $ipRange[$i] = '" ' +$format + '" '
     }
 
     $addresses = $ipRange -join ','
@@ -385,7 +433,7 @@ function WE-Implode-Host2([Parameter(Mandatory=$false)]
 function WE-ElasticSearch-InstallService($scriptPath)
 {
 	# Install and start elastic search as a service
-	$elasticService = (get-service | Where-Object {$_.Name -match " elasticsearch"}).Name
+	$elasticService = (get-service | Where-Object {$_.Name -match " elasticsearch" }).Name
 	if($elasticService -eq $null) 
     {	
         # First set heap size
@@ -422,7 +470,7 @@ function WE-ElasticSearch-StartService()
 
 function WE-ElasticSearch-VerifyInstall
 {
-    $esRequest = [System.Net.WebRequest]::Create(" http://localhost:9200")
+    $esRequest = [System.Net.WebRequest]::Create(" http://localhost:9200" )
     $esRequest.Method = " GET"
 	$esResponse = $esRequest.GetResponse()
 	$reader = new-object System.IO.StreamReader($esResponse.GetResponseStream())
@@ -463,7 +511,7 @@ function WE-Jmeter-Unzip($source, $drive)
 
 	$zip = $shell.NameSpace($source)
 
-    $loc = " $drive`:\jmeter_sa"
+   ;  $loc = " $drive`:\jmeter_sa"
 	
 	# Test destination folder
 	if (!(Test-Path $loc))
@@ -675,7 +723,7 @@ function WE-Install-WorkFlow
 	# Temporary measure to configure each ES node for JMeter server agent
 	if ($jmeterConfig)
 	{
-		$jmZip = Jmeter-Download $firstDrive
+	; 	$jmZip = Jmeter-Download $firstDrive
 	; 	$unzipLocation = Jmeter-Unzip $jmZip $firstDrive
 		Jmeter-ConfigFirewall
 		Jmeter-Run $unzipLocation

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Openai Service Manager
+    Azure Openai Service Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Openai Service Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,25 +50,27 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAccountName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WESkuName = " S0",
+    [string]$WESkuName = " S0" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEAction = " Create",
+    [string]$WEAction = " Create" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEModelName = " gpt-35-turbo",
+    [string]$WEModelName = " gpt-35-turbo" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEModelVersion = " 0613",
+    [string]$WEModelVersion = " 0613" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEDeploymentName = " gpt-35-turbo-deployment",
+    [string]$WEDeploymentName = " gpt-35-turbo-deployment" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WECapacity = 120,
@@ -64,7 +86,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure OpenAI Service Manager" -Version " 2.0" -Description " Enterprise AI service automation with security and monitoring"
@@ -103,7 +125,7 @@ try {
             }
             
             if ($WENetworkRules.Count -gt 0) {
-                if ($WENetworkRules.ContainsKey(" AllowedIPs")) {
+                if ($WENetworkRules.ContainsKey(" AllowedIPs" )) {
                     $openAIParams.NetworkRuleSet.IpRules = $WENetworkRules.AllowedIPs | ForEach-Object {
                         @{ IpAddress = $_ }
                     }
@@ -205,8 +227,8 @@ try {
                     Name = " $WEAccountName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" Audit", " RequestResponse", " Trace")
-                    MetricCategory = @(" AllMetrics")
+                    Category = @(" Audit" , " RequestResponse" , " Trace" )
+                    MetricCategory = @(" AllMetrics" )
                 }
                 
                 Set-AzDiagnosticSetting @diagnosticParams
@@ -264,13 +286,13 @@ try {
     }
     
     # Check resource group location compliance
-    if ($WELocation -in @(" East US", " West Europe", " Southeast Asia")) {
+    if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
         $securityScore++
         $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
     }
     
     # Check SKU for production readiness
-    if ($WESkuName -ne " F0") {
+    if ($WESkuName -ne " F0" ) {
         $securityScore++
         $securityFindings = $securityFindings + " ✓ Production-ready SKU selected"
     }
@@ -278,7 +300,7 @@ try {
     # Check tagging compliance
     if ($tags.Count -ge 5) {
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Enterprise tagging compliant"
+       ;  $securityFindings = $securityFindings + " ✓ Enterprise tagging compliant"
     }
 
     # Final validation
@@ -302,7 +324,7 @@ try {
     Write-WELog "   • Endpoint: $($serviceStatus.Endpoint)" " INFO" -ForegroundColor White
     Write-WELog "   • Status: $($serviceStatus.ProvisioningState)" " INFO" -ForegroundColor Green
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog "" " INFO"
         Write-WELog " 🚀 Model Deployment:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Model: $WEModelName ($WEModelVersion)" " INFO" -ForegroundColor White

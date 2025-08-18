@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Main
+    Main
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Main
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -73,7 +91,7 @@ $WEPublicIPConfig = $param.newAzPublicIpAddressSplat | Invoke-AzPublicIP
 
 
 $WEParam = $WEGatewaySubnetConfig | Invoke-DefineParam
-$WEParam = $WEPublicIPConfig | Invoke-DefineParam
+$WEParam = $WEPublicIPConfig | Invoke-DefineParam; 
 $WEGatewayPublicIPConfig = $WEParam.newAzVirtualNetworkGatewayIpConfigSplat | Invoke-AzVirtualNetworkGatewayIpConfig
 
 

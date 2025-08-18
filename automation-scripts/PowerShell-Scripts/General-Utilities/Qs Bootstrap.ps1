@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Qs Bootstrap
+    Qs Bootstrap
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,9 +16,27 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Qs Bootstrap
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $adminUser = $WEArgs[0]
 $adminPassword = $WEArgs[1]
-$scriptUrl = $($WEArgs[10])
+$scriptUrl = $($WEArgs[10]); 
 $password =  ConvertTo-SecureString $($adminPassword) -AsPlainText -Force; 
 $credential = New-Object System.Management.Automation.PSCredential -ArgumentList $env:computername\$adminUser, $password
 New-Item -ItemType directory -Path C:\installation

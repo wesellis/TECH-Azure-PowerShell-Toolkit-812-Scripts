@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Installcluster
+    Installcluster
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Installcluster
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
@@ -29,16 +47,16 @@ param(
 	[string] $WEPasswd
 )
 
-$targetDir = "."
+$targetDir = " ."
 
 function WE-Log {
-	[CmdletBinding()]
-$ErrorActionPreference = "Stop"
+	[CmdletBinding()]; 
+$ErrorActionPreference = " Stop"
 param(
 		[string] $m
 	)
 
-; 	$WEStamp = (Get-Date).toString(" yyyy/MM/dd HH:mm:ss")
+; 	$WEStamp = (Get-Date).toString(" yyyy/MM/dd HH:mm:ss" )
 	Add-Content ./installsk.log " $stamp [installCluster.ps1] $m" 
 }
 
@@ -58,10 +76,8 @@ Log " end of script"
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

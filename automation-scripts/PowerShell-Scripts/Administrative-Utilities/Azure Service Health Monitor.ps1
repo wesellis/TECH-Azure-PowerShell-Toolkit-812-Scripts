@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Service Health Monitor
+    Azure Service Health Monitor
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,20 +16,40 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Service Health Monitor
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" All", " Service", " Planned", " Health", " Security")]
-    [string]$WEEventType = " All",
+    [ValidateSet(" All" , " Service" , " Planned" , " Health" , " Security" )]
+    [string]$WEEventType = " All" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WEDaysBack = 7,
@@ -38,7 +58,7 @@ param(
     [switch]$WEActiveOnly
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Service Health Monitor" -Version " 1.0" -Description " Monitor Azure service health and incidents"
 
 try {
@@ -55,8 +75,8 @@ try {
         $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.Status -eq " Active" }
     }
 
-    if ($WEEventType -ne " All") {
-        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $WEEventType }
+    if ($WEEventType -ne " All" ) {
+       ;  $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $WEEventType }
     }
 
     Write-WELog " Service Health Summary (Last $WEDaysBack days):" " INFO" -ForegroundColor Cyan

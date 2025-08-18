@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Winget Packages
+    Windows Install Winget Packages
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Winget Packages
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -60,18 +78,20 @@ function WE-Invoke-Executable {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
+        [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -79,7 +99,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
     )
@@ -93,18 +113,20 @@ function WE-Install-WinGet-Packages {
 
 function Write-WELog {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -112,7 +134,7 @@ param(
 }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $WEPackages,
         [Parameter(Mandatory = $false)] [bool] $WEIgnorePackageInstallFailures
@@ -120,13 +142,13 @@ param(
 
     Write-WELog " === Microsoft.DesktopAppInstaller package info: $(Get-AppxPackage Microsoft.DesktopAppInstaller | Out-String)" " INFO"
 
-    $winGetAppInfo = Get-Command " winget.exe" -ErrorAction SilentlyContinue
+   ;  $winGetAppInfo = Get-Command " winget.exe" -ErrorAction SilentlyContinue
     if (!$winGetAppInfo) {
         throw 'Could not locate winget.exe'
     }
 
    ;  $winGetPath = $winGetAppInfo.Path
-    Write-WELog " === Found $winGetPath ; 'winget.exe --info' output: $(Invoke-Executable " " INFO"$winGetPath --info" | Out-String)"
+    Write-WELog " === Found $winGetPath ; 'winget.exe --info' output: $(Invoke-Executable " " INFO" $winGetPath --info" | Out-String)"
 
     $packagesArray = @($WEPackages -Split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
     Write-WELog " === Installing $($packagesArray.Count) package(s)" " INFO"
@@ -145,7 +167,7 @@ param(
             $versionArg = " --version $($packageInfoParts[1])"
         }
 
-        $runBlock = {
+       ;  $runBlock = {
             $global:LASTEXITCODE = 0
             Invoke-Executable " $WEWinGetPath install --id $packageId $versionArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force"
             if ($global:LASTEXITCODE -ne 0) {

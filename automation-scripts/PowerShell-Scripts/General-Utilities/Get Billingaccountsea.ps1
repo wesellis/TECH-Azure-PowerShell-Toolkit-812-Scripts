@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Get Billingaccountsea
+    Get Billingaccountsea
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Get Billingaccountsea
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
     .Synopsis
@@ -35,7 +53,7 @@ $billingAccounts = ($(Invoke-AzRestMethod -Method " GET" -path $billingAccountPa
 
 foreach ($ba in $billingAccounts) {
     Write-WELog " Billing Account: $($ba.name)" " INFO"
-    $enrollmentAccountUri = " /providers/Microsoft.Billing/billingaccounts/$($ba.name)/enrollmentAccounts/?api-version=2019-10-01-preview"
+   ;  $enrollmentAccountUri = " /providers/Microsoft.Billing/billingaccounts/$($ba.name)/enrollmentAccounts/?api-version=2019-10-01-preview"
    ;  $enrollmentAccounts = ($(Invoke-AzRestMethod -Method " GET" -path $enrollmentAccountUri ).Content | ConvertFrom-Json).value
 
     foreach($account in $enrollmentAccounts){

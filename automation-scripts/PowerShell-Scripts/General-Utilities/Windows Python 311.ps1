@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Python 311
+    Windows Python 311
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,9 +16,27 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Python 311
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 Function Get-Python {
     $url = 'https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe'
-    $python = "$env:Temp\python-3.11.0-amd64.exe"
+   ;  $python = "$env:Temp\python-3.11.0-amd64.exe"
 
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12

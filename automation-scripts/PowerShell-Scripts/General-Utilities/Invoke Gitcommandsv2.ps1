@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Gitcommandsv2
+    Invoke Gitcommandsv2
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,17 +16,38 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Gitcommandsv2
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Test-RequiredPath {
     [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPath)
     if (!(Test-Path $WEPath)) {
-        Write-Warning "Required path not found: $WEPath"
+        Write-Warning " Required path not found: $WEPath"
         return $false
     }
     return $true
@@ -45,7 +66,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 & " C:\Program Files\Git\mingw64\bin\git.exe" fetch
 
 & " C:\Program Files\Git\mingw64\bin\git.exe" add -A
-
+; 
 $commit_message = $null; 
 $commit_message = Read-Host -Prompt 'Please enter commit message'
 
@@ -56,10 +77,8 @@ $commit_message = Read-Host -Prompt 'Please enter commit message'
 & " C:\Program Files\Git\mingw64\bin\git.exe" pull
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

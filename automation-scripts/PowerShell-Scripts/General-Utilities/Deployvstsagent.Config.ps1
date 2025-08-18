@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deployvstsagent.Config
+    Deployvstsagent.Config
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Deployvstsagent.Config
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -37,9 +55,13 @@ param(
     [Parameter(Mandatory=$false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMachineName,
 
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEUserName,
@@ -47,9 +69,13 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPassword,
 
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEVSTSAccount,
@@ -57,14 +83,20 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPersonalAccessToken,
 
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEAgentName,
 
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPoolName,
@@ -129,7 +161,7 @@ param(
                 }
                 catch
                 {
-                    $exceptionText = ($_ | Out-String).Trim()
+                   ;  $exceptionText = ($_ | Out-String).Trim()
                     Write-Verbose " Exception occurred downloading agent: $exceptionText in try number $retries" -verbose
                     $retries++
                     Start-Sleep -Seconds 30 
@@ -162,8 +194,8 @@ param(
                 Push-Location -Path $agentInstallationPath
                 
                 Write-Verbose " Extracting the zip file for the agent" -verbose
-                $destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath")
-                $destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip").Items(),16)
+                $destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath" )
+                $destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip" ).Items(),16)
 
                 # Removing the ZoneIdentifier from files downloaded from the internet so the plugins can be loaded
                 # Don't recurse down _work or _diag, those files are not blocked and cause the process to take much longer
@@ -183,7 +215,7 @@ param(
                 # the user or blocking the cmd execution
                 Write-Verbose " Configuring agent '$($WEAgent)'" -Verbose
 
-                $pat = $using:PersonalAccessToken
+               ;  $pat = $using:PersonalAccessToken
                 #Write-Verbose " Configuring agent '$($pat)'" -Verbose
                 .\config.cmd --unattended --url $serverUrl --auth PAT --token $pat --pool $using:PoolName --agent $WEAgent --runasservice
                 
@@ -193,9 +225,9 @@ param(
             }
 
             # Adding new Path to PSModulePath environment variable
-           ;  $WECurrentValue = [Environment]::GetEnvironmentVariable(" PSModulePath", " Machine")
-            [Environment]::SetEnvironmentVariable(" PSModulePath", $WECurrentValue + " ;C:\Modules", " Machine")
-            $WENewValue = [Environment]::GetEnvironmentVariable(" PSModulePath", " Machine")
+           ;  $WECurrentValue = [Environment]::GetEnvironmentVariable(" PSModulePath" , " Machine" )
+            [Environment]::SetEnvironmentVariable(" PSModulePath" , $WECurrentValue + " ;C:\Modules" , " Machine" )
+            $WENewValue = [Environment]::GetEnvironmentVariable(" PSModulePath" , " Machine" )
             Write-Verbose " new Path is: $($WENewValue)" -verbose
 
             # Creating new Path
@@ -206,7 +238,7 @@ param(
             #Foreach ($WEModule in $using:Modules)
             { Find-Module -Name $WEModule.Name -RequiredVersion $WEModule.Version -Repository PSGallery -Verbose | Save-Module -Path C:\Modules -Verbose }
 
-            #$WEDefaultModules = " PowerShellGet", " PackageManagement"," Pester"
+            #$WEDefaultModules = " PowerShellGet" , " PackageManagement" ," Pester"
 
             Foreach ($WEModule in $WEDefaultModules)
             {

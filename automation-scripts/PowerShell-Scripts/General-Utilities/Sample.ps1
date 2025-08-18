@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Sample
+    Sample
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,12 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Sample
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 cls
 $WERGName = "RG-VS-Dev" ;
-$WEVMName = "jdvs2015vm" ;
-$WEVMUsername = "jmd" ;
-$WEDeployLocation = "West Europe"; 
-$WEChocoPackages = " linqpad;sysinternals;agentransack;beyondcompare;fiddler4;visualstudiocode;imageresizerapp;gimp";
+$WEVMName = " jdvs2015vm" ;
+$WEVMUsername = " jmd" ;
+$WEDeployLocation = " West Europe"; 
+$WEChocoPackages = " linqpad;sysinternals;agentransack;beyondcompare;fiddler4;visualstudiocode;imageresizerapp;gimp" ;
 $WEARMTemplate = " C:\@SourceControl\GitHub\ARMChocolatey\azuredeploy.json"
 
 

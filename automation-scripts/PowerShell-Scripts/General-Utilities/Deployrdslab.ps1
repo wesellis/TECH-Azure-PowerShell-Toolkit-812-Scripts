@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Deployrdslab
+    Deployrdslab
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Deployrdslab
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Configuration CreateRootDomain
 {
@@ -40,8 +58,8 @@ param(
     $WEWebGWDNS = $WERDSParameters[0].WebGWDNS
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration,xActiveDirectory,xNetworking,ComputerManagementDSC,xComputerManagement,xDnsServer,NetworkingDsc
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
-    $WEInterface = Get-NetAdapter | Where-Object Name -Like "Ethernet*" | Select-Object -First 1
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
+    $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
     $WEMyIP = ($WEInterface | Get-NetIPAddress -AddressFamily IPv4 | Select-Object -First 1).IPAddress
     $WEInterfaceAlias = $($WEInterface.Name)
 
@@ -125,7 +143,7 @@ param(
                 DatabasePath = " $WEEnv:windir\NTDS"
                 LogPath = " $WEEnv:windir\NTDS"
                 SysvolPath = " $WEEnv:windir\SYSVOL"
-                DependsOn = @(" [WindowsFeature]AD-Domain-Services", " [xDnsServerAddress]DnsServerAddress")
+                DependsOn = @(" [WindowsFeature]AD-Domain-Services" , " [xDnsServerAddress]DnsServerAddress" )
             }
 
             xDnsServerForwarder SetForwarders
@@ -133,7 +151,7 @@ param(
                 IsSingleInstance = 'Yes'
                 IPAddresses      = @('8.8.8.8', '8.8.4.4')
                 UseRootHint      = $false
-                DependsOn = @(" [WindowsFeature]DNS", " [xADDomain]RootDomain")
+                DependsOn = @(" [WindowsFeature]DNS" , " [xADDomain]RootDomain" )
             }
     
             Script AddExternalZone
@@ -184,7 +202,7 @@ param(
             PendingReboot RebootAfterInstallingAD
             {
                 Name = 'RebootAfterInstallingAD'
-                DependsOn = @(" [xADDomain]RootDomain"," [xDnsServerForwarder]SetForwarders")
+                DependsOn = @(" [xADDomain]RootDomain" ," [xDnsServerForwarder]SetForwarders" )
             }                       
         } Else {            
             xWaitForADDomain DscForestWait
@@ -193,7 +211,7 @@ param(
                 DomainUserCredential= $WEDomainCreds
                 RetryCount = 30
                 RetryIntervalSec = 2400
-                DependsOn = @(" [WindowsFeature]AD-Domain-Services", " [xDnsServerAddress]DnsServerAddress")
+                DependsOn = @(" [WindowsFeature]AD-Domain-Services" , " [xDnsServerAddress]DnsServerAddress" )
             }
             
             xADDomainController NextDC
@@ -204,7 +222,7 @@ param(
                 DatabasePath = " $WEEnv:windir\NTDS"
                 LogPath = " $WEEnv:windir\NTDS"
                 SysvolPath = " $WEEnv:windir\SYSVOL"
-                DependsOn = @(" [xWaitForADDomain]DscForestWait"," [WindowsFeature]AD-Domain-Services", " [xDnsServerAddress]DnsServerAddress")
+                DependsOn = @(" [xWaitForADDomain]DscForestWait" ," [WindowsFeature]AD-Domain-Services" , " [xDnsServerAddress]DnsServerAddress" )
             }
 
             xDnsServerForwarder SetForwarders
@@ -212,13 +230,13 @@ param(
                 IsSingleInstance = 'Yes'
                 IPAddresses      = @('8.8.8.8', '8.8.4.4')
                 UseRootHint      = $false
-                DependsOn = @(" [WindowsFeature]DNS", " [xADDomainController]NextDC")
+                DependsOn = @(" [WindowsFeature]DNS" , " [xADDomainController]NextDC" )
             }            
 
             PendingReboot RebootAfterInstallingAD
             {
                 Name = 'RebootAfterInstallingAD'
-                DependsOn = @(" [xADDomainController]NextDC"," [xDnsServerForwarder]SetForwarders")
+                DependsOn = @(" [xADDomainController]NextDC" ," [xDnsServerForwarder]SetForwarders" )
             }            
         }        
     }
@@ -241,7 +259,7 @@ param(
     $WETimeZoneID = $WERDSParameters[0].TimeZoneID
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration,xNetworking,ActiveDirectoryDsc,ComputerManagementDSC,xComputerManagement,xWebAdministration,NetworkingDsc
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)",$WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
     $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
     $WEInterfaceAlias = $($WEInterface.Name)
 
@@ -307,7 +325,7 @@ param(
             WaitTimeout = 2400
             RestartCount = 30
             WaitForValidCredentials = $WETrue
-            DependsOn = @(" [xDnsServerAddress]DnsServerAddress"," [WindowsFeature]RSAT-AD-PowerShell")
+            DependsOn = @(" [xDnsServerAddress]DnsServerAddress" ," [WindowsFeature]RSAT-AD-PowerShell" )
         }
 
         xComputer DomainJoin
@@ -323,7 +341,7 @@ param(
 Configuration RDSessionHost
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$WEAdmincreds,
@@ -337,7 +355,7 @@ param(
     $WETimeZoneID = $WERDSParameters[0].TimeZoneID
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration,xNetworking,ActiveDirectoryDsc,ComputerManagementDSC,xComputerManagement,NetworkingDsc
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)",$WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
     $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
     $WEInterfaceAlias = $($WEInterface.Name)
 
@@ -388,7 +406,7 @@ param(
             WaitTimeout = 2400
             RestartCount = 30
             WaitForValidCredentials = $WETrue
-            DependsOn = @(" [xDnsServerAddress]DnsServerAddress"," [WindowsFeature]RSAT-AD-PowerShell")
+            DependsOn = @(" [xDnsServerAddress]DnsServerAddress" ," [WindowsFeature]RSAT-AD-PowerShell" )
         }
 
         xComputer DomainJoin
@@ -404,7 +422,7 @@ param(
 Configuration RDLicenseServer
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$WEAdmincreds,
@@ -418,7 +436,7 @@ param(
     $WETimeZoneID = $WERDSParameters[0].TimeZoneID
     
     Import-DscResource -ModuleName PSDesiredStateConfiguration,xNetworking,ActiveDirectoryDsc,ComputerManagementDSC,xComputerManagement,NetworkingDsc
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)",$WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
     $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
     $WEInterfaceAlias = $($WEInterface.Name)
 
@@ -469,7 +487,7 @@ param(
             WaitTimeout = 2400
             RestartCount = 30
             WaitForValidCredentials = $WETrue
-            DependsOn = @(" [xDnsServerAddress]DnsServerAddress"," [WindowsFeature]RSAT-AD-PowerShell")
+            DependsOn = @(" [xDnsServerAddress]DnsServerAddress" ," [WindowsFeature]RSAT-AD-PowerShell" )
         }
 
         xComputer DomainJoin
@@ -485,7 +503,7 @@ param(
 Configuration RDSDeployment
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$WEAdmincreds,
@@ -505,11 +523,11 @@ param(
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration -ModuleVersion 1.1
     Import-DscResource -ModuleName xNetworking,ActiveDirectoryDsc,ComputerManagementDSC,xComputerManagement,xRemoteDesktopSessionHost,NetworkingDsc
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)",$WEAdmincreds.Password)
+    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" ,$WEAdmincreds.Password)
     $WEInterface = Get-NetAdapter | Where-Object Name -Like " Ethernet*" | Select-Object -First 1
     $WEInterfaceAlias = $($WEInterface.Name)
 
-    if (-not $collectionName)         { $collectionName = " RemoteApps" }
+    if (-not $collectionName)         {;  $collectionName = " RemoteApps" }
     if (-not $collectionDescription)  {;  $collectionDescription = " Remote Desktop Services Apps" }
 
     Node localhost
@@ -566,7 +584,7 @@ param(
             WaitTimeout = 2400
             RestartCount = 30
             WaitForValidCredentials = $WETrue
-            DependsOn = @(" [xDnsServerAddress]DnsServerAddress"," [WindowsFeature]RSAT-AD-PowerShell")
+            DependsOn = @(" [xDnsServerAddress]DnsServerAddress" ," [WindowsFeature]RSAT-AD-PowerShell" )
         }
 
         xComputer DomainJoin
@@ -676,10 +694,8 @@ param(
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

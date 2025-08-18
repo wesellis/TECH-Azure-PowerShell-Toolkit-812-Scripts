@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Create Subscriptionalias
+    Create Subscriptionalias
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Create Subscriptionalias
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
     .Synopsis
         This script will create a subscription via an alias.
     .Description
@@ -31,10 +49,11 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string] [Parameter(Mandatory = $true)]$aliasName,
     [string] $displayName = $aliasName,
-    [string] [ValidateSet("DevTest" , "Production" )]$workLoad = "DevTest" ,
+    [string] [ValidateSet(" DevTest" , " Production" )]$workLoad = " DevTest" ,
     [string] [Parameter(Mandatory = $true)]$billingAccount,
     [string] [Parameter(Mandatory = $true)]$enrollmentAccount
     )
@@ -43,12 +62,12 @@ $body = @{
     properties = @{
         workload     = $workLoad
         displayName  = $displayName
-        billingScope = "/providers/Microsoft.Billing/billingAccounts/$billingAccount/enrollmentAccounts/$enrollmentAccount"
+        billingScope = " /providers/Microsoft.Billing/billingAccounts/$billingAccount/enrollmentAccounts/$enrollmentAccount"
     }
 }
 
 $uri = " /providers/Microsoft.Subscription/aliases/$($aliasName)?api-version=2020-09-01"
-
+; 
 $bodyJSON = $body | ConvertTo-Json -Compress -Depth 30
 
 Invoke-AzRestMethod -Method " PUT" -Path $uri -Payload $bodyJSON
@@ -58,14 +77,12 @@ do {
     Start-Sleep 5
    ;  $status = (Invoke-AzRestMethod -Method " GET" -path $uri -Verbose).Content | ConvertFrom-Json
     Write-Host $status.properties.provisioningState
-} while ($status.properties.provisioningState -eq " Running" -or $status.properties.provisioningState -eq " Accepted")
+} while ($status.properties.provisioningState -eq " Running" -or $status.properties.provisioningState -eq " Accepted" )
 
 $status | ConvertTo-Json -Depth 30
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw

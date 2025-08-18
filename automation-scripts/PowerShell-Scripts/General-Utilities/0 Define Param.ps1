@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 0 Define Param
+    0 Define Param
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 0 Define Param
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -39,21 +57,23 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 function WE-Invoke-DefineParam {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
     
 
 function Write-WELog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
         [string]$Level = " INFO"
     )
     
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
    ;  $colorMap = @{
-        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
     }
     
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
@@ -88,13 +108,13 @@ param(
             $WECustomerName = 'CCI'
             $WEVMName = 'VPN505050'
             $WECustomerName = 'CanadaComputing'
-            $WEResourceGroupName = -join (" $WECustomerName", " _$WEVMName", " _RG")
+            $WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
             #EndRegion Param Global
     
     
             #Region Param Date
             #Creating the Tag Hashtable for the VM
-            $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss")
+            $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
             [hashtable]$WETags = @{
     
                 " Autoshutown"     = 'ON'
@@ -127,7 +147,7 @@ param(
 
             #Region Param VNETSubnet
 
-            $WESubnetName = -join (" $WEVMName", " -subnet")
+            $WESubnetName = -join (" $WEVMName" , " -subnet" )
             $WESubnetAddressPrefix = " 10.0.0.0/24"
        
             $newAzVirtualNetworkSubnetConfigSplat = @{
@@ -138,7 +158,7 @@ param(
             #EndRegion Param VNETSubnet     
     
             #Region Param VNET
-            $WENetworkName = -join (" $WEVMName", " _group-vnet")
+            $WENetworkName = -join (" $WEVMName" , " _group-vnet" )
             $WEVnetAddressPrefix = " 10.0.0.0/16"
 
     
@@ -175,7 +195,7 @@ param(
 
 
 
-            $WEPublicIPAddressName = -join (" $WEVMName", " -ip")
+            $WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
             $WEPublicIPAllocationMethod = 'Dynamic' 
         
             $newAzPublicIpAddressSplat = @{
@@ -195,7 +215,7 @@ param(
             }
 
 
-            $gwipconfigname = -join (" $WEVMName", " -gwipconfig")
+            $gwipconfigname = -join (" $WEVMName" , " -gwipconfig" )
             $WENewAzVirtualNetworkGatewayIpConfigSplat = @{
                 Name              = $gwipconfigname
                 SubnetId          = $WEGatewaySubnetConfig.ID
@@ -203,7 +223,7 @@ param(
             }
 
 
-            $WEGatewayName = -join (" $WEVMName", '-VNet1GW')
+            $WEGatewayName = -join (" $WEVMName" , '-VNet1GW')
             $WEGatewayType = 'Vpn'
             $WEVpnType = 'RouteBased'
             $WEGatewaySku = 'VpnGw1'
@@ -218,7 +238,7 @@ param(
                 GatewaySku        = $WEGatewaySku
             }
 
-            $mypscustomobject = [PSCustomObject]@{
+           ;  $mypscustomobject = [PSCustomObject]@{
                 newAzResourceGroupSplat                     = $newAzResourceGroupSplat
                 newAzVirtualNetworkSubnetConfigSplat        = $newAzVirtualNetworkSubnetConfigSplat
                 newAzVirtualNetworkSplat                    = $newAzVirtualNetworkSplat

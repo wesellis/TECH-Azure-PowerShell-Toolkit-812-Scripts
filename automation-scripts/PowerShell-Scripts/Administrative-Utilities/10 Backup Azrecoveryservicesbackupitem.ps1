@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 10 Backup Azrecoveryservicesbackupitem
+    10 Backup Azrecoveryservicesbackupitem
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 10 Backup Azrecoveryservicesbackupitem
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -44,15 +62,15 @@ Use Backup-AzRecoveryServicesBackupItem to trigger a backup job. If it's the ini
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join ("$WECustomerName" , "_Outlook" , "_RG" )
+$WEResourceGroupName = -join ("$WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join ("$WEVMName" , "ARSV1" )
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 
 $targetVault = Get-AzRecoveryServicesVault -ResourceGroupName $WEResourceGroupName -Name $WEVaultname
 
 
 $getAzRecoveryServicesBackupContainerSplat = @{
-    ContainerType = "AzureVM"
+    ContainerType = " AzureVM"
     Status = " Registered"
     FriendlyName = $WEVMName
     VaultId = $targetVault.ID
@@ -67,7 +85,7 @@ $getAzRecoveryServicesBackupItemSplat = @{
 $item = Get-AzRecoveryServicesBackupItem @getAzRecoveryServicesBackupItemSplat
 
 $endDate = (Get-Date).AddDays(60).ToUniversalTime()
-
+; 
 $backupAzRecoveryServicesBackupItemSplat = @{
     Item = $item
     VaultId = $targetVault.ID

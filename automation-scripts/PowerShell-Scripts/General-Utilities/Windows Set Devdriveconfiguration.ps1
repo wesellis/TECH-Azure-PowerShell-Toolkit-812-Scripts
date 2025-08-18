@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Set Devdriveconfiguration
+    Windows Set Devdriveconfiguration
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Set Devdriveconfiguration
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -39,11 +57,12 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][bool] $WEEnableGVFS,
     [Parameter(Mandatory = $true)][bool] $WEEnableContainers
 )
-
+; 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -59,7 +78,7 @@ if ($WEEnableGVFS) {
     $WEAllowedFilterList = $WEAllowedFilterList + " ,PrjFlt"
 }
 if ($WEEnableContainers) {
-    $WEAllowedFilterList = $WEAllowedFilterList + " ,wcifs,bindFlt"
+   ;  $WEAllowedFilterList = $WEAllowedFilterList + " ,wcifs,bindFlt"
 }
 Write-WELog "" " INFO"
 Write-WELog " Allowing the following filesystem filter drivers to mount to any Dev Drive:" " INFO"
@@ -67,10 +86,8 @@ Write-WELog "  $WEAllowedFilterList" " INFO"
 fsutil devdrv setFiltersAllowed $WEAllowedFilterList
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

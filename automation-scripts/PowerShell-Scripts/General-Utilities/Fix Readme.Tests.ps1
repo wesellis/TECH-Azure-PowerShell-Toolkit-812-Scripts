@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Fix Readme.Tests
+    Fix Readme.Tests
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Fix Readme.Tests
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 ﻿Describe "Get-FixedReadMe" {
     BeforeAll {
@@ -57,7 +75,7 @@
             [string] $WEReadmeContents,
             [string] $WEMarkdown
         ) {
-            $cmdlet = "$(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Get-FixedReadMe.ps1"            
+            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Get-FixedReadMe.ps1"            
             $result = . $cmdlet `
                 -ReadmeContents $WEReadmeContents `
                 -ExpectedMarkdown $WEMarkdown
@@ -68,7 +86,7 @@
             $readmeName = " $dataFolder/$WEReadmeBaseName.md" 
             $readme = Get-Content $readmeName -Raw
             $readmeExpectedName = " $dataFolder/$WEReadmeBaseName.expected.md"
-            $readmeExpected = Get-Content $readmeExpectedName -Raw
+           ;  $readmeExpected = Get-Content $readmeExpectedName -Raw
 
            ;  $result = Get-FixedReadMe $readme $markdown
             $result | Should -Be $readmeExpected

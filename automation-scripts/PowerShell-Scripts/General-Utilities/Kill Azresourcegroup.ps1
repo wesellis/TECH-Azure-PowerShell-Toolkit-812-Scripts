@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Kill Azresourcegroup
+    Kill Azresourcegroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Kill Azresourcegroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 <# 
 
 This script attempts to remove a resource group by first removing all the things that prevent removing resource groups
@@ -29,19 +47,20 @@ try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [string][Parameter(mandatory = $true)] $WEResourceGroupName
 )
 
-Write-WELog "Kill: $resourceGroupName" " INFO"
+Write-WELog " Kill: $resourceGroupName" " INFO"
 
 
-if ((Get-AzContext).Environment.Name -eq " AzureUSGovernment") {
+if ((Get-AzContext).Environment.Name -eq " AzureUSGovernment" ) {
     Write-WELog " Running in FF..." " INFO"
     $deployment = Get-AzResourceGroupDeployment -ResourceGroupName $WEResourceGroupName
     $ops = Get-AzResourceGroupDeploymentOperation -ResourceGroupName $WEResourceGroupName -DeploymentName $deployment.DeploymentName
     foreach ($op in $ops) {
-        if ($op.TargetResource -like " */Microsoft.Scheduler/jobCollections/*") {
+        if ($op.TargetResource -like " */Microsoft.Scheduler/jobCollections/*" ) {
             Write-WELog " Found operation with target resource: $($op.TargetResource)" " INFO"
             exit
         }
@@ -124,7 +143,7 @@ foreach ($eventHub in $eventHubs) {
     $drConfig = Get-AzEventHubGeoDRConfiguration -ResourceGroupName $WEResourceGroupName -Namespace $eventHub.Name -Verbose
     $drConfig
     if ($drConfig) {
-        if ($drConfig.Role.ToString() -eq " Primary") {
+        if ($drConfig.Role.ToString() -eq " Primary" ) {
             #there is a partner namespace, break the pair before removing
             Write-WELog " EventHubs Break Pairing... (primary)" " INFO"
             Set-AzEventHubGeoDRConfigurationBreakPair -ResourceGroupName $WEResourceGroupName -Namespace $eventHub.Name -Name $drConfig.Name
@@ -151,7 +170,7 @@ foreach ($s in $serviceBusNamespaces) {
     $drConfig = Get-AzServiceBusGeoDRConfiguration -ResourceGroupName $WEResourceGroupName -Namespace $s.Name
     $drConfig
     if ($drConfig) {
-        if ($drConfig.Role.ToString() -eq " Primary") {
+        if ($drConfig.Role.ToString() -eq " Primary" ) {
             #there is a partner namespace, break the pair before removing
             Write-WELog " ServiceBus Break pairing... (primary)" " INFO"
             Set-AzServiceBusGeoDRConfigurationBreakPair -ResourceGroupName $WEResourceGroupName -Namespace $s.Name -Name $drConfig.Name
@@ -255,18 +274,18 @@ foreach ($h in $vHubs) {
         Write-WELog " Attempting to remove: $($config.name)" " INFO"
         $r = Invoke-AzRestMethod -Method DELETE -Path " $($config.id)?api-version=2020-11-01"
         $r | Out-String
-        if ($r.StatusCode -like " 20*") {
+        if ($r.StatusCode -like " 20*" ) {
             do {
                 Start-Sleep 60 -Verbose
                 $r = Invoke-AzRestMethod -Method GET -Path " $($config.id)?api-version=2020-11-01"
                 $r | Out-String
                 # wait until the delete is finished and GET returns 404
-            } until ($r.StatusCode -eq " 404")
+            } until ($r.StatusCode -eq " 404" )
         }
     }
 }
 
-
+; 
 $privateLinks = Get-AzPrivateLinkService -ResourceGroupName $WEResourceGroupName
 foreach ($pl in $privateLinks) {
     Write-WELog " Checking Private Links for endpoint connections..." " INFO"
@@ -286,10 +305,8 @@ Remove-AzResourceGroup -Force -Verbose -Name $WEResourceGroupName
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

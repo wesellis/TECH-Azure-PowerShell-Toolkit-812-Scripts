@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 12 Monitor Backupjob
+    12 Monitor Backupjob
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 12 Monitor Backupjob
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -51,9 +69,9 @@ You can monitor long-running operations, such as backup jobs, without using the 
 
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join ("$WECustomerName" , "_Outlook" , "_RG" )
+$WEResourceGroupName = -join ("$WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join ("$WEVMName" , "ARSV1" )
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $WEResourceGroupName
@@ -61,9 +79,9 @@ $getAzRecoveryServicesVaultSplat = @{
 }
 
 $targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
-
+; 
 $getAzRecoveryservicesBackupJobSplat = @{
-    # Status = "InProgress" #you may ommit this out if you want to see all statuses
+    # Status = " InProgress" #you may ommit this out if you want to see all statuses
     VaultId = $targetVault.ID
 }
 ; 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Preparehn
+    Preparehn
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Preparehn
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
@@ -67,7 +85,7 @@ param(
 function WE-TraceInfo
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)]
     [String] $log = ""
@@ -90,13 +108,13 @@ if ($WEPsCmdlet.ParameterSetName -eq 'NodeState')
     Add-PSSnapin Microsoft.HPC
 
     $WEHPCInfoLogFile = " $env:windir\Temp\HpcNodeAutoBringOnline.log"
-    [Environment]::SetEnvironmentVariable(" HPCInfoLogFile", $WEHPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable(" HPCInfoLogFile" , $WEHPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
     $offlineNodes = @()
     $offlineNodes = $offlineNodes + Get-HpcNode -State Offline -ErrorAction SilentlyContinue
     if($offlineNodes.Count -gt 0)
     {
         TraceInfo 'Start to bring nodes online'
-        $nodes = @(Set-HpcNodeState -State online -Node $offlineNodes -Confirm:$false)
+       ;  $nodes = @(Set-HpcNodeState -State online -Node $offlineNodes -Confirm:$false)
         if($nodes.Count -gt 0)
         {
            ;  $formatString = '{0,16}{1,12}{2,15}{3,10}';
@@ -111,7 +129,7 @@ if ($WEPsCmdlet.ParameterSetName -eq 'NodeState')
 }
 else
 {
-    $WEHPCHNDeployRoot = [IO.Path]::Combine($env:CCP_Data, " LogFiles\HPCHNDeployment")
+    $WEHPCHNDeployRoot = [IO.Path]::Combine($env:CCP_Data, " LogFiles\HPCHNDeployment" )
     $WEHPCInfoLogFile = " $WEHPCHNDeployRoot\ConfigHeadNode-$datetimestr.log"
     $configFlagFile = " $WEHPCHNDeployRoot\HPCPackHeadNodeConfigured.flag"
     $postScriptFlagFile = " $WEHPCHNDeployRoot\PostConfigScriptExecution.flag"
@@ -121,14 +139,14 @@ else
         New-Item -Path $WEHPCHNDeployRoot -ItemType directory -Confirm:$false -Force
         $acl = Get-Acl $WEHPCHNDeployRoot
         $acl.SetAccessRuleProtection($true, $false)
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" SYSTEM"," FullControl", " ContainerInherit, ObjectInherit", " None", " Allow")
+        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" SYSTEM" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
         $acl.AddAccessRule($rule)
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" Administrators"," FullControl", " ContainerInherit, ObjectInherit", " None", " Allow")
+        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" Administrators" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
         $acl.AddAccessRule($rule)
         $domainNetBios = $WEDomainFQDN.Split('.')[0].ToUpper()
         try
         {
-            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" $domainNetBios\$WEAdminUserName"," FullControl", " ContainerInherit, ObjectInherit", " None", " Allow")
+            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(" $domainNetBios\$WEAdminUserName" ," FullControl" , " ContainerInherit, ObjectInherit" , " None" , " Allow" )
             $acl.AddAccessRule($rule)
         }
         catch
@@ -139,8 +157,8 @@ else
         Set-Acl -Path $WEHPCHNDeployRoot -AclObject $acl -Confirm:$false
     }
 
-    [Environment]::SetEnvironmentVariable(" HPCHNDeployRoot", $WEHPCHNDeployRoot, [System.EnvironmentVariableTarget]::Process)
-    [Environment]::SetEnvironmentVariable(" HPCInfoLogFile", $WEHPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable(" HPCHNDeployRoot" , $WEHPCHNDeployRoot, [System.EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable(" HPCInfoLogFile" , $WEHPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
 
     TraceInfo " Configuring head node: -DomainFQDN $WEDomainFQDN -PublicDnsName $WEPublicDnsName -AdminUserName $WEAdminUserName -CNSize $WECNSize -UnsecureDNSUpdate:$WEUnsecureDNSUpdate -PostConfigScript $WEPostConfigScript"
     if(Test-Path -Path $configFlagFile)
@@ -171,7 +189,7 @@ else
         $WEAdminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEAdminBase64Password))
         $domainNetBios = $WEDomainFQDN.Split('.')[0].ToUpper()
         $domainUserCred = New-Object -TypeName System.Management.Automation.PSCredential `
-                -ArgumentList @(" $domainNetBios\$WEAdminUserName", (ConvertTo-SecureString -String $WEAdminPassword -AsPlainText -Force))
+                -ArgumentList @(" $domainNetBios\$WEAdminUserName" , (ConvertTo-SecureString -String $WEAdminPassword -AsPlainText -Force))
 
          $job = Start-Job -ScriptBlock {
              [CmdletBinding()]
@@ -195,7 +213,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  # prepare headnode
                  $dbArgs = '-DBServerInstance .\COMPUTECLUSTER'
                  $WEHNPreparePsFile = " $scriptPath\HPCHNPrepare.ps1"
-                 $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument " -ExecutionPolicy Unrestricted -Command `"& '$WEHNPreparePsFile' $dbArgs`""
+                 $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument " -ExecutionPolicy Unrestricted -Command `" & '$WEHNPreparePsFile' $dbArgs`""
                  Register-ScheduledTask -TaskName $WEHPCPrepareTaskName -Action $action -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest
                  if(-not $?)
                  {
@@ -276,12 +294,12 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  Add-PSSnapin Microsoft.HPC
                  # setting network topology to 5 (enterprise)
                  TraceInfo 'Setting HPC cluster network topologogy...'
-                 $nics = @(Get-CimInstance win32_networkadapterconfiguration -filter " IPEnabled='true' AND DHCPEnabled='true'")
+                 $nics = @(Get-CimInstance win32_networkadapterconfiguration -filter " IPEnabled='true' AND DHCPEnabled='true'" )
                  if ($nics.Count -ne 1)
                  {
                      throw " Cannot find a suitable network adapter for enterprise topology"
                  }
-                 $startTime = Get-Date
+                ;  $startTime = Get-Date
                  while($true)
                  {
                      Set-HpcNetwork -Topology 'Enterprise' -Enterprise $nics.Description -EnterpriseFirewall $true -ErrorAction SilentlyContinue
@@ -324,7 +342,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  }
 
                  $hpcBinPath = [System.IO.Path]::Combine($env:CCP_HOME, 'Bin')
-                 $restWebCert = Get-ChildItem -Path Cert:\LocalMachine\My | ?{($_.Subject -eq " CN=$WEPublicDnsName") -and $_.HasPrivateKey} | select -First(1)
+                 $restWebCert = Get-ChildItem -Path Cert:\LocalMachine\My | ?{($_.Subject -eq " CN=$WEPublicDnsName" ) -and $_.HasPrivateKey} | select -First(1)
                  if($null -eq $restWebCert)
                  {
                      TraceInfo " Generating a self-signed certificate(CN=$WEPublicDnsName) for the HPC web service ..."
@@ -355,13 +373,13 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  TraceInfo 'HPCScheduler service restarted.'
 
                  # If the VMSize of the compute nodes is A8/A9, set the MPI net mask.
-                 if($WECNSize -match " (A8|A9)$")
+                 if($WECNSize -match " (A8|A9)$" )
                  {
                      $mpiNetMask = " 172.16.0.0/255.255.0.0"
                      ## Wait for the completion of the " Updating cluster configuration" operation after setting network topology,
                      ## because in the operation, the CCP_MPI_NETMASK may be reset.
                      $waitLoop = 0
-                     while ($null -eq (Get-HpcOperation -StartTime $startTime -State Committed | ?{$_.Name -eq " Updating cluster configuration"}))
+                     while ($null -eq (Get-HpcOperation -StartTime $startTime -State Committed | ?{$_.Name -eq " Updating cluster configuration" }))
                      {
                          if($waitLoop++ -ge 10)
                          {
@@ -381,7 +399,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  {
                      TraceInfo 'Start to register HpcNodeOnlineCheck Task'
                      $WEHpcNodeOnlineCheckFile = " $scriptPath\PrepareHN.ps1"
-                     $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument " -ExecutionPolicy Unrestricted -Command `"& '$WEHpcNodeOnlineCheckFile' -NodeStateCheck`""
+                     $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument " -ExecutionPolicy Unrestricted -Command `" & '$WEHpcNodeOnlineCheckFile' -NodeStateCheck`""
                      $trigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) -At (get-date) -RepetitionDuration (New-TimeSpan -Minutes 90) -Once
                      Register-ScheduledTask -TaskName 'HpcNodeOnlineCheck' -Action $action -Trigger $trigger -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest | Out-Null
                      TraceInfo 'Finish to register task HpcNodeOnlineCheck'
@@ -408,7 +426,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
              {
                  foreach($fwdIP in @((Get-DnsServerForwarder).IPAddress))
                  {
-                     if(($fwdIP -eq " fec0:0:0:ffff::1") -or ($fwdIP -eq " fec0:0:0:ffff::2") -or ($fwdIP -eq " fec0:0:0:ffff::3"))
+                     if(($fwdIP -eq " fec0:0:0:ffff::1" ) -or ($fwdIP -eq " fec0:0:0:ffff::2" ) -or ($fwdIP -eq " fec0:0:0:ffff::3" ))
                      {
                          TraceInfo " Removing DNS forwarder from the domain controller: $fwdIP"
                          Remove-DnsServerForwarder -IPAddress $fwdIP -Force
@@ -424,8 +442,8 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                  {
                      try
                      {
-                         $ddzState = (Get-DnsServerDirectoryPartition -Name " DomainDnsZones.$WEDomainFQDN").State
-                         $fdzState = (Get-DnsServerDirectoryPartition -Name " ForestDnsZones.$WEDomainFQDN").State
+                         $ddzState = (Get-DnsServerDirectoryPartition -Name " DomainDnsZones.$WEDomainFQDN" ).State
+                         $fdzState = (Get-DnsServerDirectoryPartition -Name " ForestDnsZones.$WEDomainFQDN" ).State
                          if (0 -eq $ddzState -and 0 -eq $fdzState)
                          {
                              TraceInfo " Default zone directory partitions ready"
@@ -462,7 +480,7 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
          }
 
          Wait-Job $job
-         if($job.State -eq " Completed")
+         if($job.State -eq " Completed" )
          {
             " done" | Out-File $configFlagFile -Confirm:$false -Force
          }
@@ -555,12 +573,12 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
                 $testFileName = " $env:HPCHNDeployRoot\HPCPostConfigScriptTest."  + (Get-Random)
                 if(-not $scriptArgs.Contains(' *> '))
                 {
-                    $logFilePath = [IO.Path]::ChangeExtension($scriptFilePath, $null) + (Get-Date -Format " yyyy_MM_dd-hh_mm_ss") + " .log"
-                    $scriptArgs = $scriptArgs + " *> `" $logFilePath`""
+                    $logFilePath = [IO.Path]::ChangeExtension($scriptFilePath, $null) + (Get-Date -Format " yyyy_MM_dd-hh_mm_ss" ) + " .log"
+                   ;  $scriptArgs = $scriptArgs + " *> `" $logFilePath`""
                 }
                ;  $scriptCmd = " 'test' | Out-File '$testFileName' -Confirm:`$false -Force;& '$scriptFilePath' $scriptArgs"
                 $encodedCmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($scriptCmd))
-                $scriptRetry = 0
+               ;  $scriptRetry = 0
                 while($downloaded)
                 {
                    ;  $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList " PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $encodedCmd"

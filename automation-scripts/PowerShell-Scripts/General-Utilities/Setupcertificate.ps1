@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Setupcertificate
+    Setupcertificate
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Setupcertificate
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEContactEMailForLetsEncrypt = "$env:ContactEMailForLetsEncrypt"
 $WECertificatePfxPassword = " $env:CertificatePfxPassword"
 $certificatePfxUrl = " $env:certificatePfxUrl"
@@ -23,7 +41,7 @@ $certificatePfxFile = ""
 
 if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
 
-    $certificatePfxFile = Join-Path $myPath "certificate.pfx"
+    $certificatePfxFile = Join-Path $myPath " certificate.pfx"
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     (New-Object System.Net.WebClient).DownloadFile($certificatePfxUrl, $certificatePfxFile)
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certificatePfxFile, $certificatePfxPassword)
@@ -33,27 +51,27 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         Write-WELog " Importing Certificate to LocalMachine\my" " INFO"
         Import-PfxCertificate -FilePath $certificatePfxFile -CertStoreLocation cert:\localMachine\my -Password (ConvertTo-SecureString -String $certificatePfxPassword -AsPlainText -Force) | Out-Null
     }
-    $dnsidentity = $cert.GetNameInfo(" SimpleName",$false)
-    if ($dnsidentity.StartsWith(" *")) {
-        $dnsidentity = $dnsidentity.Substring($dnsidentity.IndexOf(" .")+1)
+    $dnsidentity = $cert.GetNameInfo(" SimpleName" ,$false)
+    if ($dnsidentity.StartsWith(" *" )) {
+        $dnsidentity = $dnsidentity.Substring($dnsidentity.IndexOf(" ." )+1)
     }
     Write-WELog " DNS identity $dnsidentity" " INFO"
 
 } elseif (" $WEContactEMailForLetsEncrypt" -ne "" ) {
 
     try {
-        Write-WELog "Stopping Web Sites" " INFO"
+        Write-WELog " Stopping Web Sites" " INFO"
         Get-Website | Stop-Website
  
         Write-WELog " Using LetsEncrypt to create SSL Certificate" " INFO"
 
         $nuGetProvider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
-        if ((-not $nuGetProvider) -or ([Version]$nuGetProvider.Version -lt [Version]" 2.8.5.201")) {
+        if ((-not $nuGetProvider) -or ([Version]$nuGetProvider.Version -lt [Version]" 2.8.5.201" )) {
             Write-WELog " Installing NuGet Package Provider" " INFO"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
         }
         $acmePSModule = Get-InstalledModule -Name ACME-PS -ErrorAction SilentlyContinue
-        if ((-not $acmePSModule) -or ([Version]$acmePSModule.Version -lt [Version]" 1.5.0")) {
+        if ((-not $acmePSModule) -or ([Version]$acmePSModule.Version -lt [Version]" 1.5.0" )) {
             Write-WELog " Installing ACME-PS PowerShell Module" " INFO"
             Install-Module -Name ACME-PS -RequiredVersion " 1.5.0" -Force
         }
@@ -83,7 +101,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         $identifier = New-ACMEIdentifier $publicDnsName
     
         Write-WELog " Creating ACME Order" " INFO"
-        $order = New-ACMEOrder -state $stateDir -Identifiers $identifier
+       ;  $order = New-ACMEOrder -state $stateDir -Identifiers $identifier
     
         Write-WELog " Getting ACME Authorization" " INFO"
        ;  $authorizations = @(Get-ACMEAuthorization -State $stateDir -Order $order);
@@ -94,7 +112,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         New-Website -Name challenge -Port 80 -PhysicalPath $challengeLocalPath | Out-Null
 
 '<configuration>
-  <location path=" .">
+  <location path=" ." >
     <system.webServer>
       <httpProtocol>
         <customHeaders>
@@ -117,7 +135,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         foreach($authz in $authorizations) {
             # Select a challenge to fullfill
             Write-WELog " Getting ACME Challenge" " INFO"
-           ;  $challenge = Get-ACMEChallenge -State $stateDir -Authorization $authZ -Type " http-01";
+           ;  $challenge = Get-ACMEChallenge -State $stateDir -Authorization $authZ -Type " http-01" ;
     
             # Create the file requested by the challenge
             $fileName = Join-Path $challengeLocalPath $challenge.Data.RelativeUrl
@@ -150,7 +168,7 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         }
     
         # Wait a little bit and update the order, until we see the states
-        while($order.Status -notin (" ready"," invalid")) {
+        while($order.Status -notin (" ready" ," invalid" )) {
             Start-Sleep -Seconds 10
             $order | Update-ACMEOrder -state $stateDir -PassThru | Out-Null
         }
@@ -177,9 +195,9 @@ if (" $certificatePfxUrl" -ne "" -and " $WECertificatePfxPassword" -ne "" ) {
         Write-WELog " Importing Certificate to LocalMachine\my" " INFO"
         Import-PfxCertificate -FilePath $certificatePfxFile -CertStoreLocation cert:\localMachine\my -Password (ConvertTo-SecureString -String $certificatePfxPassword -AsPlainText -Force) | Out-Null
         
-        $dnsidentity = $cert.GetNameInfo(" SimpleName",$false)
-        if ($dnsidentity.StartsWith(" *")) {
-           ;  $dnsidentity = $dnsidentity.Substring($dnsidentity.IndexOf(" .")+1)
+       ;  $dnsidentity = $cert.GetNameInfo(" SimpleName" ,$false)
+        if ($dnsidentity.StartsWith(" *" )) {
+           ;  $dnsidentity = $dnsidentity.Substring($dnsidentity.IndexOf(" ." )+1)
         }
         Write-WELog " DNS identity $dnsidentity" " INFO"
     }

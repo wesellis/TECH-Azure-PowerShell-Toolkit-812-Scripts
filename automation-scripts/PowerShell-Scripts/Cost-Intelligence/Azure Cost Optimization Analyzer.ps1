@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Cost Optimization Analyzer
+    Azure Cost Optimization Analyzer
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,20 +16,42 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Cost Optimization Analyzer
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESubscriptionId,
     [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
     [Parameter(Mandatory=$false)][int]$WEAnalysisDays = 30,
-    [Parameter(Mandatory=$false)][string]$WEExportPath = " cost-analysis-$(Get-Date -Format 'yyyyMMdd').json",
+    [Parameter(Mandatory=$false)][string]$WEExportPath = " cost-analysis-$(Get-Date -Format 'yyyyMMdd').json" ,
     [Parameter(Mandatory=$false)][decimal]$WEBudgetThreshold = 1000,
     [Parameter(Mandatory=$false)][switch]$WEIncludeRecommendations,
     [Parameter(Mandatory=$false)][switch]$WEGenerateReport
@@ -117,7 +139,7 @@ try {
             $vmConfig = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name
             
             $powerState = ($vmDetails.Statuses | Where-Object { $_.Code -like " PowerState/*" }).DisplayStatus
-            $vmSize = $vmConfig.HardwareProfile.VmSize
+           ;  $vmSize = $vmConfig.HardwareProfile.VmSize
             
             # Estimate monthly cost (simplified calculation)
            ;  $sizeCosts = @{
@@ -136,11 +158,11 @@ try {
             }
             
             # Generate recommendations
-            if ($powerState -eq " VM deallocated") {
+            if ($powerState -eq " VM deallocated" ) {
                 $analysis.Recommendations += " Consider deleting this VM if not needed (saves $$estimatedMonthlyCost/month)"
             }
             
-            if ($vmSize -like " *D8s*" -or $vmSize -like " *D16s*") {
+            if ($vmSize -like " *D8s*" -or $vmSize -like " *D16s*" ) {
                 $analysis.Recommendations += " Large VM detected - verify if this size is necessary"
             }
             
@@ -170,7 +192,7 @@ try {
                 Recommendations = @()
             }
             
-            if ($storageDetails.Sku.Tier -eq " Premium" -and $storageDetails.Kind -eq " StorageV2") {
+            if ($storageDetails.Sku.Tier -eq " Premium" -and $storageDetails.Kind -eq " StorageV2" ) {
                 $analysis.Recommendations += " Premium storage detected - ensure high performance is required"
             }
             
@@ -254,7 +276,7 @@ try {
     
     if ($WEGenerateReport) {
         # Generate HTML report
-        $reportPath = $WEExportPath.Replace('.json', '.html')
+       ;  $reportPath = $WEExportPath.Replace('.json', '.html')
        ;  $htmlReport = @"
 <!DOCTYPE html>
 <html>
@@ -275,44 +297,44 @@ try {
     </style>
 </head>
 <body>
-    <div class=" header">
+    <div class=" header" >
         <h1>🔍 Azure Cost Analysis Report</h1>
         <p>Subscription: $($costData.SubscriptionName) | Period: $WEAnalysisDays days</p>
     </div>
     
-    <div class=" card">
+    <div class=" card" >
         <h2>📊 Cost Overview</h2>
-        <div class=" metric">
-            <div class=" metric-value">$$($costData.TotalCost)</div>
-            <div class=" metric-label">Estimated Monthly</div>
+        <div class=" metric" >
+            <div class=" metric-value" >$$($costData.TotalCost)</div>
+            <div class=" metric-label" >Estimated Monthly</div>
         </div>
-        <div class=" metric">
-            <div class=" metric-value">$($resources.Count)</div>
-            <div class=" metric-label">Total Resources</div>
+        <div class=" metric" >
+            <div class=" metric-value" >$($resources.Count)</div>
+            <div class=" metric-label" >Total Resources</div>
         </div>
-        <div class=" metric">
-            <div class=" metric-value">$($costData.ResourceGroups.Count)</div>
-            <div class=" metric-label">Resource Groups</div>
+        <div class=" metric" >
+            <div class=" metric-value" >$($costData.ResourceGroups.Count)</div>
+            <div class=" metric-label" >Resource Groups</div>
         </div>
-        <div class=" metric">
-            <div class=" metric-value">$($vmAnalysis.Count)</div>
-            <div class=" metric-label">Virtual Machines</div>
+        <div class=" metric" >
+            <div class=" metric-value" >$($vmAnalysis.Count)</div>
+            <div class=" metric-label" >Virtual Machines</div>
         </div>
     </div>
     
-    <div class=" card">
+    <div class=" card" >
         <h2>💡 Optimization Recommendations</h2>
         $(if ($costData.Recommendations.Count -gt 0) {
             $costData.Recommendations | ForEach-Object {
-                $priorityClass = if ($_.Priority -eq " High") { " high-priority" } else { "" }
-                " <div class='recommendation $priorityClass'><strong>$($_.Type)</strong> - $($_.Description) $(if ($_.PotentialSavings -gt 0) { "(Save: $$($_.PotentialSavings)/month)" })</div>"
+                $priorityClass = if ($_.Priority -eq " High" ) { " high-priority" } else { "" }
+                " <div class='recommendation $priorityClass'><strong>$($_.Type)</strong> - $($_.Description) $(if ($_.PotentialSavings -gt 0) { " (Save: $$($_.PotentialSavings)/month)" })</div>"
             }
         } else {
             " <p>No optimization recommendations at this time.</p>"
         })
     </div>
     
-    <div class=" card">
+    <div class=" card" >
         <h2>🎯 Key Insights</h2>
         <ul>
             <li>Average cost per resource: $$($costData.Insights.CostBreakdown.AveragePerResource)</li>
@@ -321,7 +343,7 @@ try {
         </ul>
     </div>
     
-    <div class=" card">
+    <div class=" card" >
         <h2>📋 Virtual Machine Analysis</h2>
         <table>
             <tr><th>Name</th><th>Size</th><th>State</th><th>Est. Monthly Cost</th></tr>
@@ -331,14 +353,14 @@ try {
         </table>
     </div>
     
-    <footer style=" text-align: center; margin-top: 40px; color: #666;">
+    <footer style=" text-align: center; margin-top: 40px; color: #666;" >
         <p>Generated by Azure Automation Scripts | $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
     </footer>
 </body>
 </html>
 " @
         $htmlReport | Set-Content -Path $reportPath
-        Write-Log "✓ HTML report generated: $reportPath" -Level SUCCESS
+        Write-Log " ✓ HTML report generated: $reportPath" -Level SUCCESS
     }
     
     Write-Progress -Activity " Cost Analysis" -Completed

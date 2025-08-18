@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 23 New Azresourcegroupdeployment
+    23 New Azresourcegroupdeployment
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 23 New Azresourcegroupdeployment
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -67,7 +85,7 @@ DeploymentDebugLogLevel :
 
 
 
-$WEStorageAccountResourceGroupName = " CanPrintEquip_Outlook1Restored_RG"
+$WEStorageAccountResourceGroupName = " CanPrintEquip_Outlook1Restored_RG"; 
 $WEVMName = 'Outlook1'
 
 

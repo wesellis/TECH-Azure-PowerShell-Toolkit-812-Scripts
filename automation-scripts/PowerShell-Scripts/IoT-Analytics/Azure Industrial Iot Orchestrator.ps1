@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Industrial Iot Orchestrator
+    Azure Industrial Iot Orchestrator
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Industrial Iot Orchestrator
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -59,30 +77,32 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding(SupportsShouldProcess=$true)]
-[CmdletBinding()]
-$ErrorActionPreference = "Stop"
+[CmdletBinding()]; 
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet(" Deploy", " Monitor", " Analyze", " Predict")]
+    [ValidateSet(" Deploy" , " Monitor" , " Analyze" , " Predict" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEOperationMode,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Manufacturing", " Energy", " Automotive", " Aerospace", " SmartBuilding")]
-    [string]$WEIndustryType = " Manufacturing",
+    [ValidateSet(" Manufacturing" , " Energy" , " Automotive" , " Aerospace" , " SmartBuilding" )]
+    [string]$WEIndustryType = " Manufacturing" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEDigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)",
+    [string]$WEDigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEIoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)",
+    [string]$WEIoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEResourceGroupName = " rg-industrial-iot",
+    [string]$WEResourceGroupName = " rg-industrial-iot" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
     [switch]$WEEnablePredictiveMaintenance,
@@ -114,9 +134,15 @@ class IndustrialIoTOrchestrator {
     
     IndustrialIoTOrchestrator([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEIndustry, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WERG, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WELoc) {
         $this.IndustryType = $WEIndustry
@@ -333,7 +359,11 @@ class IndustrialIoTOrchestrator {
     
     [void]DeployInfrastructure([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEDigitalTwinName, [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEIoTHubName) {
         Write-WELog " Deploying Industrial IoT infrastructure..." " INFO" -ForegroundColor Green
@@ -365,6 +395,8 @@ class IndustrialIoTOrchestrator {
     
     [void]DeployIoTHub([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEIoTHubName) {
         Write-WELog " Deploying IoT Hub: $WEIoTHubName" " INFO" -ForegroundColor Yellow
         
@@ -382,6 +414,8 @@ class IndustrialIoTOrchestrator {
     
     [void]DeployDigitalTwins([Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEDigitalTwinName) {
         Write-WELog " Deploying Digital Twins instance: $WEDigitalTwinName" " INFO" -ForegroundColor Yellow
         
@@ -392,13 +426,15 @@ class IndustrialIoTOrchestrator {
         
         try {
             New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $templatePath -Verbose
-            Remove-Item $templatePath -Force -ErrorAction SilentlyContinue
+            Remove-Item $templatePat -Forceh -Force -ErrorAction SilentlyContinue
         } catch {
             Write-Warning " Digital Twins deployment failed: $_"
         }
     }
     
     [hashtable]GetDigitalTwinsARMTemplate([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEInstanceName) {
         return @{
@@ -423,6 +459,8 @@ class IndustrialIoTOrchestrator {
     }
     
     [void]ConfigureIoTHubRouting([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEIoTHubName) {
         Write-WELog " Configuring IoT Hub message routing..." " INFO" -ForegroundColor Yellow
@@ -477,7 +515,7 @@ class IndustrialIoTOrchestrator {
         Write-WELog " Creating Digital Twin models for $($this.IndustryType)..." " INFO" -ForegroundColor Yellow
         
         foreach ($modelName in $this.DigitalTwinModels.Keys) {
-            $model = $this.DigitalTwinModels[$modelName]
+           ;  $model = $this.DigitalTwinModels[$modelName]
             Write-WELog " Creating model: $modelName" " INFO" -ForegroundColor Cyan
             
             # In a real implementation, this would upload to Digital Twins
@@ -506,6 +544,8 @@ class IndustrialIoTOrchestrator {
     }
     
     [hashtable]GenerateTelemetryData([Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDeviceType) {
         $telemetry = @{}
@@ -594,7 +634,7 @@ class IndustrialIoTOrchestrator {
             LastUpdated = Get-Date
         }
         
-        $html = $this.GenerateDashboardHTML($dashboardData)
+       ;  $html = $this.GenerateDashboardHTML($dashboardData)
        ;  $dashboardPath = " .\IoT-Dashboard-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
         $html | Out-File -FilePath $dashboardPath -Encoding UTF8
         
@@ -625,40 +665,40 @@ class IndustrialIoTOrchestrator {
     </style>
 </head>
 <body>
-    <div class=" header">
+    <div class=" header" >
         <h1>Industrial IoT Dashboard</h1>
         <p>Industry: $($WEData.IndustryType) | Last Updated: $($WEData.LastUpdated)</p>
     </div>
     
-    <div class=" dashboard">
-        <div class=" widget">
+    <div class=" dashboard" >
+        <div class=" widget" >
             <h3>Device Overview</h3>
-            <div class=" metric">$($WEData.TotalDevices)</div>
+            <div class=" metric" >$($WEData.TotalDevices)</div>
             <p>Total Devices</p>
-            <div class=" metric" style=" color: #00ff00;">$($WEData.OnlineDevices)</div>
+            <div class=" metric" style=" color: #00ff00;" >$($WEData.OnlineDevices)</div>
             <p>Online Devices</p>
         </div>
         
-        <div class=" widget">
+        <div class=" widget" >
             <h3>Alert Status</h3>
-            <div class=" metric alert-high">$($WEData.HighPriorityAlerts)</div>
+            <div class=" metric alert-high" >$($WEData.HighPriorityAlerts)</div>
             <p>High Priority Alerts</p>
-            <div class=" metric">$($WEData.ActiveAlerts)</div>
+            <div class=" metric" >$($WEData.ActiveAlerts)</div>
             <p>Total Active Alerts</p>
         </div>
         
-        <div class=" widget">
+        <div class=" widget" >
             <h3>System Health</h3>
-            <div class=" chart-placeholder">
+            <div class=" chart-placeholder" >
                 System Health Chart
                 <br>
                 (Real-time telemetry visualization)
             </div>
         </div>
         
-        <div class=" widget">
+        <div class=" widget" >
             <h3>Predictive Maintenance</h3>
-            <div class=" chart-placeholder">
+            <div class=" chart-placeholder" >
                 Maintenance Predictions
                 <br>
                 (ML-powered insights)
@@ -673,7 +713,7 @@ class IndustrialIoTOrchestrator {
 
 
 try {
-    Write-WELog "Azure Industrial IoT Orchestrator v1.0" " INFO" -ForegroundColor Cyan
+    Write-WELog " Azure Industrial IoT Orchestrator v1.0" " INFO" -ForegroundColor Cyan
     Write-WELog " ======================================" " INFO" -ForegroundColor Cyan
     
     # Connect to Azure if needed

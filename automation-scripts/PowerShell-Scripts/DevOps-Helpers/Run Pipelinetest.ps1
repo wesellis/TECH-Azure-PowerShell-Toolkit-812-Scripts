@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Run Pipelinetest
+    Run Pipelinetest
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,6 +17,24 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced Run Pipelinetest
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
+<#
  .SYNOPSIS
     Creates a set of test deployments in the pipeline
 
@@ -29,16 +47,16 @@ $ErrorActionPreference = "Stop"
 param(
 )
 
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 
 $repoRoot = Resolve-Path " $WEPSScriptRoot/../.."
 
 
 $testBranches = @( `
-    " bicep-json-doesnt-match", `
-    " bicep-success", `
-    " bicep-warnings", `
-    " bicep-errors", `
+    " bicep-json-doesnt-match" , `
+    " bicep-success" , `
+    " bicep-warnings" , `
+    " bicep-errors" , `
     " bicep-with-prereqs-success" `
 )
 
@@ -60,7 +78,7 @@ foreach ($shortBranch in $WETestBranches) {
     }
   }
   else {
-    $yes = $true
+   ;  $yes = $true
   }
 
   if ($yes) {
@@ -77,17 +95,15 @@ DO NOT CHECK IN!
 This is a test deployment for branch $fullBranch
 " @
 
-    gh pr create --head $fullBranch --title "Test: $shortBranch" --body $body --label " test deployment" --repo " Azure/azure-quickstart-templates" --draft
+    gh pr create --head $fullBranch --title " Test: $shortBranch" --body $body --label " test deployment" --repo " Azure/azure-quickstart-templates" --draft
 
     git stash apply
   }
 }
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

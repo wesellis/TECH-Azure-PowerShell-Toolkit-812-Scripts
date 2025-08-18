@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Gitinstall
+    Windows Gitinstall
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,12 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Gitinstall
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 ﻿[CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     $WESetCredHelper = $false
 )
-$WEErrorActionPreference = "Stop"
+$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
 $WEVerbosePreference = 'Continue'
 
@@ -34,11 +52,11 @@ function getSimpleValue([string] $url, [string] $filename ) {
 }
 
 
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-$gitTag = getSimpleValue -url " https://gitforwindows.org/latest-tag.txt" -filename " gitlatesttag.txt"; 
-$gitVersion = getSimpleValue -url " https://gitforwindows.org/latest-version.txt" -filename " gitlatestversion.txt";
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+$gitTag = getSimpleValue -url " https://gitforwindows.org/latest-tag.txt" -filename " gitlatesttag.txt" ; 
+$gitVersion = getSimpleValue -url " https://gitforwindows.org/latest-version.txt" -filename " gitlatestversion.txt" ;
 
-$installerFile = " Git-$gitVersion-64-bit.exe";
+$installerFile = " Git-$gitVersion-64-bit.exe" ;
 
 $uri = " https://github.com/git-for-windows/git/releases/download/$gitTag/$installerFile"
 $WEInstaller = " $env:Temp\GitInstaller.exe"
@@ -68,7 +86,7 @@ try {
             $gitPath = $binPath
         }
         else {
-            $gitPath = $cmdPath
+           ;  $gitPath = $cmdPath
         }
         if (-not (Test-Path $gitPath)) {
             throw " Unable to find git.exe"

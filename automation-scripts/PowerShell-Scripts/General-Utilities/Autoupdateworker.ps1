@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Autoupdateworker
+    Autoupdateworker
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Autoupdateworker
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS  
@@ -66,13 +84,13 @@ try
     $WEFileName = " Automation.json"
     $WEGithubFullPath = " $($WEGithubRootPath)/$($WEGithubBranch)/$($WEScriptPath)/$($WEFileName)"
 
-    #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions")
+    #[System.Reflection.Assembly]::LoadWithPartialName(" System.Web.Extensions" )
 
     $WEWebClient = New-Object System.Net.WebClient
 
     Write-Output " Download the $($WEFileName) template from GitHub..."
 
-    $WEWebClient.DownloadFile($($WEGithubFullPath)," $WEPSScriptRoot\$($WEFileName)")
+    $WEWebClient.DownloadFile($($WEGithubFullPath)," $WEPSScriptRoot\$($WEFileName)" )
     
     $jsonContent=Get-Content " $WEPSScriptRoot\$($WEFileName)"
 
@@ -106,10 +124,10 @@ try
         Write-Output " Checking for asset variable updates..."
         Write-Output " ======================================"
         $WEExistingVariables = Get-AzureRmAutomationVariable -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName | Select-Object Name 
-        $WEExistingVariables = $WEExistingVariables | Foreach {" $($_.Name)"} | Sort-Object Name
+        $WEExistingVariables = $WEExistingVariables | Foreach {" $($_.Name)" } | Sort-Object Name
         $WENewVariables=$jsonData.variables.Keys | Where-Object { $_.Trim() -match " Internal" -or $_ -match " External" } | Sort-Object
 
-        $WEDiffVariables = Compare-Object -ReferenceObject $WENewVariables -DifferenceObject $WEExistingVariables | ?{$_.sideIndicator -eq " <="}| Select InputObject
+        $WEDiffVariables = Compare-Object -ReferenceObject $WENewVariables -DifferenceObject $WEExistingVariables | ?{$_.sideIndicator -eq " <=" }| Select InputObject
 
         if($WEDiffVariables -ne $null)
         {
@@ -121,13 +139,13 @@ try
             {
                 foreach($newvar in $newResourceVariables)
                 {
-                    if(($newvar.name -like " *$($difv.InputObject)*" -eq $true) -and ($newvar.type -eq " variables"))
+                    if(($newvar.name -like " *$($difv.InputObject)*" -eq $true) -and ($newvar.type -eq " variables" ))
                     {
-                        [string[]] $rvarPropValArray = $newvar.properties.value.Split(" ,")
+                        [string[]] $rvarPropValArray = $newvar.properties.value.Split(" ," )
 
-                        if($rvarPropValArray.get(1) -ne $null -and $rvarPropValArray.get(1).Contains('" ') -ne "True" )
+                        if($rvarPropValArray.get(1) -ne $null -and $rvarPropValArray.get(1).Contains('" ') -ne " True" )
                         {
-                            [string] $rvarPropVal = $rvarPropValArray.get(1).Replace("'" ,"" )                            
+                            [string];  $rvarPropVal = $rvarPropValArray.get(1).Replace(" '" ,"" )                            
                         }
                         else
                         {
@@ -155,10 +173,10 @@ try
         foreach($runb in $runbooks)
         {
             #ignore the bootstrap and AROToolkit_AutoUpdate runboooks
-            if($runb.name -notlike " *Bootstrap*")
+            if($runb.name -notlike " *Bootstrap*" )
             {
                 [string[]] $runbookScriptUri = $runb.scriptUri -split " ,"
-                $WERunbooktable.Add($runb.name,$runbookScriptUri.get(1).Replace(" )]","" ).Replace("'" ,"" ))
+                $WERunbooktable.Add($runb.name,$runbookScriptUri.get(1).Replace(" )]" ,"" ).Replace(" '" ,"" ))
                 $currentRunbook = Get-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $runb.name -ErrorAction SilentlyContinue
                 #check if this is new runbook or existing
                 if($currentRunbook -ne $null)
@@ -171,13 +189,13 @@ try
 
                     if($WEVersionDiffRB -gt 0)
                     {
-                        $WERunbookDownloadPath = "$($WEGitHubRootPath)/$($WEGitHubBranch)/azure-resource-optimization-toolkit$($WERunbooktable[$runb.name])"
+                        $WERunbookDownloadPath = " $($WEGitHubRootPath)/$($WEGitHubBranch)/azure-resource-optimization-toolkit$($WERunbooktable[$runb.name])"
                         Write-Output " Updates needed for $($runb.name)..."
                         #Now download the runbook and do the update
                         Write-Output " Downloading the updated PowerShell script from GitHub..."
                         $WEWebClientRB = New-Object System.Net.WebClient
                         
-                        $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1")
+                        $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1" )
                         $WERunbookScriptPath = " $WEPSScriptRoot\$($runb.name).ps1"
 
                         Write-Output " Updating the Runbook content..." 
@@ -194,7 +212,7 @@ try
                     #New Runbook. So download and create it
                     Write-Output " Downloading the PowerShell script from GitHub..."
                     $WEWebClientRB = New-Object System.Net.WebClient
-                    $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1")
+                    $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($runb.name).ps1" )
                     $WERunbookScriptPath = " $WEPSScriptRoot\$($runb.name).ps1"
                     $WENewVersion = $runb.version
 
@@ -217,8 +235,8 @@ try
 
         $WERunbookDownloadPath = " $($WEGitHubRootPath)/$($WEGitHubBranch)/demos/azure-resource-optimization-toolkit/scripts/Bootstrap_Main.ps1"
         Write-Output " Downloading the Bootstrap_Main PowerShell script from GitHub..."
-        $WEWebClientRB = New-Object System.Net.WebClient
-        $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($WEBootstrap_MainRunbook).ps1")
+       ;  $WEWebClientRB = New-Object System.Net.WebClient
+        $WEWebClientRB.DownloadFile($($WERunbookDownloadPath)," $WEPSScriptRoot\$($WEBootstrap_MainRunbook).ps1" )
        ;  $WERunbookScriptPath = " $WEPSScriptRoot\Bootstrap_Main.ps1"
         
         Write-Output " Creating the Runbook in the Automation Account..." 

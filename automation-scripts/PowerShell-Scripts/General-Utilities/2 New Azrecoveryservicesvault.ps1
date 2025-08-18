@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 2 New Azrecoveryservicesvault
+    2 New Azrecoveryservicesvault
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 2 New Azrecoveryservicesvault
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -62,11 +80,11 @@ At C:\Users\Abdullah.Ollivierre\AzureRepos2\Azure\Migrating_VM_VNETA-to_VNETB\2-
 $WELocationName = 'CanadaCentral'
 $WECustomerName = 'CanPrintEquip'
 $WEVMName = 'Outlook1'
-$WEResourceGroupName = -join (" $WECustomerName", " _Outlook", " _RG")
+$WEResourceGroupName = -join (" $WECustomerName" , " _Outlook" , " _RG" )
 
-$WEVaultname = -join (" $WEVMName", " ARSV1")
+$WEVaultname = -join (" $WEVMName" , " ARSV1" )
 
-
+; 
 $WETags = ''
 
 ; 

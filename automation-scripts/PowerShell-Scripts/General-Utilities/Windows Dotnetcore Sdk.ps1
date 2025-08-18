@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Dotnetcore Sdk
+    Windows Dotnetcore Sdk
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,26 +16,51 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Dotnetcore Sdk
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
-[string]$WEDotNetCoreVersion = "latest" ,
+[string]$WEDotNetCoreVersion = " latest" ,
 
 
 [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WERuntime,
 
 
 [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEChannel,
 
 
 [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEGlobalJsonFilePath,
 
@@ -53,13 +78,13 @@ if (![string]::IsNullOrEmpty($WEGlobalJsonFilePath)) {
         $WEDotNetCoreVersion = (Get-JsonFromFile $WEGlobalJsonFilePath).sdk.version
     }
 
-    Write-WELog "Installing NetCore SDK version: $WEDotNetCoreVersion" " INFO"
+    Write-WELog " Installing NetCore SDK version: $WEDotNetCoreVersion" " INFO"
     & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -InstallDir " C:\Program Files\dotnet" 
     exit 0
 }
-
+; 
 $WEOverride = $false
-if ((![string]::IsNullOrEmpty($WEOverrideDotnet)) -and ($WEOverrideDotnet -eq " OverrideDotnet")) {
+if ((![string]::IsNullOrEmpty($WEOverrideDotnet)) -and ($WEOverrideDotnet -eq " OverrideDotnet" )) {
     ;  $WEOverride = $true
 }
 
@@ -90,10 +115,8 @@ else
 
 
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

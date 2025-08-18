@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 14.5.1 Get Azbastion
+    14.5.1 Get Azbastion
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -17,9 +17,27 @@
 #>
 
 <#
+.SYNOPSIS
+    We Enhanced 14.5.1 Get Azbastion
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
 
 
-$WEErrorActionPreference = "Stop"; 
+<#
+
+
+$WEErrorActionPreference = "Stop" ; 
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 .SYNOPSIS
@@ -41,19 +59,19 @@ DnsName              : bst-a403b33e-b182-43e5-960c-38820da0cfe3.bastion.azure.co
 ProvisioningState    : Succeeded
 IpConfigurationsText : [
                          {
-                           " Subnet": {
-                             " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/Microsoft 
+                           " Subnet" : {
+                             " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGCProdcuction/providers/Microsoft 
                        .Network/virtualNetworks/ProductionVNET/subnets/AzureBastionSubnet"
                            },
-                           " PublicIpAddress": {
-                             " Id": " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGC_Prod_Bastion_RG/providers/Micr 
+                           " PublicIpAddress" : {
+                             " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGC_Prod_Bastion_RG/providers/Micr 
                        osoft.Network/publicIPAddresses/FGC_Prod_Bastion_PublicIP"
                            },
-                           " ProvisioningState": " Succeeded",
-                           " PrivateIpAllocationMethod": " Dynamic",
-                           " Name": " IpConf",
-                           " Etag": " W/\"acaaca63-d235-4519-8151-28ccd7461cd4\"" ,
-                           "Id" : "/subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGC_Prod_Bastion_RG/providers/Micros 
+                           " ProvisioningState" : " Succeeded" ,
+                           " PrivateIpAllocationMethod" : " Dynamic" ,
+                           " Name" : " IpConf" ,
+                           " Etag" : " W/\" acaaca63-d235-4519-8151-28ccd7461cd4\"" ,
+                           " Id" : " /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGC_Prod_Bastion_RG/providers/Micros 
                        oft.Network/bastionHosts/FGC_Prod_Bastion/bastionHostIpConfigurations/IpConf"
                          }
                        ]

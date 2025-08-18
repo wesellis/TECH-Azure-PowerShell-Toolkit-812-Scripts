@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Frontenddscvmss
+    Frontenddscvmss
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Frontenddscvmss
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 Configuration Main
 {
@@ -97,7 +115,7 @@ Node $nodeName
             $dest = " C:\WindowsAzure\WebDeploy_amd64_en-US.msi"
             Invoke-WebRequest $source -OutFile $dest
         }
-        GetScript = {@{Result = " DownloadWebDeploy"}}
+        GetScript = {@{Result = " DownloadWebDeploy" }}
         DependsOn = " [WindowsFeature]WebServerRole"
     }
     Package InstallWebDeploy
@@ -144,19 +162,19 @@ Node $nodeName
 		# Download and install the web site and content
 		Script DeployWebPackage
 		{
-			GetScript = {@{Result = " DeployWebPackage"}}
+			GetScript = {@{Result = " DeployWebPackage" }}
 			TestScript = {$false}
 			SetScript ={
-				[system.io.directory]::CreateDirectory(" C:\WebApp")
+				[system.io.directory]::CreateDirectory(" C:\WebApp" )
 				$dest = " C:\WebApp\Site.zip" 
 				Remove-Item -path " C:\inetpub\wwwroot" -Force -Recurse -ErrorAction SilentlyContinue
 				Invoke-WebRequest $using:webDeployPackage -OutFile $dest
 				Add-Type -assembly " system.io.compression.filesystem"
-				[io.compression.zipfile]::ExtractToDirectory($dest, " C:\inetpub\wwwroot")
+				[io.compression.zipfile]::ExtractToDirectory($dest, " C:\inetpub\wwwroot" )
 
 				## create 443 binding from the cert store
 				$certPath = 'cert:\LocalMachine\' + $using:certStoreName				
-				$certObj = Get-ChildItem -Path $certPath -DNSName $using:certDomain
+			; 	$certObj = Get-ChildItem -Path $certPath -DNSName $using:certDomain
 				if($certObj)
 				{
 					New-WebBinding -Name " Default Web Site" -IP " *" -Port 443 -Protocol https					
@@ -168,7 +186,7 @@ Node $nodeName
 					cd c:
 					Add-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webserver/rewrite/GlobalRules" -name " ." -value @{name='HTTP to HTTPS Redirect'; patternSyntax='ECMAScript'; stopProcessing='True'}
 					Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webserver/rewrite/GlobalRules/rule[@name='HTTP to HTTPS Redirect']/match" -name url -value " (.*)"
-					Add-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webserver/rewrite/GlobalRules/rule[@name='HTTP to HTTPS Redirect']/conditions" -name " ." -value @{input=" {HTTPS}"; pattern='^OFF$'}
+					Add-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webserver/rewrite/GlobalRules/rule[@name='HTTP to HTTPS Redirect']/conditions" -name " ." -value @{input=" {HTTPS}" ; pattern='^OFF$'}
 					Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webServer/rewrite/globalRules/rule[@name='HTTP to HTTPS Redirect']/action" -name " type" -value " Redirect"
 					Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webServer/rewrite/globalRules/rule[@name='HTTP to HTTPS Redirect']/action" -name " url" -value " https://{HTTP_HOST}/{R:1}"
 					Set-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter " system.webServer/rewrite/globalRules/rule[@name='HTTP to HTTPS Redirect']/action" -name " redirectType" -value " SeeOther"

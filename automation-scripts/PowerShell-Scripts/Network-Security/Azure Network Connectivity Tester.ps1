@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Network Connectivity Tester
+    Azure Network Connectivity Tester
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,18 +16,40 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Network Connectivity Tester
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WESourceVMName,
     
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WETargetAddress,
@@ -39,7 +61,7 @@ param(
     [string]$WEResourceGroupName
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 Show-Banner -ScriptName " Azure Network Connectivity Tester" -Version " 1.0" -Description " Test network connectivity"
 
 try {
@@ -50,7 +72,7 @@ try {
     $vm = Get-AzVM -Name $WESourceVMName -ResourceGroupName $WEResourceGroupName
     $networkWatcher = Get-AzNetworkWatcher -Location $vm.Location
 
-    $connectivityTest = @{
+   ;  $connectivityTest = @{
         Source = @{
             ResourceId = $vm.Id
         }
@@ -65,7 +87,7 @@ try {
    ;  $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
     
     Write-WELog " Connectivity Test Results:" " INFO" -ForegroundColor Cyan
-    Write-WELog " Status: $($result.ConnectionStatus)" " INFO" -ForegroundColor $(if($result.ConnectionStatus -eq " Reachable"){" Green"}else{" Red"})
+    Write-WELog " Status: $($result.ConnectionStatus)" " INFO" -ForegroundColor $(if($result.ConnectionStatus -eq " Reachable" ){" Green" }else{" Red" })
     Write-WELog " Average Latency: $($result.AvgLatencyInMs) ms" " INFO" -ForegroundColor White
     Write-WELog " Min Latency: $($result.MinLatencyInMs) ms" " INFO" -ForegroundColor White
     Write-WELog " Max Latency: $($result.MaxLatencyInMs) ms" " INFO" -ForegroundColor White

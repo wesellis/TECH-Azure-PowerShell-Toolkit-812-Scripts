@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Datafactory Modern Pipeline Tool
+    Azure Datafactory Modern Pipeline Tool
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Azure Datafactory Modern Pipeline Tool
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 
@@ -66,9 +84,11 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -76,15 +96,21 @@ param(
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEDataFactoryName,
     
     [Parameter(Mandatory = $true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WELocation,
     
     [Parameter(Mandatory = $true)]
-    [ValidateSet(" Create", " Deploy", " Monitor", " Trigger", " Configure", " Delete", " Export")]
+    [ValidateSet(" Create" , " Deploy" , " Monitor" , " Trigger" , " Configure" , " Delete" , " Export" )]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEAction,
@@ -92,9 +118,13 @@ param(
     [Parameter(Mandatory = $false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPipelineName,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEPipelineDefinitionPath,
@@ -102,18 +132,24 @@ param(
     [Parameter(Mandatory = $false)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WETriggerName,
     
     [Parameter(Mandatory = $false)]
-    [ValidateSet(" Schedule", " Tumbling", " Event", " Manual")]
-    [string]$WETriggerType = " Schedule",
+    [ValidateSet(" Schedule" , " Tumbling" , " Event" , " Manual" )]
+    [string]$WETriggerType = " Schedule" ,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEDatasetName,
     
     [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WELinkedServiceName,
@@ -152,8 +188,10 @@ function WE-Write-EnhancedLog {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEMessage,
-        [ValidateSet(" Info", " Warning", " Error", " Success")]
+        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
         [string]$WELevel = " Info"
     )
     
@@ -173,7 +211,7 @@ function WE-New-DataFactoryInstance {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Azure Data Factory instance")) {
+        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Azure Data Factory instance" )) {
             Write-EnhancedLog " Creating Azure Data Factory instance: $WEDataFactoryName" " Info"
         
             # Check if Data Factory already exists
@@ -206,10 +244,10 @@ function WE-Set-DataFactoryGitConfiguration {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Git integration for Data Factory")) {
+        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Git integration for Data Factory" )) {
             Write-EnhancedLog " Configuring Git integration for Data Factory..." " Info"
         
-            if ($WEGitConfiguration.ContainsKey(" RepoUrl") -and $WEGitConfiguration.ContainsKey(" BranchName")) {
+            if ($WEGitConfiguration.ContainsKey(" RepoUrl" ) -and $WEGitConfiguration.ContainsKey(" BranchName" )) {
                 $gitConfig = @{
                     ResourceGroupName = $WEResourceGroupName
                     DataFactoryName = $WEDataFactoryName
@@ -234,7 +272,7 @@ function WE-New-ModernDataPipeline {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create modern data pipeline templates")) {
+        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create modern data pipeline templates" )) {
             Write-EnhancedLog " Creating modern data pipeline templates..." " Info"
         
         # Create sample linked services
@@ -259,7 +297,7 @@ function WE-New-SampleLinkedService {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample linked services")) {
+    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample linked services" )) {
         return
     }
     
@@ -332,7 +370,7 @@ function WE-New-SampleDataset {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample datasets")) {
+    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample datasets" )) {
         return
     }
     
@@ -367,7 +405,7 @@ function WE-New-SampleDataset {
                 }
                 columnDelimiter = " ,"
                 escapeChar = '" '
-                quoteChar = '"'
+                quoteChar = '" '
                 firstRowAsHeader = $true
             }
         }
@@ -401,7 +439,7 @@ function WE-New-SamplePipeline {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample pipelines")) {
+    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample pipelines" )) {
         return
     }
     
@@ -451,7 +489,7 @@ function WE-New-SamplePipeline {
                     dependsOn = @(
                         @{
                             activity = " CopyFromSqlToBlob"
-                            dependencyConditions = @(" Succeeded")
+                            dependencyConditions = @(" Succeeded" )
                         }
                     )
                     typeProperties = @{
@@ -472,7 +510,7 @@ function WE-New-SamplePipeline {
                     dependsOn = @(
                         @{
                             activity = " DataTransformation"
-                            dependencyConditions = @(" Succeeded")
+                            dependencyConditions = @(" Succeeded" )
                         }
                     )
                     inputs = @(
@@ -560,6 +598,8 @@ function WE-Deploy-PipelineFromFile {
     param(
         [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEPipelineName,
         [string]$WEDefinitionPath
     )
@@ -588,7 +628,7 @@ function WE-New-DataFactoryTrigger {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Data Factory triggers")) {
+    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Data Factory triggers" )) {
         return
     }
     
@@ -602,7 +642,7 @@ function WE-New-DataFactoryTrigger {
                 recurrence = @{
                     frequency = " Day"
                     interval = 1
-                    startTime = (Get-Date).AddDays(1).ToString(" yyyy-MM-ddTHH:mm:ssZ")
+                    startTime = (Get-Date).AddDays(1).ToString(" yyyy-MM-ddTHH:mm:ssZ" )
                     timeZone = " UTC"
                     schedule = @{
                         hours = @(2)
@@ -633,7 +673,7 @@ function WE-New-DataFactoryTrigger {
                 blobPathEndsWith = " .csv"
                 ignoreEmptyBlobs = $true
                 scope = " /subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$WEResourceGroupName/providers/Microsoft.Storage/storageAccounts/modernstorageaccount"
-                events = @(" Microsoft.Storage.BlobCreated")
+                events = @(" Microsoft.Storage.BlobCreated" )
             }
             pipelines = @(
                 @{
@@ -700,7 +740,7 @@ function WE-Get-DataFactoryMonitoring {
             $activityRuns = Get-AzDataFactoryV2ActivityRun -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -PipelineRunId $failedRun.RunId -RunStartedAfter $startTime -RunStartedBefore $endTime
             
             foreach ($activity in $activityRuns) {
-                if ($activity.Status -eq " Failed") {
+                if ($activity.Status -eq " Failed" ) {
                     Write-EnhancedLog "  Failed Activity: $($activity.ActivityName)" " Error"
                     Write-EnhancedLog "  Error: $($activity.Error.Message)" " Error"
                 }
@@ -717,7 +757,7 @@ function WE-Set-DataFactoryMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Data Factory monitoring")) {
+    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Data Factory monitoring" )) {
         return
     }
     
@@ -844,7 +884,7 @@ try {
     
     switch ($WEAction) {
         " Create" {
-            $dataFactory = New-DataFactoryInstance
+           ;  $dataFactory = New-DataFactoryInstance
             New-ModernDataPipeline
             New-DataFactoryTrigger
             

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Azure Synapse Analytics Workspace Manager
+    Azure Synapse Analytics Workspace Manager
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,13 +16,33 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Azure Synapse Analytics Workspace Manager
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
 
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEResourceGroupName,
@@ -30,42 +50,46 @@ param(
     [Parameter(Mandatory=$true)]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [string]$WEWorkspaceName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US",
+    [string]$WELocation = " East US" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Create", " Delete", " GetInfo", " CreateSQLPool", " CreateSparkPool", " ManageFirewall")]
-    [string]$WEAction = " Create",
+    [ValidateSet(" Create" , " Delete" , " GetInfo" , " CreateSQLPool" , " CreateSparkPool" , " ManageFirewall" )]
+    [string]$WEAction = " Create" ,
     
     [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string]$WEStorageAccountName,
     
     [Parameter(Mandatory=$false)]
-    [string]$WEFileSystemName = " synapsefs",
+    [string]$WEFileSystemName = " synapsefs" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WESQLAdminUsername = " sqladmin",
+    [string]$WESQLAdminUsername = " sqladmin" ,
     
     [Parameter(Mandatory=$false)]
     [SecureString]$WESQLAdminPassword,
     
     [Parameter(Mandatory=$false)]
-    [string]$WESQLPoolName = " DataWarehouse",
+    [string]$WESQLPoolName = " DataWarehouse" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" DW100c", " DW200c", " DW300c", " DW400c", " DW500c", " DW1000c")]
-    [string]$WESQLPoolSKU = " DW100c",
+    [ValidateSet(" DW100c" , " DW200c" , " DW300c" , " DW400c" , " DW500c" , " DW1000c" )]
+    [string]$WESQLPoolSKU = " DW100c" ,
     
     [Parameter(Mandatory=$false)]
-    [string]$WESparkPoolName = " SparkPool",
+    [string]$WESparkPoolName = " SparkPool" ,
     
     [Parameter(Mandatory=$false)]
-    [ValidateSet(" Small", " Medium", " Large")]
-    [string]$WESparkPoolSize = " Small",
+    [ValidateSet(" Small" , " Medium" , " Large" )]
+    [string]$WESparkPoolSize = " Small" ,
     
     [Parameter(Mandatory=$false)]
     [int]$WESparkPoolMinNodes = 3,
@@ -87,7 +111,7 @@ param(
 )
 
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
 
 
 Show-Banner -ScriptName " Azure Synapse Analytics Workspace Manager" -Version " 1.0" -Description " Enterprise data analytics and warehousing automation"
@@ -113,7 +137,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName " Storage Account" -Status " Setting up primary storage account"
             
             if (-not $WEStorageAccountName) {
-                $WEStorageAccountName = ($WEWorkspaceName + " storage").ToLower() -replace '[^a-z0-9]', ''
+                $WEStorageAccountName = ($WEWorkspaceName + " storage" ).ToLower() -replace '[^a-z0-9]', ''
                 if ($WEStorageAccountName.Length -gt 24) {
                     $WEStorageAccountName = $WEStorageAccountName.Substring(0, 24)
                 }
@@ -315,7 +339,7 @@ try {
             Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName " Workspace Deletion" -Status " Removing Synapse workspace"
             
             $confirmation = Read-Host " Are you sure you want to delete the Synapse workspace '$WEWorkspaceName' and all its resources? (yes/no)"
-            if ($confirmation.ToLower() -ne " yes") {
+            if ($confirmation.ToLower() -ne " yes" ) {
                 Write-Log " Deletion cancelled by user" -Level WARN
                 return
             }
@@ -344,7 +368,7 @@ try {
     }
 
     # Configure monitoring if enabled and creating workspace
-    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create") {
+    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName " Monitoring Setup" -Status " Configuring diagnostic settings"
         
         $diagnosticSettings = Invoke-AzureOperation -Operation {
@@ -358,8 +382,8 @@ try {
                     Name = " $WEWorkspaceName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" SynapseRbacOperations", " GatewayApiRequests", " BuiltinSqlReqsEnded", " IntegrationPipelineRuns", " IntegrationActivityRuns", " IntegrationTriggerRuns")
-                    MetricCategory = @(" AllMetrics")
+                    Category = @(" SynapseRbacOperations" , " GatewayApiRequests" , " BuiltinSqlReqsEnded" , " IntegrationPipelineRuns" , " IntegrationActivityRuns" , " IntegrationTriggerRuns" )
+                    MetricCategory = @(" AllMetrics" )
                 }
                 
                 Set-AzDiagnosticSetting @diagnosticParams
@@ -375,7 +399,7 @@ try {
     }
 
     # Apply enterprise tags if creating workspace
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-ProgressStep -StepNumber 7 -TotalSteps 10 -StepName " Tagging" -Status " Applying enterprise tags"
         $tags = @{
             'Environment' = 'Production'
@@ -403,7 +427,7 @@ try {
     $maxScore = 6
     $securityFindings = @()
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         # Check managed VNet
         if ($WEEnableManagedVNet) {
             $securityScore++
@@ -443,7 +467,7 @@ try {
         }
         
         # Check region compliance
-        if ($WELocation -in @(" East US", " West Europe", " Southeast Asia")) {
+        if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
             $securityScore++
             $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
         }
@@ -454,18 +478,18 @@ try {
     
     $costRecommendations = @()
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         $costRecommendations = $costRecommendations + " 💰 Enable auto-pause for Spark pools to reduce costs during idle time"
         $costRecommendations = $costRecommendations + " 💰 Use serverless SQL pool for exploratory workloads"
         $costRecommendations = $costRecommendations + " 💰 Schedule SQL pool scaling based on usage patterns"
         $costRecommendations = $costRecommendations + " 💰 Monitor storage costs and implement lifecycle policies"
-        $costRecommendations = $costRecommendations + " 💰 Use reserved capacity for predictable workloads"
+       ;  $costRecommendations = $costRecommendations + " 💰 Use reserved capacity for predictable workloads"
     }
 
     # Final validation
     Write-ProgressStep -StepNumber 10 -TotalSteps 10 -StepName " Validation" -Status " Verifying workspace health"
     
-    if ($WEAction.ToLower() -notin @(" delete")) {
+    if ($WEAction.ToLower() -notin @(" delete" )) {
        ;  $workspaceStatus = Invoke-AzureOperation -Operation {
             Get-AzSynapseWorkspace -ResourceGroupName $WEResourceGroupName -Name $WEWorkspaceName
         } -OperationName " Validate Workspace Status"
@@ -478,7 +502,7 @@ try {
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
     
-    if ($WEAction.ToLower() -eq " create") {
+    if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog " 📊 Synapse Workspace Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Workspace Name: $WEWorkspaceName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White

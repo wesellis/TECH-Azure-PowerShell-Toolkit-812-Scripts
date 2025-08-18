@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Create Shortcut
+    Windows Create Shortcut
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,11 +16,30 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Windows Create Shortcut
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
@@ -41,14 +60,14 @@ param(
 
     # defaults to Public Desktop if not provided
     [Parameter(Mandatory=$false)]
-    $WEShortcutDestinationPath = [System.Environment]::GetFolderPath("CommonDesktopDirectory" ),
+    $WEShortcutDestinationPath = [System.Environment]::GetFolderPath(" CommonDesktopDirectory" ),
 
     [Parameter(Mandatory=$false)]
     $WEEnableRunAsAdmin = $false
 )
 
 
-$newShortcutPath = $WEShortcutDestinationPath + "\" + $WEShortcutName + " .lnk"
+$newShortcutPath = $WEShortcutDestinationPath + " \" + $WEShortcutName + " .lnk"
 if (-not (Test-Path -Path $WEShortcutDestinationPath))
 {
     New-Item -ItemType 'directory' -Path $WEShortcutDestinationPath
@@ -62,7 +81,7 @@ if (-not (Test-Path -Path $newShortcutPath))
     # create the wshshell obhect
     $shell = New-Object -ComObject wscript.shell
         
-    $newShortcut = $shell.CreateShortcut($newShortcutPath)
+   ;  $newShortcut = $shell.CreateShortcut($newShortcutPath)
     $newShortcut.TargetPath = $WEShortcutTargetPath
 
     # save the shortcut
@@ -100,10 +119,8 @@ else
     Write-Warning " Specified shortcut already exists: $newShortcutPath"
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-# ============================================================================
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }

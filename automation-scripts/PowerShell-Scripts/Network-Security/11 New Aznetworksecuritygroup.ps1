@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced 11 New Aznetworksecuritygroup
+    11 New Aznetworksecuritygroup
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced 11 New Aznetworksecuritygroup
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 $WEErrorActionPreference = "Stop"
 $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
@@ -50,7 +68,7 @@ $newAzNetworkSecurityRuleConfigSplat = @{
 }
 $rule2 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
 
-
+; 
 $newAzNetworkSecurityGroupSplat = @{
     ResourceGroupName = 'InspireAV_UniFi_RG'
     Location = 'CanadaCentral'

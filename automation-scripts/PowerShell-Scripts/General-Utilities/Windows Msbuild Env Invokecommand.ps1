@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Msbuild Env Invokecommand
+    Windows Msbuild Env Invokecommand
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Msbuild Env Invokecommand
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .DESCRIPTION
@@ -33,7 +51,7 @@ param(
 )
 
 try {
-    $WEErrorActionPreference = "Stop"
+   ;  $WEErrorActionPreference = " Stop"
     Set-StrictMode -Version Latest
 
     # Detect location of msbuild.exe and add it to the path so it can be referenced from the script by just the file name

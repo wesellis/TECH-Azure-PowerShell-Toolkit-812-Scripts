@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Invoke Azroleassignment
+    Invoke Azroleassignment
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -16,6 +16,24 @@
     Requires appropriate permissions and modules
 #>
 
+<#
+.SYNOPSIS
+    We Enhanced Invoke Azroleassignment
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
+
 function WE-Invoke-AzRoleAssignment {
 
 
@@ -29,7 +47,7 @@ function WE-Invoke-AzRoleAssignment {
     #Post Deployment Configuration #2
     $WEUsersGroupName = " Azure VM - Standard User"
     #Store the Object ID in a var
-    $WEObjectID = (Get-AzADGroup -SearchString $WEUsersGroupName).ID
+   ;  $WEObjectID = (Get-AzADGroup -SearchString $WEUsersGroupName).ID
     #Store the Resource Type of the VM
    ;  $vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
     #Create a new AZ Role Assignment at the Azure RBAC Level for that VM for Standard users

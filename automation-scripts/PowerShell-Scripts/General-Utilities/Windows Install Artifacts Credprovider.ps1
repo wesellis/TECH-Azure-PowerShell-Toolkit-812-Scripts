@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    We Enhanced Windows Install Artifacts Credprovider
+    Windows Install Artifacts Credprovider
 
 .DESCRIPTION
     Professional PowerShell script for enterprise automation.
@@ -15,6 +15,24 @@
 .NOTES
     Requires appropriate permissions and modules
 #>
+
+<#
+.SYNOPSIS
+    We Enhanced Windows Install Artifacts Credprovider
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+
 
 <#
 .SYNOPSIS
@@ -35,8 +53,8 @@ param(
 
 Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-retry-utils.psm1')
 
-$downloadUrl = "https://aka.ms/install-artifacts-credprovider.ps1"
-$outputFile = [System.IO.Path]::Combine($env:TEMP, " installcredprovider.ps1")
+$downloadUrl = " https://aka.ms/install-artifacts-credprovider.ps1"
+$outputFile = [System.IO.Path]::Combine($env:TEMP, " installcredprovider.ps1" )
 
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -82,21 +100,21 @@ try {
     }
     RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 5
 
-    $nugetPluginDirectory = [System.IO.Path]::Combine($env:USERPROFILE, " .nuget", " plugins")
-    $expectedNetCoreLocation = [System.IO.Path]::Combine($nugetPluginDirectory, " netcore\CredentialProvider.Microsoft\CredentialProvider.Microsoft.dll")
+    $nugetPluginDirectory = [System.IO.Path]::Combine($env:USERPROFILE, " .nuget" , " plugins" )
+    $expectedNetCoreLocation = [System.IO.Path]::Combine($nugetPluginDirectory, " netcore\CredentialProvider.Microsoft\CredentialProvider.Microsoft.dll" )
     if (!(Test-Path -PathType Leaf $expectedNetCoreLocation)) {
         Write-WELog " Credential Provider (NetCore) not found at $expectedNetCoreLocation." " INFO"
         exit 1
     }
 
-    $expectedNetFXLoacation = [System.IO.Path]::Combine($nugetPluginDirectory, " netfx\CredentialProvider.Microsoft\CredentialProvider.Microsoft.exe")
+   ;  $expectedNetFXLoacation = [System.IO.Path]::Combine($nugetPluginDirectory, " netfx\CredentialProvider.Microsoft\CredentialProvider.Microsoft.exe" )
     if ($addNetFx -eq $true -and !(Test-Path -PathType Leaf $expectedNetFXLoacation)) {
         Write-WELog " Credential Provider (NetFx) not found at $expectedNetFXLoacation." " INFO"
         exit 1
     }
 
     if (!([System.String]::IsNullOrWhiteSpace($optionalCopyNugetPluginsRoot))) {
-       ;  $targetDirectory = [System.IO.Path]::Combine($optionalCopyNugetPluginsRoot, " .nuget", " plugins")
+       ;  $targetDirectory = [System.IO.Path]::Combine($optionalCopyNugetPluginsRoot, " .nuget" , " plugins" )
         # Create the target if it doesn't exist
         if (!(Test-Path -PathType Container $targetDirectory)) {
             Write-WELog " Creating directory '$targetDirectory'." " INFO"
