@@ -1,0 +1,95 @@
+<#
+.SYNOPSIS
+    We Enhanced Azure Publicip Creator
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+#>
+
+$WEErrorActionPreference = "Stop"
+$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+try {
+    # Main script execution
+) { " Continue" } else { " SilentlyContinue" }
+
+
+
+function Write-WELog {
+    [CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+        [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Message,
+        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [string]$Level = " INFO"
+    )
+    
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $colorMap = @{
+        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+    }
+    
+    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+}
+
+[CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WEResourceGroupName,
+    
+    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WEPublicIpName,
+    
+    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WELocation,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$WEAllocationMethod = " Static",
+    
+    [Parameter(Mandatory=$false)]
+    [string]$WESku = " Standard"
+)
+
+Write-WELog " Creating Public IP: $WEPublicIpName" " INFO"
+; 
+$WEPublicIp = New-AzPublicIpAddress `
+    -ResourceGroupName $WEResourceGroupName `
+    -Name $WEPublicIpName `
+    -Location $WELocation `
+    -AllocationMethod $WEAllocationMethod `
+    -Sku $WESku
+
+Write-WELog " Public IP created successfully:" " INFO"
+Write-WELog "  Name: $($WEPublicIp.Name)" " INFO"
+Write-WELog "  IP Address: $($WEPublicIp.IpAddress)" " INFO"
+Write-WELog "  Allocation: $($WEPublicIp.PublicIpAllocationMethod)" " INFO"
+Write-WELog "  SKU: $($WEPublicIp.Sku.Name)" " INFO"
+
+
+
+# Wesley Ellis Enterprise PowerShell Toolkit
+# Enhanced automation solutions: wesellis.com
+# ============================================================================
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

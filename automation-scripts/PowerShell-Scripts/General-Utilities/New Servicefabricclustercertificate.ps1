@@ -1,0 +1,64 @@
+<#
+.SYNOPSIS
+    We Enhanced New Servicefabricclustercertificate
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+#>
+
+[CmdletBinding()
+try {
+    # Main script execution
+]
+$ErrorActionPreference = "Stop"
+param(
+    [string] [Parameter(Mandatory=$true)] $WEPassword,
+    [string] [Parameter(Mandatory=$true)] $WECertDNSName,
+    [string] [Parameter(Mandatory=$true)] $WEKeyVaultName,
+    [string] [Parameter(Mandatory=$true)] $WEKeyVaultSecretName
+)
+
+$WESecurePassword = ConvertTo-SecureString -String $WEPassword -AsPlainText -Force
+$WECertFileFullPath = $(Join-Path (Split-Path -Parent $WEMyInvocation.MyCommand.Definition) "\$WECertDNSName.pfx" )
+
+$WENewCert = New-SelfSignedCertificate -CertStoreLocation Cert:\CurrentUser\My -DnsName $WECertDNSName 
+Export-PfxCertificate -FilePath $WECertFileFullPath -Password $WESecurePassword -Cert $WENewCert
+
+$WEBytes = [System.IO.File]::ReadAllBytes($WECertFileFullPath)
+$WEBase64 = [System.Convert]::ToBase64String($WEBytes)
+
+$WEJSONBlob = @{
+    data = $WEBase64
+    dataType = 'pfx'
+    password = $WEPassword
+} | ConvertTo-Json
+
+$WEContentBytes = [System.Text.Encoding]::UTF8.GetBytes($WEJSONBlob)
+$WEContent = [System.Convert]::ToBase64String($WEContentBytes)
+
+$WESecretValue = ConvertTo-SecureString -String $WEContent -AsPlainText -Force; 
+$WENewSecret = Set-AzureKeyVaultSecret -VaultName $WEKeyVaultName -Name $WEKeyVaultSecretName -SecretValue $WESecretValue -Verbose
+
+Write-Host
+Write-WELog "Source Vault Resource Id: " " INFO"$(Get-AzureRmKeyVault -VaultName $WEKeyVaultName).ResourceId
+Write-WELog " Certificate URL : " " INFO"$WENewSecret.Id
+Write-WELog " Certificate Thumbprint : " " INFO"$WENewCert.Thumbprint
+
+
+# Wesley Ellis Enterprise PowerShell Toolkit
+# Enhanced automation solutions: wesellis.com
+# ============================================================================
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

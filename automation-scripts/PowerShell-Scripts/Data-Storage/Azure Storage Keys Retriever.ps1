@@ -1,0 +1,79 @@
+<#
+.SYNOPSIS
+    We Enhanced Azure Storage Keys Retriever
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+#>
+
+$WEErrorActionPreference = "Stop"
+$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+try {
+    # Main script execution
+) { " Continue" } else { " SilentlyContinue" }
+
+
+
+function Write-WELog {
+    [CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+        [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Message,
+        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [string]$Level = " INFO"
+    )
+    
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $colorMap = @{
+        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+    }
+    
+    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+}
+
+[CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WEResourceGroupName,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$WEStorageAccountName
+)
+
+Write-WELog " Retrieving access keys for Storage Account: $WEStorageAccountName" " INFO"
+; 
+$WEKeys = Get-AzStorageAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
+
+Write-WELog " `nStorage Account Keys:" " INFO"
+Write-WELog "  Primary Key: $($WEKeys[0].Value)" " INFO"
+Write-WELog "  Secondary Key: $($WEKeys[1].Value)" " INFO"
+
+Write-WELog " `nConnection Strings:" " INFO"
+Write-WELog "  Primary: DefaultEndpointsProtocol=https;AccountName=$WEStorageAccountName;AccountKey=$($WEKeys[0].Value);EndpointSuffix=core.windows.net" " INFO"
+Write-WELog "  Secondary: DefaultEndpointsProtocol=https;AccountName=$WEStorageAccountName;AccountKey=$($WEKeys[1].Value);EndpointSuffix=core.windows.net" " INFO"
+
+
+
+# Wesley Ellis Enterprise PowerShell Toolkit
+# Enhanced automation solutions: wesellis.com
+# ============================================================================
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

@@ -1,0 +1,97 @@
+<#
+.SYNOPSIS
+    We Enhanced Azure Activity Log Checker
+
+.DESCRIPTION
+    Professional PowerShell script for enterprise automation.
+    Optimized for performance, reliability, and error handling.
+
+.AUTHOR
+    Enterprise PowerShell Framework
+
+.VERSION
+    1.0
+
+.NOTES
+    Requires appropriate permissions and modules
+#>
+
+$WEErrorActionPreference = "Stop"
+$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+try {
+    # Main script execution
+) { " Continue" } else { " SilentlyContinue" }
+
+
+
+function Write-WELog {
+    [CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+        [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Message,
+        [ValidateSet(" INFO", " WARN", " ERROR", " SUCCESS")]
+        [string]$Level = " INFO"
+    )
+    
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+   ;  $colorMap = @{
+        " INFO" = " Cyan"; " WARN" = " Yellow"; " ERROR" = " Red"; " SUCCESS" = " Green"
+    }
+    
+    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+}
+
+[CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WEResourceGroupName,
+    
+    [Parameter(Mandatory=$false)]
+    [int]$WEHoursBack = 24,
+    
+    [Parameter(Mandatory=$false)]
+    [int]$WEMaxEvents = 20
+)
+
+Write-Host -Object " Retrieving Activity Log events (last $WEHoursBack hours)"
+
+$WEStartTime = (Get-Date).AddHours(-$WEHoursBack)
+$WEEndTime = Get-Date
+
+if ($WEResourceGroupName) {
+    $WEActivityLogs = Get-AzActivityLog -ResourceGroupName $WEResourceGroupName -StartTime $WEStartTime -EndTime $WEEndTime
+    Write-Host -Object " Resource Group: $WEResourceGroupName"
+} else {
+    $WEActivityLogs = Get-AzActivityLog -StartTime $WEStartTime -EndTime $WEEndTime
+    Write-Host -Object " Subscription-wide activity"
+}
+; 
+$WERecentLogs = $WEActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $WEMaxEvents
+
+Write-Host -Object " `nRecent Activity (Last $WEMaxEvents events):"
+Write-Host -Object (" =" * 60)
+
+foreach ($WELog in $WERecentLogs) {
+    Write-Host -Object " Time: $($WELog.EventTimestamp)"
+    Write-Host -Object " Operation: $($WELog.OperationName.Value)"
+    Write-Host -Object " Status: $($WELog.Status.Value)"
+    Write-Host -Object " Resource: $($WELog.ResourceId.Split('/')[-1])"
+    Write-Host -Object " Caller: $($WELog.Caller)"
+    Write-Host -Object (" -" * 40)
+}
+
+
+
+# Wesley Ellis Enterprise PowerShell Toolkit
+# Enhanced automation solutions: wesellis.com
+# ============================================================================
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}
