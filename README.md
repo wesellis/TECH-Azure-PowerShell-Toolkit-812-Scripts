@@ -12,7 +12,7 @@
 
 > **The ultimate enterprise-grade Azure automation toolkit featuring 170+ PowerShell scripts, modern IaC templates, advanced security tools, comprehensive dashboards, DevOps templates, and essential administrative resources.**
 
-**Author**: Wesley Ellis | **Email**: wes@wesellis.com | **Website**: wesellis.com
+**Author**: Wesley Ellis | **Website**: wesellis.com
 
 ---
 
@@ -709,22 +709,17 @@ We welcome contributions from the global Azure community! This enhanced toolkit 
 
 ---
 
-## 📞 **Support & Contact - Enhanced**
+## 📞 **Support & Contact**
 
 **Wesley Ellis** - Lead Cloud Architect & Azure MVP  
-📧 **Email**: wes@wesellis.com  
 🌐 **Website**: [wesellis.com](https://wesellis.com)  
 💼 **LinkedIn**: [Wesley Ellis](https://linkedin.com/in/wesleyellis)  
 🐙 **GitHub**: [@wesellis](https://github.com/wesellis)  
-🏢 **Company**: CompuCom Systems Inc. - System Engineer III
 
 ### **🆘 Getting Help & Support**
 - 📚 **Documentation** - Comprehensive guides in `/docs` directory
 - 🐛 **Issues** - Report bugs and request features via GitHub Issues
 - 💬 **Discussions** - Join community discussions for Q&A and best practices
-- 📧 **Enterprise Support** - Direct email support for enterprise customers
-- 🎓 **Training** - Custom training and workshops available
-- 🤝 **Consulting** - Azure architecture and automation consulting services
 
 ### **🌟 Community Resources**
 - **Monthly Office Hours** - Live Q&A sessions with the community
@@ -805,16 +800,6 @@ Install-Module -Name Az.Security.Enterprise    # Defender, compliance, vulnerabi
 - 📦 Download modules from [PowerShell Gallery](https://www.powershellgallery.com/profiles/WesEllis)
 - 💬 Share with your team and community
 - 🐛 Report bugs and request features
-- 💖 [Sponsor on GitHub](https://github.com/sponsors/wesellis)
-- ☕ [Buy me a coffee](https://buymeacoffee.com/wesellis)
-
-### Enterprise Support
-For organizations requiring dedicated support, custom modules, or training:
-- 📧 Contact: enterprise@azuretoolkit.com
-- 💼 Custom module development
-- 🎓 Team training sessions
-- 🔧 Implementation assistance
-- 📊 Architecture reviews
 
 ### Why Support?
 Your support helps maintain and improve these enterprise-grade tools that save organizations thousands of hours in Azure management and automation.
