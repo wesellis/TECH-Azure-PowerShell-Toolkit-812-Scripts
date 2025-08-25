@@ -2,14 +2,14 @@
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.0%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![Azure](https://img.shields.io/badge/Azure-Enterprise-0078D4.svg)](https://azure.microsoft.com)
-[![Scripts](https://img.shields.io/badge/Scripts-813-green.svg)](./automation-scripts)
+[![Scripts](https://img.shields.io/badge/Scripts-812-green.svg)](./automation-scripts)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg)](https://github.com/wesellis)
 
 ## 📋 Overview
 
-**813+ Production-Ready PowerShell Scripts** for Azure cloud infrastructure management, automation, and governance. Battle-tested in Fortune 500 environments, these scripts cover everything from cost optimization to security compliance.
+**812+ Production-Ready PowerShell Scripts** for Azure cloud infrastructure management, automation, and governance. Battle-tested in Fortune 500 environments, these scripts cover everything from cost optimization to security compliance.
 
 ### 🎯 Key Features
 - **Complete Azure Coverage**: Compute, Storage, Networking, Security, Governance
@@ -30,7 +30,7 @@
 
 ```
 ├── 🔧 automation-scripts/     # Core automation & management scripts
-│   ├── PowerShell-Scripts/    # 813 PowerShell scripts
+│   ├── PowerShell-Scripts/    # 812 PowerShell scripts
 │   ├── resource-management/   # VM, Storage, Network automation
 │   └── monitoring/            # Monitoring & alerting scripts
 ├── 💰 cost-management/        # Cost optimization & budgeting
