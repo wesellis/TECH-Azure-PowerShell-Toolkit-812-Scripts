@@ -21,7 +21,7 @@
 ## 🏆 Why This Toolkit?
 
 - 📊 **Save 40+ hours/week** on repetitive Azure tasks
-- 💰 **Reduce cloud costs by 30-50%** with optimization scripts
+- 💰 **Optimize cloud resources** with automated efficiency scripts
 - 🔒 **Ensure compliance** with automated security checks
 - 🚀 **Deploy faster** with battle-tested automation
 - 📈 **Scale confidently** with enterprise-grade scripts
@@ -33,7 +33,7 @@
 │   ├── PowerShell-Scripts/    # 812 PowerShell scripts
 │   ├── resource-management/   # VM, Storage, Network automation
 │   └── monitoring/            # Monitoring & alerting scripts
-├── 💰 cost-management/        # Cost optimization & budgeting
+├── 💰 cost-management/        # Resource optimization & monitoring
 ├── 🔐 security/              # Security & compliance scripts
 ├── 🏗️ iac-templates/         # Infrastructure as Code templates
 ├── 🔄 devops-templates/      # CI/CD pipeline templates
@@ -91,10 +91,10 @@ cd azure-enterprise-powershell-toolkit/automation-scripts/PowerShell-Scripts
 - Key Vault management
 - Identity & access management
 
-### 💰 **Cost Management** (80+ scripts)
-- Cost analysis & reporting
+### 💰 **Resource Management** (80+ scripts)
+- Usage analysis & reporting
 - Resource optimization
-- Budget alerts
+- Monitoring alerts
 - Unused resource cleanup
 
 ### 📊 **Monitoring & Governance** (90+ scripts)
@@ -111,7 +111,7 @@ cd azure-enterprise-powershell-toolkit/automation-scripts/PowerShell-Scripts
 
 ## 💡 Real-World Use Cases
 
-### Cost Optimization Example
+### Resource Optimization Example
 ```powershell
 # Find and remove unused resources across all subscriptions
 .\cost-management\Find-UnusedResources.ps1 -RemoveUnused -WhatIf
