@@ -1,18 +1,29 @@
-﻿# ============================================================================
-# Script Name: Azure Subscription Switcher
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Quick Azure subscription context switching utility
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$SubscriptionName,
     [string]$SubscriptionId,
     [switch]$List,
     [switch]$Current
 )
+
+#region Functions
 
 Write-Information "Azure Subscription Switcher"
 Write-Information "==========================="
@@ -36,7 +47,7 @@ if ($List) {
     Write-Information "Available Subscriptions:"
     $subscriptions = Get-AzSubscription -ErrorAction Stop
     foreach ($sub in $subscriptions) {
-        $status = if ($sub.State -eq "Enabled") { "✓" } else { "✗" }
+        $status = if ($sub.State -eq "Enabled") { "[OK]" } else { "[FAIL]" }
         Write-Information "  $status $($sub.Name) ($($sub.Id))"
     }
     return
@@ -47,7 +58,7 @@ if ($SubscriptionName) {
     try {
         $subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
         Set-AzContext -SubscriptionId $subscription.Id
-        Write-Information "✓ Switched to subscription: $($subscription.Name)"
+        Write-Information "[OK] Switched to subscription: $($subscription.Name)"
     } catch {
         Write-Error "Failed to switch to subscription '$SubscriptionName': $($_.Exception.Message)"
     }
@@ -55,7 +66,7 @@ if ($SubscriptionName) {
     try {
         Set-AzContext -SubscriptionId $SubscriptionId
         $subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
-        Write-Information "✓ Switched to subscription: $($subscription.Name)"
+        Write-Information "[OK] Switched to subscription: $($subscription.Name)"
     } catch {
         Write-Error "Failed to switch to subscription '$SubscriptionId': $($_.Exception.Message)"
     }
@@ -68,3 +79,5 @@ if ($SubscriptionName) {
 }
 
 Write-Information "`nSubscription switching completed at $(Get-Date)"
+
+#endregion

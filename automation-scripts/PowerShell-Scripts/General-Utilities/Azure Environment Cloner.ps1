@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Environment Cloner
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -63,6 +69,8 @@ param(
     [Parameter(Mandatory=$false)][switch]$WEForce
 )
 
+#region Functions
+
 $modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath " AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
@@ -74,7 +82,7 @@ try {
     Write-ProgressStep -StepNumber 1 -TotalSteps 8 -StepName " Validation" -Status " Validating source environment..."
     
     $sourceRG = Get-AzResourceGroup -Name $WESourceResourceGroup -ErrorAction Stop
-    Write-Log " ✓ Source RG found: $($sourceRG.ResourceGroupName) in $($sourceRG.Location)" -Level SUCCESS
+    Write-Log " [OK] Source RG found: $($sourceRG.ResourceGroupName) in $($sourceRG.Location)" -Level SUCCESS
     
     # Get target location (default to source location)
     $targetLoc = $WETargetLocation ?? $sourceRG.Location
@@ -109,7 +117,7 @@ try {
         $targetRG = Get-AzResourceGroup -Name $WETargetResourceGroup -ErrorAction SilentlyContinue
         if (-not $targetRG) {
             $targetRG = New-AzResourceGroup -Name $WETargetResourceGroup -Location $targetLoc
-            Write-Log " ✓ Created target resource group: $($targetRG.ResourceGroupName)" -Level SUCCESS
+            Write-Log " [OK] Created target resource group: $($targetRG.ResourceGroupName)" -Level SUCCESS
         }
     }
     
@@ -131,9 +139,9 @@ try {
                 Export-AzResourceGroup -ResourceGroupName $WESourceResourceGroup -Resource $resourceIds -Path $templatePath -Force
                 $templates[$resourceType.Name] = $templatePath
                 
-                Write-Log " ✓ Exported template for $($resourceType.Name)" -Level SUCCESS
+                Write-Log " [OK] Exported template for $($resourceType.Name)" -Level SUCCESS
             } catch {
-                Write-Log " ⚠ Failed to export template for $($resourceType.Name): $($_.Exception.Message)" -Level WARN
+                Write-Log " [WARN] Failed to export template for $($resourceType.Name): $($_.Exception.Message)" -Level WARN
             }
         }
     }
@@ -170,11 +178,11 @@ try {
                 } -OperationName " Deploy $($template.Key)"
                 
                 $deployedResources = $deployedResources + $deployment
-                Write-Log " ✓ Deployed: $($template.Key)" -Level SUCCESS
+                Write-Log " [OK] Deployed: $($template.Key)" -Level SUCCESS
                 
             } catch {
                 $deploymentErrors = $deploymentErrors + " Failed to deploy $($template.Key): $($_.Exception.Message)"
-                Write-Log " ✗ Failed to deploy $($template.Key): $($_.Exception.Message)" -Level ERROR
+                Write-Log " [FAIL] Failed to deploy $($template.Key): $($_.Exception.Message)" -Level ERROR
             }
         }
     }
@@ -192,7 +200,7 @@ try {
                 }
                 Set-AzResource -ResourceId $resource.ResourceId -Tag $currentTags -Force
             } catch {
-                Write-Log " ⚠ Failed to apply tags to $($resource.Name): $($_.Exception.Message)" -Level WARN
+                Write-Log " [WARN] Failed to apply tags to $($resource.Name): $($_.Exception.Message)" -Level WARN
             }
         }
     }
@@ -228,4 +236,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

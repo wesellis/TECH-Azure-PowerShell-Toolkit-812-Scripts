@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Omsasrmonitoring
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -57,8 +63,7 @@ $WEAzureSubscriptionId = Get-AutomationVariable -Name 'AzureSubscriptionId'
 
 
 
-$WEVaults = Find-AzureRmResource `
-                              -ResourceType Microsoft.RecoveryServices/vaults
+$WEVaults -ResourceType "Microsoft.RecoveryServices/vaults"
 
 Write-Output " Found the following vaults:" $WEVaults.name
 
@@ -67,22 +72,21 @@ Write-Output " Found the following vaults:" $WEVaults.name
 foreach ($WEVault in $WEVaults)
 {
     # Setting Vault context
-    $WEVaultSettings = Get-AzureRmRecoveryServicesVault -ErrorAction Stop `
-                                                     -Name $WEVault.Name `
-                                                     -ResourceGroupName $WEVault.ResourceGroupName
-    Write-Output $WEVaultSettings
+    $params = @{
+        ErrorAction = "Stop"
+        ResourceGroupName = $WEVault.ResourceGroupName Write-Output $WEVaultSettings
+        Name = $WEVault.Name
+    }
+    $WEVaultSettings @params
 
     $WELocation = $WEVault.Location
 
-    Set-AzureRmSiteRecoveryVaultSettings -ErrorAction Stop `
-                                        -ARSVault $WEVaultSettings
-    # Ingesting ASRJobs into OMS
+    Set-AzureRmSiteRecoveryVaultSettings -ARSVault $WEVaultSettings # Ingesting ASRJobs into OMS -ErrorAction "Stop"
 
     $WEASRLogs = @()
     $WELogData = New-Object -ErrorAction Stop psobject -Property @{}
 
-    $WEASRJobs = Get-AzureRmSiteRecoveryJob -ErrorAction Stop `
-                                         -StartTime (Get-Date).AddHours(((-1)))
+    $WEASRJobs -StartTime "(Get-Date).AddHours(((-1)))" -ErrorAction "Stop"
 
     if ($null -eq $WEASRJobs)
     {
@@ -147,11 +151,9 @@ foreach ($WEVault in $WEVaults)
         foreach ($WEContainer in $WEContainers)
         {
             
-            $WEVMSize = Get-AzureRmVMSize -ErrorAction Stop `
-                                       -Location $WELocation
+            $WEVMSize -Location $WELocation -ErrorAction "Stop"
 
-            $WECurrentVMUsage = Get-AzureRmVMUsage -ErrorAction Stop `
-                                       -Location $WELocation
+            $WECurrentVMUsage -Location $WELocation -ErrorAction "Stop"
 
             $WECurrentStorageUsage = Get-AzureRmStorageUsage -ErrorAction Stop
 
@@ -159,53 +161,19 @@ foreach ($WEVault in $WEVaults)
 
             $WEDRServer = Get-AzureRmSiteRecoveryServer -ErrorAction Stop
 
-            $WERecoveryVms = Get-AzureRmSiteRecoveryVM -ErrorAction Stop `
-                                       -ProtectionContainer $WEContainer
-            
-            Write-Output $WERecoveryVms.FriendlyName
+            $WERecoveryVms -ProtectionContainer $WEContainer  Write-Output $WERecoveryVms.FriendlyName -ErrorAction "Stop"
 
             # Getting VM Details
             foreach ($WERecoveryVm in $WERecoveryVms)
             {
-                $WEVMSize = Get-AzureRmVMSize -ErrorAction Stop `
-                                           -Location $WELocation | Where-Object {$_.Name -eq $WERecoveryVm.RecoveryAzureVMSize}
-                
-                # Detect VMs protected by InMageAzureV2 Replication Provider
-                if ($WERecoveryVm.ReplicationProvider -eq " InMageAzureV2" )
-                {
-                    $vNetInfo = " None"
-                    $vNetRgName = " None"
-                    $WEStorageInfo = " None"
-                    $WEStorageRgName = " None"
-                    $WEStorageName = " None"
-                    
-                    Write-Output " Found the following VMware protected machines" $WERecoveryVm.FriendlyName
+                $params = @{
+                    Location = $WELocation | Where-Object {$_.Name
+                    eq = $null
+                    and = $WERecoveryVm.ReplicationProvider
+                    ne = " HyperVReplica2012R2" ) { $vNetRgName = " None" $vNetName = " None" $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /" ) $WEStorageRgName = $WEStorageInfo[4] $WEStorageName = $WEStorageInfo[8]"
+                    ErrorAction = "Stop"
                 }
-                # Detect VMs Protected using Hyper-V 2 Azure
-                else
-                {
-                    # Detect VMs that are connected to storage and vNet in Azure
-                    if($WERecoveryVm.SelectedRecoveryAzureNetworkId -ne $null -and $WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2" )
-                    {
-                        $vNetInfo = $WERecoveryVm.SelectedRecoveryAzureNetworkId.split(" /" )
-                        $vNetRgName = $vNetInfo[4]
-                        $vNetName = $vNetInfo[8]
-                        $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /" )
-                        $WEStorageRgName = $WEStorageInfo[4]
-                        $WEStorageName = $WEStorageInfo[8]
-                        
-                        Write-Output " Found the following Hyper-V protected machines" $WERecoveryVm.FriendlyName
-                    }
-                    # Detect VMs that are missing vNet connection in Azure
-                    else
-                    {
-                        if ($WERecoveryVm.RecoveryAzureStorageAccount -ne $null -and $WERecoveryVm.SelectedRecoveryAzureNetworkId -eq $null -and $WERecoveryVm.ReplicationProvider -ne " HyperVReplica2012R2" )
-                        {
-                            $vNetRgName = " None"
-                            $vNetName = " None"
-                            $WEStorageInfo = $WERecoveryVm.RecoveryAzureStorageAccount.split(" /" )
-                            $WEStorageRgName = $WEStorageInfo[4]
-                            $WEStorageName = $WEStorageInfo[8]
+                $WEVMSize @params
 
                             Write-Output " Found the following Hyper-V Protected machines missing vNet" $WERecoveryVm.FriendlyName
                         }
@@ -291,4 +259,5 @@ foreach ($WEVault in $WEVaults)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

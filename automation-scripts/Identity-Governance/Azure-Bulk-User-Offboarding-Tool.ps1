@@ -1,15 +1,12 @@
-﻿# ============================================================================
-# Script Name: Azure Bulk User Offboarding Automation Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Comprehensive automated bulk user offboarding across all Azure services
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
 #Requires -Modules Az.Accounts, Az.Resources, AzureAD
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Automated bulk user offboarding across all Azure services
 .DESCRIPTION
@@ -43,6 +40,8 @@ param(
     [Parameter(Mandatory=$false)]
     [switch]$RemoveFromAllGroups
 )
+
+#region Functions
 
 # Initialize logging
 $LogFile = "UserOffboarding_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
@@ -123,3 +122,6 @@ try {
     Write-Log "ERROR: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Tagger Pro
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -62,6 +68,8 @@ param(
     [Parameter(Mandatory=$false)][switch]$WEForce,
     [Parameter(Mandatory=$false)][switch]$WEParallel
 )
+
+#region Functions
 
 
 $modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath " AzureAutomationCommon"
@@ -167,9 +175,9 @@ try {
                     Set-AzResource -ResourceId $operation.Resource.ResourceId -Tag $operation.NewTags -Force:$WEForce
                 } -OperationName " Tag Resource: $($operation.Resource.Name)" -MaxRetries 2
                 $successCount = $successCount + 1
-                Write-Log " ✓ Tagged: $($operation.Resource.Name)" -Level SUCCESS
+                Write-Log " [OK] Tagged: $($operation.Resource.Name)" -Level SUCCESS
             } catch {
-                Write-Log " ✗ Failed: $($operation.Resource.Name) - $($_.Exception.Message)" -Level ERROR
+                Write-Log " [FAIL] Failed: $($operation.Resource.Name) - $($_.Exception.Message)" -Level ERROR
                ;  $errorCount = $errorCount + 1
             }
         }
@@ -202,4 +210,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azuresacreateschedules Ms Mgmt Sa
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -182,52 +188,59 @@ $WERBStart4=$WERBStart3.AddMinutes(15)
 
 
 
-$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction Stop `
--AutomationAccountName $WEAAAccount `
+$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction "Stop"
+-AutomationAccountName 
 -ResourceGroupName $WEAAResourceGroup
 
 foreach ($sch in  $allSchedules|where{$_.Name -match $WEMetricsScheduleName -or $_.Name -match $WEMetricsEnablerScheduleName -or $_.Name -match $WELogsScheduleName })
 {
 
 	Write-output " Removing Schedule $($sch.Name)    "
-	Remove-AzureRmAutomationSchedule -ErrorAction Stop `
-	-AutomationAccountName $WEAAAccount `
-	-Force `
-	-Name $sch.Name `
-	-ResourceGroupName $WEAAResourceGroup `
-	
+	$params = @{
+	    ErrorAction = "Stop"
+	    ResourceGroupName = $WEAAResourceGroup
+	    Name = $sch.Name
+	    AutomationAccountName = $WEAAAccount
+	}
+	Remove-AzureRmAutomationSchedule @params
 } 
 
 Write-output  " Creating schedule $WEMetricsScheduleName for runbook $WEMetricsRunbookName"
 ; 
 $i=1
 Do {
-	New-AzureRmAutomationSchedule -ErrorAction Stop `
-	-AutomationAccountName $WEAAAccount `
-	-HourInterval 1 `
-	-Name $($WEMetricsScheduleName+" -$i" ) `
-	-ResourceGroupName $WEAAResourceGroup `
-	-StartTime (Get-Variable -Name RBStart" $i" ).Value
+	$params = @{
+	    ResourceGroupName = $WEAAResourceGroup
+	    Name = "RBStart" $i" ).Value"
+	    AutomationAccountName = $WEAAAccount
+	    HourInterval = "1"
+	    ErrorAction = "Stop"
+	    StartTime = "(Get-Variable"
+	}
+	New-AzureRmAutomationSchedule @params
 
 	IF ($collectionFromAllSubscriptions  -match 'Enabled')
 	{
 	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
 
-		Register-AzureRmAutomationScheduledRunbook `
-		-AutomationAccountName $WEAAAccount `
-		-ResourceGroupName  $WEAAResourceGroup `
-		-RunbookName $WEMetricsRunbookName `
-		-ScheduleName $($WEMetricsScheduleName+" -$i" ) -Parameters $WEParams
-	}Else
-	{
+		$params = @{
+		    RunbookName = $WEMetricsRunbookName
+		    Parameters = $WEParams }Else {
+		    ResourceGroupName = $WEAAResourceGroup
+		    ScheduleName = $($WEMetricsScheduleName+
+		    AutomationAccountName = $WEAAAccount
+		}
+		Register-AzureRmAutomationScheduledRunbook @params
 
 		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
-		Register-AzureRmAutomationScheduledRunbook `
-		-AutomationAccountName $WEAAAccount `
-		-ResourceGroupName  $WEAAResourceGroup `
-		-RunbookName $WEMetricsRunbookName `
-		-ScheduleName $($WEMetricsScheduleName+" -$i" )  -Parameters $WEParams 
-	}
+		$params = @{
+		    RunbookName = $WEMetricsRunbookName
+		    Parameters = $WEParams }
+		    ResourceGroupName = $WEAAResourceGroup
+		    ScheduleName = $($WEMetricsScheduleName+
+		    AutomationAccountName = $WEAAAccount
+		}
+		Register-AzureRmAutomationScheduledRunbook @params
 
 	$i++
 }
@@ -250,21 +263,27 @@ IF($collectAuditLogs -eq 'Enabled')
 	}
 	Write-Output " Creating schedule $WELogsScheduleName for $WERunbookStartTime for runbook $WELogsRunbookName"
 
-	New-AzureRmAutomationSchedule -ErrorAction Stop `
-	-AutomationAccountName $WEAAAccount `
-	-HourInterval 1 `
-	-Name $WELogsScheduleName `
-	-ResourceGroupName $WEAAResourceGroup `
-	-StartTime $WERunbookStartTime
+	$params = @{
+	    ResourceGroupName = $WEAAResourceGroup
+	    Name = $WELogsScheduleName
+	    AutomationAccountName = $WEAAAccount
+	    HourInterval = "1"
+	    ErrorAction = "Stop"
+	    StartTime = $WERunbookStartTime
+	}
+	New-AzureRmAutomationSchedule @params
 
 	IF ($collectionFromAllSubscriptions  -match 'Enabled')
 	{
 	; 	$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
-		Register-AzureRmAutomationScheduledRunbook `
-		-AutomationAccountName $WEAAAccount `
-		-ResourceGroupName  $WEAAResourceGroup `
-		-RunbookName $WELogsRunbookName `
-		-ScheduleName $WELogsScheduleName -Parameters $WEParams
+		$params = @{
+		    RunbookName = $WELogsRunbookName
+		    Parameters = $WEParams
+		    ResourceGroupName = $WEAAResourceGroup
+		    ScheduleName = $WELogsScheduleName
+		    AutomationAccountName = $WEAAAccount
+		}
+		Register-AzureRmAutomationScheduledRunbook @params
 
 		Start-AzureRmAutomationRunbook -AutomationAccountName $WEAAAccount -Name $WELogsRunbookName -ResourceGroupName $WEAAResourceGroup -Parameters $WEParams | out-null
 	}Else
@@ -272,11 +291,14 @@ IF($collectAuditLogs -eq 'Enabled')
 		
 		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
 		
-		Register-AzureRmAutomationScheduledRunbook `
-		-AutomationAccountName $WEAAAccount `
-		-ResourceGroupName  $WEAAResourceGroup `
-		-RunbookName $WELogsRunbookName `
-		-ScheduleName $WELogsScheduleName -Parameters $WEParams
+		$params = @{
+		    RunbookName = $WELogsRunbookName
+		    Parameters = $WEParams
+		    ResourceGroupName = $WEAAResourceGroup
+		    ScheduleName = $WELogsScheduleName
+		    AutomationAccountName = $WEAAAccount
+		}
+		Register-AzureRmAutomationScheduledRunbook @params
 
 		Start-AzureRmAutomationRunbook -AutomationAccountName $WEAAAccount -Name $WELogsRunbookName -ResourceGroupName $WEAAResourceGroup | out-null
 	}
@@ -292,18 +314,18 @@ $WEMetricsRunbookStartTime = $WEDate = [DateTime]::Today.AddHours(2).AddDays(1)
 
 Write-Output " Creating schedule $WEMetricsEnablerScheduleName for $WEMetricsRunbookStartTime for runbook $WEMetricsEnablerRunbookName"
 
-New-AzureRmAutomationSchedule -ErrorAction Stop `
--AutomationAccountName $WEAAAccount `
--DayInterval 1 `
--Name " $WEMetricsEnablerScheduleName" `
--ResourceGroupName $WEAAResourceGroup `
+New-AzureRmAutomationSchedule -ErrorAction "Stop"
+-AutomationAccountName 
+-DayInterval 
+-Name 
+-ResourceGroupName 
 -StartTime $WEMetricsRunbookStartTime
 
 
-Register-AzureRmAutomationScheduledRunbook `
--AutomationAccountName $WEAAAccount `
--ResourceGroupName  $WEAAResourceGroup `
--RunbookName $WEMetricsEnablerRunbookName `
+Register-AzureRmAutomationScheduledRunbook
+-AutomationAccountName 
+-ResourceGroupName 
+-RunbookName 
 -ScheduleName " $WEMetricsEnablerScheduleName"
 
 
@@ -314,19 +336,26 @@ Start-AzureRmAutomationRunbook -Name $WEMetricsEnablerRunbookName -ResourceGroup
 
 
 ; 
-$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction Stop `
-		-AutomationAccountName $WEAAAccount `
-		-ResourceGroupName $WEAAResourceGroup |where{$_.Name -match $WEMetricsScheduleName -or $_.Name -match $WEMetricsEnablerScheduleName -or $_.Name -match $WELogsScheduleName }
+$params = @{
+    ResourceGroupName = $WEAAResourceGroup |where{$_.Name
+    AutomationAccountName = $WEAAAccount
+    match = $WELogsScheduleName }
+    ErrorAction = "Stop"
+    or = $_.Name
+}
+$allSchedules=Get-AzureRmAutomationSchedule @params
 
 
 If ($allSchedules.count -ge 5)
 {
 Write-output " Removing hourly schedule for this runbook as its not needed anymore  "
-Remove-AzureRmAutomationSchedule -ErrorAction Stop `
-		-AutomationAccountName $WEAAAccount `
-		-Force `
-		-Name $mainSchedulerName `
-		-ResourceGroupName $WEAAResourceGroup `
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $WEAAResourceGroup
+    Name = $mainSchedulerName
+    AutomationAccountName = $WEAAAccount
+}
+Remove-AzureRmAutomationSchedule @params
 
 
 }
@@ -337,4 +366,5 @@ Remove-AzureRmAutomationSchedule -ErrorAction Stop `
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Purview Data Governance Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Purview Data Governance Manager
 # Professional Azure data governance automation script
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise data catalog and governance automation
 
 param(
@@ -61,8 +78,10 @@ param(
     [switch]$EnableLineageTracking
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure Purview Data Governance Manager" -Version "1.0" -Description "Enterprise data catalog and governance automation"
@@ -82,7 +101,7 @@ try {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
     
-    Write-Log "✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     # Generate managed resource names if not provided
     if (-not $ManagedStorageAccountName) {
@@ -118,10 +137,10 @@ try {
                 New-AzPurviewAccount -ErrorAction Stop @purviewParams
             } -OperationName "Create Purview Account"
             
-            Write-Log "✓ Purview account created: $PurviewAccountName" -Level SUCCESS
-            Write-Log "✓ Atlas endpoint: $($purviewAccount.AtlasEndpoint)" -Level INFO
-            Write-Log "✓ Scan endpoint: $($purviewAccount.ScanEndpoint)" -Level INFO
-            Write-Log "✓ Catalog endpoint: $($purviewAccount.CatalogEndpoint)" -Level INFO
+            Write-Log "[OK] Purview account created: $PurviewAccountName" -Level SUCCESS
+            Write-Log "[OK] Atlas endpoint: $($purviewAccount.AtlasEndpoint)" -Level INFO
+            Write-Log "[OK] Scan endpoint: $($purviewAccount.ScanEndpoint)" -Level INFO
+            Write-Log "[OK] Catalog endpoint: $($purviewAccount.CatalogEndpoint)" -Level INFO
             
             # Wait for account to be ready
             Write-Log "Waiting for Purview account to be fully provisioned..." -Level INFO
@@ -132,7 +151,7 @@ try {
             } while ($accountStatus.ProvisioningState -eq "Provisioning")
             
             if ($accountStatus.ProvisioningState -eq "Succeeded") {
-                Write-Log "✓ Purview account fully provisioned and ready" -Level SUCCESS
+                Write-Log "[OK] Purview account fully provisioned and ready" -Level SUCCESS
             } else {
                 throw "Purview account provisioning failed with state: $($accountStatus.ProvisioningState)"
             }
@@ -174,9 +193,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Register Data Source"
             
-            Write-Log "✓ Data source registered: $DataSourceName ($DataSourceType)" -Level SUCCESS
-            Write-Log "✓ Endpoint: $DataSourceEndpoint" -Level INFO
-            Write-Log "✓ Collection: $CollectionName" -Level INFO
+            Write-Log "[OK] Data source registered: $DataSourceName ($DataSourceType)" -Level SUCCESS
+            Write-Log "[OK] Endpoint: $DataSourceEndpoint" -Level INFO
+            Write-Log "[OK] Collection: $CollectionName" -Level INFO
         }
         
         "createcollection" {
@@ -209,7 +228,7 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Create Collection"
             
-            Write-Log "✓ Collection created: $CollectionName" -Level SUCCESS
+            Write-Log "[OK] Collection created: $CollectionName" -Level SUCCESS
         }
         
         "scandatasource" {
@@ -262,9 +281,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers
             } -OperationName "Trigger Scan"
             
-            Write-Log "✓ Data source scan initiated: $ScanName" -Level SUCCESS
-            Write-Log "✓ Scan ruleset: $ScanRulesetName" -Level INFO
-            Write-Log "✓ Monitor scan progress in the Purview Studio" -Level INFO
+            Write-Log "[OK] Data source scan initiated: $ScanName" -Level SUCCESS
+            Write-Log "[OK] Scan ruleset: $ScanRulesetName" -Level INFO
+            Write-Log "[OK] Monitor scan progress in the Purview Studio" -Level INFO
         }
         
         "manageclassifications" {
@@ -288,7 +307,7 @@ try {
             } -OperationName "Get Classifications"
             
             Write-Information ""
-            Write-Information "📋 Available Data Classifications"
+            Write-Information "� Available Data Classifications"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             $systemClassifications = @(
@@ -353,7 +372,7 @@ try {
             } -OperationName "Get Data Sources"
             
             Write-Information ""
-            Write-Information "📊 Purview Account Information"
+            Write-Information " Purview Account Information"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Account Name: $($purviewAccount.Name)"
             Write-Information "Location: $($purviewAccount.Location)"
@@ -365,7 +384,7 @@ try {
             
             if ($collections.Count -gt 0) {
                 Write-Information ""
-                Write-Information "📁 Collections ($($collections.Count)):"
+                Write-Information "[FOLDER] Collections ($($collections.Count)):"
                 foreach ($collection in $collections) {
                     Write-Information "• $($collection.name)"
                     if ($collection.description) {
@@ -376,7 +395,7 @@ try {
             
             if ($dataSources.Count -gt 0) {
                 Write-Information ""
-                Write-Information "🗄️  Data Sources ($($dataSources.Count)):"
+                Write-Information "🗄  Data Sources ($($dataSources.Count)):"
                 foreach ($source in $dataSources) {
                     Write-Information "• $($source.name) ($($source.kind))"
                     if ($source.properties.endpoint) {
@@ -399,7 +418,7 @@ try {
                 Remove-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName -Force
             } -OperationName "Delete Purview Account"
             
-            Write-Log "✓ Purview account deleted: $PurviewAccountName" -Level SUCCESS
+            Write-Log "[OK] Purview account deleted: $PurviewAccountName" -Level SUCCESS
         }
     }
 
@@ -424,13 +443,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log "[WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName "Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log "✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log "[OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -459,14 +478,14 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName "Governance Analysis" -Status "Analyzing data governance setup"
     
     $governanceRecommendations = @(
-        "📊 Establish data stewardship roles and responsibilities",
-        "📊 Define data classification and sensitivity policies",
-        "📊 Implement automated scanning schedules for data sources",
-        "📊 Set up lineage tracking for critical data pipelines",
-        "📊 Configure glossary terms for business context",
-        "📊 Establish data quality rules and monitoring",
-        "📊 Create custom classifications for organization-specific data types",
-        "📊 Implement access policies based on data sensitivity"
+        " Establish data stewardship roles and responsibilities",
+        " Define data classification and sensitivity policies",
+        " Implement automated scanning schedules for data sources",
+        " Set up lineage tracking for critical data pipelines",
+        " Configure glossary terms for business context",
+        " Establish data quality rules and monitoring",
+        " Create custom classifications for organization-specific data types",
+        " Implement access policies based on data sensitivity"
     )
 
     # Security assessment
@@ -480,41 +499,41 @@ try {
         # Check managed VNet
         if ($EnableManagedVNet) {
             $securityScore++
-            $securityFindings += "✓ Managed virtual network enabled"
+            $securityFindings += "[OK] Managed virtual network enabled"
         } else {
-            $securityFindings += "⚠️  Managed VNet not enabled - consider for enhanced security"
+            $securityFindings += "[WARN]️  Managed VNet not enabled - consider for enhanced security"
         }
         
         # Check public network access
         if ($NetworkRules.Count -gt 0) {
             $securityScore++
-            $securityFindings += "✓ Network access restrictions configured"
+            $securityFindings += "[OK] Network access restrictions configured"
         } else {
-            $securityFindings += "⚠️  Public network access enabled - consider restricting"
+            $securityFindings += "[WARN]️  Public network access enabled - consider restricting"
         }
         
         # Check monitoring
         if ($EnableMonitoring) {
             $securityScore++
-            $securityFindings += "✓ Monitoring and logging enabled"
+            $securityFindings += "[OK] Monitoring and logging enabled"
         } else {
-            $securityFindings += "⚠️  Monitoring not configured"
+            $securityFindings += "[WARN]️  Monitoring not configured"
         }
         
         # Check data discovery
         if ($EnableDataDiscovery) {
             $securityScore++
-            $securityFindings += "✓ Automated data discovery enabled"
+            $securityFindings += "[OK] Automated data discovery enabled"
         } else {
-            $securityFindings += "⚠️  Automated data discovery not enabled"
+            $securityFindings += "[WARN]️  Automated data discovery not enabled"
         }
         
         # Check lineage tracking
         if ($EnableLineageTracking) {
             $securityScore++
-            $securityFindings += "✓ Data lineage tracking enabled"
+            $securityFindings += "[OK] Data lineage tracking enabled"
         } else {
-            $securityFindings += "⚠️  Data lineage tracking not enabled"
+            $securityFindings += "[WARN]️  Data lineage tracking not enabled"
         }
     }
 
@@ -560,7 +579,7 @@ try {
     Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Information "📊 Purview Account Details:"
+        Write-Information " Purview Account Details:"
         Write-Information "   • Account Name: $PurviewAccountName"
         Write-Information "   • Resource Group: $ResourceGroupName"
         Write-Information "   • Location: $Location"
@@ -570,32 +589,32 @@ try {
         Write-Information "   • Status: $($accountStatus.ProvisioningState)"
         
         Write-Information ""
-        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
+        Write-Information "[LOCK] Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
             Write-Information "   $finding"
         }
         
         Write-Information ""
-        Write-Information "💰 Cost Components:"
+        Write-Information " Cost Components:"
         foreach ($cost in $costComponents.GetEnumerator()) {
             Write-Information "   • $($cost.Key): $($cost.Value)"
         }
     }
     
     Write-Information ""
-    Write-Information "📋 Data Governance Best Practices:"
+    Write-Information "� Data Governance Best Practices:"
     foreach ($recommendation in $governanceRecommendations) {
         Write-Information "   $recommendation"
     }
     
     Write-Information ""
-    Write-Information "🏛️  Supported Compliance Frameworks:"
+    Write-Information "🏛  Supported Compliance Frameworks:"
     foreach ($framework in $complianceFrameworks) {
         Write-Information "   • $framework"
     }
     
     Write-Information ""
-    Write-Information "💡 Next Steps:"
+    Write-Information "� Next Steps:"
     Write-Information "   • Register your data sources using RegisterDataSource action"
     Write-Information "   • Create collections to organize your data assets"
     Write-Information "   • Set up automated scanning schedules"
@@ -604,13 +623,13 @@ try {
     Write-Information "   • Train data stewards on Purview Studio usage"
     Write-Information ""
 
-    Write-Log "✅ Azure Purview data governance operation '$Action' completed successfully!" -Level SUCCESS
+    Write-Log " Azure Purview data governance operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Purview data governance operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Purview data governance operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Purview service availability in your region"
     Write-Information "   • Check subscription quotas and resource limits"
     Write-Information "   • Ensure proper permissions for data governance operations"
@@ -623,3 +642,6 @@ try {
 
 Write-Progress -Activity "Purview Data Governance Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

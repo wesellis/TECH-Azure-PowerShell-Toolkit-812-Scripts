@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Install Visualstudiocode Extension
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,6 +77,8 @@ param(
     [Parameter(Mandatory = $false)] [bool] $WEInstallInsiders = $false,
     [Parameter(Mandatory = $false)] [bool] $WEEmitAllInstalledExtensions = $false
 )
+
+#region Functions
 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -139,21 +146,14 @@ function WE-Import-ExtensionToLocalPath (
     # Process extension name
     elseif (-not [string]::IsNullOrWhiteSpace($extensionName)) {
         Write-WELog " ExtensionName: $extensionName" " INFO"
-        Get-VisualStudioExtension -ExtensionReference $extensionName `
-            -VersionNumber $extensionVersion `
-            -DownloadLocation $downloadLocation `
-            -DownloadDependencies $true `
-            -DownloadPreRelease $downloadPreRelease
-    }
-    # Process extension id
-    else {
-        Write-WELog " ExtensionId: $extensionId" " INFO"
-        Get-VisualStudioExtension -ExtensionReference $extensionId `
-            -VersionNumber $extensionVersion `
-            -DownloadLocation $downloadLocation `
-            -DownloadDependencies $true `
-            -DownloadPreRelease $downloadPreRelease
-    }
+        $params = @{
+            DownloadPreRelease = $downloadPreRelease }
+            DownloadLocation = $downloadLocation
+            ExtensionReference = $extensionId
+            VersionNumber = $extensionVersion
+            DownloadDependencies = $true
+        }
+        Get-VisualStudioExtension @params
 }
 
 
@@ -188,10 +188,13 @@ function WE-Main (
     [Parameter(Mandatory = $false)] [bool] $installInsiders = $false,
     [Parameter(Mandatory = $false)] [bool];  $emitAllInstalledExtensions = $false) {
 
-    Confirm-UserRequest -extensionId $extensionId `
-        -extensionName $extensionName `
-        -extensionVsixPath $extensionVsixPath `
-        -extensionVersion $extensionVersion
+    $params = @{
+        extensionName = $extensionName
+        extensionVersion = $extensionVersion
+        extensionId = $extensionId
+        extensionVsixPath = $extensionVsixPath
+    }
+    Confirm-UserRequest @params
 
    ;  $vsCodeGlobalExtensionsPath = Resolve-VisualStudioCodeBootstrapPath
 
@@ -203,12 +206,15 @@ function WE-Main (
         }
     }
     
-    Import-ExtensionToLocalPath -extensionId $extensionId `
-        -extensionName $extensionName `
-        -extensionVsixPath $extensionVsixPath `
-        -extensionVersion $extensionVersion `
-        -downloadLocation $vsCodeGlobalExtensionsPath `
-        -downloadPreRelease $installInsiders
+    $params = @{
+        downloadPreRelease = $installInsiders
+        extensionVsixPath = $extensionVsixPath
+        extensionId = $extensionId
+        downloadLocation = $vsCodeGlobalExtensionsPath
+        extensionVersion = $extensionVersion
+        extensionName = $extensionName
+    }
+    Import-ExtensionToLocalPath @params
 
     if ($emitAllInstalledExtensions) {
         Write-WELog " All extensions in the bootstrap directory:" " INFO"
@@ -218,14 +224,16 @@ function WE-Main (
 
 try {
     if (-not ((Test-Path variable:global:IsUnderTest) -and $global:IsUnderTest)) {
-        Main -extensionId $WEExtensionId `
-            -extensionName $WEExtensionName `
-            -extensionVsixPath $WEExtensionVsixPath `
-            -extensionVersion $WEExtensionVersion `
-            -visualStudioCodeInstallPath $WEVisualStudioCodeInstallPath `
-            -installInsiders $WEInstallInsiders `
-            -emitAllInstalledExtensions $WEEmitAllInstalledExtensions
-    }
+        $params = @{
+            extensionVsixPath = $WEExtensionVsixPath
+            extensionId = $WEExtensionId
+            emitAllInstalledExtensions = $WEEmitAllInstalledExtensions }
+            visualStudioCodeInstallPath = $WEVisualStudioCodeInstallPath
+            installInsiders = $WEInstallInsiders
+            extensionVersion = $WEExtensionVersion
+            extensionName = $WEExtensionName
+        }
+        Main @params
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
@@ -234,4 +242,5 @@ catch {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

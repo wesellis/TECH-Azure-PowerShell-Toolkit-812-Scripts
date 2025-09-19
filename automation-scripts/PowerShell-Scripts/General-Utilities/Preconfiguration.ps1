@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Preconfiguration
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -60,6 +65,8 @@ param(
     #$WEAVDChildOrganizationUnitNames = @(" Groups" , " SessionHosts" , " Users" )
     [stringp[]] [Parameter(Mandatory=$true)] $WEAVDChildOrganizationUnitNames
 )
+
+#region Functions
 
 [CmdletBinding()]
 Function Set-DomainOrganizationUnits -ErrorAction Stop {
@@ -139,15 +146,21 @@ param(
     #$WEDeploymentScriptOutputs['StorageAccountOUDistinguishedName'] = $WEStorageAccountOUDistinguishedName
 }
 
-Set-DomainOrganizationUnits -ErrorAction Stop `
-    -OUDistinguishedName $WEDomainDistinguishedName `
-    -ParentOU $WEParentOrganizationUnitName `
-    -StorageAccountOUName $WEStorageAccountOrganizationUnitName `
-    -AVDOUName $WEAVDOrganizationUnitName `
-    -AVDChildOUNames $WEAVDChildOrganizationUnitNames
+$params = @{
+    StorageAccountOUName = $WEStorageAccountOrganizationUnitName
+    ParentOU = $WEParentOrganizationUnitName
+    AVDChildOUNames = $WEAVDChildOrganizationUnitNames
+    AVDOUName = $WEAVDOrganizationUnitName
+    ErrorAction = "Stop"
+    OUDistinguishedName = $WEDomainDistinguishedName
+}
+Set-DomainOrganizationUnits @params
 
 
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

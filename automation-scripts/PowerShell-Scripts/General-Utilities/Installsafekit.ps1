@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Installsafekit
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -43,6 +48,8 @@ param(
     [string] $WESkFile,
 	[string] $WEPasswd
 )
+
+#region Functions
 
 [CmdletBinding()]
 function WE-Log {
@@ -77,6 +84,8 @@ $arglist = @(
     " DODESKTOP='0'"
 )
 
+#region Functions
+
 Start-Process msiexec.exe -ArgumentList $arglist -Wait
 Log " Install Azure RM"
 
@@ -110,3 +119,6 @@ Log " end of script"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

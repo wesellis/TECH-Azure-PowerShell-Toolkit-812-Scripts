@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Service Principal Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Active Directory service principals for automation
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$DisplayName,
@@ -21,47 +30,26 @@ param (
     [int]$PasswordValidityMonths = 12
 )
 
+#region Functions
+
 Write-Information "Creating Service Principal: $DisplayName"
 
 try {
     # Create service principal with password
-    $ServicePrincipal = New-AzADServicePrincipal -ErrorAction Stop `
-        -DisplayName $DisplayName `
-        -Role $Role `
-        -Scope $Scope
-    
-    Write-Information "✅ Service Principal created successfully:"
-    Write-Information "  Display Name: $($ServicePrincipal.DisplayName)"
-    Write-Information "  Application ID: $($ServicePrincipal.ApplicationId)"
-    Write-Information "  Object ID: $($ServicePrincipal.Id)"
-    Write-Information "  Service Principal Names: $($ServicePrincipal.ServicePrincipalNames -join ', ')"
-    
-    # Get the secret
-    $Secret = $ServicePrincipal.Secret
-    if ($Secret) {
-        Write-Information "`n🔑 Credentials (SAVE THESE SECURELY):"
-        Write-Information "  Application (Client) ID: $($ServicePrincipal.ApplicationId)"
-        Write-Information "  Client Secret: $($Secret)"
-        Write-Information "  Tenant ID: $((Get-AzContext).Tenant.Id)"
+    $params = @{
+        DisplayName = $DisplayName
+        Information = "  Connect-AzAccount"
+        TenantId = $((Get-AzContext).Tenant.Id)
+        ApplicationId = $($ServicePrincipal.ApplicationId)
+        CertificateThumbprint = "[thumbprint]"
+        Scope = $Scope  Write-Information " Service Principal created successfully:" Write-Information "  Display Name: $($ServicePrincipal.DisplayName)" Write-Information "  Application ID: $($ServicePrincipal.ApplicationId)" Write-Information "  Object ID: $($ServicePrincipal.Id)" Write-Information "  Service Principal Names: $($ServicePrincipal.ServicePrincipalNames
+        ErrorAction = "Stop"
+        Role = $Role
     }
-    
-    Write-Information "`nRole Assignment:"
-    Write-Information "  Role: $Role"
-    if ($Scope) {
-        Write-Information "  Scope: $Scope"
-    } else {
-        Write-Information "  Scope: Subscription level"
-    }
-    
-    Write-Information "`n⚠️ SECURITY NOTES:"
-    Write-Information "• Store credentials securely (Key Vault recommended)"
-    Write-Information "• Use certificate authentication for production"
-    Write-Information "• Implement credential rotation"
-    Write-Information "• Follow principle of least privilege"
-    
-    Write-Information "`nUsage in scripts:"
-    Write-Information "  Connect-AzAccount -ServicePrincipal -ApplicationId '$($ServicePrincipal.ApplicationId)' -TenantId '$((Get-AzContext).Tenant.Id)' -CertificateThumbprint '[thumbprint]'"
-    
+    $ServicePrincipal @params
 } catch {
     Write-Error "Failed to create service principal: $($_.Exception.Message)"
 }
+
+
+#endregion

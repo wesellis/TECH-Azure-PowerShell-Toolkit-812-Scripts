@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Digitaltwins Management Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -151,15 +157,17 @@ param(
     [switch]$WEAssignRoles
 )
 
+#region Functions
+
 
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.DigitalTwins -Force -ErrorAction Stop
     Import-Module Az.EventHub -Force -ErrorAction Stop
-    Write-WELog " ✅ Successfully imported required Azure modules" " INFO" -ForegroundColor Green
+    Write-WELog "  Successfully imported required Azure modules" " INFO" -ForegroundColor Green
 } catch {
-    Write-Error " ❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error "  Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -672,4 +680,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

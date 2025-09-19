@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Storage Account Usage and Capacity Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Storage Account usage, capacity, and performance metrics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$StorageAccountName
 )
+
+#region Functions
 
 # Get storage account details
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
@@ -24,3 +35,6 @@ Write-Information "Resource Group: $($StorageAccount.ResourceGroupName)"
 Write-Information "Location: $($StorageAccount.Location)"
 Write-Information "SKU: $($StorageAccount.Sku.Name)"
 Write-Information "Usage: $($Usage.CurrentValue) / $($Usage.Limit)"
+
+
+#endregion

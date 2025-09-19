@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Remove Oldresources
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -43,17 +49,18 @@ $adfParams = @{
 }
 
 ; 
-$triggers = Get-AzDataFactoryV2Trigger -ErrorAction Stop @adfParams -ErrorAction SilentlyContinue `
+$triggers -ErrorAction "SilentlyContinue"
 | Where-Object { $_.Name -match '^msexports(_(setup|daily|monthly|extract|FileAdded))?$' }
 $WEDeploymentScriptOutputs["stopTriggers" ] = $triggers | Stop-AzDataFactoryV2Trigger -Force -ErrorAction SilentlyContinue
 $WEDeploymentScriptOutputs[" deleteTriggers" ] = $triggers | Remove-AzDataFactoryV2Trigger -Force -ErrorAction SilentlyContinue
 
 
-$WEDeploymentScriptOutputs[" pipelines" ] = Get-AzDataFactoryV2Pipeline -ErrorAction Stop @adfParams -ErrorAction SilentlyContinue `
-| Where-Object { $_.Name -match '^(msexports_(backfill|extract|fill|get|run|setup|transform)|config_(BackfillData|ExportData|RunBackfill|RunExports))$' } `
+$WEDeploymentScriptOutputs[" -ErrorAction "SilentlyContinue"
+| -match "^(msexports_(backfill|extract|fill|get|run|setup|transform)|config_(BackfillData|ExportData|RunBackfill|RunExports))$' }" -Object "{ $_.Name"
 | Remove-AzDataFactoryV2Pipeline -Force -ErrorAction SilentlyContinue
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

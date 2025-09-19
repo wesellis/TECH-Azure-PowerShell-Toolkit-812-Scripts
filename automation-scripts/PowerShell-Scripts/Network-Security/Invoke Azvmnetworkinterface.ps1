@@ -1,4 +1,6 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
 .SYNOPSIS
     Invoke Azvmnetworkinterface
 
@@ -7,7 +9,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +27,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -59,4 +61,4 @@ function WE-Invoke-AzVMNetworkInterface {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+

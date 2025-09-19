@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Run Templateanalyzer
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -55,6 +60,8 @@ param(
     [string] $mainParametersFilename = $WEENV:GEN_PARAMETERS_FILENAME,
     [string] $templateAnalyzerOutputFilePath = $WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH
 )
+
+#region Functions
 
 $templateAnalyzerFolderPath = " $ttkFolder\templateAnalyzer"
 New-Item -ItemType Directory -Path $templateAnalyzerFolderPath -Force
@@ -155,3 +162,6 @@ exit [int]!$passed
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Npm Global
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -46,6 +51,8 @@ param(
     [Parameter(Mandatory=$false)]
     [bool]$addToPath=$true
 )
+
+#region Functions
 
 try {
    ;  $packageArray = $packages.split(" ," )
@@ -72,4 +79,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

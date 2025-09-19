@@ -1,6 +1,23 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # AI-Assistant.ps1
 # Natural Language AI Assistant for Azure PowerShell Scripts
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 3.0
 
 param(
@@ -12,6 +29,8 @@ param(
     [switch]$GenerateScript,
     [string]$Model = "gpt-4"
 )
+
+#region Functions
 
 $Global:AssistantConfig = @{
     ScriptsPath = Join-Path $PSScriptRoot "automation-scripts"
@@ -303,7 +322,7 @@ function Invoke-AIAssistant {
     # Parse intent
     $intent = $nlp.ParseIntent($Query)
     
-    Write-Host "`n📊 Analysis Results:" -ForegroundColor Yellow
+    Write-Host "`n Analysis Results:" -ForegroundColor Yellow
     Write-Host "Intent: $($intent.Intent)" -ForegroundColor White
     Write-Host "Resource: $($intent.Resource)" -ForegroundColor White
     Write-Host "Confidence: $([Math]::Round($intent.Confidence * 100))%" -ForegroundColor White
@@ -316,24 +335,24 @@ function Invoke-AIAssistant {
     }
     
     # Find relevant scripts
-    Write-Host "`n🔍 Relevant Scripts:" -ForegroundColor Yellow
+    Write-Host "`n Relevant Scripts:" -ForegroundColor Yellow
     $scripts = $recommender.FindRelevantScripts($Query)
     
     if ($scripts.Count -gt 0) {
         foreach ($script in $scripts) {
-            Write-Host "📄 $($script.Name)" -ForegroundColor Green
+            Write-Host "[FILE] $($script.Name)" -ForegroundColor Green
             Write-Host "   $($script.Description)" -ForegroundColor Gray
             Write-Host "   Category: $($script.Category) | Relevance: $($script.Relevance)" -ForegroundColor DarkGray
         }
         
-        Write-Host "`n💡 Suggested Command:" -ForegroundColor Cyan
+        Write-Host "`n� Suggested Command:" -ForegroundColor Cyan
         $suggestedScript = $scripts[0]
         Write-Host "& '$($suggestedScript.Path)'" -ForegroundColor White
     }
     
     # Generate script if requested
     if ($GenerateScript -or $intent.Confidence -gt 0.7) {
-        Write-Host "`n📝 Generated Script:" -ForegroundColor Yellow
+        Write-Host "`n Generated Script:" -ForegroundColor Yellow
         $generatedScript = $nlp.GenerateScript($intent)
         Write-Host $generatedScript -ForegroundColor White
         
@@ -341,12 +360,12 @@ function Invoke-AIAssistant {
         if ($intent.Confidence -gt 0.8) {
             $scriptPath = Join-Path $Global:AssistantConfig.CachePath "generated_$($intent.Action)_$(Get-Date -Format 'yyyyMMdd_HHmmss').ps1"
             $generatedScript | Out-File $scriptPath -Encoding UTF8
-            Write-Host "`n✅ Script saved to: $scriptPath" -ForegroundColor Green
+            Write-Host "`n Script saved to: $scriptPath" -ForegroundColor Green
         }
     }
     
     # Provide recommendations
-    Write-Host "`n🎯 Recommendations:" -ForegroundColor Cyan
+    Write-Host "`n Recommendations:" -ForegroundColor Cyan
     switch ($intent.Intent) {
         "create" {
             Write-Host "• Ensure resource group exists before creating resources" -ForegroundColor White
@@ -354,7 +373,7 @@ function Invoke-AIAssistant {
             Write-Host "• Consider using ARM templates for repeatability" -ForegroundColor White
         }
         "delete" {
-            Write-Host "• ⚠️ Verify resource dependencies before deletion" -ForegroundColor Yellow
+            Write-Host "• [WARN] Verify resource dependencies before deletion" -ForegroundColor Yellow
             Write-Host "• Consider backing up data first" -ForegroundColor White
             Write-Host "• Use -WhatIf parameter to preview changes" -ForegroundColor White
         }
@@ -394,16 +413,16 @@ function Start-InteractiveAssistant {
     $context.LoadHistory()
     
     while ($true) {
-        Write-Host "`n💬 " -NoNewline -ForegroundColor Cyan
+        Write-Host "`n� " -NoNewline -ForegroundColor Cyan
         $userInput = Read-Host "How can I help you with Azure"
         
         if ($userInput -eq 'exit' -or $userInput -eq 'quit') {
-            Write-Host "`n👋 Goodbye!" -ForegroundColor Green
+            Write-Host "`n� Goodbye!" -ForegroundColor Green
             break
         }
         
         if ($userInput -eq 'history') {
-            Write-Host "`n📜 Conversation History:" -ForegroundColor Yellow
+            Write-Host "`n� Conversation History:" -ForegroundColor Yellow
             $context.History | ForEach-Object {
                 Write-Host "$($_.Role): $($_.Content)" -ForegroundColor Gray
             }
@@ -437,11 +456,11 @@ function Start-VoiceInterface {
     $speechGrammar = New-Object System.Speech.Recognition.Grammar($grammar)
     $speech.LoadGrammar($speechGrammar)
     
-    Write-Host "🎤 Voice interface active. Say 'Azure' followed by your command..." -ForegroundColor Cyan
+    Write-Host "� Voice interface active. Say 'Azure' followed by your command..." -ForegroundColor Cyan
     
     Register-ObjectEvent -InputObject $speech -EventName SpeechRecognized -Action {
         $result = $event.SourceEventArgs.Result.Text
-        Write-Host "`n🎤 Heard: $result" -ForegroundColor Yellow
+        Write-Host "`n� Heard: $result" -ForegroundColor Yellow
         Invoke-AIAssistant -Query $result
     }
     
@@ -464,3 +483,5 @@ if ($Interactive) {
     # Default to interactive mode
     Start-InteractiveAssistant
 }
+
+#endregion

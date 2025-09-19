@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Cosmosdb Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -89,6 +95,8 @@ param(
     [bool]$WEEnableMultipleWriteLocations = $false
 )
 
+#region Functions
+
 Write-WELog " Provisioning Cosmos DB Account: $WEAccountName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Primary Location: $WELocation" " INFO"
@@ -96,13 +104,15 @@ Write-WELog " Consistency Level: $WEDefaultConsistencyLevel" " INFO"
 Write-WELog " Account Kind: $WEKind" " INFO"
 
 ; 
-$WECosmosDB = New-AzCosmosDBAccount -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAccountName `
-    -Location $WELocation `
-    -DefaultConsistencyLevel $WEDefaultConsistencyLevel `
-    -Kind $WEKind `
-    -EnableMultipleWriteLocations:$WEEnableMultipleWriteLocations
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Location = $WELocation
+    Kind = $WEKind
+    ErrorAction = "Stop"
+    DefaultConsistencyLevel = $WEDefaultConsistencyLevel
+    Name = $WEAccountName
+}
+$WECosmosDB @params
 
 Write-WELog " Cosmos DB Account $WEAccountName provisioned successfully" " INFO"
 Write-WELog " Document Endpoint: $($WECosmosDB.DocumentEndpoint)" " INFO"
@@ -127,3 +137,6 @@ Write-WELog " `nCosmos DB provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Resource Orphan Finder Tool
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Resource Orphan Finder Tool
 # Professional Azure utility script for identifying unused and orphaned resources
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Advanced resource cleanup and cost optimization
 
 param(
@@ -33,8 +50,10 @@ param(
     [switch]$DryRun
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure Resource Orphan Finder Tool" -Version "1.0" -Description "Identify and cleanup unused Azure resources for cost optimization"
@@ -53,7 +72,7 @@ try {
     if ($SubscriptionId) {
         Write-ProgressStep -StepNumber 2 -TotalSteps 8 -StepName "Subscription Context" -Status "Setting subscription context"
         Set-AzContext -SubscriptionId $SubscriptionId
-        Write-Log "✓ Subscription context set to: $SubscriptionId" -Level SUCCESS
+        Write-Log "[OK] Subscription context set to: $SubscriptionId" -Level SUCCESS
     }
 
     # Get all resources to analyze
@@ -186,7 +205,7 @@ try {
     
     if ($GenerateReport -or $orphanedResources.Count -gt 0) {
         $orphanedResources | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
-        Write-Log "✓ Orphaned resources report saved to: $OutputPath" -Level SUCCESS
+        Write-Log "[OK] Orphaned resources report saved to: $OutputPath" -Level SUCCESS
     }
 
     # Remove orphans if requested and explicitly disabled dry run mode  
@@ -215,9 +234,9 @@ try {
                         Remove-AzNetworkSecurityGroup -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
                     }
                 }
-                Write-Log "✓ Removed $($resource.ResourceType): $($resource.ResourceName)" -Level SUCCESS
+                Write-Log "[OK] Removed $($resource.ResourceType): $($resource.ResourceName)" -Level SUCCESS
             } catch {
-                Write-Log "❌ Failed to remove $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
+                Write-Log " Failed to remove $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
             }
         }
     }
@@ -228,7 +247,7 @@ try {
     Write-Information "                              ORPHANED RESOURCES ANALYSIS COMPLETE"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "📊 Orphaned Resources Found:"
+    Write-Information " Orphaned Resources Found:"
     
     $resourceTypeCounts = $orphanedResources | Group-Object ResourceType
     foreach ($type in $resourceTypeCounts) {
@@ -236,27 +255,29 @@ try {
     }
     
     Write-Information ""
-    Write-Information "💰 Cost Analysis:"
+    Write-Information " Cost Analysis:"
     Write-Information "   • Total Monthly Savings Potential: $${totalSavings:F2}"
     Write-Information "   • Annual Savings Potential: $${($totalSavings * 12):F2}"
     
     if ($isDryRunMode) {
         Write-Information ""
-        Write-Information "🔒 DRY RUN MODE:"
+        Write-Information "[LOCK] DRY RUN MODE:"
         Write-Information "   • No resources were deleted"
         Write-Information "   • Use -DryRun:`$false -RemoveOrphans to actually delete"
     }
     
     Write-Information ""
-    Write-Information "📋 Report Location: $OutputPath"
+    Write-Information "� Report Location: $OutputPath"
     Write-Information ""
 
-    Write-Log "✅ Orphaned resources analysis completed successfully!" -Level SUCCESS
+    Write-Log " Orphaned resources analysis completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Orphaned resources analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Orphaned resources analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "Orphaned Resources Analysis" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Machine Learning Workspace Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Machine Learning workspaces for AI and ML development
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$WorkspaceName,
@@ -17,6 +26,8 @@ param (
     [string]$ContainerRegistryName,
     [string]$Sku = "Basic"
 )
+
+#region Functions
 
 Write-Information "Provisioning ML Workspace: $WorkspaceName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -31,14 +42,15 @@ if ($StorageAccountName) {
     $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
     if (-not $StorageAccount) {
         Write-Information "Creating Storage Account: $StorageAccountName"
-        $StorageAccount = New-AzStorageAccount -ErrorAction Stop `
-            -ResourceGroupName $ResourceGroupName `
-            -Name $StorageAccountName `
-            -Location $Location `
-            -SkuName "Standard_LRS" `
-            -Kind "StorageV2"
-    }
-    Write-Information "Storage Account: $($StorageAccount.StorageAccountName)"
+        $params = @{
+            ResourceGroupName = $ResourceGroupName
+            SkuName = "Standard_LRS"
+            Location = $Location
+            Kind = "StorageV2" } Write-Information "Storage Account: $($StorageAccount.StorageAccountName)"
+            ErrorAction = "Stop"
+            Name = $StorageAccountName
+        }
+        $StorageAccount @params
 }
 
 # Key Vault
@@ -46,13 +58,14 @@ if ($KeyVaultName) {
     $KeyVault = Get-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $KeyVaultName -ErrorAction SilentlyContinue
     if (-not $KeyVault) {
         Write-Information "Creating Key Vault: $KeyVaultName"
-        $KeyVault = New-AzKeyVault -ErrorAction Stop `
-            -ResourceGroupName $ResourceGroupName `
-            -VaultName $KeyVaultName `
-            -Location $Location `
-            -Sku "Standard"
-    }
-    Write-Information "Key Vault: $($KeyVault.VaultName)"
+        $params = @{
+            Sku = "Standard" } Write-Information "Key Vault: $($KeyVault.VaultName)"
+            ErrorAction = "Stop"
+            VaultName = $KeyVaultName
+            ResourceGroupName = $ResourceGroupName
+            Location = $Location
+        }
+        $KeyVault @params
 }
 
 # Application Insights
@@ -60,13 +73,14 @@ if ($ApplicationInsightsName) {
     $AppInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $ApplicationInsightsName -ErrorAction SilentlyContinue
     if (-not $AppInsights) {
         Write-Information "Creating Application Insights: $ApplicationInsightsName"
-        $AppInsights = New-AzApplicationInsights -ErrorAction Stop `
-            -ResourceGroupName $ResourceGroupName `
-            -Name $ApplicationInsightsName `
-            -Location $Location `
-            -Kind "web"
-    }
-    Write-Information "Application Insights: $($AppInsights.Name)"
+        $params = @{
+            ErrorAction = "Stop"
+            Kind = "web" } Write-Information "Application Insights: $($AppInsights.Name)"
+            ResourceGroupName = $ResourceGroupName
+            Name = $ApplicationInsightsName
+            Location = $Location
+        }
+        $AppInsights @params
 }
 
 # Container Registry (optional)
@@ -74,14 +88,15 @@ if ($ContainerRegistryName) {
     $ContainerRegistry = Get-AzContainerRegistry -ResourceGroupName $ResourceGroupName -Name $ContainerRegistryName -ErrorAction SilentlyContinue
     if (-not $ContainerRegistry) {
         Write-Information "Creating Container Registry: $ContainerRegistryName"
-        $ContainerRegistry = New-AzContainerRegistry -ErrorAction Stop `
-            -ResourceGroupName $ResourceGroupName `
-            -Name $ContainerRegistryName `
-            -Location $Location `
-            -Sku "Basic" `
-            -EnableAdminUser
-    }
-    Write-Information "Container Registry: $($ContainerRegistry.Name)"
+        $params = @{
+            ResourceGroupName = $ResourceGroupName
+            Sku = "Basic"
+            Location = $Location
+            ErrorAction = "Stop"
+            EnableAdminUser = "} Write-Information "Container Registry: $($ContainerRegistry.Name)"
+            Name = $ContainerRegistryName
+        }
+        $ContainerRegistry @params
 }
 
 # Create the ML Workspace
@@ -139,3 +154,6 @@ Write-Information "  • Model management and versioning"
 Write-Information "  • Real-time and batch inference endpoints"
 
 Write-Information "`nML Workspace provisioning completed at $(Get-Date)"
+
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Security Center Compliance Scanner
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Security Center Compliance Scanner
 # Professional security compliance assessment tool
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Comprehensive security posture analysis
 
 param(
@@ -22,8 +39,10 @@ param(
     [string]$OutputPath = ".\security-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName "Azure Security Center Compliance Scanner" -Version "1.0" -Description "Comprehensive security compliance assessment and reporting"
 
@@ -86,7 +105,7 @@ try {
     
     if ($ExportReport) {
         $complianceReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-        Write-Log "✓ Compliance report exported to: $OutputPath" -Level SUCCESS
+        Write-Log "[OK] Compliance report exported to: $OutputPath" -Level SUCCESS
     }
 
     Write-ProgressStep -StepNumber 5 -TotalSteps 5 -StepName "Summary" -Status "Displaying results"
@@ -97,12 +116,12 @@ try {
     Write-Information "                              SECURITY COMPLIANCE REPORT"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "🛡️ Security Score: $($complianceReport.SecurityScore.SecureScorePercentage)%"
-    Write-Information "📊 Compliance Rate: $($complianceReport.ComplianceRate)%"
-    Write-Information "❌ Failed Assessments: $($complianceReport.FailedAssessments)/$($complianceReport.TotalAssessments)"
+    Write-Information " Security Score: $($complianceReport.SecurityScore.SecureScorePercentage)%"
+    Write-Information " Compliance Rate: $($complianceReport.ComplianceRate)%"
+    Write-Information " Failed Assessments: $($complianceReport.FailedAssessments)/$($complianceReport.TotalAssessments)"
     
     Write-Information ""
-    Write-Information "🚨 High Priority Issues:"
+    Write-Information "� High Priority Issues:"
     $highPriorityIssues = $complianceReport.Assessments | Where-Object { $_.Status -eq "Unhealthy" -and $_.Severity -eq "High" }
     if ($highPriorityIssues.Count -gt 0) {
         $highPriorityIssues | ForEach-Object {
@@ -114,11 +133,13 @@ try {
     
     Write-Information ""
 
-    Write-Log "✅ Security compliance scan completed successfully!" -Level SUCCESS
+    Write-Log " Security compliance scan completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Security compliance scan failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Security compliance scan failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "Security Compliance Scan" -Completed
+
+#endregion

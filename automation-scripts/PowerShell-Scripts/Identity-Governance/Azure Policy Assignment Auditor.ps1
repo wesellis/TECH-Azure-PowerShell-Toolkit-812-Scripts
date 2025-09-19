@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Policy Assignment Auditor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -65,7 +71,9 @@ param(
     [string]$WEOutputPath = " .\policy-audit-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Policy Assignment Auditor" -Version " 1.0" -Description " Audit policy compliance and assignments"
 
 try {
@@ -99,7 +107,7 @@ try {
 
     if ($WEExportReport) {
         $complianceReport | Export-Csv -Path $WEOutputPath -NoTypeInformation
-        Write-Log " ✓ Policy audit report exported to: $WEOutputPath" -Level SUCCESS
+        Write-Log " [OK] Policy audit report exported to: $WEOutputPath" -Level SUCCESS
     }
 
     Write-WELog " Policy Compliance Summary:" " INFO" -ForegroundColor Cyan
@@ -109,7 +117,7 @@ try {
     Write-WELog " Average Compliance Rate: $([math]::Round($avgCompliance, 2))%" " INFO" -ForegroundColor Green
 
 } catch {
-    Write-Log " ❌ Policy audit failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Policy audit failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -117,4 +125,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

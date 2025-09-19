@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Configurespse
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -264,30 +269,29 @@ param(
                 # $icmpRuleName = " File and Printer Sharing (Echo Request - ICMPv4-In)"
                 # $icmpFirewallRule = Get-NetFirewallRule -DisplayName $icmpRuleName -ErrorAction SilentlyContinue
                 # if ($null -eq $icmpFirewallRule) {
-                #     New-NetFirewallRule -Name Allow_Ping -DisplayName $icmpRuleName `
-                #         -Description " Allow ICMPv4 ping" `
-                #         -Protocol ICMPv4 `
-                #         -IcmpType 8 `
-                #         -Enabled True `
-                #         -Profile Any `
-                #         -Action Allow
-                # }
-                # Enable-NetFirewallRule -DisplayName $icmpRuleName
-                Enable-NetFirewallRule -displayName " File and Printer Sharing (Echo Request - ICMPv4-In)"
+                $params = @{
+                    DisplayName = " File and Printer Sharing (Echo Request"
+                    Protocol = "ICMPv4 #"
+                    Name = "Allow_Ping"
+                    Description = " Allow ICMPv4 ping" #"
+                    IcmpType = "8 #"
+                    Enabled = "True #"
+                    Profile = "Any #"
+                    Action = "Allow # } # Enable-NetFirewallRule"
+                }
+                # @params
 
                 $spRuleName = " SharePoint Distributed Cache"
                 $firewallRule = Get-NetFirewallRule -DisplayName $spRuleName -ErrorAction SilentlyContinue
                 if ($null -eq $firewallRule) {
-                    New-NetFirewallRule -Name " SPDistCache" `
-                        -DisplayName $spRuleName `
-                        -Protocol TCP `
-                        -LocalPort 22233-22236 `
-                        -Group " SharePoint"
-                }                
-                Enable-NetFirewallRule -DisplayName $spRuleName
-            }
-            GetScript  = { }
-        }
+                    $params = @{
+                        DisplayName = $spRuleName } GetScript  = { } }
+                        Protocol = "TCP"
+                        Name = " SPDistCache"
+                        LocalPort = "22233-22236"
+                        Group = " SharePoint" } Enable-NetFirewallRule"
+                    }
+                    New-NetFirewallRule @params
 
         xRemoteFile DownloadLDAPCP {
             DestinationPath = $WELDAPCPFileFullPath
@@ -1302,30 +1306,18 @@ param(
                 $spCert = Import-SPCertificate -Path " $setupPath\$sharePointSitesAuthority.cer" -Exportable -Store EndEntity
 
                 Write-Verbose -Verbose -Message " Extending web application to HTTPS zone using certificate 'CN=$sharePointSitesAuthority.$domainFQDN'..."
-                Set-SPWebApplication -Identity " http://$sharePointSitesAuthority" -Zone Intranet -Port 443 -Certificate $spCert `
-                    -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url " https://$sharePointSitesAuthority.$domainFQDN"
-                
-                Write-Verbose -Verbose -Message " Finished."
-            }
-            GetScript            = { }
-            TestScript           = 
-            {
-                $domainFQDN = $using:DomainFQDN
-                $domainNetbiosName = $using:DomainNetbiosName
-                $sharePointSitesAuthority = $using:SharePointSitesAuthority
-                
-                #;  $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq " CN=$sharePointSitesAuthority.$domainFQDN, O=$domainNetbiosName" }
-               ;  $cert = Get-SPCertificate -Identity " $sharePointSitesAuthority Certificate" -ErrorAction SilentlyContinue
-                if ($null -eq $cert) {
-                    return $false   # Run SetScript
+                $params = @{
+                    Certificate = $spCert
+                    ErrorAction = "SilentlyContinue if ($null"
+                    Url = " https://$sharePointSitesAuthority.$domainFQDN"  Write-Verbose"
+                    Path = "cert:\localMachine\my | Where-Object{ $_.Subject"
+                    Port = "443"
+                    eq = $cert) { return $false   # Run SetScript } else { return $true    # Certificate is already created } } DependsOn            = " [Script]UpdateGPOToTrustRootCACert" , " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication" PsDscRunAsCredential = $WEDomainAdminCredsQualified }
+                    Identity = " $sharePointSitesAuthority Certificate"
+                    Message = " Finished." } GetScript            = { } TestScript           = { $domainFQDN = $using:DomainFQDN $domainNetbiosName = $using:DomainNetbiosName $sharePointSitesAuthority = $using:SharePointSitesAuthority  #;  $cert = Get-ChildItem"
+                    Zone = "Intranet"
                 }
-                else {
-                    return $true    # Certificate is already created
-                }
-            }
-            DependsOn            = " [Script]UpdateGPOToTrustRootCACert" , " [SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
-        }
+                Set-SPWebApplication @params
 
         SPCacheAccounts SetCacheAccounts {
             WebAppUrl            = " http://$WESharePointSitesAuthority/"
@@ -1495,10 +1487,14 @@ param(
                     $claimsProvider = Get-SPClaimProvider -Identity $spTrustName -ErrorAction SilentlyContinue
                     if ($null -eq $claimsProvider) {
                         $claimsProviderName = " UPA Claim Provider"
-                        $claimsProvider = New-SPClaimProvider -AssemblyName " Microsoft.SharePoint, Version=16.0.0.0, Culture=neutral, publicKeyToken=71e9bce111e9429c" -Default:$false `
-                            -DisplayName $claimsProviderName -Description $claimsProviderName -Type " Microsoft.SharePoint.Administration.Claims.SPTrustedBackedByUPAClaimProvider" `
-                            -TrustedTokenIssuer $trust
-                    }
+                        $params = @{
+                            TrustedTokenIssuer = $trust }
+                            AssemblyName = " Microsoft.SharePoint, Version=16.0.0.0, Culture=neutral, publicKeyToken=71e9bce111e9429c"
+                            Type = " Microsoft.SharePoint.Administration.Claims.SPTrustedBackedByUPAClaimProvider"
+                            Description = $claimsProviderName
+                            DisplayName = $claimsProviderName
+                        }
+                        $claimsProvider @params
 
                     # Running this set below would set SPTrustedBackedByUPAClaimProvider as the active claims provider for this trust
                     # But it wouldn't work since properties " SPS-ClaimProviderID" and " SPS-ClaimProviderType" of trusted profiles are not set
@@ -2093,6 +2089,8 @@ $WESharePointBits = @(
     }
 )
 
+#region Functions
+
 $outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSPSE.0\ConfigureSPVM"
 ConfigureSPVM -DomainAdminCreds $WEDomainAdminCreds -SPSetupCreds $WESPSetupCreds -SPFarmCreds $WESPFarmCreds -SPSvcCreds $WESPSvcCreds -SPAppPoolCreds $WESPAppPoolCreds -SPADDirSyncCreds $WESPADDirSyncCreds -SPPassphraseCreds $WESPPassphraseCreds -SPSuperUserCreds $WESPSuperUserCreds -SPSuperReaderCreds $WESPSuperReaderCreds -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DCServerName $WEDCServerName -SQLServerName $WESQLServerName -SQLAlias $WESQLAlias -SharePointVersion $WESharePointVersion -SharePointSitesAuthority $WESharePointSitesAuthority -SharePointCentralAdminPort $WESharePointCentralAdminPort -EnableAnalysis $WEEnableAnalysis -SharePointBits $WESharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
@@ -2104,4 +2102,5 @@ C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

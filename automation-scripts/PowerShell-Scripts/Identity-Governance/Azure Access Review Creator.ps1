@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Access Review Creator
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,6 +101,8 @@ param(
     [array]$WEReviewerEmails = @()
 )
 
+#region Functions
+
 Write-WELog " Creating Access Review: $WEReviewName" " INFO"
 
 try {
@@ -108,7 +115,7 @@ try {
     # Connect to Microsoft Graph
     Connect-MgGraph -Scopes " AccessReview.ReadWrite.All"
     
-    Write-WELog " ✅ Connected to Microsoft Graph" " INFO"
+    Write-WELog "  Connected to Microsoft Graph" " INFO"
     
     # Get group information
     $WEGroup = Get-MgGroup -GroupId $WEGroupId
@@ -184,7 +191,7 @@ try {
         }
     }
     
-    Write-WELog " `n⚠️ IMPORTANT NOTES:" " INFO"
+    Write-WELog " `n[WARN]️ IMPORTANT NOTES:" " INFO"
     Write-WELog " • Access reviews require Azure AD Premium P2" " INFO"
     Write-WELog " • Reviewers will receive email notifications" " INFO"
     Write-WELog " • Configure auto-apply based on your needs" " INFO"
@@ -218,7 +225,7 @@ try {
     Write-WELog " 4. Configure scope, reviewers, and settings" " INFO"
     Write-WELog " 5. Start the review" " INFO"
     
-    Write-WELog " `n✅ Access review template prepared" " INFO"
+    Write-WELog " `n Access review template prepared" " INFO"
     Write-WELog " 🚨 Use Azure Portal to create the actual review for safety" " INFO"
     Write-WELog " 📧 Reviewers will be notified via email when review starts" " INFO"
     
@@ -231,4 +238,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

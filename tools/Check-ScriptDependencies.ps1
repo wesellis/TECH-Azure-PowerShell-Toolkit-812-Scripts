@@ -1,6 +1,22 @@
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Check-ScriptDependencies.ps1
 # Analyzes and validates script dependencies across the repository
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 2.0
 
 param(
@@ -15,6 +31,8 @@ param(
     [switch]$CheckVersions,
     [switch]$ValidateAzureModules
 )
+
+#region Functions
 
 class DependencyAnalyzer {
     [hashtable]$Dependencies = @{}
@@ -182,12 +200,12 @@ Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
         $report += "`n### Installed Modules`n"
         foreach ($module in $installStatus.Installed) {
             $version = $installStatus.VersionInfo[$module]
-            $report += "- ✅ $module (v$version)`n"
+            $report += "-  $module (v$version)`n"
         }
         
         $report += "`n### Missing Modules`n"
         foreach ($module in $installStatus.Missing) {
-            $report += "- ❌ $module`n"
+            $report += "-  $module`n"
         }
         
         if ($installStatus.Missing.Count -gt 0) {
@@ -240,9 +258,9 @@ if ($InstallMissing -and $installStatus.Missing.Count -gt 0) {
         try {
             Write-Host "Installing $module..." -NoNewline
             Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser -ErrorAction Stop
-            Write-Host " ✅" -ForegroundColor Green
+            Write-Host " " -ForegroundColor Green
         } catch {
-            Write-Host " ❌ Failed: $_" -ForegroundColor Red
+            Write-Host "  Failed: $_" -ForegroundColor Red
         }
     }
 }
@@ -274,3 +292,5 @@ if ($ValidateAzureModules) {
 }
 
 Write-Host "`nDependency analysis complete!" -ForegroundColor Cyan
+
+#endregion

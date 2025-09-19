@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Nsg Rule Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -121,21 +127,25 @@ param(
     [int]$WEPriority
 )
 
+#region Functions
+
 Write-WELog " Adding security rule to NSG: $WENsgName" " INFO"
 ; 
 $WENsg = Get-AzNetworkSecurityGroup -ResourceGroupName $WEResourceGroupName -Name $WENsgName
 
-Add-AzNetworkSecurityRuleConfig `
-    -NetworkSecurityGroup $WENsg `
-    -Name $WERuleName `
-    -Protocol $WEProtocol `
-    -SourcePortRange $WESourcePortRange `
-    -DestinationPortRange $WEDestinationPortRange `
-    -SourceAddressPrefix " *" `
-    -DestinationAddressPrefix " *" `
-    -Access $WEAccess `
-    -Priority $WEPriority `
-    -Direction Inbound
+$params = @{
+    DestinationAddressPrefix = " *"
+    Direction = "Inbound"
+    Protocol = $WEProtocol
+    Name = $WERuleName
+    Priority = $WEPriority
+    DestinationPortRange = $WEDestinationPortRange
+    SourcePortRange = $WESourcePortRange
+    Access = $WEAccess
+    NetworkSecurityGroup = $WENsg
+    SourceAddressPrefix = " *"
+}
+Add-AzNetworkSecurityRuleConfig @params
 
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $WENsg
 Write-WELog " Security rule '$WERuleName' added successfully to NSG: $WENsgName" " INFO"
@@ -147,3 +157,6 @@ Write-WELog " Security rule '$WERuleName' added successfully to NSG: $WENsgName"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

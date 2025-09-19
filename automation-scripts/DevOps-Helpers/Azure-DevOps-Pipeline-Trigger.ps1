@@ -1,6 +1,22 @@
-﻿# Azure DevOps Pipeline Trigger
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure DevOps Pipeline Trigger
 # Trigger Azure DevOps build and release pipelines
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -20,7 +36,9 @@ param(
     [string]$SourceBranch = "main"
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure DevOps Pipeline Trigger" -Version "1.0" -Description "Trigger DevOps pipelines remotely"
 
 try {
@@ -42,11 +60,14 @@ try {
 
     $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType "application/json"
     
-    Write-Information "✅ Pipeline triggered successfully!"
+    Write-Information " Pipeline triggered successfully!"
     Write-Information "Run ID: $($response.id)"
     Write-Information "URL: $($response._links.web.href)"
 
 } catch {
-    Write-Log "❌ Pipeline trigger failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Pipeline trigger failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

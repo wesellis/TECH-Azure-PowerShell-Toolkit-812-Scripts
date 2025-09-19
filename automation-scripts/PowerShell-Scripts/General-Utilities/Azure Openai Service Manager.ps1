@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Openai Service Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -85,8 +91,10 @@ param(
     [switch]$WERestrictPublicAccess
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure OpenAI Service Manager" -Version " 2.0" -Description " Enterprise AI service automation with security and monitoring"
@@ -104,7 +112,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($WEAction.ToLower()) {
         " create" {
@@ -136,7 +144,7 @@ try {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @openAIParams
             } -OperationName " Create OpenAI Account" | Out-Null
             
-            Write-Log " ✓ OpenAI account created: $WEAccountName" -Level SUCCESS
+            Write-Log " [OK] OpenAI account created: $WEAccountName" -Level SUCCESS
 
             # Deploy model
             Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Model Deployment" -Status " Deploying AI model"
@@ -167,7 +175,7 @@ try {
                 Invoke-RestMethod -Uri " https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$WEResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$WEAccountName/deployments/$WEDeploymentName?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
             } -OperationName " Deploy AI Model" | Out-Null
             
-            Write-Log " ✓ Model deployed: $WEModelName ($WEModelVersion) as $WEDeploymentName" -Level SUCCESS
+            Write-Log " [OK] Model deployed: $WEModelName ($WEModelVersion) as $WEDeploymentName" -Level SUCCESS
         }
         
         " listmodels" {
@@ -209,7 +217,7 @@ try {
             Write-WELog " Key 1: $($keys.Key1)" " INFO" -ForegroundColor Yellow
             Write-WELog " Key 2: $($keys.Key2)" " INFO" -ForegroundColor Yellow
             Write-WELog "" " INFO"
-            Write-WELog " ⚠️  Store these keys securely! Consider using Azure Key Vault." " INFO" -ForegroundColor Red
+            Write-WELog " [WARN]️  Store these keys securely! Consider using Azure Key Vault." " INFO" -ForegroundColor Red
         }
     }
 
@@ -233,7 +241,7 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName " Configure Monitoring" | Out-Null
@@ -241,7 +249,7 @@ try {
         $diagnosticSettings = $true
         
         if ($diagnosticSettings) {
-            Write-Log " ✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -272,35 +280,35 @@ try {
     # Check network access
     if ($WERestrictPublicAccess) {
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Public access restricted"
+        $securityFindings = $securityFindings + " [OK] Public access restricted"
     } else {
-        $securityFindings = $securityFindings + " ⚠️  Public access allowed - consider restricting"
+        $securityFindings = $securityFindings + " [WARN]️  Public access allowed - consider restricting"
     }
     
     # Check monitoring
     if ($WEEnableMonitoring) {
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Monitoring enabled"
+        $securityFindings = $securityFindings + " [OK] Monitoring enabled"
     } else {
-        $securityFindings = $securityFindings + " ⚠️  Monitoring not configured"
+        $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
     }
     
     # Check resource group location compliance
     if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
+        $securityFindings = $securityFindings + " [OK] Deployed in compliant region"
     }
     
     # Check SKU for production readiness
     if ($WESkuName -ne " F0" ) {
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ Production-ready SKU selected"
+        $securityFindings = $securityFindings + " [OK] Production-ready SKU selected"
     }
     
     # Check tagging compliance
     if ($tags.Count -ge 5) {
         $securityScore++
-       ;  $securityFindings = $securityFindings + " ✓ Enterprise tagging compliant"
+       ;  $securityFindings = $securityFindings + " [OK] Enterprise tagging compliant"
     }
 
     # Final validation
@@ -326,14 +334,14 @@ try {
     
     if ($WEAction.ToLower() -eq " create" ) {
         Write-WELog "" " INFO"
-        Write-WELog " 🚀 Model Deployment:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Model Deployment:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Model: $WEModelName ($WEModelVersion)" " INFO" -ForegroundColor White
         Write-WELog "   • Deployment: $WEDeploymentName" " INFO" -ForegroundColor White
         Write-WELog "   • Capacity: $WECapacity TPM" " INFO" -ForegroundColor White
     }
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔒 Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+    Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
     foreach ($finding in $securityFindings) {
         Write-WELog "   $finding" " INFO" -ForegroundColor White
     }
@@ -346,13 +354,13 @@ try {
     Write-WELog "   • Review compliance: Ensure AI governance policies are met" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure OpenAI service '$WEAccountName' successfully configured for enterprise AI workloads!" -Level SUCCESS
+    Write-Log "  Azure OpenAI service '$WEAccountName' successfully configured for enterprise AI workloads!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ OpenAI service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  OpenAI service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify OpenAI service availability in your region" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription quotas for Cognitive Services" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure proper permissions for AI service creation" " INFO" -ForegroundColor White
@@ -369,4 +377,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

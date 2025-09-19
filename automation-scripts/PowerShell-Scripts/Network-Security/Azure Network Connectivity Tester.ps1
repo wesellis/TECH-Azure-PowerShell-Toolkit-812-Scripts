@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Network Connectivity Tester
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -61,7 +67,9 @@ param(
     [string]$WEResourceGroupName
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Network Connectivity Tester" -Version " 1.0" -Description " Test network connectivity"
 
 try {
@@ -82,7 +90,7 @@ try {
         }
     }
 
-    Write-Log " 🔍 Testing connectivity from $WESourceVMName to $WETargetAddress`:$WEPort..." -Level INFO
+    Write-Log "  Testing connectivity from $WESourceVMName to $WETargetAddress`:$WEPort..." -Level INFO
     
    ;  $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
     
@@ -95,7 +103,7 @@ try {
     Write-WELog " Probes Failed: $($result.ProbesFailed)" " INFO" -ForegroundColor White
 
 } catch {
-    Write-Log " ❌ Network connectivity test failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Network connectivity test failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -103,4 +111,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

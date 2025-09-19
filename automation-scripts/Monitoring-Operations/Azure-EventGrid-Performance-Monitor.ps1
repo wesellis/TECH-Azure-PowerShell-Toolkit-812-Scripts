@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Event Grid Topic Performance Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Event Grid topics, subscriptions, and event delivery metrics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$TopicName
 )
+
+#region Functions
 
 Write-Information "Monitoring Event Grid Topic: $TopicName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -157,3 +168,6 @@ Write-Information "`nEvent Grid Portal Access:"
 Write-Information "URL: https://portal.azure.com/#@/resource$($EventGridTopic.Id)"
 
 Write-Information "`nEvent Grid Topic monitoring completed at $(Get-Date)"
+
+
+#endregion

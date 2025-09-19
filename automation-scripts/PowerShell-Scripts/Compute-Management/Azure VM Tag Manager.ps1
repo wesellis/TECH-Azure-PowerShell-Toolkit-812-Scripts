@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Tag Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [hashtable]$WETags
 )
 
+#region Functions
+
 Write-WELog " Updating tags for VM: $WEVmName" " INFO"
 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
@@ -109,3 +117,6 @@ Write-WELog " Tags updated successfully for VM: $WEVmName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

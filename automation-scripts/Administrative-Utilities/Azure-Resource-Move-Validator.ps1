@@ -1,6 +1,23 @@
-﻿# Azure Resource Move Validator
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Resource Move Validator
 # Validates if resources can be moved between resource groups or subscriptions
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -20,7 +37,9 @@ param(
     [switch]$ValidateOnly
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Resource Move Validator" -Version "1.0" -Description "Validate resource move operations"
 
 try {
@@ -43,12 +62,15 @@ try {
     } -Force
 
     if ($validation) {
-        Write-Information "✅ All resources can be moved successfully!"
+        Write-Information " All resources can be moved successfully!"
     } else {
-        Write-Information "❌ Some resources cannot be moved. Check Azure portal for details."
+        Write-Information " Some resources cannot be moved. Check Azure portal for details."
     }
 
 } catch {
-    Write-Log "❌ Resource move validation failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Resource move validation failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Call Writetestresults
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,15 +61,18 @@ if (($WEStorageAccountKey -eq "" ) -or ($null -eq $WEStorageAccountKey)) {
 }
 ; 
 $script = " $WEPSScriptRoot/../ci-scripts/Write-TestResults"
-& $script `
-    -PublicDeployment $WEENV:RESULT_DEPLOYMENT `
-    -TableName " QuickStartsMetadataServiceTest" `
-    -TableNamePRs " QuickStartsMetadataServiceTestPRs" `
-    -StorageAccountKey $WEStorageAccountKey `
-    -PRsContainerName " badgestest" `
-    -BadgesContainerName " badgestest"
+$params = @{
+    PublicDeployment = $WEENV:RESULT_DEPLOYMENT
+    PRsContainerName = " badgestest"
+    BadgesContainerName = " badgestest"
+    TableName = " QuickStartsMetadataServiceTest"
+    TableNamePRs = " QuickStartsMetadataServiceTestPRs"
+    StorageAccountKey = $WEStorageAccountKey
+}
+& @params
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

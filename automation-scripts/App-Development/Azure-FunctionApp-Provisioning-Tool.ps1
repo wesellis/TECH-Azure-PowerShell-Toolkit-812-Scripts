@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Function App Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Function Apps with runtime and hosting configurations
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -17,6 +26,8 @@ param (
     [string]$StorageAccountName
 )
 
+#region Functions
+
 Write-Information "Provisioning Function App: $AppName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "App Service Plan: $PlanName"
@@ -24,13 +35,16 @@ Write-Information "Location: $Location"
 Write-Information "Runtime: $Runtime $RuntimeVersion"
 
 # Create the Function App
-$FunctionApp = New-AzFunctionApp -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $AppName `
-    -AppServicePlan $PlanName `
-    -Location $Location `
-    -Runtime $Runtime `
-    -RuntimeVersion $RuntimeVersion
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $AppName
+    RuntimeVersion = $RuntimeVersion
+    AppServicePlan = $PlanName
+    Runtime = $Runtime
+    Location = $Location
+    ErrorAction = "Stop"
+}
+$FunctionApp @params
 
 if ($StorageAccountName) {
     Write-Information "Storage Account: $StorageAccountName"
@@ -39,3 +53,6 @@ if ($StorageAccountName) {
 Write-Information "Function App $AppName provisioned successfully"
 Write-Information "Default Hostname: $($FunctionApp.DefaultHostName)"
 Write-Information "State: $($FunctionApp.State)"
+
+
+#endregion

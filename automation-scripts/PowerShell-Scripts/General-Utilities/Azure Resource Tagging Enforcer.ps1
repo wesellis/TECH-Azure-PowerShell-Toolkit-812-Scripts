@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Tagging Enforcer
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -79,8 +85,10 @@ param(
     [string]$WEOutputPath = " .\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName " Azure Resource Tagging Enforcer" -Version " 1.0" -Description " Enforce consistent resource tagging for governance and compliance"
 
@@ -154,7 +162,7 @@ try {
         }
         
         " Fix" {
-            Write-Log " 🔧 Fixing tag compliance..." -Level WARNING
+            Write-Log "  Fixing tag compliance..." -Level WARNING
             
             foreach ($resource in $nonCompliantResources) {
                 try {
@@ -178,10 +186,10 @@ try {
                     }
                     
                     Set-AzResource -ResourceId $resourceObj.ResourceId -Tag $newTags -Force
-                    Write-Log " ✓ Fixed tags for $($resource.ResourceName)" -Level SUCCESS
+                    Write-Log " [OK] Fixed tags for $($resource.ResourceName)" -Level SUCCESS
                     
                 } catch {
-                    Write-Log " ❌ Failed to fix tags for $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
+                    Write-Log "  Failed to fix tags for $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
                 }
             }
         }
@@ -190,7 +198,7 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 6 -StepName " Report Generation" -Status " Generating compliance report"
     
     $nonCompliantResources | Export-Csv -Path $WEOutputPath -NoTypeInformation -Encoding UTF8
-    Write-Log " ✓ Tag compliance report saved to: $WEOutputPath" -Level SUCCESS
+    Write-Log " [OK] Tag compliance report saved to: $WEOutputPath" -Level SUCCESS
 
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName " Summary" -Status " Generating summary"
 
@@ -200,7 +208,7 @@ try {
     Write-WELog "                              TAG COMPLIANCE ANALYSIS COMPLETE" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " 📊 Compliance Summary:" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Compliance Summary:" " INFO" -ForegroundColor Cyan
     Write-WELog "   • Total Resources: $($resources.Count)" " INFO" -ForegroundColor White
     Write-WELog "   • Non-Compliant: $($nonCompliantResources.Count)" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Compliance Rate: $([math]::Round((($resources.Count - $nonCompliantResources.Count) / $resources.Count) * 100, 2))%" " INFO" -ForegroundColor Green
@@ -216,10 +224,10 @@ try {
     Write-WELog " 📋 Report: $WEOutputPath" " INFO" -ForegroundColor Cyan
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Tag compliance analysis completed successfully!" -Level SUCCESS
+    Write-Log "  Tag compliance analysis completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Tag compliance analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Tag compliance analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
@@ -228,4 +236,5 @@ Write-Progress -Activity " Tag Compliance Analysis" -Completed
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

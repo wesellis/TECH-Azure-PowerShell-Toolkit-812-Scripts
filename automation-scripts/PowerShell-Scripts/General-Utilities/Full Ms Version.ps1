@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Full Ms Version
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -61,17 +67,22 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 New-AzResourceGroup -Name TestRG1 -Location EastUS
 
 
-$virtualNetwork = New-AzVirtualNetwork -ErrorAction Stop `
-  -ResourceGroupName TestRG1 `
-  -Location EastUS `
-  -Name VNet1 `
-  -AddressPrefix 10.1.0.0/16
+$params = @{
+    ErrorAction = "Stop"
+    AddressPrefix = "10.1.0.0/16"
+    ResourceGroupName = "TestRG1"
+    Name = "VNet1"
+    Location = "EastUS"
+}
+$virtualNetwork @params
 
 
-  $subnetConfig = Add-AzVirtualNetworkSubnetConfig `
-  -Name Frontend `
-  -AddressPrefix 10.1.0.0/24 `
-  -VirtualNetwork $virtualNetwork
+  $params = @{
+      AddressPrefix = "10.1.0.0/24"
+      VirtualNetwork = $virtualNetwork
+      Name = "Frontend"
+  }
+  $subnetConfig @params
 
 
   $virtualNetwork | Set-AzVirtualNetwork -ErrorAction Stop
@@ -93,8 +104,8 @@ $virtualNetwork = New-AzVirtualNetwork -ErrorAction Stop `
  ;  $gwipconfig = New-AzVirtualNetworkGatewayIpConfig -Name gwipconfig1 -SubnetId $subnet.Id -PublicIpAddressId $gwpip.Id
 
 
-  New-AzVirtualNetworkGateway -Name VNet1GW -ResourceGroupName TestRG1 `
--Location 'East US' -IpConfigurations $gwipconfig -GatewayType Vpn `
+  New-AzVirtualNetworkGateway -Name "VNet1GW" -ResourceGroupName "TestRG1"
+-Location -GatewayType "Vpn" -IpConfigurations $gwipconfig
 -VpnType RouteBased -GatewaySku VpnGw1
 
 
@@ -108,4 +119,5 @@ Get-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

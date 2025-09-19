@@ -1,17 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure CLI PowerShell Bridge
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Bridge Azure CLI commands with PowerShell for cross-platform automation
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$Command,
     [string]$OutputFormat = "json",
     [switch]$PassThru
 )
+
+#region Functions
 
 Write-Information "Azure CLI PowerShell Bridge"
 Write-Information "==========================="
@@ -19,7 +29,7 @@ Write-Information "==========================="
 # Check if Azure CLI is installed
 try {
     $azVersion = az version 2>$null | ConvertFrom-Json
-    Write-Information "✓ Azure CLI Version: $($azVersion.'azure-cli')"
+    Write-Information "[OK] Azure CLI Version: $($azVersion.'azure-cli')"
 } catch {
     Write-Error "Azure CLI is not installed or not in PATH. Please install Azure CLI first."
     return
@@ -28,8 +38,8 @@ try {
 # Check if logged in to Azure CLI
 try {
     $account = az account show 2>$null | ConvertFrom-Json
-    Write-Information "✓ Logged in as: $($account.user.name)"
-    Write-Information "✓ Subscription: $($account.name)"
+    Write-Information "[OK] Logged in as: $($account.user.name)"
+    Write-Information "[OK] Subscription: $($account.name)"
 } catch {
     Write-Warning "Not logged in to Azure CLI. Please run 'az login' first."
     if (-not $Force) {
@@ -55,11 +65,11 @@ try {
     if ($OutputFormat -eq "json" -and -not $PassThru) {
         # Parse JSON and return as PowerShell objects
         $jsonResult = $result | ConvertFrom-Json
-        Write-Information "`n✓ Command executed successfully"
+        Write-Information "`n[OK] Command executed successfully"
         return $jsonResult
     } else {
         # Return raw output
-        Write-Information "`n✓ Command executed successfully"
+        Write-Information "`n[OK] Command executed successfully"
         return $result
     }
 } catch {
@@ -68,3 +78,5 @@ try {
 }
 
 Write-Information "`nAzure CLI bridge completed at $(Get-Date)"
+
+#endregion

@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Cognitive Services Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -74,7 +80,9 @@ param(
     [string]$WESku = " S0"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Cognitive Services Manager" -Version " 1.0" -Description " Manage AI and machine learning services"
 
 try {
@@ -86,7 +94,7 @@ try {
         " Create" {
             Write-Log " 🧠 Creating Cognitive Services account..." -Level INFO
             $account = New-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEAccountName -Type $WEKind -SkuName $WESku -Location $WELocation
-            Write-Log " ✓ Created $WEKind account: $WEAccountName" -Level SUCCESS
+            Write-Log " [OK] Created $WEKind account: $WEAccountName" -Level SUCCESS
             Write-WELog " Endpoint: $($account.Endpoint)" " INFO" -ForegroundColor Green
         }
         
@@ -98,7 +106,7 @@ try {
         
         " RegenerateKey" {
            ;  $newKeys = New-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEAccountName -KeyName Key1
-            Write-Log " ✓ Key regenerated successfully" -Level SUCCESS
+            Write-Log " [OK] Key regenerated successfully" -Level SUCCESS
             Write-WELog " New Key 1: $($newKeys.Key1)" " INFO" -ForegroundColor Green
             Write-WELog " Key 2: $($newKeys.Key2)" " INFO" -ForegroundColor Cyan
         }
@@ -110,12 +118,12 @@ try {
         
         " Delete" {
             Remove-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEAccountName -Force
-            Write-Log " ✓ Cognitive Services account deleted" -Level SUCCESS
+            Write-Log " [OK] Cognitive Services account deleted" -Level SUCCESS
         }
     }
 
 } catch {
-    Write-Log " ❌ Cognitive Services operation failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Cognitive Services operation failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -123,4 +131,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

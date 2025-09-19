@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Network Info
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -79,6 +85,8 @@ param(
     [string]$WEVmName
 )
 
+#region Functions
+
 Write-WELog " Retrieving network information for VM: $WEVmName" " INFO"
 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
@@ -106,3 +114,6 @@ foreach ($WENicRef in $WEVM.NetworkProfile.NetworkInterfaces) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

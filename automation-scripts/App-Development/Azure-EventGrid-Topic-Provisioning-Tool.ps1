@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Event Grid Topic Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Event Grid topics for event-driven architecture and messaging
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$TopicName,
@@ -15,17 +24,22 @@ param (
     [hashtable]$Tags = @{}
 )
 
+#region Functions
+
 Write-Information "Provisioning Event Grid Topic: $TopicName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "Location: $Location"
 Write-Information "Input Schema: $InputSchema"
 
 # Create the Event Grid Topic
-$EventGridTopic = New-AzEventGridTopic -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $TopicName `
-    -Location $Location `
-    -InputSchema $InputSchema
+$params = @{
+    ErrorAction = "Stop"
+    InputSchema = $InputSchema
+    ResourceGroupName = $ResourceGroupName
+    Name = $TopicName
+    Location = $Location
+}
+$EventGridTopic @params
 
 if ($Tags.Count -gt 0) {
     Write-Information "`nApplying tags:"
@@ -79,3 +93,6 @@ Write-Information @"
 "@
 
 Write-Information "`nEvent Grid Topic provisioning completed at $(Get-Date)"
+
+
+#endregion

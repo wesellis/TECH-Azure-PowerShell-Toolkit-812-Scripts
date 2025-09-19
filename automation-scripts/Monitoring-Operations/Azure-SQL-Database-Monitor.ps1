@@ -1,17 +1,28 @@
-﻿# ============================================================================
-# Script Name: Azure SQL Database Performance Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure SQL Database performance, DTU usage, and connection status
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ServerName,
     [string]$DatabaseName
 )
+
+#region Functions
 
 Write-Information "Monitoring SQL Database: $DatabaseName"
 Write-Information "Server: $ServerName"
@@ -53,3 +64,6 @@ Write-Information "  Note: Use Azure Monitor or Azure Portal for detailed perfor
 Write-Information "  Current Service Level: $($SqlDatabase.CurrentServiceObjectiveName)"
 
 Write-Information "`nSQL Database monitoring completed at $(Get-Date)"
+
+
+#endregion

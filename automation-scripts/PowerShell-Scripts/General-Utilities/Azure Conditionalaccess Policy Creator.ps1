@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Conditionalaccess Policy Creator
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -95,6 +100,8 @@ param(
     [string]$WEState = " enabledForReportingButNotEnforced"
 )
 
+#region Functions
+
 Write-WELog " Creating Conditional Access Policy: $WEPolicyName" " INFO"
 
 try {
@@ -107,7 +114,7 @@ try {
     # Connect to Microsoft Graph
     Connect-MgGraph -Scopes " Policy.ReadWrite.ConditionalAccess"
     
-    Write-WELog " ✅ Connected to Microsoft Graph" " INFO"
+    Write-WELog "  Connected to Microsoft Graph" " INFO"
     
     Write-WELog " 🔐 Conditional Access Policy Configuration:" " INFO"
     Write-WELog "  Name: $WEPolicyName" " INFO"
@@ -120,7 +127,7 @@ try {
     Write-WELog "  Applications: $($WEIncludeApplications -join ', ')" " INFO"
     Write-WELog "  Grant Controls: $($WERequireMFA -join ', ')" " INFO"
     
-    Write-WELog " `n⚠️ IMPORTANT NOTES:" " INFO"
+    Write-WELog " `n[WARN]️ IMPORTANT NOTES:" " INFO"
     Write-WELog " • Policy created in report-only mode by default" " INFO"
     Write-WELog " • Test thoroughly before enabling enforcement" " INFO"
     Write-WELog " • Ensure emergency access accounts are excluded" " INFO"
@@ -155,7 +162,7 @@ try {
     Write-WELog " 5. Set access controls and session controls" " INFO"
     Write-WELog " 6. Enable policy" " INFO"
     
-    Write-WELog " `n✅ Conditional Access policy template prepared" " INFO"
+    Write-WELog " `n Conditional Access policy template prepared" " INFO"
     Write-WELog " 🚨 Use Azure Portal to create the actual policy for safety" " INFO"
     
 } catch {
@@ -167,4 +174,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

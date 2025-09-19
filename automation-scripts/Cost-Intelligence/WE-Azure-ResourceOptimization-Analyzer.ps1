@@ -1,13 +1,25 @@
-﻿# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Wesley Ellis Azure Resource Optimization & Cost Intelligence Analyzer
-# Author: Wesley Ellis
 # Contact: wesellis.com
 # Version: 4.0 Enterprise Edition
-# Date: August 2025
-# Description: Comprehensive Azure resource analysis with cost optimization,
 #              rightsizing recommendations, and enterprise governance reporting
-# ============================================================================
-
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$false, HelpMessage="Target subscription ID (current if not specified)")]
@@ -36,6 +48,8 @@ param (
     [Parameter(Mandatory=$false, HelpMessage="Include preview/beta resource types")]
     [switch]$WEIncludePreview
 )
+
+#region Functions
 
 # Wesley Ellis Enterprise Framework
 $WEToolName = "WE-Azure-ResourceOptimizer"
@@ -383,7 +397,7 @@ try {
     # Generate executive summary
     $executionTime = (Get-Date) - $WEStartTime
     
-    Write-WEOptimizationLog "🎉 Azure Resource Optimization Analysis Complete!" "SUCCESS"
+    Write-WEOptimizationLog " Azure Resource Optimization Analysis Complete!" "SUCCESS"
     Write-WEOptimizationLog "   Analysis Type: $WEAnalysisType" "SUCCESS"
     Write-WEOptimizationLog "   Execution Time: $($executionTime.TotalMinutes.ToString('F1')) minutes" "SUCCESS"
     Write-WEOptimizationLog "   Potential Monthly Savings: $([math]::Round($totalPotentialSavings, 2))" "SUCCESS"
@@ -405,11 +419,12 @@ try {
     return $WEOptimizationResults
     
 } catch {
-    Write-WEOptimizationLog "❌ Optimization analysis failed: $($_.Exception.Message)" "ERROR"
+    Write-WEOptimizationLog " Optimization analysis failed: $($_.Exception.Message)" "ERROR"
     Write-WEOptimizationLog "Contact wesellis.com for enterprise support and consulting" "ERROR"
     throw
 }
 
 # Wesley Ellis Azure Enterprise Optimization Solutions
 # Advanced cost management and governance: wesellis.com
-# ============================================================================
+
+#endregion

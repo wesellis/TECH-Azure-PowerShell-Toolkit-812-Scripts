@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Role Assignment Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -90,6 +96,8 @@ param(
     [string]$WEPrincipalType = " User"
 )
 
+#region Functions
+
 Write-WELog " Managing role assignment:" " INFO"
 Write-WELog "  Principal ID: $WEPrincipalId" " INFO"
 Write-WELog "  Role: $WERoleDefinitionName" " INFO"
@@ -101,23 +109,19 @@ try {
    ;  $WEExistingAssignment = Get-AzRoleAssignment -ObjectId $WEPrincipalId -RoleDefinitionName $WERoleDefinitionName -Scope $WEScope -ErrorAction SilentlyContinue
     
     if ($WEExistingAssignment) {
-        Write-WELog " ⚠️ Role assignment already exists" " INFO"
+        Write-WELog " [WARN]️ Role assignment already exists" " INFO"
         Write-WELog "  Assignment ID: $($WEExistingAssignment.RoleAssignmentId)" " INFO"
         return
     }
     
     # Create new role assignment
-   ;  $WEAssignment = New-AzRoleAssignment -ErrorAction Stop `
-        -ObjectId $WEPrincipalId `
-        -RoleDefinitionName $WERoleDefinitionName `
-        -Scope $WEScope
-    
-    Write-WELog " ✅ Role assignment created successfully:" " INFO"
-    Write-WELog "  Assignment ID: $($WEAssignment.RoleAssignmentId)" " INFO"
-    Write-WELog "  Principal Name: $($WEAssignment.DisplayName)" " INFO"
-    Write-WELog "  Role: $($WEAssignment.RoleDefinitionName)" " INFO"
-    Write-WELog "  Scope: $($WEAssignment.Scope)" " INFO"
-    
+   $params = @{
+       ErrorAction = "Stop"
+       RoleDefinitionName = $WERoleDefinitionName
+       ObjectId = $WEPrincipalId
+       Scope = $WEScope  Write-WELog "  Role assignment created successfully:" " INFO" Write-WELog "  Assignment ID: $($WEAssignment.RoleAssignmentId)" " INFO" Write-WELog "  Principal Name: $($WEAssignment.DisplayName)" " INFO" Write-WELog "  Role: $($WEAssignment.RoleDefinitionName)" " INFO" Write-WELog "  Scope: $($WEAssignment.Scope)" " INFO
+   }
+   ; @params
 } catch {
     Write-Error " Failed to create role assignment: $($_.Exception.Message)"
 }
@@ -134,4 +138,5 @@ Write-WELog " • Backup Contributor - Backup management" " INFO"
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

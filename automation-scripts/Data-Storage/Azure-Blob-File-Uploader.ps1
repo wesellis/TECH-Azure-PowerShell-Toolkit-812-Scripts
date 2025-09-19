@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Blob File Uploader
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Uploads a local file to Azure Blob Storage
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -24,6 +33,8 @@ param (
     [string]$BlobName
 )
 
+#region Functions
+
 if (-not $BlobName) {
     $BlobName = Split-Path $LocalFilePath -Leaf
 }
@@ -35,11 +46,17 @@ Write-Information "  Blob name: $BlobName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 
-$Blob = Set-AzStorageBlobContent -ErrorAction Stop `
-    -File $LocalFilePath `
-    -Container $ContainerName `
-    -Blob $BlobName `
-    -Context $Context
+$params = @{
+    File = $LocalFilePath
+    ErrorAction = "Stop"
+    Context = $Context
+    Blob = $BlobName
+    Container = $ContainerName
+}
+$Blob @params
 
-Write-Information "✅ File uploaded successfully!"
+Write-Information " File uploaded successfully!"
 Write-Information "  URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
+
+
+#endregion

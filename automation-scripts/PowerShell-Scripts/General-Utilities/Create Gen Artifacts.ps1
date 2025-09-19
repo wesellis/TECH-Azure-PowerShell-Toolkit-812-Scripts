@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Create Gen Artifacts
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -69,6 +75,8 @@ param(
     [string] $sshPrivateKeyValue = $(Get-Content -Path scratch -Raw)
 
 )
+
+#region Functions
 
 
 if ((Get-AzureRMResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue) -eq $null) {
@@ -126,14 +134,12 @@ Creat a KeyVault and add:
 
 $vault = Get-AzureRMKeyVault -VaultName $WEKeyVaultName -verbose -ErrorAction SilentlyContinue
 if ($null -eq $vault) {
-    $vault = New-AzureRMKeyVault -VaultName $WEKeyVaultName `
-                                 -ResourceGroupName $WEResourceGroupName `
-                                 -Location $WELocation `
-                                 -EnabledForTemplateDeployment `
-                                 -EnabledForDiskEncryption `
-                                 -EnabledForDeployment `
-                                 -EnableSoftDelete `
-                                 -Verbose
+    $params = @{
+        VaultName = $WEKeyVaultName
+        ResourceGroupName = $WEResourceGroupName
+        Location = $WELocation
+    }
+    $vault @params
 }
 
 
@@ -194,25 +200,32 @@ if ($WEServicePrincipalObjectId) {
 
     # Set the Data Plane Access Policy for the Principal to retrieve secrets via reference parameters
     Set-AzureRMKeyVaultAccessPolicy -VaultName $WEKeyVaultName 
-                                    -ObjectId $WEServicePrincipalObjectId `
-                                    -PermissionsToKeys get, restore `
-                                    -PermissionsToSecrets get, set `
-                                    -PermissionsToCertificates get
+                                    $params = @{
+                                        PermissionsToKeys = "get, restore"
+                                        PermissionsToSecrets = "get, set"
+                                        PermissionsToCertificates = "get"
+                                    }
+                                    -ObjectId @params
 
     # Set the Data Plane Access Policy for the UserAssigned MSI to retrieve secrets via reference parameters
     Set-AzureRMKeyVaultAccessPolicy -VaultName $WEKeyVaultName
-                                    -ObjectId $msi.principalId `
-                                    -PermissionsToKeys get `
-                                    -PermissionsToSecrets get `
-                                    -PermissionsToCertificates get
+                                    $params = @{
+                                        PermissionsToKeys = "get"
+                                        PermissionsToSecrets = "get"
+                                        PermissionsToCertificates = "get"
+                                    }
+                                    -ObjectId @params
 
     # Assign the SP perms to the NetworkWatcherRG for deploying flowlogs
-    New-AzureRMRoleAssignment -RoleDefinitionId 'b24988ac-6180-42a0-ab88-20f7382dd24c' `
-                              -ObjectId $WEServicePrincipalObjectId `
-                              -Scope $(Get-AzureRmResourceGroup -Name 'NetworkWatcherRG').ResourceId `
-                              -Verbose
-                              
-    # TODO - Add the " Cognitive Services Contributor" role 25fbc0a9-bd7c-42a3-aa1a-3b75d497ee68 to be able to deploy CS
+    $params = @{
+        3b75d497ee68 = "to be able to deploy CS"
+        RoleDefinitionId = "b24988ac-6180-42a0-ab88-20f7382dd24c"
+        Verbose = "# TODO"
+        Name = "NetworkWatcherRG').ResourceId"
+        Scope = $(Get-AzureRmResourceGroup
+        ObjectId = $WEServicePrincipalObjectId
+    }
+    New-AzureRMRoleAssignment @params
 
 }
 
@@ -388,3 +401,6 @@ Write-Output $($json | ConvertTo-json -Depth 30)
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

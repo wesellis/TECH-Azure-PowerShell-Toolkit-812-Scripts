@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Defender For Cloud Automation
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -91,8 +97,10 @@ param(
     [string]$WEOutputPath = " .\defender-report.json"
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Defender for Cloud Automation Tool" -Version " 1.0" -Description " Comprehensive cloud security automation with advanced threat protection"
@@ -110,7 +118,7 @@ try {
         Invoke-AzureOperation -Operation {
             Set-AzContext -SubscriptionId $WESubscriptionId -ErrorAction Stop
         } -OperationName " Set Subscription Context"
-        Write-Log " ✓ Subscription context set to: $WESubscriptionId" -Level SUCCESS
+        Write-Log " [OK] Subscription context set to: $WESubscriptionId" -Level SUCCESS
     }
 
     # Execute the requested action
@@ -118,7 +126,7 @@ try {
     
     switch ($WEAction) {
         " EnableDefender" {
-            Write-Log " 🛡️ Enabling Azure Defender for Cloud..." -Level INFO
+            Write-Log "  Enabling Azure Defender for Cloud..." -Level INFO
             
             foreach ($plan in $WEDefenderPlans) {
                 try {
@@ -126,15 +134,15 @@ try {
                         Set-AzSecurityPricing -Name $plan -PricingTier $WEPricingTier
                     } -OperationName " Enable Defender for $plan" | Out-Null
                     
-                    Write-Log " ✓ Defender enabled for $plan ($WEPricingTier tier)" -Level SUCCESS
+                    Write-Log " [OK] Defender enabled for $plan ($WEPricingTier tier)" -Level SUCCESS
                 } catch {
-                    Write-Log " ⚠️ Failed to enable Defender for $plan : $($_.Exception.Message)" -Level WARNING
+                    Write-Log " [WARN]️ Failed to enable Defender for $plan : $($_.Exception.Message)" -Level WARNING
                 }
             }
         }
         
         " ConfigureDefender" {
-            Write-Log " 🔧 Configuring Azure Defender settings..." -Level INFO
+            Write-Log "  Configuring Azure Defender settings..." -Level INFO
             
             # Configure security contacts
             if ($WEEmailContact) {
@@ -148,7 +156,7 @@ try {
                     Set-AzSecurityContact -ErrorAction Stop @contactParams
                 } -OperationName " Configure Security Contacts"
                 
-                Write-Log " ✓ Security contact configured: $WEEmailContact" -Level SUCCESS
+                Write-Log " [OK] Security contact configured: $WEEmailContact" -Level SUCCESS
             }
             
             # Configure workspace settings
@@ -157,12 +165,12 @@ try {
                     Set-AzSecurityWorkspaceSetting -Name " default" -WorkspaceId $WEWorkspaceResourceId
                 } -OperationName " Configure Log Analytics Workspace"
                 
-                Write-Log " ✓ Log Analytics workspace configured" -Level SUCCESS
+                Write-Log " [OK] Log Analytics workspace configured" -Level SUCCESS
             }
         }
         
         " GetSecurityScore" {
-            Write-Log " 📊 Retrieving security score and posture..." -Level INFO
+            Write-Log "  Retrieving security score and posture..." -Level INFO
             
             $secureScore = Invoke-AzureOperation -Operation {
                 Get-AzSecurityScore -ErrorAction Stop
@@ -224,15 +232,15 @@ try {
                         Set-AzSecurityAutoProvisioningSetting -Name $agent -EnableAutoProvisioning $true
                     } -OperationName " Enable Auto-Provisioning for $agent"
                     
-                    Write-Log " ✓ Auto-provisioning enabled for $agent" -Level SUCCESS
+                    Write-Log " [OK] Auto-provisioning enabled for $agent" -Level SUCCESS
                 } catch {
-                    Write-Log " ⚠️ Failed to enable auto-provisioning for $agent" -Level WARNING
+                    Write-Log " [WARN]️ Failed to enable auto-provisioning for $agent" -Level WARNING
                 }
             }
         }
         
         " ConfigurePricing" {
-            Write-Log " 💰 Configuring pricing tiers..." -Level INFO
+            Write-Log "  Configuring pricing tiers..." -Level INFO
             
             foreach ($plan in $WEDefenderPlans) {
                 $currentPricing = Invoke-AzureOperation -Operation {
@@ -246,7 +254,7 @@ try {
                         Set-AzSecurityPricing -Name $plan -PricingTier $WEPricingTier
                     } -OperationName " Update Pricing for $plan"
                     
-                    Write-Log " ✓ Updated $plan pricing to $WEPricingTier" -Level SUCCESS
+                    Write-Log " [OK] Updated $plan pricing to $WEPricingTier" -Level SUCCESS
                 }
             }
         }
@@ -257,14 +265,14 @@ try {
     
     if ($results) {
         $results | ConvertTo-Json -Depth 10 | Out-File -FilePath $WEOutputPath -Encoding UTF8
-        Write-Log " ✓ Security report saved to: $WEOutputPath" -Level SUCCESS
+        Write-Log " [OK] Security report saved to: $WEOutputPath" -Level SUCCESS
     }
 
     # Display monitoring information
     Write-ProgressStep -StepNumber 5 -TotalSteps 6 -StepName " Monitoring Setup" -Status " Configuring monitoring"
     
     if ($WEEnableMonitoring) {
-        Write-Log " 📊 Setting up continuous monitoring..." -Level INFO
+        Write-Log "  Setting up continuous monitoring..." -Level INFO
         
         # Get current security state
        ;  $currentPricings = Invoke-AzureOperation -Operation {
@@ -272,7 +280,7 @@ try {
         } -OperationName " Get All Security Pricings"
         
        ;  $enabledPlans = $currentPricings | Where-Object { $_.PricingTier -eq " Standard" }
-        Write-Log " ✓ Defender enabled for $($enabledPlans.Count) service types" -Level SUCCESS
+        Write-Log " [OK] Defender enabled for $($enabledPlans.Count) service types" -Level SUCCESS
     }
 
     # Final validation and summary
@@ -284,14 +292,14 @@ try {
     Write-WELog "                              AZURE DEFENDER CONFIGURATION SUCCESSFUL" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " 🛡️ Security Operation: $WEAction" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Security Operation: $WEAction" " INFO" -ForegroundColor Cyan
     Write-WELog "   • Subscription: $(if($WESubscriptionId){$WESubscriptionId}else{'Current'})" " INFO" -ForegroundColor White
     Write-WELog "   • Pricing Tier: $WEPricingTier" " INFO" -ForegroundColor White
     Write-WELog "   • Protected Services: $($WEDefenderPlans.Count)" " INFO" -ForegroundColor White
     
     if ($results) {
         Write-WELog "" " INFO"
-        Write-WELog " 📊 Results Summary:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Results Summary:" " INFO" -ForegroundColor Cyan
         if ($results.SecurityScore) {
             Write-WELog "   • Security Score: $($results.SecurityScore.SecureScorePercentage)%" " INFO" -ForegroundColor Green
         }
@@ -311,13 +319,13 @@ try {
     Write-WELog "   • Check compliance: Get-AzSecurityCompliance" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure Defender configuration completed successfully!" -Level SUCCESS
+    Write-Log "  Azure Defender configuration completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Azure Defender configuration failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Azure Defender configuration failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Security Center permissions" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription access" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure Az.Security module is installed" " INFO" -ForegroundColor White
@@ -333,4 +341,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

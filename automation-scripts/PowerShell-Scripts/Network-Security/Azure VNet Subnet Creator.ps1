@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vnet Subnet Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,14 +99,18 @@ param(
     [string]$WEAddressPrefix
 )
 
+#region Functions
+
 Write-WELog " Adding subnet to VNet: $WEVNetName" " INFO"
 ; 
 $WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
 
-Add-AzVirtualNetworkSubnetConfig `
-    -Name $WESubnetName `
-    -VirtualNetwork $WEVNet `
-    -AddressPrefix $WEAddressPrefix
+$params = @{
+    AddressPrefix = $WEAddressPrefix
+    VirtualNetwork = $WEVNet
+    Name = $WESubnetName
+}
+Add-AzVirtualNetworkSubnetConfig @params
 
 Set-AzVirtualNetwork -VirtualNetwork $WEVNet
 
@@ -116,3 +126,6 @@ Write-WELog "  VNet: $WEVNetName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

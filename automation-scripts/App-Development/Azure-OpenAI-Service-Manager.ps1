@@ -1,6 +1,23 @@
-﻿# Azure OpenAI Service Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure OpenAI Service Manager
 # Professional Azure automation script for AI service management
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise AI deployments
 
 param(
@@ -41,8 +58,10 @@ param(
     [switch]$RestrictPublicAccess
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure OpenAI Service Manager" -Version "2.0" -Description "Enterprise AI service automation with security and monitoring"
@@ -60,7 +79,7 @@ try {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
     
-    Write-Log "✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($Action.ToLower()) {
         "create" {
@@ -92,7 +111,7 @@ try {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @openAIParams
             } -OperationName "Create OpenAI Account" | Out-Null
             
-            Write-Log "✓ OpenAI account created: $AccountName" -Level SUCCESS
+            Write-Log "[OK] OpenAI account created: $AccountName" -Level SUCCESS
 
             # Deploy model
             Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName "Model Deployment" -Status "Deploying AI model"
@@ -123,7 +142,7 @@ try {
                 Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
             } -OperationName "Deploy AI Model" | Out-Null
             
-            Write-Log "✓ Model deployed: $ModelName ($ModelVersion) as $DeploymentName" -Level SUCCESS
+            Write-Log "[OK] Model deployed: $ModelName ($ModelVersion) as $DeploymentName" -Level SUCCESS
         }
         
         "listmodels" {
@@ -141,7 +160,7 @@ try {
             } -OperationName "List Available Models"
             
             Write-Information ""
-            Write-Information "📋 Available Models for $AccountName"
+            Write-Information "� Available Models for $AccountName"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             foreach ($model in $models.value) {
@@ -160,12 +179,12 @@ try {
             } -OperationName "Get API Keys"
             
             Write-Information ""
-            Write-Information "🔑 API Keys for $AccountName"
+            Write-Information "� API Keys for $AccountName"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Key 1: $($keys.Key1)"
             Write-Information "Key 2: $($keys.Key2)"
             Write-Information ""
-            Write-Information "⚠️  Store these keys securely! Consider using Azure Key Vault."
+            Write-Information "[WARN]  Store these keys securely! Consider using Azure Key Vault."
         }
     }
 
@@ -189,7 +208,7 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log "[WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName "Configure Monitoring" | Out-Null
@@ -197,7 +216,7 @@ try {
         $diagnosticSettings = $true
         
         if ($diagnosticSettings) {
-            Write-Log "✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log "[OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -228,35 +247,35 @@ try {
     # Check network access
     if ($RestrictPublicAccess) {
         $securityScore++
-        $securityFindings += "✓ Public access restricted"
+        $securityFindings += "[OK] Public access restricted"
     } else {
-        $securityFindings += "⚠️  Public access allowed - consider restricting"
+        $securityFindings += "[WARN]️  Public access allowed - consider restricting"
     }
     
     # Check monitoring
     if ($EnableMonitoring) {
         $securityScore++
-        $securityFindings += "✓ Monitoring enabled"
+        $securityFindings += "[OK] Monitoring enabled"
     } else {
-        $securityFindings += "⚠️  Monitoring not configured"
+        $securityFindings += "[WARN]️  Monitoring not configured"
     }
     
     # Check resource group location compliance
     if ($Location -in @("East US", "West Europe", "Southeast Asia")) {
         $securityScore++
-        $securityFindings += "✓ Deployed in compliant region"
+        $securityFindings += "[OK] Deployed in compliant region"
     }
     
     # Check SKU for production readiness
     if ($SkuName -ne "F0") {
         $securityScore++
-        $securityFindings += "✓ Production-ready SKU selected"
+        $securityFindings += "[OK] Production-ready SKU selected"
     }
     
     # Check tagging compliance
     if ($tags.Count -ge 5) {
         $securityScore++
-        $securityFindings += "✓ Enterprise tagging compliant"
+        $securityFindings += "[OK] Enterprise tagging compliant"
     }
 
     # Final validation
@@ -282,33 +301,33 @@ try {
     
     if ($Action.ToLower() -eq "create") {
         Write-Information ""
-        Write-Information "🚀 Model Deployment:"
+        Write-Information " Model Deployment:"
         Write-Information "   • Model: $ModelName ($ModelVersion)"
         Write-Information "   • Deployment: $DeploymentName"
         Write-Information "   • Capacity: $Capacity TPM"
     }
     
     Write-Information ""
-    Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
+    Write-Information "[LOCK] Security Assessment: $securityScore/$maxScore"
     foreach ($finding in $securityFindings) {
         Write-Information "   $finding"
     }
     
     Write-Information ""
-    Write-Information "💡 Next Steps:"
+    Write-Information "� Next Steps:"
     Write-Information "   • Test API: Use the endpoint and keys to make API calls"
     Write-Information "   • Monitor usage: Check Azure Monitor for usage metrics"
     Write-Information "   • Set up alerts: Configure cost and usage alerts"
     Write-Information "   • Review compliance: Ensure AI governance policies are met"
     Write-Information ""
 
-    Write-Log "✅ Azure OpenAI service '$AccountName' successfully configured for enterprise AI workloads!" -Level SUCCESS
+    Write-Log " Azure OpenAI service '$AccountName' successfully configured for enterprise AI workloads!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ OpenAI service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " OpenAI service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify OpenAI service availability in your region"
     Write-Information "   • Check subscription quotas for Cognitive Services"
     Write-Information "   • Ensure proper permissions for AI service creation"
@@ -320,3 +339,6 @@ try {
 
 Write-Progress -Activity "OpenAI Service Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

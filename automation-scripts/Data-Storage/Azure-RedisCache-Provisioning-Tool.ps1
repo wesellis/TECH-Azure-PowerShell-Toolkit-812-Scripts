@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Redis Cache Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Redis Cache instances with specified performance tiers
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$CacheName,
@@ -18,6 +27,8 @@ param (
     [hashtable]$RedisConfiguration = @{}
 )
 
+#region Functions
+
 Write-Information "Provisioning Redis Cache: $CacheName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "Location: $Location"
@@ -25,14 +36,16 @@ Write-Information "SKU: $SkuName $SkuFamily$SkuCapacity"
 Write-Information "Non-SSL Port Enabled: $EnableNonSslPort"
 
 # Create the Redis Cache
-$RedisCache = New-AzRedisCache -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $CacheName `
-    -Location $Location `
-    -SkuName $SkuName `
-    -SkuFamily $SkuFamily `
-    -SkuCapacity $SkuCapacity `
-    -EnableNonSslPort:$EnableNonSslPort
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    SkuName = $SkuName
+    Location = $Location
+    SkuFamily = $SkuFamily
+    SkuCapacity = $SkuCapacity
+    ErrorAction = "Stop"
+    Name = $CacheName
+}
+$RedisCache @params
 
 if ($RedisConfiguration.Count -gt 0) {
     Write-Information "`nApplying Redis Configuration:"
@@ -51,3 +64,6 @@ Write-Information "Provisioning State: $($RedisCache.ProvisioningState)"
 Write-Information "`nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet"
 
 Write-Information "`nRedis Cache provisioning completed at $(Get-Date)"
+
+
+#endregion

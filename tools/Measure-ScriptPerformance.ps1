@@ -1,6 +1,22 @@
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Measure-ScriptPerformance.ps1
 # Performance benchmarking framework for PowerShell scripts
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 2.0
 
 param(
@@ -14,6 +30,8 @@ param(
     [switch]$ExportReport,
     [string]$ReportPath = "./performance-report.html"
 )
+
+#region Functions
 
 class PerformanceBenchmark {
     [string]$ScriptPath
@@ -318,28 +336,28 @@ if (-not (Test-Path $ScriptPath)) {
 $benchmark = [PerformanceBenchmark]::new($ScriptPath)
 $results = $benchmark.RunBenchmark($Iterations)
 
-Write-Host "`n📊 Performance Results:" -ForegroundColor Green
+Write-Host "`n Performance Results:" -ForegroundColor Green
 Write-Host "═══════════════════════════════════════════" -ForegroundColor Gray
 
-Write-Host "`n⏱️  Execution Time:" -ForegroundColor Yellow
+Write-Host "`n⏱  Execution Time:" -ForegroundColor Yellow
 Write-Host "   Average: $([Math]::Round($results.Statistics.ExecutionTime.Average, 2)) ms" -ForegroundColor White
 Write-Host "   Min: $([Math]::Round($results.Statistics.ExecutionTime.Min, 2)) ms | Max: $([Math]::Round($results.Statistics.ExecutionTime.Max, 2)) ms" -ForegroundColor Gray
 Write-Host "   Std Dev: $([Math]::Round($results.Statistics.ExecutionTime.StdDev, 2)) ms" -ForegroundColor Gray
 
-Write-Host "`n💾 Memory Usage:" -ForegroundColor Yellow
+Write-Host "`n Memory Usage:" -ForegroundColor Yellow
 Write-Host "   Average: $([Math]::Round($results.Statistics.MemoryUsage.Average, 2)) MB" -ForegroundColor White
 Write-Host "   Min: $([Math]::Round($results.Statistics.MemoryUsage.Min, 2)) MB | Max: $([Math]::Round($results.Statistics.MemoryUsage.Max, 2)) MB" -ForegroundColor Gray
 
-Write-Host "`n⚡ CPU Usage:" -ForegroundColor Yellow
+Write-Host "`n[!] CPU Usage:" -ForegroundColor Yellow
 Write-Host "   Average: $([Math]::Round($results.Statistics.CPUUsage.Average, 3)) seconds" -ForegroundColor White
 
-Write-Host "`n✅ Reliability:" -ForegroundColor Yellow
+Write-Host "`n Reliability:" -ForegroundColor Yellow
 $successRate = 100 - $results.Statistics.ErrorRate
 $color = if ($successRate -eq 100) { "Green" } elseif ($successRate -ge 90) { "Yellow" } else { "Red" }
 Write-Host "   Success Rate: $([Math]::Round($successRate, 1))%" -ForegroundColor $color
 
 if ($DetailedMetrics) {
-    Write-Host "`n📈 Detailed Metrics:" -ForegroundColor Cyan
+    Write-Host "`n Detailed Metrics:" -ForegroundColor Cyan
     Write-Host "Iteration | Time (ms) | Memory (MB) | CPU (s)" -ForegroundColor Gray
     Write-Host "----------|-----------|-------------|--------" -ForegroundColor Gray
     
@@ -353,7 +371,7 @@ if ($DetailedMetrics) {
 
 if ($CompareVersions -and $BaselineScript) {
     if (Test-Path $BaselineScript) {
-        Write-Host "`n🔄 Comparing with baseline..." -ForegroundColor Cyan
+        Write-Host "`n� Comparing with baseline..." -ForegroundColor Cyan
         $baselineBenchmark = [PerformanceBenchmark]::new($BaselineScript)
         $baselineResults = $baselineBenchmark.RunBenchmark($Iterations)
         
@@ -368,7 +386,7 @@ if ($CompareVersions -and $BaselineScript) {
 }
 
 # Performance optimization suggestions
-Write-Host "`n💡 Optimization Suggestions:" -ForegroundColor Cyan
+Write-Host "`n� Optimization Suggestions:" -ForegroundColor Cyan
 $optimizer = [PerformanceOptimizer]::new()
 $suggestions = $optimizer.AnalyzeScript($ScriptPath)
 
@@ -384,7 +402,9 @@ foreach ($category in $suggestions.Keys) {
 if ($ExportReport) {
     $htmlReport = $benchmark.GenerateHTMLReport($results)
     $htmlReport | Out-File $ReportPath -Encoding UTF8
-    Write-Host "`n📄 Report exported to: $ReportPath" -ForegroundColor Green
+    Write-Host "`n[FILE] Report exported to: $ReportPath" -ForegroundColor Green
 }
 
 Write-Host "`n═══════════════════════════════════════════" -ForegroundColor Gray
+
+#endregion

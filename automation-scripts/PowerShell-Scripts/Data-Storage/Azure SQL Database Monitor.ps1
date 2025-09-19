@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Sql Database Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -81,6 +87,8 @@ param(
     [string]$WEDatabaseName
 )
 
+#region Functions
+
 Write-WELog " Monitoring SQL Database: $WEDatabaseName" " INFO"
 Write-WELog " Server: $WEServerName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
@@ -129,3 +137,6 @@ Write-WELog " `nSQL Database monitoring completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

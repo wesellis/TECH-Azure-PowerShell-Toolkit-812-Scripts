@@ -1,6 +1,23 @@
-﻿# Azure Policy Assignment Auditor
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Policy Assignment Auditor
 # Audit policy assignments and compliance across subscriptions
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -21,7 +38,9 @@ param(
     [string]$OutputPath = ".\policy-audit-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Policy Assignment Auditor" -Version "1.0" -Description "Audit policy compliance and assignments"
 
 try {
@@ -55,7 +74,7 @@ try {
 
     if ($ExportReport) {
         $complianceReport | Export-Csv -Path $OutputPath -NoTypeInformation
-        Write-Log "✓ Policy audit report exported to: $OutputPath" -Level SUCCESS
+        Write-Log "[OK] Policy audit report exported to: $OutputPath" -Level SUCCESS
     }
 
     Write-Information "Policy Compliance Summary:"
@@ -65,6 +84,9 @@ try {
     Write-Information "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%"
 
 } catch {
-    Write-Log "❌ Policy audit failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Policy audit failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

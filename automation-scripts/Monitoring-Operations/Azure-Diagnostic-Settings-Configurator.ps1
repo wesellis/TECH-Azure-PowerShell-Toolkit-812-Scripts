@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Diagnostic Settings Configurator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Configures diagnostic settings for Azure resources
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceId,
@@ -26,6 +35,8 @@ param (
     [Parameter(Mandatory=$false)]
     [array]$MetricCategories = @("AllMetrics")
 )
+
+#region Functions
 
 Write-Information "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])"
 
@@ -78,7 +89,7 @@ $DiagnosticParams.Metric = $MetricSettings
 # Create diagnostic setting
 $DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
 
-Write-Information "✅ Diagnostic settings configured successfully:"
+Write-Information " Diagnostic settings configured successfully:"
 Write-Information "  Setting ID: $($DiagnosticSetting.Id)"
 Write-Information "  Name: $DiagnosticSettingName"
 Write-Information "  Resource: $($ResourceId.Split('/')[-1])"
@@ -99,3 +110,6 @@ Write-Information "• Compliance and audit trails"
 Write-Information "• Performance troubleshooting"
 Write-Information "• Security event tracking"
 Write-Information "• Cost optimization insights"
+
+
+#endregion

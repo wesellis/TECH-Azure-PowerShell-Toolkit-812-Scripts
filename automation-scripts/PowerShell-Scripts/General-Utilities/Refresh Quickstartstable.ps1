@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Refresh Quickstartstable
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -42,6 +48,8 @@ param(
     $WETableName = " QuickStartsMetadataService" ,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
+
+#region Functions
 <#
 
 Get all metadata files in the repo
@@ -205,10 +213,13 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
     Write-WELog " Removing... $($r.RowKey)" " INFO"
     $r | Remove-AzTableRow -Table $cloudTable
     Write-WELog " Adding... $WERowKey" " INFO"
-    Add-AzTableRow -table $cloudTable `
-        -partitionKey $WEMetadataJson.type `
-        -rowKey $WERowKey `
-        -property $p
+    $params = @{
+        table = $cloudTable
+        property = $p
+        partitionKey = $WEMetadataJson.type
+        rowKey = $WERowKey
+    }
+    Add-AzTableRow @params
 
 } #foreach
 
@@ -217,4 +228,5 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

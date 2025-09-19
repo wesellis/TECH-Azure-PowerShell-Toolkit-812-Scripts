@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Vmmanalytics
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -67,16 +72,17 @@ Function Post-OMSData($customerId, $sharedKey, $body)
     $resource = " /api/logs"
     $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
     $contentLength = $body.Length
-    $signature = Build-Signature `
-        -customerId $customerId `
-        -sharedKey $sharedKey `
-        -date $rfc1123date `
-        -contentLength $contentLength `
-        -fileName $fileName `
-        -method $method `
-        -contentType $contentType `
-        -resource $resource
-   ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
+    $params = @{
+        date = $rfc1123date
+        contentLength = $contentLength
+        resource = $resource ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01
+        sharedKey = $sharedKey
+        customerId = $customerId
+        contentType = $contentType
+        fileName = $fileName
+        method = $method
+    }
+    $signature @params
 
    ;  $headers = @{
         " Authorization" = $signature;
@@ -147,4 +153,5 @@ Set-AutomationVariable -Name 'lastRunTime' -Value $currentTimestamp
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

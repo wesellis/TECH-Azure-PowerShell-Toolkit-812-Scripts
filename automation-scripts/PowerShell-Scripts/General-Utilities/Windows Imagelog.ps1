@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Imagelog
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -58,6 +63,8 @@ param(
     [Parameter(Mandatory = $true)][String] $WEBicepInfo,
     [Parameter(Mandatory = $false)][String] $WEUsefulTagsList = " correlationId,createdBy,imageTemplateName,imageTemplateResourceGroupName"
 )
+
+#region Functions
 
 function WE-Add-VarForLogging ($varName, $varValue) {
     <#
@@ -149,4 +156,5 @@ catch {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

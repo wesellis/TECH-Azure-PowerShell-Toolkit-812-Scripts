@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Get Templatehash
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -42,6 +48,8 @@ param(
     # If this is set, the hash obtained will *not* be the official template hash that Azure would compute.
     [switch][Parameter(Mandatory = $false)] $removeGeneratorMetadata
 )
+
+#region Functions
 
 Import-Module " $WEPSScriptRoot/Local.psm1" -Force
 
@@ -80,11 +88,13 @@ if ($null -eq $withoutGeneratorMetadata -or $withoutGeneratorMetadata -eq "" ) {
 Write-WELog " Requesting Hash for file: $templateFilePath" " INFO"
 try {
     #fail the build for now so we can find issues
-   ;  $response = Invoke-RestMethod -Uri $uri `
-        -Method " POST" `
-        -Headers $WEHeaders `
-        -Body $withoutGeneratorMetadata
-   ;  $templateHash = $response.templateHash
+   $params = @{
+       Method = " POST"
+       Uri = $uri
+       Headers = $WEHeaders
+       Body = $withoutGeneratorMetadata ;  $templateHash = $response.templateHash
+   }
+   ; @params
 }
 catch {
     Write-Warning $WEError[0]
@@ -102,4 +112,5 @@ Return $templateHash
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

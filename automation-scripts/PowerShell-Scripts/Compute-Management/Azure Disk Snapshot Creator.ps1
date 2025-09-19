@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Disk Snapshot Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [string]$WESnapshotName = " $WEDiskName-snapshot-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 )
 
+#region Functions
+
 Write-WELog " Creating snapshot of disk: $WEDiskName" " INFO"
 
 $WEDisk = Get-AzDisk -ResourceGroupName $WEResourceGroupName -DiskName $WEDiskName
@@ -106,3 +114,6 @@ Write-WELog "  Location: $($WESnapshot.Location)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

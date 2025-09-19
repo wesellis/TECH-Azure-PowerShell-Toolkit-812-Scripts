@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Defender Exclusions
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -45,6 +50,8 @@ param(
     [Parameter(Mandatory = $false)] [string] $WEExclusionExtensions = "" ,
     [Parameter(Mandatory = $false)] [string] $WEExclusionProcesses = ""
 )
+
+#region Functions
 
 Set-StrictMode -Version Latest
 ; 
@@ -79,3 +86,6 @@ if ($parameters.Count -ne 0) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

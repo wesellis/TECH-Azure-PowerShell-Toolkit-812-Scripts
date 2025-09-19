@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Policy Assignment Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Policy assignments for governance and compliance
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$PolicyDefinitionId,
@@ -26,6 +35,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$EnforcementMode = "Default"
 )
+
+#region Functions
 
 Write-Information "Creating Policy Assignment: $AssignmentName"
 
@@ -48,7 +59,7 @@ if ($Parameters.Count -gt 0) {
 # Create policy assignment
 $Assignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
 
-Write-Information "✅ Policy Assignment created successfully:"
+Write-Information " Policy Assignment created successfully:"
 Write-Information "  Name: $($Assignment.Name)"
 Write-Information "  Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
 Write-Information "  Scope: $Scope"
@@ -83,3 +94,6 @@ Write-Information "1. Monitor compliance status"
 Write-Information "2. Review policy effects"
 Write-Information "3. Adjust parameters if needed"
 Write-Information "4. Create exemptions if required"
+
+
+#endregion

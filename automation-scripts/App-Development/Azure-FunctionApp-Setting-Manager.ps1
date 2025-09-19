@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Function App Setting Manager
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Adds or updates application settings for Azure Function App
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$true)]
     [hashtable]$AppSettings
 )
+
+#region Functions
 
 Write-Information "Updating Function App settings: $FunctionAppName"
 
@@ -35,4 +46,7 @@ foreach ($Setting in $AppSettings.GetEnumerator()) {
 # Update Function App
 Update-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppName -AppSetting $ExistingSettings
 
-Write-Information "✅ Function App settings updated successfully!"
+Write-Information " Function App settings updated successfully!"
+
+
+#endregion

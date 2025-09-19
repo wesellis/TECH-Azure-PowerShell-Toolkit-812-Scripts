@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Asr Wordpress Changemysqlconfig
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -77,29 +83,16 @@ param(
         
 
 		" Logging in to Azure..."
-		#Add-AzureRmAccount `
-        Login-AzureRmAccount `
-			-ServicePrincipal `
-			-TenantId $servicePrincipalConnection.TenantId `
-			-ApplicationId $servicePrincipalConnection.ApplicationId `
-			-CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
-	}
-	catch {
-		if (!$servicePrincipalConnection)
-		{
-			$WEErrorMessage = " Connection $connectionName not found."
-			throw $WEErrorMessage
-		} else{
-			Write-Error -Message $_.Exception
-			throw $_.Exception
+		$params = @{
+		    Message = $_.Exception throw $_.Exception } }  ;  $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member
+		    ExpandProperty = "Name  Write-output $WERecoveryPlanContext.VmMap Write-output $WERecoveryPlanContext"
+		    TenantId = $servicePrincipalConnection.TenantId
+		    ApplicationId = $servicePrincipalConnection.ApplicationId
+		    EQ = "NoteProperty | select"
+		    ErrorAction = "Stop | Where-Object MemberType"
+		    CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint } catch { if (!$servicePrincipalConnection) { $WEErrorMessage = " Connection $connectionName not found." throw $WEErrorMessage } else{ Write-Error
 		}
-	} 
-    
-   ;  $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
-	
-    Write-output $WERecoveryPlanContext.VmMap
-    Write-output $WERecoveryPlanContext
-    
+		#Add-AzureRmAccount @params
 
    ;  $WEVMs = $WERecoveryPlanContext.VmMap;
 	
@@ -116,17 +109,19 @@ param(
 
             InlineScript { 
 
-                Set-AzureRmVMCustomScriptExtension -ResourceGroupName $WEUsing:VM.ResourceGroupName `
-                     -VMName $WEUsing:VM.RoleName `
-                     -Name " myCustomScript" `
-                     -FileUri " https://raw.githubusercontent.com/ruturaj/RecoveryPlanScripts/master/ChangeWPDBHostIP.ps1" `
-                     -Run " ChangeWPDBHostIP.ps1" -Location $recoveryLocation
-            }
-        } 
-    }	
+                $params = @{
+                    ResourceGroupName = $WEUsing:VM.ResourceGroupName
+                    Name = " myCustomScript"
+                    FileUri = " https://raw.githubusercontent.com/ruturaj/RecoveryPlanScripts/master/ChangeWPDBHostIP.ps1"
+                    Location = $recoveryLocation } } }
+                    Run = " ChangeWPDBHostIP.ps1"
+                    VMName = $WEUsing:VM.RoleName
+                }
+                Set-AzureRmVMCustomScriptExtension @params
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.ConnectedMachine
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Arc Server Onboarding and Management Tool - Enterprise Edition
 .DESCRIPTION
@@ -90,14 +93,16 @@ param(
     [string]$OperatingSystem = "Both"
 )
 
+#region Functions
+
 # Import required modules
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.ConnectedMachine -Force -ErrorAction Stop
-    Write-Information "✅ Successfully imported required Azure modules"
+    Write-Information " Successfully imported required Azure modules"
 } catch {
-    Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error " Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -442,3 +447,5 @@ try {
     Write-EnhancedLog "Tool execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+#endregion

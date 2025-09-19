@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Custom Role Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates custom Azure RBAC roles for fine-grained access control
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$RoleName,
@@ -30,6 +39,8 @@ param (
     [string]$SubscriptionId
 )
 
+#region Functions
+
 Write-Information "Creating custom Azure role: $RoleName"
 
 if (-not $SubscriptionId) {
@@ -51,7 +62,7 @@ try {
     # Create the custom role
     $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
     
-    Write-Information "✅ Custom role created successfully:"
+    Write-Information " Custom role created successfully:"
     Write-Information "  Name: $($CustomRole.Name)"
     Write-Information "  ID: $($CustomRole.Id)"
     Write-Information "  Description: $($CustomRole.Description)"
@@ -111,3 +122,6 @@ try {
 } catch {
     Write-Error "Failed to create custom role: $($_.Exception.Message)"
 }
+
+
+#endregion

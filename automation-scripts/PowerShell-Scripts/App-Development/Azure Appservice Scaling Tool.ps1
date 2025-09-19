@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Appservice Scaling Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,6 +62,8 @@ param(
     [int]$WEInstanceCount
 )
 
+#region Functions
+
 Set-AzAppServicePlan -ResourceGroupName $WEResourceGroupName -Name $WEPlanName -NumberofWorkers $WEInstanceCount
 
 
@@ -65,3 +73,6 @@ Set-AzAppServicePlan -ResourceGroupName $WEResourceGroupName -Name $WEPlanName -
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

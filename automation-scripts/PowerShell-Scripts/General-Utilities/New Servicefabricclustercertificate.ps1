@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     New Servicefabricclustercertificate
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -46,6 +52,8 @@ param(
     [string] [Parameter(Mandatory=$true)] $WEKeyVaultName,
     [string] [Parameter(Mandatory=$true)] $WEKeyVaultSecretName
 )
+
+#region Functions
 
 $WESecurePassword = ConvertTo-SecureString -String $WEPassword -AsPlainText -Force
 $WECertFileFullPath = $(Join-Path (Split-Path -Parent $WEMyInvocation.MyCommand.Definition) " \$WECertDNSName.pfx" )
@@ -78,3 +86,6 @@ Write-WELog " Certificate Thumbprint : " " INFO" $WENewCert.Thumbprint
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

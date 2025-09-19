@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Tag Manager
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Adds or updates tags on Azure Virtual Machines
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$true)]
     [hashtable]$Tags
 )
+
+#region Functions
 
 Write-Information "Updating tags for VM: $VmName"
 
@@ -33,3 +44,6 @@ foreach ($Tag in $Tags.GetEnumerator()) {
 
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
 Write-Information "Tags updated successfully for VM: $VmName"
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Aks Status Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -76,6 +82,8 @@ param(
     [string]$WEClusterName
 )
 
+#region Functions
+
 Write-WELog " Monitoring AKS Cluster: $WEClusterName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " ============================================" " INFO"
@@ -112,3 +120,6 @@ Write-WELog " `nCluster monitoring completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Rediscache Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -90,6 +96,8 @@ param(
     [hashtable]$WERedisConfiguration = @{}
 )
 
+#region Functions
+
 Write-WELog " Provisioning Redis Cache: $WECacheName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -97,14 +105,16 @@ Write-WELog " SKU: $WESkuName $WESkuFamily$WESkuCapacity" " INFO"
 Write-WELog " Non-SSL Port Enabled: $WEEnableNonSslPort" " INFO"
 
 ; 
-$WERedisCache = New-AzRedisCache -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WECacheName `
-    -Location $WELocation `
-    -SkuName $WESkuName `
-    -SkuFamily $WESkuFamily `
-    -SkuCapacity $WESkuCapacity `
-    -EnableNonSslPort:$WEEnableNonSslPort
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    SkuName = $WESkuName
+    Location = $WELocation
+    SkuFamily = $WESkuFamily
+    SkuCapacity = $WESkuCapacity
+    ErrorAction = "Stop"
+    Name = $WECacheName
+}
+$WERedisCache @params
 
 if ($WERedisConfiguration.Count -gt 0) {
     Write-WELog " `nApplying Redis Configuration:" " INFO"
@@ -131,3 +141,6 @@ Write-WELog " `nRedis Cache provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

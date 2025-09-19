@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Storage Account Lifecycle Manager
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Configures lifecycle management policies for Azure Storage Account
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -23,6 +32,8 @@ param (
     [Parameter(Mandatory=$false)]
     [int]$DaysToDelete = 365
 )
+
+#region Functions
 
 Write-Information "Configuring lifecycle management for: $StorageAccountName"
 
@@ -55,12 +66,15 @@ $LifecycleRule = @{
 $PolicyJson = $LifecycleRule | ConvertTo-Json -Depth 10
 
 # Apply lifecycle policy
-Set-AzStorageAccountManagementPolicy -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -StorageAccountName $StorageAccountName `
-    -Policy $PolicyJson
+$params = @{
+    ErrorAction = "Stop"
+    Policy = $PolicyJson
+    ResourceGroupName = $ResourceGroupName
+    StorageAccountName = $StorageAccountName
+}
+Set-AzStorageAccountManagementPolicy @params
 
-Write-Information "✅ Lifecycle management configured successfully:"
+Write-Information " Lifecycle management configured successfully:"
 Write-Information "  Storage Account: $StorageAccountName"
 Write-Information "  Tier to Cool: After $DaysToTierCool days"
 Write-Information "  Tier to Archive: After $DaysToTierArchive days"
@@ -71,3 +85,6 @@ Write-Information "• Automatic cost optimization"
 Write-Information "• Compliance with retention policies"
 Write-Information "• Reduced management overhead"
 Write-Information "• Environmental efficiency"
+
+
+#endregion

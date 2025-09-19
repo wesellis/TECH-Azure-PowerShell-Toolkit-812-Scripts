@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Create Devenv Shortcut
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -87,6 +92,8 @@ param(
     [Parameter(Mandatory = $false)][String] $WEDesktopShortcutName,
     [Parameter(Mandatory = $false)][String] $WEDesktopShortcutHost = " Console"
 )
+
+#region Functions
 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
@@ -188,19 +195,19 @@ function WE-RunScriptCreatehortcut($WERepoRoot, $WERepoKind, $WEDesktopShortcutS
 
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
-        RunScriptCreatehortcut -RepoRoot $WERepoRoot `
-            -RepoKind $WERepoKind `
-            -DesktopShortcutScriptPath $WEDesktopShortcutScriptPath `
-            -ShortcutRunAsAdmin $WEShortcutRunAsAdmin `
-            -DesktopShortcutIconPath $WEDesktopShortcutIconPath `
-            -DesktopShortcutName $WEDesktopShortcutName `
-            -DesktopShortcutHost $WEDesktopShortcutHost
-    }
-    catch {
-        Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-    }
+        $params = @{
+            DesktopShortcutName = $WEDesktopShortcutName
+            DesktopShortcutScriptPath = $WEDesktopShortcutScriptPath
+            RepoKind = $WERepoKind
+            ErrorAction = "Stop }"
+            RepoRoot = $WERepoRoot
+            ShortcutRunAsAdmin = $WEShortcutRunAsAdmin
+            DesktopShortcutIconPath = $WEDesktopShortcutIconPath
+        }
+        RunScriptCreatehortcut @params
 }
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

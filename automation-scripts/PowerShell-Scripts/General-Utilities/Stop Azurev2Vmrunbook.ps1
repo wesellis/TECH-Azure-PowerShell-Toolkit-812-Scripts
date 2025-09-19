@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Stop Azurev2Vmrunbook
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -75,6 +81,8 @@ param(
     [String] $WEResourceGroupName
 )
 
+#region Functions
+
 
 
 
@@ -84,11 +92,12 @@ try
     $servicePrincipalConnection = Get-AutomationConnection -Name $automationConnectionName          
 
     # Log into Azure
-    $login = Connect-AzureRmAccount `
-        -ServicePrincipal `
-        -TenantId $servicePrincipalConnection.TenantId `
-        -ApplicationId $servicePrincipalConnection.ApplicationId `
-        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+    $params = @{
+        ApplicationId = $servicePrincipalConnection.ApplicationId
+        TenantId = $servicePrincipalConnection.TenantId
+        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+    }
+    $login @params
 }
 catch 
 {
@@ -151,4 +160,5 @@ foreach ($WEVM in $WEVMs)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

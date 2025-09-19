@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Policy Assignment Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -103,6 +109,8 @@ param(
     [string]$WEEnforcementMode = " Default"
 )
 
+#region Functions
+
 Write-WELog " Creating Policy Assignment: $WEAssignmentName" " INFO"
 
 ; 
@@ -124,7 +132,7 @@ if ($WEParameters.Count -gt 0) {
 ; 
 $WEAssignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
 
-Write-WELog " ✅ Policy Assignment created successfully:" " INFO"
+Write-WELog "  Policy Assignment created successfully:" " INFO"
 Write-WELog "  Name: $($WEAssignment.Name)" " INFO"
 Write-WELog "  Policy: $($WEAssignment.Properties.PolicyDefinitionId.Split('/')[-1])" " INFO"
 Write-WELog "  Scope: $WEScope" " INFO"
@@ -167,3 +175,6 @@ Write-WELog " 4. Create exemptions if required" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

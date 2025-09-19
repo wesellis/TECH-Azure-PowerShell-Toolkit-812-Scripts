@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Pester, Az.Accounts, Az.Resources
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Comprehensive Azure Enterprise Toolkit Testing Framework
 .DESCRIPTION
@@ -66,6 +69,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string[]]$Tags = @()
 )
+
+#region Functions
 
 # Initialize test environment
 $ErrorActionPreference = "Stop"
@@ -742,3 +747,5 @@ try {
     Write-TestLog "Test framework execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+#endregion

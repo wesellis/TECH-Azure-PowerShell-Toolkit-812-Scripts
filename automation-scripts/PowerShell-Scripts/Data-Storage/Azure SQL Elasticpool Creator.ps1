@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Sql Elasticpool Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -102,18 +108,23 @@ param(
     [int]$WEDatabaseDtuMax = 100
 )
 
+#region Functions
+
 Write-WELog " Creating SQL Elastic Pool: $WEElasticPoolName" " INFO"
 ; 
-$WEElasticPool = New-AzSqlElasticPool -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -ServerName $WEServerName `
-    -ElasticPoolName $WEElasticPoolName `
-    -Edition $WEEdition `
-    -Dtu $WEPoolDtu `
-    -DatabaseDtuMin $WEDatabaseDtuMin `
-    -DatabaseDtuMax $WEDatabaseDtuMax
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Dtu = $WEPoolDtu
+    Edition = $WEEdition
+    DatabaseDtuMax = $WEDatabaseDtuMax
+    ServerName = $WEServerName
+    ElasticPoolName = $WEElasticPoolName
+    ErrorAction = "Stop"
+    DatabaseDtuMin = $WEDatabaseDtuMin
+}
+$WEElasticPool @params
 
-Write-WELog " ✅ SQL Elastic Pool created successfully:" " INFO"
+Write-WELog "  SQL Elastic Pool created successfully:" " INFO"
 Write-WELog "  Name: $($WEElasticPool.ElasticPoolName)" " INFO"
 Write-WELog "  Server: $($WEElasticPool.ServerName)" " INFO"
 Write-WELog "  Edition: $($WEElasticPool.Edition)" " INFO"
@@ -140,3 +151,6 @@ Write-WELog " 3. Monitor resource utilization" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Netapp Connect Ontap Win
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -48,6 +53,8 @@ param(
     [Parameter(Mandatory=$true)]
     [decimal]$WECapacity
 ) 
+
+#region Functions
 
 function WE-Get-ONTAPClusterDetails([String]$email, [String]$password, [String]$ocmip)
 {
@@ -356,4 +363,5 @@ Remove-Password -ErrorAction Stop $password
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

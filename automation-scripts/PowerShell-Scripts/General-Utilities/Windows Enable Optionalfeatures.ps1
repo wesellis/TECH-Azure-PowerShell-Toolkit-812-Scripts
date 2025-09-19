@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Enable Optionalfeatures
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -45,6 +50,8 @@ param(
     [string] $WEFeatureName
     
 )
+
+#region Functions
 ; 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest; 
@@ -57,3 +64,6 @@ Enable-WindowsOptionalFeature -Online -FeatureName $WEFeatureName -NoRestart -Al
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

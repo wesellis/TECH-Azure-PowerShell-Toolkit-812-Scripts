@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Move Validator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -68,7 +74,9 @@ param(
     [switch]$WEValidateOnly
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Resource Move Validator" -Version " 1.0" -Description " Validate resource move operations"
 
 try {
@@ -91,13 +99,13 @@ try {
     } -Force
 
     if ($validation) {
-        Write-WELog " ✅ All resources can be moved successfully!" " INFO" -ForegroundColor Green
+        Write-WELog "  All resources can be moved successfully!" " INFO" -ForegroundColor Green
     } else {
-        Write-WELog " ❌ Some resources cannot be moved. Check Azure portal for details." " INFO" -ForegroundColor Red
+        Write-WELog "  Some resources cannot be moved. Check Azure portal for details." " INFO" -ForegroundColor Red
     }
 
 } catch {
-    Write-Log " ❌ Resource move validation failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Resource move validation failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -105,4 +113,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

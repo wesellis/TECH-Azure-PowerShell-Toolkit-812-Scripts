@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Dns Zone Health Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,6 +78,8 @@ param(
     [string]$WEResourceGroupName,
     [string]$WEZoneName
 )
+
+#region Functions
 
 Write-WELog " Monitoring DNS Zone: $WEZoneName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
@@ -167,15 +175,15 @@ $WEHasNS = $WERecordSets | Where-Object { $_.RecordType -eq " NS" -and $_.Name -
 $WEHasA = $WERecordSets | Where-Object { $_.RecordType -eq " A" -and $_.Name -eq " @" }
 $WEHasWWW = $WERecordSets | Where-Object { $_.Name -eq " www" }
 
-Write-WELog "  ✓ SOA Record: $(if ($WEHasSOA) { 'Present' } else { 'Missing' })" " INFO"
-Write-WELog "  ✓ NS Records: $(if ($WEHasNS) { 'Present' } else { 'Missing' })" " INFO"
-Write-WELog "  ✓ Root A Record: $(if ($WEHasA) { 'Present' } else { 'Missing (Optional)' })" " INFO"
-Write-WELog "  ✓ WWW Record: $(if ($WEHasWWW) { 'Present' } else { 'Missing (Recommended)' })" " INFO"
+Write-WELog "  [OK] SOA Record: $(if ($WEHasSOA) { 'Present' } else { 'Missing' })" " INFO"
+Write-WELog "  [OK] NS Records: $(if ($WEHasNS) { 'Present' } else { 'Missing' })" " INFO"
+Write-WELog "  [OK] Root A Record: $(if ($WEHasA) { 'Present' } else { 'Missing (Optional)' })" " INFO"
+Write-WELog "  [OK] WWW Record: $(if ($WEHasWWW) { 'Present' } else { 'Missing (Recommended)' })" " INFO"
 
 
 $WELowTTLRecords = $WERecordSets | Where-Object { $_.Ttl -lt 300 -and $_.RecordType -ne " SOA" }
 if ($WELowTTLRecords.Count -gt 0) {
-    Write-WELog "  ⚠ Low TTL Warning: $($WELowTTLRecords.Count) records have TTL < 5 minutes" " INFO"
+    Write-WELog "  [WARN] Low TTL Warning: $($WELowTTLRecords.Count) records have TTL < 5 minutes" " INFO"
     foreach ($WERecord in $WELowTTLRecords) {
         Write-WELog "    - $($WERecord.Name) ($($WERecord.RecordType)): $($WERecord.Ttl)s" " INFO"
     }
@@ -183,7 +191,7 @@ if ($WELowTTLRecords.Count -gt 0) {
 
 $WEHighTTLRecords = $WERecordSets | Where-Object { $_.Ttl -gt 86400 -and $_.RecordType -ne " SOA" -and $_.RecordType -ne " NS" }
 if ($WEHighTTLRecords.Count -gt 0) {
-    Write-WELog "  ⚠ High TTL Warning: $($WEHighTTLRecords.Count) records have TTL > 24 hours" " INFO"
+    Write-WELog "  [WARN] High TTL Warning: $($WEHighTTLRecords.Count) records have TTL > 24 hours" " INFO"
 }
 
 
@@ -192,20 +200,20 @@ try {
     # Test resolution of the zone itself
    ;  $WEResolutionTest = Resolve-DnsName -Name $WEZoneName -Type NS -ErrorAction SilentlyContinue
     if ($WEResolutionTest) {
-        Write-WELog "  ✓ Zone resolution: Successful" " INFO"
+        Write-WELog "  [OK] Zone resolution: Successful" " INFO"
         Write-WELog "    Responding name servers:" " INFO"
         foreach ($WENS in $WEResolutionTest | Where-Object { $_.Type -eq " NS" }) {
             Write-WELog "      $($WENS.NameHost)" " INFO"
         }
     } else {
-        Write-WELog "  ✗ Zone resolution: Failed" " INFO"
+        Write-WELog "  [FAIL] Zone resolution: Failed" " INFO"
     }
     
     # Test A record resolution if exists
     if ($WEHasA) {
        ;  $WEARecordTest = Resolve-DnsName -Name $WEZoneName -Type A -ErrorAction SilentlyContinue
         if ($WEARecordTest) {
-            Write-WELog "  ✓ A record resolution: Successful" " INFO"
+            Write-WELog "  [OK] A record resolution: Successful" " INFO"
             foreach ($WEA in $WEARecordTest | Where-Object { $_.Type -eq " A" }) {
                 Write-WELog "    $($WEZoneName) -> $($WEA.IPAddress)" " INFO"
             }
@@ -213,7 +221,7 @@ try {
     }
     
 } catch {
-    Write-WELog "  ⚠ DNS resolution test failed: $($_.Exception.Message)" " INFO"
+    Write-WELog "  [WARN] DNS resolution test failed: $($_.Exception.Message)" " INFO"
 }
 
 Write-WELog " `nRecommendations:" " INFO"
@@ -229,4 +237,5 @@ Write-WELog " `nDNS Zone monitoring completed at $(Get-Date)" " INFO"
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

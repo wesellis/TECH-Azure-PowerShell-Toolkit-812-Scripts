@@ -1,6 +1,23 @@
-﻿# Azure AI Document Intelligence Service Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure AI Document Intelligence Service Manager
 # Professional Azure automation script for AI document processing
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise document AI automation
 
 param(
@@ -40,8 +57,10 @@ param(
     [switch]$EnableCustomerManagedKeys
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure AI Document Intelligence Manager" -Version "1.0" -Description "Enterprise document AI processing automation"
@@ -59,7 +78,7 @@ try {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
     
-    Write-Log "✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($Action.ToLower()) {
         "create" {
@@ -107,8 +126,8 @@ try {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @serviceParams
             } -OperationName "Create Document Intelligence Service"
             
-            Write-Log "✓ Document Intelligence service created: $ServiceName" -Level SUCCESS
-            Write-Log "✓ Endpoint: $($docIntelligenceService.Endpoint)" -Level INFO
+            Write-Log "[OK] Document Intelligence service created: $ServiceName" -Level SUCCESS
+            Write-Log "[OK] Endpoint: $($docIntelligenceService.Endpoint)" -Level INFO
         }
         
         "listmodels" {
@@ -128,7 +147,7 @@ try {
             } -OperationName "List Available Models" | Out-Null
             
             Write-Information ""
-            Write-Information "📋 Available Document Intelligence Models"
+            Write-Information "� Available Document Intelligence Models"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             $prebuiltModels = @(
@@ -179,7 +198,7 @@ try {
             } -OperationName "Analyze Document"
             
             Write-Information ""
-            Write-Information "📄 Document Analysis Results"
+            Write-Information "[FILE] Document Analysis Results"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Status: $($analysisResult.status)"
             Write-Information "Model ID: $ModelId"
@@ -200,13 +219,13 @@ try {
             $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
             
             Write-Information ""
-            Write-Information "🔑 Document Intelligence Service Details"
+            Write-Information "� Document Intelligence Service Details"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Endpoint: $endpoint"
             Write-Information "Key 1: $($keys.Key1)"
             Write-Information "Key 2: $($keys.Key2)"
             Write-Information ""
-            Write-Information "⚠️  Store these keys securely! Consider using Azure Key Vault."
+            Write-Information "[WARN]  Store these keys securely! Consider using Azure Key Vault."
         }
         
         "delete" {
@@ -222,7 +241,7 @@ try {
                 Remove-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -Force
             } -OperationName "Delete Document Intelligence Service"
             
-            Write-Log "✓ Document Intelligence service deleted: $ServiceName" -Level SUCCESS
+            Write-Log "[OK] Document Intelligence service deleted: $ServiceName" -Level SUCCESS
         }
     }
 
@@ -247,13 +266,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log "[WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName "Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log "✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log "[OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -288,42 +307,42 @@ try {
         # Check network access
         if ($RestrictPublicAccess) {
             $securityScore++
-            $securityFindings += "✓ Public access restricted"
+            $securityFindings += "[OK] Public access restricted"
         } else {
-            $securityFindings += "⚠️  Public access allowed - consider restricting"
+            $securityFindings += "[WARN]️  Public access allowed - consider restricting"
         }
         
         # Check monitoring
         if ($EnableMonitoring) {
             $securityScore++
-            $securityFindings += "✓ Monitoring enabled"
+            $securityFindings += "[OK] Monitoring enabled"
         } else {
-            $securityFindings += "⚠️  Monitoring not configured"
+            $securityFindings += "[WARN]️  Monitoring not configured"
         }
         
         # Check customer-managed keys
         if ($EnableCustomerManagedKeys) {
             $securityScore++
-            $securityFindings += "✓ Customer-managed encryption enabled"
+            $securityFindings += "[OK] Customer-managed encryption enabled"
         } else {
-            $securityFindings += "⚠️  Using Microsoft-managed keys"
+            $securityFindings += "[WARN]️  Using Microsoft-managed keys"
         }
         
         # Check region compliance
         if ($Location -in @("East US", "West Europe", "Southeast Asia")) {
             $securityScore++
-            $securityFindings += "✓ Deployed in compliant region"
+            $securityFindings += "[OK] Deployed in compliant region"
         }
         
         # Check SKU for production readiness
         if ($SkuName -ne "F0") {
             $securityScore++
-            $securityFindings += "✓ Production-ready SKU selected"
+            $securityFindings += "[OK] Production-ready SKU selected"
         }
         
         # Check custom subdomain (required for VNet integration)
         $securityScore++
-        $securityFindings += "✓ Custom subdomain configured"
+        $securityFindings += "[OK] Custom subdomain configured"
     }
 
     # Final validation
@@ -354,13 +373,13 @@ try {
         Write-Information "   • Status: $($serviceStatus.ProvisioningState)"
         
         Write-Information ""
-        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
+        Write-Information "[LOCK] Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
             Write-Information "   $finding"
         }
         
         Write-Information ""
-        Write-Information "💡 Next Steps:"
+        Write-Information "� Next Steps:"
         Write-Information "   • Test with sample documents using TestService action"
         Write-Information "   • Configure custom models for specific document types"
         Write-Information "   • Set up cost alerts for API usage monitoring"
@@ -368,19 +387,19 @@ try {
     }
     
     Write-Information ""
-    Write-Information "📚 Supported Document Types:"
+    Write-Information "� Supported Document Types:"
     Write-Information "   • General documents, invoices, receipts, business cards"
     Write-Information "   • Identity documents, tax forms (W-2, 1098, 1099)"
     Write-Information "   • Custom models for specific document types"
     Write-Information ""
 
-    Write-Log "✅ Azure AI Document Intelligence service '$ServiceName' operation completed successfully!" -Level SUCCESS
+    Write-Log " Azure AI Document Intelligence service '$ServiceName' operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Document Intelligence service availability in your region"
     Write-Information "   • Check subscription quotas for Cognitive Services"
     Write-Information "   • Ensure proper permissions for AI service creation"
@@ -392,3 +411,6 @@ try {
 
 Write-Progress -Activity "Document Intelligence Service Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

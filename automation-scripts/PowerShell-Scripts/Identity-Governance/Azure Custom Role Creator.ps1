@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Custom Role Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -95,6 +101,8 @@ param(
     [string]$WESubscriptionId
 )
 
+#region Functions
+
 Write-WELog " Creating custom Azure role: $WERoleName" " INFO"
 
 if (-not $WESubscriptionId) {
@@ -116,7 +124,7 @@ try {
     # Create the custom role
    ;  $WECustomRole = New-AzRoleDefinition -Role $WERoleDefinition
     
-    Write-WELog " ✅ Custom role created successfully:" " INFO"
+    Write-WELog "  Custom role created successfully:" " INFO"
     Write-WELog "  Name: $($WECustomRole.Name)" " INFO"
     Write-WELog "  ID: $($WECustomRole.Id)" " INFO"
     Write-WELog "  Description: $($WECustomRole.Description)" " INFO"
@@ -181,4 +189,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

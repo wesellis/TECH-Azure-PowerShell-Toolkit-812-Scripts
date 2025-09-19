@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Scheduledsnooze Parent
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +56,8 @@ param(
     [Parameter(Mandatory = $true, HelpMessage = " Enter the value for Action. Values can be either stop or start" )][String]$WEAction,
     [Parameter(Mandatory = $false, HelpMessage = " Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
 )
+
+#region Functions
 
 function WE-ScheduleSnoozeAction ($WEVMObject, [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
@@ -108,11 +116,12 @@ try {
     $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName         
 
     " Logging in to Azure..."
-    Add-AzureRmAccount `
-        -ServicePrincipal `
-        -TenantId $servicePrincipalConnection.TenantId `
-        -ApplicationId $servicePrincipalConnection.ApplicationId `
-        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+    $params = @{
+        ApplicationId = $servicePrincipalConnection.ApplicationId
+        TenantId = $servicePrincipalConnection.TenantId
+        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+    }
+    Add-AzureRmAccount @params
 }
 catch {
     if (!$servicePrincipalConnection) {
@@ -211,4 +220,5 @@ catch {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

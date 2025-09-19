@@ -1,6 +1,23 @@
-﻿# Azure Disk Encryption Status Checker
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Disk Encryption Status Checker
 # Check encryption status of managed disks and VMs
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -17,7 +34,9 @@ param(
     [string]$OutputPath = ".\encryption-status-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Disk Encryption Status Checker" -Version "1.0" -Description "Check disk and VM encryption status"
 
 try {
@@ -76,7 +95,7 @@ try {
 
     if ($ExportReport) {
         $encryptionStatus | Export-Csv -Path $OutputPath -NoTypeInformation
-        Write-Log "✓ Encryption report exported to: $OutputPath" -Level SUCCESS
+        Write-Log "[OK] Encryption report exported to: $OutputPath" -Level SUCCESS
     }
 
     $totalResources = $encryptionStatus.Count
@@ -89,6 +108,9 @@ try {
     Write-Information "  Encryption Rate: $encryptionRate%"
 
 } catch {
-    Write-Log "❌ Encryption status check failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Encryption status check failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

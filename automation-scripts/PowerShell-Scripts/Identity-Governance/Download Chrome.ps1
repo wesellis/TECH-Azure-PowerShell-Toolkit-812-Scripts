@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Download Chrome
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -61,4 +66,5 @@ Start-BitsTransfer -Source " https://dl.google.com/tag/s/appguid%3D%7B8A69D345-D
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Aks Node Restart Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -81,6 +87,8 @@ param(
     [string]$WENodeName
 )
 
+#region Functions
+
 Write-WELog " Restarting AKS Node: $WENodeName" " INFO"
 Write-WELog " Cluster: $WEAksClusterName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
@@ -105,3 +113,6 @@ Write-WELog " Then: kubectl uncordon $WENodeName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

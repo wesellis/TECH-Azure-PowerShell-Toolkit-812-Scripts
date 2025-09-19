@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Auto Shutdown Configurator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Configures automatic shutdown for Azure Virtual Machines
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -23,6 +32,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$NotificationEmail
 )
+
+#region Functions
 
 Write-Information "Configuring auto-shutdown for VM: $VmName"
 
@@ -46,15 +57,21 @@ if ($NotificationEmail) {
     }
 }
 
-New-AzResource -ErrorAction Stop `
-    -ResourceId ("/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}" -f (Get-AzContext).Subscription.Id, $ResourceGroupName, $VmName) `
-    -Properties $Properties `
-    -Force
+$params = @{
+    f = "(Get-AzContext).Subscription.Id, $ResourceGroupName, $VmName)"
+    ErrorAction = "Stop"
+    Properties = $Properties
+    ResourceId = "("/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}"
+}
+New-AzResource @params
 
-Write-Information "✅ Auto-shutdown configured successfully:"
+Write-Information " Auto-shutdown configured successfully:"
 Write-Information "  VM: $VmName"
 Write-Information "  Shutdown Time: $ShutdownTime"
 Write-Information "  Time Zone: $TimeZone"
 if ($NotificationEmail) {
     Write-Information "  Notification Email: $NotificationEmail"
 }
+
+
+#endregion

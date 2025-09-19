@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Containerapps Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -92,8 +98,10 @@ param(
     [string]$WELogAnalyticsWorkspace
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Container Apps Provisioning Tool" -Version " 2.0" -Description " Deploy modern serverless containers with enterprise features"
@@ -111,7 +119,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     # Create Container Apps Environment
     Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Container Environment" -Status " Creating Container Apps Environment"
@@ -128,20 +136,16 @@ try {
     
     Invoke-AzureOperation -Operation {
         # Note: Using Azure CLI as Az.ContainerApps module is still in preview
-        $envJson = az containerapp env create `
-            --name $WEEnvironmentName `
-            --resource-group $WEResourceGroupName `
-            --location $WELocation `
-            --output json 2>$null
-        
-        if ($WELASTEXITCODE -ne 0) {
-            throw " Failed to create Container Apps Environment"
+        $params = @{
+            Level = "SUCCESS"
+            name = $WEEnvironmentName
+            location = $WELocation
+            ne = "0) { throw " Failed to create Container Apps Environment" }  return ($envJson | ConvertFrom-Json) }"
+            output = "json 2>$null  if ($WELASTEXITCODE"
+            group = $WEResourceGroupName
+            OperationName = " Create Container Apps Environment" | Out-Null  Write-Log " [OK] Container Apps Environment created: $WEEnvironmentName"
         }
-        
-        return ($envJson | ConvertFrom-Json)
-    } -OperationName " Create Container Apps Environment" | Out-Null
-    
-    Write-Log " ✓ Container Apps Environment created: $WEEnvironmentName" -Level SUCCESS
+        $envJson @params
 
     # Prepare environment variables
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Configuration" -Status " Preparing container configuration"
@@ -193,7 +197,7 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName " Advanced Configuration" -Status " Configuring ingress and scaling"
     
     if ($WEEnableExternalIngress) {
-        Write-Log " ✓ External ingress enabled for $WEContainerAppName" -Level SUCCESS
+        Write-Log " [OK] External ingress enabled for $WEContainerAppName" -Level SUCCESS
         Write-Log " 🌐 Application URL: https://$($containerApp.properties.configuration.ingress.fqdn)" -Level SUCCESS
     }
 
@@ -229,7 +233,7 @@ try {
     Write-WELog "                              CONTAINER APP DEPLOYMENT SUCCESSFUL" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " 📦 Container App Details:" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Container App Details:" " INFO" -ForegroundColor Cyan
     Write-WELog "   • Name: $WEContainerAppName" " INFO" -ForegroundColor White
     Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White
     Write-WELog "   • Environment: $WEEnvironmentName" " INFO" -ForegroundColor White
@@ -253,13 +257,13 @@ try {
     Write-WELog "   • Update image: az containerapp update --name $WEContainerAppName --resource-group $WEResourceGroupName --image NEW_IMAGE" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Container App '$WEContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
+    Write-Log "  Container App '$WEContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Azure CLI is installed: az --version" " INFO" -ForegroundColor White
     Write-WELog "   • Check Container Apps extension: az extension add --name containerapp" " INFO" -ForegroundColor White
     Write-WELog "   • Validate image accessibility: docker pull $WEContainerImage" " INFO" -ForegroundColor White
@@ -276,4 +280,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

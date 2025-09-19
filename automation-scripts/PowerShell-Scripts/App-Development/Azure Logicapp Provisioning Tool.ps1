@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Logicapp Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -92,6 +98,8 @@ param(
     [hashtable]$WETags = @{}
 )
 
+#region Functions
+
 Write-WELog " Provisioning Logic App: $WEAppName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -105,34 +113,38 @@ if ($WEPlanName) {
     
     if (-not $WEPlan) {
         Write-WELog " Creating App Service Plan for Logic App..." " INFO"
-        $WEPlan = New-AzAppServicePlan -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -Name $WEPlanName `
-            -Location $WELocation `
-            -Tier " WorkflowStandard" `
-            -WorkerSize " WS1"
-        
-        Write-WELog " App Service Plan created: $($WEPlan.Name)" " INFO"
-    } else {
-        Write-WELog " Using existing App Service Plan: $($WEPlan.Name)" " INFO"
-    }
+        $params = @{
+            ResourceGroupName = $WEResourceGroupName
+            Tier = " WorkflowStandard"
+            WorkerSize = " WS1"  Write-WELog " App Service Plan created: $($WEPlan.Name)" " INFO" } else { Write-WELog " Using existing App Service Plan: $($WEPlan.Name)" " INFO" }"
+            Location = $WELocation
+            ErrorAction = "Stop"
+            Name = $WEPlanName
+        }
+        $WEPlan @params
 }
 
 
 Write-WELog " `nCreating Logic App..." " INFO"
 if ($WEPlanName) {
     # Logic App with dedicated plan (Standard tier)
-   ;  $WELogicApp = New-AzLogicApp -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEAppName `
-        -Location $WELocation `
-        -AppServicePlan $WEPlanName
+   $params = @{
+       AppServicePlan = $WEPlanName
+       ErrorAction = "Stop"
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEAppName
+       Location = $WELocation
+   }
+   ; @params
 } else {
     # Consumption-based Logic App
-   ;  $WELogicApp = New-AzLogicApp -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEAppName `
-        -Location $WELocation
+   $params = @{
+       ErrorAction = "Stop"
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEAppName
+       Location = $WELocation
+   }
+   ; @params
 }
 
 
@@ -189,3 +201,6 @@ Write-WELog " `nLogic App provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

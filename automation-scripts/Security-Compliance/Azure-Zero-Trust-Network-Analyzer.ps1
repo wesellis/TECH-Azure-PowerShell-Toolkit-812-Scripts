@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Analyzes Azure environment for Zero Trust Network compliance and provides actionable recommendations.
 
@@ -44,6 +50,8 @@ param(
     [ValidateSet("Summary", "Detailed", "Executive")]
     [string]$DetailLevel = "Detailed"
 )
+
+#region Functions
 
 # Import required modules
 $requiredModules = @('Az.Network', 'Az.Security', 'Az.Monitor', 'Az.Resources')
@@ -479,3 +487,5 @@ try {
     Write-Error "An error occurred during assessment: $_"
     exit 1
 }
+
+#endregion

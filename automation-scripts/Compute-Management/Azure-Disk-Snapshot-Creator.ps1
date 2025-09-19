@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Disk Snapshot Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates a snapshot of an Azure managed disk
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$SnapshotName = "$DiskName-snapshot-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 )
+
+#region Functions
 
 Write-Information "Creating snapshot of disk: $DiskName"
 
@@ -30,3 +41,6 @@ Write-Information "Snapshot created successfully:"
 Write-Information "  Name: $($Snapshot.Name)"
 Write-Information "  Size: $($Snapshot.DiskSizeGB) GB"
 Write-Information "  Location: $($Snapshot.Location)"
+
+
+#endregion

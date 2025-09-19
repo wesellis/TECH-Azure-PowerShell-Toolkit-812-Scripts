@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Batchaccount Performance Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,6 +78,8 @@ param(
     [string]$WEResourceGroupName,
     [string]$WEAccountName
 )
+
+#region Functions
 
 Write-WELog " Monitoring Batch Account: $WEAccountName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
@@ -173,4 +181,5 @@ Write-WELog " `nBatch Account monitoring completed at $(Get-Date)" " INFO"
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Get Fixedreadme
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -44,6 +49,8 @@ param(
     [string] $WEReadmeContents,
     [string] $WEExpectedMarkdown
 )
+
+#region Functions
 
 Import-Module " $WEPSScriptRoot/Local.psm1" -force
 $newLine = [System.Environment]::NewLine
@@ -109,3 +116,6 @@ return $fixed.Trim() + $newLine
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

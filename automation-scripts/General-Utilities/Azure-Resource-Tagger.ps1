@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Resource Tagger
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Bulk resource tagging across Azure services
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [hashtable]$Tags = @{},
@@ -14,6 +23,8 @@ param (
     [switch]$WhatIf,
     [switch]$Force
 )
+
+#region Functions
 
 Write-Information "Azure Resource Tagger"
 Write-Information "====================="
@@ -56,7 +67,7 @@ foreach ($resource in $resources) {
             }
             
             Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$Force
-            Write-Information "  ✓ Tagged: $($resource.Name)"
+            Write-Information "  [OK] Tagged: $($resource.Name)"
             $taggedCount++
         }
     } catch {
@@ -65,7 +76,9 @@ foreach ($resource in $resources) {
 }
 
 if (-not $WhatIf) {
-    Write-Information "`n✓ Successfully tagged $taggedCount resources"
+    Write-Information "`n[OK] Successfully tagged $taggedCount resources"
 }
 
 Write-Information "`nResource tagging completed at $(Get-Date)"
+
+#endregion

@@ -1,17 +1,28 @@
-﻿# ============================================================================
-# Script Name: Azure Virtual Machine Scaling Automation Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Automates scaling of Azure Virtual Machine sizes and configurations
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$VmName,
     [string]$NewVmSize
 )
+
+#region Functions
 
 # Get current VM
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
@@ -23,3 +34,6 @@ $VM.HardwareProfile.VmSize = $NewVmSize
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 
 Write-Information "VM $VmName has been scaled to size: $NewVmSize"
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Table Storage Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [string]$WETableName
 )
 
+#region Functions
+
 Write-WELog " Creating Table Storage: $WETableName" " INFO"
 
 $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
@@ -93,7 +101,7 @@ $WEContext = $WEStorageAccount.Context
 
 $WETable = New-AzStorageTable -Name $WETableName -Context $WEContext
 
-Write-WELog " ✅ Table Storage created successfully:" " INFO"
+Write-WELog "  Table Storage created successfully:" " INFO"
 Write-WELog "  Name: $($WETable.Name)" " INFO"
 Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
 Write-WELog "  Context: $($WEContext.StorageAccountName)" " INFO"
@@ -123,3 +131,6 @@ Write-WELog " • REST API access" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

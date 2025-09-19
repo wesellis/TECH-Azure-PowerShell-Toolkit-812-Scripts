@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Gatewayinstall
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -40,6 +45,8 @@ param(
  [string]
  $gatewayKey
 )
+
+#region Functions
 
 
 $logLoc = " $env:SystemDrive\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\"
@@ -97,16 +104,16 @@ function WE-Run-Process([string] $process, [string] $arguments)
 
 	if ([string]::IsNullOrEmpty($arguments))
 	{
-		$proc = Start-Process -FilePath $process -Wait -Passthru -NoNewWindow `
-			-RedirectStandardError $errorFile -RedirectStandardOutput $outFile -ErrorVariable errVariable
-	}
-	else
-	{
-		$proc = Start-Process -FilePath $process -ArgumentList $arguments -Wait -Passthru -NoNewWindow `
-			-RedirectStandardError $errorFile -RedirectStandardOutput $outFile -ErrorVariable errVariable
-	}
-	
-	$errContent = [string] (Get-Content -Path $errorFile -Delimiter " !!!DoesNotExist!!!" )
+		$params = @{
+		    Path = $errorFile
+		    ArgumentList = $arguments
+		    ErrorVariable = "errVariable }  $errContent = [string] (Get-Content"
+		    Delimiter = " !!!DoesNotExist!!!" )"
+		    FilePath = $process
+		    RedirectStandardOutput = $outFile
+		    RedirectStandardError = $errorFile
+		}
+		$proc @params
 ; 	$outContent = [string] (Get-Content -Path $outFile -Delimiter " !!!DoesNotExist!!!" )
 
 	Remove-Item -ErrorAction Stop $errorFil -Forcee -Force
@@ -222,4 +229,5 @@ Register-Gateway $gatewayKey
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

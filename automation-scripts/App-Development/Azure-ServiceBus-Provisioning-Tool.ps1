@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Service Bus Namespace Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Service Bus namespaces for reliable messaging and queuing
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$NamespaceName,
@@ -16,6 +25,8 @@ param (
     [bool]$ZoneRedundant = $false,
     [hashtable]$Tags = @{}
 )
+
+#region Functions
 
 Write-Information "Provisioning Service Bus Namespace: $NamespaceName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -128,3 +139,6 @@ Write-Information "  • Event-driven architectures"
 Write-Information "  • Integrating on-premises and cloud systems"
 
 Write-Information "`nService Bus Namespace provisioning completed at $(Get-Date)"
+
+
+#endregion

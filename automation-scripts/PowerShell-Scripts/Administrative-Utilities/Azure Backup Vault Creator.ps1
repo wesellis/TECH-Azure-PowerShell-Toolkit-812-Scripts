@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Backup Vault Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -88,23 +94,31 @@ param(
     [string]$WEStorageType = " GeoRedundant"
 )
 
+#region Functions
+
 Write-WELog " Creating Recovery Services Vault: $WEVaultName" " INFO"
 
 ; 
-$WEVault = New-AzRecoveryServicesVault -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEVaultName `
-    -Location $WELocation
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEVaultName
+    Location = $WELocation
+}
+$WEVault @params
 
 
 Set-AzRecoveryServicesVaultContext -Vault $WEVault
 
 
-Set-AzRecoveryServicesBackupProperty -ErrorAction Stop `
-    -Vault $WEVault `
-    -BackupStorageRedundancy $WEStorageType
+$params = @{
+    BackupStorageRedundancy = $WEStorageType
+    ErrorAction = "Stop"
+    Vault = $WEVault
+}
+Set-AzRecoveryServicesBackupProperty @params
 
-Write-WELog " ✅ Recovery Services Vault created successfully:" " INFO"
+Write-WELog "  Recovery Services Vault created successfully:" " INFO"
 Write-WELog "  Name: $($WEVault.Name)" " INFO"
 Write-WELog "  Location: $($WEVault.Location)" " INFO"
 Write-WELog "  Storage Type: $WEStorageType" " INFO"
@@ -144,3 +158,6 @@ Write-WELog " • SAP HANA in Azure VMs" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

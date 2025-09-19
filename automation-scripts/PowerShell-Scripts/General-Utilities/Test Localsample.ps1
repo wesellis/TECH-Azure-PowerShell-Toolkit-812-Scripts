@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Test Localsample
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -69,6 +74,8 @@ param(
     [switch] $WEFix # If true, fixes will be made if possible
 )
 
+#region Functions
+
 $WESampleFolder = $WESampleFolder -eq "" ? " ." : $WESampleFolder
 
 $WEPreviousErrorPreference = $WEErrorActionPreference
@@ -95,10 +102,7 @@ Write-WELog " Running local validation on sample $WESampleName in folder $WESamp
 
 
 Write-WELog " Checking bicep support in the sample" " INFO"
-$checkLanguageHostOutput = & $WEPSScriptRoot/Check-LanguageSupport.ps1 `
-    -SampleFolder $WESampleFolder `
-    -MainTemplateFilenameBicep " main.bicep" `
-    6>&1
+$checkLanguageHostOutput -MainTemplateFilenameBicep " main.bicep" 6>&1" -SampleFolder $WESampleFolder
 Write-Output $checkLanguageHostOutput
 $vars = Find-VarsFromWriteHostOutput $checkLanguageHostOutput
 $bicepSupported = $vars[" BICEP_SUPPORTED" ] -eq 'true'
@@ -109,15 +113,15 @@ Assert-NotEmptyOrNull $mainTemplateFilenameJson " mainTemplateFilenameJson"
 
 Write-Information " Validating deployment file"
 
-$buildHostOutput = & $WEPSScriptRoot/Validate-DeploymentFile.ps1 `
-    -SampleFolder $WESampleFolder `
-    -MainTemplateFilenameBicep " main.bicep" `
-    -MainTemplateFilenameJson $mainTemplateFilenameJson `
-    -BuildReason " PullRequest" `
-    -BicepPath $WEBicepPath `
-    -BicepVersion " (current)" `
-    -BicepSupported:$bicepSupported `
-    6>&1
+$params = @{
+    SampleFolder = $WESampleFolder
+    MainTemplateFilenameJson = $mainTemplateFilenameJson
+    BicepVersion = " (current)"
+    BicepPath = $WEBicepPath
+    BuildReason = " PullRequest"
+    MainTemplateFilenameBicep = " main.bicep"
+}
+$buildHostOutput @params
 Write-Output $buildHostOutput
 $vars = Find-VarsFromWriteHostOutput $buildHostOutput
 $mainTemplateDeploymentFilename = $vars[" MAINTEMPLATE_DEPLOYMENT_FILENAME" ]
@@ -128,11 +132,12 @@ $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ] -eq " TRUE"
 
 Write-WELog " Validating metadata.json" " INFO"
 $metadataHostOutput =
-& $WEPSScriptRoot/Validate-Metadata.ps1 `
-    -SampleFolder $WESampleFolder `
-    -CloudEnvironment $WECloudEnvironment `
-    -BuildReason " PullRequest" `
-    6>&1
+$params = @{
+    BuildReason = " PullRequest" 6>&1"
+    SampleFolder = $WESampleFolder
+    CloudEnvironment = $WECloudEnvironment
+}
+& @params
 Write-Output $metadataHostOutput
 $vars = Find-VarsFromWriteHostOutput $metadataHostOutput
 $supportedEnvironmentsJson = $vars[" SUPPORTED_ENVIRONMENTS" ]
@@ -141,15 +146,14 @@ Assert-NotEmptyOrNull $supportedEnvironmentsJson " supportedEnvironmentsJson"
 
 Write-WELog " Validating README.md" " INFO"
 $validateReadMeHostOutput =
-& $WEPSScriptRoot/Validate-ReadMe.ps1 `
-    -SampleFolder $WESampleFolder `
-    -SampleName $WESampleName `
-    -StorageAccountName $WEStorageAccountName `
-    -ReadMeFileName " README.md" `
-    -supportedEnvironmentsJson $supportedEnvironmentsJson `
-    -bicepSupported:$bicepSupported `
-    -Fix:$WEFix `
-    6>&1
+$params = @{
+    SampleName = $WESampleName
+    supportedEnvironmentsJson = $supportedEnvironmentsJson
+    StorageAccountName = $WEStorageAccountName
+    SampleFolder = $WESampleFolder
+    ReadMeFileName = " README.md"
+}
+& @params
 Write-Output $validateReadMeHostOutput
 $vars = Find-VarsFromWriteHostOutput $validateReadMeHostOutput
 $resultReadMe = $vars[" RESULT_README" ] # will be null if fails
@@ -170,20 +174,19 @@ if (!$WETtkFolder) {
 }
 Write-WELog " Validating JSON best practices (using ARM TTK)" " INFO"
 $validateBPOutput =
-& $WEPSScriptRoot/Test-BestPractices.ps1 `
-    -SampleFolder $WESampleFolder `
-    -MainTemplateDeploymentFilename $mainTemplateDeploymentFilename `
-    -ttkFolder $WETtkFolder `
-    6>&1
+$params = @{
+    ttkFolder = $WETtkFolder 6>&1
+    SampleFolder = $WESampleFolder
+    MainTemplateDeploymentFilename = $mainTemplateDeploymentFilename
+}
+& @params
 Write-Output $validateBPOutput
 $vars = Find-VarsFromWriteHostOutput $validateBPOutput
 
 
 Write-WELog " Checking for miscellaneous labels" " INFO"
 $miscLabelsHostOutput =
-& $WEPSScriptRoot/Check-MiscLabels.ps1 `
-    -SampleName $WESampleName `
-    6>&1
+& -SampleName $WESampleName 6>&1
 Write-Output $miscLabelsHostOutput
 $vars = Find-VarsFromWriteHostOutput $miscLabelsHostOutput
 $isRootSample = $vars[" ISROOTSAMPLE" ] -eq " true"
@@ -231,3 +234,6 @@ if ($isPortalSample) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

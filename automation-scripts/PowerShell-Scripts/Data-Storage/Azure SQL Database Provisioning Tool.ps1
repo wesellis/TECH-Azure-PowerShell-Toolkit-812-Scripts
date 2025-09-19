@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Sql Database Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -99,6 +105,8 @@ param(
     [bool]$WEAllowAzureIps = $true
 )
 
+#region Functions
+
 Write-WELog " Provisioning SQL Database: $WEDatabaseName" " INFO"
 Write-WELog " SQL Server: $WEServerName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
@@ -108,33 +116,42 @@ Write-WELog " Service Objective: $WEServiceObjective" " INFO"
 
 
 Write-WELog " `nCreating SQL Server..." " INFO"; 
-$WESqlServer = New-AzSqlServer -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Location $WELocation `
-    -ServerName $WEServerName `
-    -SqlAdministratorCredentials (New-Object -ErrorAction Stop PSCredential($WEAdminUser, $WEAdminPassword))
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    ServerName = $WEServerName
+    Location = $WELocation
+    SqlAdministratorCredentials = "(New-Object"
+    ErrorAction = "Stop PSCredential($WEAdminUser, $WEAdminPassword))"
+}
+$WESqlServer @params
 
 Write-WELog " SQL Server created: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
 
 
 if ($WEAllowAzureIps) {
     Write-WELog " Configuring firewall to allow Azure services..." " INFO"
-    New-AzSqlServerFirewallRule -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -ServerName $WEServerName `
-        -FirewallRuleName " AllowAzureServices" `
-        -StartIpAddress " 0.0.0.0" `
-        -EndIpAddress " 0.0.0.0"
+    $params = @{
+        ResourceGroupName = $WEResourceGroupName
+        StartIpAddress = " 0.0.0.0"
+        ServerName = $WEServerName
+        EndIpAddress = " 0.0.0.0"
+        ErrorAction = "Stop"
+        FirewallRuleName = " AllowAzureServices"
+    }
+    New-AzSqlServerFirewallRule @params
 }
 
 
 Write-WELog " `nCreating SQL Database..." " INFO" ; 
-$WESqlDatabase = New-AzSqlDatabase -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -ServerName $WEServerName `
-    -DatabaseName $WEDatabaseName `
-    -Edition $WEEdition `
-    -RequestedServiceObjectiveName $WEServiceObjective
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Edition = $WEEdition
+    ServerName = $WEServerName
+    RequestedServiceObjectiveName = $WEServiceObjective
+    DatabaseName = $WEDatabaseName
+    ErrorAction = "Stop"
+}
+$WESqlDatabase @params
 
 Write-WELog " `nSQL Database $WEDatabaseName provisioned successfully" " INFO"
 Write-WELog " Server: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
@@ -155,3 +172,6 @@ Write-WELog " `nSQL Database provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

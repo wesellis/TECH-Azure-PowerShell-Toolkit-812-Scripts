@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Fileshare Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,17 +99,22 @@ param(
     [int]$WEQuotaInGB = 1024
 )
 
+#region Functions
+
 Write-WELog " Creating File Share: $WEShareName" " INFO"
 
 $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
 $WEContext = $WEStorageAccount.Context
 
-$WEFileShare = New-AzStorageShare -ErrorAction Stop `
-    -Name $WEShareName `
-    -Context $WEContext `
-    -QuotaGiB $WEQuotaInGB
+$params = @{
+    ErrorAction = "Stop"
+    Context = $WEContext
+    QuotaGiB = $WEQuotaInGB
+    Name = $WEShareName
+}
+$WEFileShare @params
 
-Write-WELog " ✅ File Share created successfully:" " INFO"
+Write-WELog "  File Share created successfully:" " INFO"
 Write-WELog "  Name: $($WEFileShare.Name)" " INFO"
 Write-WELog "  Quota: $WEQuotaInGB GB" " INFO"
 Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
@@ -126,3 +137,6 @@ Write-WELog "    sudo mount -t cifs //$WEStorageAccountName.file.core.windows.ne
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Get Oldestsamplefolder
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -49,6 +55,8 @@ param(
     $WEResultDeploymentParameter = " $WEENV:RESULT_DEPLOYMENT_PARAMETER" , #also cloud specific
     $WEPurgeOldRows = $true
 )
+
+#region Functions
 <#
 
 Get all metadata files in the repo
@@ -132,11 +140,13 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
 
         Write-WELog " Adding new row for $WERowkey..." " INFO"
         $p | Format-Table
-        Add-AzTableRow -table $cloudTable `
-            -partitionKey $WEMetadataJson.type `
-            -rowKey $WERowKey `
-            -property $p
-    }
+        $params = @{
+            table = $cloudTable
+            property = $p }
+            partitionKey = $WEMetadataJson.type
+            rowKey = $WERowKey
+        }
+        Add-AzTableRow @params
 }
 
 
@@ -214,3 +224,6 @@ Write-WELog " ##vso[task.setvariable variable=sample.name]$sampleName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

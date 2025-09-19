@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Networkwatcher Enabler
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [string]$WENetworkWatcherName = " NetworkWatcher_$WELocation"
 )
 
+#region Functions
+
 Write-WELog " Enabling Network Watcher in: $WELocation" " INFO"
 
 ; 
@@ -93,14 +101,15 @@ $WENetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $WEResourceGroupName
 
 if (-not $WENetworkWatcher) {
     # Create Network Watcher
-   ;  $WENetworkWatcher = New-AzNetworkWatcher -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WENetworkWatcherName `
-        -Location $WELocation
-    
-    Write-WELog " ✅ Network Watcher created successfully:" " INFO"
+   $params = @{
+       ErrorAction = "Stop"
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WENetworkWatcherName
+       Location = $WELocation  Write-WELog "  Network Watcher created successfully:" " INFO
+   }
+   ; @params
 } else {
-    Write-WELog " ✅ Network Watcher already exists:" " INFO"
+    Write-WELog "  Network Watcher already exists:" " INFO"
 }
 
 Write-WELog "  Name: $($WENetworkWatcher.Name)" " INFO"
@@ -124,3 +133,6 @@ Write-WELog "  • Connection Troubleshoot" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

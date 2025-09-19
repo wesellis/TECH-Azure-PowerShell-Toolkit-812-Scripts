@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Deploy Azureresourcegroup
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -55,6 +61,8 @@ param(
     [string] $WEDeploymentName = ([IO.Path]::GetFileNameWithoutExtension($WETemplateFile) + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')),
     [switch] $WEDev
 )
+
+#region Functions
 
 try {
     [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzureQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
@@ -250,27 +258,17 @@ if ($WEValidateOnly) {
 else {
     if ($deploymentScope -eq " Subscription" ) {
         #subscription scoped deployment
-        New-AzureRmDeployment -Name $WEDeploymentName `
-            -Location $WELocation `
-            @TemplateArgs `
-            @OptionalParameters `
-            -Verbose `
-            -ErrorVariable ErrorMessages
-    }
-    else {
-        New-AzureRmResourceGroupDeployment -Name $WEDeploymentName `
-            -ResourceGroupName $WEResourceGroupName `
-            @TemplateArgs `
-            @OptionalParameters `
-            -Force -Verbose `
-            -ErrorVariable ErrorMessages
-    }
-    if ($WEErrorMessages) {
-        Write-Output '', 'Template deployment returned the following errors:', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message.TrimEnd(" `r`n" ) })
-    }
+        $params = @{
+            ResourceGroupName = $WEResourceGroupName @TemplateArgs @OptionalParameters
+            ErrorVariable = "ErrorMessages } else { New-AzureRmResourceGroupDeployment"
+            Name = $WEDeploymentName
+            Location = $WELocation @TemplateArgs @OptionalParameters
+        }
+        New-AzureRmDeployment @params
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

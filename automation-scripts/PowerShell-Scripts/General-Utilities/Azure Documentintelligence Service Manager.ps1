@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Documentintelligence Service Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -88,8 +94,10 @@ param(
     [switch]$WEEnableCustomerManagedKeys
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure AI Document Intelligence Manager" -Version " 1.0" -Description " Enterprise document AI processing automation"
@@ -107,7 +115,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($WEAction.ToLower()) {
         " create" {
@@ -155,8 +163,8 @@ try {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @serviceParams
             } -OperationName " Create Document Intelligence Service"
             
-            Write-Log " ✓ Document Intelligence service created: $WEServiceName" -Level SUCCESS
-            Write-Log " ✓ Endpoint: $($docIntelligenceService.Endpoint)" -Level INFO
+            Write-Log " [OK] Document Intelligence service created: $WEServiceName" -Level SUCCESS
+            Write-Log " [OK] Endpoint: $($docIntelligenceService.Endpoint)" -Level INFO
         }
         
         " listmodels" {
@@ -227,7 +235,7 @@ try {
             } -OperationName " Analyze Document"
             
             Write-WELog "" " INFO"
-            Write-WELog " 📄 Document Analysis Results" " INFO" -ForegroundColor Cyan
+            Write-WELog " [FILE] Document Analysis Results" " INFO" -ForegroundColor Cyan
             Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
             Write-WELog " Status: $($analysisResult.status)" " INFO" -ForegroundColor Green
             Write-WELog " Model ID: $WEModelId" " INFO" -ForegroundColor White
@@ -254,7 +262,7 @@ try {
             Write-WELog " Key 1: $($keys.Key1)" " INFO" -ForegroundColor Yellow
             Write-WELog " Key 2: $($keys.Key2)" " INFO" -ForegroundColor Yellow
             Write-WELog "" " INFO"
-            Write-WELog " ⚠️  Store these keys securely! Consider using Azure Key Vault." " INFO" -ForegroundColor Red
+            Write-WELog " [WARN]️  Store these keys securely! Consider using Azure Key Vault." " INFO" -ForegroundColor Red
         }
         
         " delete" {
@@ -270,7 +278,7 @@ try {
                 Remove-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName -Force
             } -OperationName " Delete Document Intelligence Service"
             
-            Write-Log " ✓ Document Intelligence service deleted: $WEServiceName" -Level SUCCESS
+            Write-Log " [OK] Document Intelligence service deleted: $WEServiceName" -Level SUCCESS
         }
     }
 
@@ -295,13 +303,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName " Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log " ✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -336,42 +344,42 @@ try {
         # Check network access
         if ($WERestrictPublicAccess) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Public access restricted"
+            $securityFindings = $securityFindings + " [OK] Public access restricted"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Public access allowed - consider restricting"
+            $securityFindings = $securityFindings + " [WARN]️  Public access allowed - consider restricting"
         }
         
         # Check monitoring
         if ($WEEnableMonitoring) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Monitoring enabled"
+            $securityFindings = $securityFindings + " [OK] Monitoring enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Monitoring not configured"
+            $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
         }
         
         # Check customer-managed keys
         if ($WEEnableCustomerManagedKeys) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Customer-managed encryption enabled"
+            $securityFindings = $securityFindings + " [OK] Customer-managed encryption enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Using Microsoft-managed keys"
+            $securityFindings = $securityFindings + " [WARN]️  Using Microsoft-managed keys"
         }
         
         # Check region compliance
         if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
+            $securityFindings = $securityFindings + " [OK] Deployed in compliant region"
         }
         
         # Check SKU for production readiness
         if ($WESkuName -ne " F0" ) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Production-ready SKU selected"
+            $securityFindings = $securityFindings + " [OK] Production-ready SKU selected"
         }
         
         # Check custom subdomain (required for VNet integration)
         $securityScore++
-       ;  $securityFindings = $securityFindings + " ✓ Custom subdomain configured"
+       ;  $securityFindings = $securityFindings + " [OK] Custom subdomain configured"
     }
 
     # Final validation
@@ -402,7 +410,7 @@ try {
         Write-WELog "   • Status: $($serviceStatus.ProvisioningState)" " INFO" -ForegroundColor Green
         
         Write-WELog "" " INFO"
-        Write-WELog " 🔒 Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+        Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
         foreach ($finding in $securityFindings) {
             Write-WELog "   $finding" " INFO" -ForegroundColor White
         }
@@ -422,13 +430,13 @@ try {
     Write-WELog "   • Custom models for specific document types" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure AI Document Intelligence service '$WEServiceName' operation completed successfully!" -Level SUCCESS
+    Write-Log "  Azure AI Document Intelligence service '$WEServiceName' operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Document Intelligence service availability in your region" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription quotas for Cognitive Services" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure proper permissions for AI service creation" " INFO" -ForegroundColor White
@@ -445,4 +453,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Create Shortcut
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -65,6 +70,8 @@ param(
     [Parameter(Mandatory=$false)]
     $WEEnableRunAsAdmin = $false
 )
+
+#region Functions
 
 
 $newShortcutPath = $WEShortcutDestinationPath + " \" + $WEShortcutName + " .lnk"
@@ -124,3 +131,6 @@ else
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Deploycertha
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -122,6 +127,8 @@ param(
 
     [bool]$WEEnableDebug = $WEFalse
 )
+
+#region Functions
 
 If (-Not (Test-Path " C:\temp" )) {
     New-Item -ItemType Directory -Path " C:\temp" -Force
@@ -363,12 +370,12 @@ If ($WEServerName -eq $WEMainConnectionBroker) {
         $WEDBConnectionString = " Driver={ODBC Driver 17 for SQL Server};Server=tcp:$($WEAzureSQLFQDN),1433;Database=$($WEAzureSQLDBName);Uid=$($WEAzureSQLUserID);Pwd=$($WEAzureSQLPasswd);Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
     
         If (-Not (Get-RDConnectionBrokerHighAvailability).ActiveManagementServer) {
-            Set-RDConnectionBrokerHighAvailability -ConnectionBroker $WEConnectionBroker `
-                -DatabaseConnectionString $WEDBConnectionString `
-                -ClientAccessName $WEBrokerFQDN
-        }
-    }
-    #End of configure broker in HA
+            $params = @{
+                DatabaseConnectionString = $WEDBConnectionString
+                ClientAccessName = $WEBrokerFQDN } } #End of configure broker in HA
+                ConnectionBroker = $WEConnectionBroker
+            }
+            Set-RDConnectionBrokerHighAvailability @params
 }
 Else {
     #If not the first broker, just install SQL OBDC driver and join the farm
@@ -430,3 +437,6 @@ If ($WEEnableDebug) { Stop-Transcript }
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

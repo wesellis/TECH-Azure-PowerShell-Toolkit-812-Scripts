@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Health Checker
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -68,6 +74,8 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$WEResourceGroupName
 )
+
+#region Functions
 
 Write-Information -Object " Checking health status for resources in: $WEResourceGroupName"
 
@@ -114,10 +122,10 @@ Write-Information -Object (" =" * 60)
 
 foreach ($WEHealth in $WEHealthStatus) {
    ;  $WEStatusColor = switch ($WEHealth.Status) {
-        { $_ -in @(" VM running" , " Running" , " Succeeded" , " Active" ) } { " ✅" }
+        { $_ -in @(" VM running" , " Running" , " Succeeded" , " Active" ) } { " " }
         { $_ -in @(" VM stopped" , " Stopped" ) } { " ⏹️" }
-        " Error" { " ❌" }
-        default { " ⚠️" }
+        " Error" { " " }
+        default { " [WARN]️" }
     }
     
     Write-Information -Object " $WEStatusColor $($WEHealth.ResourceName) ($($WEHealth.ResourceType)): $($WEHealth.Status)"
@@ -127,4 +135,5 @@ foreach ($WEHealth in $WEHealthStatus) {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

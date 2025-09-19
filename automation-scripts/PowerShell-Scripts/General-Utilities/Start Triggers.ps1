@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Start Triggers
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -44,6 +49,8 @@ param(
     [switch] $WEStop
 )
 
+#region Functions
+
 
 $WEDeploymentScriptOutputs = @{}
 
@@ -53,37 +60,20 @@ if (-not $WEStop)
 }
 
 
-$env:Triggers.Split('|') `
+$env:Triggers.Split('|')
 | ForEach-Object {
     $trigger = $_
     if ($WEStop)
     {
         Write-Output " Stopping trigger $trigger..."
-       ;  $triggerOutput = Stop-AzDataFactoryV2Trigger `
-            -ResourceGroupName $env:DataFactoryResourceGroup `
-            -DataFactoryName $env:DataFactoryName `
-            -Name $trigger `
-            -Force `
-            -ErrorAction SilentlyContinue # Ignore errors, since the trigger may not exist
-    }
-    else
-    {
-        Write-Output " Starting trigger $trigger..."
-       ;  $triggerOutput = Start-AzDataFactoryV2Trigger `
-            -ResourceGroupName $env:DataFactoryResourceGroup `
-            -DataFactoryName $env:DataFactoryName `
-            -Name $trigger `
-            -Force
-    }
-    if ($triggerOutput)
-    {
-        Write-Output " done..."
-    }
-    else
-    {
-        Write-Output " failed..."
-    }
-    $WEDeploymentScriptOutputs[$trigger] = $triggerOutput
+       $params = @{
+           ErrorAction = "SilentlyContinue # Ignore errors, since the trigger may not exist } else { Write-Output " Starting trigger $trigger..." ;  $triggerOutput = Start-AzDataFactoryV2Trigger"
+           DataFactoryName = $env:DataFactoryName
+           ResourceGroupName = $env:DataFactoryResourceGroup
+           Name = $trigger
+           Force = "} if ($triggerOutput) { Write-Output " done..." } else { Write-Output " failed..." } $WEDeploymentScriptOutputs[$trigger] = $triggerOutput"
+       }
+       ; @params
 }
 
 if ($WEStop)
@@ -93,14 +83,13 @@ if ($WEStop)
 
 if (-not [string]::IsNullOrWhiteSpace($env:Pipelines))
 {
-    $env:Pipelines.Split('|') `
-    | ForEach-Object {
-        Write-Output " Running the init pipeline..."
-        Invoke-AzDataFactoryV2Pipeline `
-            -ResourceGroupName $env:DataFactoryResourceGroup `
-            -DataFactoryName $env:DataFactoryName `
-            -PipelineName $_
+    $params = @{
+        PipelineName = $_ }
+        DataFactoryName = $env:DataFactoryName
+        ResourceGroupName = $env:DataFactoryResourceGroup
+        Object = "{ Write-Output " Running the init pipeline..." Invoke-AzDataFactoryV2Pipeline"
     }
+    $env:Pipelines.Split('|') @params
 }
 
 
@@ -109,3 +98,6 @@ if (-not [string]::IsNullOrWhiteSpace($env:Pipelines))
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

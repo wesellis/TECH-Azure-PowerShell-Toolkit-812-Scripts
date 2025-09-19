@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Storage Blob Cleanup Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,6 +62,8 @@ param(
     [string]$WEContainerName
 )
 
+#region Functions
+
 Remove-AzStorageBlob -ResourceGroupName $WEResourceGroupName -StorageAccountName $WEStorageAccountName -ContainerName $WEContainerName -Force
 
 
@@ -65,3 +73,6 @@ Remove-AzStorageBlob -ResourceGroupName $WEResourceGroupName -StorageAccountName
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

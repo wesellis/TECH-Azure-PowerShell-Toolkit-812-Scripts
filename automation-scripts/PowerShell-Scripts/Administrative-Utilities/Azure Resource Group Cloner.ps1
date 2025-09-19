@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Group Cloner
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -68,7 +74,9 @@ param(
     [string]$WEExportPath = " .\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Resource Group Cloner" -Version " 1.0" -Description " Clone resource groups and their contents"
 
 try {
@@ -79,25 +87,25 @@ try {
 
     Write-Log " 📤 Exporting resource group template..." -Level INFO
     $null = Export-AzResourceGroup -ResourceGroupName $WESourceResourceGroupName -Path $WEExportPath
-    Write-Log " ✓ Template exported to: $WEExportPath" -Level SUCCESS
+    Write-Log " [OK] Template exported to: $WEExportPath" -Level SUCCESS
 
     if (-not $WEExportOnly) {
-        Write-Log " 🏗️ Creating target resource group..." -Level INFO
+        Write-Log "  Creating target resource group..." -Level INFO
        ;  $null = New-AzResourceGroup -Name $WETargetResourceGroupName -Location $WETargetLocation -Tag $sourceRG.Tags
-        Write-Log " ✓ Target resource group created: $WETargetResourceGroupName" -Level SUCCESS
+        Write-Log " [OK] Target resource group created: $WETargetResourceGroupName" -Level SUCCESS
         
-        Write-Log " 🚀 Deploying resources to target..." -Level INFO
+        Write-Log "  Deploying resources to target..." -Level INFO
        ;  $deployment = New-AzResourceGroupDeployment -ResourceGroupName $WETargetResourceGroupName -TemplateFile $WEExportPath
         
         if ($deployment.ProvisioningState -eq " Succeeded" ) {
-            Write-Log " ✅ Resource group cloned successfully!" -Level SUCCESS
+            Write-Log "  Resource group cloned successfully!" -Level SUCCESS
         } else {
-            Write-Log " ❌ Deployment failed: $($deployment.ProvisioningState)" -Level ERROR
+            Write-Log "  Deployment failed: $($deployment.ProvisioningState)" -Level ERROR
         }
     }
 
 } catch {
-    Write-Log " ❌ Resource group cloning failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Resource group cloning failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -105,4 +113,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Event Grid Subscription Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -80,7 +86,9 @@ param(
     [string]$WELocation = " East US"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Event Grid Subscription Manager" -Version " 1.0" -Description " Manage Event Grid topics and subscriptions"
 
 try {
@@ -91,13 +99,13 @@ try {
     switch ($WEAction) {
         " CreateTopic" {
             $topic = New-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $WETopicName -Location $WELocation
-            Write-Log " ✓ Event Grid topic created: $WETopicName" -Level SUCCESS
+            Write-Log " [OK] Event Grid topic created: $WETopicName" -Level SUCCESS
             Write-WELog " Endpoint: $($topic.Endpoint)" " INFO" -ForegroundColor Green
         }
         
         " CreateSubscription" {
             $subscription = New-AzEventGridSubscription -ResourceGroupName $WEResourceGroupName -TopicName $WETopicName -EventSubscriptionName $WESubscriptionName -Endpoint $WEEndpointUrl
-            Write-Log " ✓ Event subscription created: $($subscription.EventSubscriptionName)" -Level SUCCESS
+            Write-Log " [OK] Event subscription created: $($subscription.EventSubscriptionName)" -Level SUCCESS
         }
         
         " ListEvents" {
@@ -111,12 +119,12 @@ try {
         
         " DeleteTopic" {
             Remove-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $WETopicName -Force
-            Write-Log " ✓ Event Grid topic deleted: $WETopicName" -Level SUCCESS
+            Write-Log " [OK] Event Grid topic deleted: $WETopicName" -Level SUCCESS
         }
     }
 
 } catch {
-    Write-Log " ❌ Event Grid operation failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Event Grid operation failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -124,4 +132,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

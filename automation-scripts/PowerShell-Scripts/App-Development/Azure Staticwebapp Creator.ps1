@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Staticwebapp Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -106,15 +112,20 @@ param(
     [string]$WEOutputLocation = " dist"
 )
 
+#region Functions
+
 Write-WELog " Creating Static Web App: $WEName" " INFO"
 
 ; 
-$WEStaticWebApp = New-AzStaticWebApp -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEName `
-    -Location $WELocation
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEName
+    Location = $WELocation
+}
+$WEStaticWebApp @params
 
-Write-WELog " ✅ Static Web App created successfully:" " INFO"
+Write-WELog "  Static Web App created successfully:" " INFO"
 Write-WELog "  Name: $($WEStaticWebApp.Name)" " INFO"
 Write-WELog "  Location: $($WEStaticWebApp.Location)" " INFO"
 Write-WELog "  Default Hostname: $($WEStaticWebApp.DefaultHostname)" " INFO"
@@ -152,3 +163,6 @@ Write-WELog " `nAccess your app at: https://$($WEStaticWebApp.DefaultHostname)" 
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

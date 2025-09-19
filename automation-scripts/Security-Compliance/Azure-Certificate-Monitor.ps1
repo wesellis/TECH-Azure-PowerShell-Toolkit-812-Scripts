@@ -1,6 +1,23 @@
-﻿# Azure Certificate Monitor
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Certificate Monitor
 # Monitor SSL certificate expiration across Azure services
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -14,7 +31,9 @@ param(
     [switch]$CheckAppGatewayCertificates
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Certificate Monitor" -Version "1.0" -Description "Monitor SSL certificate expiration"
 
 try {
@@ -44,7 +63,7 @@ try {
                     }
                 }
             } catch {
-                Write-Log "⚠️ Could not access certificates in vault: $($vault.VaultName)" -Level WARNING
+                Write-Log "[WARN]️ Could not access certificates in vault: $($vault.VaultName)" -Level WARNING
             }
         }
     }
@@ -56,10 +75,13 @@ try {
     if ($expiringCertificates.Count -gt 0) {
         $expiringCertificates | Sort-Object ExpirationDate | Format-Table Service, VaultName, CertificateName, ExpirationDate, DaysUntilExpiration
     } else {
-        Write-Information "✅ No certificates expiring within $ExpirationWarningDays days"
+        Write-Information " No certificates expiring within $ExpirationWarningDays days"
     }
 
 } catch {
-    Write-Log "❌ Certificate monitoring failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Certificate monitoring failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

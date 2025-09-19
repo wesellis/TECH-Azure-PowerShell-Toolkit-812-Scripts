@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure VM List All Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Lists all Virtual Machines across all resource groups with status
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$false)]
     [string]$SubscriptionId
 )
+
+#region Functions
 
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId
@@ -26,3 +37,6 @@ Write-Information -Object ("=" * 60)
 foreach ($VM in $VMs) {
     Write-Information -Object "VM: $($VM.Name) | RG: $($VM.ResourceGroupName) | State: $($VM.PowerState) | Size: $($VM.HardwareProfile.VmSize)"
 }
+
+
+#endregion

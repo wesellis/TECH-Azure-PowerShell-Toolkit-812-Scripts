@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Resource Group Cost Calculator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Estimates costs for all resources in a Resource Group
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName
 )
+
+#region Functions
 
 Write-Information "Calculating estimated costs for Resource Group: $ResourceGroupName"
 
@@ -47,3 +58,6 @@ foreach ($Item in $CostBreakdown) {
 
 Write-Information "`nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
 Write-Information "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
+
+
+#endregion

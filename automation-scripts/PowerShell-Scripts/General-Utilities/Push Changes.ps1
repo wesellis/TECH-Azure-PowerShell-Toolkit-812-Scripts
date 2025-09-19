@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Push Changes
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -44,6 +49,8 @@ param(
     [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the path to the sample
     [string] $WESampleName = $WEENV:SAMPLE_NAME # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
 )
+
+#region Functions
 
 $gitStatus = $(git status)
 Write-Output " Found Git Status of: `n $gitStatus"
@@ -104,3 +111,6 @@ if($gitStatus -like " *Changes not staged for commit:*" -or
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

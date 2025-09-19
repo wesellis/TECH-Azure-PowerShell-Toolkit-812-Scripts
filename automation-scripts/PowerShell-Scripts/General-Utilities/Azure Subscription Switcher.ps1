@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Subscription Switcher
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -79,6 +85,8 @@ param(
     [switch]$WECurrent
 )
 
+#region Functions
+
 Write-WELog " Azure Subscription Switcher" " INFO" -ForegroundColor Cyan
 Write-WELog " ===========================" " INFO" -ForegroundColor Cyan
 
@@ -101,7 +109,7 @@ if ($WEList) {
     Write-WELog " Available Subscriptions:" " INFO" -ForegroundColor Green
     $subscriptions = Get-AzSubscription -ErrorAction Stop
     foreach ($sub in $subscriptions) {
-        $status = if ($sub.State -eq " Enabled" ) { " ✓" } else { " ✗" }
+        $status = if ($sub.State -eq " Enabled" ) { " [OK]" } else { " [FAIL]" }
         Write-WELog "  $status $($sub.Name) ($($sub.Id))" " INFO" -ForegroundColor White
     }
     return
@@ -112,7 +120,7 @@ if ($WESubscriptionName) {
     try {
        ;  $subscription = Get-AzSubscription -SubscriptionName $WESubscriptionName
         Set-AzContext -SubscriptionId $subscription.Id
-        Write-WELog " ✓ Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
+        Write-WELog " [OK] Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
     } catch {
         Write-Error " Failed to switch to subscription '$WESubscriptionName': $($_.Exception.Message)"
     }
@@ -120,7 +128,7 @@ if ($WESubscriptionName) {
     try {
         Set-AzContext -SubscriptionId $WESubscriptionId
        ;  $subscription = Get-AzSubscription -SubscriptionId $WESubscriptionId
-        Write-WELog " ✓ Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
+        Write-WELog " [OK] Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
     } catch {
         Write-Error " Failed to switch to subscription '$WESubscriptionId': $($_.Exception.Message)"
     }
@@ -137,4 +145,5 @@ Write-WELog " `nSubscription switching completed at $(Get-Date)" " INFO" -Foregr
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

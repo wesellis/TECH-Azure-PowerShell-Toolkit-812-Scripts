@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Function App Performance Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Function App performance, execution metrics, and runtime status
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName
 )
+
+#region Functions
 
 Write-Information "Monitoring Function App: $AppName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -62,3 +73,6 @@ try {
 }
 
 Write-Information "`nFunction App monitoring completed at $(Get-Date)"
+
+
+#endregion

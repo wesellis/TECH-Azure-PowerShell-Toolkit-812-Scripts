@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Subscription Security Auditor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Audits Azure subscription security settings and permissions
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$false)]
     [string]$SubscriptionId,
@@ -14,6 +23,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$OutputPath = "SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
 )
+
+#region Functions
 
 Write-Information "Starting Azure Security Audit..."
 
@@ -43,10 +54,10 @@ try {
         State = $Subscription.State
     }
     
-    Write-Information "✅ Subscription info collected"
+    Write-Information " Subscription info collected"
     
     # Audit role assignments
-    Write-Information "🔍 Auditing role assignments..."
+    Write-Information " Auditing role assignments..."
     $RoleAssignments = Get-AzRoleAssignment -Scope "/subscriptions/$SubscriptionId"
     
     foreach ($Assignment in $RoleAssignments) {
@@ -64,14 +75,14 @@ try {
     $PrivilegedAssignments = $RoleAssignments | Where-Object { $_.RoleDefinitionName -in $PrivilegedRoles }
     
     if ($PrivilegedAssignments.Count -gt 10) {
-        $AuditResults.SecurityFindings += "⚠️ High number of privileged role assignments: $($PrivilegedAssignments.Count)"
+        $AuditResults.SecurityFindings += "[WARN]️ High number of privileged role assignments: $($PrivilegedAssignments.Count)"
         $AuditResults.Recommendations += "Review and minimize privileged access assignments"
     }
     
-    Write-Information "✅ Role assignments audited: $($RoleAssignments.Count) found"
+    Write-Information " Role assignments audited: $($RoleAssignments.Count) found"
     
     # Audit policy assignments
-    Write-Information "🔍 Auditing policy assignments..."
+    Write-Information " Auditing policy assignments..."
     $PolicyAssignments = Get-AzPolicyAssignment -Scope "/subscriptions/$SubscriptionId"
     
     foreach ($Policy in $PolicyAssignments) {
@@ -83,33 +94,33 @@ try {
         }
     }
     
-    Write-Information "✅ Policy assignments audited: $($PolicyAssignments.Count) found"
+    Write-Information " Policy assignments audited: $($PolicyAssignments.Count) found"
     
     # Security checks
-    Write-Information "🔍 Performing security checks..."
+    Write-Information " Performing security checks..."
     
     # Check for guest users with privileged access
     $GuestUsers = $RoleAssignments | Where-Object { $_.DisplayName -like "*#EXT#*" -and $_.RoleDefinitionName -in $PrivilegedRoles }
     if ($GuestUsers.Count -gt 0) {
-        $AuditResults.SecurityFindings += "⚠️ Guest users with privileged access: $($GuestUsers.Count)"
+        $AuditResults.SecurityFindings += "[WARN]️ Guest users with privileged access: $($GuestUsers.Count)"
         $AuditResults.Recommendations += "Review guest user access and implement time-limited assignments"
     }
     
     # Check for service principals with Owner role
     $ServicePrincipalOwners = $RoleAssignments | Where-Object { $_.ObjectType -eq "ServicePrincipal" -and $_.RoleDefinitionName -eq "Owner" }
     if ($ServicePrincipalOwners.Count -gt 0) {
-        $AuditResults.SecurityFindings += "⚠️ Service principals with Owner role: $($ServicePrincipalOwners.Count)"
+        $AuditResults.SecurityFindings += "[WARN]️ Service principals with Owner role: $($ServicePrincipalOwners.Count)"
         $AuditResults.Recommendations += "Consider using more restrictive roles for service principals"
     }
     
     # Check for users with subscription-level Owner access
     $SubscriptionOwners = $RoleAssignments | Where-Object { $_.Scope -eq "/subscriptions/$SubscriptionId" -and $_.RoleDefinitionName -eq "Owner" }
     if ($SubscriptionOwners.Count -gt 5) {
-        $AuditResults.SecurityFindings += "⚠️ Many subscription owners: $($SubscriptionOwners.Count)"
+        $AuditResults.SecurityFindings += "[WARN]️ Many subscription owners: $($SubscriptionOwners.Count)"
         $AuditResults.Recommendations += "Limit subscription-level Owner assignments"
     }
     
-    Write-Information "✅ Security checks completed"
+    Write-Information " Security checks completed"
     
     # Generate HTML report
     $HTML = @"
@@ -156,7 +167,7 @@ try {
     $HTML += "<h2>Recommendations</h2>"
     
     foreach ($Recommendation in $AuditResults.Recommendations) {
-        $HTML += "<div class='recommendation'>✅ $Recommendation</div>"
+        $HTML += "<div class='recommendation'> $Recommendation</div>"
     }
     
     $HTML += @"
@@ -172,8 +183,8 @@ try {
     # Save report
     $HTML | Out-File -FilePath $OutputPath -Encoding UTF8
     
-    Write-Information "✅ Security audit completed successfully!"
-    Write-Information "📊 Audit Results:"
+    Write-Information " Security audit completed successfully!"
+    Write-Information " Audit Results:"
     Write-Information "  Role Assignments: $($AuditResults.RoleAssignments.Count)"
     Write-Information "  Policy Assignments: $($AuditResults.PolicyAssignments.Count)"
     Write-Information "  Security Findings: $($AuditResults.SecurityFindings.Count)"
@@ -182,3 +193,6 @@ try {
 } catch {
     Write-Error "Security audit failed: $($_.Exception.Message)"
 }
+
+
+#endregion

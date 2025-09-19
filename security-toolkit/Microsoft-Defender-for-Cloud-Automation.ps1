@@ -1,6 +1,23 @@
-﻿# Microsoft Defender for Cloud Automation Tool
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Microsoft Defender for Cloud Automation Tool
 # Professional Azure security automation script
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise security posture management automation
 
 param(
@@ -40,8 +57,10 @@ param(
     [switch]$DetailedOutput
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Microsoft Defender for Cloud Automation" -Version "1.0" -Description "Enterprise security posture management and compliance automation"
@@ -57,10 +76,10 @@ try {
     if ($SubscriptionId) {
         Write-ProgressStep -StepNumber 2 -TotalSteps 8 -StepName "Subscription Context" -Status "Setting subscription context"
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
-        Write-Log "✓ Using subscription: $SubscriptionId" -Level SUCCESS
+        Write-Log "[OK] Using subscription: $SubscriptionId" -Level SUCCESS
     } else {
         $SubscriptionId = (Get-AzContext).Subscription.Id
-        Write-Log "✓ Using current subscription: $SubscriptionId" -Level SUCCESS
+        Write-Log "[OK] Using current subscription: $SubscriptionId" -Level SUCCESS
     }
 
     switch ($Action.ToLower()) {
@@ -95,24 +114,24 @@ try {
                     } -OperationName "Enable Defender Plan: $planName"
                     
                     $enabledPlans += $plan
-                    Write-Log "✓ Defender for $plan enabled" -Level SUCCESS
+                    Write-Log "[OK] Defender for $plan enabled" -Level SUCCESS
                     
                 } catch {
                     $failedPlans += $plan
-                    Write-Log "❌ Failed to enable Defender for $plan`: $($_.Exception.Message)" -Level ERROR
+                    Write-Log " Failed to enable Defender for $plan`: $($_.Exception.Message)" -Level ERROR
                 }
             }
             
             Write-Information ""
-            Write-Information "📊 Defender for Cloud Plan Status"
+            Write-Information " Defender for Cloud Plan Status"
             Write-Information "════════════════════════════════════════════════════════════════════"
-            Write-Information "✅ Enabled Plans ($($enabledPlans.Count)):"
+            Write-Information " Enabled Plans ($($enabledPlans.Count)):"
             foreach ($plan in $enabledPlans) {
                 Write-Information "   • $plan"
             }
             
             if ($failedPlans.Count -gt 0) {
-                Write-Information "❌ Failed Plans ($($failedPlans.Count)):"
+                Write-Information " Failed Plans ($($failedPlans.Count)):"
                 foreach ($plan in $failedPlans) {
                     Write-Information "   • $plan"
                 }
@@ -128,7 +147,7 @@ try {
             } -OperationName "Get Security Policy Assignments"
             
             Write-Information ""
-            Write-Information "📋 Current Security Policy Assignments"
+            Write-Information "� Current Security Policy Assignments"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             foreach ($assignment in $policyAssignments) {
@@ -153,7 +172,7 @@ try {
                     Set-AzSecurityAutoProvisioningSetting -Name "default" -EnableAutoProvisioning
                 } -OperationName "Enable Auto Provisioning"
                 
-                Write-Log "✓ Auto-provisioning enabled for security agents" -Level SUCCESS
+                Write-Log "[OK] Auto-provisioning enabled for security agents" -Level SUCCESS
             }
         }
         
@@ -194,25 +213,25 @@ try {
             $lowFindings = $recommendations | Where-Object { $_.properties.status.severity -eq "Low" -and $_.properties.status.code -eq "Unhealthy" }
             
             Write-Information ""
-            Write-Information "🛡️  Security Score Dashboard"
+            Write-Information "  Security Score Dashboard"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             if ($securityScore) {
                 $currentScore = [math]::Round(($securityScore.properties.score.current / $securityScore.properties.score.max) * 100, 1)
                 $scoreColor = if ($currentScore -ge 80) { "Green" } elseif ($currentScore -ge 60) { "Yellow" } else { "Red" }
                 
-                Write-Information "📊 Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
+                Write-Information " Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
                 Write-Information ""
             }
             
-            Write-Information "🚨 Security Findings by Severity:"
+            Write-Information "� Security Findings by Severity:"
             Write-Information "   • Critical (High): $($criticalFindings.Count)"
             Write-Information "   • Medium: $($mediumFindings.Count)"  
             Write-Information "   • Low: $($lowFindings.Count)"
             Write-Information ""
             
             if ($DetailedOutput -and $criticalFindings.Count -gt 0) {
-                Write-Information "🔥 Critical Security Issues (Top 10):"
+                Write-Information "� Critical Security Issues (Top 10):"
                 Write-Information "════════════════════════════════════════════════════════════════════"
                 $criticalFindings | Select-Object -First 10 | ForEach-Object {
                     Write-Information "• $($_.properties.displayName)"
@@ -276,9 +295,9 @@ try {
             $csvPath = Join-Path $ExportPath "defender-summary-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
             $csvData | Export-Csv -Path $csvPath -NoTypeInformation
             
-            Write-Log "✓ Security findings exported to: $ExportPath" -Level SUCCESS
-            Write-Log "✓ JSON export: $jsonPath" -Level INFO
-            Write-Log "✓ CSV summary: $csvPath" -Level INFO
+            Write-Log "[OK] Security findings exported to: $ExportPath" -Level SUCCESS
+            Write-Log "[OK] JSON export: $jsonPath" -Level INFO
+            Write-Log "[OK] CSV summary: $csvPath" -Level INFO
         }
         
         "configurealerts" {
@@ -302,7 +321,7 @@ try {
                 Set-AzSecurityContact -ErrorAction Stop @contactParams
             } -OperationName "Configure Security Contacts"
             
-            Write-Log "✓ Security contacts configured: $($AlertEmails -join ', ')" -Level SUCCESS
+            Write-Log "[OK] Security contacts configured: $($AlertEmails -join ', ')" -Level SUCCESS
             
             # Configure workspace settings if Log Analytics workspace provided
             if ($LogAnalyticsWorkspaceId) {
@@ -310,7 +329,7 @@ try {
                     Set-AzSecurityWorkspaceSetting -Name "default" -Scope "/subscriptions/$SubscriptionId" -WorkspaceId $LogAnalyticsWorkspaceId
                 } -OperationName "Configure Log Analytics Workspace"
                 
-                Write-Log "✓ Log Analytics workspace configured for security data collection" -Level SUCCESS
+                Write-Log "[OK] Log Analytics workspace configured for security data collection" -Level SUCCESS
             }
         }
         
@@ -322,7 +341,7 @@ try {
                 Set-AzSecurityAutoProvisioningSetting -Name "default" -EnableAutoProvisioning
             } -OperationName "Enable Auto Provisioning"
             
-            Write-Log "✓ Auto-provisioning enabled for security agents" -Level SUCCESS
+            Write-Log "[OK] Auto-provisioning enabled for security agents" -Level SUCCESS
             
             # Configure additional security features if requested
             if ($EnableJITAccess) {
@@ -401,14 +420,14 @@ try {
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
     
-    Write-Information "🛡️  Defender for Cloud Overview:"
+    Write-Information "  Defender for Cloud Overview:"
     Write-Information "   • Subscription: $SubscriptionId"
     Write-Information "   • Plans Enabled: $($enabledPlans.Count)/$($currentPlans.Count)" -ForegroundColor $(if ($enabledPlans.Count -gt 0) { "Green" } else { "Red" })
     Write-Information "   • Coverage Score: $overallSecurityScore%" -ForegroundColor $(if ($overallSecurityScore -ge 80) { "Green" } elseif ($overallSecurityScore -ge 50) { "Yellow" } else { "Red" })
     
     if ($enabledPlans.Count -gt 0) {
         Write-Information ""
-        Write-Information "✅ Enabled Protection Plans:"
+        Write-Information " Enabled Protection Plans:"
         foreach ($plan in $enabledPlans) {
             Write-Information "   • $($plan.Name)"
         }
@@ -416,32 +435,32 @@ try {
     
     if ($freePlans.Count -gt 0) {
         Write-Information ""
-        Write-Information "⚠️  Free Tier Plans (Consider Upgrading):"
+        Write-Information "[WARN]  Free Tier Plans (Consider Upgrading):"
         foreach ($plan in $freePlans) {
             Write-Information "   • $($plan.Name)"
         }
     }
     
     Write-Information ""
-    Write-Information "💰 Estimated Monthly Costs:"
+    Write-Information " Estimated Monthly Costs:"
     foreach ($cost in $costEstimates.GetEnumerator()) {
         Write-Information "   • $($cost.Key): $($cost.Value)"
     }
     
     Write-Information ""
-    Write-Information "📋 Security Recommendations:"
+    Write-Information "� Security Recommendations:"
     foreach ($recommendation in $securityRecommendations) {
         Write-Information "   $recommendation"
     }
     
     Write-Information ""
-    Write-Information "🏛️  Compliance Standards Available:"
+    Write-Information "🏛  Compliance Standards Available:"
     foreach ($standard in $complianceStandards) {
         Write-Information "   • $standard"
     }
     
     Write-Information ""
-    Write-Information "💡 Next Steps:"
+    Write-Information "� Next Steps:"
     Write-Information "   • Review and remediate high-priority security recommendations"
     Write-Information "   • Configure custom security policies for your environment"
     Write-Information "   • Set up regular security assessments and reporting"
@@ -449,13 +468,13 @@ try {
     Write-Information "   • Train your team on security best practices"
     Write-Information ""
 
-    Write-Log "✅ Microsoft Defender for Cloud operation '$Action' completed successfully!" -Level SUCCESS
+    Write-Log " Microsoft Defender for Cloud operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Microsoft Defender for Cloud operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Microsoft Defender for Cloud operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Security Center access permissions"
     Write-Information "   • Check subscription eligibility for Defender plans"
     Write-Information "   • Ensure Azure Security module is installed and updated"
@@ -467,3 +486,6 @@ try {
 
 Write-Progress -Activity "Microsoft Defender for Cloud Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

@@ -1,11 +1,28 @@
-﻿# Stuff I Need You to Do - Azure Enterprise Toolkit
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Stuff I Need You to Do - Azure Enterprise Toolkit
 # Human tasks that require manual intervention
 
 Write-Information "Azure Enterprise Toolkit - Human Tasks Required"
 Write-Information "=" * 50 -ForegroundColor Cyan
 
 # Task 1: GitHub Repository Settings
-Write-Information "`n📋 Task 1: Update GitHub Repository Settings"
+Write-Information "`n� Task 1: Update GitHub Repository Settings"
 Write-Information @"
 Please update the following in the GitHub repository settings:
 
@@ -29,7 +46,7 @@ Please update the following in the GitHub repository settings:
 "@
 
 # Task 2: Module Publishing
-Write-Information "`n📋 Task 2: PowerShell Gallery Publishing (Optional)"
+Write-Information "`n� Task 2: PowerShell Gallery Publishing (Optional)"
 Write-Information @"
 If you want to publish the enterprise modules to PowerShell Gallery:
 
@@ -37,23 +54,16 @@ If you want to publish the enterprise modules to PowerShell Gallery:
 2. Publish modules:
    
    # Publish Az.Accounts.Enterprise
-   Publish-Module -Path './automation-scripts/modules/accounts' `
-                  -NuGetApiKey 'YOUR-API-KEY' `
-                  -Repository PSGallery
-   
-   # Publish Az.Resources.Enterprise
-   Publish-Module -Path './automation-scripts/modules/resources' `
-                  -NuGetApiKey 'YOUR-API-KEY' `
-                  -Repository PSGallery
-   
-   # Publish Az.Storage.Enterprise
-   Publish-Module -Path './automation-scripts/modules/storage' `
-                  -NuGetApiKey 'YOUR-API-KEY' `
-                  -Repository PSGallery
+   $params = @{
+       NuGetApiKey = "YOUR-API-KEY"
+       Repository = "PSGallery"
+       Path = "./automation-scripts/modules/storage"
+   }
+   Publish-Module @params
 "@
 
 # Task 3: Azure Resource Setup
-Write-Information "`n📋 Task 3: Azure Resources for Testing"
+Write-Information "`n� Task 3: Azure Resources for Testing"
 Write-Information @"
 To fully test the enterprise modules, you'll need:
 
@@ -64,13 +74,16 @@ To fully test the enterprise modules, you'll need:
 5. Test Resource Groups with proper tags
 
 Run this to create test service principal:
-   az ad sp create-for-rbac --name "AzureEnterpriseToolkit-Testing" `
-                            --role "Contributor" `
-                            --scopes "/subscriptions/{subscription-id}"
+   $params = @{
+       scopes = "/subscriptions/{subscription-id}"
+       role = "Contributor"
+       name = "AzureEnterpriseToolkit-Testing"
+   }
+   az @params
 "@
 
 # Task 4: Documentation Site
-Write-Information "`n📋 Task 4: GitHub Pages Documentation"
+Write-Information "`n� Task 4: GitHub Pages Documentation"
 Write-Information @"
 Update the documentation site with new module information:
 
@@ -81,7 +94,7 @@ Update the documentation site with new module information:
 "@
 
 # Task 5: CI/CD Pipeline
-Write-Information "`n📋 Task 5: Update GitHub Actions Workflow"
+Write-Information "`n� Task 5: Update GitHub Actions Workflow"
 Write-Information @"
 Consider adding module-specific tests to .github/workflows/powershell-ci.yml:
 
@@ -92,7 +105,7 @@ Consider adding module-specific tests to .github/workflows/powershell-ci.yml:
 "@
 
 # Task 6: Security Review
-Write-Information "`n📋 Task 6: Security Considerations"
+Write-Information "`n� Task 6: Security Considerations"
 Write-Information @"
 Review and implement:
 
@@ -104,7 +117,7 @@ Review and implement:
 "@
 
 # Task 7: MONETIZATION - PRIORITY #1
-Write-Information "`n💰 Task 7: MONETIZATION SETUP (DO THIS FIRST!)" -BackgroundColor DarkGreen
+Write-Information "`n Task 7: MONETIZATION SETUP (DO THIS FIRST!)" -BackgroundColor DarkGreen
 Write-Information @"
 IMMEDIATE REVENUE OPPORTUNITIES:
 
@@ -142,7 +155,7 @@ TOTAL POTENTIAL: `$4,600 - `$23,000/month!
 "@
 
 # Task 8: Next Development Priorities
-Write-Information "`n📋 Task 8: Continue Development (AFTER monetization)"
+Write-Information "`n� Task 8: Continue Development (AFTER monetization)"
 Write-Information @"
 Based on the action list, next priorities are:
 
@@ -156,3 +169,5 @@ Based on the action list, next priorities are:
 Write-Information "`n" + ("=" * 50) -ForegroundColor Cyan
 Write-Information "Run this script later to see pending human tasks"
 Write-Information "Some tasks are optional but recommended for production use"
+
+#endregion

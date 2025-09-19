@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Backup Vault Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Recovery Services Vault for backup and disaster recovery
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,23 +30,31 @@ param (
     [string]$StorageType = "GeoRedundant"
 )
 
+#region Functions
+
 Write-Information "Creating Recovery Services Vault: $VaultName"
 
 # Create Recovery Services Vault
-$Vault = New-AzRecoveryServicesVault -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $VaultName `
-    -Location $Location
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $ResourceGroupName
+    Name = $VaultName
+    Location = $Location
+}
+$Vault @params
 
 # Set vault context
 Set-AzRecoveryServicesVaultContext -Vault $Vault
 
 # Configure storage redundancy
-Set-AzRecoveryServicesBackupProperty -ErrorAction Stop `
-    -Vault $Vault `
-    -BackupStorageRedundancy $StorageType
+$params = @{
+    BackupStorageRedundancy = $StorageType
+    ErrorAction = "Stop"
+    Vault = $Vault
+}
+Set-AzRecoveryServicesBackupProperty @params
 
-Write-Information "✅ Recovery Services Vault created successfully:"
+Write-Information " Recovery Services Vault created successfully:"
 Write-Information "  Name: $($Vault.Name)"
 Write-Information "  Location: $($Vault.Location)"
 Write-Information "  Storage Type: $StorageType"
@@ -70,3 +87,6 @@ Write-Information "• Azure Virtual Machines"
 Write-Information "• Azure File Shares"
 Write-Information "• SQL Server in Azure VMs"
 Write-Information "• SAP HANA in Azure VMs"
+
+
+#endregion

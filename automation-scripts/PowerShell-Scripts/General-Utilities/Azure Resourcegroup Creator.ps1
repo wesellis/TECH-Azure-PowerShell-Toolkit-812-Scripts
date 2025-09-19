@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resourcegroup Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [hashtable]$WETags = @{}
 )
 
+#region Functions
+
 Write-WELog " Creating Resource Group: $WEResourceGroupName" " INFO"
 
 if ($WETags.Count -gt 0) {
@@ -98,7 +106,7 @@ if ($WETags.Count -gt 0) {
    ;  $WEResourceGroup = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation
 }
 
-Write-WELog " ✅ Resource Group created successfully:" " INFO"
+Write-WELog "  Resource Group created successfully:" " INFO"
 Write-WELog "  Name: $($WEResourceGroup.ResourceGroupName)" " INFO"
 Write-WELog "  Location: $($WEResourceGroup.Location)" " INFO"
 Write-WELog "  Provisioning State: $($WEResourceGroup.ProvisioningState)" " INFO"
@@ -111,3 +119,6 @@ Write-WELog "  Resource ID: $($WEResourceGroup.ResourceId)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

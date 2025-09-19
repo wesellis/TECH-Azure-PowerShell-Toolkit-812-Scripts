@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Activity Log Checker
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Retrieves recent Azure Activity Log events
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$false)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$false)]
     [int]$MaxEvents = 20
 )
+
+#region Functions
 
 Write-Information -Object "Retrieving Activity Log events (last $HoursBack hours)"
 
@@ -44,3 +55,6 @@ foreach ($Log in $RecentLogs) {
     Write-Information -Object "Caller: $($Log.Caller)"
     Write-Information -Object ("-" * 40)
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Publicip Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,14 +102,19 @@ param(
     [string]$WESku = " Standard"
 )
 
+#region Functions
+
 Write-WELog " Creating Public IP: $WEPublicIpName" " INFO"
 ; 
-$WEPublicIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEPublicIpName `
-    -Location $WELocation `
-    -AllocationMethod $WEAllocationMethod `
-    -Sku $WESku
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = $WESku
+    Location = $WELocation
+    AllocationMethod = $WEAllocationMethod
+    ErrorAction = "Stop"
+    Name = $WEPublicIpName
+}
+$WEPublicIp @params
 
 Write-WELog " Public IP created successfully:" " INFO"
 Write-WELog "  Name: $($WEPublicIp.Name)" " INFO"
@@ -118,3 +129,6 @@ Write-WELog "  SKU: $($WEPublicIp.Sku.Name)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

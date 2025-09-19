@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Automated Iaas Backup
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -65,9 +71,7 @@ Catch {
         $WEErrorMessage = $WEErrorMessage + " `n"
         $WEErrorMessage = $WEErrorMessage + 'Error: '
         $WEErrorMessage = $WEErrorMessage + $_
-        Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
-      }
+        Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 
 Try {
 
@@ -79,9 +83,7 @@ Catch {
         $WEErrorMessage = $WEErrorMessage + " `n"
         $WEErrorMessage = $WEErrorMessage + 'Error: '
         $WEErrorMessage = $WEErrorMessage + $_
-        Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
-      }
+        Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 
 Try {
         $WEVMs = Get-AzureRmVM -ErrorAction Stop | Where-Object {$_.Location -eq $WELocation}
@@ -92,34 +94,31 @@ Catch {
         $WEErrorMessage = $WEErrorMessage + " `n"
         $WEErrorMessage = $WEErrorMessage + 'Error: '
        ;  $WEErrorMessage = $WEErrorMessage + $_
-        Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
-      }
+        Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 
 
 
 Try {
         Foreach ($vm in $vms)
         {
-            New-AzureRmResourceGroupDeployment -Name $vm.name `
-                                               -ResourceGroupName $WEOMSResourceGroupName `
-                                               -TemplateUri $WETemplateUri `
-                                               -omsRecoveryResourceGroupName $WEOMSResourceGroupName `
-                                               -vmResourceGroupName $vm.ResourceGroupName `
-                                               -vaultName $WEOMSRecoveryVault `
-                                               -vmName $vm.name `
-                                               -Verbose
-        }
-    }
+            $params = @{
+                ResourceGroupName = $WEOMSResourceGroupName
+                vmResourceGroupName = $vm.ResourceGroupName
+                omsRecoveryResourceGroupName = $WEOMSResourceGroupName
+                Name = $vm.name
+                vmName = $vm.name
+                TemplateUri = $WETemplateUri
+                vaultName = $WEOMSRecoveryVault
+                Verbose = "} }"
+            }
+            New-AzureRmResourceGroupDeployment @params
 
 Catch {
        ;  $WEErrorMessage = 'Failed to enable backup using ARM template.'
         $WEErrorMessage = $WEErrorMessage + " `n"
         $WEErrorMessage = $WEErrorMessage + 'Error: '
        ;  $WEErrorMessage = $WEErrorMessage + $_
-        Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
-      }
+        Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 
 
 
@@ -128,4 +127,5 @@ Catch {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

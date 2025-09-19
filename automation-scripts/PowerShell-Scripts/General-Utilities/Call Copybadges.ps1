@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Call Copybadges
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,22 +55,24 @@ $WEENV:BUILD_REPOSITORY_NAME = " Azure/azure-quickstart-templates"
 $WEENV:BUILD_REPOSITORY_LOCALPATH = Get-SampleRootPath -ErrorAction Stop
 $WEENV:BUILD_SOURCESDIRECTORY = Get-SampleRootPath -ErrorAction Stop
 
-$getSampleFolderHost = & " $WEPSScriptRoot/../ci-scripts/Get-SampleFolder.ps1" `
-    6>&1
+$getSampleFolderHost 
 Write-Output $getSampleFolderHost
 $vars = Find-VarsFromWriteHostOutput $getSampleFolderHost
 ; 
 $WESampleName = $vars[" SAMPLE_NAME" ]
 ; 
 $script = " $WEPSScriptRoot/../ci-scripts/Copy-Badges"
-& $script `
-    -SampleName $WESampleName `
-    -StorageAccountName $WEStorageAccountName `
-    -TableName " QuickStartsMetadataService" `
-    -TableNamePRs " QuickStartsMetadataServicePRs" `
-    -StorageAccountKey $WEStorageAccountKey `
+$params = @{
+    StorageAccountKey = $WEStorageAccountKey
+    SampleName = $WESampleName
+    TableNamePRs = " QuickStartsMetadataServicePRs"
+    StorageAccountName = $WEStorageAccountName
+    TableName = " QuickStartsMetadataService"
+}
+& @params
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure CDN Profile Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure CDN Profile for global content delivery
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -27,29 +36,37 @@ param (
     [string]$Sku = "Standard_Microsoft"
 )
 
+#region Functions
+
 Write-Information "Creating CDN Profile: $ProfileName"
 
 # Create CDN Profile
-$CdnProfile = New-AzCdnProfile -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -ProfileName $ProfileName `
-    -Location $Location `
-    -Sku $Sku
+$params = @{
+    Sku = $Sku
+    ErrorAction = "Stop"
+    ProfileName = $ProfileName
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+}
+$CdnProfile @params
 
 Write-Information "CDN Profile created: $($CdnProfile.Name)"
 
 # Create CDN Endpoint
 Write-Information "Creating CDN Endpoint: $EndpointName"
 
-$CdnEndpoint = New-AzCdnEndpoint -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -ProfileName $ProfileName `
-    -EndpointName $EndpointName `
-    -Location $Location `
-    -OriginHostName $OriginHostName `
-    -OriginName "origin1"
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    ProfileName = $ProfileName
+    Location = $Location
+    EndpointName = $EndpointName
+    OriginHostName = $OriginHostName
+    ErrorAction = "Stop"
+    OriginName = "origin1"
+}
+$CdnEndpoint @params
 
-Write-Information "✅ CDN Profile and Endpoint created successfully:"
+Write-Information " CDN Profile and Endpoint created successfully:"
 Write-Information "  Profile Name: $($CdnProfile.Name)"
 Write-Information "  SKU: $($CdnProfile.Sku.Name)"
 Write-Information "  Endpoint Name: $($CdnEndpoint.Name)"
@@ -69,3 +86,6 @@ Write-Information "2. Set up custom domains"
 Write-Information "3. Enable HTTPS"
 Write-Information "4. Configure compression"
 Write-Information "5. Test global distribution"
+
+
+#endregion

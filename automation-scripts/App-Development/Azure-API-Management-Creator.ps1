@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure API Management Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure API Management service for API gateway functionality
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -27,18 +36,23 @@ param (
     [string]$Sku = "Developer"
 )
 
+#region Functions
+
 Write-Information "Creating API Management service: $ServiceName"
 Write-Information "This process may take 30-45 minutes..."
 
-$ApiManagement = New-AzApiManagement -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $ServiceName `
-    -Location $Location `
-    -Organization $Organization `
-    -AdminEmail $AdminEmail `
-    -Sku $Sku
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    Organization = $Organization
+    Location = $Location
+    AdminEmail = $AdminEmail
+    ErrorAction = "Stop"
+    Name = $ServiceName
+}
+$ApiManagement @params
 
-Write-Information "✅ API Management service created successfully:"
+Write-Information " API Management service created successfully:"
 Write-Information "  Name: $($ApiManagement.Name)"
 Write-Information "  Location: $($ApiManagement.Location)"
 Write-Information "  SKU: $($ApiManagement.Sku)"
@@ -59,3 +73,6 @@ Write-Information "1. Configure APIs and operations"
 Write-Information "2. Set up authentication policies"
 Write-Information "3. Configure rate limiting"
 Write-Information "4. Customize developer portal"
+
+
+#endregion

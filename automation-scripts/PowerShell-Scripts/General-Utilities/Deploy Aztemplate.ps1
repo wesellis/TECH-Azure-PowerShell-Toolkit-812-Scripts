@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Deploy Aztemplate
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,6 +62,8 @@ param(
     [switch] $bicep,
     [switch] $whatIf
 )
+
+#region Functions
 
 try {
     [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
@@ -323,49 +331,19 @@ else {
     
     switch ($deploymentScope) {
         " resourceGroup" {
-            New-AzResourceGroupDeployment -Name $WEDeploymentName `
-                -ResourceGroupName $WEResourceGroupName `
-                @TemplateArgs `
-                @OptionalParameters `
-                -Verbose `
-                -ErrorVariable ErrorMessages
-        }
-        " Subscription" {
-            New-AzDeployment -Name $WEDeploymentName `
-                -Location $WELocation `
-                @TemplateArgs `
-                @OptionalParameters `
-                -Verbose `
-                -ErrorVariable ErrorMessages
-        }
-        " managementGroup" {           
-            New-AzManagementGroupDeployment -Name $WEDeploymentName `
-                -ManagementGroupId $managementGroupId `
-                -Location $WELocation `
-                @TemplateArgs `
-                @OptionalParameters `
-                -Verbose `
-                -ErrorVariable ErrorMessages
-        }
-        " tenant" {
-            New-AzTenantDeployment -Name $WEDeploymentName `
-                -Location $WELocation `
-                @TemplateArgs `
-                @OptionalParameters `
-                -Verbose `
-                -ErrorVariable ErrorMessages
-        }
-    }
-    
-   ;  $WEErrorActionPreference = 'Stop' 
-    if ($WEErrorMessages) {
-        Write-Output '', 'Template deployment returned the following errors:', '', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message })
-        Write-Error " Deployment failed."
-    }
+            $params = @{
+                ResourceGroupName = $WEResourceGroupName @TemplateArgs @OptionalParameters
+                Location = $WELocation @TemplateArgs @OptionalParameters
+                ErrorVariable = "ErrorMessages } }  ;  $WEErrorActionPreference = 'Stop' if ($WEErrorMessages) { Write-Output '', 'Template deployment returned the following errors:', '', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message }) Write-Error " Deployment failed." }"
+                ManagementGroupId = $managementGroupId
+                Name = $WEDeploymentName
+            }
+            New-AzResourceGroupDeployment @params
 
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

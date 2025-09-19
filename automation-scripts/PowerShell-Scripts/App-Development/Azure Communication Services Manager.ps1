@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Communication Services Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -150,8 +156,10 @@ param(
     [switch]$WEEnableAdvancedMessaging
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Communication Services Manager" -Version " 1.0" -Description " Enterprise communication platform automation"
@@ -171,7 +179,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($WEAction.ToLower()) {
         " create" {
@@ -188,16 +196,16 @@ try {
                 New-AzCommunicationService -ErrorAction Stop @communicationParams
             } -OperationName " Create Communication Service"
             
-            Write-Log " ✓ Communication Service created: $WECommunicationServiceName" -Level SUCCESS
-            Write-Log " ✓ Data location: $WELocation" -Level INFO
-            Write-Log " ✓ Resource ID: $($communicationService.Id)" -Level INFO
+            Write-Log " [OK] Communication Service created: $WECommunicationServiceName" -Level SUCCESS
+            Write-Log " [OK] Data location: $WELocation" -Level INFO
+            Write-Log " [OK] Resource ID: $($communicationService.Id)" -Level INFO
             
             # Get connection string
             $connectionString = Invoke-AzureOperation -Operation {
                 Get-AzCommunicationServiceKey -ResourceGroupName $WEResourceGroupName -Name $WECommunicationServiceName
             } -OperationName " Get Connection String"
             
-            Write-Log " ✓ Connection string retrieved (store securely)" -Level SUCCESS
+            Write-Log " [OK] Connection string retrieved (store securely)" -Level SUCCESS
         }
         
         " configuredomain" {
@@ -229,8 +237,8 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName " Configure Email Domain" | Out-Null
             
-            Write-Log " ✓ Email domain configured: $WEDomainName" -Level SUCCESS
-            Write-Log " ✓ Domain management: $WEDomainManagement" -Level INFO
+            Write-Log " [OK] Email domain configured: $WEDomainName" -Level SUCCESS
+            Write-Log " [OK] Domain management: $WEDomainManagement" -Level INFO
             
             if ($WEDomainManagement -eq " CustomerManaged" ) {
                 Write-WELog "" " INFO"
@@ -302,8 +310,8 @@ try {
                         Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
                     } -OperationName " Purchase Phone Numbers" | Out-Null
                     
-                    Write-Log " ✓ Phone number purchase initiated" -Level SUCCESS
-                    Write-Log " ✓ Search ID: $($availableNumbers.searchId)" -Level INFO
+                    Write-Log " [OK] Phone number purchase initiated" -Level SUCCESS
+                    Write-Log " [OK] Search ID: $($availableNumbers.searchId)" -Level INFO
                 }
             } else {
                 Write-Log " No phone numbers available for the specified criteria" -Level WARN
@@ -343,10 +351,10 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName " Send SMS"
             
-            Write-Log " ✓ SMS sent successfully" -Level SUCCESS
-            Write-Log " ✓ From: $WESMSFrom" -Level INFO
-            Write-Log " ✓ To: $WESMSTo" -Level INFO
-            Write-Log " ✓ Message ID: $($smsResult.messageId)" -Level INFO
+            Write-Log " [OK] SMS sent successfully" -Level SUCCESS
+            Write-Log " [OK] From: $WESMSFrom" -Level INFO
+            Write-Log " [OK] To: $WESMSTo" -Level INFO
+            Write-Log " [OK] Message ID: $($smsResult.messageId)" -Level INFO
         }
         
         " sendemail" {
@@ -388,10 +396,10 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName " Send Email" | Out-Null
             
-            Write-Log " ✓ Email sent successfully" -Level SUCCESS
-            Write-Log " ✓ From: $WEEmailFrom" -Level INFO
-            Write-Log " ✓ To: $WEEmailTo" -Level INFO
-            Write-Log " ✓ Subject: $WEEmailSubject" -Level INFO
+            Write-Log " [OK] Email sent successfully" -Level SUCCESS
+            Write-Log " [OK] From: $WEEmailFrom" -Level INFO
+            Write-Log " [OK] To: $WEEmailTo" -Level INFO
+            Write-Log " [OK] Subject: $WEEmailSubject" -Level INFO
         }
         
         " createidentity" {
@@ -414,9 +422,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName " Create User Identity"
             
-            Write-Log " ✓ User identity created" -Level SUCCESS
-            Write-Log " ✓ Identity ID: $($userIdentity.identity.id)" -Level INFO
-            Write-Log " ✓ Access token generated with chat and VoIP scopes" -Level INFO
+            Write-Log " [OK] User identity created" -Level SUCCESS
+            Write-Log " [OK] Identity ID: $($userIdentity.identity.id)" -Level INFO
+            Write-Log " [OK] Access token generated with chat and VoIP scopes" -Level INFO
             
             Write-WELog "" " INFO"
             Write-WELog " 🆔 User Identity Details" " INFO" -ForegroundColor Cyan
@@ -425,7 +433,7 @@ try {
             Write-WELog " Access Token: $($userIdentity.accessToken.token)" " INFO" -ForegroundColor Yellow
             Write-WELog " Token Expires: $($userIdentity.accessToken.expiresOn)" " INFO" -ForegroundColor White
             Write-WELog "" " INFO"
-            Write-WELog " ⚠️  Store the access token securely - it's needed for client authentication" " INFO" -ForegroundColor Red
+            Write-WELog " [WARN]️  Store the access token securely - it's needed for client authentication" " INFO" -ForegroundColor Red
         }
         
         " getinfo" {
@@ -508,7 +516,7 @@ try {
                 Remove-AzCommunicationService -ResourceGroupName $WEResourceGroupName -Name $WECommunicationServiceName -Force
             } -OperationName " Delete Communication Service"
             
-            Write-Log " ✓ Communication Service deleted: $WECommunicationServiceName" -Level SUCCESS
+            Write-Log " [OK] Communication Service deleted: $WECommunicationServiceName" -Level SUCCESS
         }
     }
 
@@ -521,7 +529,7 @@ try {
             New-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $topicName -Location $resourceGroup.Location
         } -OperationName " Create Event Grid Topic" | Out-Null
         
-        Write-Log " ✓ Event Grid topic created for communication events" -Level SUCCESS
+        Write-Log " [OK] Event Grid topic created for communication events" -Level SUCCESS
     }
 
     # Configure monitoring if enabled
@@ -545,13 +553,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName " Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log " ✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -586,7 +594,7 @@ try {
         " 📧 Email - Transactional and marketing emails" ,
         " 📹 Video calling - HD video communication" ,
         " 🔐 Identity management - User authentication and tokens" ,
-        " 📊 Call analytics - Call quality and usage metrics" ,
+        "  Call analytics - Call quality and usage metrics" ,
         " 🌍 Global reach - Worldwide communication coverage"
     )
 
@@ -601,34 +609,34 @@ try {
         # Check data location
         if ($WELocation -in @(" United States" , " Europe" , " Asia Pacific" )) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Data stored in compliant region"
+            $securityFindings = $securityFindings + " [OK] Data stored in compliant region"
         }
         
         # Check monitoring
         if ($WEEnableMonitoring) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Monitoring and logging enabled"
+            $securityFindings = $securityFindings + " [OK] Monitoring and logging enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Monitoring not configured"
+            $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
         }
         
         # Check Event Grid integration
         if ($WEEnableEventGrid) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Event Grid integration for audit trails"
+            $securityFindings = $securityFindings + " [OK] Event Grid integration for audit trails"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Event Grid not configured for event tracking"
+            $securityFindings = $securityFindings + " [WARN]️  Event Grid not configured for event tracking"
         }
         
         # Check advanced messaging
         if ($WEEnableAdvancedMessaging) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Advanced messaging features enabled"
+            $securityFindings = $securityFindings + " [OK] Advanced messaging features enabled"
         }
         
         # Service is inherently secure
         $securityScore++
-        $securityFindings = $securityFindings + " ✓ End-to-end encryption for all communications"
+        $securityFindings = $securityFindings + " [OK] End-to-end encryption for all communications"
     }
 
     # Cost analysis
@@ -670,20 +678,20 @@ try {
         Write-WELog "   • Resource ID: $($serviceStatus.Id)" " INFO" -ForegroundColor White
         
         Write-WELog "" " INFO"
-        Write-WELog " 🔒 Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+        Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
         foreach ($finding in $securityFindings) {
             Write-WELog "   $finding" " INFO" -ForegroundColor White
         }
         
         Write-WELog "" " INFO"
-        Write-WELog " 💰 Pricing (Approximate):" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Pricing (Approximate):" " INFO" -ForegroundColor Cyan
         foreach ($cost in $costComponents.GetEnumerator()) {
             Write-WELog "   • $($cost.Key): $($cost.Value)" " INFO" -ForegroundColor White
         }
     }
     
     Write-WELog "" " INFO"
-    Write-WELog " 🚀 Communication Capabilities:" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Communication Capabilities:" " INFO" -ForegroundColor Cyan
     foreach ($capability in $capabilities) {
         Write-WELog "   $capability" " INFO" -ForegroundColor White
     }
@@ -698,13 +706,13 @@ try {
     Write-WELog "   • Configure compliance settings for your region" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure Communication Services operation '$WEAction' completed successfully!" -Level SUCCESS
+    Write-Log "  Azure Communication Services operation '$WEAction' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Communication Services operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Communication Services operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Communication Services availability in your region" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription quotas and limits" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure proper permissions for resource creation" " INFO" -ForegroundColor White
@@ -722,4 +730,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

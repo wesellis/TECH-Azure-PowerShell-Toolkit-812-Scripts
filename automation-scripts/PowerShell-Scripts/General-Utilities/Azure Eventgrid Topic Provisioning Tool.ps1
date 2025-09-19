@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Eventgrid Topic Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -84,17 +90,22 @@ param(
     [hashtable]$WETags = @{}
 )
 
+#region Functions
+
 Write-WELog " Provisioning Event Grid Topic: $WETopicName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " Input Schema: $WEInputSchema" " INFO"
 
 ; 
-$WEEventGridTopic = New-AzEventGridTopic -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WETopicName `
-    -Location $WELocation `
-    -InputSchema $WEInputSchema
+$params = @{
+    ErrorAction = "Stop"
+    InputSchema = $WEInputSchema
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WETopicName
+    Location = $WELocation
+}
+$WEEventGridTopic @params
 
 if ($WETags.Count -gt 0) {
     Write-WELog " `nApplying tags:" " INFO"
@@ -153,4 +164,5 @@ Write-WELog " `nEvent Grid Topic provisioning completed at $(Get-Date)" " INFO"
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

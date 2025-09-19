@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Enable Storage Static Website
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -47,6 +53,8 @@ param(
     [string] $WEErrorDocument404Path
 )
 
+#region Functions
+
 $WEErrorActionPreference = 'Stop'
 ; 
 $storageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -AccountName $WEStorageAccountName; 
@@ -67,3 +75,6 @@ Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $WEErrorDocument4
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

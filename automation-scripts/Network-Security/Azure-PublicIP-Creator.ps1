@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Public IP Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates a new Azure Public IP address
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -24,17 +33,25 @@ param (
     [string]$Sku = "Standard"
 )
 
+#region Functions
+
 Write-Information "Creating Public IP: $PublicIpName"
 
-$PublicIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $PublicIpName `
-    -Location $Location `
-    -AllocationMethod $AllocationMethod `
-    -Sku $Sku
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    Location = $Location
+    AllocationMethod = $AllocationMethod
+    ErrorAction = "Stop"
+    Name = $PublicIpName
+}
+$PublicIp @params
 
 Write-Information "Public IP created successfully:"
 Write-Information "  Name: $($PublicIp.Name)"
 Write-Information "  IP Address: $($PublicIp.IpAddress)"
 Write-Information "  Allocation: $($PublicIp.PublicIpAllocationMethod)"
 Write-Information "  SKU: $($PublicIp.Sku.Name)"
+
+
+#endregion

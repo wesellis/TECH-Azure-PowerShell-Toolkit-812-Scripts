@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Virtual Machine Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions new Azure Virtual Machines with specified configurations
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$VmName,
@@ -18,6 +27,8 @@ param (
     [string]$ImageOffer = "WindowsServer",
     [string]$ImageSku = "2022-Datacenter"
 )
+
+#region Functions
 
 Write-Information "Provisioning Virtual Machine: $VmName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -37,3 +48,6 @@ $VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Of
 New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
 
 Write-Information "Virtual Machine $VmName provisioned successfully"
+
+
+#endregion

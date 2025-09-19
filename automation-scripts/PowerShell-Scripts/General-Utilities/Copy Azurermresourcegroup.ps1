@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Copy Azurermresourcegroup
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -167,6 +173,8 @@ param(
 
 
 )  
+
+#region Functions
 
 $resourceGroupVmResumePath = " $env:TEMP\$resourcegroupname.resourceGroupVMs.resume.json"
 $resourceGroupVmSizeResumePath = " $env:TEMP\$resourcegroupname.resourceGroupVMsize.resume.json"
@@ -340,12 +348,15 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
    try 
    {
-        $blobCopy = Start-AzureStorageBlobCopy -ea Stop `
-            -srcUri $srcUri `
-            -SrcContext $srcContext `
-            -DestContainer $containerName `
-            -DestBlob $blobName `
-            -DestContext $destContext
+        $params = @{
+            DestBlob = $blobName
+            srcUri = $srcUri
+            DestContext = $destContext
+            SrcContext = $srcContext
+            DestContainer = $containerName
+            ea = "Stop"
+        }
+        $blobCopy @params
 
          write-output " $srcUri is being copied to $containerName"
     
@@ -1826,4 +1837,5 @@ foreach($srcVM in $resourceGroupVMs)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

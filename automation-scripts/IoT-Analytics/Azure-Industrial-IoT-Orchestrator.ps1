@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Enterprise Industrial IoT orchestration platform for Azure Digital Twins and IoT Hub management.
 
@@ -63,6 +69,8 @@ param(
     [Parameter(Mandatory=$false)]
     [int]$TimeSeriesRetentionDays = 90
 )
+
+#region Functions
 
 # Import required modules
 $requiredModules = @('Az.Resources', 'Az.IotHub', 'Az.Storage', 'Az.EventGrid')
@@ -419,143 +427,25 @@ class IndustrialIoTOrchestrator {
         $storageAccountName = "sa$($this.ResourceGroupName -replace '-', '')"
         
         try {
-            $storage = New-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -Name $storageAccountName `
-                -Location $this.Location -SkuName "Standard_LRS" -Kind "StorageV2" -EnableHierarchicalNamespace $true
-            
-            Write-Information "Data Lake storage account created: $storageAccountName"
-        } catch {
-            Write-Warning "Storage account creation failed: $_"
-        }
-    }
-    
-    [void]CreateDigitalTwinModels() {
-        Write-Information "Creating Digital Twin models for $($this.IndustryType)..."
-        
-        foreach ($modelName in $this.DigitalTwinModels.Keys) {
-            $model = $this.DigitalTwinModels[$modelName]
-            Write-Information "Creating model: $modelName"
-            
-            # In a real implementation, this would upload to Digital Twins
-            $modelJson = $model | ConvertTo-Json -Depth 10
-            Write-Information "Model JSON created for: $modelName"
-        }
-    }
-    
-    [void]SimulateDevices([int]$DeviceCount = 10) {
-        Write-Information "Simulating $DeviceCount Industrial IoT devices..."
-        
-        for ($i = 1; $i -le $DeviceCount; $i++) {
-            $deviceType = ($this.DigitalTwinModels.Keys | Get-Random)
-            $device = @{
-                DeviceId = "$deviceType-$i"
-                DeviceType = $deviceType
-                Location = "Floor-$([math]::Ceiling($i / 3))"
-                Status = "Online"
-                LastTelemetry = Get-Date -ErrorAction Stop
-                TelemetryData = $this.GenerateTelemetryData($deviceType)
+            $params = @{
+                Encoding = "UTF8  Write-Information "Dashboard saved to: $dashboardPath" }  [string]GenerateDashboardHTML([hashtable]$Data) { return @"
+                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-Information "Generating IoT Dashboard..."  $dashboardData = @{ IndustryType = $this.IndustryType TotalDevices = $this.Devices.Count OnlineDevices = ($this.Devices | Where-Object { $_.Status"
+                gt = "70) { $score += 20 }  # Add random variation $score += Get-Random"
+                ErrorAction = "Stop }  $html = $this.GenerateDashboardHTML($dashboardData) $dashboardPath = ".\IoT-Dashboard-$(Get-Date"
+                Location = $this.Location
+                eq = "High" }).Count LastUpdated = Get-Date"
+                le = $DeviceCount; $i++) { $deviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = "$deviceType-$i" DeviceType = $deviceType Location = "Floor-$([math]::Ceiling($i / 3))" Status = "Online" LastTelemetry = Get-Date
+                Depth = "10 Write-Information "Model JSON created for: $modelName" } }  [void]SimulateDevices([int]$DeviceCount = 10) { Write-Information "Simulating $DeviceCount Industrial IoT devices..."  for ($i = 1; $i"
+                Name = $storageAccountName
+                Format = "yyyyMMdd-HHmmss').html" $html | Out-File"
+                EnableHierarchicalNamespace = $true  Write-Information "Data Lake storage account created: $storageAccountName" } catch { Write-Warning "Storage account creation failed: $_" } }  [void]CreateDigitalTwinModels() { Write-Information "Creating Digital Twin models for $($this.IndustryType)..."  foreach ($modelName in $this.DigitalTwinModels.Keys) { $model = $this.DigitalTwinModels[$modelName] Write-Information "Creating model: $modelName"  # In a real implementation, this would upload to Digital Twins $modelJson = $model | ConvertTo-Json
+                Minimum = "0"
+                SkuName = "Standard_LRS"
+                FilePath = $dashboardPath
+                ResourceGroupName = $this.ResourceGroupName
+                Kind = "StorageV2"
             }
-            
-            $this.Devices += $device
-            Write-Information "Device created: $($device.DeviceId)"
-        }
-    }
-    
-    [hashtable]GenerateTelemetryData([string]$DeviceType) {
-        $telemetry = @{}
-        
-        switch ($DeviceType) {
-            "CNCMachine" {
-                $telemetry = @{
-                    spindleSpeed = Get-Random -Minimum 1000 -Maximum 5000
-                    vibration = [math]::Round((Get-Random -Minimum 0.5 -Maximum 3.0), 2)
-                    toolWear = Get-Random -Minimum 0 -Maximum 100
-                    temperature = Get-Random -Minimum 20 -Maximum 80
-                }
-            }
-            "WindTurbine" {
-                $telemetry = @{
-                    windSpeed = [math]::Round((Get-Random -Minimum 3 -Maximum 25), 1)
-                    powerOutput = Get-Random -Minimum 0 -Maximum 2000
-                    rotorSpeed = Get-Random -Minimum 10 -Maximum 40
-                    nacelleDirection = Get-Random -Minimum 0 -Maximum 360
-                }
-            }
-            "HVAC" {
-                $telemetry = @{
-                    temperature = [math]::Round((Get-Random -Minimum 18 -Maximum 26), 1)
-                    humidity = Get-Random -Minimum 30 -Maximum 70
-                    airQuality = Get-Random -Minimum 50 -Maximum 150
-                    energyConsumption = Get-Random -Minimum 1000 -Maximum 5000
-                }
-            }
-            default {
-                $telemetry = @{
-                    genericSensor1 = Get-Random -Minimum 0 -Maximum 100
-                    genericSensor2 = Get-Random -Minimum 0 -Maximum 100
-                }
-            }
-        }
-        
-        return $telemetry
-    }
-    
-    [void]AnalyzePredictiveMaintenance() {
-        Write-Information "Analyzing predictive maintenance requirements..."
-        
-        foreach ($device in $this.Devices) {
-            $maintenanceScore = $this.CalculateMaintenanceScore($device)
-            
-            if ($maintenanceScore -gt 80) {
-                $alert = @{
-                    DeviceId = $device.DeviceId
-                    AlertType = "PredictiveMaintenance"
-                    Severity = "High"
-                    Message = "Device requires immediate maintenance"
-                    Score = $maintenanceScore
-                    Timestamp = Get-Date -ErrorAction Stop
-                }
-                
-                $this.Alerts += $alert
-                Write-Information "ALERT: $($device.DeviceId) - Maintenance score: $maintenanceScore"
-            }
-        }
-    }
-    
-    [double]CalculateMaintenanceScore([hashtable]$Device) {
-        # Simple ML algorithm simulation
-        $score = 0
-        
-        if ($Device.TelemetryData.vibration -gt 2.5) { $score += 30 }
-        if ($Device.TelemetryData.toolWear -gt 80) { $score += 40 }
-        if ($Device.TelemetryData.temperature -gt 70) { $score += 20 }
-        
-        # Add random variation
-        $score += Get-Random -Minimum -10 -Maximum 10
-        
-        return [math]::Max(0, [math]::Min(100, $score))
-    }
-    
-    [void]GenerateIoTDashboard() {
-        Write-Information "Generating IoT Dashboard..."
-        
-        $dashboardData = @{
-            IndustryType = $this.IndustryType
-            TotalDevices = $this.Devices.Count
-            OnlineDevices = ($this.Devices | Where-Object { $_.Status -eq "Online" }).Count
-            ActiveAlerts = $this.Alerts.Count
-            HighPriorityAlerts = ($this.Alerts | Where-Object { $_.Severity -eq "High" }).Count
-            LastUpdated = Get-Date -ErrorAction Stop
-        }
-        
-        $html = $this.GenerateDashboardHTML($dashboardData)
-        $dashboardPath = ".\IoT-Dashboard-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
-        $html | Out-File -FilePath $dashboardPath -Encoding UTF8
-        
-        Write-Information "Dashboard saved to: $dashboardPath"
-    }
-    
-    [string]GenerateDashboardHTML([hashtable]$Data) {
-        return @"
+            $storage @params
 <!DOCTYPE html>
 <html>
 <head>
@@ -685,3 +575,5 @@ try {
     Write-Error "An error occurred: $_"
     exit 1
 }
+
+#endregion

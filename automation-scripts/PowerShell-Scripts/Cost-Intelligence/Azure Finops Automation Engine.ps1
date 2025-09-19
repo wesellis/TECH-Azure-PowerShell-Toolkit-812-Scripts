@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Finops Automation Engine
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,6 +102,8 @@ param(
     [Parameter(Mandatory=$false)]
     [string]$WEOutputPath = " .\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
 )
+
+#region Functions
 
 
 $requiredModules = @('Az.Billing', 'Az.CostManagement', 'Az.Monitor', 'Az.Resources', 'Az.Compute')
@@ -254,250 +262,34 @@ class FinOpsEngine {
             $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddDays(-7)
             
-            $metrics = Get-AzMetric -ResourceId $vm.Id -MetricName " Percentage CPU" `
-                -StartTime $startTime -EndTime $endTime -TimeGrain 01:00:00 `
-                -AggregationType Average -WarningAction SilentlyContinue
-            
-            if ($metrics -and $metrics.Data) {
-                $avgCpu = ($metrics.Data | Measure-Object -Property Average -Average).Average
-                
-                if ($avgCpu -lt 20) {
-                    $currentSize = $vm.HardwareProfile.VmSize
-                    $recommendedSize = $this.GetSmallerVMSize($currentSize)
-                    
-                    if ($recommendedSize) {
-                        $rightSizingRecommendations = $rightSizingRecommendations + @{
-                            Type = " VM"
-                            Name = $vm.Name
-                            ResourceGroup = $vm.ResourceGroupName
-                            CurrentSize = $currentSize
-                            RecommendedSize = $recommendedSize
-                            AvgCPU = [math]::Round($avgCpu, 2)
-                            EstimatedSavings = 30 # Percentage
-                            Action = " Resize VM to smaller SKU"
-                        }
-                    }
-                }
+            $params = @{
+                or = $gw.BackendAddressPools[0].BackendAddresses.Count
+                Maximum = "5)  $predictions = $predictions + @{ Date = $predictedDate PredictedCost = [math]::Round($predictedCost, 2) Confidence = 0.85 } }  return $predictions }"
+                ne = " Production" ) { $storageOptimizations = $storageOptimizations + @{ Type = " Storage" Name = $storage.StorageAccountName ResourceGroup = $storage.ResourceGroupName CurrentRedundancy = $storage.Sku.Name RecommendedRedundancy = " Standard_LRS" Action = " Reduce redundancy for non-production storage" EstimatedSavings = 50 } } }  return $storageOptimizations }  [array]OptimizeNetworking([Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [string]$WESubscriptionId) { $networkOptimizations = @()  # Check for unused Application Gateways $appGateways = Get-AzApplicationGateway"
+                ge = "3) { $riRecommendations = $riRecommendations + @{ Type = " ReservedInstance" VMSize = $group.Name Count = $group.Count Term = " 1 Year" EstimatedSavings = 40 # Percentage Action = " Purchase Reserved Instances" } } }  return $riRecommendations }  [array]IdentifyAutoShutdownCandidates([Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [string]$WESubscriptionId) { $shutdownCandidates = @()  $vms = Get-AzVM"
+                TimeGrain = "01:00:00"
+                le = $WEDaysAhead; $i++) { $predictedDate = $currentDate.AddDays($i) $predictedCost = 100 + ($i * 2) + (Get-Random
+                lt = "20) { $currentSize = $vm.HardwareProfile.VmSize $recommendedSize = $this.GetSmallerVMSize($currentSize)  if ($recommendedSize) { $rightSizingRecommendations = $rightSizingRecommendations + @{ Type = " VM" Name = $vm.Name ResourceGroup = $vm.ResourceGroupName CurrentSize = $currentSize RecommendedSize = $recommendedSize AvgCPU = [math]::Round($avgCpu, 2) EstimatedSavings = 30 # Percentage Action = " Resize VM to smaller SKU" } } } } }  return $rightSizingRecommendations }  [string]GetSmallerVMSize([Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [string]$currentSize) { $sizeMap = @{ " Standard_D4s_v3" = " Standard_D2s_v3" " Standard_D8s_v3" = " Standard_D4s_v3" " Standard_D16s_v3" = " Standard_D8s_v3" " Standard_E4s_v3" = " Standard_E2s_v3" " Standard_E8s_v3" = " Standard_E4s_v3" }  return $sizeMap[$currentSize] }  [array]RecommendReservedInstances([Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [string]$WESubscriptionId) { $riRecommendations = @()  # Analyze steady-state workloads $vms = Get-AzVM"
+                AggregationType = "Average"
+                ResourceId = $vm.Id
+                MetricName = " Percentage CPU"
+                WarningAction = "SilentlyContinue  if ($metrics"
+                ResourceGroupName = $optimization.ResourceGroup
+                EndTime = $endTime
+                match = " GRS"
+                and = $storage.Tags.Environment
+                AccountName = $storage.StorageAccountName
+                eq = " Deallocate stopped VM" ) { Stop-AzVM"
+                Property = "{ $_.HardwareProfile.VmSize }  foreach ($group in $vmsBySize) { if ($group.Count"
+                DiskName = $optimization.Name
+                StartTime = $startTime
+                shutdown = "schedule" } } }  return $shutdownCandidates }  [array]OptimizeStorage([Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [Parameter(Mandatory=$false)] [ValidateNotNullOrEmpty()] [string]$WESubscriptionId) { $storageOptimizations = @()  # Analyze storage accounts $storageAccounts = Get-AzStorageAccount"
+                ErrorAction = "Stop  for ($i = 1; $i"
+                Force = "Write-WELog " Deallocated VM: $($optimization.Name)" " INFO"
+                Name = $optimization.Name
+                ForegroundColor = "Green } } } }  $this.TotalSavings += $optimization.MonthlyCost ?? 0 } } }  [array]PredictCosts([int]$WEDaysAhead) { # Simple linear regression for cost prediction # In a real implementation, this would use Azure ML or more sophisticated algorithms  ;  $predictions = @() ;  $currentDate = Get-Date"
             }
-        }
-        
-        return $rightSizingRecommendations
-    }
-    
-    [string]GetSmallerVMSize([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$currentSize) {
-        $sizeMap = @{
-            " Standard_D4s_v3" = " Standard_D2s_v3"
-            " Standard_D8s_v3" = " Standard_D4s_v3"
-            " Standard_D16s_v3" = " Standard_D8s_v3"
-            " Standard_E4s_v3" = " Standard_E2s_v3"
-            " Standard_E8s_v3" = " Standard_E4s_v3"
-        }
-        
-        return $sizeMap[$currentSize]
-    }
-    
-    [array]RecommendReservedInstances([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId) {
-        $riRecommendations = @()
-        
-        # Analyze steady-state workloads
-        $vms = Get-AzVM -ErrorAction Stop
-        $vmsBySize = $vms | Group-Object -Property { $_.HardwareProfile.VmSize }
-        
-        foreach ($group in $vmsBySize) {
-            if ($group.Count -ge 3) {
-                $riRecommendations = $riRecommendations + @{
-                    Type = " ReservedInstance"
-                    VMSize = $group.Name
-                    Count = $group.Count
-                    Term = " 1 Year"
-                    EstimatedSavings = 40 # Percentage
-                    Action = " Purchase Reserved Instances"
-                }
-            }
-        }
-        
-        return $riRecommendations
-    }
-    
-    [array]IdentifyAutoShutdownCandidates([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId) {
-        $shutdownCandidates = @()
-        
-        $vms = Get-AzVM -ErrorAction Stop
-        foreach ($vm in $vms) {
-            $tags = $vm.Tags
-            
-            # Check if VM is marked as non-production
-            if ($tags.Environment -eq " Dev" -or $tags.Environment -eq " Test" -or 
-                $tags.Environment -eq " QA" -or !$tags.Environment) {
-                
-                $shutdownCandidates = $shutdownCandidates + @{
-                    Type = " AutoShutdown"
-                    Name = $vm.Name
-                    ResourceGroup = $vm.ResourceGroupName
-                    Environment = $tags.Environment ?? " Unknown"
-                    Schedule = " 7 PM - 7 AM"
-                    EstimatedSavings = 50 # Percentage
-                    Action = " Configure auto-shutdown schedule"
-                }
-            }
-        }
-        
-        return $shutdownCandidates
-    }
-    
-    [array]OptimizeStorage([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId) {
-        $storageOptimizations = @()
-        
-        # Analyze storage accounts
-        $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
-        foreach ($storage in $storageAccounts) {
-            # Check for lifecycle management
-            $lifecycle = Get-AzStorageAccountManagementPolicy -ResourceGroupName $storage.ResourceGroupName `
-                -AccountName $storage.StorageAccountName -ErrorAction SilentlyContinue
-            
-            if (!$lifecycle) {
-                $storageOptimizations = $storageOptimizations + @{
-                    Type = " Storage"
-                    Name = $storage.StorageAccountName
-                    ResourceGroup = $storage.ResourceGroupName
-                    CurrentTier = $storage.Sku.Tier
-                    Action = " Implement lifecycle management policy"
-                    EstimatedSavings = 30
-                }
-            }
-            
-            # Check for redundancy optimization
-            if ($storage.Sku.Name -match " GRS" -and $storage.Tags.Environment -ne " Production" ) {
-                $storageOptimizations = $storageOptimizations + @{
-                    Type = " Storage"
-                    Name = $storage.StorageAccountName
-                    ResourceGroup = $storage.ResourceGroupName
-                    CurrentRedundancy = $storage.Sku.Name
-                    RecommendedRedundancy = " Standard_LRS"
-                    Action = " Reduce redundancy for non-production storage"
-                    EstimatedSavings = 50
-                }
-            }
-        }
-        
-        return $storageOptimizations
-    }
-    
-    [array]OptimizeNetworking([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId) {
-        $networkOptimizations = @()
-        
-        # Check for unused Application Gateways
-        $appGateways = Get-AzApplicationGateway -ErrorAction Stop
-        foreach ($gw in $appGateways) {
-            if ($gw.BackendAddressPools.Count -eq 0 -or 
-                $gw.BackendAddressPools[0].BackendAddresses.Count -eq 0) {
-                
-                $networkOptimizations = $networkOptimizations + @{
-                    Type = " ApplicationGateway"
-                    Name = $gw.Name
-                    ResourceGroup = $gw.ResourceGroupName
-                    MonthlyCost = 175 # Estimated base cost
-                    Action = " Delete unused Application Gateway"
-                }
-            }
-        }
-        
-        # Check for ExpressRoute circuits utilization
-        $circuits = Get-AzExpressRouteCircuit -ErrorAction Stop
-        foreach ($circuit in $circuits) {
-            # This is a placeholder - actual utilization check would be more complex
-            $networkOptimizations = $networkOptimizations + @{
-                Type = " ExpressRoute"
-                Name = $circuit.Name
-                ResourceGroup = $circuit.ResourceGroupName
-                Bandwidth = $circuit.ServiceProviderProperties.BandwidthInMbps
-                Action = " Review ExpressRoute utilization"
-            }
-        }
-        
-        return $networkOptimizations
-    }
-    
-    [void]ImplementOptimizations([hashtable]$WEOptimizations) {
-        Write-WELog " `nImplementing optimizations..." " INFO" -ForegroundColor Green
-        
-        foreach ($category in $WEOptimizations.Keys) {
-            Write-WELog " `nProcessing $category optimizations:" " INFO" -ForegroundColor Yellow
-            
-            foreach ($optimization in $WEOptimizations[$category]) {
-                if ($global:WhatIfPreference) {
-                    Write-WELog " What if: $($optimization.Action) for $($optimization.Name)" " INFO" -ForegroundColor Cyan
-                } else {
-                    switch ($optimization.Type) {
-                        " Disk" {
-                            if ($optimization.Action -eq " Delete unattached disk" ) {
-                                Remove-AzDisk -ResourceGroupName $optimization.ResourceGroup `
-                                    -DiskName $optimization.Name -Force
-                                Write-WELog " Deleted disk: $($optimization.Name)" " INFO" -ForegroundColor Green
-                            }
-                        }
-                        " PublicIP" {
-                            if ($optimization.Action -eq " Delete unused public IP" ) {
-                                Remove-AzPublicIpAddress -Name $optimization.Name `
-                                    -ResourceGroupName $optimization.ResourceGroup -Force
-                                Write-WELog " Deleted public IP: $($optimization.Name)" " INFO" -ForegroundColor Green
-                            }
-                        }
-                        " VM" {
-                            if ($optimization.Action -eq " Deallocate stopped VM" ) {
-                                Stop-AzVM -Name $optimization.Name `
-                                    -ResourceGroupName $optimization.ResourceGroup -Force
-                                Write-WELog " Deallocated VM: $($optimization.Name)" " INFO" -ForegroundColor Green
-                            }
-                        }
-                    }
-                }
-                
-                $this.TotalSavings += $optimization.MonthlyCost ?? 0
-            }
-        }
-    }
-    
-    [array]PredictCosts([int]$WEDaysAhead) {
-        # Simple linear regression for cost prediction
-        # In a real implementation, this would use Azure ML or more sophisticated algorithms
-        
-       ;  $predictions = @()
-       ;  $currentDate = Get-Date -ErrorAction Stop
-        
-        for ($i = 1; $i -le $WEDaysAhead; $i++) {
-            $predictedDate = $currentDate.AddDays($i)
-            $predictedCost = 100 + ($i * 2) + (Get-Random -Minimum -5 -Maximum 5)
-            
-            $predictions = $predictions + @{
-                Date = $predictedDate
-                PredictedCost = [math]::Round($predictedCost, 2)
-                Confidence = 0.85
-            }
-        }
-        
-        return $predictions
-    }
+            $metrics @params
 }
 
 [CmdletBinding()]
@@ -601,7 +393,7 @@ param(
                           else { " TBD" }
                           
                ;  $details = if ($item.Size) { $item.Size }
-                          elseif ($item.CurrentSize) { " $($item.CurrentSize) → $($item.RecommendedSize)" }
+                          elseif ($item.CurrentSize) { " $($item.CurrentSize) -> $($item.RecommendedSize)" }
                           elseif ($item.Schedule) { $item.Schedule }
                           else { " -" }
                 
@@ -755,7 +547,7 @@ try {
     
     # Cost threshold alert
     if ($engine.TotalSavings -gt $WECostThreshold) {
-        Write-WELog " `n⚠️  ALERT: Potential savings exceed threshold of `$$WECostThreshold!" " INFO" -ForegroundColor Red
+        Write-WELog " `n[WARN]️  ALERT: Potential savings exceed threshold of `$$WECostThreshold!" " INFO" -ForegroundColor Red
         Write-WELog " Immediate action recommended to reduce costs." " INFO" -ForegroundColor Red
     }
     
@@ -767,4 +559,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

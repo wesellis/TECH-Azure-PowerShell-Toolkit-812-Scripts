@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Pim Role Activator
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +91,8 @@ param(
     [string]$WEJustification = " Administrative task requiring elevated access"
 )
 
+#region Functions
+
 Write-WELog " Activating PIM role: $WERoleName" " INFO"
 Write-WELog " Scope: $WEResourceScope" " INFO"
 Write-WELog " Duration: $WEDurationHours hours" " INFO"
@@ -118,7 +125,7 @@ try {
     # Note: Actual PIM activation requires Azure AD Premium P2 and specific Graph API calls
     # This is a template showing the structure - actual implementation depends on environment
     
-    Write-WELog " `n⚠️ PIM Activation Process:" " INFO"
+    Write-WELog " `n[WARN]️ PIM Activation Process:" " INFO"
     Write-WELog " 1. This script provides the framework for PIM activation" " INFO"
     Write-WELog " 2. Actual activation requires Azure AD Premium P2 license" " INFO"
     Write-WELog " 3. Use Azure Portal or Microsoft Graph API for activation" " INFO"
@@ -144,7 +151,7 @@ try {
     Write-WELog " Import-Module Microsoft.Graph.Identity.Governance" " INFO"
     Write-WELog " # Create activation request using New-MgIdentityGovernancePrivilegedAccessRoleAssignmentRequest" " INFO"
     
-    Write-WELog " `n✅ PIM activation guidance provided" " INFO"
+    Write-WELog " `n PIM activation guidance provided" " INFO"
     Write-WELog " ⏰ Remember to deactivate when no longer needed" " INFO"
     
 } catch {
@@ -155,4 +162,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

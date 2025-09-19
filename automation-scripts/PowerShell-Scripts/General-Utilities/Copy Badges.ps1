@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Copy Badges
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -55,6 +61,8 @@ param(
     [string]$WETableNamePRs = " QuickStartsMetadataServicePRs" ,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
+
+#region Functions
 
 if ([string]::IsNullOrWhiteSpace($WESampleName)) {
     Write-Error " SampleName is empty"
@@ -119,12 +127,13 @@ $p | out-string
 
 
 Write-WELog " Add/Update Row in live table..." " INFO"
-Add-AzTableRow -table $cloudTable `
-    -partitionKey $r.partitionKey `
-    -rowKey $r.rowKey `
-    -property $p `
-    -UpdateExisting
-               
+$params = @{
+    table = $cloudTable
+    property = $p
+    partitionKey = $r.partitionKey
+    rowKey = $r.rowKey
+}
+Add-AzTableRow @params
 Write-WELog " Removing row from PR table..." " INFO"
 $r | Remove-AzTableRow -Table $cloudTablePRs
 
@@ -135,3 +144,6 @@ $r | Remove-AzTableRow -Table $cloudTablePRs
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Data Factory Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Data Factory for data integration and ETL workflows
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$FactoryName,
@@ -18,6 +27,8 @@ param (
     [string]$GitRepositoryName,
     [string]$GitCollaborationBranch = "main"
 )
+
+#region Functions
 
 Write-Information "Provisioning Data Factory: $FactoryName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -31,21 +42,27 @@ if ($EnableGitIntegration -and $GitAccountName -and $GitRepositoryName) {
     Write-Information "Collaboration Branch: $GitCollaborationBranch"
     
     # Create Data Factory with Git integration
-    $DataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $FactoryName `
-        -Location $Location `
-        -GitAccountName $GitAccountName `
-        -GitProjectName $GitProjectName `
-        -GitRepositoryName $GitRepositoryName `
-        -GitCollaborationBranch $GitCollaborationBranch `
-        -GitRepoType $GitRepoType
+    $params = @{
+        ResourceGroupName = $ResourceGroupName
+        GitRepoType = $GitRepoType
+        GitProjectName = $GitProjectName
+        Location = $Location
+        GitCollaborationBranch = $GitCollaborationBranch
+        GitAccountName = $GitAccountName
+        GitRepositoryName = $GitRepositoryName
+        ErrorAction = "Stop"
+        Name = $FactoryName
+    }
+    $DataFactory @params
 } else {
     # Create Data Factory without Git integration
-    $DataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $FactoryName `
-        -Location $Location
+    $params = @{
+        ErrorAction = "Stop"
+        ResourceGroupName = $ResourceGroupName
+        Name = $FactoryName
+        Location = $Location
+    }
+    $DataFactory @params
 }
 
 Write-Information "`nData Factory $FactoryName provisioned successfully"
@@ -72,3 +89,6 @@ Write-Information "`nData Factory Access:"
 Write-Information "Portal URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName"
 
 Write-Information "`nData Factory provisioning completed at $(Get-Date)"
+
+
+#endregion

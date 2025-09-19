@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Release Ttk
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -49,6 +55,8 @@ param(
     [switch]$WEStaging,
     [switch]$WEPublish
 )
+
+#region Functions
 
 if ($WEStaging) {
     # Publish to staging folder instead of default (" latest" ) folder
@@ -74,13 +82,14 @@ $WETarget = " Target: storage account $WEStorageAccountName, container $containe
 if ($WEPublish) {
     Write-WELog " Publishing to $WETarget" " INFO"
    ;  $ctx = (Get-AzStorageAccount -Name $WEStorageAccountName -ResourceGroupName $WEStorageAccountResourceGroupName).Context
-    Set-AzStorageBlobContent -Container $containerName `
-        -File $ttkFileName `
-        -Blob " $folderName/$ttkFileName" `
-        -Context $ctx `
-        -Force -Verbose `
-        -Properties @{" ContentType" = " application/x-zip-compressed" ; " CacheControl" = " no-cache" }
-    Write-WELog " Published" " INFO"
+    $params = @{
+        Properties = "@{" ContentType" = " application/x-zip-compressed" ; " CacheControl" = " no-cache" } Write-WELog " Published" " INFO"
+        File = $ttkFileName
+        Context = $ctx
+        Blob = " $folderName/$ttkFileName"
+        Container = $containerName
+    }
+    Set-AzStorageBlobContent @params
 }
 else {
     Write-WELog " If -Publish flag had been set, this would have published to $WETarget" " INFO"
@@ -92,3 +101,6 @@ else {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

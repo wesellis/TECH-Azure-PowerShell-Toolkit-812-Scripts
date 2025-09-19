@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Kubernetes Service Status Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Kubernetes Service cluster health, node status, and performance metrics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ClusterName
 )
+
+#region Functions
 
 Write-Information "Monitoring AKS Cluster: $ClusterName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -40,3 +51,6 @@ foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
 }
 
 Write-Information "`nCluster monitoring completed at $(Get-Date)"
+
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Configuresapvm
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -47,6 +52,8 @@ param(
 	[string] $WEDBDataName = " dbdata" ,
     [string];  $WEDBLogName = " dblog"
 )
+
+#region Functions
 ; 
 $WEErrorActionPreference = " Stop" ;
 
@@ -121,3 +128,6 @@ Create-Pool -arraystring $WEDBLogLUNS -name $WEDBLogName -path $WEDBLogDrive
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

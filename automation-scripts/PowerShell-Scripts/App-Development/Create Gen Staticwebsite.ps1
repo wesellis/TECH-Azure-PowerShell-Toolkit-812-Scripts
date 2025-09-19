@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Create Gen Staticwebsite
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -44,6 +50,8 @@ param(
     [string] $WEResourceGroupName = 'ttk-gen-artifacts',
     [string] [Parameter(mandatory = $true)] $WELocation
 )
+
+#region Functions
 
 
 if ((Get-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue) -eq $null) {
@@ -96,3 +104,6 @@ Write-Output $($json | ConvertTo-json -Depth 30)
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

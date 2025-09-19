@@ -1,6 +1,22 @@
-﻿# Microsoft Graph Integration Tool
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Microsoft Graph Integration Tool
 # Professional Azure automation script for Microsoft 365 connectivity
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise M365 integration
 
 param(
@@ -45,8 +61,10 @@ param(
     [switch]$DetailedOutput
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Microsoft Graph Integration Tool" -Version "2.0" -Description "Enterprise M365 and Azure AD automation via Graph API"
@@ -79,7 +97,7 @@ try {
     }
     
     $context = Get-MgContext -ErrorAction Stop
-    Write-Log "✓ Connected to Microsoft Graph - Tenant: $($context.TenantId)" -Level SUCCESS
+    Write-Log "[OK] Connected to Microsoft Graph - Tenant: $($context.TenantId)" -Level SUCCESS
 
     # Execute operations based on parameter
     Write-ProgressStep -StepNumber 2 -TotalSteps 6 -StepName "Operation Execution" -Status "Executing $Operation"
@@ -124,7 +142,7 @@ try {
                 }
             }
             
-            Write-Log "✓ Retrieved $($results.Count) users" -Level SUCCESS
+            Write-Log "[OK] Retrieved $($results.Count) users" -Level SUCCESS
         }
         
         "GetGroups" {
@@ -155,7 +173,7 @@ try {
                 }
             }
             
-            Write-Log "✓ Retrieved $($results.Count) groups" -Level SUCCESS
+            Write-Log "[OK] Retrieved $($results.Count) groups" -Level SUCCESS
         }
         
         "GetTeams" {
@@ -178,7 +196,7 @@ try {
                 }
             }
             
-            Write-Log "✓ Retrieved $($results.Count) Teams" -Level SUCCESS
+            Write-Log "[OK] Retrieved $($results.Count) Teams" -Level SUCCESS
         }
         
         "GetSites" {
@@ -198,7 +216,7 @@ try {
                 }
             }
             
-            Write-Log "✓ Retrieved $($results.Count) SharePoint sites" -Level SUCCESS
+            Write-Log "[OK] Retrieved $($results.Count) SharePoint sites" -Level SUCCESS
         }
         
         "CreateUser" {
@@ -236,7 +254,7 @@ try {
                 TempPassword = $passwordProfile.Password
             })
             
-            Write-Log "✓ User created successfully: $UserPrincipalName" -Level SUCCESS
+            Write-Log "[OK] User created successfully: $UserPrincipalName" -Level SUCCESS
         }
     }
 
@@ -245,7 +263,7 @@ try {
     
     if ($results.Count -gt 0) {
         Write-Information ""
-        Write-Information "📊 $Operation Results ($($results.Count) items)"
+        Write-Information " $Operation Results ($($results.Count) items)"
         Write-Information "════════════════════════════════════════════════════════════════════"
         
         switch ($OutputFormat.ToLower()) {
@@ -277,7 +295,7 @@ try {
         }
         
         $results | Export-Csv -Path $exportFile -NoTypeInformation -Force
-        Write-Log "✓ Results exported to: $exportFile" -Level SUCCESS
+        Write-Log "[OK] Results exported to: $exportFile" -Level SUCCESS
     }
 
     # Generate summary statistics
@@ -307,7 +325,7 @@ try {
     Write-Information "                              MICROSOFT GRAPH OPERATION SUCCESSFUL"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "📈 Operation Summary:"
+    Write-Information " Operation Summary:"
     Write-Information "   • Operation: $Operation"
     Write-Information "   • Records Retrieved: $($stats.TotalRecords)"
     Write-Information "   • Tenant: $($stats.TenantId)"
@@ -315,7 +333,7 @@ try {
     
     if ($stats.ContainsKey("EnabledUsers")) {
         Write-Information ""
-        Write-Information "👥 User Statistics:"
+        Write-Information "� User Statistics:"
         Write-Information "   • Enabled Users: $($stats.EnabledUsers)"
         Write-Information "   • Disabled Users: $($stats.DisabledUsers)"
         if ($stats.TopDepartments) {
@@ -325,25 +343,25 @@ try {
     
     if ($ExportPath) {
         Write-Information ""
-        Write-Information "📁 Export Information:"
+        Write-Information "[FOLDER] Export Information:"
         Write-Information "   • Export Path: $exportFile"
         Write-Information "   • Format: CSV"
     }
     
     Write-Information ""
-    Write-Information "💡 Next Steps:"
+    Write-Information "� Next Steps:"
     Write-Information "   • Review the results for compliance and security"
     Write-Information "   • Set up automated reporting for regular monitoring"
     Write-Information "   • Consider implementing governance policies"
     Write-Information ""
 
-    Write-Log "✅ Microsoft Graph operation '$Operation' completed successfully!" -Level SUCCESS
+    Write-Log " Microsoft Graph operation '$Operation' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Microsoft Graph operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Microsoft Graph operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Microsoft.Graph PowerShell module is installed"
     Write-Information "   • Check application permissions in Azure AD"
     Write-Information "   • Ensure proper Graph API scopes are granted"
@@ -363,3 +381,6 @@ try {
 
 Write-Progress -Activity "Microsoft Graph Integration" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

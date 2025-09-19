@@ -1,20 +1,38 @@
-﻿# Commit PSScriptAnalyzer fixes for Virtual WAN Management Tool
-Write-Information "🔧 Committing PSScriptAnalyzer fixes..."
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Commit PSScriptAnalyzer fixes for Virtual WAN Management Tool
+Write-Information " Committing PSScriptAnalyzer fixes..."
 
 # Change to repository directory
 Set-Location -ErrorAction Stop "A:\GITHUB\Azure-Enterprise-Toolkit"
 
 # Check git status
-Write-Information "📋 Checking git status..."
+Write-Information "� Checking git status..."
 git status --porcelain
 
 # Add the specific file that was fixed
-Write-Information "✅ Adding fixed file to staging..."
+Write-Information " Adding fixed file to staging..."
 git add "automation-scripts/Network-Security/Azure-Virtual-WAN-Management-Tool.ps1"
 
 # Commit with specific message about the fixes
 $commitMessage = @"
-🔧 Fix PSScriptAnalyzer ShouldProcess warnings in Virtual WAN tool
+ Fix PSScriptAnalyzer ShouldProcess warnings in Virtual WAN tool
 
 - Fixed 8 functions with ShouldProcess attribute but missing ShouldProcess calls
 - Added proper ShouldProcess calls to all creation/modification functions  
@@ -33,13 +51,16 @@ Functions fixed:
 - Remove-VirtualHub -ErrorAction Stop
 "@
 
-Write-Information "✅ Committing fixes with detailed message..."
+Write-Information " Committing fixes with detailed message..."
 git commit -m $commitMessage
 
 # Push to GitHub
-Write-Information "🚀 Pushing to GitHub..."
+Write-Information " Pushing to GitHub..."
 git push
 
-Write-Information "`n🎉 PSScriptAnalyzer fixes deployed!"
-Write-Information "⏱️  CI pipeline should now pass on next run"
-Write-Information "🌐 View CI status at: https://github.com/wesellis/Azure-Enterprise-Toolkit/actions"
+Write-Information "`n PSScriptAnalyzer fixes deployed!"
+Write-Information "⏱  CI pipeline should now pass on next run"
+Write-Information "� View CI status at: https://github.com/wesellis/Azure-Enterprise-Toolkit/actions"
+
+
+#endregion

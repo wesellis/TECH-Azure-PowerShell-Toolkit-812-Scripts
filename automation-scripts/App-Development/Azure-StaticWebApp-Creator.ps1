@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Static Web App Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Static Web Apps for JAMstack applications
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -30,15 +39,20 @@ param (
     [string]$OutputLocation = "dist"
 )
 
+#region Functions
+
 Write-Information "Creating Static Web App: $Name"
 
 # Create Static Web App
-$StaticWebApp = New-AzStaticWebApp -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $Name `
-    -Location $Location
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $ResourceGroupName
+    Name = $Name
+    Location = $Location
+}
+$StaticWebApp @params
 
-Write-Information "✅ Static Web App created successfully:"
+Write-Information " Static Web App created successfully:"
 Write-Information "  Name: $($StaticWebApp.Name)"
 Write-Information "  Location: $($StaticWebApp.Location)"
 Write-Information "  Default Hostname: $($StaticWebApp.DefaultHostname)"
@@ -68,3 +82,6 @@ Write-Information "4. Configure authentication providers"
 Write-Information "5. Add API functions if needed"
 
 Write-Information "`nAccess your app at: https://$($StaticWebApp.DefaultHostname)"
+
+
+#endregion

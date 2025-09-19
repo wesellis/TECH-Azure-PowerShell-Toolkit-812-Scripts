@@ -1,6 +1,23 @@
-﻿# Azure Resource Lock Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Resource Lock Manager
 # Professional utility for managing resource locks across Azure resources
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Resource protection and governance
 
 param(
@@ -28,8 +45,10 @@ param(
     [switch]$Force
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName "Azure Resource Lock Manager" -Version "1.0" -Description "Manage resource locks for protection and governance"
 
@@ -48,13 +67,13 @@ try {
             if ($ResourceName) {
                 $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceId $resource.ResourceId -LockNotes $LockNotes
-                Write-Log "✓ Created $LockLevel lock on resource: $ResourceName" -Level SUCCESS
+                Write-Log "[OK] Created $LockLevel lock on resource: $ResourceName" -Level SUCCESS
             } elseif ($ResourceGroupName) {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceGroupName $ResourceGroupName -LockNotes $LockNotes
-                Write-Log "✓ Created $LockLevel lock on resource group: $ResourceGroupName" -Level SUCCESS
+                Write-Log "[OK] Created $LockLevel lock on resource group: $ResourceGroupName" -Level SUCCESS
             } else {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -LockNotes $LockNotes
-                Write-Log "✓ Created $LockLevel lock on subscription" -Level SUCCESS
+                Write-Log "[OK] Created $LockLevel lock on subscription" -Level SUCCESS
             }
         }
         
@@ -76,7 +95,7 @@ try {
                 } else {
                     Remove-AzResourceLock -LockName $LockName -Force:$Force
                 }
-                Write-Log "✓ Removed lock: $LockName" -Level SUCCESS
+                Write-Log "[OK] Removed lock: $LockName" -Level SUCCESS
             }
         }
         
@@ -99,11 +118,13 @@ try {
     }
 
     Write-ProgressStep -StepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
-    Write-Log "✅ Resource lock operation completed successfully!" -Level SUCCESS
+    Write-Log " Resource lock operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "Resource Lock Management" -Completed
+
+#endregion

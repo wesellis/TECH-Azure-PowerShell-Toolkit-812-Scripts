@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Certificate Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,7 +56,9 @@ param(
     [switch]$WECheckAppGatewayCertificates
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Certificate Monitor" -Version " 1.0" -Description " Monitor SSL certificate expiration"
 
 try {
@@ -80,7 +88,7 @@ try {
                     }
                 }
             } catch {
-                Write-Log " ⚠️ Could not access certificates in vault: $($vault.VaultName)" -Level WARNING
+                Write-Log " [WARN]️ Could not access certificates in vault: $($vault.VaultName)" -Level WARNING
             }
         }
     }
@@ -92,11 +100,11 @@ try {
     if ($expiringCertificates.Count -gt 0) {
         $expiringCertificates | Sort-Object ExpirationDate | Format-Table Service, VaultName, CertificateName, ExpirationDate, DaysUntilExpiration
     } else {
-        Write-WELog " ✅ No certificates expiring within $WEExpirationWarningDays days" " INFO" -ForegroundColor Green
+        Write-WELog "  No certificates expiring within $WEExpirationWarningDays days" " INFO" -ForegroundColor Green
     }
 
 } catch {
-    Write-Log " ❌ Certificate monitoring failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Certificate monitoring failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -104,4 +112,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Key Vault Secret Retriever
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Retrieves a secret value from Azure Key Vault
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$VaultName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$false)]
     [switch]$AsPlainText
 )
+
+#region Functions
 
 Write-Information "Retrieving secret from Key Vault: $VaultName"
 
@@ -33,3 +44,6 @@ Write-Information "  Name: $($Secret.Name)"
 Write-Information "  Version: $($Secret.Version)"
 Write-Information "  Created: $($Secret.Created)"
 Write-Information "  Updated: $($Secret.Updated)"
+
+
+#endregion

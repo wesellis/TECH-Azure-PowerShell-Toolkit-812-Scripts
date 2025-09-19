@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azurevminventory Schedules Ms Mgmt
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -88,9 +94,12 @@ $varVMIopsList=" AzureVMInventory-VM-IOPSLimits"
 
 If ($clearLocks)
 {
-        $lockList = Get-AzureRmResourceLock -ErrorAction Stop `
-		-ResourceGroupName $WEAAResourceGroup
-        " $($locklist|where {$_.Name -match " AzureVMInventory" }).count) locks found "
+        $params = @{
+            ErrorAction = "Stop"
+            match = " AzureVMInventory" }).count) locks found "
+            ResourceGroupName = $WEAAResourceGroup " $($locklist|where {$_.Name
+        }
+        $lockList @params
 
             foreach ($l in $lockList|where {$_.Name -match " AzureVMInventory" }) 
             {
@@ -323,4 +332,5 @@ While ($count -lt $WENumberofSchedules)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

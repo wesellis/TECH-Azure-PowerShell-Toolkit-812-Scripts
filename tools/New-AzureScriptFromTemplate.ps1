@@ -1,6 +1,8 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 # New-AzureScriptFromTemplate.ps1
 # Generates new Azure PowerShell scripts from templates with best practices
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 2.0
 
 param(
@@ -17,6 +19,8 @@ param(
     [switch]$IncludeTests,
     [switch]$IncludeDocumentation
 )
+
+#region Functions
 
 function Get-ScriptTemplate {
     param([string]$TemplateType)
@@ -64,6 +68,8 @@ param(
     
     [switch]$WhatIf
 )
+
+#region Functions
 
 #Requires -Modules Az.Accounts, Az.Resources
 #Requires -Version 7.0
@@ -422,7 +428,7 @@ Write-Host "Output path: $OutputPath" -ForegroundColor Yellow
 $scriptContent = Get-ScriptTemplate -TemplateType $Template
 $scriptContent | Out-File $scriptPath -Encoding UTF8
 
-Write-Host "✅ Script created: $scriptPath" -ForegroundColor Green
+Write-Host " Script created: $scriptPath" -ForegroundColor Green
 
 # Generate test file if requested
 if ($IncludeTests) {
@@ -430,7 +436,7 @@ if ($IncludeTests) {
     $testPath = Join-Path $OutputPath $testFileName
     $testContent = New-PesterTest -ScriptName ($ScriptName -replace '\.ps1$', '')
     $testContent | Out-File $testPath -Encoding UTF8
-    Write-Host "✅ Test file created: $testPath" -ForegroundColor Green
+    Write-Host " Test file created: $testPath" -ForegroundColor Green
 }
 
 # Generate documentation if requested
@@ -475,7 +481,7 @@ This script implements $Template operations for Azure.
 "@
     
     $docContent | Out-File $docPath -Encoding UTF8
-    Write-Host "✅ Documentation created: $docPath" -ForegroundColor Green
+    Write-Host " Documentation created: $docPath" -ForegroundColor Green
 }
 
 Write-Host "`nScript generation complete!" -ForegroundColor Cyan
@@ -486,3 +492,4 @@ Write-Host "3. Add your specific logic" -ForegroundColor White
 if ($IncludeTests) {
     Write-Host "4. Run tests: Invoke-Pester $testPath" -ForegroundColor White
 }
+

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Configure Onedrive Sync
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -48,6 +53,8 @@ param(
     # This can cause having multiple copies of a shortcut or a file on desktop when they are created by an app installer or build env init scripts.
     [Parameter(Mandatory = $false)][bool] $WEEnableDesktopSync = $false
 )
+
+#region Functions
 ; 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -80,4 +87,5 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

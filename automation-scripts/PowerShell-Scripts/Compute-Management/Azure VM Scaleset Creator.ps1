@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Scaleset Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -100,45 +106,61 @@ param(
     [int]$WEInstanceCount = 2
 )
 
+#region Functions
+
 Write-WELog " Creating VM Scale Set: $WEScaleSetName" " INFO"
 
 
-$WEVmssConfig = New-AzVmssConfig -ErrorAction Stop `
-    -Location $WELocation `
-    -SkuCapacity $WEInstanceCount `
-    -SkuName $WEVmSize `
-    -UpgradePolicyMode " Manual"
+$params = @{
+    ErrorAction = "Stop"
+    SkuCapacity = $WEInstanceCount
+    SkuName = $WEVmSize
+    UpgradePolicyMode = " Manual"
+    Location = $WELocation
+}
+$WEVmssConfig @params
 
 
-$WEVmssConfig = Add-AzVmssNetworkInterfaceConfiguration `
-    -VirtualMachineScaleSet $WEVmssConfig `
-    -Name " network-config" `
-    -Primary $true `
-    -IPConfigurationName " internal" `
-    -CreatePublicIPAddress $false
+$params = @{
+    CreatePublicIPAddress = $false
+    IPConfigurationName = " internal"
+    Primary = $true
+    Name = " network-config"
+    VirtualMachineScaleSet = $WEVmssConfig
+}
+$WEVmssConfig @params
 
 
-$WEVmssConfig = Set-AzVmssOsProfile -ErrorAction Stop `
-    -VirtualMachineScaleSet $WEVmssConfig `
-    -ComputerNamePrefix " vmss" `
-    -AdminUsername " azureuser"
+$params = @{
+    ComputerNamePrefix = " vmss"
+    ErrorAction = "Stop"
+    AdminUsername = " azureuser"
+    VirtualMachineScaleSet = $WEVmssConfig
+}
+$WEVmssConfig @params
 
 ; 
-$WEVmssConfig = Set-AzVmssStorageProfile -ErrorAction Stop `
-    -VirtualMachineScaleSet $WEVmssConfig `
-    -OsDiskCreateOption " FromImage" `
-    -ImageReferencePublisher " MicrosoftWindowsServer" `
-    -ImageReferenceOffer " WindowsServer" `
-    -ImageReferenceSku " 2022-Datacenter" `
-    -ImageReferenceVersion " latest"
+$params = @{
+    ImageReferenceOffer = " WindowsServer"
+    ImageReferenceSku = " 2022-Datacenter"
+    ErrorAction = "Stop"
+    OsDiskCreateOption = " FromImage"
+    VirtualMachineScaleSet = $WEVmssConfig
+    ImageReferenceVersion = " latest"
+    ImageReferencePublisher = " MicrosoftWindowsServer"
+}
+$WEVmssConfig @params
 
 ; 
-$WEVmss = New-AzVmss -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEScaleSetName `
-    -VirtualMachineScaleSet $WEVmssConfig
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEScaleSetName
+    VirtualMachineScaleSet = $WEVmssConfig
+}
+$WEVmss @params
 
-Write-WELog " ✅ VM Scale Set created successfully:" " INFO"
+Write-WELog "  VM Scale Set created successfully:" " INFO"
 Write-WELog "  Name: $($WEVmss.Name)" " INFO"
 Write-WELog "  Location: $($WEVmss.Location)" " INFO"
 Write-WELog "  VM Size: $WEVmSize" " INFO"
@@ -151,3 +173,6 @@ Write-WELog "  Instance Count: $WEInstanceCount" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

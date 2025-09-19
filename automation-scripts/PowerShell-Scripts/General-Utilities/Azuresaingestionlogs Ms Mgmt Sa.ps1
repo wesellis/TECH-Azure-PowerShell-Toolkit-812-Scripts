@@ -1,4 +1,7 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
 .SYNOPSIS
     Azuresaingestionlogs Ms Mgmt Sa
 
@@ -7,7 +10,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +28,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -222,18 +225,27 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource, $uri, $svc
 
 	
     If ($method -eq 'PUT') {
-        $signature = Build-StorageSignature `
-            -sharedKey $sharedKey `
-            -date  $rfc1123date `
-            -method $method -resource $resource -uri $uri -bodylength $msgbody.length -service $svc
-    }
-    Else {
+        $params = @{
+            uri = $uri
+            date = $rfc1123date
+            service = $svc } Else {
+            resource = $resource
+            sharedKey = $sharedKey
+            bodylength = $msgbody.length
+            method = $method
+        }
+        $signature @params
 
-       ;  $signature = Build-StorageSignature `
-            -sharedKey $sharedKey `
-            -date  $rfc1123date `
-            -method $method -resource $resource -uri $uri -body $body -service $svc
-    } 
+       $params = @{
+           uri = $uri
+           date = $rfc1123date
+           service = $svc }
+           resource = $resource
+           sharedKey = $sharedKey
+           body = $body
+           method = $method
+       }
+       ; @params
 
     If ($svc -eq 'Table') {
        ;  $headersforsa = @{
@@ -357,22 +369,17 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType) {
     $resource = " /api/logs"
     $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
     $contentLength = $body.Length
-    $signature = Build-OMSSignature `
-        -customerId $customerId `
-        -sharedKey $sharedKey `
-        -date $rfc1123date `
-        -contentLength $contentLength `
-        -fileName $fileName `
-        -method $method `
-        -contentType $contentType `
-        -resource $resource
-   ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
-   ;  $WEOMSheaders = @{
-        " Authorization"        = $signature;
-        " Log-Type"             = $logType;
-        " x-ms-date"            = $rfc1123date;
-        " time-generated-field" = $WETimeStampField;
+    $params = @{
+        date = $rfc1123date
+        contentLength = $contentLength
+        resource = $resource ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01" ;  $WEOMSheaders = @{ " Authorization"        = $signature; " Log-Type"             = $logType; " x-ms-date"            = $rfc1123date; " time-generated-field" = $WETimeStampField; }
+        sharedKey = $sharedKey
+        customerId = $customerId
+        contentType = $contentType
+        fileName = $fileName
+        method = $method
     }
+    $signature @params
 
     Try {
         $response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $WEOMSheaders -Body $body -UseBasicParsing
@@ -828,18 +835,27 @@ $scriptBlock = {
 
 		
         If ($method -eq 'PUT') {
-            $signature = Build-StorageSignature `
-                -sharedKey $sharedKey `
-                -date  $rfc1123date `
-                -method $method -resource $resource -uri $uri -bodylength $msgbody.length -service $svc
-        }
-        Else {
+            $params = @{
+                uri = $uri
+                date = $rfc1123date
+                service = $svc } Else {
+                resource = $resource
+                sharedKey = $sharedKey
+                bodylength = $msgbody.length
+                method = $method
+            }
+            $signature @params
 
-           ;  $signature = Build-StorageSignature `
-                -sharedKey $sharedKey `
-                -date  $rfc1123date `
-                -method $method -resource $resource -uri $uri -body $body -service $svc
-        } 
+           $params = @{
+               uri = $uri
+               date = $rfc1123date
+               service = $svc }
+               resource = $resource
+               sharedKey = $sharedKey
+               body = $body
+               method = $method
+           }
+           ; @params
 
         If ($svc -eq 'Table') {
            ;  $headersforsa = @{
@@ -963,22 +979,17 @@ $scriptBlock = {
         $resource = " /api/logs"
         $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
         $contentLength = $body.Length
-        $signature = Build-OMSSignature `
-            -customerId $customerId `
-            -sharedKey $sharedKey `
-            -date $rfc1123date `
-            -contentLength $contentLength `
-            -fileName $fileName `
-            -method $method `
-            -contentType $contentType `
-            -resource $resource
-       ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
-       ;  $WEOMSheaders = @{
-            " Authorization"        = $signature;
-            " Log-Type"             = $logType;
-            " x-ms-date"            = $rfc1123date;
-            " time-generated-field" = $WETimeStampField;
+        $params = @{
+            date = $rfc1123date
+            contentLength = $contentLength
+            resource = $resource ;  $uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01" ;  $WEOMSheaders = @{ " Authorization"        = $signature; " Log-Type"             = $logType; " x-ms-date"            = $rfc1123date; " time-generated-field" = $WETimeStampField; }
+            sharedKey = $sharedKey
+            customerId = $customerId
+            contentType = $contentType
+            fileName = $fileName
+            method = $method
         }
+        $signature @params
 
         Try {
             $response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $WEOMSheaders -Body $body -UseBasicParsing
@@ -1377,4 +1388,4 @@ Remove-Variable -Name  jsonlogs  -ea 0
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+

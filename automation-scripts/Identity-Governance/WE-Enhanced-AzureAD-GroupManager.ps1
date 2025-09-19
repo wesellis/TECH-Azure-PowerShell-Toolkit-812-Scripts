@@ -1,13 +1,25 @@
-﻿# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Enhanced Azure AD Group Management Tool
-# Author: Wesley Ellis
 # Contact: wesellis.com
 # Version: 2.0 Enhanced Edition
-# Date: August 2025
-# Description: Advanced Azure Active Directory group creation and management
 #              with enhanced validation, reporting, and enterprise features
-# ============================================================================
-
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$true, HelpMessage="Name for the new Azure AD group")]
@@ -36,6 +48,8 @@ param (
     [Parameter(Mandatory=$false, HelpMessage="Validate group name uniqueness")]
     [switch]$WEValidateUniqueness
 )
+
+#region Functions
 
 # Wesley Ellis Enhanced Error Handling Framework
 $ErrorActionPreference = "Stop"
@@ -137,7 +151,7 @@ try {
     Write-WELog "Creating Azure AD group..." "INFO"
     $WENewGroup = New-AzADGroup -ErrorAction Stop @WEGroupParameters
     
-    Write-WELog "✅ Azure AD Group created successfully!" "SUCCESS"
+    Write-WELog " Azure AD Group created successfully!" "SUCCESS"
     Write-WELog "   Display Name: $($WENewGroup.DisplayName)" "SUCCESS"
     Write-WELog "   Object ID: $($WENewGroup.Id)" "SUCCESS"
     Write-WELog "   Group Type: $WEGroupType" "SUCCESS"
@@ -149,9 +163,9 @@ try {
             $owner = Resolve-WEUserByEmail -EmailAddress $ownerEmail
             if ($owner) {
                 Add-AzADGroupOwner -GroupObject $WENewGroup -OwnerObjectId $owner.Id
-                Write-WELog "   ✅ Owner added: $ownerEmail" "SUCCESS"
+                Write-WELog "    Owner added: $ownerEmail" "SUCCESS"
             } else {
-                Write-WELog "   ❌ Owner not found: $ownerEmail" "WARN"
+                Write-WELog "    Owner not found: $ownerEmail" "WARN"
             }
         }
     }
@@ -165,10 +179,10 @@ try {
             $member = Resolve-WEUserByEmail -EmailAddress $memberEmail
             if ($member) {
                 Add-AzADGroupMember -GroupObject $WENewGroup -MemberObjectId $member.Id
-                Write-WELog "   ✅ Member added: $memberEmail" "SUCCESS"
+                Write-WELog "    Member added: $memberEmail" "SUCCESS"
                 $successCount++
             } else {
-                Write-WELog "   ❌ Member not found: $memberEmail" "WARN"
+                Write-WELog "    Member not found: $memberEmail" "WARN"
             }
         }
         
@@ -200,18 +214,19 @@ try {
     if ($WEExportResults) {
         $exportPath = "WE-AzureAD-Group-Export-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
         $WEGroupSummary | Export-Csv -Path $exportPath -NoTypeInformation
-        Write-WELog "✅ Group details exported to: $exportPath" "SUCCESS"
+        Write-WELog " Group details exported to: $exportPath" "SUCCESS"
     }
     
-    Write-WELog "🎉 Wesley Ellis Enhanced Group Creation Complete!" "SUCCESS"
+    Write-WELog " Wesley Ellis Enhanced Group Creation Complete!" "SUCCESS"
     return $WEGroupSummary
     
 } catch {
-    Write-WELog "❌ Group creation failed: $($_.Exception.Message)" "ERROR"
+    Write-WELog " Group creation failed: $($_.Exception.Message)" "ERROR"
     Write-WELog "Contact: wesellis.com for support" "ERROR"
     throw
 }
 
 # Wesley Ellis Enterprise Toolkit
 # More tools available at: wesellis.com
-# ============================================================================
+
+#endregion

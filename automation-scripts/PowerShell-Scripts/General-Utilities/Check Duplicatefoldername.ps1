@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Check Duplicatefoldername
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -52,6 +57,8 @@ param(
     $sampleName = $WEENV:SAMPLE_NAME
 )
 
+#region Functions
+
 if($WESampleName.StartsWith('modules')){
    # for modules we use version numbers, e.g. 0.9 so will have dupes, the the urlFragment will be the full path for a module and not an issue
 }else{
@@ -75,3 +82,6 @@ if($d.count -gt 1){ # there should be at least one since this sample should be f
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

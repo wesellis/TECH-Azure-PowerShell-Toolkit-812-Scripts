@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azureusage Schedules Ms Mgmt
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -45,6 +51,8 @@ param(
 [Parameter(Mandatory=$false)][string]$syncInterval ,
 [Parameter(Mandatory=$false)] [bool] $clearLocks=$false                
 )
+
+#region Functions
 
 Write-Verbose " Logging in to Azure..."
 $WEConn = Get-AutomationConnection -Name AzureRunAsConnection 
@@ -116,4 +124,5 @@ Start-AzureRmAutomationRunbook -AutomationAccountName $WEAAAccount -Name $WERunb
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

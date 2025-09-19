@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Install Bicep
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +55,8 @@ param(
     $ttkFolder = $WEENV:TTK_FOLDER,
     $bicepUri = $WEENV:BICEP_URI
 )
+
+#region Functions
 
 
 
@@ -90,3 +97,6 @@ Write-WELog " ##vso[task.setvariable variable=bicep.version]$bicepVersion" " INF
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Container Registry Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Container Registry for container image storage
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,16 +30,20 @@ param (
     [string]$Sku = "Basic"
 )
 
+#region Functions
+
 Write-Information "Creating Container Registry: $RegistryName"
 
-$Registry = New-AzContainerRegistry -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $RegistryName `
-    -Location $Location `
-    -Sku $Sku `
-    -EnableAdminUser
+$params = @{
+    ErrorAction = "Stop"
+    Sku = $Sku
+    ResourceGroupName = $ResourceGroupName
+    Name = $RegistryName
+    Location = $Location
+}
+$Registry @params
 
-Write-Information "✅ Container Registry created successfully:"
+Write-Information " Container Registry created successfully:"
 Write-Information "  Name: $($Registry.Name)"
 Write-Information "  Login Server: $($Registry.LoginServer)"
 Write-Information "  Location: $($Registry.Location)"
@@ -42,3 +55,6 @@ $Creds = Get-AzContainerRegistryCredential -ResourceGroupName $ResourceGroupName
 Write-Information "`nAdmin Credentials:"
 Write-Information "  Username: $($Creds.Username)"
 Write-Information "  Password: $($Creds.Password)"
+
+
+#endregion

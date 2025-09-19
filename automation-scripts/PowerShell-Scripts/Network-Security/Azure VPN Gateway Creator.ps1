@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vpn Gateway Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -100,6 +106,8 @@ param(
     [string]$WEGatewaySku = " VpnGw1"
 )
 
+#region Functions
+
 Write-WELog " Creating VPN Gateway: $WEGatewayName" " INFO"
 
 
@@ -117,30 +125,39 @@ if (-not $WEGatewaySubnet) {
 
 
 $WEGatewayIpName = " $WEGatewayName-pip"
-$WEGatewayIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEGatewayIpName `
-    -Location $WELocation `
-    -AllocationMethod Dynamic
+$params = @{
+    ErrorAction = "Stop"
+    AllocationMethod = "Dynamic"
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEGatewayIpName
+    Location = $WELocation
+}
+$WEGatewayIp @params
 
 ; 
-$WEGatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop `
-    -Name " gatewayConfig" `
-    -SubnetId $WEGatewaySubnet.Id `
-    -PublicIpAddressId $WEGatewayIp.Id
+$params = @{
+    ErrorAction = "Stop"
+    PublicIpAddressId = $WEGatewayIp.Id
+    SubnetId = $WEGatewaySubnet.Id
+    Name = " gatewayConfig"
+}
+$WEGatewayIpConfig @params
 
 
 Write-WELog " Creating VPN Gateway (this may take 30-45 minutes)..." " INFO" ; 
-$WEGateway = New-AzVirtualNetworkGateway -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEGatewayName `
-    -Location $WELocation `
-    -IpConfigurations $WEGatewayIpConfig `
-    -GatewayType " Vpn" `
-    -VpnType " RouteBased" `
-    -GatewaySku $WEGatewaySku
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Location = $WELocation
+    GatewaySku = $WEGatewaySku
+    VpnType = " RouteBased"
+    IpConfigurations = $WEGatewayIpConfig
+    GatewayType = " Vpn"
+    ErrorAction = "Stop"
+    Name = $WEGatewayName
+}
+$WEGateway @params
 
-Write-WELog " ✅ VPN Gateway created successfully:" " INFO"
+Write-WELog "  VPN Gateway created successfully:" " INFO"
 Write-WELog "  Name: $($WEGateway.Name)" " INFO"
 Write-WELog "  Type: $($WEGateway.GatewayType)" " INFO"
 Write-WELog "  SKU: $($WEGateway.Sku.Name)" " INFO"
@@ -153,3 +170,6 @@ Write-WELog "  Public IP: $($WEGatewayIp.IpAddress)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

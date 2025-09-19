@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Vmdemo
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -46,6 +51,8 @@ $ErrorActionPreference = "Stop"
 param(
 	[string]$WENodeName = 'localhost'
 )
+
+#region Functions
 
 Import-DscResource -ModuleName ComputerManagementDsc, cChoco, xStorage, xPSDesiredStateConfiguration
 
@@ -145,3 +152,6 @@ vmDemo
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

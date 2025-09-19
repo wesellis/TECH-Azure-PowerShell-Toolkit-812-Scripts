@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure App Service Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure App Service web applications with custom configurations
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -18,6 +27,8 @@ param (
     [hashtable]$AppSettings = @{}
 )
 
+#region Functions
+
 Write-Information "Provisioning App Service: $AppName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "App Service Plan: $PlanName"
@@ -26,11 +37,14 @@ Write-Information "Runtime: $Runtime $RuntimeVersion"
 Write-Information "HTTPS Only: $HttpsOnly"
 
 # Create the App Service
-$WebApp = New-AzWebApp -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $AppName `
-    -AppServicePlan $PlanName `
-    -Location $Location
+$params = @{
+    ErrorAction = "Stop"
+    Location = $Location
+    ResourceGroupName = $ResourceGroupName
+    Name = $AppName
+    AppServicePlan = $PlanName
+}
+$WebApp @params
 
 Write-Information "App Service created: $($WebApp.DefaultHostName)"
 
@@ -59,3 +73,6 @@ Write-Information "URL: https://$($WebApp.DefaultHostName)"
 Write-Information "State: $($WebApp.State)"
 
 Write-Information "`nApp Service provisioning completed at $(Get-Date)"
+
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Network Watcher Enabler
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Enables Azure Network Watcher for network monitoring and diagnostics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -18,6 +27,8 @@ param (
     [string]$NetworkWatcherName = "NetworkWatcher_$Location"
 )
 
+#region Functions
+
 Write-Information "Enabling Network Watcher in: $Location"
 
 # Check if Network Watcher already exists
@@ -25,14 +36,15 @@ $NetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $ResourceGroupName -Na
 
 if (-not $NetworkWatcher) {
     # Create Network Watcher
-    $NetworkWatcher = New-AzNetworkWatcher -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $NetworkWatcherName `
-        -Location $Location
-    
-    Write-Information "✅ Network Watcher created successfully:"
+    $params = @{
+        ErrorAction = "Stop"
+        ResourceGroupName = $ResourceGroupName
+        Name = $NetworkWatcherName
+        Location = $Location  Write-Information " Network Watcher created successfully:
+    }
+    $NetworkWatcher @params
 } else {
-    Write-Information "✅ Network Watcher already exists:"
+    Write-Information " Network Watcher already exists:"
 }
 
 Write-Information "  Name: $($NetworkWatcher.Name)"
@@ -48,3 +60,6 @@ Write-Information "  • NSG Flow Logs"
 Write-Information "  • Connection Monitor"
 Write-Information "  • Packet Capture"
 Write-Information "  • Connection Troubleshoot"
+
+
+#endregion

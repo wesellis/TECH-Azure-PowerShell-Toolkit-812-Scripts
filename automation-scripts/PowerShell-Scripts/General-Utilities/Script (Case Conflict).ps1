@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Script (Case Conflict)
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -26,7 +31,7 @@ try {
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -44,6 +49,8 @@ param(
   [Object[]]$myArray,
   [Object]$myObject
 )
+
+#region Functions
 
 Write-Output " myBool: $myBool"
 Write-Output " myInt: $myInt"
@@ -63,3 +70,6 @@ $WEDeploymentScriptOutputs['myObject'] = $myObject
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

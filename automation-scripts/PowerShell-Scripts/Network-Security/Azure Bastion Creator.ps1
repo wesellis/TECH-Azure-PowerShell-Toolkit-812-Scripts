@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Bastion Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,6 +99,8 @@ param(
     [string]$WELocation
 )
 
+#region Functions
+
 Write-WELog " Creating Azure Bastion: $WEBastionName" " INFO"
 
 
@@ -110,22 +118,28 @@ if (-not $WEBastionSubnet) {
 
 
 $WEBastionIpName = " $WEBastionName-pip"; 
-$WEBastionIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEBastionIpName `
-    -Location $WELocation `
-    -AllocationMethod Static `
-    -Sku Standard
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = "Standard"
+    Location = $WELocation
+    AllocationMethod = "Static"
+    ErrorAction = "Stop"
+    Name = $WEBastionIpName
+}
+$WEBastionIp @params
 
 
 Write-WELog " Creating Bastion host (this may take 10-15 minutes)..." " INFO" ; 
-$WEBastion = New-AzBastion -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEBastionName `
-    -PublicIpAddress $WEBastionIp `
-    -VirtualNetwork $WEVNet
+$params = @{
+    ErrorAction = "Stop"
+    PublicIpAddress = $WEBastionIp
+    VirtualNetwork = $WEVNet
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEBastionName
+}
+$WEBastion @params
 
-Write-WELog " ✅ Azure Bastion created successfully:" " INFO"
+Write-WELog "  Azure Bastion created successfully:" " INFO"
 Write-WELog "  Name: $($WEBastion.Name)" " INFO"
 Write-WELog "  Location: $($WEBastion.Location)" " INFO"
 Write-WELog "  Public IP: $($WEBastionIp.IpAddress)" " INFO"
@@ -144,3 +158,6 @@ Write-WELog " • No VPN client required" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

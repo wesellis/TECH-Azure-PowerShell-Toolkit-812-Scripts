@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Sets up Azure budget alerts and monitoring for proactive cost management.
 
@@ -91,6 +97,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$CostCenter
 )
+
+#region Functions
 
 # Script configuration
 $ErrorActionPreference = "Stop"
@@ -396,7 +404,7 @@ function Show-BudgetSummary {
     Write-Information "• Review and adjust budget amounts as needed"
     Write-Information "• Set up additional budgets for other scopes if required"
     
-    Write-Information "`n✅ Budget alert setup completed successfully!"
+    Write-Information "`n Budget alert setup completed successfully!"
 }
 
 # Main execution
@@ -476,3 +484,6 @@ catch {
 finally {
     Write-Log "Script execution completed"
 }
+
+
+#endregion

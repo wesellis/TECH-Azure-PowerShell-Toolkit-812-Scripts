@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Convertpfx Tobase64
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -43,6 +48,8 @@ $ErrorActionPreference = "Stop"
 param(
     [string] [Parameter(mandatory = $true)] $pfxFile
 )
+
+#region Functions
 ; 
 $fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream 
 [System.Convert]::ToBase64String($fileContent) | Set-Content -Encoding ascii " $pfxFile.txt"
@@ -53,3 +60,6 @@ $fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Service Bus Queue Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates a new queue in Azure Service Bus namespace
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,16 +30,24 @@ param (
     [int]$MaxSizeInMegabytes = 1024
 )
 
+#region Functions
+
 Write-Information "Creating Service Bus queue: $QueueName"
 
-$Queue = New-AzServiceBusQueue -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -NamespaceName $NamespaceName `
-    -Name $QueueName `
-    -MaxSizeInMegabytes $MaxSizeInMegabytes
+$params = @{
+    ErrorAction = "Stop"
+    MaxSizeInMegabytes = $MaxSizeInMegabytes
+    ResourceGroupName = $ResourceGroupName
+    NamespaceName = $NamespaceName
+    Name = $QueueName
+}
+$Queue @params
 
 Write-Information "Queue created successfully:"
 Write-Information "  Name: $($Queue.Name)"
 Write-Information "  Max Size: $($Queue.MaxSizeInMegabytes) MB"
 Write-Information "  Status: $($Queue.Status)"
 Write-Information "  Namespace: $NamespaceName"
+
+
+#endregion

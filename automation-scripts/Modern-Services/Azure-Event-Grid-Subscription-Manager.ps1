@@ -1,6 +1,23 @@
-﻿# Azure Event Grid Subscription Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Event Grid Subscription Manager
 # Manage Event Grid topics and subscriptions
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -24,7 +41,9 @@ param(
     [string]$Location = "East US"
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Event Grid Subscription Manager" -Version "1.0" -Description "Manage Event Grid topics and subscriptions"
 
 try {
@@ -35,13 +54,13 @@ try {
     switch ($Action) {
         "CreateTopic" {
             $topic = New-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName -Location $Location
-            Write-Log "✓ Event Grid topic created: $TopicName" -Level SUCCESS
+            Write-Log "[OK] Event Grid topic created: $TopicName" -Level SUCCESS
             Write-Information "Endpoint: $($topic.Endpoint)"
         }
         
         "CreateSubscription" {
             $subscription = New-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName -EventSubscriptionName $SubscriptionName -Endpoint $EndpointUrl
-            Write-Log "✓ Event subscription created: $($subscription.EventSubscriptionName)" -Level SUCCESS
+            Write-Log "[OK] Event subscription created: $($subscription.EventSubscriptionName)" -Level SUCCESS
         }
         
         "ListEvents" {
@@ -55,11 +74,14 @@ try {
         
         "DeleteTopic" {
             Remove-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName -Force
-            Write-Log "✓ Event Grid topic deleted: $TopicName" -Level SUCCESS
+            Write-Log "[OK] Event Grid topic deleted: $TopicName" -Level SUCCESS
         }
     }
 
 } catch {
-    Write-Log "❌ Event Grid operation failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Event Grid operation failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

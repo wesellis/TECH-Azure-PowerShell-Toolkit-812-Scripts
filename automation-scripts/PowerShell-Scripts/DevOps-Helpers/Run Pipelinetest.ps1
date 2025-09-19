@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Run Pipelinetest
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -47,17 +52,14 @@ $ErrorActionPreference = "Stop"
 param(
 )
 
+#region Functions
+
 $WEErrorActionPreference = " Stop"
 
 $repoRoot = Resolve-Path " $WEPSScriptRoot/../.."
 
 
-$testBranches = @( `
-    " bicep-json-doesnt-match" , `
-    " bicep-success" , `
-    " bicep-warnings" , `
-    " bicep-errors" , `
-    " bicep-with-prereqs-success" `
+$testBranches 
 )
 
 $yesAll = $false
@@ -107,3 +109,6 @@ This is a test deployment for branch $fullBranch
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

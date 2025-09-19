@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Update Readme
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -48,6 +53,8 @@ param(
     [string]$mainTemplateFilename = $WEENV:MAINTEMPLATE_FILENAME_JSON,
     [string]$prereqTemplateFileName = $WEENV:PREREQ_TEMPLATE_FILENAME_JSON
 )
+
+#region Functions
 
 
 Import-Module " $($ttkFolder)/arm-ttk/arm-ttk.psd1"
@@ -222,3 +229,6 @@ Write-Output $readme
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

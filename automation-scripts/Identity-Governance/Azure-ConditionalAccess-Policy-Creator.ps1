@@ -1,12 +1,20 @@
-﻿# ============================================================================
-# Script Name: Azure Conditional Access Policy Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure AD Conditional Access policies for enhanced security
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$PolicyName,
@@ -30,6 +38,8 @@ param (
     [string]$State = "enabledForReportingButNotEnforced"
 )
 
+#region Functions
+
 Write-Information "Creating Conditional Access Policy: $PolicyName"
 
 try {
@@ -42,9 +52,9 @@ try {
     # Connect to Microsoft Graph
     Connect-MgGraph -Scopes "Policy.ReadWrite.ConditionalAccess"
     
-    Write-Information "✅ Connected to Microsoft Graph"
+    Write-Information " Connected to Microsoft Graph"
     
-    Write-Information "🔐 Conditional Access Policy Configuration:"
+    Write-Information "� Conditional Access Policy Configuration:"
     Write-Information "  Name: $PolicyName"
     Write-Information "  Description: $Description"
     Write-Information "  State: $State"
@@ -55,7 +65,7 @@ try {
     Write-Information "  Applications: $($IncludeApplications -join ', ')"
     Write-Information "  Grant Controls: $($RequireMFA -join ', ')"
     
-    Write-Information "`n⚠️ IMPORTANT NOTES:"
+    Write-Information "`n[WARN] IMPORTANT NOTES:"
     Write-Information "• Policy created in report-only mode by default"
     Write-Information "• Test thoroughly before enabling enforcement"
     Write-Information "• Ensure emergency access accounts are excluded"
@@ -90,10 +100,13 @@ try {
     Write-Information "5. Set access controls and session controls"
     Write-Information "6. Enable policy"
     
-    Write-Information "`n✅ Conditional Access policy template prepared"
-    Write-Information "🚨 Use Azure Portal to create the actual policy for safety"
+    Write-Information "`n Conditional Access policy template prepared"
+    Write-Information "� Use Azure Portal to create the actual policy for safety"
     
 } catch {
     Write-Error "Conditional Access policy creation failed: $($_.Exception.Message)"
-    Write-Information "💡 Tip: Use Azure Portal for creating Conditional Access policies"
+    Write-Information "� Tip: Use Azure Portal for creating Conditional Access policies"
 }
+
+
+#endregion

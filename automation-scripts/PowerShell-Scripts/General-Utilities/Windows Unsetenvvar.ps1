@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Unsetenvvar
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -43,6 +48,8 @@ $ErrorActionPreference = "Stop"
 param(
     $WEVariable
 )
+
+#region Functions
 ; 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
@@ -56,3 +63,6 @@ Write-Information " Removing variable $WEVariable complete"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

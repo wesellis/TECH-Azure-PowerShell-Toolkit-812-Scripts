@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Storage Account Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions new Azure Storage Accounts with specified configurations
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$StorageAccountName,
@@ -16,6 +25,8 @@ param (
     [string]$AccessTier = "Hot"
 )
 
+#region Functions
+
 Write-Information "Provisioning Storage Account: $StorageAccountName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "Location: $Location"
@@ -24,14 +35,20 @@ Write-Information "Kind: $Kind"
 Write-Information "Access Tier: $AccessTier"
 
 # Create the storage account
-$StorageAccount = New-AzStorageAccount -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $StorageAccountName `
-    -Location $Location `
-    -SkuName $SkuName `
-    -Kind $Kind `
-    -AccessTier $AccessTier `
-    -EnableHttpsTrafficOnly $true
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    AccessTier = $AccessTier
+    SkuName = $SkuName
+    Location = $Location
+    EnableHttpsTrafficOnly = $true
+    Kind = $Kind
+    ErrorAction = "Stop"
+    Name = $StorageAccountName
+}
+$StorageAccount @params
 
 Write-Information "Storage Account $StorageAccountName provisioned successfully"
 Write-Information "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)"
+
+
+#endregion

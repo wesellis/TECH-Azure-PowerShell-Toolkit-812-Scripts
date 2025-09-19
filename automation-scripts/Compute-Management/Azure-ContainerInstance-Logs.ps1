@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Container Instance Logs Viewer
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Retrieves and displays logs from Azure Container Instance
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,6 +30,8 @@ param (
     [int]$Tail = 50
 )
 
+#region Functions
+
 Write-Information -Object "Retrieving logs for container group: $ContainerGroupName"
 
 if ($ContainerName) {
@@ -32,3 +43,6 @@ if ($ContainerName) {
 Write-Information -Object "`nContainer Logs (Last $Tail lines):"
 Write-Information -Object ("=" * 50)
 Write-Information -Object $Logs
+
+
+#endregion

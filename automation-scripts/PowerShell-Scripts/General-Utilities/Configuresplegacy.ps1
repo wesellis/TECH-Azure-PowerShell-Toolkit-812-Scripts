@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Configuresplegacy
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -213,29 +218,29 @@ param(
                 $icmpRuleName = " File and Printer Sharing (Echo Request - ICMPv4-In)"
                 $icmpFirewallRule = Get-NetFirewallRule -DisplayName $icmpRuleName -ErrorAction SilentlyContinue
                 if ($null -eq $icmpFirewallRule) {
-                    New-NetFirewallRule -Name Allow_Ping -DisplayName $icmpRuleName `
-                        -Description " Allow ICMPv4 ping" `
-                        -Protocol ICMPv4 `
-                        -IcmpType 8 `
-                        -Enabled True `
-                        -Profile Any `
-                        -Action Allow
-                }
-                Enable-NetFirewallRule -DisplayName $icmpRuleName
+                    $params = @{
+                        DisplayName = $icmpRuleName
+                        Protocol = "ICMPv4"
+                        Name = "Allow_Ping"
+                        Description = " Allow ICMPv4 ping"
+                        IcmpType = "8"
+                        Enabled = "True"
+                        Profile = "Any"
+                        Action = "Allow } Enable-NetFirewallRule"
+                    }
+                    New-NetFirewallRule @params
 
                ;  $spRuleName = " SharePoint Distributed Cache"
                ;  $firewallRule = Get-NetFirewallRule -DisplayName $spRuleName -ErrorAction SilentlyContinue
                 if ($null -eq $firewallRule) {
-                    New-NetFirewallRule -Name " SPDistCache" `
-                        -DisplayName $spRuleName `
-                        -Protocol TCP `
-                        -LocalPort 22233-22236 `
-                        -Group " SharePoint"
-                }                
-                Enable-NetFirewallRule -DisplayName $spRuleName
-            }
-            GetScript = { }
-        }
+                    $params = @{
+                        DisplayName = $spRuleName } GetScript = { } }
+                        Protocol = "TCP"
+                        Name = " SPDistCache"
+                        LocalPort = "22233-22236"
+                        Group = " SharePoint" } Enable-NetFirewallRule"
+                    }
+                    New-NetFirewallRule @params
 
         xRemoteFile DownloadLDAPCP
         {
@@ -1707,4 +1712,5 @@ C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

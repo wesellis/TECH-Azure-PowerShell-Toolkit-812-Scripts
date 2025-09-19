@@ -1,6 +1,9 @@
-﻿<#
+#Requires -Version 5.1
+#Requires -Module Az.Resources
+
+<#
 .SYNOPSIS
-    Comprehensive test script to validate all Azure Cost Management Dashboard prerequisites and configuration.
+    Validates all Azure Cost Management Dashboard prerequisites and configuration
 
 .DESCRIPTION
     This script performs a complete validation of the Azure Cost Management Dashboard installation,
@@ -22,122 +25,156 @@
 .EXAMPLE
     .\Test-Prerequisites.ps1
 
+    Runs basic prerequisite validation tests
+
 .EXAMPLE
     .\Test-Prerequisites.ps1 -Detailed -ExportResults
+
+    Runs detailed tests and exports results to a file
 
 .EXAMPLE
     .\Test-Prerequisites.ps1 -ConfigPath "config\prod-config.json" -TestData
 
+    Tests with production config using sample data
+
 .NOTES
-    Author: Wesley Ellis
-    Email: wes@wesellis.com
-    Created: May 23, 2025
-    Version: 1.0
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 2.0.0
+    Created: 2024-11-15
+    LastModified: 2025-09-19
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$ConfigPath = "config\config.json",
-    
-    [Parameter(Mandatory = $false)]
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$ConfigPath,
+
+    [Parameter()]
     [switch]$TestData,
-    
-    [Parameter(Mandatory = $false)]
+
+    [Parameter()]
     [switch]$Detailed,
-    
-    [Parameter(Mandatory = $false)]
+
+    [Parameter()]
     [switch]$ExportResults
 )
 
-# Initialize test results
-$testResults = @{
-    PowerShell = @{}
-    Modules = @{}
-    Azure = @{}
-    Configuration = @{}
-    Functionality = @{}
-    Overall = @{}
+#region Initialize-Configuration
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+
+# Set dynamic defaults
+if (-not $ConfigPath) {
+    $ConfigPath = "config\config.json"
+}
+#endregion
+
+#region Functions
+
+function Initialize-TestResults {
+    [CmdletBinding()]
+    param()
+
+    return @{
+        PowerShell = @{}
+        Modules = @{}
+        Azure = @{}
+        Configuration = @{}
+        Functionality = @{}
+        Overall = @{}
+    }
 }
 
-$testStartTime = Get-Date -ErrorAction Stop
-
-# Helper functions
-[CmdletBinding()]
 function Write-TestResult {
+    [CmdletBinding()]
     param(
+        [Parameter(Mandatory)]
         [string]$Test,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('PASS', 'FAIL', 'WARN', 'INFO', 'SKIP')]
         [string]$Status,
+
+        [Parameter()]
         [string]$Message = "",
+
+        [Parameter()]
         [string]$Details = ""
     )
-    
+
     $icon = switch ($Status) {
-        "PASS" { "✅" }
-        "FAIL" { "❌" }
-        "WARN" { "⚠️" }
-        "INFO" { "ℹ️" }
+        'PASS' { '[OK]' }
+        'FAIL' { '[FAIL]' }
+        'WARN' { '[WARN]' }
+        'INFO' { '[INFO]' }
+        'SKIP' { '[SKIP]' }
     }
-    
+
     $color = switch ($Status) {
-        "PASS" { "Green" }
-        "FAIL" { "Red" }
-        "WARN" { "Yellow" }
-        "INFO" { "Cyan" }
+        'PASS' { 'Green' }
+        'FAIL' { 'Red' }
+        'WARN' { 'Yellow' }
+        'INFO' { 'Cyan' }
+        'SKIP' { 'Gray' }
     }
-    
-    Write-Information "$icon $Test" -ForegroundColor $color
+
+    Write-Host "$icon $Test" -ForegroundColor $color
     if ($Message) {
-        Write-Information "   $Message"
+        Write-Host "   $Message" -ForegroundColor $color
     }
-    if ($Details -and $Detailed) {
-        Write-Information "   Details: $Details"
+    if ($Details -and $script:Detailed) {
+        Write-Host "   Details: $Details" -ForegroundColor Gray
     }
-    
+
     return @{
         Test = $Test
         Status = $Status
         Message = $Message
         Details = $Details
-        Timestamp = Get-Date -ErrorAction Stop
+        Timestamp = Get-Date
     }
 }
 
-[CmdletBinding()]
 function Test-PowerShellEnvironment {
-    Write-Information "`n🔍 Testing PowerShell Environment..."
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`nTesting PowerShell Environment..." -ForegroundColor Cyan
     
     # PowerShell Version
     $psVersion = $PSVersionTable.PSVersion
     if ($psVersion.Major -ge 5) {
-        $testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "PASS" "Version $($psVersion.Major).$($psVersion.Minor).$($psVersion.Build)"
+        $script:testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "PASS" "Version $($psVersion.Major).$($psVersion.Minor).$($psVersion.Build)"
     }
     else {
-        $testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "FAIL" "Version $($psVersion.Major).$($psVersion.Minor) (Requires 5.1+)"
+        $script:testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "FAIL" "Version $($psVersion.Major).$($psVersion.Minor) (Requires 5.1+)"
     }
     
     # Execution Policy
     $execPolicy = Get-ExecutionPolicy -ErrorAction Stop
     if ($execPolicy -in @("RemoteSigned", "Unrestricted", "Bypass")) {
-        $testResults.PowerShell.ExecutionPolicy = Write-TestResult "Execution Policy" "PASS" $execPolicy
+        $script:testResults.PowerShell.ExecutionPolicy = Write-TestResult "Execution Policy" "PASS" $execPolicy
     }
     else {
-        $testResults.PowerShell.ExecutionPolicy = Write-TestResult "Execution Policy" "WARN" "$execPolicy (May prevent script execution)"
+        $script:testResults.PowerShell.ExecutionPolicy = Write-TestResult "Execution Policy" "WARN" "$execPolicy (May prevent script execution)"
     }
     
     # Admin Rights
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
     if ($isAdmin) {
-        $testResults.PowerShell.AdminRights = Write-TestResult "Administrator Rights" "PASS" "Running as Administrator"
+        $script:testResults.PowerShell.AdminRights = Write-TestResult "Administrator Rights" "PASS" "Running as Administrator"
     }
     else {
-        $testResults.PowerShell.AdminRights = Write-TestResult "Administrator Rights" "INFO" "Not running as Administrator (OK for user-scope modules)"
+        $script:testResults.PowerShell.AdminRights = Write-TestResult "Administrator Rights" "INFO" "Not running as Administrator (OK for user-scope modules)"
     }
 }
 
-[CmdletBinding()]
 function Test-RequiredModules {
-    Write-Information "`n📦 Testing Required Modules..."
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`nTesting Required Modules..." -ForegroundColor Cyan
     
     $requiredModules = @(
         @{ Name = "Az"; MinVersion = "9.0.0" },
@@ -152,14 +189,14 @@ function Test-RequiredModules {
         
         if ($installedModule) {
             if ($installedModule.Version -ge [version]$module.MinVersion) {
-                $testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "PASS" "Version $($installedModule.Version)"
+                $script:testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "PASS" "Version $($installedModule.Version)"
             }
             else {
-                $testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "WARN" "Version $($installedModule.Version) (Minimum: $($module.MinVersion))"
+                $script:testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "WARN" "Version $($installedModule.Version) (Minimum: $($module.MinVersion))"
             }
         }
         else {
-            $testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "FAIL" "Not installed"
+            $script:testResults.Modules[$module.Name] = Write-TestResult "$($module.Name) Module" "FAIL" "Not installed"
         }
     }
     
@@ -168,37 +205,39 @@ function Test-RequiredModules {
     foreach ($module in $optionalModules) {
         $installedModule = Get-Module -Name $module -ListAvailable
         if ($installedModule) {
-            $testResults.Modules[$module] = Write-TestResult "$module Module (Optional)" "PASS" "Version $($installedModule[0].Version)"
+            $script:testResults.Modules[$module] = Write-TestResult "$module Module (Optional)" "PASS" "Version $($installedModule[0].Version)"
         }
         else {
-            $testResults.Modules[$module] = Write-TestResult "$module Module (Optional)" "INFO" "Not installed (Optional)"
+            $script:testResults.Modules[$module] = Write-TestResult "$module Module (Optional)" "INFO" "Not installed (Optional)"
         }
     }
 }
 
-[CmdletBinding()]
 function Test-AzureConnectivity {
-    Write-Information "`n☁️ Testing Azure Connectivity..."
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`nTesting Azure Connectivity..." -ForegroundColor Cyan
     
     try {
         # Test Azure connection
         $context = Get-AzContext -ErrorAction Stop
         if ($context) {
-            $testResults.Azure.Connection = Write-TestResult "Azure Connection" "PASS" "Connected as $($context.Account.Id)"
-            $testResults.Azure.Subscription = Write-TestResult "Subscription Access" "PASS" "$($context.Subscription.Name) ($($context.Subscription.Id))"
+            $script:testResults.Azure.Connection = Write-TestResult "Azure Connection" "PASS" "Connected as $($context.Account.Id)"
+            $script:testResults.Azure.Subscription = Write-TestResult "Subscription Access" "PASS" "$($context.Subscription.Name) ($($context.Subscription.Id))"
         }
         else {
-            $testResults.Azure.Connection = Write-TestResult "Azure Connection" "FAIL" "Not connected to Azure"
+            $script:testResults.Azure.Connection = Write-TestResult "Azure Connection" "FAIL" "Not connected to Azure"
             return
         }
         
         # Test Cost Management permissions
         try {
             $subscription = Get-AzSubscription -SubscriptionId $context.Subscription.Id -ErrorAction Stop
-            $testResults.Azure.SubscriptionAccess = Write-TestResult "Subscription Permissions" "PASS" "Read access confirmed"
+            $script:testResults.Azure.SubscriptionAccess = Write-TestResult "Subscription Permissions" "PASS" "Read access confirmed"
         }
         catch {
-            $testResults.Azure.SubscriptionAccess = Write-TestResult "Subscription Permissions" "FAIL" "Cannot access subscription: $($_.Exception.Message)"
+            $script:testResults.Azure.SubscriptionAccess = Write-TestResult "Subscription Permissions" "FAIL" "Cannot access subscription: $($_.Exception.Message)"
         }
         
         # Test Cost Management API access
@@ -225,43 +264,45 @@ function Test-AzureConnectivity {
             } -ErrorAction Stop
             
             if ($costData.StatusCode -eq 200) {
-                $testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "PASS" "API access successful"
+                $script:testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "PASS" "API access successful"
             }
             else {
-                $testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API returned status: $($costData.StatusCode)"
+                $script:testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API returned status: $($costData.StatusCode)"
             }
         }
         catch {
-            $testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API access failed: $($_.Exception.Message)"
+            $script:testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API access failed: $($_.Exception.Message)"
         }
         
         # Test Resource Graph access
         try {
             $query = "Resources | limit 1"
             $resourceData = Search-AzGraph -Query $query -ErrorAction Stop
-            $testResults.Azure.ResourceGraph = Write-TestResult "Resource Graph API" "PASS" "Query successful"
+            $script:testResults.Azure.ResourceGraph = Write-TestResult "Resource Graph API" "PASS" "Query successful"
         }
         catch {
-            $testResults.Azure.ResourceGraph = Write-TestResult "Resource Graph API" "WARN" "Limited access: $($_.Exception.Message)"
+            $script:testResults.Azure.ResourceGraph = Write-TestResult "Resource Graph API" "WARN" "Limited access: $($_.Exception.Message)"
         }
     }
     catch {
-        $testResults.Azure.Connection = Write-TestResult "Azure Connection" "FAIL" "Connection test failed: $($_.Exception.Message)"
+        $script:testResults.Azure.Connection = Write-TestResult "Azure Connection" "FAIL" "Connection test failed: $($_.Exception.Message)"
     }
 }
 
-[CmdletBinding()]
 function Test-Configuration {
-    Write-Information "`n⚙️ Testing Configuration..."
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`nTesting Configuration..." -ForegroundColor Cyan
     
     # Test configuration file existence
     $fullConfigPath = Join-Path $PWD $ConfigPath
     if (Test-Path $fullConfigPath) {
-        $testResults.Configuration.File = Write-TestResult "Configuration File" "PASS" "Found at $ConfigPath"
+        $script:testResults.Configuration.File = Write-TestResult "Configuration File" "PASS" "Found at $ConfigPath"
         
         try {
             $config = Get-Content -ErrorAction Stop $fullConfigPath | ConvertFrom-Json
-            $testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "PASS" "Valid JSON format"
+            $script:testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "PASS" "Valid JSON format"
             
             # Validate required sections
             $requiredSections = @("azure", "dashboard", "notifications")
@@ -277,31 +318,31 @@ function Test-Configuration {
             # Validate Azure configuration
             if ($config.azure.subscriptionId) {
                 if ($config.azure.subscriptionId -match "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$") {
-                    $testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID Format" "PASS" "Valid GUID format"
+                    $script:testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID Format" "PASS" "Valid GUID format"
                 }
                 else {
-                    $testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID Format" "FAIL" "Invalid GUID format"
+                    $script:testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID Format" "FAIL" "Invalid GUID format"
                 }
             }
             else {
-                $testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID" "WARN" "Not specified in configuration"
+                $script:testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID" "WARN" "Not specified in configuration"
             }
         }
         catch {
-            $testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "FAIL" "Invalid JSON: $($_.Exception.Message)"
+            $script:testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "FAIL" "Invalid JSON: $($_.Exception.Message)"
         }
     }
     else {
-        $testResults.Configuration.File = Write-TestResult "Configuration File" "WARN" "Not found at $ConfigPath (Using defaults)"
+        $script:testResults.Configuration.File = Write-TestResult "Configuration File" "WARN" "Not found at $ConfigPath (Using defaults)"
     }
     
     # Test authentication configuration
     $authPath = "config\auth.json"
     if (Test-Path $authPath) {
-        $testResults.Configuration.Auth = Write-TestResult "Authentication Config" "PASS" "Authentication file found"
+        $script:testResults.Configuration.Auth = Write-TestResult "Authentication Config" "PASS" "Authentication file found"
     }
     else {
-        $testResults.Configuration.Auth = Write-TestResult "Authentication Config" "INFO" "No saved authentication (Will use interactive)"
+        $script:testResults.Configuration.Auth = Write-TestResult "Authentication Config" "INFO" "No saved authentication (Will use interactive)"
     }
     
     # Test directory structure
@@ -316,9 +357,11 @@ function Test-Configuration {
     }
 }
 
-[CmdletBinding()]
 function Test-Functionality {
-    Write-Information "`n🧪 Testing Core Functionality..."
+    [CmdletBinding()]
+    param()
+
+    Write-Host "`nTesting Core Functionality..." -ForegroundColor Cyan
     
     if ($TestData) {
         # Test with sample data
@@ -326,14 +369,14 @@ function Test-Functionality {
         if (Test-Path $sampleDataPath) {
             try {
                 $sampleData = Import-Csv $sampleDataPath
-                $testResults.Functionality.DataImport = Write-TestResult "Sample Data Import" "PASS" "$($sampleData.Count) records loaded"
+                $script:testResults.Functionality.DataImport = Write-TestResult "Sample Data Import" "PASS" "$($sampleData.Count) records loaded"
             }
             catch {
-                $testResults.Functionality.DataImport = Write-TestResult "Sample Data Import" "FAIL" "Failed to load sample data"
+                $script:testResults.Functionality.DataImport = Write-TestResult "Sample Data Import" "FAIL" "Failed to load sample data"
             }
         }
         else {
-            $testResults.Functionality.DataImport = Write-TestResult "Sample Data" "WARN" "Sample data file not found"
+            $script:testResults.Functionality.DataImport = Write-TestResult "Sample Data" "WARN" "Sample data file not found"
         }
     }
     else {
@@ -341,22 +384,22 @@ function Test-Functionality {
         try {
             $scriptPath = "scripts\data-collection\Get-AzureCostData.ps1"
             if (Test-Path $scriptPath) {
-                $testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "PASS" "Script file exists"
+                $script:testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "PASS" "Script file exists"
                 
                 # Test script execution (dry run)
                 if ((Get-AzContext)) {
-                    $testResults.Functionality.ScriptExecution = Write-TestResult "Script Execution Test" "INFO" "Skipped (Would require live data)"
+                    $script:testResults.Functionality.ScriptExecution = Write-TestResult "Script Execution Test" "INFO" "Skipped (Would require live data)"
                 }
                 else {
-                    $testResults.Functionality.ScriptExecution = Write-TestResult "Script Execution Test" "SKIP" "No Azure connection"
+                    $script:testResults.Functionality.ScriptExecution = Write-TestResult "Script Execution Test" "SKIP" "No Azure connection"
                 }
             }
             else {
-                $testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script file missing"
+                $script:testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script file missing"
             }
         }
         catch {
-            $testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script test failed: $($_.Exception.Message)"
+            $script:testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script test failed: $($_.Exception.Message)"
         }
     }
     
@@ -367,15 +410,15 @@ function Test-Functionality {
             @{Test="Value"} | Export-Excel -Path $testPath -AutoSize
             if (Test-Path $testPath) {
                 Remove-Item -ErrorAction Stop $testPath -Force
-                $testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "PASS" "Export capability confirmed"
+                $script:testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "PASS" "Export capability confirmed"
             }
         }
         else {
-            $testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "ImportExcel module not available"
+            $script:testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "ImportExcel module not available"
         }
     }
     catch {
-        $testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "Export test failed: $($_.Exception.Message)"
+        $script:testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "Export test failed: $($_.Exception.Message)"
     }
     
     # Test dashboard files
@@ -395,16 +438,17 @@ function Test-Functionality {
     }
 }
 
-[CmdletBinding()]
-function Get-OverallStatus -ErrorAction Stop {
+function Get-OverallStatus {
+    [CmdletBinding()]
+    param()
     $totalTests = 0
     $passedTests = 0
     $failedTests = 0
     $warnings = 0
     
-    foreach ($category in $testResults.Keys) {
+    foreach ($category in $script:testResults.Keys) {
         if ($category -ne "Overall") {
-            foreach ($test in $testResults[$category].Values) {
+            foreach ($test in $script:testResults[$category].Values) {
                 $totalTests++
                 switch ($test.Status) {
                     "PASS" { $passedTests++ }
@@ -415,7 +459,7 @@ function Get-OverallStatus -ErrorAction Stop {
         }
     }
     
-    $testResults.Overall = @{
+    $script:testResults.Overall = @{
         TotalTests = $totalTests
         PassedTests = $passedTests
         FailedTests = $failedTests
@@ -425,52 +469,53 @@ function Get-OverallStatus -ErrorAction Stop {
     }
 }
 
-[CmdletBinding()]
 function Show-Summary {
-    $overall = $testResults.Overall
+    [CmdletBinding()]
+    param()
+    $overall = $script:testResults.Overall
     
-    Write-Information "`n" + "="*70 -ForegroundColor Cyan
-    Write-Information "AZURE COST MANAGEMENT DASHBOARD - SYSTEM TEST RESULTS"
-    Write-Information "="*70 -ForegroundColor Cyan
+    Write-Host "`n$('=' * 70)" -ForegroundColor Cyan
+    Write-Host "AZURE COST MANAGEMENT DASHBOARD - SYSTEM TEST RESULTS" -ForegroundColor White
+    Write-Host "$('=' * 70)" -ForegroundColor Cyan
     
-    Write-Information "`nOverall Status: " -NoNewline
+    Write-Host "`nOverall Status: " -NoNewline -ForegroundColor White
     $statusColor = switch ($overall.Status) {
         "PASS" { "Green" }
         "WARN" { "Yellow" }
         "FAIL" { "Red" }
     }
-    Write-Information $overall.Status -ForegroundColor $statusColor
+    Write-Host $overall.Status -ForegroundColor $statusColor
     
-    Write-Information "Tests Run: $($overall.TotalTests)"
-    Write-Information "Passed: $($overall.PassedTests)"
-    Write-Information "Failed: $($overall.FailedTests)"
-    Write-Information "Warnings: $($overall.Warnings)"
-    Write-Information "Pass Rate: $($overall.PassRate)%" -ForegroundColor $(if ($overall.PassRate -ge 80) { "Green" } else { "Yellow" })
+    Write-Host "Tests Run: $($overall.TotalTests)" -ForegroundColor White
+    Write-Host "Passed: $($overall.PassedTests)" -ForegroundColor Green
+    Write-Host "Failed: $($overall.FailedTests)" -ForegroundColor Red
+    Write-Host "Warnings: $($overall.Warnings)" -ForegroundColor Yellow
+    Write-Host "Pass Rate: $($overall.PassRate)%" -ForegroundColor $(if ($overall.PassRate -ge 80) { "Green" } else { "Yellow" })
     
     # Recommendations based on results
-    Write-Information "`nRecommendations:"
+    Write-Host "`nRecommendations:" -ForegroundColor White
     
     if ($overall.FailedTests -gt 0) {
-        Write-Information "❌ Critical Issues Found:"
-        foreach ($category in $testResults.Keys) {
+        Write-Host " Critical Issues Found:" -ForegroundColor Red
+        foreach ($category in $script:testResults.Keys) {
             if ($category -ne "Overall") {
-                foreach ($test in $testResults[$category].Values) {
+                foreach ($test in $script:testResults[$category].Values) {
                     if ($test.Status -eq "FAIL") {
-                        Write-Information "   • $($test.Test): $($test.Message)"
+                        Write-Host "   - $($test.Test): $($test.Message)" -ForegroundColor Red
                     }
                 }
             }
         }
-        Write-Information "`n   Please resolve failed tests before proceeding."
+        Write-Host "`n   Please resolve failed tests before proceeding." -ForegroundColor Red
     }
     
     if ($overall.Warnings -gt 0) {
-        Write-Information "⚠️ Warnings to Consider:"
-        foreach ($category in $testResults.Keys) {
+        Write-Host "[WARN] Warnings to Consider:" -ForegroundColor Yellow
+        foreach ($category in $script:testResults.Keys) {
             if ($category -ne "Overall") {
-                foreach ($test in $testResults[$category].Values) {
+                foreach ($test in $script:testResults[$category].Values) {
                     if ($test.Status -eq "WARN") {
-                        Write-Information "   • $($test.Test): $($test.Message)"
+                        Write-Host "   - $($test.Test): $($test.Message)" -ForegroundColor Red
                     }
                 }
             }
@@ -478,39 +523,45 @@ function Show-Summary {
     }
     
     if ($overall.Status -eq "PASS") {
-        Write-Information "✅ System Ready!"
-        Write-Information "   Your Azure Cost Management Dashboard is properly configured."
-        Write-Information "   Next steps:"
-        Write-Information "   • Generate your first cost report"
-        Write-Information "   • Configure automated reporting"
-        Write-Information "   • Customize dashboards for your needs"
+        Write-Host " System Ready!" -ForegroundColor Green
+        Write-Host "   Your Azure Cost Management Dashboard is properly configured." -ForegroundColor Green
+        Write-Host "   Next steps:" -ForegroundColor Green
+        Write-Host "   - Generate your first cost report" -ForegroundColor Green
+        Write-Host "   - Configure automated reporting" -ForegroundColor Green
+        Write-Host "   - Customize dashboards for your needs" -ForegroundColor Green
     }
     
-    Write-Information "`nTest completed in $([math]::Round(((Get-Date) - $testStartTime).TotalSeconds, 1)) seconds"
+    Write-Host "`nTest completed in $([math]::Round(((Get-Date) - $script:testStartTime).TotalSeconds, 1)) seconds" -ForegroundColor Gray
 }
 
-[CmdletBinding()]
 function Export-TestResults {
+    [CmdletBinding()]
+    param()
     if ($ExportResults) {
         $exportPath = "test-results-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
-        $testResults | ConvertTo-Json -Depth 5 | Out-File $exportPath
-        Write-Information "`n📄 Test results exported to: $exportPath"
+        $script:testResults | ConvertTo-Json -Depth 5 | Out-File $exportPath
+        Write-Host "`n[FILE] Test results exported to: $exportPath" -ForegroundColor Green
     }
 }
+#endregion
 
-# Main execution
+#region Main-Execution
 try {
-    Write-Information "Azure Cost Management Dashboard - System Prerequisites Test"
-    Write-Information "============================================================"
-    Write-Information "Test Started: $(Get-Date)"
-    
+    # Initialize test results
+    $script:testResults = Initialize-TestResults
+    $script:testStartTime = Get-Date
+
+    Write-Host "Azure Cost Management Dashboard - System Prerequisites Test" -ForegroundColor White
+    Write-Host "============================================================" -ForegroundColor White
+    Write-Host "Test Started: $(Get-Date)" -ForegroundColor Gray
+
     if ($TestData) {
-        Write-Information "Mode: Test Data (No live Azure data will be accessed)"
+        Write-Host "Mode: Test Data (No live Azure data will be accessed)" -ForegroundColor Yellow
     }
     else {
-        Write-Information "Mode: Live Testing (Will test Azure connectivity and permissions)"
+        Write-Host "Mode: Live Testing (Will test Azure connectivity and permissions)" -ForegroundColor Green
     }
-    
+
     # Run all tests
     Test-PowerShellEnvironment
     Test-RequiredModules
@@ -519,20 +570,25 @@ try {
     }
     Test-Configuration
     Test-Functionality
-    
+
     # Calculate overall results
-    Get-OverallStatus -ErrorAction Stop
-    
+    Get-OverallStatus
+
     # Show summary
     Show-Summary
-    
+
     # Export results if requested
     Export-TestResults
-    
+
     # Exit with appropriate code
-    exit $(if ($testResults.Overall.Status -eq "FAIL") { 1 } else { 0 })
+    exit $(if ($script:testResults.Overall.Status -eq "FAIL") { 1 } else { 0 })
 }
 catch {
     Write-Error "Test execution failed: $($_.Exception.Message)"
-    exit 1
+    throw
 }
+finally {
+    # Cleanup if needed
+    Write-Verbose "Test execution completed"
+}
+#endregion

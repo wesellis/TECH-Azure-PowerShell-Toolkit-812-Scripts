@@ -1,6 +1,23 @@
-﻿# Azure Communication Services Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Communication Services Manager
 # Professional Azure communications automation script
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise communication platform automation
 
 param(
@@ -70,8 +87,10 @@ param(
     [switch]$EnableAdvancedMessaging
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure Communication Services Manager" -Version "1.0" -Description "Enterprise communication platform automation"
@@ -91,7 +110,7 @@ try {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
     
-    Write-Log "✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($Action.ToLower()) {
         "create" {
@@ -108,16 +127,16 @@ try {
                 New-AzCommunicationService -ErrorAction Stop @communicationParams
             } -OperationName "Create Communication Service"
             
-            Write-Log "✓ Communication Service created: $CommunicationServiceName" -Level SUCCESS
-            Write-Log "✓ Data location: $Location" -Level INFO
-            Write-Log "✓ Resource ID: $($communicationService.Id)" -Level INFO
+            Write-Log "[OK] Communication Service created: $CommunicationServiceName" -Level SUCCESS
+            Write-Log "[OK] Data location: $Location" -Level INFO
+            Write-Log "[OK] Resource ID: $($communicationService.Id)" -Level INFO
             
             # Get connection string
             $connectionString = Invoke-AzureOperation -Operation {
                 Get-AzCommunicationServiceKey -ResourceGroupName $ResourceGroupName -Name $CommunicationServiceName
             } -OperationName "Get Connection String"
             
-            Write-Log "✓ Connection string retrieved (store securely)" -Level SUCCESS
+            Write-Log "[OK] Connection string retrieved (store securely)" -Level SUCCESS
         }
         
         "configuredomain" {
@@ -149,12 +168,12 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Configure Email Domain" | Out-Null
             
-            Write-Log "✓ Email domain configured: $DomainName" -Level SUCCESS
-            Write-Log "✓ Domain management: $DomainManagement" -Level INFO
+            Write-Log "[OK] Email domain configured: $DomainName" -Level SUCCESS
+            Write-Log "[OK] Domain management: $DomainManagement" -Level INFO
             
             if ($DomainManagement -eq "CustomerManaged") {
                 Write-Information ""
-                Write-Information "📋 DNS Configuration Required"
+                Write-Information "� DNS Configuration Required"
                 Write-Information "════════════════════════════════════════════════════════════════════"
                 Write-Information "For customer-managed domains, add these DNS records:"
                 Write-Information "• TXT record: verification code (check Azure portal)"
@@ -194,7 +213,7 @@ try {
             } -OperationName "Search Phone Numbers"
             
             Write-Information ""
-            Write-Information "📞 Available Phone Numbers"
+            Write-Information "� Available Phone Numbers"
             Write-Information "════════════════════════════════════════════════════════════════════"
             
             if ($availableNumbers.phoneNumbers) {
@@ -222,8 +241,8 @@ try {
                         Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
                     } -OperationName "Purchase Phone Numbers" | Out-Null
                     
-                    Write-Log "✓ Phone number purchase initiated" -Level SUCCESS
-                    Write-Log "✓ Search ID: $($availableNumbers.searchId)" -Level INFO
+                    Write-Log "[OK] Phone number purchase initiated" -Level SUCCESS
+                    Write-Log "[OK] Search ID: $($availableNumbers.searchId)" -Level INFO
                 }
             } else {
                 Write-Log "No phone numbers available for the specified criteria" -Level WARN
@@ -263,10 +282,10 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName "Send SMS"
             
-            Write-Log "✓ SMS sent successfully" -Level SUCCESS
-            Write-Log "✓ From: $SMSFrom" -Level INFO
-            Write-Log "✓ To: $SMSTo" -Level INFO
-            Write-Log "✓ Message ID: $($smsResult.messageId)" -Level INFO
+            Write-Log "[OK] SMS sent successfully" -Level SUCCESS
+            Write-Log "[OK] From: $SMSFrom" -Level INFO
+            Write-Log "[OK] To: $SMSTo" -Level INFO
+            Write-Log "[OK] Message ID: $($smsResult.messageId)" -Level INFO
         }
         
         "sendemail" {
@@ -308,10 +327,10 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName "Send Email" | Out-Null
             
-            Write-Log "✓ Email sent successfully" -Level SUCCESS
-            Write-Log "✓ From: $EmailFrom" -Level INFO
-            Write-Log "✓ To: $EmailTo" -Level INFO
-            Write-Log "✓ Subject: $EmailSubject" -Level INFO
+            Write-Log "[OK] Email sent successfully" -Level SUCCESS
+            Write-Log "[OK] From: $EmailFrom" -Level INFO
+            Write-Log "[OK] To: $EmailTo" -Level INFO
+            Write-Log "[OK] Subject: $EmailSubject" -Level INFO
         }
         
         "createidentity" {
@@ -334,18 +353,18 @@ try {
                 Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -Body $body
             } -OperationName "Create User Identity"
             
-            Write-Log "✓ User identity created" -Level SUCCESS
-            Write-Log "✓ Identity ID: $($userIdentity.identity.id)" -Level INFO
-            Write-Log "✓ Access token generated with chat and VoIP scopes" -Level INFO
+            Write-Log "[OK] User identity created" -Level SUCCESS
+            Write-Log "[OK] Identity ID: $($userIdentity.identity.id)" -Level INFO
+            Write-Log "[OK] Access token generated with chat and VoIP scopes" -Level INFO
             
             Write-Information ""
-            Write-Information "🆔 User Identity Details"
+            Write-Information "� User Identity Details"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Identity ID: $($userIdentity.identity.id)"
             Write-Information "Access Token: $($userIdentity.accessToken.token)"
             Write-Information "Token Expires: $($userIdentity.accessToken.expiresOn)"
             Write-Information ""
-            Write-Information "⚠️  Store the access token securely - it's needed for client authentication"
+            Write-Information "[WARN]  Store the access token securely - it's needed for client authentication"
         }
         
         "getinfo" {
@@ -385,7 +404,7 @@ try {
             } -OperationName "Get Email Domains"
             
             Write-Information ""
-            Write-Information "📡 Communication Services Information"
+            Write-Information "� Communication Services Information"
             Write-Information "════════════════════════════════════════════════════════════════════"
             Write-Information "Service Name: $($communicationService.Name)"
             Write-Information "Data Location: $($communicationService.DataLocation)"
@@ -394,7 +413,7 @@ try {
             
             if ($phoneNumbers.Count -gt 0) {
                 Write-Information ""
-                Write-Information "📞 Phone Numbers ($($phoneNumbers.Count)):"
+                Write-Information "� Phone Numbers ($($phoneNumbers.Count)):"
                 foreach ($number in $phoneNumbers) {
                     Write-Information "• $($number.phoneNumber)"
                     Write-Information "  Type: $($number.phoneNumberType)"
@@ -405,7 +424,7 @@ try {
             }
             
             if ($domains.Count -gt 0) {
-                Write-Information "📧 Email Domains ($($domains.Count)):"
+                Write-Information "� Email Domains ($($domains.Count)):"
                 foreach ($domain in $domains) {
                     Write-Information "• $($domain.name)"
                     Write-Information "  Management: $($domain.properties.domainManagement)"
@@ -428,7 +447,7 @@ try {
                 Remove-AzCommunicationService -ResourceGroupName $ResourceGroupName -Name $CommunicationServiceName -Force
             } -OperationName "Delete Communication Service"
             
-            Write-Log "✓ Communication Service deleted: $CommunicationServiceName" -Level SUCCESS
+            Write-Log "[OK] Communication Service deleted: $CommunicationServiceName" -Level SUCCESS
         }
     }
 
@@ -441,7 +460,7 @@ try {
             New-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $topicName -Location $resourceGroup.Location
         } -OperationName "Create Event Grid Topic" | Out-Null
         
-        Write-Log "✓ Event Grid topic created for communication events" -Level SUCCESS
+        Write-Log "[OK] Event Grid topic created for communication events" -Level SUCCESS
     }
 
     # Configure monitoring if enabled
@@ -465,13 +484,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log "⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log "[WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName "Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log "✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log "[OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -506,7 +525,7 @@ try {
         "📧 Email - Transactional and marketing emails",
         "📹 Video calling - HD video communication",
         "🔐 Identity management - User authentication and tokens",
-        "📊 Call analytics - Call quality and usage metrics",
+        " Call analytics - Call quality and usage metrics",
         "🌍 Global reach - Worldwide communication coverage"
     )
 
@@ -521,34 +540,34 @@ try {
         # Check data location
         if ($Location -in @("United States", "Europe", "Asia Pacific")) {
             $securityScore++
-            $securityFindings += "✓ Data stored in compliant region"
+            $securityFindings += "[OK] Data stored in compliant region"
         }
         
         # Check monitoring
         if ($EnableMonitoring) {
             $securityScore++
-            $securityFindings += "✓ Monitoring and logging enabled"
+            $securityFindings += "[OK] Monitoring and logging enabled"
         } else {
-            $securityFindings += "⚠️  Monitoring not configured"
+            $securityFindings += "[WARN]️  Monitoring not configured"
         }
         
         # Check Event Grid integration
         if ($EnableEventGrid) {
             $securityScore++
-            $securityFindings += "✓ Event Grid integration for audit trails"
+            $securityFindings += "[OK] Event Grid integration for audit trails"
         } else {
-            $securityFindings += "⚠️  Event Grid not configured for event tracking"
+            $securityFindings += "[WARN]️  Event Grid not configured for event tracking"
         }
         
         # Check advanced messaging
         if ($EnableAdvancedMessaging) {
             $securityScore++
-            $securityFindings += "✓ Advanced messaging features enabled"
+            $securityFindings += "[OK] Advanced messaging features enabled"
         }
         
         # Service is inherently secure
         $securityScore++
-        $securityFindings += "✓ End-to-end encryption for all communications"
+        $securityFindings += "[OK] End-to-end encryption for all communications"
     }
 
     # Cost analysis
@@ -582,7 +601,7 @@ try {
     Write-Information ""
     
     if ($Action.ToLower() -eq "create") {
-        Write-Information "📡 Communication Service Details:"
+        Write-Information "� Communication Service Details:"
         Write-Information "   • Service Name: $CommunicationServiceName"
         Write-Information "   • Resource Group: $ResourceGroupName"
         Write-Information "   • Data Location: $Location"
@@ -590,26 +609,26 @@ try {
         Write-Information "   • Resource ID: $($serviceStatus.Id)"
         
         Write-Information ""
-        Write-Information "🔒 Security Assessment: $securityScore/$maxScore"
+        Write-Information "[LOCK] Security Assessment: $securityScore/$maxScore"
         foreach ($finding in $securityFindings) {
             Write-Information "   $finding"
         }
         
         Write-Information ""
-        Write-Information "💰 Pricing (Approximate):"
+        Write-Information " Pricing (Approximate):"
         foreach ($cost in $costComponents.GetEnumerator()) {
             Write-Information "   • $($cost.Key): $($cost.Value)"
         }
     }
     
     Write-Information ""
-    Write-Information "🚀 Communication Capabilities:"
+    Write-Information " Communication Capabilities:"
     foreach ($capability in $capabilities) {
         Write-Information "   $capability"
     }
     
     Write-Information ""
-    Write-Information "💡 Next Steps:"
+    Write-Information "� Next Steps:"
     Write-Information "   • Configure email domains using ConfigureDomain action"
     Write-Information "   • Purchase phone numbers using ManagePhoneNumbers action"
     Write-Information "   • Create user identities for chat and calling features"
@@ -618,13 +637,13 @@ try {
     Write-Information "   • Configure compliance settings for your region"
     Write-Information ""
 
-    Write-Log "✅ Azure Communication Services operation '$Action' completed successfully!" -Level SUCCESS
+    Write-Log " Azure Communication Services operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Communication Services operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Communication Services operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Communication Services availability in your region"
     Write-Information "   • Check subscription quotas and limits"
     Write-Information "   • Ensure proper permissions for resource creation"
@@ -637,3 +656,6 @@ try {
 
 Write-Progress -Activity "Communication Services Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

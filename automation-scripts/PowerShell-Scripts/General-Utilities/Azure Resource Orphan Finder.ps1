@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Orphan Finder
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -77,8 +83,10 @@ param(
     [switch]$WEDryRun
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Resource Orphan Finder Tool" -Version " 1.0" -Description " Identify and cleanup unused Azure resources for cost optimization"
@@ -97,7 +105,7 @@ try {
     if ($WESubscriptionId) {
         Write-ProgressStep -StepNumber 2 -TotalSteps 8 -StepName " Subscription Context" -Status " Setting subscription context"
         Set-AzContext -SubscriptionId $WESubscriptionId
-        Write-Log " ✓ Subscription context set to: $WESubscriptionId" -Level SUCCESS
+        Write-Log " [OK] Subscription context set to: $WESubscriptionId" -Level SUCCESS
     }
 
     # Get all resources to analyze
@@ -230,7 +238,7 @@ try {
     
     if ($WEGenerateReport -or $orphanedResources.Count -gt 0) {
         $orphanedResources | Export-Csv -Path $WEOutputPath -NoTypeInformation -Encoding UTF8
-        Write-Log " ✓ Orphaned resources report saved to: $WEOutputPath" -Level SUCCESS
+        Write-Log " [OK] Orphaned resources report saved to: $WEOutputPath" -Level SUCCESS
     }
 
     # Remove orphans if requested and explicitly disabled dry run mode  
@@ -259,9 +267,9 @@ try {
                         Remove-AzNetworkSecurityGroup -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
                     }
                 }
-                Write-Log " ✓ Removed $($resource.ResourceType): $($resource.ResourceName)" -Level SUCCESS
+                Write-Log " [OK] Removed $($resource.ResourceType): $($resource.ResourceName)" -Level SUCCESS
             } catch {
-                Write-Log " ❌ Failed to remove $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
+                Write-Log "  Failed to remove $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
             }
         }
     }
@@ -272,7 +280,7 @@ try {
     Write-WELog "                              ORPHANED RESOURCES ANALYSIS COMPLETE" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " 📊 Orphaned Resources Found:" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Orphaned Resources Found:" " INFO" -ForegroundColor Cyan
     
    ;  $resourceTypeCounts = $orphanedResources | Group-Object ResourceType
     foreach ($type in $resourceTypeCounts) {
@@ -280,13 +288,13 @@ try {
     }
     
     Write-WELog "" " INFO"
-    Write-WELog " 💰 Cost Analysis:" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Cost Analysis:" " INFO" -ForegroundColor Cyan
     Write-WELog "   • Total Monthly Savings Potential: $${totalSavings:F2}" " INFO" -ForegroundColor Green
     Write-WELog "   • Annual Savings Potential: $${($totalSavings * 12):F2}" " INFO" -ForegroundColor Green
     
     if ($isDryRunMode) {
         Write-WELog "" " INFO"
-        Write-WELog " 🔒 DRY RUN MODE:" " INFO" -ForegroundColor Yellow
+        Write-WELog " [LOCK] DRY RUN MODE:" " INFO" -ForegroundColor Yellow
         Write-WELog "   • No resources were deleted" " INFO" -ForegroundColor White
         Write-WELog "   • Use -DryRun:`$false -RemoveOrphans to actually delete" " INFO" -ForegroundColor White
     }
@@ -295,10 +303,10 @@ try {
     Write-WELog " 📋 Report Location: $WEOutputPath" " INFO" -ForegroundColor Cyan
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Orphaned resources analysis completed successfully!" -Level SUCCESS
+    Write-Log "  Orphaned resources analysis completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Orphaned resources analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Orphaned resources analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
@@ -308,4 +316,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm List All
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,6 +78,8 @@ param(
     [string]$WESubscriptionId
 )
 
+#region Functions
+
 if ($WESubscriptionId) {
     Set-AzContext -SubscriptionId $WESubscriptionId
     Write-Information -Object " Connected to subscription: $WESubscriptionId"
@@ -94,3 +102,6 @@ foreach ($WEVM in $WEVMs) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

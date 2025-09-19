@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Update Templatehash
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +56,8 @@ param(
     [string]$bearerToken,
     [Parameter(mandatory = $true)]$WEStorageAccountKey
 )
+
+#region Functions
 
 If(!$WERepoRoot.EndsWith(" \" )){
     $WERepoRoot = " $WERepoRoot\"
@@ -120,16 +128,14 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
             # Get TemplateHash
             Write-WELog " Requesting Hash for file: $file" " INFO"
             try{ #fail the build for now so we can find issues
-            $response = Invoke-RestMethod -Uri $uri `
-                -Method " POST" `
-                -Headers $WEHeaders `
-                -Body $json -verbose
-            }catch{
-                Write-Information $response
-                Write-Error " Failed to get hash for: $file"
+            $params = @{
+                Method = " POST"
+                verbose = "}catch{ Write-Information $response Write-Error " Failed to get hash for: $file" }  ;  $templateHash = $response.templateHash"
+                Uri = $uri
+                Headers = $WEHeaders
+                Body = $json
             }
-            
-           ;  $templateHash = $response.templateHash
+            $response @params
 
             # Find row in table if it exists, if it doesn't exist, add a new row with the new hash
             Write-Output " Fetching row for: *$templateHash*"
@@ -139,19 +145,19 @@ foreach ($WESourcePath in $WEArtifactFilePaths) {
                 # Add this as a new hash
                 Write-Output " $templateHash not found in table"
 
-                Add-AzTableRow -table $cloudTable `
-                    -partitionKey $partitionKey `
-                    -rowKey $templateHash `
-                    -property @{
-                    " version"  = " $templateHash-$(Get-Date -Format 'yyyy-MM-dd')" ; `
-                        " file" = " $($file -ireplace [regex]::Escape(" $WERepoRoot$sampleName\" ), '')"
-                    }
-            }
-        }
-    }
+                $params = @{
+                    table = $cloudTable
+                    rowKey = $templateHash
+                    property = "@{ " version"  = " $templateHash-$(Get-Date"
+                    partitionKey = $partitionKey
+                    ireplace = "[regex]::Escape(" $WERepoRoot$sampleName\" ), '')" } } } }"
+                    Format = "yyyy-MM-dd')" ; " file" = " $($file"
+                }
+                Add-AzTableRow @params
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

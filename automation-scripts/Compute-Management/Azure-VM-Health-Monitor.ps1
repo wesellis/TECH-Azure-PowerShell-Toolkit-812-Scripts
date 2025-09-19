@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Virtual Machine Health and Status Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Virtual Machine health, status, and performance metrics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$VmName
 )
+
+#region Functions
 
 # Get VM status and details
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Status
@@ -25,3 +36,6 @@ Write-Information "Provisioning State: $($VM.ProvisioningState)"
 foreach ($Status in $VM.Statuses) {
     Write-Information "Status: $($Status.Code) - $($Status.DisplayStatus)"
 }
+
+
+#endregion

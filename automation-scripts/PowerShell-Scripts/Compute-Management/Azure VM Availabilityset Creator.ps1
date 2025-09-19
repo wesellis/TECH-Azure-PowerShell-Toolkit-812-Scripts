@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Availabilityset Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,17 +102,22 @@ param(
     [int]$WEPlatformUpdateDomainCount = 5
 )
 
+#region Functions
+
 Write-WELog " Creating Availability Set: $WEAvailabilitySetName" " INFO"
 ; 
-$WEAvailabilitySet = New-AzAvailabilitySet -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAvailabilitySetName `
-    -Location $WELocation `
-    -PlatformFaultDomainCount $WEPlatformFaultDomainCount `
-    -PlatformUpdateDomainCount $WEPlatformUpdateDomainCount `
-    -Sku Aligned
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    PlatformUpdateDomainCount = $WEPlatformUpdateDomainCount
+    Location = $WELocation
+    PlatformFaultDomainCount = $WEPlatformFaultDomainCount
+    Sku = "Aligned"
+    ErrorAction = "Stop"
+    Name = $WEAvailabilitySetName
+}
+$WEAvailabilitySet @params
 
-Write-WELog " ✅ Availability Set created successfully:" " INFO"
+Write-WELog "  Availability Set created successfully:" " INFO"
 Write-WELog "  Name: $($WEAvailabilitySet.Name)" " INFO"
 Write-WELog "  Location: $($WEAvailabilitySet.Location)" " INFO"
 Write-WELog "  Fault Domains: $($WEAvailabilitySet.PlatformFaultDomainCount)" " INFO"
@@ -120,3 +131,6 @@ Write-WELog "  SKU: $($WEAvailabilitySet.Sku)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

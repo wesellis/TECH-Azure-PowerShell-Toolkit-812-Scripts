@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Network Info Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Displays network interface and IP information for a Virtual Machine
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -14,6 +23,8 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$VmName
 )
+
+#region Functions
 
 Write-Information "Retrieving network information for VM: $VmName"
 
@@ -34,3 +45,6 @@ foreach ($NicRef in $VM.NetworkProfile.NetworkInterfaces) {
         Write-Information "  Public IP: $($Pip.IpAddress)"
     }
 }
+
+
+#endregion

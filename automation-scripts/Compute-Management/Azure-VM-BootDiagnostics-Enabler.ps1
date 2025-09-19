@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Boot Diagnostics Enabler
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Enables boot diagnostics for Azure Virtual Machines
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$StorageAccountName
 )
+
+#region Functions
 
 Write-Information "Enabling boot diagnostics for VM: $VmName"
 
@@ -32,10 +43,13 @@ if ($StorageAccountName) {
 
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 
-Write-Information "✅ Boot diagnostics enabled successfully:"
+Write-Information " Boot diagnostics enabled successfully:"
 Write-Information "  VM: $VmName"
 Write-Information "  Resource Group: $ResourceGroupName"
 if ($StorageAccountName) {
     Write-Information "  Storage Account: $StorageAccountName"
 }
 Write-Information "  Status: Enabled"
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Containerinstance Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,6 +102,8 @@ param(
     [string]$WERestartPolicy = " Always"
 )
 
+#region Functions
+
 Write-WELog " Provisioning Container Instance: $WEContainerGroupName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -123,12 +131,15 @@ if ($WEEnvironmentVariables.Count -gt 0) {
 }
 
 ; 
-$WEContainer = New-AzContainerInstanceObject -ErrorAction Stop `
-    -Name $WEContainerGroupName `
-    -Image $WEImage `
-    -RequestCpu $WECpu `
-    -RequestMemoryInGb $WEMemory `
-    -Port $WEPortObjects
+$params = @{
+    RequestMemoryInGb = $WEMemory
+    Name = $WEContainerGroupName
+    Port = $WEPortObjects
+    RequestCpu = $WECpu
+    Image = $WEImage
+    ErrorAction = "Stop"
+}
+$WEContainer @params
 
 if ($WEEnvVarObjects.Count -gt 0) {
     $WEContainer.EnvironmentVariable = $WEEnvVarObjects
@@ -136,14 +147,17 @@ if ($WEEnvVarObjects.Count -gt 0) {
 
 
 Write-WELog " `nCreating Container Instance..." " INFO" ; 
-$WEContainerGroup = New-AzContainerGroup -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEContainerGroupName `
-    -Location $WELocation `
-    -Container $WEContainer `
-    -OsType $WEOsType `
-    -RestartPolicy $WERestartPolicy `
-    -IpAddressType Public
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    RestartPolicy = $WERestartPolicy
+    Location = $WELocation
+    Container = $WEContainer
+    IpAddressType = "Public"
+    OsType = $WEOsType
+    ErrorAction = "Stop"
+    Name = $WEContainerGroupName
+}
+$WEContainerGroup @params
 
 Write-WELog " `nContainer Instance $WEContainerGroupName provisioned successfully" " INFO"
 Write-WELog " Public IP Address: $($WEContainerGroup.IpAddress)" " INFO"
@@ -174,3 +188,6 @@ Write-WELog " `nContainer Instance provisioning completed at $(Get-Date)" " INFO
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

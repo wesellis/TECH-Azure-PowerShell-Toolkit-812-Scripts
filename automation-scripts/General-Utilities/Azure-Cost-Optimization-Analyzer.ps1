@@ -1,4 +1,22 @@
-﻿# Azure Cost Optimization Analyzer with AI Recommendations
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Cost Optimization Analyzer with AI Recommendations
 param (
     [Parameter(Mandatory=$false)][string]$SubscriptionId,
     [Parameter(Mandatory=$false)][string]$ResourceGroupName,
@@ -8,6 +26,8 @@ param (
     [Parameter(Mandatory=$false)][switch]$IncludeRecommendations,
     [Parameter(Mandatory=$false)][switch]$GenerateReport
 )
+
+#region Functions
 
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
@@ -224,7 +244,7 @@ try {
     
     # Export detailed analysis
     $costData | ConvertTo-Json -Depth 10 | Set-Content -Path $ExportPath
-    Write-Log "✓ Cost analysis exported to: $ExportPath" -Level SUCCESS
+    Write-Log "[OK] Cost analysis exported to: $ExportPath" -Level SUCCESS
     
     if ($GenerateReport) {
         # Generate HTML report
@@ -250,12 +270,12 @@ try {
 </head>
 <body>
     <div class="header">
-        <h1>🔍 Azure Cost Analysis Report</h1>
+        <h1> Azure Cost Analysis Report</h1>
         <p>Subscription: $($costData.SubscriptionName) | Period: $AnalysisDays days</p>
     </div>
     
     <div class="card">
-        <h2>📊 Cost Overview</h2>
+        <h2> Cost Overview</h2>
         <div class="metric">
             <div class="metric-value">$$($costData.TotalCost)</div>
             <div class="metric-label">Estimated Monthly</div>
@@ -287,7 +307,7 @@ try {
     </div>
     
     <div class="card">
-        <h2>🎯 Key Insights</h2>
+        <h2> Key Insights</h2>
         <ul>
             <li>Average cost per resource: $$($costData.Insights.CostBreakdown.AveragePerResource)</li>
             <li>Most common resource type: $($costData.Insights.MostCommonResourceTypes[0])</li>
@@ -312,7 +332,7 @@ try {
 </html>
 "@
         $htmlReport | Set-Content -Path $reportPath
-        Write-Log "✓ HTML report generated: $reportPath" -Level SUCCESS
+        Write-Log "[OK] HTML report generated: $reportPath" -Level SUCCESS
     }
     
     Write-Progress -Activity "Cost Analysis" -Completed
@@ -334,3 +354,6 @@ try {
     Write-Log "Cost analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     throw
 }
+
+
+#endregion

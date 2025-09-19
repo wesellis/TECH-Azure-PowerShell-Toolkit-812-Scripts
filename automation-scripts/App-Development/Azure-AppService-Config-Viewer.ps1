@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure App Service Configuration Viewer
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Displays configuration settings for Azure App Service
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -14,6 +23,8 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$AppName
 )
+
+#region Functions
 
 Write-Information "Retrieving configuration for App Service: $AppName"
 
@@ -31,3 +42,6 @@ Write-Information "  HTTPS Only: $($WebApp.HttpsOnly)"
 if ($WebApp.SiteConfig.AppSettings) {
     Write-Information "`nApplication Settings Count: $($WebApp.SiteConfig.AppSettings.Count)"
 }
+
+
+#endregion

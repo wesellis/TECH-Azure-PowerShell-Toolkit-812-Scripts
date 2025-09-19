@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Custom Build Env Invokecommand
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,6 +61,8 @@ param(
     [Parameter(Mandatory = $false)] [string] $WEAdditionalRepoFeeds
 )
 
+#region Functions
+
 try {
    ;  $WEErrorActionPreference = " Stop"
     Set-StrictMode -Version Latest
@@ -63,8 +70,14 @@ try {
     Set-Location -ErrorAction Stop $WERepoRoot
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-build-environment-utils.psm1')
 
-    SetPackagesRestoreEnvironmentAndRunScript -RepoRoot $WERepoRoot -RepoKind Custom -Script $WEScript `
-        -RepoPackagesFeed $WERepoPackagesFeed -AdditionalRepoFeeds $WEAdditionalRepoFeeds 
+    $params = @{
+        Script = $WEScript
+        RepoKind = "Custom"
+        RepoPackagesFeed = $WERepoPackagesFeed
+        RepoRoot = $WERepoRoot
+        AdditionalRepoFeeds = $WEAdditionalRepoFeeds
+    }
+    SetPackagesRestoreEnvironmentAndRunScript @params
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
@@ -72,4 +85,5 @@ catch {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

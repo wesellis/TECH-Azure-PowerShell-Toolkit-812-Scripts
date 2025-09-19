@@ -1,17 +1,28 @@
-﻿# ============================================================================
-# Script Name: Azure Function App Update Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Updates Azure Function App configurations and app service plans
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName,
     [string]$PlanName
 )
+
+#region Functions
 
 # Get current Function App
 $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
@@ -29,3 +40,6 @@ if ($PlanName) {
 } else {
     Write-Information "No plan specified - displaying current configuration only"
 }
+
+
+#endregion

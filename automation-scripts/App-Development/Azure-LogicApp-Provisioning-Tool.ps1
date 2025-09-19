@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Logic App Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Logic Apps for workflow automation and integration
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -15,6 +24,8 @@ param (
     [string]$PlanSku = "WS1",
     [hashtable]$Tags = @{}
 )
+
+#region Functions
 
 Write-Information "Provisioning Logic App: $AppName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -29,34 +40,38 @@ if ($PlanName) {
     
     if (-not $Plan) {
         Write-Information "Creating App Service Plan for Logic App..."
-        $Plan = New-AzAppServicePlan -ErrorAction Stop `
-            -ResourceGroupName $ResourceGroupName `
-            -Name $PlanName `
-            -Location $Location `
-            -Tier "WorkflowStandard" `
-            -WorkerSize "WS1"
-        
-        Write-Information "App Service Plan created: $($Plan.Name)"
-    } else {
-        Write-Information "Using existing App Service Plan: $($Plan.Name)"
-    }
+        $params = @{
+            ResourceGroupName = $ResourceGroupName
+            Tier = "WorkflowStandard"
+            WorkerSize = "WS1"  Write-Information "App Service Plan created: $($Plan.Name)" } else { Write-Information "Using existing App Service Plan: $($Plan.Name)" }"
+            Location = $Location
+            ErrorAction = "Stop"
+            Name = $PlanName
+        }
+        $Plan @params
 }
 
 # Create the Logic App
 Write-Information "`nCreating Logic App..."
 if ($PlanName) {
     # Logic App with dedicated plan (Standard tier)
-    $LogicApp = New-AzLogicApp -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $AppName `
-        -Location $Location `
-        -AppServicePlan $PlanName
+    $params = @{
+        AppServicePlan = $PlanName
+        ErrorAction = "Stop"
+        ResourceGroupName = $ResourceGroupName
+        Name = $AppName
+        Location = $Location
+    }
+    $LogicApp @params
 } else {
     # Consumption-based Logic App
-    $LogicApp = New-AzLogicApp -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $AppName `
-        -Location $Location
+    $params = @{
+        ErrorAction = "Stop"
+        ResourceGroupName = $ResourceGroupName
+        Name = $AppName
+        Location = $Location
+    }
+    $LogicApp @params
 }
 
 # Apply tags if provided
@@ -105,3 +120,6 @@ Write-Information "  • File operations (SharePoint, OneDrive)"
 Write-Information "  • Conditional logic and loops"
 
 Write-Information "`nLogic App provisioning completed at $(Get-Date)"
+
+
+#endregion

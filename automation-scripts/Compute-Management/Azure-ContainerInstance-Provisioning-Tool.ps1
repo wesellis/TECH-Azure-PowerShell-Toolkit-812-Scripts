@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Container Instance Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Container Instances for serverless container deployments
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ContainerGroupName,
@@ -19,6 +28,8 @@ param (
     [hashtable]$EnvironmentVariables = @{},
     [string]$RestartPolicy = "Always"
 )
+
+#region Functions
 
 Write-Information "Provisioning Container Instance: $ContainerGroupName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -47,12 +58,15 @@ if ($EnvironmentVariables.Count -gt 0) {
 }
 
 # Create container object
-$Container = New-AzContainerInstanceObject -ErrorAction Stop `
-    -Name $ContainerGroupName `
-    -Image $Image `
-    -RequestCpu $Cpu `
-    -RequestMemoryInGb $Memory `
-    -Port $PortObjects
+$params = @{
+    RequestMemoryInGb = $Memory
+    Name = $ContainerGroupName
+    Port = $PortObjects
+    RequestCpu = $Cpu
+    Image = $Image
+    ErrorAction = "Stop"
+}
+$Container @params
 
 if ($EnvVarObjects.Count -gt 0) {
     $Container.EnvironmentVariable = $EnvVarObjects
@@ -60,14 +74,17 @@ if ($EnvVarObjects.Count -gt 0) {
 
 # Create the Container Instance
 Write-Information "`nCreating Container Instance..."
-$ContainerGroup = New-AzContainerGroup -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $ContainerGroupName `
-    -Location $Location `
-    -Container $Container `
-    -OsType $OsType `
-    -RestartPolicy $RestartPolicy `
-    -IpAddressType Public
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    RestartPolicy = $RestartPolicy
+    Location = $Location
+    Container = $Container
+    IpAddressType = "Public"
+    OsType = $OsType
+    ErrorAction = "Stop"
+    Name = $ContainerGroupName
+}
+$ContainerGroup @params
 
 Write-Information "`nContainer Instance $ContainerGroupName provisioned successfully"
 Write-Information "Public IP Address: $($ContainerGroup.IpAddress)"
@@ -90,3 +107,6 @@ if ($ContainerGroup.IpAddress -and $Ports) {
 }
 
 Write-Information "`nContainer Instance provisioning completed at $(Get-Date)"
+
+
+#endregion

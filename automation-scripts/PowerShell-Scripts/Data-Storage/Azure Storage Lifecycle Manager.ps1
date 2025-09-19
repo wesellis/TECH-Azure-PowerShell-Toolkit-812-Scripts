@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Storage Lifecycle Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -92,6 +98,8 @@ param(
     [int]$WEDaysToDelete = 365
 )
 
+#region Functions
+
 Write-WELog " Configuring lifecycle management for: $WEStorageAccountName" " INFO"
 
 ; 
@@ -123,12 +131,15 @@ $WELifecycleRule = @{
 $WEPolicyJson = $WELifecycleRule | ConvertTo-Json -Depth 10
 
 
-Set-AzStorageAccountManagementPolicy -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -StorageAccountName $WEStorageAccountName `
-    -Policy $WEPolicyJson
+$params = @{
+    ErrorAction = "Stop"
+    Policy = $WEPolicyJson
+    ResourceGroupName = $WEResourceGroupName
+    StorageAccountName = $WEStorageAccountName
+}
+Set-AzStorageAccountManagementPolicy @params
 
-Write-WELog " ✅ Lifecycle management configured successfully:" " INFO"
+Write-WELog "  Lifecycle management configured successfully:" " INFO"
 Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
 Write-WELog "  Tier to Cool: After $WEDaysToTierCool days" " INFO"
 Write-WELog "  Tier to Archive: After $WEDaysToTierArchive days" " INFO"
@@ -147,3 +158,6 @@ Write-WELog " • Environmental efficiency" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

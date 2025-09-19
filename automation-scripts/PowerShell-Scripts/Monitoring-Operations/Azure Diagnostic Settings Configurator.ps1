@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Diagnostic Settings Configurator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -103,6 +109,8 @@ param(
     [array]$WEMetricCategories = @(" AllMetrics" )
 )
 
+#region Functions
+
 Write-WELog " Configuring diagnostic settings for resource: $($WEResourceId.Split('/')[-1])" " INFO"
 
 
@@ -154,7 +162,7 @@ $WEDiagnosticParams.Metric = $WEMetricSettings
 ; 
 $WEDiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
 
-Write-WELog " ✅ Diagnostic settings configured successfully:" " INFO"
+Write-WELog "  Diagnostic settings configured successfully:" " INFO"
 Write-WELog "  Setting ID: $($WEDiagnosticSetting.Id)" " INFO"
 Write-WELog "  Name: $WEDiagnosticSettingName" " INFO"
 Write-WELog "  Resource: $($WEResourceId.Split('/')[-1])" " INFO"
@@ -183,3 +191,6 @@ Write-WELog " • Cost optimization insights" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

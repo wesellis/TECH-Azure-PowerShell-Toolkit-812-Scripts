@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Appdscsql
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -142,21 +147,18 @@ Node $nodeName
 		if($null -ne $disks)
 		{
 		# Create a new storage pool using all available disks 
-		New-StoragePool -ErrorAction Stop �FriendlyName " VMStoragePool" `
-				�StorageSubsystemFriendlyName " Storage Spaces*" `
-				�PhysicalDisks (Get-PhysicalDisk -ErrorAction Stop �CanPool $WETrue)
+		New-StoragePool -ErrorAction "Stop �CanPool $WETrue)"
 
 		# Return all disks in the new pool
-		$disks = Get-StoragePool -ErrorAction Stop �FriendlyName " VMStoragePool" `
-					-IsPrimordial $false | 
-					Get-PhysicalDisk -ErrorAction Stop
+		$disks -ErrorAction "Stop" -IsPrimordial $false | Get-PhysicalDisk
 
 		# Create a new virtual disk 
-		New-VirtualDisk -ErrorAction Stop �FriendlyName " DataDisk" `
-				-ResiliencySettingName Simple `
-						�NumberOfColumns $disks.Count `
-						�UseMaximumSize �Interleave 256KB `
-						-StoragePoolFriendlyName " VMStoragePool" 
+		$params = @{
+		    ErrorAction = "Stop �FriendlyName " DataDisk"
+		    ResiliencySettingName = "Simple �NumberOfColumns $disks.Count �UseMaximumSize �Interleave 256KB"
+		    StoragePoolFriendlyName = " VMStoragePool"
+		}
+		New-VirtualDisk @params
 
 		# Format the disk using NTFS and mount it as the F: drive
 		Get-Disk -ErrorAction Stop | 
@@ -200,9 +202,16 @@ Node $nodeName
 ; 	$ldf = New-Object -ErrorAction Stop Microsoft.SqlServer.Management.Smo.RelocateFile(" AdventureWorks2012_Log" , " F:\Logs\AdventureWorks2012.ldf" )
 
 	# Restore the database from the backup
-	Restore-SqlDatabase -ServerInstance Localhost -Database AdventureWorks `
-					-BackupFile $dbdestination -RelocateFile @($mdf,$ldf)  
-	New-NetFirewallRule -DisplayName " SQL Server" -Direction Inbound �Protocol TCP �LocalPort 1433 -Action allow 
+	$params = @{
+	    BackupFile = $dbdestination
+	    DisplayName = " SQL Server"
+	    Direction = "Inbound �Protocol TCP �LocalPort 1433"
+	    ServerInstance = "Localhost"
+	    RelocateFile = "@($mdf,$ldf) New-NetFirewallRule"
+	    Database = "AdventureWorks"
+	    Action = "allow"
+	}
+	Restore-SqlDatabase @params
 
 	}
   }
@@ -215,4 +224,5 @@ Node $nodeName
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

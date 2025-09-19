@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Backup Tool
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -54,6 +59,8 @@ param(
     [string]$WEVmName
 )
 
+#region Functions
+
 Backup-AzVM -ResourceGroupName $WEResourceGroupName -VaultName $WEVaultName -Name $WEVmName
 
 
@@ -62,3 +69,6 @@ Backup-AzVM -ResourceGroupName $WEResourceGroupName -VaultName $WEVaultName -Nam
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

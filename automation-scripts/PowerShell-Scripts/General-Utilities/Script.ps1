@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Script
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -176,11 +182,13 @@ param([Parameter(Mandatory=$false)]
 	#
 	$roles = @(" RDGateway" , " RDWebAccess" , " RDRedirector" , " RDPublishing" )
 
-	$roles | % `
-	{
-		log " applying certificate for role: $_..."
-		set-rdcertificate -role $_ -importpath $pfxFilePath -password (convertto-securestring $password -asplaintext -force) -force
+	$params = @{
+	    force = "}"
+	    role = $_
+	    password = "(convertto-securestring $password"
+	    importpath = $pfxFilePath
 	}
+	$roles @params
 
 	log " remove impersonation..."
 	Remove-ImpersonateUser -ErrorAction Stop
@@ -217,3 +225,6 @@ param([Parameter(Mandatory=$false)]
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,21 @@
-﻿# GitHub Repository Downloader
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# GitHub Repository Downloader
 # Downloads/updates all Wesley's repositories from GitHub
 # Usage: Run this script to get the latest versions of all repositories
 
@@ -79,3 +96,6 @@ Write-Information "Failed: $failed repositories"
 Write-Information "Total: $($repositories.Count) repositories"
 
 Write-Information "`nAll repositories are now up to date!"
+
+
+#endregion

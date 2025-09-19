@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Get Samplefolderazdo
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -51,6 +56,8 @@ param(
     $WERepoRoot = $WEENV:BUILD_REPOSITORY_LOCALPATH,
     $WEBuildSourcesDirectory = $WEENV:BUILD_SOURCESDIRECTORY
 )
+
+#region Functions
 
 
 $WEChangedFiles = git diff --name-status --diff-filter AMR origin/main # --name-only -- .
@@ -116,3 +123,6 @@ Write-WELog " ##vso[task.setvariable variable=sample.name]$sampleName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

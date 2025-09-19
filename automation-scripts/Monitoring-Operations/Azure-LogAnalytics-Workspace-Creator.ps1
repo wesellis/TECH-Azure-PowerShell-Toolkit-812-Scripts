@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Log Analytics Workspace Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Log Analytics Workspace for centralized logging
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -24,16 +33,21 @@ param (
     [int]$RetentionInDays = 30
 )
 
+#region Functions
+
 Write-Information "Creating Log Analytics Workspace: $WorkspaceName"
 
-$Workspace = New-AzOperationalInsightsWorkspace -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $WorkspaceName `
-    -Location $Location `
-    -Sku $Sku `
-    -RetentionInDays $RetentionInDays
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    Location = $Location
+    RetentionInDays = $RetentionInDays
+    ErrorAction = "Stop"
+    Name = $WorkspaceName
+}
+$Workspace @params
 
-Write-Information "✅ Log Analytics Workspace created successfully:"
+Write-Information " Log Analytics Workspace created successfully:"
 Write-Information "  Name: $($Workspace.Name)"
 Write-Information "  Location: $($Workspace.Location)"
 Write-Information "  SKU: $($Workspace.Sku)"
@@ -68,3 +82,6 @@ Write-Information "• VM Performance Counters"
 Write-Information "• Application Insights"
 Write-Information "• Security Events"
 Write-Information "• Custom Applications"
+
+
+#endregion

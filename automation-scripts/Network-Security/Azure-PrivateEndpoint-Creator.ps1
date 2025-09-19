@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Private Endpoint Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Private Endpoints for secure service connectivity
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -27,22 +36,30 @@ param (
     [string]$Location
 )
 
+#region Functions
+
 Write-Information "Creating Private Endpoint: $EndpointName"
 
 # Create private endpoint
-$PrivateLinkServiceConnection = New-AzPrivateLinkServiceConnection -ErrorAction Stop `
-    -Name "$EndpointName-connection" `
-    -PrivateLinkServiceId $TargetResourceId `
-    -GroupId $GroupId
+$params = @{
+    GroupId = $GroupId
+    ErrorAction = "Stop"
+    PrivateLinkServiceId = $TargetResourceId
+    Name = $EndpointName-connection
+}
+$PrivateLinkServiceConnection @params
 
-$PrivateEndpoint = New-AzPrivateEndpoint -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $EndpointName `
-    -Location $Location `
-    -Subnet @{Id=$SubnetId} `
-    -PrivateLinkServiceConnection $PrivateLinkServiceConnection
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    PrivateLinkServiceConnection = $PrivateLinkServiceConnection
+    Subnet = "@{Id=$SubnetId}"
+    ErrorAction = "Stop"
+    Name = $EndpointName
+}
+$PrivateEndpoint @params
 
-Write-Information "✅ Private Endpoint created successfully:"
+Write-Information " Private Endpoint created successfully:"
 Write-Information "  Name: $($PrivateEndpoint.Name)"
 Write-Information "  Location: $($PrivateEndpoint.Location)"
 Write-Information "  Target Resource: $($TargetResourceId.Split('/')[-1])"
@@ -53,3 +70,6 @@ Write-Information "`nNext Steps:"
 Write-Information "1. Configure DNS records for the private endpoint"
 Write-Information "2. Update network security groups if needed"
 Write-Information "3. Test connectivity from the virtual network"
+
+
+#endregion

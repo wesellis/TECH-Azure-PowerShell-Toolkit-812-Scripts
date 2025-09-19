@@ -1,6 +1,23 @@
-﻿# Azure Subscription Usage Monitor
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Subscription Usage Monitor
 # Professional utility for tracking subscription limits and quotas
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Resource usage and quota monitoring
 
 param(
@@ -23,8 +40,10 @@ param(
     [string]$OutputPath = ".\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName "Azure Subscription Usage Monitor" -Version "1.0" -Description "Monitor subscription limits, quotas, and resource usage"
 
@@ -92,7 +111,7 @@ try {
     
     if ($ExportReport) {
         $usageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-        Write-Log "✓ Usage report exported to: $OutputPath" -Level SUCCESS
+        Write-Log "[OK] Usage report exported to: $OutputPath" -Level SUCCESS
     }
 
     Write-ProgressStep -StepNumber 5 -TotalSteps 5 -StepName "Summary" -Status "Displaying results"
@@ -111,14 +130,14 @@ try {
     Write-Information "                              SUBSCRIPTION USAGE REPORT"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "📊 Usage Summary for $($Location):"
+    Write-Information " Usage Summary for $($Location):"
     Write-Information "   • Critical Items: $($criticalItems.Count)"
     Write-Information "   • Warning Items: $($warningItems.Count)"
     Write-Information "   • Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)"
     
     if ($criticalItems.Count -gt 0) {
         Write-Information ""
-        Write-Information "🚨 Critical Usage (>$CriticalThreshold%):"
+        Write-Information "� Critical Usage (>$CriticalThreshold%):"
         $criticalItems | ForEach-Object {
             Write-Information "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
         }
@@ -126,7 +145,7 @@ try {
     
     if ($warningItems.Count -gt 0) {
         Write-Information ""
-        Write-Information "⚠️ Warning Usage (>$WarningThreshold%):"
+        Write-Information "[WARN] Warning Usage (>$WarningThreshold%):"
         $warningItems | ForEach-Object {
             Write-Information "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
         }
@@ -134,11 +153,13 @@ try {
     
     Write-Information ""
 
-    Write-Log "✅ Subscription usage monitoring completed successfully!" -Level SUCCESS
+    Write-Log " Subscription usage monitoring completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Subscription usage monitoring failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Subscription usage monitoring failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "Subscription Usage Monitoring" -Completed
+
+#endregion

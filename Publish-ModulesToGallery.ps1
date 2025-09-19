@@ -1,5 +1,8 @@
-﻿#Requires -Module PowerShellGet
+#Requires -Module PowerShellGet
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Publishes Azure Enterprise Toolkit modules to PowerShell Gallery
     
@@ -28,6 +31,8 @@ param(
     
     [switch]$Force
 )
+
+#region Functions
 
 # Module directory
 $ModulesPath = Join-Path $PSScriptRoot 'automation-scripts\modules'
@@ -63,9 +68,9 @@ foreach ($module in $Modules) {
             Description = $manifest.Description
         }
         $modulesToPublish += $moduleInfo
-        Write-Information "  ✓ $($moduleInfo.Name) v$($moduleInfo.Version)"
+        Write-Information "  [OK] $($moduleInfo.Name) v$($moduleInfo.Version)"
     } else {
-        Write-Warning "  ✗ Module not found: $module"
+        Write-Warning "  [FAIL] Module not found: $module"
     }
 }
 
@@ -98,26 +103,13 @@ foreach ($module in $modulesToPublish) {
             $testResult = Test-ModuleManifest -Path "$($module.Path).psd1" -ErrorAction Stop
             
             # Publish to gallery
-            Publish-Module -Path $module.Path `
-                          -Repository $Repository `
-                          -NuGetApiKey $ApiKey `
-                          -Verbose:$VerbosePreference `
-                          -ErrorAction Stop
-            
-            Write-Information "  ✓ Successfully published $($module.Name)"
-            
-            # Display module URL
-            $moduleUrl = "https://www.powershellgallery.com/packages/$($module.Name)"
-            Write-Information "  📦 View at: $moduleUrl"
-            
-        } catch {
-            Write-Error "  ✗ Failed to publish $($module.Name): $_"
-        }
-    } else {
-        Write-Information "  [WhatIf] Would publish $($module.Name) to $Repository"
-    }
-    
-    Write-Information ""
+            $params = @{
+                NuGetApiKey = $ApiKey
+                Repository = $Repository
+                Path = $module.Path
+                ErrorAction = "Stop  Write-Information "  [OK] Successfully published $($module.Name)"  # Display module URL $moduleUrl = "https://www.powershellgallery.com/packages/$($module.Name)" Write-Information "   View at: $moduleUrl"  } catch { Write-Error "  [FAIL] Failed to publish $($module.Name): $_" } } else { Write-Information "  [WhatIf] Would publish $($module.Name) to $Repository" }  Write-Information "
+            }
+            Publish-Module @params
 }
 
 # Summary
@@ -150,3 +142,5 @@ $publishLog | ConvertTo-Json -Depth 3 | Out-File $logPath -Force
 
 Write-Information ""
 Write-Information "Publish log saved to: $logPath"
+
+#endregion

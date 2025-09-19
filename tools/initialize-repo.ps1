@@ -1,15 +1,32 @@
-﻿# Initialize Azure Enterprise Toolkit Repository
-Write-Information "🚀 Initializing Azure Enterprise Toolkit Git Repository"
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Initialize Azure Enterprise Toolkit Repository
+Write-Information " Initializing Azure Enterprise Toolkit Git Repository"
 
 Set-Location -ErrorAction Stop "A:\GITHUB\Azure-Enterprise-Toolkit"
 
 # Initialize Git repository
 git init
-Write-Information "✅ Git repository initialized"
+Write-Information " Git repository initialized"
 
 # Add remote origin
 git remote add origin https://github.com/wesellis/Azure-Enterprise-Toolkit.git
-Write-Information "✅ Remote origin added"
+Write-Information " Remote origin added"
 
 # Create initial README
 $readmeContent = @"
@@ -37,17 +54,20 @@ Coming soon! Content is being migrated from existing repositories.
 "@
 
 $readmeContent | Out-File -FilePath "README.md" -Encoding UTF8
-Write-Information "✅ Initial README created"
+Write-Information " Initial README created"
 
 # Add and commit initial structure
 git add .
 git commit -m "Initial repository structure and README"
-Write-Information "✅ Initial commit created"
+Write-Information " Initial commit created"
 
 # Set default branch and push
 git branch -M main
 git push -u origin main
-Write-Information "✅ Repository pushed to GitHub"
+Write-Information " Repository pushed to GitHub"
 
-Write-Information "`n🎉 Repository is now initialized and connected to GitHub!"
+Write-Information "`n Repository is now initialized and connected to GitHub!"
 Write-Information "Ready for content migration from existing repositories."
+
+
+#endregion

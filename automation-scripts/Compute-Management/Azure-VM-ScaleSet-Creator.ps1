@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Scale Set Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Virtual Machine Scale Sets for auto-scaling
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -24,46 +33,65 @@ param (
     [int]$InstanceCount = 2
 )
 
+#region Functions
+
 Write-Information "Creating VM Scale Set: $ScaleSetName"
 
 # Create scale set configuration
-$VmssConfig = New-AzVmssConfig -ErrorAction Stop `
-    -Location $Location `
-    -SkuCapacity $InstanceCount `
-    -SkuName $VmSize `
-    -UpgradePolicyMode "Manual"
+$params = @{
+    ErrorAction = "Stop"
+    SkuCapacity = $InstanceCount
+    SkuName = $VmSize
+    UpgradePolicyMode = "Manual"
+    Location = $Location
+}
+$VmssConfig @params
 
 # Add network profile
-$VmssConfig = Add-AzVmssNetworkInterfaceConfiguration `
-    -VirtualMachineScaleSet $VmssConfig `
-    -Name "network-config" `
-    -Primary $true `
-    -IPConfigurationName "internal" `
-    -CreatePublicIPAddress $false
+$params = @{
+    CreatePublicIPAddress = $false
+    IPConfigurationName = "internal"
+    Primary = $true
+    Name = "network-config"
+    VirtualMachineScaleSet = $VmssConfig
+}
+$VmssConfig @params
 
 # Set OS profile
-$VmssConfig = Set-AzVmssOsProfile -ErrorAction Stop `
-    -VirtualMachineScaleSet $VmssConfig `
-    -ComputerNamePrefix "vmss" `
-    -AdminUsername "azureuser"
+$params = @{
+    ComputerNamePrefix = "vmss"
+    ErrorAction = "Stop"
+    AdminUsername = "azureuser"
+    VirtualMachineScaleSet = $VmssConfig
+}
+$VmssConfig @params
 
 # Set storage profile
-$VmssConfig = Set-AzVmssStorageProfile -ErrorAction Stop `
-    -VirtualMachineScaleSet $VmssConfig `
-    -OsDiskCreateOption "FromImage" `
-    -ImageReferencePublisher "MicrosoftWindowsServer" `
-    -ImageReferenceOffer "WindowsServer" `
-    -ImageReferenceSku "2022-Datacenter" `
-    -ImageReferenceVersion "latest"
+$params = @{
+    ImageReferenceOffer = "WindowsServer"
+    ImageReferenceSku = "2022-Datacenter"
+    ErrorAction = "Stop"
+    OsDiskCreateOption = "FromImage"
+    VirtualMachineScaleSet = $VmssConfig
+    ImageReferenceVersion = "latest"
+    ImageReferencePublisher = "MicrosoftWindowsServer"
+}
+$VmssConfig @params
 
 # Create the scale set
-$Vmss = New-AzVmss -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $ScaleSetName `
-    -VirtualMachineScaleSet $VmssConfig
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $ResourceGroupName
+    Name = $ScaleSetName
+    VirtualMachineScaleSet = $VmssConfig
+}
+$Vmss @params
 
-Write-Information "✅ VM Scale Set created successfully:"
+Write-Information " VM Scale Set created successfully:"
 Write-Information "  Name: $($Vmss.Name)"
 Write-Information "  Location: $($Vmss.Location)"
 Write-Information "  VM Size: $VmSize"
 Write-Information "  Instance Count: $InstanceCount"
+
+
+#endregion

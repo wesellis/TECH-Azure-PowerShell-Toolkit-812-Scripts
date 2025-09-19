@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vnet Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -92,6 +98,8 @@ param(
     [string]$WESubnetPrefix
 )
 
+#region Functions
+
 Write-WELog " Provisioning Virtual Network: $WEVnetName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -103,19 +111,25 @@ if ($WESubnetPrefix) {
     Write-WELog " Subnet: $WESubnetName ($WESubnetPrefix)" " INFO"
     
     # Create virtual network with subnet
-   ;  $WEVNet = New-AzVirtualNetwork -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Location $WELocation `
-        -Name $WEVnetName `
-        -AddressPrefix $WEAddressPrefix `
-        -Subnet $WESubnetConfig
+   $params = @{
+       ResourceGroupName = $WEResourceGroupName
+       Location = $WELocation
+       AddressPrefix = $WEAddressPrefix
+       Subnet = $WESubnetConfig
+       ErrorAction = "Stop"
+       Name = $WEVnetName
+   }
+   ; @params
 } else {
     # Create virtual network without subnet
-   ;  $WEVNet = New-AzVirtualNetwork -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Location $WELocation `
-        -Name $WEVnetName `
-        -AddressPrefix $WEAddressPrefix
+   $params = @{
+       ErrorAction = "Stop"
+       AddressPrefix = $WEAddressPrefix
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEVnetName
+       Location = $WELocation
+   }
+   ; @params
 }
 
 Write-WELog " Virtual Network $WEVnetName provisioned successfully" " INFO"
@@ -128,3 +142,6 @@ Write-WELog " VNet ID: $($WEVNet.Id)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

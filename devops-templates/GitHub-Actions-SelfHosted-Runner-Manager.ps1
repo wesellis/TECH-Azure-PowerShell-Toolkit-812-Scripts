@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.Compute
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     GitHub Actions Self-Hosted Runner Enterprise Management Tool
 .DESCRIPTION
@@ -131,6 +134,8 @@ param(
     }
 )
 
+#region Functions
+
 # Import required modules
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
@@ -138,9 +143,9 @@ try {
     Import-Module Az.Compute -Force -ErrorAction Stop
     Import-Module Az.Network -Force -ErrorAction Stop
     Import-Module Az.KeyVault -Force -ErrorAction Stop
-    Write-Information "✅ Successfully imported required Azure modules"
+    Write-Information " Successfully imported required Azure modules"
 } catch {
-    Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error " Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -690,3 +695,5 @@ try {
     Write-EnhancedLog "Tool execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+#endregion

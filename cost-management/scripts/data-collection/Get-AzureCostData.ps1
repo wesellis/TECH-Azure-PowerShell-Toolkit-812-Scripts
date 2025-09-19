@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Retrieves Azure cost and usage data for analysis and reporting.
 
@@ -79,6 +85,8 @@ param(
     [ValidateSet("CSV", "JSON", "Excel", "Console")]
     [string]$OutputFormat = "Console"
 )
+
+#region Functions
 
 # Script variables
 $ErrorActionPreference = "Stop"
@@ -372,3 +380,6 @@ catch {
 finally {
     Write-Verbose "Script execution completed."
 }
+
+
+#endregion

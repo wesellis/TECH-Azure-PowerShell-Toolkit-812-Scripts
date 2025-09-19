@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Retry Utils.Tests
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -122,13 +127,18 @@ param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds
         }
 
         # Omit -retryAttempts argument to validate the default value
-        { RunWithRetries -runBlock $runBlock -onFailureBlock { OnFailure } -ignoreFailure $false -waitBeforeRetrySeconds 0 } `
-        | Should -Throw " testing RetriesUntilFailure"
-        Should -Invoke OnFailure -Times 1 -Exactly
-        Should -Invoke LogError -Times 0 -Exactly
-        $script:currentAttempt | Should -Be 6
-        $script:sleepTimes | Should -Be @(0, 0, 0, 0, 0) # Five retries with no wait time
-    }
+        $params = @{
+            onFailureBlock = "{ OnFailure }"
+            runBlock = $runBlock
+            ignoreFailure = $false
+            Invoke = "LogError"
+            waitBeforeRetrySeconds = "0 } | Should"
+            Throw = " testing RetriesUntilFailure" Should"
+            Exactly = $script:currentAttempt | Should
+            Be = "@(0, 0, 0, 0, 0) # Five retries with no wait time }"
+            Times = "0"
+        }
+        { @params
 
     It " ExponentialBackoffWithRetries" {
         $runBlock = {
@@ -154,3 +164,6 @@ param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

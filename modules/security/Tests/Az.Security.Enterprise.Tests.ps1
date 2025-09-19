@@ -1,5 +1,8 @@
-﻿#Requires -Module Pester
+#Requires -Module Pester
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Tests for Az.Security.Enterprise module
 .DESCRIPTION
@@ -131,254 +134,42 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
         
         It "Should configure security contacts" {
-            Enable-AzSecurityCenterAdvanced -SubscriptionId "12345678-1234-1234-1234-123456789012" `
-                -SecurityContactEmails @("test@example.com") `
-                -SecurityContactPhone "+1234567890"
-            
-            Should -Invoke Set-AzSecurityContact -Times 1
-        }
-        
-        It "Should configure workspace settings when provided" {
-            $workspaceSettings = @{WorkspaceId = "/subscriptions/xxx/workspace"}
-            Enable-AzSecurityCenterAdvanced -SubscriptionId "12345678-1234-1234-1234-123456789012" `
-                -WorkspaceSettings $workspaceSettings
-            
-            Should -Invoke Set-AzSecurityWorkspaceSetting -Times 1
-        }
-    }
-    
-    Context "Set-AzDefenderPlan" {
-        
-        It "Should enable Defender plan" {
-            Set-AzDefenderPlan -PlanName "VirtualMachines" -Enable
-            
-            Should -Invoke Set-AzSecurityPricing -Times 1 -ParameterFilter { 
-                $Name -eq "VirtualMachines" -and $PricingTier -eq "Standard" 
+            $params = @{
+                SecurityContactEmails = "@("test@example.com")"
+                TargetScore = "85  Should"
+                ParameterFilter = "{ $EnforcementMode"
+                RecommendationId = "NonExistent" } | Should"
+                and = $PricingTier
+                BeGreaterOrEqual = "85 }  It "Should save target configuration" { Set-AzSecurityScoreTarget"
+                eq = "DoNotEnforce" } } }  Context "Start-AzVulnerabilityAssessment" {  BeforeEach { Mock Get-AzResource"
+                Be = "EnableMFA" }  It "Should fail if recommendation not found" { Mock Get-AzSecurityTask"
+                ResourceGroupName = "TestRG"  $result.Status | Should"
+                Framework = "NIST"
+                IncludeRecommendations = "Should"
+                IncludeControls = $score.Controls | Should
+                SubscriptionId = "12345678-1234-1234-1234-123456789012"
+                TestMode = $result.Status | Should
+                PlanName = "VirtualMachines"
+                Times = "1 }  It "Should filter by severity" { $recommendations = Get-AzSecurityRecommendations"
+                EnforcementMode = "DoNotEnforce"  Should"
+                ResourceType = "SqlDatabases"
+                Enable = "Should"
+                ScanType = "Quick"  $result.ScanType | Should"
+                ErrorAction = "Stop { $null }  { Invoke-AzSecurityRecommendation"
+                SecurityContactPhone = "+1234567890"  Should"
+                ManagementGroupId = "TestMG"  Should"
+                HaveCount = "1 $recommendations[0].Severity | Should"
+                Throw = "} }"
+                BeGreaterThan = "0 } }  Context "Invoke-AzSecurityRecommendation" {  BeforeEach { Mock Get-AzSecurityTask"
+                Invoke = "Get-AzSecurityTask"
+                WorkspaceSettings = $workspaceSettings  Should
+                PolicySetName = "Test"
+                Severity = "High"  $recommendations | Should"
+                SubPlan = "P2"  Should"
+                TargetDate = $targetDate  $target.Milestones | Should
+                BeNullOrEmpty = "Should"
             }
-        }
-        
-        It "Should disable Defender plan" {
-            Set-AzDefenderPlan -PlanName "VirtualMachines" -Enable:$false
-            
-            Should -Invoke Set-AzSecurityPricing -Times 1 -ParameterFilter { 
-                $Name -eq "VirtualMachines" -and $PricingTier -eq "Free" 
-            }
-        }
-        
-        It "Should set sub-plan when specified" {
-            Set-AzDefenderPlan -PlanName "VirtualMachines" -Enable -SubPlan "P2"
-            
-            Should -Invoke Set-AzSecurityPricing -Times 1 -ParameterFilter { $SubPlan -eq "P2" }
-        }
-    }
-    
-    Context "Get-AzDefenderCoverage" {
-        
-        BeforeEach {
-            Mock Get-AzResource -ErrorAction Stop {
-                @(
-                    [PSCustomObject]@{ResourceId = "/subscriptions/xxx/vm1"; ResourceType = "Microsoft.Compute/virtualMachines"},
-                    [PSCustomObject]@{ResourceId = "/subscriptions/xxx/sql1"; ResourceType = "Microsoft.Sql/servers"}
-                )
-            }
-        }
-        
-        It "Should calculate coverage percentage" {
-            $coverage = Get-AzDefenderCoverage -ErrorAction Stop
-            
-            $coverage.CoveragePercentage | Should -Be 50 # 1 protected out of 2
-            $coverage.Plans | Should -HaveCount 2
-        }
-        
-        It "Should identify protected and unprotected resources" {
-            $coverage = Get-AzDefenderCoverage -ErrorAction Stop
-            
-            $coverage.ProtectedResources | Should -HaveCount 1
-            $coverage.UnprotectedResources | Should -HaveCount 1
-        }
-    }
-    
-    Context "New-AzSecurityPolicySet" {
-        
-        BeforeEach {
-            Mock New-AzPolicySetDefinition -ErrorAction Stop {
-                [PSCustomObject]@{
-                    Name = "TestPolicySet"
-                    PolicySetDefinitionId = "/providers/Microsoft.Authorization/policySetDefinitions/test"
-                }
-            }
-            Mock New-AzPolicyAssignment -ErrorAction Stop {
-                [PSCustomObject]@{
-                    Name = "TestPolicySet-Assignment"
-                    PolicyAssignmentId = "/subscriptions/xxx/providers/Microsoft.Authorization/policyAssignments/test"
-                }
-            }
-        }
-        
-        It "Should create policy set for CIS framework" {
-            $result = New-AzSecurityPolicySet -PolicySetName "CIS-Baseline" -Framework "CIS"
-            
-            Should -Invoke New-AzPolicySetDefinition -Times 1
-            Should -Invoke New-AzPolicyAssignment -Times 1
-            $result.PolicySetDefinition | Should -Not -BeNullOrEmpty
-            $result.Assignment | Should -Not -BeNullOrEmpty
-        }
-        
-        It "Should use management group scope when specified" {
-            New-AzSecurityPolicySet -PolicySetName "Test" -Framework "CIS" -ManagementGroupId "TestMG"
-            
-            Should -Invoke New-AzPolicySetDefinition -Times 1 -ParameterFilter { $ManagementGroupId -eq "TestMG" }
-        }
-        
-        It "Should apply enforcement mode" {
-            New-AzSecurityPolicySet -PolicySetName "Test" -Framework "NIST" -EnforcementMode "DoNotEnforce"
-            
-            Should -Invoke New-AzPolicyAssignment -Times 1 -ParameterFilter { $EnforcementMode -eq "DoNotEnforce" }
-        }
-    }
-    
-    Context "Start-AzVulnerabilityAssessment" {
-        
-        BeforeEach {
-            Mock Get-AzResource -ErrorAction Stop {
-                @([PSCustomObject]@{ResourceId = "/subscriptions/xxx/vm1"})
-            }
-        }
-        
-        It "Should initiate vulnerability assessment" {
-            $result = Start-AzVulnerabilityAssessment -ResourceType "VirtualMachines" -ResourceGroupName "TestRG"
-            
-            $result.Status | Should -Be "Completed"
-            $result.ResourceType | Should -Be "VirtualMachines"
-            $result.ScanType | Should -Be "Full"
-        }
-        
-        It "Should use specified scan type" {
-            $result = Start-AzVulnerabilityAssessment -ResourceType "SqlDatabases" -ScanType "Quick"
-            
-            $result.ScanType | Should -Be "Quick"
-        }
-    }
-    
-    Context "Get-AzSecurityScore" {
-        
-        BeforeEach {
-            Mock Get-AzSecuritySecureScoreControl -ErrorAction Stop {
-                @(
-                    [PSCustomObject]@{
-                        Name = "ASC_EnableMFA"
-                        DisplayName = "Enable MFA"
-                        Score = [PSCustomObject]@{Current = 10; Max = 20; Percentage = 50}
-                        HealthyResourceCount = 5
-                        UnhealthyResourceCount = 5
-                        NotApplicableResourceCount = 0
-                    }
-                )
-            }
-        }
-        
-        It "Should retrieve basic security score" {
-            $score = Get-AzSecurityScore -ErrorAction Stop
-            
-            $score.CurrentScore | Should -Be 65
-            $score.MaxScore | Should -Be 100
-            $score.Percentage | Should -Be 65
-        }
-        
-        It "Should include controls when requested" {
-            $score = Get-AzSecurityScore -IncludeControls
-            
-            $score.Controls | Should -HaveCount 1
-            $score.Controls[0].DisplayName | Should -Be "Enable MFA"
-        }
-        
-        It "Should include recommendations when requested" {
-            $score = Get-AzSecurityScore -IncludeRecommendations
-            
-            Should -Invoke Get-AzSecurityTask -Times 1
-            $score.Recommendations | Should -Not -BeNullOrEmpty
-        }
-    }
-    
-    Context "Set-AzSecurityScoreTarget" {
-        
-        BeforeEach {
-            Mock Out-File { }
-        }
-        
-        It "Should set security score target" {
-            $target = Set-AzSecurityScoreTarget -TargetScore 85
-            
-            $target.TargetScore | Should -Be 85
-            $target.CurrentScore | Should -Be 65
-            $target.Gap | Should -Be 20
-        }
-        
-        It "Should calculate milestones" {
-            $targetDate = (Get-Date).AddMonths(4)
-            $target = Set-AzSecurityScoreTarget -TargetScore 85 -TargetDate $targetDate
-            
-            $target.Milestones | Should -HaveCount 4
-            $target.Milestones[-1].TargetScore | Should -BeGreaterOrEqual 85
-        }
-        
-        It "Should save target configuration" {
-            Set-AzSecurityScoreTarget -TargetScore 85
-            
-            Should -Invoke Out-File -Times 1
-        }
-    }
-    
-    Context "Get-AzSecurityRecommendations" {
-        
-        It "Should get all recommendations by default" {
-            $recommendations = Get-AzSecurityRecommendations -ErrorAction Stop
-            
-            $recommendations | Should -Not -BeNullOrEmpty
-            Should -Invoke Get-AzSecurityTask -Times 1
-        }
-        
-        It "Should filter by severity" {
-            $recommendations = Get-AzSecurityRecommendations -Severity "High"
-            
-            $recommendations | Should -HaveCount 1
-            $recommendations[0].Severity | Should -Be "High"
-        }
-        
-        It "Should prioritize recommendations" {
-            $recommendations = Get-AzSecurityRecommendations -ErrorAction Stop
-            
-            $recommendations[0].Priority | Should -BeGreaterThan 0
-        }
-    }
-    
-    Context "Invoke-AzSecurityRecommendation" {
-        
-        BeforeEach {
-            Mock Get-AzSecurityTask -ErrorAction Stop {
-                [PSCustomObject]@{
-                    Name = "EnableMFA"
-                    SecurityTaskParameters = [PSCustomObject]@{
-                        Name = "Enable MFA"
-                        RecommendationType = "EnableMFA"
-                    }
-                }
-            }
-        }
-        
-        It "Should process recommendation in test mode" {
-            $result = Invoke-AzSecurityRecommendation -RecommendationId "EnableMFA" -TestMode
-            
-            $result.Status | Should -Be "TestCompleted"
-            $result.RecommendationId | Should -Be "EnableMFA"
-        }
-        
-        It "Should fail if recommendation not found" {
-            Mock Get-AzSecurityTask -ErrorAction Stop { $null }
-            
-            { Invoke-AzSecurityRecommendation -RecommendationId "NonExistent" } | Should -Throw
-        }
-    }
+            Enable-AzSecurityCenterAdvanced @params
 }
 
 Describe "Helper Function Tests" {
@@ -431,3 +222,4 @@ Describe "Helper Function Tests" {
         }
     }
 }
+#endregion

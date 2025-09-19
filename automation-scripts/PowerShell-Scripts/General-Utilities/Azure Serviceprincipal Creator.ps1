@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Serviceprincipal Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,47 +92,23 @@ param(
     [int]$WEPasswordValidityMonths = 12
 )
 
+#region Functions
+
 Write-WELog " Creating Service Principal: $WEDisplayName" " INFO"
 
 try {
     # Create service principal with password
-   ;  $WEServicePrincipal = New-AzADServicePrincipal -ErrorAction Stop `
-        -DisplayName $WEDisplayName `
-        -Role $WERole `
-        -Scope $WEScope
-    
-    Write-WELog " ✅ Service Principal created successfully:" " INFO"
-    Write-WELog "  Display Name: $($WEServicePrincipal.DisplayName)" " INFO"
-    Write-WELog "  Application ID: $($WEServicePrincipal.ApplicationId)" " INFO"
-    Write-WELog "  Object ID: $($WEServicePrincipal.Id)" " INFO"
-    Write-WELog "  Service Principal Names: $($WEServicePrincipal.ServicePrincipalNames -join ', ')" " INFO"
-    
-    # Get the secret
-   ;  $WESecret = $WEServicePrincipal.Secret
-    if ($WESecret) {
-        Write-WELog " `n🔑 Credentials (SAVE THESE SECURELY):" " INFO"
-        Write-WELog "  Application (Client) ID: $($WEServicePrincipal.ApplicationId)" " INFO"
-        Write-WELog "  Client Secret: $($WESecret)" " INFO"
-        Write-WELog "  Tenant ID: $((Get-AzContext).Tenant.Id)" " INFO"
-    }
-    
-    Write-WELog " `nRole Assignment:" " INFO"
-    Write-WELog "  Role: $WERole" " INFO"
-    if ($WEScope) {
-        Write-WELog "  Scope: $WEScope" " INFO"
-    } else {
-        Write-WELog "  Scope: Subscription level" " INFO"
-    }
-    
-    Write-WELog " `n⚠️ SECURITY NOTES:" " INFO"
-    Write-WELog " • Store credentials securely (Key Vault recommended)" " INFO"
-    Write-WELog " • Use certificate authentication for production" " INFO"
-    Write-WELog " • Implement credential rotation" " INFO"
-    Write-WELog " • Follow principle of least privilege" " INFO"
-    
-    Write-WELog " `nUsage in scripts:" " INFO"
-    Write-WELog "  Connect-AzAccount -ServicePrincipal -ApplicationId '$($WEServicePrincipal.ApplicationId)' -TenantId '$((Get-AzContext).Tenant.Id)' -CertificateThumbprint '[thumbprint]'" " INFO"
-    
+   $params = @{
+       WELog = "  Connect-AzAccount"
+       DisplayName = $WEDisplayName
+       TenantId = $((Get-AzContext).Tenant.Id)
+       ApplicationId = $($WEServicePrincipal.ApplicationId)
+       CertificateThumbprint = "[thumbprint]'" " INFO"
+       Scope = $WEScope  Write-WELog "  Service Principal created successfully:" " INFO" Write-WELog "  Display Name: $($WEServicePrincipal.DisplayName)" " INFO" Write-WELog "  Application ID: $($WEServicePrincipal.ApplicationId)" " INFO" Write-WELog "  Object ID: $($WEServicePrincipal.Id)" " INFO" Write-WELog "  Service Principal Names: $($WEServicePrincipal.ServicePrincipalNames
+       ErrorAction = "Stop"
+       Role = $WERole
+   }
+   ; @params
 } catch {
     Write-Error " Failed to create service principal: $($_.Exception.Message)"
 }
@@ -135,4 +117,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

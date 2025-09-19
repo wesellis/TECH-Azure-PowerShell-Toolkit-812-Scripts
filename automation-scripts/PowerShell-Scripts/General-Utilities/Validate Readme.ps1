@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Validate Readme
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -49,6 +54,8 @@ param(
     [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" ),
     [switch] $WEFix # If true, README will be fixed if possible
 )
+
+#region Functions
 
 Write-WELog " StorageAccountName: $WEStorageAccountName" " INFO"
 Write-WELog " bicepSupported: $bicepSupported" " INFO"
@@ -193,9 +200,7 @@ $WEARMVizButton
 " @
 
     if ($WEFix) {
-       ;  $fixed = & $WEPSScriptRoot/Get-FixedReadMe.ps1 `
-            -ReadmeContents $readme `
-            -ExpectedMarkdown $md
+       ; -ExpectedMarkdown $md -ReadmeContents $readme
 
         # Back up existing
        ;  $backup = New-TemporaryFile -ErrorAction Stop
@@ -236,3 +241,6 @@ if ($error.count -eq 0) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

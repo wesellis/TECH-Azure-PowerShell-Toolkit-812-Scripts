@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azuresaingestionmetrics Ms Mgmt Sa
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -234,18 +240,27 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc,$
 
 	
 	If ($method -eq 'PUT')
-	{$signature = Build-StorageSignature `
-		-sharedKey $sharedKey `
-		-date  $rfc1123date `
-		-method $method -resource $resource -uri $uri -bodylength $msgbody.length -service $svc
-	}Else
-	{
+	$params = @{
+	    uri = $uri
+	    date = $rfc1123date
+	    service = $svc }Else {
+	    resource = $resource
+	    sharedKey = $sharedKey
+	    bodylength = $msgbody.length
+	    method = $method
+	}
+	{$signature @params
 
-	; 	$signature = Build-StorageSignature `
-		-sharedKey $sharedKey `
-		-date  $rfc1123date `
-		-method $method -resource $resource -uri $uri -body $body -service $svc
-	} 
+	$params = @{
+	    uri = $uri
+	    date = $rfc1123date
+	    service = $svc }
+	    resource = $resource
+	    sharedKey = $sharedKey
+	    body = $body
+	    method = $method
+	}
+	; @params
 
 	If($svc -eq 'Table')
 	{
@@ -375,15 +390,17 @@ Function Post-OMSData($customerId, $sharedKey, $body, $logType)
 	$resource = " /api/logs"
 	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	$contentLength = $body.Length
-	$signature = Build-OMSSignature `
-	-customerId $customerId `
-	-sharedKey $sharedKey `
-	-date $rfc1123date `
-	-contentLength $contentLength `
-	-fileName $fileName `
-	-method $method `
-	-contentType $contentType `
-	-resource $resource
+	$params = @{
+	    date = $rfc1123date
+	    contentLength = $contentLength
+	    resource = $resource
+	    sharedKey = $sharedKey
+	    customerId = $customerId
+	    contentType = $contentType
+	    fileName = $fileName
+	    method = $method
+	}
+	$signature @params
 ; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
 ; 	$WEOMSheaders = @{
 		" Authorization" = $signature;
@@ -993,18 +1010,27 @@ $scriptBlockGetKeys={
 
 		
 		If ($method -eq 'PUT')
-		{$signature = Build-StorageSignature `
-			-sharedKey $sharedKey `
-			-date  $rfc1123date `
-			-method $method -resource $resource -uri $uri -bodylength $msgbody.length -service $svc
-		}Else
-		{
+		$params = @{
+		    uri = $uri
+		    date = $rfc1123date
+		    service = $svc }Else {
+		    resource = $resource
+		    sharedKey = $sharedKey
+		    bodylength = $msgbody.length
+		    method = $method
+		}
+		{$signature @params
 
-		; 	$signature = Build-StorageSignature `
-			-sharedKey $sharedKey `
-			-date  $rfc1123date `
-			-method $method -resource $resource -uri $uri -body $body -service $svc
-		} 
+		$params = @{
+		    uri = $uri
+		    date = $rfc1123date
+		    service = $svc }
+		    resource = $resource
+		    sharedKey = $sharedKey
+		    body = $body
+		    method = $method
+		}
+		; @params
 
 		If($svc -eq 'Table')
 		{
@@ -1433,18 +1459,27 @@ $scriptBlockGetMetrics={
 
 		
 		If ($method -eq 'PUT')
-		{$signature = Build-StorageSignature `
-			-sharedKey $sharedKey `
-			-date  $rfc1123date `
-			-method $method -resource $resource -uri $uri -bodylength $msgbody.length -service $svc
-		}Else
-		{
+		$params = @{
+		    uri = $uri
+		    date = $rfc1123date
+		    service = $svc }Else {
+		    resource = $resource
+		    sharedKey = $sharedKey
+		    bodylength = $msgbody.length
+		    method = $method
+		}
+		{$signature @params
 
-		; 	$signature = Build-StorageSignature `
-			-sharedKey $sharedKey `
-			-date  $rfc1123date `
-			-method $method -resource $resource -uri $uri -body $body -service $svc
-		} 
+		$params = @{
+		    uri = $uri
+		    date = $rfc1123date
+		    service = $svc }
+		    resource = $resource
+		    sharedKey = $sharedKey
+		    body = $body
+		    method = $method
+		}
+		; @params
 
 		If($svc -eq 'Table')
 		{
@@ -1574,22 +1609,17 @@ $scriptBlockGetMetrics={
 		$resource = " /api/logs"
 		$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 		$contentLength = $body.Length
-		$signature = Build-OMSSignature `
-		-customerId $customerId `
-		-sharedKey $sharedKey `
-		-date $rfc1123date `
-		-contentLength $contentLength `
-		-fileName $fileName `
-		-method $method `
-		-contentType $contentType `
-		-resource $resource
-	; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01"
-	; 	$WEOMSheaders = @{
-			" Authorization" = $signature;
-			" Log-Type" = $logType;
-			" x-ms-date" = $rfc1123date;
-			" time-generated-field" = $WETimeStampField;
+		$params = @{
+		    date = $rfc1123date
+		    contentLength = $contentLength
+		    resource = $resource ; 	$uri = " https://" + $customerId + " .ods.opinsights.azure.com" + $resource + " ?api-version=2016-04-01" ; 	$WEOMSheaders = @{ " Authorization" = $signature; " Log-Type" = $logType; " x-ms-date" = $rfc1123date; " time-generated-field" = $WETimeStampField; }
+		    sharedKey = $sharedKey
+		    customerId = $customerId
+		    contentType = $contentType
+		    fileName = $fileName
+		    method = $method
 		}
+		$signature @params
 
 		Try{
 			$response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $WEOMSheaders -Body $body -UseBasicParsing
@@ -1697,10 +1727,15 @@ $scriptBlockGetMetrics={
 		$logdate=[DateTime]::UtcNow
 		$rfc1123date = $logdate.ToString(" r" )
 		
-	; 	$signature = Build-StorageSignature `
-		-sharedKey $prikey `
-		-date  $rfc1123date `
-		-method GET -resource $storageaccount -uri $tablequri  -service table
+	$params = @{
+	    uri = $tablequri
+	    date = $rfc1123date
+	    service = "table"
+	    resource = $storageaccount
+	    sharedKey = $prikey
+	    method = "GET"
+	}
+	; @params
 
 	; 	$headersforsa=  @{
 			'Authorization'= " $signature"
@@ -1791,10 +1826,15 @@ $scriptBlockGetMetrics={
 	$resource = $storageaccount
 	$logdate=[DateTime]::UtcNow
 	$rfc1123date = $logdate.ToString(" r" )
-; 	$signature = Build-StorageSignature `
-	-sharedKey $prikey `
-	-date  $rfc1123date `
-	-method GET -resource $storageaccount -uri $tablequri  -service table
+$params = @{
+    uri = $tablequri
+    date = $rfc1123date
+    service = "table"
+    resource = $storageaccount
+    sharedKey = $prikey
+    method = "GET"
+}
+; @params
 
 ; 	$headersforsa=  @{
 		'Authorization'= " $signature"
@@ -1973,49 +2013,20 @@ $scriptBlockGetMetrics={
 		[uri]$uritable=" https://{0}.table.core.windows.net/Tables" -f $storageaccount
 		
 		$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
-	; 	$signature = Build-StorageSignature `
-		-sharedKey $prikey
-		-date  $rfc1123date `
-		-method GET -resource $sa.name -uri $uritable  -service table
-	; 	$headersforsa=  @{
-			'Authorization'= " $signature"
-			'x-ms-version'=" $apistorage"
-			'x-ms-date'=" $rfc1123date"
-			'Accept-Charset'='UTF-8'
-			'MaxDataServiceVersion'='3.0;NetFx'
-			'Accept'='application/json;odata=nometadata'
-		}
-		$tableresp=Invoke-WebRequest -Uri $uritable -Headers $headersforsa -Method GET  -UseBasicParsing 
-	; 	$respJson=convertFrom-Json    $tableresp.Content
-		
-		IF (![string]::IsNullOrEmpty($respJson.value.Tablename))
-		{
-			foreach($tbl in @($respJson.value.Tablename))
-			{
-				write-verbose  " Table found :$storageaccount ; $($tbl) "
-				
-				#$tablearr = $tablearr + " {0}" -f $sa.name
-				IF ([string]::IsNullOrEmpty($tablearr.Get_item($storageaccount)))
-				{
-					$tablearr.add($sa.name,'Storageaccount') 
-				}
-				
-				
-				$hash['queueInventory']+= New-Object -ErrorAction Stop PSObject -Property @{
-					Timestamp = $timestamp
-					MetricName = 'Inventory'
-					InventoryType='Table'
-					StorageAccount=$storageaccount
-					Table=$tbl
-					Uri=$uritable.Scheme+'://'+$uritable.Host+'/'+$tbl
-					SubscriptionID = $WEArmConn.SubscriptionId;
-					AzureSubscription = $subscriptionInfo.displayName
-					ShowinDesigner=1
-					
-				}
-			}
-		}
+	$params = @{
+	    uri = $uritable
+	    UseBasicParsing = "; 	$respJson=convertFrom-Json    $tableresp.Content  IF (![string]::IsNullOrEmpty($respJson.value.Tablename)) { foreach($tbl in @($respJson.value.Tablename)) { write-verbose  " Table found :$storageaccount ; $($tbl) "  #$tablearr = $tablearr + " {0}"
+	    date = $rfc1123date
+	    service = "table ; 	$headersforsa=  @{ 'Authorization'= " $signature" 'x-ms-version'=" $apistorage" 'x-ms-date'=" $rfc1123date" 'Accept-Charset'='UTF-8' 'MaxDataServiceVersion'='3.0;NetFx' 'Accept'='application/json;odata=nometadata' } $tableresp=Invoke-WebRequest"
+	    resource = $sa.name
+	    sharedKey = $prikey
+	    Property = "@{ Timestamp = $timestamp MetricName = 'Inventory' InventoryType='Table' StorageAccount=$storageaccount Table=$tbl Uri=$uritable.Scheme+'://'+$uritable.Host+'/'+$tbl SubscriptionID = $WEArmConn.SubscriptionId; AzureSubscription = $subscriptionInfo.displayName ShowinDesigner=1  } } } }"
+	    ErrorAction = "Stop PSObject"
+	    Headers = $headersforsa
+	    f = $sa.name IF ([string]::IsNullOrEmpty($tablearr.Get_item($storageaccount))) { $tablearr.add($sa.name,'Storageaccount') }   $hash['queueInventory']+= New-Object
+	    method = "GET"
 	}
+	; @params
 
 
 
@@ -2464,4 +2475,5 @@ Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction Sil
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

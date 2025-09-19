@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Extension Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,21 +102,26 @@ param(
     [string]$WEPublisher = " Microsoft.Compute"
 )
 
+#region Functions
+
 Write-WELog " Managing VM extension: $WEExtensionName" " INFO"
 ; 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
 
 
-Set-AzVMExtension -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -VMName $WEVmName `
-    -Name $WEExtensionName `
-    -Publisher $WEPublisher `
-    -ExtensionType $WEExtensionType `
-    -TypeHandlerVersion " 1.10" `
-    -Location $WEVM.Location
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Publisher = $WEPublisher
+    Name = $WEExtensionName
+    ExtensionType = $WEExtensionType
+    Location = $WEVM.Location
+    TypeHandlerVersion = " 1.10"
+    ErrorAction = "Stop"
+    VMName = $WEVmName
+}
+Set-AzVMExtension @params
 
-Write-WELog " ✅ Extension '$WEExtensionName' installed successfully" " INFO"
+Write-WELog "  Extension '$WEExtensionName' installed successfully" " INFO"
 Write-WELog " VM: $WEVmName" " INFO"
 Write-WELog " Publisher: $WEPublisher" " INFO"
 Write-WELog " Type: $WEExtensionType" " INFO"
@@ -122,3 +133,6 @@ Write-WELog " Type: $WEExtensionType" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

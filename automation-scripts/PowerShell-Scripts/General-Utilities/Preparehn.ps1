@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Preparehn
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -81,6 +86,8 @@ param(
     [Parameter(Mandatory=$true, ParameterSetName='NodeState')]
     [switch] $WENodeStateCheck
 )
+
+#region Functions
 
 [CmdletBinding()]
 function WE-TraceInfo
@@ -189,8 +196,12 @@ else
         Import-Module ScheduledTasks
         $WEAdminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($WEAdminBase64Password))
         $domainNetBios = $WEDomainFQDN.Split('.')[0].ToUpper()
-        $domainUserCred = New-Object -TypeName System.Management.Automation.PSCredential `
-                -ArgumentList @(" $domainNetBios\$WEAdminUserName" , (ConvertTo-SecureString -String $WEAdminPassword -AsPlainText -Force))
+        $params = @{
+            TypeName = "System.Management.Automation.PSCredential"
+            ArgumentList = "@(" $domainNetBios\$WEAdminUserName" , (ConvertTo-SecureString"
+            String = $WEAdminPassword
+        }
+        $domainUserCred @params
 
          $job = Start-Job -ScriptBlock {
              [CmdletBinding()]
@@ -623,4 +634,5 @@ param($scriptPath, $domainUserCred, $WEAzureStorageConnStr, $WEPublicDnsName, $W
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,21 @@
-﻿# Enhanced GitHub Repository Uploader with Detailed Status
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Enhanced GitHub Repository Uploader with Detailed Status
 # Uploads local changes to GitHub for all repositories with better change detection
 
 Write-Information "=== Enhanced GitHub Repository Uploader ==="
@@ -21,7 +38,7 @@ if (Test-Path $repoPath) {
     
     # Check if this is a Git repository
     if (Test-Path ".git") {
-        Write-Information "✓ Git repository detected"
+        Write-Information "[OK] Git repository detected"
         
         # Get detailed Git status
         Write-Information "`nChecking Git status..."
@@ -63,20 +80,20 @@ if (Test-Path $repoPath) {
                     git commit -m $commitMessage 2>$null
                     
                     if ($LASTEXITCODE -eq 0) {
-                        Write-Information "✓ Changes committed successfully"
+                        Write-Information "[OK] Changes committed successfully"
                         
                         # Push to GitHub
                         Write-Information "`nPushing to GitHub..."
                         git push 2>$null
                         
                         if ($LASTEXITCODE -eq 0) {
-                            Write-Information "✓ Successfully pushed to GitHub!"
+                            Write-Information "[OK] Successfully pushed to GitHub!"
                         } else {
-                            Write-Information "✗ Failed to push to GitHub"
+                            Write-Information "[FAIL] Failed to push to GitHub"
                             Write-Information "You may need to authenticate with GitHub"
                         }
                     } else {
-                        Write-Information "✗ Failed to commit changes"
+                        Write-Information "[FAIL] Failed to commit changes"
                     }
                 } else {
                     Write-Information "No changes after adding files"
@@ -99,9 +116,9 @@ if (Test-Path $repoPath) {
             git push 2>$null
             
             if ($LASTEXITCODE -eq 0) {
-                Write-Information "✓ Changes uploaded successfully!"
+                Write-Information "[OK] Changes uploaded successfully!"
             } else {
-                Write-Information "✗ Failed to upload changes"
+                Write-Information "[FAIL] Failed to upload changes"
             }
         }
         
@@ -118,7 +135,7 @@ if (Test-Path $repoPath) {
         Write-Information "  Remote URL: $remoteUrl"
         
     } else {
-        Write-Information "✗ Not a Git repository"
+        Write-Information "[FAIL] Not a Git repository"
         Write-Information "Initialize Git repository? (y/n):"
         $response = Read-Host
         
@@ -130,11 +147,11 @@ if (Test-Path $repoPath) {
             git branch -M main 2>$null
             git push -u origin main 2>$null
             
-            Write-Information "✓ Repository initialized and pushed to GitHub"
+            Write-Information "[OK] Repository initialized and pushed to GitHub"
         }
     }
 } else {
-    Write-Information "✗ Repository path not found: $repoPath"
+    Write-Information "[FAIL] Repository path not found: $repoPath"
 }
 
 Write-Information "`n=== Quick Check: All Repositories ==="
@@ -178,3 +195,6 @@ Write-Information "Not Git repositories: $($summary.NotGitRepo)"
 Write-Information "Total repositories: $($repositories.Count)"
 
 Write-Information "`nEnhanced upload process complete!"
+
+
+#endregion

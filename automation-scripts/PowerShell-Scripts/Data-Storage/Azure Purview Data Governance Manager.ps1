@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Purview Data Governance Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -125,8 +131,10 @@ param(
     [switch]$WEEnableLineageTracking
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Purview Data Governance Manager" -Version " 1.0" -Description " Enterprise data catalog and governance automation"
@@ -146,7 +154,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     # Generate managed resource names if not provided
     if (-not $WEManagedStorageAccountName) {
@@ -182,10 +190,10 @@ try {
                 New-AzPurviewAccount -ErrorAction Stop @purviewParams
             } -OperationName " Create Purview Account"
             
-            Write-Log " ✓ Purview account created: $WEPurviewAccountName" -Level SUCCESS
-            Write-Log " ✓ Atlas endpoint: $($purviewAccount.AtlasEndpoint)" -Level INFO
-            Write-Log " ✓ Scan endpoint: $($purviewAccount.ScanEndpoint)" -Level INFO
-            Write-Log " ✓ Catalog endpoint: $($purviewAccount.CatalogEndpoint)" -Level INFO
+            Write-Log " [OK] Purview account created: $WEPurviewAccountName" -Level SUCCESS
+            Write-Log " [OK] Atlas endpoint: $($purviewAccount.AtlasEndpoint)" -Level INFO
+            Write-Log " [OK] Scan endpoint: $($purviewAccount.ScanEndpoint)" -Level INFO
+            Write-Log " [OK] Catalog endpoint: $($purviewAccount.CatalogEndpoint)" -Level INFO
             
             # Wait for account to be ready
             Write-Log " Waiting for Purview account to be fully provisioned..." -Level INFO
@@ -196,7 +204,7 @@ try {
             } while ($accountStatus.ProvisioningState -eq " Provisioning" )
             
             if ($accountStatus.ProvisioningState -eq " Succeeded" ) {
-                Write-Log " ✓ Purview account fully provisioned and ready" -Level SUCCESS
+                Write-Log " [OK] Purview account fully provisioned and ready" -Level SUCCESS
             } else {
                 throw " Purview account provisioning failed with state: $($accountStatus.ProvisioningState)"
             }
@@ -238,9 +246,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName " Register Data Source"
             
-            Write-Log " ✓ Data source registered: $WEDataSourceName ($WEDataSourceType)" -Level SUCCESS
-            Write-Log " ✓ Endpoint: $WEDataSourceEndpoint" -Level INFO
-            Write-Log " ✓ Collection: $WECollectionName" -Level INFO
+            Write-Log " [OK] Data source registered: $WEDataSourceName ($WEDataSourceType)" -Level SUCCESS
+            Write-Log " [OK] Endpoint: $WEDataSourceEndpoint" -Level INFO
+            Write-Log " [OK] Collection: $WECollectionName" -Level INFO
         }
         
         " createcollection" {
@@ -273,7 +281,7 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName " Create Collection"
             
-            Write-Log " ✓ Collection created: $WECollectionName" -Level SUCCESS
+            Write-Log " [OK] Collection created: $WECollectionName" -Level SUCCESS
         }
         
         " scandatasource" {
@@ -326,9 +334,9 @@ try {
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers
             } -OperationName " Trigger Scan"
             
-            Write-Log " ✓ Data source scan initiated: $WEScanName" -Level SUCCESS
-            Write-Log " ✓ Scan ruleset: $WEScanRulesetName" -Level INFO
-            Write-Log " ✓ Monitor scan progress in the Purview Studio" -Level INFO
+            Write-Log " [OK] Data source scan initiated: $WEScanName" -Level SUCCESS
+            Write-Log " [OK] Scan ruleset: $WEScanRulesetName" -Level INFO
+            Write-Log " [OK] Monitor scan progress in the Purview Studio" -Level INFO
         }
         
         " manageclassifications" {
@@ -417,7 +425,7 @@ try {
             } -OperationName " Get Data Sources"
             
             Write-WELog "" " INFO"
-            Write-WELog " 📊 Purview Account Information" " INFO" -ForegroundColor Cyan
+            Write-WELog "  Purview Account Information" " INFO" -ForegroundColor Cyan
             Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
             Write-WELog " Account Name: $($purviewAccount.Name)" " INFO" -ForegroundColor White
             Write-WELog " Location: $($purviewAccount.Location)" " INFO" -ForegroundColor White
@@ -429,7 +437,7 @@ try {
             
             if ($collections.Count -gt 0) {
                 Write-WELog "" " INFO"
-                Write-WELog " 📁 Collections ($($collections.Count)):" " INFO" -ForegroundColor Cyan
+                Write-WELog " [FOLDER] Collections ($($collections.Count)):" " INFO" -ForegroundColor Cyan
                 foreach ($collection in $collections) {
                     Write-WELog " • $($collection.name)" " INFO" -ForegroundColor White
                     if ($collection.description) {
@@ -463,7 +471,7 @@ try {
                 Remove-AzPurviewAccount -ResourceGroupName $WEResourceGroupName -Name $WEPurviewAccountName -Force
             } -OperationName " Delete Purview Account"
             
-            Write-Log " ✓ Purview account deleted: $WEPurviewAccountName" -Level SUCCESS
+            Write-Log " [OK] Purview account deleted: $WEPurviewAccountName" -Level SUCCESS
         }
     }
 
@@ -488,13 +496,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName " Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log " ✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -523,14 +531,14 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName " Governance Analysis" -Status " Analyzing data governance setup"
     
     $governanceRecommendations = @(
-        " 📊 Establish data stewardship roles and responsibilities" ,
-        " 📊 Define data classification and sensitivity policies" ,
-        " 📊 Implement automated scanning schedules for data sources" ,
-        " 📊 Set up lineage tracking for critical data pipelines" ,
-        " 📊 Configure glossary terms for business context" ,
-        " 📊 Establish data quality rules and monitoring" ,
-        " 📊 Create custom classifications for organization-specific data types" ,
-        " 📊 Implement access policies based on data sensitivity"
+        "  Establish data stewardship roles and responsibilities" ,
+        "  Define data classification and sensitivity policies" ,
+        "  Implement automated scanning schedules for data sources" ,
+        "  Set up lineage tracking for critical data pipelines" ,
+        "  Configure glossary terms for business context" ,
+        "  Establish data quality rules and monitoring" ,
+        "  Create custom classifications for organization-specific data types" ,
+        "  Implement access policies based on data sensitivity"
     )
 
     # Security assessment
@@ -544,41 +552,41 @@ try {
         # Check managed VNet
         if ($WEEnableManagedVNet) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Managed virtual network enabled"
+            $securityFindings = $securityFindings + " [OK] Managed virtual network enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Managed VNet not enabled - consider for enhanced security"
+            $securityFindings = $securityFindings + " [WARN]️  Managed VNet not enabled - consider for enhanced security"
         }
         
         # Check public network access
         if ($WENetworkRules.Count -gt 0) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Network access restrictions configured"
+            $securityFindings = $securityFindings + " [OK] Network access restrictions configured"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Public network access enabled - consider restricting"
+            $securityFindings = $securityFindings + " [WARN]️  Public network access enabled - consider restricting"
         }
         
         # Check monitoring
         if ($WEEnableMonitoring) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Monitoring and logging enabled"
+            $securityFindings = $securityFindings + " [OK] Monitoring and logging enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Monitoring not configured"
+            $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
         }
         
         # Check data discovery
         if ($WEEnableDataDiscovery) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Automated data discovery enabled"
+            $securityFindings = $securityFindings + " [OK] Automated data discovery enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Automated data discovery not enabled"
+            $securityFindings = $securityFindings + " [WARN]️  Automated data discovery not enabled"
         }
         
         # Check lineage tracking
         if ($WEEnableLineageTracking) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Data lineage tracking enabled"
+            $securityFindings = $securityFindings + " [OK] Data lineage tracking enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Data lineage tracking not enabled"
+            $securityFindings = $securityFindings + " [WARN]️  Data lineage tracking not enabled"
         }
     }
 
@@ -624,7 +632,7 @@ try {
     Write-WELog "" " INFO"
     
     if ($WEAction.ToLower() -eq " create" ) {
-        Write-WELog " 📊 Purview Account Details:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Purview Account Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Account Name: $WEPurviewAccountName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White
         Write-WELog "   • Location: $WELocation" " INFO" -ForegroundColor White
@@ -634,13 +642,13 @@ try {
         Write-WELog "   • Status: $($accountStatus.ProvisioningState)" " INFO" -ForegroundColor Green
         
         Write-WELog "" " INFO"
-        Write-WELog " 🔒 Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+        Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
         foreach ($finding in $securityFindings) {
             Write-WELog "   $finding" " INFO" -ForegroundColor White
         }
         
         Write-WELog "" " INFO"
-        Write-WELog " 💰 Cost Components:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Cost Components:" " INFO" -ForegroundColor Cyan
         foreach ($cost in $costComponents.GetEnumerator()) {
             Write-WELog "   • $($cost.Key): $($cost.Value)" " INFO" -ForegroundColor White
         }
@@ -668,13 +676,13 @@ try {
     Write-WELog "   • Train data stewards on Purview Studio usage" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure Purview data governance operation '$WEAction' completed successfully!" -Level SUCCESS
+    Write-Log "  Azure Purview data governance operation '$WEAction' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Purview data governance operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Purview data governance operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Purview service availability in your region" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription quotas and resource limits" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure proper permissions for data governance operations" " INFO" -ForegroundColor White
@@ -692,4 +700,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

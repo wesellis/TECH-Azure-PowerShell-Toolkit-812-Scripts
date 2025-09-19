@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Sets up automated Azure cost reporting with email notifications.
 
@@ -81,6 +87,8 @@ param(
     [Parameter(Mandatory = $false)]
     [PSCredential]$EmailCredential
 )
+
+#region Functions
 
 # Script configuration
 $ErrorActionPreference = "Stop"
@@ -454,11 +462,11 @@ try {
     
     Write-Log "Automated cost reporting setup completed successfully" -Level "SUCCESS"
     
-    Write-Information "`n✅ SETUP COMPLETE!"
-    Write-Information "📧 Test report sent to: $($Recipients -join ', ')"
+    Write-Information "`n SETUP COMPLETE!"
+    Write-Information "� Test report sent to: $($Recipients -join ', ')"
     Write-Information "⏰ Scheduled task created: $taskName"
-    Write-Information "📊 Report format: $Format"
-    Write-Information "💰 Total cost in test period: $($totalCost.ToString('C'))"
+    Write-Information " Report format: $Format"
+    Write-Information " Total cost in test period: $($totalCost.ToString('C'))"
     Write-Information "`nNext steps:"
     Write-Information "• Check your email for the test report"
     Write-Information "• Verify the scheduled task in Task Scheduler"
@@ -470,3 +478,6 @@ catch {
     Write-Error $_.Exception.Message
     exit 1
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Check Languagesupport
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +55,8 @@ param(
     $sampleFolder = $WEENV:SAMPLE_FOLDER,
     $mainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME
 )
+
+#region Functions
 
 Write-WELog " Checking languages supported by sample: $sampleFolder" " INFO"
 
@@ -96,3 +103,6 @@ Write-WELog " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

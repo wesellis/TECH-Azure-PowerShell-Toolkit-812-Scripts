@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Install Winget Packages
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -68,6 +73,8 @@ param(
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $WEPackages,
     [Parameter(Mandatory = $false)] [bool] $WEIgnorePackageInstallFailures = $false
 )
+
+#region Functions
 
 $WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -209,4 +216,5 @@ if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

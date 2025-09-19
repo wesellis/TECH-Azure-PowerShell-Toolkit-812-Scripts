@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Clone Update Repo
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -84,6 +89,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
+
+#region Functions
 
 enum SourceControl {
     git = 0  # default
@@ -655,6 +662,8 @@ function WE-RunScriptSyncRepo(
     $repository_MSIClientId
 ) {
 
+#region Functions
+
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName " PSCustomObject"
     Set-StrictMode -Version Latest
@@ -776,22 +785,25 @@ if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-azure-managed-identity-utils.psm1')
     Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-retry-utils.psm1')
 
-    RunScriptSyncRepo `
-        -repoUrl $repoUrl `
-        -repository_TargetDirectory $repository_TargetDirectory `
-        -repository_SourceControl  $sourceControl `
-        -repository_cloneIfNotExists $repository_cloneIfNotExists `
-        -repoName $repoName `
-        -commitId $commitId `
-        -branchName $branchName `
-        -repository_optionalCloningParameters $repository_optionalCloningParameters `
-        -repository_optionalFetchParameters $repository_optionalFetchParameters `
-        -enableGitCommitGraph $enableGitCommitGraph `
-        -sparseCheckoutFolders $sparseCheckoutFolders `
-        -repository_MSIClientId $repository_MSIClientId `
+    $params = @{
+        repository_TargetDirectory = $repository_TargetDirectory
+        repository_optionalCloningParameters = $repository_optionalCloningParameters
+        repository_cloneIfNotExists = $repository_cloneIfNotExists
+        enableGitCommitGraph = $enableGitCommitGraph
+        sparseCheckoutFolders = $sparseCheckoutFolders
+        commitId = $commitId
+        repository_optionalFetchParameters = $repository_optionalFetchParameters
+        repository_MSIClientId = $repository_MSIClientId
+        branchName = $branchName
+        repository_SourceControl = $sourceControl
+        repoName = $repoName
+        repoUrl = $repoUrl
+    }
+    RunScriptSyncRepo @params
 
 }
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

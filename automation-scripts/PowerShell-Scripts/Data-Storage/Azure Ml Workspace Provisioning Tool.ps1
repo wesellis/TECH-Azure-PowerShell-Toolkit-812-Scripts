@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Ml Workspace Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -106,6 +112,8 @@ param(
     [string]$WESku = " Basic"
 )
 
+#region Functions
+
 Write-WELog " Provisioning ML Workspace: $WEWorkspaceName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -119,14 +127,15 @@ if ($WEStorageAccountName) {
     $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName -ErrorAction SilentlyContinue
     if (-not $WEStorageAccount) {
         Write-WELog " Creating Storage Account: $WEStorageAccountName" " INFO"
-        $WEStorageAccount = New-AzStorageAccount -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -Name $WEStorageAccountName `
-            -Location $WELocation `
-            -SkuName " Standard_LRS" `
-            -Kind " StorageV2"
-    }
-    Write-WELog " Storage Account: $($WEStorageAccount.StorageAccountName)" " INFO"
+        $params = @{
+            ResourceGroupName = $WEResourceGroupName
+            SkuName = " Standard_LRS"
+            Location = $WELocation
+            Kind = " StorageV2" } Write-WELog " Storage Account: $($WEStorageAccount.StorageAccountName)" " INFO"
+            ErrorAction = "Stop"
+            Name = $WEStorageAccountName
+        }
+        $WEStorageAccount @params
 }
 
 
@@ -134,13 +143,14 @@ if ($WEKeyVaultName) {
     $WEKeyVault = Get-AzKeyVault -ResourceGroupName $WEResourceGroupName -VaultName $WEKeyVaultName -ErrorAction SilentlyContinue
     if (-not $WEKeyVault) {
         Write-WELog " Creating Key Vault: $WEKeyVaultName" " INFO"
-        $WEKeyVault = New-AzKeyVault -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -VaultName $WEKeyVaultName `
-            -Location $WELocation `
-            -Sku " Standard"
-    }
-    Write-WELog " Key Vault: $($WEKeyVault.VaultName)" " INFO"
+        $params = @{
+            Sku = " Standard" } Write-WELog " Key Vault: $($WEKeyVault.VaultName)" " INFO"
+            ErrorAction = "Stop"
+            VaultName = $WEKeyVaultName
+            ResourceGroupName = $WEResourceGroupName
+            Location = $WELocation
+        }
+        $WEKeyVault @params
 }
 
 
@@ -148,13 +158,14 @@ if ($WEApplicationInsightsName) {
     $WEAppInsights = Get-AzApplicationInsights -ResourceGroupName $WEResourceGroupName -Name $WEApplicationInsightsName -ErrorAction SilentlyContinue
     if (-not $WEAppInsights) {
         Write-WELog " Creating Application Insights: $WEApplicationInsightsName" " INFO"
-        $WEAppInsights = New-AzApplicationInsights -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -Name $WEApplicationInsightsName `
-            -Location $WELocation `
-            -Kind " web"
-    }
-    Write-WELog " Application Insights: $($WEAppInsights.Name)" " INFO"
+        $params = @{
+            ErrorAction = "Stop"
+            Kind = " web" } Write-WELog " Application Insights: $($WEAppInsights.Name)" " INFO"
+            ResourceGroupName = $WEResourceGroupName
+            Name = $WEApplicationInsightsName
+            Location = $WELocation
+        }
+        $WEAppInsights @params
 }
 
 
@@ -162,14 +173,15 @@ if ($WEContainerRegistryName) {
     $WEContainerRegistry = Get-AzContainerRegistry -ResourceGroupName $WEResourceGroupName -Name $WEContainerRegistryName -ErrorAction SilentlyContinue
     if (-not $WEContainerRegistry) {
         Write-WELog " Creating Container Registry: $WEContainerRegistryName" " INFO"
-        $WEContainerRegistry = New-AzContainerRegistry -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -Name $WEContainerRegistryName `
-            -Location $WELocation `
-            -Sku " Basic" `
-            -EnableAdminUser
-    }
-    Write-WELog " Container Registry: $($WEContainerRegistry.Name)" " INFO"
+        $params = @{
+            ResourceGroupName = $WEResourceGroupName
+            Sku = " Basic"
+            Location = $WELocation
+            ErrorAction = "Stop"
+            EnableAdminUser = "} Write-WELog " Container Registry: $($WEContainerRegistry.Name)" " INFO"
+            Name = $WEContainerRegistryName
+        }
+        $WEContainerRegistry @params
 }
 
 
@@ -235,3 +247,6 @@ Write-WELog " `nML Workspace provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

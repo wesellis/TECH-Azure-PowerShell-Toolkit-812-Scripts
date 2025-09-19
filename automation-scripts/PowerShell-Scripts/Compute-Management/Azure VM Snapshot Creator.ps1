@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Snapshot Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -61,6 +67,8 @@ param(
     [string]$WELocation
 )
 
+#region Functions
+
 New-AzSnapshot -ResourceGroupName $WEResourceGroupName -SnapshotName $WESnapshotName -SourceUri (Get-AzDisk -ResourceGroupName $WEResourceGroupName -DiskName $WEDiskName).Id -Location $WELocation
 
 
@@ -70,3 +78,6 @@ New-AzSnapshot -ResourceGroupName $WEResourceGroupName -SnapshotName $WESnapshot
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

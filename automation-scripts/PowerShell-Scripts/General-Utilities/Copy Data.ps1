@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Copy Data
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -42,13 +48,17 @@ $ctx = New-AzStorageContext -StorageAccountName " ${Env:storageAccountName}" -St
 New-AzStorageContainer -Context $ctx -Name " ${env:containerName}" -Verbose
 
 
-Set-AzStorageBlobContent -Context $ctx `
-                         -Container " ${Env:containerName}" `
-                         -Blob " ${env:csvFileName}" `
-                         -StandardBlobTier 'Hot' `
-                         -File " ${env:csvFileName}"
+$params = @{
+    File = " ${env:csvFileName}"
+    Context = $ctx
+    Blob = " ${env:csvFileName}"
+    Container = " ${Env:containerName}"
+    StandardBlobTier = "Hot"
+}
+Set-AzStorageBlobContent @params
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Container Apps Provisioning Tool
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Container Apps Provisioning Tool
 # Professional Azure automation script for modern serverless containers
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise environments
 
 param(
@@ -44,8 +61,10 @@ param(
     [string]$LogAnalyticsWorkspace
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure Container Apps Provisioning Tool" -Version "2.0" -Description "Deploy modern serverless containers with enterprise features"
@@ -63,7 +82,7 @@ try {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
     
-    Write-Log "✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     # Create Container Apps Environment
     Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName "Container Environment" -Status "Creating Container Apps Environment"
@@ -80,20 +99,16 @@ try {
     
     Invoke-AzureOperation -Operation {
         # Note: Using Azure CLI as Az.ContainerApps module is still in preview
-        $envJson = az containerapp env create `
-            --name $EnvironmentName `
-            --resource-group $ResourceGroupName `
-            --location $Location `
-            --output json 2>$null
-        
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to create Container Apps Environment"
+        $params = @{
+            Level = "SUCCESS"
+            name = $EnvironmentName
+            location = $Location
+            ne = "0) { throw "Failed to create Container Apps Environment" }  return ($envJson | ConvertFrom-Json) }"
+            output = "json 2>$null  if ($LASTEXITCODE"
+            group = $ResourceGroupName
+            OperationName = "Create Container Apps Environment" | Out-Null  Write-Log "[OK] Container Apps Environment created: $EnvironmentName"
         }
-        
-        return ($envJson | ConvertFrom-Json)
-    } -OperationName "Create Container Apps Environment" | Out-Null
-    
-    Write-Log "✓ Container Apps Environment created: $EnvironmentName" -Level SUCCESS
+        $envJson @params
 
     # Prepare environment variables
     Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName "Configuration" -Status "Preparing container configuration"
@@ -145,7 +160,7 @@ try {
     Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName "Advanced Configuration" -Status "Configuring ingress and scaling"
     
     if ($EnableExternalIngress) {
-        Write-Log "✓ External ingress enabled for $ContainerAppName" -Level SUCCESS
+        Write-Log "[OK] External ingress enabled for $ContainerAppName" -Level SUCCESS
         Write-Log "🌐 Application URL: https://$($containerApp.properties.configuration.ingress.fqdn)" -Level SUCCESS
     }
 
@@ -181,7 +196,7 @@ try {
     Write-Information "                              CONTAINER APP DEPLOYMENT SUCCESSFUL"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "📦 Container App Details:"
+    Write-Information " Container App Details:"
     Write-Information "   • Name: $ContainerAppName"
     Write-Information "   • Resource Group: $ResourceGroupName"
     Write-Information "   • Environment: $EnvironmentName"
@@ -193,25 +208,25 @@ try {
     
     if ($EnableExternalIngress -and $finalApp.properties.configuration.ingress.fqdn) {
         Write-Information ""
-        Write-Information "🌐 Access Information:"
+        Write-Information "� Access Information:"
         Write-Information "   • External URL: https://$($finalApp.properties.configuration.ingress.fqdn)"
         Write-Information "   • Port: $Port"
     }
     
     Write-Information ""
-    Write-Information "💡 Management Commands:"
+    Write-Information "� Management Commands:"
     Write-Information "   • View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName"
     Write-Information "   • Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y"
     Write-Information "   • Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE"
     Write-Information ""
 
-    Write-Log "✅ Container App '$ContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
+    Write-Log " Container App '$ContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Azure CLI is installed: az --version"
     Write-Information "   • Check Container Apps extension: az extension add --name containerapp"
     Write-Information "   • Validate image accessibility: docker pull $ContainerImage"
@@ -223,3 +238,6 @@ try {
 
 Write-Progress -Activity "Container App Deployment" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.DigitalTwins
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Digital Twins Enterprise Management Tool
 .DESCRIPTION
@@ -88,15 +91,17 @@ param(
     [switch]$AssignRoles
 )
 
+#region Functions
+
 # Import required modules
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.DigitalTwins -Force -ErrorAction Stop
     Import-Module Az.EventHub -Force -ErrorAction Stop
-    Write-Information "✅ Successfully imported required Azure modules"
+    Write-Information " Successfully imported required Azure modules"
 } catch {
-    Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error " Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -600,3 +605,5 @@ try {
     Write-EnhancedLog "Tool execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+#endregion

@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VNet Subnet Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Adds a new subnet to an existing Azure Virtual Network
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,14 +30,18 @@ param (
     [string]$AddressPrefix
 )
 
+#region Functions
+
 Write-Information "Adding subnet to VNet: $VNetName"
 
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
 
-Add-AzVirtualNetworkSubnetConfig `
-    -Name $SubnetName `
-    -VirtualNetwork $VNet `
-    -AddressPrefix $AddressPrefix
+$params = @{
+    AddressPrefix = $AddressPrefix
+    VirtualNetwork = $VNet
+    Name = $SubnetName
+}
+Add-AzVirtualNetworkSubnetConfig @params
 
 Set-AzVirtualNetwork -VirtualNetwork $VNet
 
@@ -36,3 +49,6 @@ Write-Information "Subnet added successfully:"
 Write-Information "  Subnet: $SubnetName"
 Write-Information "  Address: $AddressPrefix"
 Write-Information "  VNet: $VNetName"
+
+
+#endregion

@@ -1,5 +1,8 @@
-﻿#Requires -Module Pester
+#Requires -Module Pester
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Tests for Az.KeyVault.Enterprise module
 .DESCRIPTION
@@ -315,3 +318,4 @@ Describe "Helper Function Tests" {
         }
     }
 }
+#endregion

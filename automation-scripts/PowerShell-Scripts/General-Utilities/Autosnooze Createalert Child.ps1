@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Autosnooze Createalert Child
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -69,11 +75,12 @@ try
     $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
 
     " Logging in to Azure..."
-    Add-AzureRmAccount `
-        -ServicePrincipal `
-        -TenantId $servicePrincipalConnection.TenantId `
-        -ApplicationId $servicePrincipalConnection.ApplicationId `
-        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+    $params = @{
+        ApplicationId = $servicePrincipalConnection.ApplicationId
+        TenantId = $servicePrincipalConnection.TenantId
+        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+    }
+    Add-AzureRmAccount @params
 }
 catch 
 {
@@ -125,17 +132,20 @@ try
                             if($WEAlert.Name.ToLower().Contains($($WEVMObject.Name.ToLower().Trim())))
                             {
                                 Write-Output " Previous alert ($($WEAlert.Name)) found and disabling now..." 
-                                 Add-AzureRmMetricAlertRule  -Name  $WEAlert.Name `
-                                        -Location  $WEAlert.Location `
-                                        -ResourceGroup $WEResourceGroupName `
-                                        -TargetResourceId $resourceId `
-                                        -MetricName $metricName `
-                                        -Operator  $condition `
-                                        -Threshold $threshold `
-                                        -WindowSize  $timeWindow `
-                                        -TimeAggregationOperator $timeAggregationOperator `
-                                        -Actions $actionWebhook `
-                                        -Description $description -DisableRule 
+                                 $params = @{
+                                     TargetResourceId = $resourceId
+                                     Description = $description
+                                     Location = $WEAlert.Location
+                                     Threshold = $threshold
+                                     Actions = $actionWebhook
+                                     ResourceGroup = $WEResourceGroupName
+                                     WindowSize = $timeWindow
+                                     Operator = $condition
+                                     MetricName = $metricName
+                                     TimeAggregationOperator = $timeAggregationOperator
+                                     Name = $WEAlert.Name
+                                 }
+                                 Add-AzureRmMetricAlertRule @params
 
                                         Write-Output " Alert ($($WEAlert.Name)) Disabled for VM $($WEVMObject.Name)"
                                     
@@ -190,42 +200,24 @@ try
                                  
                                  Write-Output " Adding a new alert to the VM..."
                                  
-                                 Add-AzureRmMetricAlertRule  -Name  $WENewAlertName `
-                                        -Location  $location `
-                                        -ResourceGroup $WEResourceGroupName `
-                                        -TargetResourceId $resourceId `
-                                        -MetricName $metricName `
-                                        -Operator  $condition `
-                                        -Threshold $threshold `
-                                        -WindowSize  $timeWindow `
-                                        -TimeAggregationOperator $timeAggregationOperator `
-                                        -Actions $actionWebhook `
-                                        -Description $description               
-                               
-                                           
-                               Write-Output  " Alert Created for VM $($WEVMObject.Name.Trim())"    
-                            }
-                            catch
-                            {
-                             Write-Output " Error Occurred"   
-                             Write-Output $_.Exception
-                            }
-                    
-                         }
-                         else
-                         {
-                            Write-Output " $($WEVM.Name) is De-allocated"
-                         }
-    }
-  }
-  catch
-  {
-    Write-Output " Error Occurred"   
-    Write-Output $_.Exception
-  }  
+                                 $params = @{
+                                     TargetResourceId = $resourceId
+                                     Description = $description   Write-Output  " Alert Created for VM $($WEVMObject.Name.Trim())" } catch { Write-Output " Error Occurred" Write-Output $_.Exception }  } else { Write-Output " $($WEVM.Name) is De-allocated" } } } catch { Write-Output " Error Occurred" Write-Output $_.Exception }
+                                     Location = $location
+                                     Threshold = $threshold
+                                     Actions = $actionWebhook
+                                     ResourceGroup = $WEResourceGroupName
+                                     WindowSize = $timeWindow
+                                     Operator = $condition
+                                     MetricName = $metricName
+                                     TimeAggregationOperator = $timeAggregationOperator
+                                     Name = $WENewAlertName
+                                 }
+                                 Add-AzureRmMetricAlertRule @params
 
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

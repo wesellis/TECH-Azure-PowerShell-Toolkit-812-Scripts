@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Alert Rule Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Monitor alert rules for proactive monitoring
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -30,59 +39,65 @@ param (
     [string]$NotificationEmail
 )
 
+#region Functions
+
 Write-Information "Creating Alert Rule: $AlertRuleName"
 
 # Create action group if email is provided
 if ($NotificationEmail) {
     $ActionGroupName = "$AlertRuleName-actiongroup"
     
-    $EmailReceiver = New-AzActionGroupReceiver -ErrorAction Stop `
-        -Name "EmailAlert" `
-        -EmailReceiver `
-        -EmailAddress $NotificationEmail
-    
-    $ActionGroup = Set-AzActionGroup -ErrorAction Stop `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $ActionGroupName `
-        -ShortName "AlertAG" `
-        -Receiver $EmailReceiver
-    
-    Write-Information "Action Group created: $ActionGroupName"
+    $params = @{
+        ResourceGroupName = $ResourceGroupName
+        Name = $ActionGroupName
+        Receiver = $EmailReceiver  Write-Information "Action Group created: $ActionGroupName
+        ShortName = "AlertAG"
+        ErrorAction = "Stop"
+        EmailAddress = $NotificationEmail  $ActionGroup = Set-AzActionGroup
+    }
+    $EmailReceiver @params
 }
 
 # Create alert rule condition
-$Condition = New-AzMetricAlertRuleV2Criteria -ErrorAction Stop `
-    -MetricName $MetricName `
-    -TimeAggregation "Average" `
-    -Operator $Operator `
-    -Threshold $Threshold
+$params = @{
+    Threshold = $Threshold
+    ErrorAction = "Stop"
+    MetricName = $MetricName
+    TimeAggregation = "Average"
+    Operator = $Operator
+}
+$Condition @params
 
 # Create alert rule
-$AlertRule = Add-AzMetricAlertRuleV2 `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $AlertRuleName `
-    -TargetResourceId $TargetResourceId `
-    -Condition $Condition `
-    -Severity 2 `
-    -WindowSize "PT5M" `
-    -Frequency "PT1M"
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $AlertRuleName
+    Severity = "2"
+    Frequency = "PT1M"
+    WindowSize = "PT5M"
+    TargetResourceId = $TargetResourceId
+    Condition = $Condition
+}
+$AlertRule @params
 
 Write-Information "Alert Rule ID: $($AlertRule.Id)"
 
 if ($ActionGroup) {
     # Associate action group with alert rule
-    Add-AzMetricAlertRuleV2 `
-        -ResourceGroupName $ResourceGroupName `
-        -Name $AlertRuleName `
-        -TargetResourceId $TargetResourceId `
-        -Condition $Condition `
-        -ActionGroupId $ActionGroup.Id `
-        -Severity 2 `
-        -WindowSize "PT5M" `
-        -Frequency "PT1M"
+    $params = @{
+        ResourceGroupName = $ResourceGroupName
+        Name = $AlertRuleName
+        Severity = "2"
+        Condition = $Condition
+        WindowSize = "PT5M"
+        TargetResourceId = $TargetResourceId
+        ActionGroupId = $ActionGroup.Id
+        Frequency = "PT1M"
+    }
+    Add-AzMetricAlertRuleV2 @params
 }
 
-Write-Information "✅ Alert Rule created successfully:"
+Write-Information " Alert Rule created successfully:"
 Write-Information "  Name: $AlertRuleName"
 Write-Information "  Metric: $MetricName"
 Write-Information "  Threshold: $Operator $Threshold"
@@ -96,3 +111,6 @@ Write-Information "• Real-time monitoring"
 Write-Information "• Configurable thresholds"
 Write-Information "• Multiple notification channels"
 Write-Information "• Auto-resolution"
+
+
+#endregion

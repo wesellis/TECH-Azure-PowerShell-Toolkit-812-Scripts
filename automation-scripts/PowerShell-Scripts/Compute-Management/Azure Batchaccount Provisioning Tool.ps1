@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Batchaccount Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -91,6 +97,8 @@ param(
     [string]$WEPoolAllocationMode = " BatchService"
 )
 
+#region Functions
+
 Write-WELog " Provisioning Batch Account: $WEAccountName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -105,31 +113,35 @@ if ($WEStorageAccountName) {
     
     if (-not $WEStorageAccount) {
         Write-WELog " Creating storage account for Batch..." " INFO"
-        $WEStorageAccount = New-AzStorageAccount -ErrorAction Stop `
-            -ResourceGroupName $WEResourceGroupName `
-            -Name $WEStorageAccountName `
-            -Location $WELocation `
-            -SkuName " Standard_LRS" `
-            -Kind " StorageV2"
-        
-        Write-WELog " Storage account created: $($WEStorageAccount.StorageAccountName)" " INFO"
-    } else {
-        Write-WELog " Using existing storage account: $($WEStorageAccount.StorageAccountName)" " INFO"
-    }
+        $params = @{
+            ResourceGroupName = $WEResourceGroupName
+            SkuName = " Standard_LRS"
+            Location = $WELocation
+            Kind = " StorageV2"  Write-WELog " Storage account created: $($WEStorageAccount.StorageAccountName)" " INFO" } else { Write-WELog " Using existing storage account: $($WEStorageAccount.StorageAccountName)" " INFO" }"
+            ErrorAction = "Stop"
+            Name = $WEStorageAccountName
+        }
+        $WEStorageAccount @params
 }
 
 
 if ($WEStorageAccountName) {
-   ;  $WEBatchAccount = New-AzBatchAccount -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEAccountName `
-        -Location $WELocation `
-        -AutoStorageAccountId $WEStorageAccount.Id
+   $params = @{
+       ErrorAction = "Stop"
+       AutoStorageAccountId = $WEStorageAccount.Id
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEAccountName
+       Location = $WELocation
+   }
+   ; @params
 } else {
-   ;  $WEBatchAccount = New-AzBatchAccount -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEAccountName `
-        -Location $WELocation
+   $params = @{
+       ErrorAction = "Stop"
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEAccountName
+       Location = $WELocation
+   }
+   ; @params
 }
 
 Write-WELog " `nBatch Account $WEAccountName provisioned successfully" " INFO"
@@ -155,3 +167,6 @@ Write-WELog " `nBatch Account provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

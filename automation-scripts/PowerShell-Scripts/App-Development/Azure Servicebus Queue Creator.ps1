@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Servicebus Queue Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,13 +99,18 @@ param(
     [int]$WEMaxSizeInMegabytes = 1024
 )
 
+#region Functions
+
 Write-WELog " Creating Service Bus queue: $WEQueueName" " INFO"
 ; 
-$WEQueue = New-AzServiceBusQueue -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -NamespaceName $WENamespaceName `
-    -Name $WEQueueName `
-    -MaxSizeInMegabytes $WEMaxSizeInMegabytes
+$params = @{
+    ErrorAction = "Stop"
+    MaxSizeInMegabytes = $WEMaxSizeInMegabytes
+    ResourceGroupName = $WEResourceGroupName
+    NamespaceName = $WENamespaceName
+    Name = $WEQueueName
+}
+$WEQueue @params
 
 Write-WELog " Queue created successfully:" " INFO"
 Write-WELog "  Name: $($WEQueue.Name)" " INFO"
@@ -114,3 +125,6 @@ Write-WELog "  Namespace: $WENamespaceName" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

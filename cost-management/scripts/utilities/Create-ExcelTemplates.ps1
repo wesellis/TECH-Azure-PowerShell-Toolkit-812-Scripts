@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Creates Excel dashboard templates for Azure cost management analysis.
 
@@ -42,6 +47,8 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$OverwriteExisting
 )
+
+#region Functions
 
 # Import required modules
 try {
@@ -178,3 +185,6 @@ catch {
     Write-Error "Template generation failed: $($_.Exception.Message)"
     exit 1
 }
+
+
+#endregion

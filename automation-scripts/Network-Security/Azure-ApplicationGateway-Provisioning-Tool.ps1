@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Application Gateway Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Application Gateway with load balancing and SSL termination
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$GatewayName,
@@ -17,6 +26,8 @@ param (
     [string]$Tier = "Standard_v2",
     [int]$Capacity = 2
 )
+
+#region Functions
 
 Write-Information "Provisioning Application Gateway: $GatewayName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -34,79 +45,108 @@ Write-Information "Using Subnet: $SubnetName"
 
 # Create public IP for the Application Gateway
 $PublicIpName = "$GatewayName-pip"
-$PublicIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Location $Location `
-    -Name $PublicIpName `
-    -AllocationMethod Static `
-    -Sku Standard
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Sku = "Standard"
+    Location = $Location
+    AllocationMethod = "Static"
+    ErrorAction = "Stop"
+    Name = $PublicIpName
+}
+$PublicIp @params
 
 Write-Information "Public IP created: $PublicIpName"
 
 # Create Application Gateway IP configuration
-$GatewayIpConfig = New-AzApplicationGatewayIPConfiguration -ErrorAction Stop `
-    -Name "gatewayIP01" `
-    -Subnet $Subnet
+$params = @{
+    ErrorAction = "Stop"
+    Subnet = $Subnet
+    Name = "gatewayIP01"
+}
+$GatewayIpConfig @params
 
 # Create frontend IP configuration
-$FrontendIpConfig = New-AzApplicationGatewayFrontendIPConfig -ErrorAction Stop `
-    -Name "frontendIP01" `
-    -PublicIPAddress $PublicIp
+$params = @{
+    ErrorAction = "Stop"
+    PublicIPAddress = $PublicIp
+    Name = "frontendIP01"
+}
+$FrontendIpConfig @params
 
 # Create frontend port
-$FrontendPort = New-AzApplicationGatewayFrontendPort -ErrorAction Stop `
-    -Name "frontendPort01" `
-    -Port 80
+$params = @{
+    ErrorAction = "Stop"
+    Port = "80"
+    Name = "frontendPort01"
+}
+$FrontendPort @params
 
 # Create backend address pool
-$BackendPool = New-AzApplicationGatewayBackendAddressPool -ErrorAction Stop `
-    -Name "backendPool01"
+$BackendPool -Name "backendPool01" -ErrorAction "Stop"
 
 # Create backend HTTP settings
-$BackendHttpSettings = New-AzApplicationGatewayBackendHttpSetting -ErrorAction Stop `
-    -Name "backendHttpSettings01" `
-    -Port 80 `
-    -Protocol Http `
-    -CookieBasedAffinity Disabled
+$params = @{
+    ErrorAction = "Stop"
+    Port = "80"
+    CookieBasedAffinity = "Disabled"
+    Name = "backendHttpSettings01"
+    Protocol = "Http"
+}
+$BackendHttpSettings @params
 
 # Create HTTP listener
-$HttpListener = New-AzApplicationGatewayHttpListener -ErrorAction Stop `
-    -Name "httpListener01" `
-    -Protocol Http `
-    -FrontendIPConfiguration $FrontendIpConfig `
-    -FrontendPort $FrontendPort
+$params = @{
+    FrontendIPConfiguration = $FrontendIpConfig
+    ErrorAction = "Stop"
+    FrontendPort = $FrontendPort
+    Name = "httpListener01"
+    Protocol = "Http"
+}
+$HttpListener @params
 
 # Create request routing rule
-$RoutingRule = New-AzApplicationGatewayRequestRoutingRule -ErrorAction Stop `
-    -Name "routingRule01" `
-    -RuleType Basic `
-    -HttpListener $HttpListener `
-    -BackendAddressPool $BackendPool `
-    -BackendHttpSettings $BackendHttpSettings
+$params = @{
+    RuleType = "Basic"
+    Name = "routingRule01"
+    HttpListener = $HttpListener
+    BackendAddressPool = $BackendPool
+    ErrorAction = "Stop"
+    BackendHttpSettings = $BackendHttpSettings
+}
+$RoutingRule @params
 
 # Create SKU
-$Sku = New-AzApplicationGatewaySku -ErrorAction Stop `
-    -Name $SkuName `
-    -Tier $Tier `
-    -Capacity $Capacity
+$params = @{
+    Tier = $Tier
+    ErrorAction = "Stop"
+    Capacity = $Capacity
+    Name = $SkuName
+}
+$Sku @params
 
 # Create the Application Gateway
 Write-Information "`nCreating Application Gateway (this may take 10-15 minutes)..."
-$AppGateway = New-AzApplicationGateway -ErrorAction Stop `
-    -Name $GatewayName `
-    -ResourceGroupName $ResourceGroupName `
-    -Location $Location `
-    -GatewayIpConfiguration $GatewayIpConfig `
-    -FrontendIpConfiguration $FrontendIpConfig `
-    -FrontendPort $FrontendPort `
-    -BackendAddressPool $BackendPool `
-    -BackendHttpSetting $BackendHttpSettings `
-    -HttpListener $HttpListener `
-    -RequestRoutingRule $RoutingRule `
-    -Sku $Sku
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    GatewayIpConfiguration = $GatewayIpConfig
+    FrontendPort = $FrontendPort
+    Location = $Location
+    BackendHttpSetting = $BackendHttpSettings
+    HttpListener = $HttpListener
+    RequestRoutingRule = $RoutingRule
+    BackendAddressPool = $BackendPool
+    ErrorAction = "Stop"
+    FrontendIpConfiguration = $FrontendIpConfig
+    Name = $GatewayName
+}
+$AppGateway @params
 
 Write-Information "`nApplication Gateway $GatewayName provisioned successfully"
 Write-Information "Public IP: $($PublicIp.IpAddress)"
 Write-Information "Provisioning State: $($AppGateway.ProvisioningState)"
 
 Write-Information "`nApplication Gateway provisioning completed at $(Get-Date)"
+
+
+#endregion

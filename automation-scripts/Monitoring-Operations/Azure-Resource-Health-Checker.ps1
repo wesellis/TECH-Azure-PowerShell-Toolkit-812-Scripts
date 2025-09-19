@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Resource Health Checker
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Checks health status of Azure resources in a Resource Group
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName
 )
+
+#region Functions
 
 Write-Information -Object "Checking health status for resources in: $ResourceGroupName"
 
@@ -57,11 +68,14 @@ Write-Information -Object ("=" * 60)
 
 foreach ($Health in $HealthStatus) {
     $StatusColor = switch ($Health.Status) {
-        { $_ -in @("VM running", "Running", "Succeeded", "Active") } { "✅" }
+        { $_ -in @("VM running", "Running", "Succeeded", "Active") } { "" }
         { $_ -in @("VM stopped", "Stopped") } { "⏹️" }
-        "Error" { "❌" }
-        default { "⚠️" }
+        "Error" { "" }
+        default { "[WARN]️" }
     }
     
     Write-Information -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
 }
+
+
+#endregion

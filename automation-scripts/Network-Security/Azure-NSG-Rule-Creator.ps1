@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Network Security Group Rule Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Adds a new security rule to an Azure Network Security Group
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -33,21 +42,28 @@ param (
     [int]$Priority
 )
 
+#region Functions
+
 Write-Information "Adding security rule to NSG: $NsgName"
 
 $Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
 
-Add-AzNetworkSecurityRuleConfig `
-    -NetworkSecurityGroup $Nsg `
-    -Name $RuleName `
-    -Protocol $Protocol `
-    -SourcePortRange $SourcePortRange `
-    -DestinationPortRange $DestinationPortRange `
-    -SourceAddressPrefix "*" `
-    -DestinationAddressPrefix "*" `
-    -Access $Access `
-    -Priority $Priority `
-    -Direction Inbound
+$params = @{
+    DestinationAddressPrefix = "*"
+    Direction = "Inbound"
+    Protocol = $Protocol
+    Name = $RuleName
+    Priority = $Priority
+    DestinationPortRange = $DestinationPortRange
+    SourcePortRange = $SourcePortRange
+    Access = $Access
+    NetworkSecurityGroup = $Nsg
+    SourceAddressPrefix = "*"
+}
+Add-AzNetworkSecurityRuleConfig @params
 
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
 Write-Information "Security rule '$RuleName' added successfully to NSG: $NsgName"
+
+
+#endregion

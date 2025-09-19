@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Postconfiguration
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -85,6 +91,8 @@ param(
     [string] [Parameter(Mandatory=$true)] $WESessionHostsOUDistinguishedName
 )
 
+#region Functions
+
 $WEErrorActionPreference = 'Stop'
 $WESecureStringPwd = $WEServicePrincipalSecret | ConvertTo-SecureString -AsPlainText -Force
 $pscredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $WEServicePrincipalAppId, $WESecureStringPwd
@@ -107,12 +115,14 @@ if(Get-Command -Name 'Join-AzStorageAccount' -Module 'AzFilesHybrid' -ErrorActio
         # the target OU. You can choose to create the identity that represents the storage account as either a 
         # Service Logon Account or Computer Account (default parameter value), depending on your AD permissions 
         # and preference. Run Get-Help -ErrorAction Stop Join-AzStorageAccountForAuth for more details on this cmdlet.
-        Join-AzStorageAccount `
-            -ResourceGroupName $WEResourceGroupName `
-            -StorageAccountName $WEStorageAccountName `
-            -SamAccountName $WESamAccountName `
-            -DomainAccountType $WEDomainAccountType `
-            -OrganizationalUnitDistinguishedName $WEStorageAccountOUDistinguishedName
+        $params = @{
+            SamAccountName = $WESamAccountName
+            OrganizationalUnitDistinguishedName = $WEStorageAccountOUDistinguishedName
+            DomainAccountType = $WEDomainAccountType
+            ResourceGroupName = $WEResourceGroupName
+            StorageAccountName = $WEStorageAccountName
+        }
+        Join-AzStorageAccount @params
 
         # You can run the Debug-AzStorageAccountAuth cmdlet to conduct a set of basic checks on your AD configuration 
         # with the logged on AD user. This cmdlet is supported on AzFilesHybrid v0.1.2+ version. For more details on 
@@ -145,12 +155,14 @@ else {
     # the target OU. You can choose to create the identity that represents the storage account as either a 
     # Service Logon Account or Computer Account (default parameter value), depending on your AD permissions 
     # and preference. Run Get-Help -ErrorAction Stop Join-AzStorageAccountForAuth for more details on this cmdlet.
-    Join-AzStorageAccount `
-            -ResourceGroupName $WEResourceGroupName `
-            -StorageAccountName $WEStorageAccountName `
-            -SamAccountName $WESamAccountName `
-            -DomainAccountType $WEDomainAccountType `
-            -OrganizationalUnitDistinguishedName $WEStorageAccountOUDistinguishedName
+    $params = @{
+        SamAccountName = $WESamAccountName
+        OrganizationalUnitDistinguishedName = $WEStorageAccountOUDistinguishedName
+        DomainAccountType = $WEDomainAccountType
+        ResourceGroupName = $WEResourceGroupName
+        StorageAccountName = $WEStorageAccountName
+    }
+    Join-AzStorageAccount @params
 
     # You can run the Debug-AzStorageAccountAuth cmdlet to conduct a set of basic checks on your AD configuration 
     # with the logged on AD user. This cmdlet is supported on AzFilesHybrid v0.1.2+ version. For more details on 
@@ -216,3 +228,6 @@ Set-GPRegistryValue -Name " AVD-GPO" -ValueName " VolumeType" -Key " HKEY_LOCAL_
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

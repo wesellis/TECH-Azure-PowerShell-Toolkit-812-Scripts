@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Disk Detacher
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [string]$WEDiskName
 )
 
+#region Functions
+
 Write-WELog " Detaching disk from VM: $WEVmName" " INFO"
 ; 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
@@ -106,7 +114,7 @@ Remove-AzVMDataDisk -VM $WEVM -Name $WEDiskName
 
 Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $WEVM
 
-Write-WELog " ✅ Disk detached successfully:" " INFO"
+Write-WELog "  Disk detached successfully:" " INFO"
 Write-WELog "  Disk: $WEDiskName" " INFO"
 Write-WELog "  VM: $WEVmName" " INFO"
 Write-WELog "  LUN: $($WEDiskToDetach.Lun)" " INFO"
@@ -119,3 +127,6 @@ Write-WELog "  Note: Disk is now available for attachment to other VMs" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

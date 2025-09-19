@@ -1,6 +1,23 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Azure Resource Group Cloner
 # Clone entire resource groups with all resources
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -20,7 +37,9 @@ param(
     [string]$ExportPath = ".\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Resource Group Cloner" -Version "1.0" -Description "Clone resource groups and their contents"
 
 try {
@@ -31,24 +50,27 @@ try {
 
     Write-Log "📤 Exporting resource group template..." -Level INFO
     $null = Export-AzResourceGroup -ResourceGroupName $SourceResourceGroupName -Path $ExportPath
-    Write-Log "✓ Template exported to: $ExportPath" -Level SUCCESS
+    Write-Log "[OK] Template exported to: $ExportPath" -Level SUCCESS
 
     if (-not $ExportOnly) {
-        Write-Log "🏗️ Creating target resource group..." -Level INFO
+        Write-Log " Creating target resource group..." -Level INFO
         $null = New-AzResourceGroup -Name $TargetResourceGroupName -Location $TargetLocation -Tag $sourceRG.Tags
-        Write-Log "✓ Target resource group created: $TargetResourceGroupName" -Level SUCCESS
+        Write-Log "[OK] Target resource group created: $TargetResourceGroupName" -Level SUCCESS
         
-        Write-Log "🚀 Deploying resources to target..." -Level INFO
+        Write-Log " Deploying resources to target..." -Level INFO
         $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath
         
         if ($deployment.ProvisioningState -eq "Succeeded") {
-            Write-Log "✅ Resource group cloned successfully!" -Level SUCCESS
+            Write-Log " Resource group cloned successfully!" -Level SUCCESS
         } else {
-            Write-Log "❌ Deployment failed: $($deployment.ProvisioningState)" -Level ERROR
+            Write-Log " Deployment failed: $($deployment.ProvisioningState)" -Level ERROR
         }
     }
 
 } catch {
-    Write-Log "❌ Resource group cloning failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Resource group cloning failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

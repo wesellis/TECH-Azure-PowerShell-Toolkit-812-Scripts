@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Batch Account Performance Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Batch Account status, pools, and job execution metrics
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AccountName
 )
+
+#region Functions
 
 Write-Information "Monitoring Batch Account: $AccountName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -107,3 +118,6 @@ Write-Information "4. Consider using low-priority VMs for cost savings"
 Write-Information "5. Implement auto-scaling for dynamic workloads"
 
 Write-Information "`nBatch Account monitoring completed at $(Get-Date)"
+
+
+#endregion

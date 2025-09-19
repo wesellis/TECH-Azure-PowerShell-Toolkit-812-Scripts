@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Adddatabasetosqlserver
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -48,12 +53,12 @@ param(
 	$password
 )
 
+#region Functions
+
 if ((Get-Command -ErrorAction Stop Install-PackageProvider -ErrorAction Ignore) -eq $null)
 {
 	# Load the latest SQL PowerShell Provider
-	(Get-Module -ListAvailable SQLPS `
-		| Sort-Object -Descending -Property Version)[0] `
-		| Import-Module;
+	(Get-Module -ListAvailable "SQLPS | Sort-Object" -Property "Version)[0] | Import-Module;"
 }
 else
 {
@@ -71,12 +76,14 @@ else
 	Import-Module -Name SqlServer;
 }
 
-$fileList = Invoke-Sqlcmd `
-                    -QueryTimeout 0 `
-                    -ServerInstance . `
-                    -UserName $username `
-                    -Password $password `
-                    -Query " restore filelistonly from disk='$($pwd)\AdventureWorks2016.bak'" ;
+$params = @{
+    QueryTimeout = "0"
+    ServerInstance = "."
+    Query = " restore filelistonly from disk='$($pwd)\AdventureWorks2016.bak'" ;"
+    Password = $password
+    UserName = $username
+}
+$fileList @params
 
 
 $relocateFiles = @();
@@ -85,21 +92,19 @@ foreach ($nextBackupFile in $fileList)
 {
     # Move the file to the default data directory of the default instance
     $nextBackupFileName = Split-Path -Path ($nextBackupFile.PhysicalName) -Leaf;
-    $relocateFiles = $relocateFiles + New-Object -ErrorAction Stop `
-        Microsoft.SqlServer.Management.Smo.RelocateFile( `
-            $nextBackupFile.LogicalName,
-            " $env:temp\$($nextBackupFileName)" );
+    $relocateFiles -ErrorAction "Stop Microsoft.SqlServer.Management.Smo.RelocateFile( $nextBackupFile.LogicalName, " $env:temp\$($nextBackupFileName)" );"
 }
 
 $securePassword = ConvertTo-SecureString $password -AsPlainText -Force; 
 $credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username, $securePassword)
-Restore-SqlDatabase `
-	-ReplaceDatabase `
-	-ServerInstance . `
-	-Database " SampleDatabase" `
-	-BackupFile " $pwd\AdventureWorks2016.bak" `
-	-RelocateFile $relocateFiles `
-	-Credential $credentials; 
+$params = @{
+    RelocateFile = $relocateFiles
+    Database = " SampleDatabase"
+    ServerInstance = "."
+    Credential = $credentials;
+    BackupFile = " $pwd\AdventureWorks2016.bak"
+}
+Restore-SqlDatabase @params
 
 
 
@@ -107,3 +112,6 @@ Restore-SqlDatabase `
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

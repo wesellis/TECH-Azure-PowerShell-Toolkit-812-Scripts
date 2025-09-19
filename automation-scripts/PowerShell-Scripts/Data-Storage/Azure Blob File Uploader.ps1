@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Blob File Uploader
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -100,6 +106,8 @@ param(
     [string]$WEBlobName
 )
 
+#region Functions
+
 if (-not $WEBlobName) {
     $WEBlobName = Split-Path $WELocalFilePath -Leaf
 }
@@ -111,13 +119,16 @@ Write-WELog "  Blob name: $WEBlobName" " INFO"
 $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName; 
 $WEContext = $WEStorageAccount.Context
 ; 
-$WEBlob = Set-AzStorageBlobContent -ErrorAction Stop `
-    -File $WELocalFilePath `
-    -Container $WEContainerName `
-    -Blob $WEBlobName `
-    -Context $WEContext
+$params = @{
+    File = $WELocalFilePath
+    ErrorAction = "Stop"
+    Context = $WEContext
+    Blob = $WEBlobName
+    Container = $WEContainerName
+}
+$WEBlob @params
 
-Write-WELog " ✅ File uploaded successfully!" " INFO"
+Write-WELog "  File uploaded successfully!" " INFO"
 Write-WELog "  URL: $($WEBlob.ICloudBlob.StorageUri.PrimaryUri)" " INFO"
 
 
@@ -127,3 +138,6 @@ Write-WELog "  URL: $($WEBlob.ICloudBlob.StorageUri.PrimaryUri)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

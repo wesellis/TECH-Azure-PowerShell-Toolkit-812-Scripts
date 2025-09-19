@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Asr Addpublicip
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -108,10 +114,7 @@ Catch
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
       $WEErrorMessage = $WEErrorMessage + $_
-      Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
- }
-    # Get VMs within the Resource Group
+      Write-Error -Message $WEErrorMessage -ErrorAction "Stop } # Get VMs within the Resource Group"
 Try
  {
     $WEVMs = Get-AzureRmVm -ResourceGroupName $WERGName
@@ -123,9 +126,7 @@ Catch
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
       $WEErrorMessage = $WEErrorMessage + $_
-      Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
- }
+      Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 Try
  {
     foreach ($WEVM in $WEVMs)
@@ -145,9 +146,7 @@ Catch
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
      ;  $WEErrorMessage = $WEErrorMessage + $_
-      Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
- }
+      Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 }
 
 
@@ -156,3 +155,6 @@ Catch
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

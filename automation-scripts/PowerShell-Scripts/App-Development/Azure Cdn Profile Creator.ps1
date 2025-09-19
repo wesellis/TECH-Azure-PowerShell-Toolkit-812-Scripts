@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Cdn Profile Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -107,29 +113,37 @@ param(
     [string]$WESku = " Standard_Microsoft"
 )
 
+#region Functions
+
 Write-WELog " Creating CDN Profile: $WEProfileName" " INFO"
 
 ; 
-$WECdnProfile = New-AzCdnProfile -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -ProfileName $WEProfileName `
-    -Location $WELocation `
-    -Sku $WESku
+$params = @{
+    Sku = $WESku
+    ErrorAction = "Stop"
+    ProfileName = $WEProfileName
+    ResourceGroupName = $WEResourceGroupName
+    Location = $WELocation
+}
+$WECdnProfile @params
 
 Write-WELog " CDN Profile created: $($WECdnProfile.Name)" " INFO"
 
 
 Write-WELog " Creating CDN Endpoint: $WEEndpointName" " INFO"
 ; 
-$WECdnEndpoint = New-AzCdnEndpoint -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -ProfileName $WEProfileName `
-    -EndpointName $WEEndpointName `
-    -Location $WELocation `
-    -OriginHostName $WEOriginHostName `
-    -OriginName " origin1"
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    ProfileName = $WEProfileName
+    Location = $WELocation
+    EndpointName = $WEEndpointName
+    OriginHostName = $WEOriginHostName
+    ErrorAction = "Stop"
+    OriginName = " origin1"
+}
+$WECdnEndpoint @params
 
-Write-WELog " ✅ CDN Profile and Endpoint created successfully:" " INFO"
+Write-WELog "  CDN Profile and Endpoint created successfully:" " INFO"
 Write-WELog "  Profile Name: $($WECdnProfile.Name)" " INFO"
 Write-WELog "  SKU: $($WECdnProfile.Sku.Name)" " INFO"
 Write-WELog "  Endpoint Name: $($WECdnEndpoint.Name)" " INFO"
@@ -157,3 +171,6 @@ Write-WELog " 5. Test global distribution" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources, Az.Billing, Az.CostManagement
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure AI-Powered Cost Optimization and Analytics Tool
 .DESCRIPTION
@@ -108,15 +111,17 @@ param(
     [hashtable]$Tags = @{}
 )
 
+#region Functions
+
 # Import required modules
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.Billing -Force -ErrorAction Stop
     Import-Module Az.CostManagement -Force -ErrorAction Stop
-    Write-Information "✅ Successfully imported required Azure modules"
+    Write-Information " Successfully imported required Azure modules"
 } catch {
-    Write-Error "❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error " Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -318,7 +323,7 @@ function Invoke-AICostAnalysis {
         
         # Resource optimization insights
         $topCostResources = $resourceTypeCosts | Select-Object -First 5
-        $insights += "💰 Top Cost Drivers:"
+        $insights += " Top Cost Drivers:"
         foreach ($resource in $topCostResources) {
             $insights += "   • $($resource.ResourceType): $($resource.TotalCost.ToString('C2')) ($($resource.Percentage)% of total cost)"
         }
@@ -326,7 +331,7 @@ function Invoke-AICostAnalysis {
         # Cost efficiency insights
         $highVarianceResources = $resourceTypeCosts | Where-Object { $_.AvgCostPerResource -gt ($avgDailyCost * 0.1) }
         if ($highVarianceResources) {
-            $insights += "⚡ High-Cost Resource Types (Optimization Candidates):"
+            $insights += "[!] High-Cost Resource Types (Optimization Candidates):"
             foreach ($resource in $highVarianceResources) {
                 $insights += "   • $($resource.ResourceType): Avg $($resource.AvgCostPerResource.ToString('C2')) per resource"
             }
@@ -361,7 +366,7 @@ function Invoke-AICostAnalysis {
             Insights = $insights
         }
         
-        Write-EnhancedLog "🎯 AI analysis completed - Generated $($insights.Count) insights" "AI"
+        Write-EnhancedLog " AI analysis completed - Generated $($insights.Count) insights" "AI"
         return $analysisResult
         
     } catch {
@@ -437,7 +442,7 @@ function New-CostForecast -ErrorAction Stop {
             ConfidenceLevel = ($forecast | Measure-Object Confidence -Average).Average
         }
         
-        Write-EnhancedLog "📊 Forecast generated: $($forecastSummary.PeriodTotal.ToString('C2')) projected for next $ForecastDays days" "AI"
+        Write-EnhancedLog " Forecast generated: $($forecastSummary.PeriodTotal.ToString('C2')) projected for next $ForecastDays days" "AI"
         
         return @{
             Forecast = $forecast
@@ -459,7 +464,7 @@ function New-CostForecast -ErrorAction Stop {
 [CmdletBinding()]
 function New-OptimizationRecommendations -ErrorAction Stop {
     try {
-        Write-EnhancedLog "🎯 Generating automated optimization recommendations..." "AI"
+        Write-EnhancedLog " Generating automated optimization recommendations..." "AI"
         
         $recommendations = @()
         
@@ -550,7 +555,7 @@ function New-OptimizationRecommendations -ErrorAction Stop {
         
         $script:Recommendations = $recommendations
         
-        Write-EnhancedLog "✅ Generated $($recommendations.Count) optimization recommendations" "AI"
+        Write-EnhancedLog " Generated $($recommendations.Count) optimization recommendations" "AI"
         return $recommendations
         
     } catch {
@@ -726,7 +731,7 @@ Generated: $(Get-Date)
                 # Implementation would depend on available email service (SendGrid, etc.)
             }
         } else {
-            Write-EnhancedLog "✅ Cost is within threshold: $($totalCost.ToString('C2')) ≤ $($Threshold.ToString('C2'))" "Success"
+            Write-EnhancedLog " Cost is within threshold: $($totalCost.ToString('C2')) ≤ $($Threshold.ToString('C2'))" "Success"
         }
         
     } catch {
@@ -736,7 +741,7 @@ Generated: $(Get-Date)
 
 # Main execution
 try {
-    Write-EnhancedLog "🚀 Starting Azure AI-Powered Cost Optimization Tool" "Info"
+    Write-EnhancedLog " Starting Azure AI-Powered Cost Optimization Tool" "Info"
     Write-EnhancedLog "Action: $Action" "Info"
     Write-EnhancedLog "Time Frame: $TimeFrame" "Info"
     
@@ -794,7 +799,7 @@ try {
             $analysis = Invoke-AICostAnalysis -CostData $costData
             $forecast = New-CostForecast -HistoricalData $costData -ForecastDays 90
             
-            Write-EnhancedLog "📈 90-Day Cost Forecast:" "AI"
+            Write-EnhancedLog " 90-Day Cost Forecast:" "AI"
             Write-EnhancedLog "Projected Total: $($forecast.Summary.PeriodTotal.ToString('C2'))" "AI"
             Write-EnhancedLog "Daily Average: $($forecast.Summary.DailyAverage.ToString('C2'))" "AI"
             Write-EnhancedLog "Trend: $($forecast.Summary.TrendDirection)" "AI"
@@ -804,7 +809,7 @@ try {
             $analysis = Invoke-AICostAnalysis -CostData $costData
             $recommendations = New-OptimizationRecommendations -ErrorAction Stop
             
-            Write-EnhancedLog "🎯 Top Optimization Recommendations:" "AI"
+            Write-EnhancedLog " Top Optimization Recommendations:" "AI"
             $recommendations | Sort-Object { 
                 switch ($_.Priority) { 
                     "High" { 1 } 
@@ -842,9 +847,12 @@ try {
         }
     }
     
-    Write-EnhancedLog "🎉 Azure AI-Powered Cost Optimization Tool completed successfully" "Success"
+    Write-EnhancedLog " Azure AI-Powered Cost Optimization Tool completed successfully" "Success"
     
 } catch {
-    Write-EnhancedLog "❌ Tool execution failed: $($_.Exception.Message)" "Error"
+    Write-EnhancedLog " Tool execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+
+#endregion

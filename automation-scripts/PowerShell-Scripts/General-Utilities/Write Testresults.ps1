@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Write Testresults
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -73,6 +79,8 @@ param(
     [string]$WETemplateAnalyzerOutputFilePath = " $WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
     [string]$WETemplateAnalyzerLogsContainerName = " $WEENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
 )
+
+#region Functions
 
 function WE-Get-Regression(
     [object] $oldRow,
@@ -268,11 +276,13 @@ if ($null -eq $r) {
     $newResults = $results.PSObject.copy()
     Write-WELog " New Record: Add-AzTableRow" " INFO"
 
-    Add-AzTableRow -table $cloudTable `
-        -partitionKey $WEPartitionKey `
-        -rowKey $WERowKey `
-        -property $results `
-        -Verbose
+    $params = @{
+        table = $cloudTable
+        property = $results
+        partitionKey = $WEPartitionKey
+        rowKey = $WERowKey
+    }
+    Add-AzTableRow @params
 }
 else {
     # Update the existing row - need to check to make sure the columns exist
@@ -436,11 +446,13 @@ if (!$isPullRequest) {
     $regressionsRow | Add-Member " BuildNumber" $WEENV:BUILD_BUILDNUMBER
     $regressionsRow | Add-Member " BuildId" $WEENV:BUILD_BUILDID
     $regressionsRow | Add-Member " Build" " https://dev.azure.com/azurequickstarts/azure-quickstart-templates/_build/results?buildId=$($WEENV:BUILD_BUILDID)"
-    Add-AzTableRow -table $regressionsTable `
-        -partitionKey $WEPartitionKey `
-        -rowKey $regressionsKey `
-        -property (Convert-EntityToHashtable $regressionsRow) `
-        -Verbose
+    $params = @{
+        table = $regressionsTable
+        property = "(Convert-EntityToHashtable $regressionsRow)"
+        partitionKey = $WEPartitionKey
+        rowKey = $regressionsKey
+    }
+    Add-AzTableRow @params
 }
 
 <#
@@ -600,24 +612,28 @@ foreach ($badge in $badges) {
    ;  $blobName = " $badgePath/$($badge.filename)"
     Write-Output " Uploading badge to storage account '$($WEStorageAccountName)', container '$($containerName)', name '$($blobName)':"
     $badge | Format-List | Write-Output
-    Set-AzStorageBlobContent -Container $containerName `
-        -File $badgeTempPath `
-        -Blob $blobName `
-        -Context $ctx `
-        -Properties @{" ContentType" = " image/svg+xml" ; " CacheControl" = " no-cache" } `
-        -Force -Verbose
+    $params = @{
+        Properties = "@{" ContentType" = " image/svg+xml" ; " CacheControl" = " no-cache" }"
+        File = $badgeTempPath
+        Context = $ctx
+        Blob = $blobName
+        Container = $containerName
+    }
+    Set-AzStorageBlobContent @params
 }
 
 
 $templateAnalyzerLogFileName = " $($WEENV:BUILD_BUILDNUMBER)_$WERowKey.txt"
 Write-WELog " Uploading TemplateAnalyzer log file: $templateAnalyzerLogFileName" " INFO"
 try {
-    Set-AzStorageBlobContent -Container $WETemplateAnalyzerLogsContainerName `
-        -File $WETemplateAnalyzerOutputFilePath `
-        -Blob $templateAnalyzerLogFileName `
-        -Context $ctx `
-        -Properties @{ " ContentType" = " text/plain" } `
-        -Force -Verbose
+    $params = @{
+        Properties = "@{ " ContentType" = " text/plain" }"
+        File = $WETemplateAnalyzerOutputFilePath
+        Context = $ctx
+        Blob = $templateAnalyzerLogFileName
+        Container = $WETemplateAnalyzerLogsContainerName
+    }
+    Set-AzStorageBlobContent @params
 }
 catch {
     Write-WELog " ====================================================" " INFO"
@@ -651,4 +667,5 @@ Snippet that will be placed in the README.md files
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

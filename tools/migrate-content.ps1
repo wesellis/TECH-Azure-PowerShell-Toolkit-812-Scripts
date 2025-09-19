@@ -1,4 +1,21 @@
-﻿# Azure Enterprise Toolkit - Content Migration Script
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Enterprise Toolkit - Content Migration Script
 # This script copies content from existing repositories into the consolidated structure
 
 Write-Information "Starting Azure Enterprise Toolkit Content Migration"
@@ -109,3 +126,6 @@ Write-Information "Utility Tools"
 Write-Information "`nContent migration completed!"
 Write-Information "Total consolidated components: 7 major toolkits"
 Write-Information "Ready for git commands"
+
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Service Health Monitor
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Service Health Monitor
 # Monitor Azure service health and incidents
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -18,7 +35,9 @@ param(
     [switch]$ActiveOnly
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Service Health Monitor" -Version "1.0" -Description "Monitor Azure service health and incidents"
 
 try {
@@ -58,6 +77,9 @@ try {
     }
 
 } catch {
-    Write-Log "❌ Service health monitoring failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Service health monitoring failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

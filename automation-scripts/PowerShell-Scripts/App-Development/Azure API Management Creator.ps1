@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Api Management Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -107,18 +113,23 @@ param(
     [string]$WESku = " Developer"
 )
 
+#region Functions
+
 Write-WELog " Creating API Management service: $WEServiceName" " INFO"
 Write-WELog " This process may take 30-45 minutes..." " INFO"
 ; 
-$WEApiManagement = New-AzApiManagement -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEServiceName `
-    -Location $WELocation `
-    -Organization $WEOrganization `
-    -AdminEmail $WEAdminEmail `
-    -Sku $WESku
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = $WESku
+    Organization = $WEOrganization
+    Location = $WELocation
+    AdminEmail = $WEAdminEmail
+    ErrorAction = "Stop"
+    Name = $WEServiceName
+}
+$WEApiManagement @params
 
-Write-WELog " ✅ API Management service created successfully:" " INFO"
+Write-WELog "  API Management service created successfully:" " INFO"
 Write-WELog "  Name: $($WEApiManagement.Name)" " INFO"
 Write-WELog "  Location: $($WEApiManagement.Location)" " INFO"
 Write-WELog "  SKU: $($WEApiManagement.Sku)" " INFO"
@@ -147,3 +158,6 @@ Write-WELog " 4. Customize developer portal" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

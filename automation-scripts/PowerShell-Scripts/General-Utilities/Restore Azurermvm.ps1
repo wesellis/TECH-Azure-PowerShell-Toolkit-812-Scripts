@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Restore Azurermvm
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -110,6 +116,8 @@ param(
     [string]$WEEnvironment= " AzureCloud"
 
 )
+
+#region Functions
 $WEProgressPreference = 'SilentlyContinue'
 $resourceGroupVMjsonPath = " $env:TEMP\$WEResourceGroupName.resourceGroupVMs.json"
 
@@ -196,21 +204,15 @@ param($srcUri, $srcContext, $destContext, $containerName)
 
    try 
    {
-        $blobCopy = Start-AzureStorageBlobCopy `
-            -srcUri $srcUri `
-            -SrcContext $srcContext `
-            -DestContainer $containerName `
-            -DestBlob $blobName `
-            -DestContext $destContext `
-            -Force -ea Stop
-         write-output " $srcUri is being copied to $containerName"
-    
-   }
-   catch
-   { 
-      $_ ; write-warning " Failed to copy to $srcUri to $containerName"
-   }
-  
+        $params = @{
+            DestBlob = $blobName
+            srcUri = $srcUri
+            DestContext = $destContext
+            SrcContext = $srcContext
+            DestContainer = $containerName
+            ea = "Stop write-output " $srcUri is being copied to $containerName"  } catch { $_ ; write-warning " Failed to copy to $srcUri to $containerName" }"
+        }
+        $blobCopy @params
 
 } # end of copy-azureBlob function
 
@@ -426,4 +428,5 @@ foreach($srcVM in $resourceGroupVMs)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,13 +1,25 @@
-﻿# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Wesley Ellis Advanced Azure VM Maintenance & Update Manager
-# Author: Wesley Ellis
 # Contact: wesellis.com
 # Version: 2.5 Enterprise Edition
-# Date: August 2025
-# Description: Comprehensive Azure Virtual Machine maintenance automation
 #              with patching, health monitoring, and enterprise reporting
-# ============================================================================
-
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$true, HelpMessage="Azure Resource Group containing the VM")]
@@ -37,6 +49,8 @@ param (
     [Parameter(Mandatory=$false, HelpMessage="Test mode - no actual changes")]
     [switch]$WETestMode
 )
+
+#region Functions
 
 # Wesley Ellis Enhanced Framework
 $WELogPrefix = "[WE-VM-MaintenanceManager]"
@@ -299,7 +313,7 @@ try {
     $successCount = ($WEMaintenanceResults | Where-Object {$_.Status -like "*Success*"}).Count
     $totalTime = (Get-Date) - $WEStartTime
     
-    Write-WEMaintenanceLog "🎉 Maintenance Operation Complete!" "SUCCESS"
+    Write-WEMaintenanceLog " Maintenance Operation Complete!" "SUCCESS"
     Write-WEMaintenanceLog "   VMs Processed: $($WEMaintenanceResults.Count)" "SUCCESS"
     Write-WEMaintenanceLog "   Successful: $successCount" "SUCCESS"
     Write-WEMaintenanceLog "   Total Time: $($totalTime.TotalMinutes.ToString('F1')) minutes" "SUCCESS"
@@ -308,11 +322,12 @@ try {
     return $WEMaintenanceResults
     
 } catch {
-    Write-WEMaintenanceLog "❌ Maintenance operation failed: $($_.Exception.Message)" "ERROR"
+    Write-WEMaintenanceLog " Maintenance operation failed: $($_.Exception.Message)" "ERROR"
     Write-WEMaintenanceLog "Contact wesellis.com for enterprise support" "ERROR"
     throw
 }
 
 # Wesley Ellis Enterprise VM Management Toolkit
 # Advanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Run Whatif
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -54,6 +60,8 @@ param(
     [switch]$uploadResults
 )
 
+#region Functions
+
 if (!$uploadResults) {
 
     Invoke-WebRequest -uri " $url" -OutFile " $ttkFolder/$filename" -Verbose
@@ -71,12 +79,14 @@ if (!$uploadResults) {
     Import-Module " $ttkFolder/modules/Az.Resources/Az.Resources.psd1" -Verbose -Scope Local
 
     # Run What-If to file
-    $results = New-AzDeploymentWhatIf -ScopeType ResourceGroup `
-        -Name mainTemplate `
-        -TemplateFile " $sampleFolder\azuredeploy.json" `
-        -TemplateParameterFile " $sampleFolder\$paramFileName" `
-        -ResourceGroupName $resourceGroupName `
-        -Verbose
+    $params = @{
+        ResourceGroupName = $resourceGroupName
+        TemplateParameterFile = " $sampleFolder\$paramFileName"
+        TemplateFile = " $sampleFolder\azuredeploy.json"
+        Name = "mainTemplate"
+        ScopeType = "ResourceGroup"
+    }
+    $results @params
 
     # Upload files to storage container
 
@@ -89,17 +99,23 @@ else { # these need to be done in separate runs due to compatibility problems wi
    ;  $WERowKey = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
     Write-WELog " RowKey: $WERowKey" " INFO"
 
-    Set-AzStorageBlobContent -Container " whatif" `
-        -File " $ttkFolder/modules/$txtFileName" `
-        -Blob " $WERowKey@$txtFileName" `
-        -Context $ctx -Force -Verbose `
-        -Properties @{" CacheControl" = " no-cache" }
+    $params = @{
+        Properties = "@{" CacheControl" = " no-cache" }"
+        File = " $ttkFolder/modules/$txtFileName"
+        Context = $ctx
+        Blob = " $WERowKey@$txtFileName"
+        Container = " whatif"
+    }
+    Set-AzStorageBlobContent @params
 
-    Set-AzStorageBlobContent -Container " whatif" `
-        -File " $ttkFolder/modules/$jsonFileName" `
-        -Blob " $WERowKey@$jsonFileName" `
-        -Context $ctx -Force -Verbose `
-        -Properties @{" CacheControl" = " no-cache" }
+    $params = @{
+        Properties = "@{" CacheControl" = " no-cache" }"
+        File = " $ttkFolder/modules/$jsonFileName"
+        Context = $ctx
+        Blob = " $WERowKey@$jsonFileName"
+        Container = " whatif"
+    }
+    Set-AzStorageBlobContent @params
 
 }
 
@@ -108,3 +124,6 @@ else { # these need to be done in separate runs due to compatibility problems wi
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

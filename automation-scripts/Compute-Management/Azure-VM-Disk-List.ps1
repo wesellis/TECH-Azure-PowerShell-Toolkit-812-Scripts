@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Disk List Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Lists all disks attached to a specific Virtual Machine
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -14,6 +23,8 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$VmName
 )
+
+#region Functions
 
 Write-Information "Retrieving disk information for VM: $VmName"
 
@@ -32,3 +43,6 @@ if ($VM.StorageProfile.DataDisks.Count -gt 0) {
 } else {
     Write-Information "`nNo data disks attached."
 }
+
+
+#endregion

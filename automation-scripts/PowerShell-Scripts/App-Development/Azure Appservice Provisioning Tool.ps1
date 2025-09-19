@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Appservice Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -94,6 +100,8 @@ param(
     [hashtable]$WEAppSettings = @{}
 )
 
+#region Functions
+
 Write-WELog " Provisioning App Service: $WEAppName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " App Service Plan: $WEPlanName" " INFO"
@@ -102,11 +110,14 @@ Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
 Write-WELog " HTTPS Only: $WEHttpsOnly" " INFO"
 
 ; 
-$WEWebApp = New-AzWebApp -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAppName `
-    -AppServicePlan $WEPlanName `
-    -Location $WELocation
+$params = @{
+    ErrorAction = "Stop"
+    Location = $WELocation
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEAppName
+    AppServicePlan = $WEPlanName
+}
+$WEWebApp @params
 
 Write-WELog " App Service created: $($WEWebApp.DefaultHostName)" " INFO"
 
@@ -143,3 +154,6 @@ Write-WELog " `nApp Service provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

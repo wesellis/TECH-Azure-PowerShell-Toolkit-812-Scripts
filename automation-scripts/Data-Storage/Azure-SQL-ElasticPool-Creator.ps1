@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure SQL Elastic Pool Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure SQL Elastic Pools for database resource sharing
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -30,18 +39,23 @@ param (
     [int]$DatabaseDtuMax = 100
 )
 
+#region Functions
+
 Write-Information "Creating SQL Elastic Pool: $ElasticPoolName"
 
-$ElasticPool = New-AzSqlElasticPool -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -ServerName $ServerName `
-    -ElasticPoolName $ElasticPoolName `
-    -Edition $Edition `
-    -Dtu $PoolDtu `
-    -DatabaseDtuMin $DatabaseDtuMin `
-    -DatabaseDtuMax $DatabaseDtuMax
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Dtu = $PoolDtu
+    Edition = $Edition
+    DatabaseDtuMax = $DatabaseDtuMax
+    ServerName = $ServerName
+    ElasticPoolName = $ElasticPoolName
+    ErrorAction = "Stop"
+    DatabaseDtuMin = $DatabaseDtuMin
+}
+$ElasticPool @params
 
-Write-Information "✅ SQL Elastic Pool created successfully:"
+Write-Information " SQL Elastic Pool created successfully:"
 Write-Information "  Name: $($ElasticPool.ElasticPoolName)"
 Write-Information "  Server: $($ElasticPool.ServerName)"
 Write-Information "  Edition: $($ElasticPool.Edition)"
@@ -60,3 +74,6 @@ Write-Information "`nNext Steps:"
 Write-Information "1. Move existing databases to the pool"
 Write-Information "2. Create new databases in the pool"
 Write-Information "3. Monitor resource utilization"
+
+
+#endregion

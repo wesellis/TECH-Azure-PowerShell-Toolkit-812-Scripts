@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Synapse Analytics Workspace Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -110,8 +116,10 @@ param(
     [switch]$WEEnableMonitoring
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 
 Show-Banner -ScriptName " Azure Synapse Analytics Workspace Manager" -Version " 1.0" -Description " Enterprise data analytics and warehousing automation"
@@ -129,7 +137,7 @@ try {
         Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
     } -OperationName " Get Resource Group"
     
-    Write-Log " ✓ Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
 
     switch ($WEAction.ToLower()) {
         " create" {
@@ -170,14 +178,14 @@ try {
                 $existing = Get-AzDataLakeGen2FileSystem -Context $ctx -Name $WEFileSystemName -ErrorAction SilentlyContinue
                 if (-not $existing) {
                     New-AzDataLakeGen2FileSystem -Context $ctx -Name $WEFileSystemName
-                    Write-Log " ✓ Created file system: $WEFileSystemName" -Level SUCCESS
+                    Write-Log " [OK] Created file system: $WEFileSystemName" -Level SUCCESS
                 } else {
-                    Write-Log " ✓ Using existing file system: $WEFileSystemName" -Level INFO
+                    Write-Log " [OK] Using existing file system: $WEFileSystemName" -Level INFO
                     return $existing
                 }
             } -OperationName " Create File System"
             
-            Write-Log " ✓ Storage account configured: $WEStorageAccountName" -Level SUCCESS
+            Write-Log " [OK] Storage account configured: $WEStorageAccountName" -Level SUCCESS
 
             # Generate secure password if not provided
             if (-not $WESQLAdminPassword) {
@@ -204,8 +212,8 @@ try {
                 New-AzSynapseWorkspace -ErrorAction Stop @workspaceParams
             } -OperationName " Create Synapse Workspace"
             
-            Write-Log " ✓ Synapse workspace created: $WEWorkspaceName" -Level SUCCESS
-            Write-Log " ✓ Workspace URL: https://$WEWorkspaceName.dev.azuresynapse.net" -Level INFO
+            Write-Log " [OK] Synapse workspace created: $WEWorkspaceName" -Level SUCCESS
+            Write-Log " [OK] Workspace URL: https://$WEWorkspaceName.dev.azuresynapse.net" -Level INFO
 
             # Configure firewall rules
             Write-ProgressStep -StepNumber 5 -TotalSteps 10 -StepName " Firewall Configuration" -Status " Setting up firewall rules"
@@ -223,7 +231,7 @@ try {
                         New-AzSynapseFirewallRule -WorkspaceName $WEWorkspaceName -Name $ruleName -StartIpAddress $ip -EndIpAddress $ip
                     } -OperationName " Create Custom IP Firewall Rule"
                 }
-                Write-Log " ✓ Custom firewall rules created for $($WEAllowedIPs.Count) IP addresses" -Level SUCCESS
+                Write-Log " [OK] Custom firewall rules created for $($WEAllowedIPs.Count) IP addresses" -Level SUCCESS
             }
         }
         
@@ -240,7 +248,7 @@ try {
                 New-AzSynapseSqlPool -ErrorAction Stop @sqlPoolParams
             } -OperationName " Create SQL Pool"
             
-            Write-Log " ✓ Dedicated SQL Pool created: $WESQLPoolName ($WESQLPoolSKU)" -Level SUCCESS
+            Write-Log " [OK] Dedicated SQL Pool created: $WESQLPoolName ($WESQLPoolSKU)" -Level SUCCESS
         }
         
         " createsparkpool" {
@@ -263,7 +271,7 @@ try {
                 New-AzSynapseSparkPool -ErrorAction Stop @sparkPoolParams
             } -OperationName " Create Spark Pool"
             
-            Write-Log " ✓ Apache Spark Pool created: $WESparkPoolName ($WESparkPoolSize)" -Level SUCCESS
+            Write-Log " [OK] Apache Spark Pool created: $WESparkPoolName ($WESparkPoolSize)" -Level SUCCESS
         }
         
         " managefirewall" {
@@ -289,7 +297,7 @@ try {
                     Invoke-AzureOperation -Operation {
                         New-AzSynapseFirewallRule -WorkspaceName $WEWorkspaceName -Name $ruleName -StartIpAddress $ip -EndIpAddress $ip
                     } -OperationName " Add Firewall Rule"
-                    Write-Log " ✓ Added firewall rule for IP: $ip" -Level SUCCESS
+                    Write-Log " [OK] Added firewall rule for IP: $ip" -Level SUCCESS
                 }
             }
         }
@@ -310,7 +318,7 @@ try {
             } -OperationName " Get Spark Pools"
             
             Write-WELog "" " INFO"
-            Write-WELog " 📊 Synapse Workspace Information" " INFO" -ForegroundColor Cyan
+            Write-WELog "  Synapse Workspace Information" " INFO" -ForegroundColor Cyan
             Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
             Write-WELog " Workspace Name: $($workspace.Name)" " INFO" -ForegroundColor White
             Write-WELog " Location: $($workspace.Location)" " INFO" -ForegroundColor White
@@ -328,7 +336,7 @@ try {
             
             if ($sparkPools.Count -gt 0) {
                 Write-WELog "" " INFO"
-                Write-WELog " ⚡ Spark Pools:" " INFO" -ForegroundColor Cyan
+                Write-WELog " [!] Spark Pools:" " INFO" -ForegroundColor Cyan
                 foreach ($pool in $sparkPools) {
                     Write-WELog " • $($pool.Name) - $($pool.NodeSize) - Nodes: $($pool.NodeCount)" " INFO" -ForegroundColor White
                 }
@@ -363,7 +371,7 @@ try {
                 Remove-AzSynapseWorkspace -ResourceGroupName $WEResourceGroupName -Name $WEWorkspaceName -Force
             } -OperationName " Delete Synapse Workspace"
             
-            Write-Log " ✓ Synapse workspace deleted: $WEWorkspaceName" -Level SUCCESS
+            Write-Log " [OK] Synapse workspace deleted: $WEWorkspaceName" -Level SUCCESS
         }
     }
 
@@ -388,13 +396,13 @@ try {
                 
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " ⚠️  No Log Analytics workspace found for monitoring setup" -Level WARN
+                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
                 return $null
             }
         } -OperationName " Configure Monitoring"
         
         if ($diagnosticSettings) {
-            Write-Log " ✓ Monitoring configured with diagnostic settings" -Level SUCCESS
+            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
         }
     }
 
@@ -416,7 +424,7 @@ try {
         $null = Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $WEResourceGroupName -Name $WEWorkspaceName -ResourceType " Microsoft.Synapse/workspaces"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-            Write-Log " ✓ Applied enterprise tags to workspace" -Level SUCCESS
+            Write-Log " [OK] Applied enterprise tags to workspace" -Level SUCCESS
         } -OperationName " Apply Enterprise Tags"
     }
 
@@ -431,45 +439,45 @@ try {
         # Check managed VNet
         if ($WEEnableManagedVNet) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Managed virtual network enabled"
+            $securityFindings = $securityFindings + " [OK] Managed virtual network enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Managed VNet not enabled - consider for enhanced security"
+            $securityFindings = $securityFindings + " [WARN]️  Managed VNet not enabled - consider for enhanced security"
         }
         
         # Check data exfiltration protection
         if ($WEEnableDataExfiltrationProtection) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Data exfiltration protection enabled"
+            $securityFindings = $securityFindings + " [OK] Data exfiltration protection enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Data exfiltration protection disabled"
+            $securityFindings = $securityFindings + " [WARN]️  Data exfiltration protection disabled"
         }
         
         # Check monitoring
         if ($WEEnableMonitoring) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Monitoring enabled"
+            $securityFindings = $securityFindings + " [OK] Monitoring enabled"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Monitoring not configured"
+            $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
         }
         
         # Check firewall configuration
         if ($WEAllowedIPs.Count -gt 0) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Custom firewall rules configured"
+            $securityFindings = $securityFindings + " [OK] Custom firewall rules configured"
         } else {
-            $securityFindings = $securityFindings + " ⚠️  Only Azure services allowed - configure specific IP rules"
+            $securityFindings = $securityFindings + " [WARN]️  Only Azure services allowed - configure specific IP rules"
         }
         
         # Check storage account security
         if ($storageAccount.EnableHttpsTrafficOnly) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ HTTPS-only traffic enforced on storage"
+            $securityFindings = $securityFindings + " [OK] HTTPS-only traffic enforced on storage"
         }
         
         # Check region compliance
         if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
             $securityScore++
-            $securityFindings = $securityFindings + " ✓ Deployed in compliant region"
+            $securityFindings = $securityFindings + " [OK] Deployed in compliant region"
         }
     }
 
@@ -479,11 +487,11 @@ try {
     $costRecommendations = @()
     
     if ($WEAction.ToLower() -eq " create" ) {
-        $costRecommendations = $costRecommendations + " 💰 Enable auto-pause for Spark pools to reduce costs during idle time"
-        $costRecommendations = $costRecommendations + " 💰 Use serverless SQL pool for exploratory workloads"
-        $costRecommendations = $costRecommendations + " 💰 Schedule SQL pool scaling based on usage patterns"
-        $costRecommendations = $costRecommendations + " 💰 Monitor storage costs and implement lifecycle policies"
-       ;  $costRecommendations = $costRecommendations + " 💰 Use reserved capacity for predictable workloads"
+        $costRecommendations = $costRecommendations + "  Enable auto-pause for Spark pools to reduce costs during idle time"
+        $costRecommendations = $costRecommendations + "  Use serverless SQL pool for exploratory workloads"
+        $costRecommendations = $costRecommendations + "  Schedule SQL pool scaling based on usage patterns"
+        $costRecommendations = $costRecommendations + "  Monitor storage costs and implement lifecycle policies"
+       ;  $costRecommendations = $costRecommendations + "  Use reserved capacity for predictable workloads"
     }
 
     # Final validation
@@ -503,7 +511,7 @@ try {
     Write-WELog "" " INFO"
     
     if ($WEAction.ToLower() -eq " create" ) {
-        Write-WELog " 📊 Synapse Workspace Details:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Synapse Workspace Details:" " INFO" -ForegroundColor Cyan
         Write-WELog "   • Workspace Name: $WEWorkspaceName" " INFO" -ForegroundColor White
         Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White
         Write-WELog "   • Location: $WELocation" " INFO" -ForegroundColor White
@@ -517,17 +525,17 @@ try {
             Write-WELog " 🔑 SQL Admin Credentials:" " INFO" -ForegroundColor Yellow
             Write-WELog "   • Username: $WESQLAdminUsername" " INFO" -ForegroundColor Yellow
             Write-WELog "   • Password: [SecureString - Store in Key Vault]" " INFO" -ForegroundColor Yellow
-            Write-WELog "   ⚠️  Store these credentials securely in Azure Key Vault!" " INFO" -ForegroundColor Red
+            Write-WELog "   [WARN]️  Store these credentials securely in Azure Key Vault!" " INFO" -ForegroundColor Red
         }
         
         Write-WELog "" " INFO"
-        Write-WELog " 🔒 Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+        Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
         foreach ($finding in $securityFindings) {
             Write-WELog "   $finding" " INFO" -ForegroundColor White
         }
         
         Write-WELog "" " INFO"
-        Write-WELog " 💰 Cost Optimization:" " INFO" -ForegroundColor Cyan
+        Write-WELog "  Cost Optimization:" " INFO" -ForegroundColor Cyan
         foreach ($recommendation in $costRecommendations) {
             Write-WELog "   $recommendation" " INFO" -ForegroundColor White
         }
@@ -543,13 +551,13 @@ try {
     
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Azure Synapse Analytics workspace '$WEWorkspaceName' operation completed successfully!" -Level SUCCESS
+    Write-Log "  Azure Synapse Analytics workspace '$WEWorkspaceName' operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Synapse Analytics operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Synapse Analytics operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-WELog "" " INFO"
-    Write-WELog " 🔧 Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
+    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Verify Synapse Analytics service availability in your region" " INFO" -ForegroundColor White
     Write-WELog "   • Check subscription quotas and limits" " INFO" -ForegroundColor White
     Write-WELog "   • Ensure proper permissions for resource creation" " INFO" -ForegroundColor White
@@ -567,4 +575,5 @@ Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:s
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

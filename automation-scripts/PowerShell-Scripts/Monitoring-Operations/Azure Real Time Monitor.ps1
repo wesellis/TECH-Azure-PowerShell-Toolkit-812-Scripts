@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Real Time Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -75,6 +81,8 @@ param(
     [Parameter(Mandatory=$false)][switch]$WEExportMetrics
 )
 
+#region Functions
+
 $modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " .." , " modules" , " AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
@@ -100,7 +108,7 @@ function WE-Start-ResourceMonitoring {
     while ($script:MonitoringState.Running) {
         try {
             $timestamp = Get-Date -ErrorAction Stop
-            Write-Log " 📊 Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
+            Write-Log "  Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
             
             # Get resources to monitor
             $resources = if ($WEResourceGroups.Count -gt 0) {
@@ -133,12 +141,12 @@ function WE-Start-ResourceMonitoring {
             $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq " Healthy" }).Count
             $unhealthyCount = ($currentMetrics | Where-Object { $_.Status -ne " Healthy" }).Count
             
-            Write-WELog " 📈 Resources: $($resources.Count) | ✅ Healthy: $healthyCount | ⚠️ Issues: $unhealthyCount" " INFO" -ForegroundColor Green
+            Write-WELog "  Resources: $($resources.Count) |  Healthy: $healthyCount | [WARN]️ Issues: $unhealthyCount" " INFO" -ForegroundColor Green
             
             if ($unhealthyCount -gt 0) {
                 $issues = $currentMetrics | Where-Object { $_.Status -ne " Healthy" }
                 foreach ($issue in $issues) {
-                    Write-WELog "  ⚠️ $($issue.Name): $($issue.Status) - $($issue.Details)" " INFO" -ForegroundColor Yellow
+                    Write-WELog "  [WARN]️ $($issue.Name): $($issue.Status) - $($issue.Details)" " INFO" -ForegroundColor Yellow
                 }
             }
             
@@ -260,7 +268,7 @@ function WE-Send-AlertWebhook {
         } | ConvertTo-Json
         
         Invoke-RestMethod -Uri $WEAlertWebhookUrl -Method Post -Body $payload -ContentType " application/json"
-        Write-Log " ✓ Alert sent to webhook" -Level SUCCESS
+        Write-Log " [OK] Alert sent to webhook" -Level SUCCESS
     } catch {
         Write-Log " Failed to send webhook alert: $($_.Exception.Message)" -Level ERROR
     }
@@ -270,7 +278,7 @@ function WE-Send-AlertWebhook {
 try {
     if (-not (Test-AzureConnection)) { throw " Azure connection required" }
     
-    Write-Log " 🚀 Azure Real-time Monitor initialized" -Level SUCCESS
+    Write-Log "  Azure Real-time Monitor initialized" -Level SUCCESS
     Write-Log " Refresh interval: $WERefreshIntervalSeconds seconds" -Level INFO
     
     if ($WEResourceGroups.Count -gt 0) {
@@ -313,4 +321,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,6 +1,22 @@
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Launch-AzureToolkit.ps1
 # Interactive CLI launcher for Azure Enterprise Toolkit scripts
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 2.0
 
 param(
@@ -10,6 +26,8 @@ param(
     [string]$Category,
     [switch]$Favorites
 )
+
+#region Functions
 
 $Global:ToolkitPath = $PSScriptRoot
 $Global:ConfigPath = Join-Path $env:USERPROFILE ".azure-toolkit"
@@ -63,8 +81,7 @@ class ScriptLauncher {
         if ($content -match '(?s)\.SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
             return $Matches[1].Trim()
         }
-        if ($content -match '# Description:\s*(.+)') {
-            return $Matches[1].Trim()
+        if ($content -match '            return $Matches[1].Trim()
         }
         return "No description available"
     }
@@ -166,7 +183,7 @@ class ScriptLauncher {
         
         for ($i = 0; $i -lt $scripts.Count; $i++) {
             $script = $scripts[$i]
-            $star = if ($script.Path -in $this.Favorites) { "⭐" } else { "  " }
+            $star = if ($script.Path -in $this.Favorites) { "[*]" } else { "  " }
             Write-Host "$star $($i + 1). $($script.Name)" -ForegroundColor White
             Write-Host "     $($script.Description)" -ForegroundColor Gray
         }
@@ -458,3 +475,5 @@ if ($ListOnly) {
 }
 
 Write-Host "`nThank you for using Azure Enterprise Toolkit!" -ForegroundColor Cyan
+
+#endregion

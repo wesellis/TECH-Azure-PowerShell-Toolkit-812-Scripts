@@ -1,4 +1,22 @@
-﻿# Real-time Azure Resource Monitor with Dashboards
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Real-time Azure Resource Monitor with Dashboards
 param (
     [Parameter(Mandatory=$false)][string[]]$ResourceGroups = @(),
     [Parameter(Mandatory=$false)][string[]]$ResourceTypes = @(),
@@ -9,6 +27,8 @@ param (
     [Parameter(Mandatory=$false)][switch]$EnableAlerts,
     [Parameter(Mandatory=$false)][switch]$ExportMetrics
 )
+
+#region Functions
 
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "..", "modules", "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
@@ -35,7 +55,7 @@ function Start-ResourceMonitoring {
     while ($script:MonitoringState.Running) {
         try {
             $timestamp = Get-Date -ErrorAction Stop
-            Write-Log "📊 Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
+            Write-Log " Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
             
             # Get resources to monitor
             $resources = if ($ResourceGroups.Count -gt 0) {
@@ -68,12 +88,12 @@ function Start-ResourceMonitoring {
             $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq "Healthy" }).Count
             $unhealthyCount = ($currentMetrics | Where-Object { $_.Status -ne "Healthy" }).Count
             
-            Write-Information "📈 Resources: $($resources.Count) | ✅ Healthy: $healthyCount | ⚠️ Issues: $unhealthyCount"
+            Write-Information " Resources: $($resources.Count) |  Healthy: $healthyCount | [WARN] Issues: $unhealthyCount"
             
             if ($unhealthyCount -gt 0) {
                 $issues = $currentMetrics | Where-Object { $_.Status -ne "Healthy" }
                 foreach ($issue in $issues) {
-                    Write-Information "  ⚠️ $($issue.Name): $($issue.Status) - $($issue.Details)"
+                    Write-Information "  [WARN] $($issue.Name): $($issue.Status) - $($issue.Details)"
                 }
             }
             
@@ -194,7 +214,7 @@ function Send-AlertWebhook {
         } | ConvertTo-Json
         
         Invoke-RestMethod -Uri $AlertWebhookUrl -Method Post -Body $payload -ContentType "application/json"
-        Write-Log "✓ Alert sent to webhook" -Level SUCCESS
+        Write-Log "[OK] Alert sent to webhook" -Level SUCCESS
     } catch {
         Write-Log "Failed to send webhook alert: $($_.Exception.Message)" -Level ERROR
     }
@@ -204,7 +224,7 @@ function Send-AlertWebhook {
 try {
     if (-not (Test-AzureConnection)) { throw "Azure connection required" }
     
-    Write-Log "🚀 Azure Real-time Monitor initialized" -Level SUCCESS
+    Write-Log " Azure Real-time Monitor initialized" -Level SUCCESS
     Write-Log "Refresh interval: $RefreshIntervalSeconds seconds" -Level INFO
     
     if ($ResourceGroups.Count -gt 0) {
@@ -242,3 +262,6 @@ try {
     $script:MonitoringState.Running = $false
     Write-Log "🛑 Monitoring stopped" -Level INFO
 }
+
+
+#endregion

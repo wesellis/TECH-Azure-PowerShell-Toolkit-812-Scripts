@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Autosnooze Stopvm Child
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +55,8 @@ $ErrorActionPreference = "Stop"
 param(
     [object]$WEWebhookData
 )
+
+#region Functions
 
 if ($null -ne $WEWebhookData) {  
     # Collect properties of WebhookData.
@@ -87,34 +94,17 @@ if ($null -ne $WEWebhookData) {
         $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
 
         " Logging in to Azure..."
-        Add-AzureRmAccount `
-            -ServicePrincipal `
-            -TenantId $servicePrincipalConnection.TenantId `
-            -ApplicationId $servicePrincipalConnection.ApplicationId `
-            -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
-    }
-    catch 
-    {
-        if (!$servicePrincipalConnection)
-        {
-           ;  $WEErrorMessage = " Connection $connectionName not found."
-            throw $WEErrorMessage
-        } else{
-            Write-Error -Message $_.Exception
-            throw $_.Exception
+        $params = @{
+            Message = $_.Exception throw $_.Exception } }  ;  $WEStatus = Stop-AzureRmVM
+            Name = $WEAlertContext.resourceName
+            ApplicationId = $servicePrincipalConnection.ApplicationId
+            Force = "if($null"
+            eq = $WEStatus) { Write-Output " Error occured while stopping the Virtual Machine. $WEAlertContext.resourceName" } else { Write-Output " Successfully stopped the VM $WEAlertContext.resourceName" }
+            ResourceGroupName = $WEAlertContext.resourceGroupName
+            TenantId = $servicePrincipalConnection.TenantId
+            CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint } catch { if (!$servicePrincipalConnection) { ;  $WEErrorMessage = " Connection $connectionName not found." throw $WEErrorMessage } else{ Write-Error
         }
-    }
-          
-   ;  $WEStatus = Stop-AzureRmVM -Name $WEAlertContext.resourceName -ResourceGroupName $WEAlertContext.resourceGroupName -Force
-    
-    if($null -eq $WEStatus)
-    {
-        Write-Output " Error occured while stopping the Virtual Machine. $WEAlertContext.resourceName"
-    }
-    else
-    {
-       Write-Output " Successfully stopped the VM $WEAlertContext.resourceName"
-    }
+        Add-AzureRmAccount @params
 }
 else 
 {
@@ -124,4 +114,5 @@ else
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Sql Connection Tester
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -90,6 +95,8 @@ param(
     [securestring]$WEPassword
 )
 
+#region Functions
+
 Write-WELog " Testing connection to SQL Database: $WEDatabaseName" " INFO"
 ; 
 $WEConnectionString = " Server=tcp:$WEServerName.database.windows.net,1433;Initial Catalog=$WEDatabaseName;Persist Security Info=False;User ID=$WEUsername;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
@@ -99,14 +106,14 @@ try {
     $WEConnection.ConnectionString = $WEConnectionString
     $WEConnection.Open()
     
-    Write-WELog " ✅ Connection successful!" " INFO"
+    Write-WELog "  Connection successful!" " INFO"
     Write-WELog "  Server: $WEServerName.database.windows.net" " INFO"
     Write-WELog "  Database: $WEDatabaseName" " INFO"
     Write-WELog "  Status: Connected" " INFO"
     
     $WEConnection.Close()
 } catch {
-    Write-WELog " ❌ Connection failed!" " INFO"
+    Write-WELog "  Connection failed!" " INFO"
     Write-WELog "  Error: $($_.Exception.Message)" " INFO"
 }
 
@@ -114,4 +121,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

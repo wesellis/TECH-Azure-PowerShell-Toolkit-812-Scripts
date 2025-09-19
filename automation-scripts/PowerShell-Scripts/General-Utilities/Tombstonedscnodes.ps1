@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Tombstonedscnodes
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -92,6 +98,8 @@ param(
     [string]$WEAutomationAccountName
 )
 
+#region Functions
+
 $WETombstoneAction = $false
 $WETombstoneDays = 1
 $WEUnregisterAction = $false
@@ -99,11 +107,12 @@ $WEUnregisterDays = 3
 
 
 $WEServicePrincipalConnection = Get-AutomationConnection -Name " AzureRunAsConnection"
-Add-AzureRmAccount `
-    -ServicePrincipal `
-    -TenantId $WEServicePrincipalConnection.TenantId `
-    -ApplicationId $WEServicePrincipalConnection.ApplicationId `
-    -CertificateThumbprint $WEServicePrincipalConnection.CertificateThumbprint | Write-Verbose
+$params = @{
+    ApplicationId = $WEServicePrincipalConnection.ApplicationId
+    TenantId = $WEServicePrincipalConnection.TenantId
+    CertificateThumbprint = $WEServicePrincipalConnection.CertificateThumbprint | Write-Verbose
+}
+Add-AzureRmAccount @params
 $WEContext = Set-AzureRmContext -SubscriptionId $WEServicePrincipalConnection.SubscriptionID | Write-Verbose
 
 ; 
@@ -157,3 +166,6 @@ if ($true -eq $WEUnregisterAction) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

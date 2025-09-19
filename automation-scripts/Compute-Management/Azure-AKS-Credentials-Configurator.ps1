@@ -1,12 +1,20 @@
-﻿# ============================================================================
-# Script Name: Azure AKS Credentials Configurator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Configures kubectl credentials for Azure Kubernetes Service cluster
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +25,8 @@ param (
     [Parameter(Mandatory=$false)]
     [switch]$Admin
 )
+
+#region Functions
 
 Write-Information "Configuring kubectl credentials for AKS cluster: $ClusterName"
 
@@ -31,3 +41,6 @@ if ($Admin) {
 Write-Information "`nTesting connection..."
 kubectl get nodes
 Write-Information "`nKubectl is now configured for cluster: $ClusterName"
+
+
+#endregion

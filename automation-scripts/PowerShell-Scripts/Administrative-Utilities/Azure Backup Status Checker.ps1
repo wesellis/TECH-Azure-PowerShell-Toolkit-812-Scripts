@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Backup Status Checker
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -55,7 +61,9 @@ param(
     [switch]$WEShowUnprotected
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Backup Status Checker" -Version " 1.0" -Description " Verify backup protection status"
 
 try {
@@ -96,14 +104,15 @@ try {
     }
 
     $backupReport | Format-Table -AutoSize
-    Write-Log " ✅ Backup status check completed" -Level SUCCESS
+    Write-Log "  Backup status check completed" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Backup status check failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Backup status check failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

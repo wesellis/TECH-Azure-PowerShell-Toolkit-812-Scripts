@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Hpchnprepare
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -91,6 +96,8 @@ param(
     [Parameter(Mandatory=$false)]
     [String] $WELogFile = ""
 )
+
+#region Functions
 
 Set-StrictMode -Version 3
 $WEScript:LogFilePath = " $env:windir\Temp\HPCHeadNodePrepare.log"
@@ -223,8 +230,7 @@ try
         $WESQLServices | Start-Service
     }
 
-    $WEHNServiceList = @(" HpcSdm" , " HpcManagement" , " HpcReporting" , " HpcMonitoringClient" , " HpcNodeManager" , " msmpi" , " HpcBroker" , `
-        " HpcDiagnostics" , " HpcScheduler" , " HpcMonitoringServer" , " HpcSession" , " HpcSoaDiagMon" )
+    $WEHNServiceList 
 
     foreach($svcname in $WEHNServiceList)
     {
@@ -402,4 +408,5 @@ catch
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

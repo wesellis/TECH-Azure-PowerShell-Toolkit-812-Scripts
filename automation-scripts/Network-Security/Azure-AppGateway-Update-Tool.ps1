@@ -1,17 +1,28 @@
-﻿# ============================================================================
-# Script Name: Azure Application Gateway Update Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Updates Azure Application Gateway configurations and settings
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$GatewayName,
     [hashtable]$Settings
 )
+
+#region Functions
 
 # Get current Application Gateway
 $Gateway = Get-AzApplicationGateway -ResourceGroupName $ResourceGroupName -Name $GatewayName
@@ -32,3 +43,6 @@ if ($Settings) {
 Set-AzApplicationGateway -ApplicationGateway $Gateway
 
 Write-Information "Application Gateway $GatewayName updated successfully"
+
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Webapp Restart Tool
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -51,6 +56,8 @@ param(
     [string]$WEAppName
 )
 
+#region Functions
+
 Restart-AzWebApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName
 
 
@@ -60,3 +67,6 @@ Restart-AzWebApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

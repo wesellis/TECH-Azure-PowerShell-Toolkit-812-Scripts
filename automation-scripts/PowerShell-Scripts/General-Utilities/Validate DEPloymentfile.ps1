@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Validate Deploymentfile
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -81,6 +86,8 @@ param(
 
     [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" )
 )
+
+#region Functions
 
 $WEError.Clear()
 
@@ -146,20 +153,13 @@ if ($bicepSupported) {
 
     # If this is a PR, compare it against the JSON file included in the sample
     # if ($isPR) {
-    #    ;  $templatesMatch = & $WEPSScriptRoot/Compare-Templates.ps1 `
-    #         -TemplateFilePathExpected $WECompiledJsonPath `
-    #         -TemplateFilePathActual $WEMainTemplatePathJson `
-    #         -RemoveGeneratorMetadata `
-    #         -WriteToHost `
-    #         -ErrorAction Ignore # Ignore so we can write the following error message instead
-    #     if (!$templatesMatch) {
-    #         Write-Error (" The JSON in the sample does not match the JSON built from bicep.`n" `
-    #                 + " Either copy the expected output from the log into $WEMainTemplateFilenameJson or run the command ``bicep build $mainTemplateFilenameBicep --outfile $WEMainTemplateFilenameJson`` in your sample folder using bicep version $WEBicepVersion" )
-    #     }
-    # }
-    
-    # Deploy the JSON file included in the sample, not the one we temporarily built
-    #$fileToDeploy = $WEMainTemplateFilenameJson
+    $params = @{
+        WriteToHost = "#"
+        TemplateFilePathExpected = $WECompiledJsonPath #
+        TemplateFilePathActual = $WEMainTemplatePathJson #
+        RemoveGeneratorMetadata = "#"
+    }
+    # @params
 
     # Delete the temporary built JSON file
     Remove-Item -ErrorAction Stop $WECompiledJsonPat -Forceh -Force
@@ -178,3 +178,6 @@ if ($bicepSupported) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

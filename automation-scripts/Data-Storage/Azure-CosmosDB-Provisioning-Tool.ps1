@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Cosmos DB Account Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Cosmos DB accounts with global distribution and consistency settings
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AccountName,
@@ -17,6 +26,8 @@ param (
     [bool]$EnableMultipleWriteLocations = $false
 )
 
+#region Functions
+
 Write-Information "Provisioning Cosmos DB Account: $AccountName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "Primary Location: $Location"
@@ -24,13 +35,15 @@ Write-Information "Consistency Level: $DefaultConsistencyLevel"
 Write-Information "Account Kind: $Kind"
 
 # Create the Cosmos DB account
-$CosmosDB = New-AzCosmosDBAccount -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $AccountName `
-    -Location $Location `
-    -DefaultConsistencyLevel $DefaultConsistencyLevel `
-    -Kind $Kind `
-    -EnableMultipleWriteLocations:$EnableMultipleWriteLocations
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    Kind = $Kind
+    ErrorAction = "Stop"
+    DefaultConsistencyLevel = $DefaultConsistencyLevel
+    Name = $AccountName
+}
+$CosmosDB @params
 
 Write-Information "Cosmos DB Account $AccountName provisioned successfully"
 Write-Information "Document Endpoint: $($CosmosDB.DocumentEndpoint)"
@@ -47,3 +60,6 @@ if ($LocationsToAdd.Count -gt 0) {
 }
 
 Write-Information "`nCosmos DB provisioning completed at $(Get-Date)"
+
+
+#endregion

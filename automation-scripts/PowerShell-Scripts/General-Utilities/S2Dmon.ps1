@@ -1,4 +1,6 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
 .SYNOPSIS
     S2Dmon
 
@@ -7,7 +9,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +27,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -830,11 +832,7 @@ if ($WEService) {                 # Run the service
             
 
             # Construct Workspace ID and Key into credentials
-            $WEOMSCredsFromFiles = New-Object -TypeName System.Management.Automation.PSCredential `
-                                   -ArgumentList $WEOMSWorkspaceIDFromFile , $WEOMSWorkspaceKeyFromFile 
-            
-            # Log Name
-            $logType = " S2D"
+            $WEOMSCredsFromFiles -ArgumentList $WEOMSWorkspaceIDFromFile , $WEOMSWorkspaceKeyFromFile  # Log Name $logType = " S2D -TypeName "System.Management.Automation.PSCredential"
 
             # Time Generated Fields
             $WETimestampfield = " Timestamp"
@@ -904,11 +902,14 @@ if ($WEService) {                 # Run the service
                         $jsonTable = $table | ConvertTo-Json -Depth 5
 
                         #Send to OMS
-                        Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                                 -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                                 -body $jsonTable `
-                                                 -logType $logType `
-                                                 -TimeStampField $WETimestampfield
+                        $params = @{
+                            TimeStampField = $WETimestampfield
+                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            logType = $logType
+                            body = $jsonTable
+                            customerId = $WEOMSCredsFromFiles.UserName
+                        }
+                        Send-OMSAPIIngestionFile @params
 
                     }
                 }
@@ -977,11 +978,14 @@ if ($WEService) {                 # Run the service
                         $jsonTable = $table | ConvertTo-Json -Depth 5
 
                         #Send to OMS
-                        Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                                 -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                                 -body $jsonTable `
-                                                 -logType $logType `
-                                                 -TimeStampField $WETimestampfield
+                        $params = @{
+                            TimeStampField = $WETimestampfield
+                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            logType = $logType
+                            body = $jsonTable
+                            customerId = $WEOMSCredsFromFiles.UserName
+                        }
+                        Send-OMSAPIIngestionFile @params
 
                     }
                 }
@@ -1052,11 +1056,14 @@ if ($WEService) {                 # Run the service
                         $jsonTable = $table | ConvertTo-Json -Depth 5
 
                         #Send to OMS
-                        Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                                 -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                                 -body $jsonTable `
-                                                 -logType $logType `
-                                                 -TimeStampField $WETimestampfield
+                        $params = @{
+                            TimeStampField = $WETimestampfield
+                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            logType = $logType
+                            body = $jsonTable
+                            customerId = $WEOMSCredsFromFiles.UserName
+                        }
+                        Send-OMSAPIIngestionFile @params
 
                     }
                 }
@@ -1136,11 +1143,14 @@ if ($WEService) {                 # Run the service
                     $jsonTable = $table | ConvertTo-Json -Depth 5
 
                     #Send to OMS
-                    Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                             -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                             -body $jsonTable `
-                                             -logType $logType `
-                                             -TimeStampField $WETimestampfield
+                    $params = @{
+                        TimeStampField = $WETimestampfield
+                        sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                        logType = $logType
+                        body = $jsonTable
+                        customerId = $WEOMSCredsFromFiles.UserName
+                    }
+                    Send-OMSAPIIngestionFile @params
 
                 }
                 #endregion
@@ -1227,15 +1237,14 @@ if ($WEService) {                 # Run the service
                         $jsonTable = $table | ConvertTo-Json -Depth 5
 
                         #Send to OMS
-                        Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                                 -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                                 -body $jsonTable `
-                                                 -logType $logType `
-                                                 -TimeStampField $WETimestampfield
-                    }
-                    
-                }
-                #endregion
+                        $params = @{
+                            TimeStampField = $WETimestampfield }  } #endregion
+                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            logType = $logType
+                            body = $jsonTable
+                            customerId = $WEOMSCredsFromFiles.UserName
+                        }
+                        Send-OMSAPIIngestionFile @params
 
                 #region Get and Send S2D Share Faults to OMS
                 $shares = Get-FileShare -ErrorAction Stop | where {$_.ContinuouslyAvailable -eq $true}
@@ -1318,11 +1327,14 @@ if ($WEService) {                 # Run the service
                         $jsonTable = $table | ConvertTo-Json -Depth 5
 
                         #Send to OMS
-                        Send-OMSAPIIngestionFile -customerId $WEOMSCredsFromFiles.UserName `
-                                                 -sharedKey $WEOMSCredsFromFiles.GetNetworkCredential().password `
-                                                 -body $jsonTable `
-                                                 -logType $logType `
-                                                 -TimeStampField $WETimestampfield
+                        $params = @{
+                            TimeStampField = $WETimestampfield
+                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            logType = $logType
+                            body = $jsonTable
+                            customerId = $WEOMSCredsFromFiles.UserName
+                        }
+                        Send-OMSAPIIngestionFile @params
 
                     }
                     
@@ -1361,4 +1373,4 @@ if ($WEService) {                 # Run the service
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+

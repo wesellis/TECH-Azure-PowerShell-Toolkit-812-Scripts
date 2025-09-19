@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Assign Unallocated Space
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -62,6 +67,8 @@ param(
     [Parameter(Mandatory = $true)][PSObject] $WETaskParams,
     [Parameter(Mandatory = $false)][bool] $WESuppressVerboseOutput
 )
+
+#region Functions
 
 Set-StrictMode -Version latest
 $WEErrorActionPreference = " Stop"
@@ -132,4 +139,5 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

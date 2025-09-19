@@ -1,17 +1,28 @@
-﻿# ============================================================================
-# Script Name: Azure DNS Zone Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure DNS zones for domain name management and resolution
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ZoneName,
     [array]$Tags = @()
 )
+
+#region Functions
 
 Write-Information "Provisioning DNS Zone: $ZoneName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -48,3 +59,6 @@ Write-Information "2. Add A, CNAME, MX, or other DNS records as needed"
 Write-Information "3. Verify DNS propagation using nslookup or dig"
 
 Write-Information "`nDNS Zone provisioning completed at $(Get-Date)"
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Storage Keys Retriever
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -79,6 +85,8 @@ param(
     [string]$WEStorageAccountName
 )
 
+#region Functions
+
 Write-WELog " Retrieving access keys for Storage Account: $WEStorageAccountName" " INFO"
 ; 
 $WEKeys = Get-AzStorageAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
@@ -98,3 +106,6 @@ Write-WELog "  Secondary: DefaultEndpointsProtocol=https;AccountName=$WEStorageA
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

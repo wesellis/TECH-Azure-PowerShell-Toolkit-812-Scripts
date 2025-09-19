@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Nat Gateway Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,27 +99,35 @@ param(
     [int]$WEIdleTimeoutInMinutes = 10
 )
 
+#region Functions
+
 Write-WELog " Creating NAT Gateway: $WENatGatewayName" " INFO"
 
 
 $WENatIpName = " $WENatGatewayName-pip"; 
-$WENatIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WENatIpName `
-    -Location $WELocation `
-    -AllocationMethod Static `
-    -Sku Standard
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = "Standard"
+    Location = $WELocation
+    AllocationMethod = "Static"
+    ErrorAction = "Stop"
+    Name = $WENatIpName
+}
+$WENatIp @params
 
 ; 
-$WENatGateway = New-AzNatGateway -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WENatGatewayName `
-    -Location $WELocation `
-    -IdleTimeoutInMinutes $WEIdleTimeoutInMinutes `
-    -Sku Standard `
-    -PublicIpAddress $WENatIp
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = "Standard"
+    Location = $WELocation
+    PublicIpAddress = $WENatIp
+    IdleTimeoutInMinutes = $WEIdleTimeoutInMinutes
+    ErrorAction = "Stop"
+    Name = $WENatGatewayName
+}
+$WENatGateway @params
 
-Write-WELog " ✅ NAT Gateway created successfully:" " INFO"
+Write-WELog "  NAT Gateway created successfully:" " INFO"
 Write-WELog "  Name: $($WENatGateway.Name)" " INFO"
 Write-WELog "  Location: $($WENatGateway.Location)" " INFO"
 Write-WELog "  SKU: $($WENatGateway.Sku.Name)" " INFO"
@@ -135,3 +149,6 @@ Write-WELog " Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'sub
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

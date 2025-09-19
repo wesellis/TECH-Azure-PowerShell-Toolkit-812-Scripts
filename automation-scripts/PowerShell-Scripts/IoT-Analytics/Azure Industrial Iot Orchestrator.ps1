@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Industrial Iot Orchestrator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -110,6 +116,8 @@ param(
     [Parameter(Mandatory=$false)]
     [int]$WETimeSeriesRetentionDays = 90
 )
+
+#region Functions
 
 ; 
 $requiredModules = @('Az.Resources', 'Az.IotHub', 'Az.Storage', 'Az.EventGrid')
@@ -502,147 +510,26 @@ class IndustrialIoTOrchestrator {
         $storageAccountName = " sa$($this.ResourceGroupName -replace '-', '')"
         
         try {
-            $storage = New-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -Name $storageAccountName `
-                -Location $this.Location -SkuName " Standard_LRS" -Kind " StorageV2" -EnableHierarchicalNamespace $true
-            
-            Write-WELog " Data Lake storage account created: $storageAccountName" " INFO" -ForegroundColor Green
-        } catch {
-            Write-Warning " Storage account creation failed: $_"
-        }
-    }
-    
-    [void]CreateDigitalTwinModels() {
-        Write-WELog " Creating Digital Twin models for $($this.IndustryType)..." " INFO" -ForegroundColor Yellow
-        
-        foreach ($modelName in $this.DigitalTwinModels.Keys) {
-           ;  $model = $this.DigitalTwinModels[$modelName]
-            Write-WELog " Creating model: $modelName" " INFO" -ForegroundColor Cyan
-            
-            # In a real implementation, this would upload to Digital Twins
-           ;  $modelJson = $model | ConvertTo-Json -Depth 10
-            Write-WELog " Model JSON created for: $modelName" " INFO" -ForegroundColor Green
-        }
-    }
-    
-    [void]SimulateDevices([int]$WEDeviceCount = 10) {
-        Write-WELog " Simulating $WEDeviceCount Industrial IoT devices..." " INFO" -ForegroundColor Yellow
-        
-        for ($i = 1; $i -le $WEDeviceCount; $i++) {
-            $deviceType = ($this.DigitalTwinModels.Keys | Get-Random)
-            $device = @{
-                DeviceId = " $deviceType-$i"
-                DeviceType = $deviceType
-                Location = " Floor-$([math]::Ceiling($i / 3))"
-                Status = " Online"
-                LastTelemetry = Get-Date -ErrorAction Stop
-                TelemetryData = $this.GenerateTelemetryData($deviceType)
+            $params = @{
+                Encoding = "UTF8  Write-WELog " Dashboard saved to: $dashboardPath" " INFO"
+                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-WELog " Generating IoT Dashboard..." " INFO"
+                gt = "70) { $score = $score + 20 }  # Add random variation $score = $score + Get-Random"
+                ErrorAction = "Stop }  ;  $html = $this.GenerateDashboardHTML($dashboardData) ;  $dashboardPath = " .\IoT-Dashboard-$(Get-Date"
+                Location = $this.Location
+                eq = " High" }).Count LastUpdated = Get-Date"
+                Depth = "10 Write-WELog " Model JSON created for: $modelName" " INFO"
+                Name = $storageAccountName
+                Format = "yyyyMMdd-HHmmss').html" $html | Out-File"
+                SkuName = " Standard_LRS"
+                EnableHierarchicalNamespace = $true  Write-WELog " Data Lake storage account created: $storageAccountName" " INFO
+                le = $WEDeviceCount; $i++) { $deviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = " $deviceType-$i" DeviceType = $deviceType Location = " Floor-$([math]::Ceiling($i / 3))" Status = " Online" LastTelemetry = Get-Date
+                Kind = " StorageV2"
+                Minimum = "0"
+                FilePath = $dashboardPath
+                ResourceGroupName = $this.ResourceGroupName
+                ForegroundColor = "Green }  [string]GenerateDashboardHTML([hashtable]$WEData) { return @"
             }
-            
-            $this.Devices += $device
-            Write-WELog " Device created: $($device.DeviceId)" " INFO" -ForegroundColor Cyan
-        }
-    }
-    
-    [hashtable]GenerateTelemetryData([Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDeviceType) {
-        $telemetry = @{}
-        
-        switch ($WEDeviceType) {
-            " CNCMachine" {
-                $telemetry = @{
-                    spindleSpeed = Get-Random -Minimum 1000 -Maximum 5000
-                    vibration = [math]::Round((Get-Random -Minimum 0.5 -Maximum 3.0), 2)
-                    toolWear = Get-Random -Minimum 0 -Maximum 100
-                    temperature = Get-Random -Minimum 20 -Maximum 80
-                }
-            }
-            " WindTurbine" {
-                $telemetry = @{
-                    windSpeed = [math]::Round((Get-Random -Minimum 3 -Maximum 25), 1)
-                    powerOutput = Get-Random -Minimum 0 -Maximum 2000
-                    rotorSpeed = Get-Random -Minimum 10 -Maximum 40
-                    nacelleDirection = Get-Random -Minimum 0 -Maximum 360
-                }
-            }
-            " HVAC" {
-                $telemetry = @{
-                    temperature = [math]::Round((Get-Random -Minimum 18 -Maximum 26), 1)
-                    humidity = Get-Random -Minimum 30 -Maximum 70
-                    airQuality = Get-Random -Minimum 50 -Maximum 150
-                    energyConsumption = Get-Random -Minimum 1000 -Maximum 5000
-                }
-            }
-            default {
-                $telemetry = @{
-                    genericSensor1 = Get-Random -Minimum 0 -Maximum 100
-                    genericSensor2 = Get-Random -Minimum 0 -Maximum 100
-                }
-            }
-        }
-        
-        return $telemetry
-    }
-    
-    [void]AnalyzePredictiveMaintenance() {
-        Write-WELog " Analyzing predictive maintenance requirements..." " INFO" -ForegroundColor Yellow
-        
-        foreach ($device in $this.Devices) {
-            $maintenanceScore = $this.CalculateMaintenanceScore($device)
-            
-            if ($maintenanceScore -gt 80) {
-                $alert = @{
-                    DeviceId = $device.DeviceId
-                    AlertType = " PredictiveMaintenance"
-                    Severity = " High"
-                    Message = " Device requires immediate maintenance"
-                    Score = $maintenanceScore
-                    Timestamp = Get-Date -ErrorAction Stop
-                }
-                
-                $this.Alerts += $alert
-                Write-WELog " ALERT: $($device.DeviceId) - Maintenance score: $maintenanceScore" " INFO" -ForegroundColor Red
-            }
-        }
-    }
-    
-    [double]CalculateMaintenanceScore([hashtable]$WEDevice) {
-        # Simple ML algorithm simulation
-        $score = 0
-        
-        if ($WEDevice.TelemetryData.vibration -gt 2.5) { $score = $score + 30 }
-        if ($WEDevice.TelemetryData.toolWear -gt 80) { $score = $score + 40 }
-        if ($WEDevice.TelemetryData.temperature -gt 70) { $score = $score + 20 }
-        
-        # Add random variation
-        $score = $score + Get-Random -Minimum -10 -Maximum 10
-        
-        return [math]::Max(0, [math]::Min(100, $score))
-    }
-    
-    [void]GenerateIoTDashboard() {
-        Write-WELog " Generating IoT Dashboard..." " INFO" -ForegroundColor Green
-        
-        $dashboardData = @{
-            IndustryType = $this.IndustryType
-            TotalDevices = $this.Devices.Count
-            OnlineDevices = ($this.Devices | Where-Object { $_.Status -eq " Online" }).Count
-            ActiveAlerts = $this.Alerts.Count
-            HighPriorityAlerts = ($this.Alerts | Where-Object { $_.Severity -eq " High" }).Count
-            LastUpdated = Get-Date -ErrorAction Stop
-        }
-        
-       ;  $html = $this.GenerateDashboardHTML($dashboardData)
-       ;  $dashboardPath = " .\IoT-Dashboard-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
-        $html | Out-File -FilePath $dashboardPath -Encoding UTF8
-        
-        Write-WELog " Dashboard saved to: $dashboardPath" " INFO" -ForegroundColor Green
-    }
-    
-    [string]GenerateDashboardHTML([hashtable]$WEData) {
-        return @"
+            $storage @params
 <!DOCTYPE html>
 <html>
 <head>
@@ -776,4 +663,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

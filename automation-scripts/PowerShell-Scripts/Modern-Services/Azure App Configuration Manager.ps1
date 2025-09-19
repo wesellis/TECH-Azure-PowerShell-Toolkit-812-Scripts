@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure App Configuration Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -104,8 +110,10 @@ param(
     [string]$WESku = " Standard"
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName " Azure App Configuration Service Manager" -Version " 1.0" -Description " Centralized configuration management for modern applications"
 
@@ -119,51 +127,22 @@ try {
     
     switch ($WEAction) {
         " Create" {
-            Write-Log " 🏗️ Creating App Configuration store..." -Level INFO
+            Write-Log "  Creating App Configuration store..." -Level INFO
             
-            $configStore = New-AzAppConfigurationStore -ErrorAction Stop `
-                -ResourceGroupName $WEResourceGroupName `
-                -Name $WEConfigStoreName `
-                -Location $WELocation `
-                -Sku $WESku `
-                -Tag $WETags
-            
-            Write-Log " ✓ App Configuration store created: $($configStore.Name)" -Level SUCCESS
-        }
-        
-        " AddKey" {
-            Write-Log " 🔑 Adding configuration key..." -Level INFO
-            
-            $keyParams = @{
-                Endpoint = " https://$WEConfigStoreName.azconfig.io"
-                Key = $WEKeyName
-                Value = $WEKeyValue
+            $params = @{
+                ResourceGroupName = $WEResourceGroupName
+                Sku = $WESku
+                Key = $WEKeyName Write-WELog " Key: $($key.Key)" " INFO
+                gt = "0) { $keyParams.Tag = $WETags }  Set-AzAppConfigurationKeyValue"
+                Location = $WELocation
+                Endpoint = " https://$WEConfigStoreName.azconfig.io" $keys | Format-Table Key, Value, Label, ContentType } }"
+                Level = "INFO  ;  $keys = Get-AzAppConfigurationKeyValue"
+                Tag = $WETags  Write-Log " [OK] App Configuration store created: $($configStore.Name)
+                ForegroundColor = "White }  " ListKeys" { Write-Log " 📋 Listing all configuration keys..."
+                ErrorAction = "Stop @keyParams Write-Log " [OK] Configuration key added: $WEKeyName"
+                Name = $WEConfigStoreName
             }
-            
-            if ($WELabel) { $keyParams.Label = $WELabel }
-            if ($WEContentType) { $keyParams.ContentType = $WEContentType }
-            if ($WETags.Count -gt 0) { $keyParams.Tag = $WETags }
-            
-            Set-AzAppConfigurationKeyValue -ErrorAction Stop @keyParams
-            Write-Log " ✓ Configuration key added: $WEKeyName" -Level SUCCESS
-        }
-        
-        " GetKey" {
-            Write-Log " 📖 Retrieving configuration key..." -Level INFO
-            
-            $key = Get-AzAppConfigurationKeyValue -Endpoint " https://$WEConfigStoreName.azconfig.io" -Key $WEKeyName
-            Write-WELog " Key: $($key.Key)" " INFO" -ForegroundColor Cyan
-            Write-WELog " Value: $($key.Value)" " INFO" -ForegroundColor Green
-            Write-WELog " Label: $($key.Label)" " INFO" -ForegroundColor White
-        }
-        
-        " ListKeys" {
-            Write-Log " 📋 Listing all configuration keys..." -Level INFO
-            
-           ;  $keys = Get-AzAppConfigurationKeyValue -Endpoint " https://$WEConfigStoreName.azconfig.io"
-            $keys | Format-Table Key, Value, Label, ContentType
-        }
-    }
+            $configStore @params
 
     Write-ProgressStep -StepNumber 3 -TotalSteps 4 -StepName " Validation" -Status " Validating configuration"
     
@@ -177,16 +156,16 @@ try {
     Write-WELog "                              APP CONFIGURATION OPERATION COMPLETE" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " ⚙️ Configuration Store: $WEConfigStoreName" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Configuration Store: $WEConfigStoreName" " INFO" -ForegroundColor Cyan
     Write-WELog " 🌍 Endpoint: https://$WEConfigStoreName.azconfig.io" " INFO" -ForegroundColor Yellow
     Write-WELog " 📍 Location: $($store.Location)" " INFO" -ForegroundColor White
-    Write-WELog " 💰 SKU: $($store.Sku.Name)" " INFO" -ForegroundColor White
+    Write-WELog "  SKU: $($store.Sku.Name)" " INFO" -ForegroundColor White
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ App Configuration operation completed successfully!" -Level SUCCESS
+    Write-Log "  App Configuration operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ App Configuration operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  App Configuration operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
@@ -195,4 +174,5 @@ Write-Progress -Activity " App Configuration Management" -Completed
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

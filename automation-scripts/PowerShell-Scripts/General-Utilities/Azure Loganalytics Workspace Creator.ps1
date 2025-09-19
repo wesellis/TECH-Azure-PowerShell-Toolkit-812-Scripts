@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Loganalytics Workspace Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -96,16 +102,21 @@ param(
     [int]$WERetentionInDays = 30
 )
 
+#region Functions
+
 Write-WELog " Creating Log Analytics Workspace: $WEWorkspaceName" " INFO"
 ; 
-$WEWorkspace = New-AzOperationalInsightsWorkspace -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEWorkspaceName `
-    -Location $WELocation `
-    -Sku $WESku `
-    -RetentionInDays $WERetentionInDays
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = $WESku
+    Location = $WELocation
+    RetentionInDays = $WERetentionInDays
+    ErrorAction = "Stop"
+    Name = $WEWorkspaceName
+}
+$WEWorkspace @params
 
-Write-WELog " ✅ Log Analytics Workspace created successfully:" " INFO"
+Write-WELog "  Log Analytics Workspace created successfully:" " INFO"
 Write-WELog "  Name: $($WEWorkspace.Name)" " INFO"
 Write-WELog "  Location: $($WEWorkspace.Location)" " INFO"
 Write-WELog "  SKU: $($WEWorkspace.Sku)" " INFO"
@@ -148,3 +159,6 @@ Write-WELog " • Custom Applications" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

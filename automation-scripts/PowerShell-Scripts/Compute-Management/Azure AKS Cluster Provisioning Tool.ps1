@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Aks Cluster Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -91,6 +97,8 @@ param(
     [bool]$WEEnableManagedIdentity = $true
 )
 
+#region Functions
+
 Write-WELog " Provisioning AKS Cluster: $WEAksClusterName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -102,16 +110,17 @@ Write-WELog " RBAC Enabled: $WEEnableRBAC" " INFO"
 
 
 Write-WELog " `nCreating AKS cluster (this may take 10-15 minutes)..." " INFO" ; 
-$WEAksCluster = New-AzAksCluster -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAksClusterName `
-    -NodeCount $WENodeCount `
-    -Location $WELocation `
-    -NodeVmSize $WENodeVmSize `
-    -KubernetesVersion $WEKubernetesVersion `
-    -NetworkPlugin $WENetworkPlugin `
-    -EnableRBAC:$WEEnableRBAC `
-    -EnableManagedIdentity:$WEEnableManagedIdentity
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    NodeVmSize = $WENodeVmSize
+    NodeCount = $WENodeCount
+    Location = $WELocation
+    NetworkPlugin = $WENetworkPlugin
+    ErrorAction = "Stop"
+    KubernetesVersion = $WEKubernetesVersion
+    Name = $WEAksClusterName
+}
+$WEAksCluster @params
 
 Write-WELog " `nAKS Cluster $WEAksClusterName provisioned successfully!" " INFO"
 Write-WELog " Cluster FQDN: $($WEAksCluster.Fqdn)" " INFO"
@@ -143,3 +152,6 @@ Write-WELog " `nAKS Cluster provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

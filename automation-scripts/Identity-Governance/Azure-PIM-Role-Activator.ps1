@@ -1,12 +1,20 @@
-﻿# ============================================================================
-# Script Name: Azure Privileged Identity Management Activator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Activates eligible Azure PIM roles for just-in-time access
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$RoleName,
@@ -20,6 +28,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$Justification = "Administrative task requiring elevated access"
 )
+
+#region Functions
 
 Write-Information "Activating PIM role: $RoleName"
 Write-Information "Scope: $ResourceScope"
@@ -53,7 +63,7 @@ try {
     # Note: Actual PIM activation requires Azure AD Premium P2 and specific Graph API calls
     # This is a template showing the structure - actual implementation depends on environment
     
-    Write-Information "`n⚠️ PIM Activation Process:"
+    Write-Information "`n[WARN] PIM Activation Process:"
     Write-Information "1. This script provides the framework for PIM activation"
     Write-Information "2. Actual activation requires Azure AD Premium P2 license"
     Write-Information "3. Use Azure Portal or Microsoft Graph API for activation"
@@ -79,9 +89,12 @@ try {
     Write-Information "Import-Module Microsoft.Graph.Identity.Governance"
     Write-Information "# Create activation request using New-MgIdentityGovernancePrivilegedAccessRoleAssignmentRequest"
     
-    Write-Information "`n✅ PIM activation guidance provided"
+    Write-Information "`n PIM activation guidance provided"
     Write-Information "⏰ Remember to deactivate when no longer needed"
     
 } catch {
     Write-Error "PIM activation failed: $($_.Exception.Message)"
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Asr Sql Failoverag
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -112,9 +118,7 @@ Catch
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
       $WEErrorMessage = $WEErrorMessage + $_
-      Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
- }
+      Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 
 
     $WERPVariable = Get-AutomationVariable -Name $WERecoveryPlanContext.RecoveryPlanName
@@ -171,3 +175,6 @@ Catch
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

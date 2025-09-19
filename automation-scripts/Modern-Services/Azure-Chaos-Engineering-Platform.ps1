@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Enterprise chaos engineering platform for Azure resilience testing and disaster recovery validation.
 
@@ -64,6 +70,8 @@ param(
     [Parameter(Mandatory=$false)]
     [switch]$DryRun
 )
+
+#region Functions
 
 # Import required modules
 $requiredModules = @('Az.Resources', 'Az.Monitor', 'Az.Network', 'Az.Compute', 'Az.Storage')
@@ -257,332 +265,7 @@ class ChaosEngineeringPlatform {
             $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddMinutes(-5)
             
-            $metrics = Get-AzMetric -ResourceId $VM.ResourceId -MetricName "Percentage CPU" `
-                -StartTime $startTime -EndTime $endTime -TimeGrain 00:01:00 `
-                -AggregationType Average -WarningAction SilentlyContinue
-            
-            if ($metrics -and $metrics.Data) {
-                return ($metrics.Data | Measure-Object -Property Average -Average).Average
-            }
-        } catch {
-            Write-Debug "Failed to get CPU metrics for $($VM.Name)"
-        }
-        
-        return 0
-    }
-    
-    [double]GetWebAppErrorRate([object]$WebApp) {
-        # Simulate error rate collection
-        return [math]::Round((Get-Random -Minimum 0 -Maximum 5), 2)
-    }
-    
-    [double]GetWebAppAvailability([object]$WebApp) {
-        # Simulate availability check
-        return [math]::Round((Get-Random -Minimum 95 -Maximum 100), 2)
-    }
-    
-    [double]GetStorageAvailability([object]$Storage) {
-        # Simulate storage availability check
-        return [math]::Round((Get-Random -Minimum 98 -Maximum 100), 2)
-    }
-    
-    [void]ExecuteChaosExperiment([bool]$DryRun) {
-        Write-Information "`n=== Starting Chaos Experiment: $($this.ChaosMode) ==="
-        Write-Information "Experiment ID: $($this.ExperimentId)"
-        Write-Information "Duration: $($this.Duration) minutes"
-        Write-Information "Target Resources: $($this.TargetResources.Count)"
-        
-        if ($DryRun) {
-            Write-Information "`n*** DRY RUN MODE - No actual changes will be made ***"
-        }
-        
-        $startTime = Get-Date -ErrorAction Stop
-        $endTime = $startTime.AddMinutes($this.Duration)
-        
-        # Pre-experiment safety check
-        if ($this.SafetyEnabled) {
-            $safetyResult = $this.PerformSafetyCheck()
-            if (!$safetyResult.Safe) {
-                throw "Safety check failed: $($safetyResult.Reason). Experiment aborted."
-            }
-        }
-        
-        try {
-            # Execute chaos based on mode
-            switch ($this.ChaosMode) {
-                "NetworkLatency" { $this.InjectNetworkLatency($DryRun) }
-                "ResourceFailure" { $this.TriggerResourceFailure($DryRun) }
-                "ZoneFailure" { $this.SimulateZoneFailure($DryRun) }
-                "ApplicationStress" { $this.InjectApplicationStress($DryRun) }
-                "DatabaseFailover" { $this.TriggerDatabaseFailover($DryRun) }
-                "FullDR" { $this.ExecuteFullDRTest($DryRun) }
-            }
-            
-            # Monitor during experiment
-            $this.MonitorExperiment($endTime, $DryRun)
-            
-        } finally {
-            # Cleanup and recovery
-            Write-Information "`nCleaning up experiment..."
-            $this.CleanupExperiment($DryRun)
-        }
-    }
-    
-    [void]InjectNetworkLatency([bool]$DryRun) {
-        Write-Information "Injecting network latency..."
-        
-        foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq "Microsoft.Compute/virtualMachines") {
-                if ($DryRun) {
-                    Write-Information "DRY RUN: Would inject 200ms latency on VM: $($resource.Name)"
-                } else {
-                    # In a real implementation, this would use Azure Chaos Studio or custom agents
-                    Write-Information "Injecting latency on VM: $($resource.Name)"
-                    
-                    $result = @{
-                        ResourceId = $resource.ResourceId
-                        Action = "NetworkLatency"
-                        Parameters = @{ Latency = "200ms" }
-                        Timestamp = Get-Date -ErrorAction Stop
-                        Success = $true
-                    }
-                    
-                    $this.ExperimentResults += $result
-                }
-            }
-        }
-    }
-    
-    [void]TriggerResourceFailure([bool]$DryRun) {
-        Write-Information "Triggering resource failures..."
-        
-        # Select random resources for failure (max 30% of resources)
-        $failureCount = [math]::Min([math]::Ceiling($this.TargetResources.Count * 0.3), 3)
-        $resourcesToFail = $this.TargetResources | Get-Random -Count $failureCount
-        
-        foreach ($resource in $resourcesToFail) {
-            if ($DryRun) {
-                Write-Information "DRY RUN: Would stop resource: $($resource.Name)"
-            } else {
-                switch ($resource.ResourceType) {
-                    "Microsoft.Compute/virtualMachines" {
-                        Write-Information "Stopping VM: $($resource.Name)"
-                        Stop-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -Force -NoWait
-                    }
-                    "Microsoft.Web/sites" {
-                        Write-Information "Stopping Web App: $($resource.Name)"
-                        Stop-AzWebApp -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name
-                    }
-                }
-                
-                $result = @{
-                    ResourceId = $resource.ResourceId
-                    Action = "ResourceFailure"
-                    Parameters = @{ Type = "Stop" }
-                    Timestamp = Get-Date -ErrorAction Stop
-                    Success = $true
-                }
-                
-                $this.ExperimentResults += $result
-            }
-        }
-    }
-    
-    [void]InjectApplicationStress([bool]$DryRun) {
-        Write-Information "Injecting application stress..."
-        
-        foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq "Microsoft.Web/sites") {
-                if ($DryRun) {
-                    Write-Information "DRY RUN: Would stress test app: $($resource.Name)"
-                } else {
-                    Write-Information "Starting stress test on: $($resource.Name)"
-                    
-                    # Simulate stress testing
-                    $result = @{
-                        ResourceId = $resource.ResourceId
-                        Action = "ApplicationStress"
-                        Parameters = @{ CPULoad = "80%"; MemoryLoad = "70%" }
-                        Timestamp = Get-Date -ErrorAction Stop
-                        Success = $true
-                    }
-                    
-                    $this.ExperimentResults += $result
-                }
-            }
-        }
-    }
-    
-    [void]TriggerDatabaseFailover([bool]$DryRun) {
-        Write-Information "Triggering database failover..."
-        
-        $databases = $this.TargetResources | Where-Object { $_.ResourceType -like "*Sql*" -or $_.ResourceType -like "*DocumentDB*" }
-        
-        foreach ($db in $databases) {
-            if ($DryRun) {
-                Write-Information "DRY RUN: Would trigger failover for: $($db.Name)"
-            } else {
-                Write-Information "Triggering failover for: $($db.Name)"
-                
-                $result = @{
-                    ResourceId = $db.ResourceId
-                    Action = "DatabaseFailover"
-                    Parameters = @{ Type = "Automatic" }
-                    Timestamp = Get-Date -ErrorAction Stop
-                    Success = $true
-                }
-                
-                $this.ExperimentResults += $result
-            }
-        }
-    }
-    
-    [void]SimulateZoneFailure([bool]$DryRun) {
-        Write-Information "Simulating availability zone failure..."
-        
-        if ($DryRun) {
-            Write-Information "DRY RUN: Would simulate zone failure affecting multiple resources"
-        } else {
-            # This would simulate an entire availability zone going down
-            Write-Information "Simulating zone failure - affecting zone-redundant resources"
-        }
-    }
-    
-    [void]ExecuteFullDRTest([bool]$DryRun) {
-        Write-Information "Executing full disaster recovery test..."
-        
-        if ($DryRun) {
-            Write-Information "DRY RUN: Would execute complete DR failover"
-        } else {
-            Write-Information "*** FULL DR TEST - This will test complete failover procedures ***"
-            # Full DR implementation would go here
-        }
-    }
-    
-    [void]MonitorExperiment([datetime]$EndTime, [bool]$DryRun) {
-        Write-Information "`nMonitoring experiment progress..."
-        
-        while ((Get-Date) -lt $EndTime) {
-            # Collect current metrics
-            $currentMetrics = @{}
-            foreach ($resource in $this.TargetResources) {
-                $currentMetrics[$resource.ResourceId] = $this.CollectResourceMetrics($resource)
-            }
-            
-            $this.ChaosMetrics[(Get-Date)] = $currentMetrics
-            
-            # Check safety breakers
-            if ($this.SafetyEnabled) {
-                $safetyResult = $this.CheckSafetyBreakers($currentMetrics)
-                if (!$safetyResult.Safe) {
-                    Write-Information "SAFETY BREAKER TRIGGERED: $($safetyResult.Reason)"
-                    break
-                }
-            }
-            
-            $remainingMinutes = [math]::Ceiling(($EndTime - (Get-Date)).TotalMinutes)
-            Write-Information "Experiment running... $remainingMinutes minutes remaining"
-            
-            Start-Sleep -Seconds 30
-        }
-    }
-    
-    [hashtable]PerformSafetyCheck() {
-        Write-Information "Performing pre-experiment safety check..."
-        
-        # Check baseline metrics
-        foreach ($resourceId in $this.BaselineMetrics.Keys) {
-            $baseline = $this.BaselineMetrics[$resourceId]
-            
-            if ($baseline.ErrorRate -gt 10) {
-                return @{ Safe = $false; Reason = "Baseline error rate too high: $($baseline.ErrorRate)%" }
-            }
-            
-            if ($baseline.Availability -lt 95) {
-                return @{ Safe = $false; Reason = "Baseline availability too low: $($baseline.Availability)%" }
-            }
-        }
-        
-        return @{ Safe = $true; Reason = "All safety checks passed" }
-    }
-    
-    [hashtable]CheckSafetyBreakers([hashtable]$CurrentMetrics) {
-        foreach ($breaker in $this.SafetyBreakers) {
-            foreach ($resourceId in $CurrentMetrics.Keys) {
-                $metrics = $CurrentMetrics[$resourceId]
-                $metricValue = $metrics[$breaker.MetricName]
-                
-                if ($null -ne $metricValue) {
-                    $thresholdBreached = switch ($breaker.MetricName) {
-                        "ErrorRate" { $metricValue -gt $breaker.Threshold }
-                        "Availability" { $metricValue -lt $breaker.Threshold }
-                        "ResponseTime" { $metricValue -gt $breaker.Threshold }
-                        "CPUUtilization" { $metricValue -gt $breaker.Threshold }
-                        default { $false }
-                    }
-                    
-                    if ($thresholdBreached) {
-                        return @{
-                            Safe = $false
-                            Reason = "$($breaker.Name) threshold breached: $metricValue (threshold: $($breaker.Threshold))"
-                            Action = $breaker.Action
-                        }
-                    }
-                }
-            }
-        }
-        
-        return @{ Safe = $true; Reason = "All safety breakers within limits" }
-    }
-    
-    [void]CleanupExperiment([bool]$DryRun) {
-        Write-Information "Cleaning up chaos experiment..."
-        
-        foreach ($result in $this.ExperimentResults) {
-            switch ($result.Action) {
-                "ResourceFailure" {
-                    if ($DryRun) {
-                        Write-Information "DRY RUN: Would restart stopped resources"
-                    } else {
-                        # Restart stopped resources
-                        $resource = Get-AzResource -ResourceId $result.ResourceId
-                        if ($resource.ResourceType -eq "Microsoft.Compute/virtualMachines") {
-                            Write-Information "Restarting VM: $($resource.Name)"
-                            Start-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -NoWait
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    [void]ValidateRecovery() {
-        Write-Information "`nValidating recovery mechanisms..."
-        
-        Start-Sleep -Seconds 60  # Wait for recovery
-        
-        foreach ($resource in $this.TargetResources) {
-            $postMetrics = $this.CollectResourceMetrics($resource)
-            $baselineMetrics = $this.BaselineMetrics[$resource.ResourceId]
-            
-            $recovery = @{
-                ResourceId = $resource.ResourceId
-                BaselineAvailability = $baselineMetrics.Availability
-                PostExperimentAvailability = $postMetrics.Availability
-                RecoveryTime = "60 seconds"  # Simplified
-                FullyRecovered = $postMetrics.Availability -ge ($baselineMetrics.Availability * 0.95)
-            }
-            
-            if ($recovery.FullyRecovered) {
-                Write-Information "✅ $($resource.Name) - Recovery successful"
-            } else {
-                Write-Information "❌ $($resource.Name) - Recovery incomplete"
-            }
-        }
-    }
-    
-    [string]GenerateExperimentReport() {
-        $html = @"
+            $metrics -ge "($baselineMetrics.Availability * 0.95) }  if ($recovery.FullyRecovered) { Write-Information " $($resource.Name)" -Debug "Failed to get CPU metrics for $($VM.Name)" }  return 0 }  [double]GetWebAppErrorRate([object]$WebApp) { # Simulate error rate collection return [math]::Round((Get-Random" -and $metrics.Data) { return ($metrics.Data | Measure-Object -ResourceId $result.ResourceId if ($resource.ResourceType -gt $breaker.Threshold } default { $false } }  if ($thresholdBreached) { return @{ Safe = $false Reason = "$($breaker.Name) threshold breached: $metricValue (threshold: $($breaker.Threshold))" Action = $breaker.Action } } } } }  return @{ Safe = $true; Reason = "All safety breakers within limits" } }  [void]CleanupExperiment([bool]$DryRun) { Write-Information "Cleaning up chaos experiment..."  foreach ($result in $this.ExperimentResults) { switch ($result.Action) { "ResourceFailure" { if ($DryRun) { Write-Information "DRY RUN: Would restart stopped resources" } else { # Restart stopped resources $resource = Get-AzResource -Seconds "60  # Wait for recovery  foreach ($resource in $this.TargetResources) { $postMetrics = $this.CollectResourceMetrics($resource) $baselineMetrics = $this.BaselineMetrics[$resource.ResourceId]  $recovery = @{ ResourceId = $resource.ResourceId BaselineAvailability = $baselineMetrics.Availability PostExperimentAvailability = $postMetrics.Availability RecoveryTime = "60 seconds"  # Simplified FullyRecovered = $postMetrics.Availability" -eq "Microsoft.Compute/virtualMachines") { Write-Information "Restarting VM: $($resource.Name)" Start-AzVM" -ResourceGroupName $resource.ResourceGroupName -Count $failureCount  foreach ($resource in $resourcesToFail) { if ($DryRun) { Write-Information "DRY RUN: Would stop resource: $($resource.Name)" } else { switch ($resource.ResourceType) { "Microsoft.Compute/virtualMachines" { Write-Information "Stopping VM: $($resource.Name)" Stop-AzVM -Property "Average" -Minimum "98" -Name $resource.Name -EndTime $endTime -ne $metricValue) { $thresholdBreached = switch ($breaker.MetricName) { "ErrorRate" { $metricValue -ErrorAction "Stop Success = $true }  $this.ExperimentResults += $result } } }  [void]SimulateZoneFailure([bool]$DryRun) { Write-Information "Simulating availability zone failure..."  if ($DryRun) { Write-Information "DRY RUN: Would simulate zone failure affecting multiple resources" } else { # This would simulate an entire availability zone going down Write-Information "Simulating zone failure" -StartTime $startTime -MetricName "Percentage CPU" -redundant "resources" } }  [void]ExecuteFullDRTest([bool]$DryRun) { Write-Information "Executing full disaster recovery test..."  if ($DryRun) { Write-Information "DRY RUN: Would execute complete DR failover" } else { Write-Information "*** FULL DR TEST" -NoWait "} "Microsoft.Web/sites" { Write-Information "Stopping Web App: $($resource.Name)" Stop-AzWebApp" -or $_.ResourceType -lt $breaker.Threshold } "ResponseTime" { $metricValue -like "*DocumentDB*" }  foreach ($db in $databases) { if ($DryRun) { Write-Information "DRY RUN: Would trigger failover for: $($db.Name)" } else { Write-Information "Triggering failover for: $($db.Name)"  $result = @{ ResourceId = $db.ResourceId Action = "DatabaseFailover" Parameters = @{ Type = "Automatic" } Timestamp = Get-Date" -TimeGrain "00:01:00" -Information " $($resource.Name)" -WarningAction "SilentlyContinue  if ($metrics" -Maximum "100), 2) }  [double]GetStorageAvailability([object]$Storage) { # Simulate storage availability check return [math]::Round((Get-Random" -AggregationType "Average"
 <!DOCTYPE html>
 <html>
 <head>
@@ -704,8 +387,8 @@ class ChaosEngineeringPlatform {
 try {
     Write-Information "Azure Chaos Engineering Platform v1.0"
     Write-Information "===================================="
-    Write-Information "⚠️  WARNING: This tool introduces controlled failures!"
-    Write-Information "⚠️  Use with extreme caution in production environments!"
+    Write-Information "[WARN]  WARNING: This tool introduces controlled failures!"
+    Write-Information "[WARN]  Use with extreme caution in production environments!"
     
     if (!$DryRun) {
         $confirmation = Read-Host "`nAre you sure you want to proceed with chaos engineering? (yes/no)"
@@ -751,10 +434,12 @@ try {
         Write-Information "`nExperiment report saved to: $reportPath"
     }
     
-    Write-Information "`n✅ Chaos engineering experiment completed successfully!"
+    Write-Information "`n Chaos engineering experiment completed successfully!"
     Write-Information "Experiment ID: $($chaosEngine.ExperimentId)"
     
 } catch {
     Write-Error "Chaos engineering experiment failed: $_"
     exit 1
 }
+
+#endregion

@@ -1,6 +1,23 @@
-﻿# Azure Backup Status Checker
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Backup Status Checker
 # Quick backup status verification for VMs and other resources
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -14,7 +31,9 @@ param(
     [switch]$ShowUnprotected
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Backup Status Checker" -Version "1.0" -Description "Verify backup protection status"
 
 try {
@@ -55,9 +74,12 @@ try {
     }
 
     $backupReport | Format-Table -AutoSize
-    Write-Log "✅ Backup status check completed" -Level SUCCESS
+    Write-Log " Backup status check completed" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Backup status check failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Backup status check failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

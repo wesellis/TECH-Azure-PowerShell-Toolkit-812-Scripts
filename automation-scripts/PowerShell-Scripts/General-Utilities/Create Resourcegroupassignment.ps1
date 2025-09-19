@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Create Resourcegroupassignment
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +56,8 @@ param(
     [string][Parameter(mandatory=$true)] $appId
 )
 
+#region Functions
+
 
 if ($null -eq (Get-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue)) {
    ;  $rg = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -Force
@@ -61,9 +69,13 @@ if ($null -eq (Get-AzResourceGroup -Name $WEResourceGroupName -Location $WELocat
 }
 
 ; 
-$ra = New-AzRoleAssignment -ObjectId $(Get-AzADServicePrincipal -ApplicationId $appId).Id `
-                           -RoleDefinitionName Owner `
-                           -Scope $rg.ResourceId -Verbose
+$params = @{
+    ApplicationId = $appId).Id
+    RoleDefinitionName = "Owner"
+    ObjectId = $(Get-AzADServicePrincipal
+    Scope = $rg.ResourceId
+}
+$ra @params
 
 
 
@@ -79,3 +91,6 @@ $ra | out-string
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

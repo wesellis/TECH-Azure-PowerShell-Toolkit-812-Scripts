@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Bootstrap Main
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -259,26 +265,13 @@ try
             $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
 
             " Logging in to Azure..."
-            Add-AzureRmAccount `
-                -ServicePrincipal `
-                -TenantId $servicePrincipalConnection.TenantId `
-                -ApplicationId $servicePrincipalConnection.ApplicationId `
-                -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
-        }
-        catch 
-        {
-            if (!$servicePrincipalConnection)
-            {
-                $WEErrorMessage = " Connection $connectionName not found."
-                throw $WEErrorMessage
-            } else{
-                Write-Error -Message $_.Exception
-                throw $_.Exception
-                exit
+            $params = @{
+                ApplicationId = $servicePrincipalConnection.ApplicationId
+                TenantId = $servicePrincipalConnection.TenantId
+                CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint } catch { if (!$servicePrincipalConnection) { $WEErrorMessage = " Connection $connectionName not found." throw $WEErrorMessage } else{ Write-Error
+                Message = $_.Exception throw $_.Exception exit } } } #++++++++++++++++++++++++STEP 1 execution ends++++++++++++++++++++++++++
             }
-        }
-    }
-    #++++++++++++++++++++++++STEP 1 execution ends++++++++++++++++++++++++++
+            Add-AzureRmAccount @params
 
     #=======================STEP 2 execution starts===========================
 
@@ -678,4 +671,5 @@ catch
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Functionapp Setting Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [hashtable]$WEAppSettings
 )
 
+#region Functions
+
 Write-WELog " Updating Function App settings: $WEFunctionAppName" " INFO"
 
 $WEFunctionApp = Get-AzFunctionApp -ResourceGroupName $WEResourceGroupName -Name $WEFunctionAppName
@@ -103,7 +111,7 @@ foreach ($WESetting in $WEAppSettings.GetEnumerator()) {
 
 Update-AzFunctionApp -ResourceGroupName $WEResourceGroupName -Name $WEFunctionAppName -AppSetting $WEExistingSettings
 
-Write-WELog " ✅ Function App settings updated successfully!" " INFO"
+Write-WELog "  Function App settings updated successfully!" " INFO"
 
 
 
@@ -112,3 +120,6 @@ Write-WELog " ✅ Function App settings updated successfully!" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

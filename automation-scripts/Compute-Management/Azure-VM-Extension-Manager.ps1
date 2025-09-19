@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Extension Manager
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Installs and manages Azure VM extensions
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -24,21 +33,29 @@ param (
     [string]$Publisher = "Microsoft.Compute"
 )
 
+#region Functions
+
 Write-Information "Managing VM extension: $ExtensionName"
 
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 
 # Install extension
-Set-AzVMExtension -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -VMName $VmName `
-    -Name $ExtensionName `
-    -Publisher $Publisher `
-    -ExtensionType $ExtensionType `
-    -TypeHandlerVersion "1.10" `
-    -Location $VM.Location
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Publisher = $Publisher
+    Name = $ExtensionName
+    ExtensionType = $ExtensionType
+    Location = $VM.Location
+    TypeHandlerVersion = "1.10"
+    ErrorAction = "Stop"
+    VMName = $VmName
+}
+Set-AzVMExtension @params
 
-Write-Information "✅ Extension '$ExtensionName' installed successfully"
+Write-Information " Extension '$ExtensionName' installed successfully"
 Write-Information "VM: $VmName"
 Write-Information "Publisher: $Publisher"
 Write-Information "Type: $ExtensionType"
+
+
+#endregion

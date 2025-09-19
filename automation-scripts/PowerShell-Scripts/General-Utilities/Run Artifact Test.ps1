@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Run Artifact Test
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -45,6 +50,8 @@ param(
     [Int] $WEIntParam,
     [Boolean] $WEBoolParam
 )
+
+#region Functions
 ; 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
@@ -71,3 +78,6 @@ if ((Test-Path variable:global:TestShouldExitWithNonZeroExitCode) -and ($global:
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Validate Metadata
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -45,6 +50,8 @@ param(
     [string] $WECloudEnvironment = $WEENV:ENVIRONMENT,
     [string] $WEBuildReason = $WEENV:BUILD_REASON
 )
+
+#region Functions
 
 
 Write-Information " Validating metadata file: $WESampleFolder\metadata.json"
@@ -115,3 +122,6 @@ if ($error.count -eq 0) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

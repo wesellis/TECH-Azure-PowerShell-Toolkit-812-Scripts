@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Kubernetes Service Cluster Provisioning Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Provisions Azure Kubernetes Service clusters with node pools and networking
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$AksClusterName,
@@ -19,6 +28,8 @@ param (
     [bool]$EnableManagedIdentity = $true
 )
 
+#region Functions
+
 Write-Information "Provisioning AKS Cluster: $AksClusterName"
 Write-Information "Resource Group: $ResourceGroupName"
 Write-Information "Location: $Location"
@@ -30,16 +41,17 @@ Write-Information "RBAC Enabled: $EnableRBAC"
 
 # Create the AKS cluster
 Write-Information "`nCreating AKS cluster (this may take 10-15 minutes)..."
-$AksCluster = New-AzAksCluster -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $AksClusterName `
-    -NodeCount $NodeCount `
-    -Location $Location `
-    -NodeVmSize $NodeVmSize `
-    -KubernetesVersion $KubernetesVersion `
-    -NetworkPlugin $NetworkPlugin `
-    -EnableRBAC:$EnableRBAC `
-    -EnableManagedIdentity:$EnableManagedIdentity
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    NodeVmSize = $NodeVmSize
+    NodeCount = $NodeCount
+    Location = $Location
+    NetworkPlugin = $NetworkPlugin
+    ErrorAction = "Stop"
+    KubernetesVersion = $KubernetesVersion
+    Name = $AksClusterName
+}
+$AksCluster @params
 
 Write-Information "`nAKS Cluster $AksClusterName provisioned successfully!"
 Write-Information "Cluster FQDN: $($AksCluster.Fqdn)"
@@ -63,3 +75,6 @@ Write-Information "2. Get credentials: az aks get-credentials --resource-group $
 Write-Information "3. Verify connection: kubectl get nodes"
 
 Write-Information "`nAKS Cluster provisioning completed at $(Get-Date)"
+
+
+#endregion

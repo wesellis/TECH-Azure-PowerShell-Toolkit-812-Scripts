@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Application Gateway Health Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Application Gateway health, backend pools, and routing rules
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$GatewayName
 )
+
+#region Functions
 
 Write-Information "Monitoring Application Gateway: $GatewayName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -106,3 +117,6 @@ if ($AppGateway.SslCertificates.Count -gt 0) {
 }
 
 Write-Information "`nApplication Gateway monitoring completed at $(Get-Date)"
+
+
+#endregion

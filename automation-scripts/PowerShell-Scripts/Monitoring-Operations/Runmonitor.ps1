@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Runmonitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -85,6 +91,8 @@ param(
     [string] $WEDataFactoryName
 )
 
+#region Functions
+
 if(-not($resourceGroupName)) { Throw " You must supply a value for -resourceGroupName" }
 if(-not($WEDataFactoryName)) { Throw " You must supply a value for -DataFactoryName" }
 
@@ -121,3 +129,6 @@ $result.Error -join " `r`n"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Chaos Engineering Platform
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -115,6 +121,8 @@ param(
     [Parameter(Mandatory=$false)]
     [switch]$WEDryRun
 )
+
+#region Functions
 
 
 $requiredModules = @('Az.Resources', 'Az.Monitor', 'Az.Network', 'Az.Compute', 'Az.Storage')
@@ -320,332 +328,7 @@ class ChaosEngineeringPlatform {
             $endTime = Get-Date -ErrorAction Stop
             $startTime = $endTime.AddMinutes(-5)
             
-            $metrics = Get-AzMetric -ResourceId $WEVM.ResourceId -MetricName " Percentage CPU" `
-                -StartTime $startTime -EndTime $endTime -TimeGrain 00:01:00 `
-                -AggregationType Average -WarningAction SilentlyContinue
-            
-            if ($metrics -and $metrics.Data) {
-                return ($metrics.Data | Measure-Object -Property Average -Average).Average
-            }
-        } catch {
-            Write-Debug " Failed to get CPU metrics for $($WEVM.Name)"
-        }
-        
-        return 0
-    }
-    
-    [double]GetWebAppErrorRate([object]$WEWebApp) {
-        # Simulate error rate collection
-        return [math]::Round((Get-Random -Minimum 0 -Maximum 5), 2)
-    }
-    
-    [double]GetWebAppAvailability([object]$WEWebApp) {
-        # Simulate availability check
-        return [math]::Round((Get-Random -Minimum 95 -Maximum 100), 2)
-    }
-    
-    [double]GetStorageAvailability([object]$WEStorage) {
-        # Simulate storage availability check
-        return [math]::Round((Get-Random -Minimum 98 -Maximum 100), 2)
-    }
-    
-    [void]ExecuteChaosExperiment([bool]$WEDryRun) {
-        Write-WELog " `n=== Starting Chaos Experiment: $($this.ChaosMode) ===" " INFO" -ForegroundColor Red
-        Write-WELog " Experiment ID: $($this.ExperimentId)" " INFO" -ForegroundColor Cyan
-        Write-WELog " Duration: $($this.Duration) minutes" " INFO" -ForegroundColor Cyan
-        Write-WELog " Target Resources: $($this.TargetResources.Count)" " INFO" -ForegroundColor Cyan
-        
-        if ($WEDryRun) {
-            Write-WELog " `n*** DRY RUN MODE - No actual changes will be made ***" " INFO" -ForegroundColor Yellow
-        }
-        
-        $startTime = Get-Date -ErrorAction Stop
-        $endTime = $startTime.AddMinutes($this.Duration)
-        
-        # Pre-experiment safety check
-        if ($this.SafetyEnabled) {
-            $safetyResult = $this.PerformSafetyCheck()
-            if (!$safetyResult.Safe) {
-                throw " Safety check failed: $($safetyResult.Reason). Experiment aborted."
-            }
-        }
-        
-        try {
-            # Execute chaos based on mode
-            switch ($this.ChaosMode) {
-                " NetworkLatency" { $this.InjectNetworkLatency($WEDryRun) }
-                " ResourceFailure" { $this.TriggerResourceFailure($WEDryRun) }
-                " ZoneFailure" { $this.SimulateZoneFailure($WEDryRun) }
-                " ApplicationStress" { $this.InjectApplicationStress($WEDryRun) }
-                " DatabaseFailover" { $this.TriggerDatabaseFailover($WEDryRun) }
-                " FullDR" { $this.ExecuteFullDRTest($WEDryRun) }
-            }
-            
-            # Monitor during experiment
-            $this.MonitorExperiment($endTime, $WEDryRun)
-            
-        } finally {
-            # Cleanup and recovery
-            Write-WELog " `nCleaning up experiment..." " INFO" -ForegroundColor Yellow
-            $this.CleanupExperiment($WEDryRun)
-        }
-    }
-    
-    [void]InjectNetworkLatency([bool]$WEDryRun) {
-        Write-WELog " Injecting network latency..." " INFO" -ForegroundColor Red
-        
-        foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines" ) {
-                if ($WEDryRun) {
-                    Write-WELog " DRY RUN: Would inject 200ms latency on VM: $($resource.Name)" " INFO" -ForegroundColor Yellow
-                } else {
-                    # In a real implementation, this would use Azure Chaos Studio or custom agents
-                    Write-WELog " Injecting latency on VM: $($resource.Name)" " INFO" -ForegroundColor Red
-                    
-                    $result = @{
-                        ResourceId = $resource.ResourceId
-                        Action = " NetworkLatency"
-                        Parameters = @{ Latency = " 200ms" }
-                        Timestamp = Get-Date -ErrorAction Stop
-                        Success = $true
-                    }
-                    
-                    $this.ExperimentResults += $result
-                }
-            }
-        }
-    }
-    
-    [void]TriggerResourceFailure([bool]$WEDryRun) {
-        Write-WELog " Triggering resource failures..." " INFO" -ForegroundColor Red
-        
-        # Select random resources for failure (max 30% of resources)
-        $failureCount = [math]::Min([math]::Ceiling($this.TargetResources.Count * 0.3), 3)
-        $resourcesToFail = $this.TargetResources | Get-Random -Count $failureCount
-        
-        foreach ($resource in $resourcesToFail) {
-            if ($WEDryRun) {
-                Write-WELog " DRY RUN: Would stop resource: $($resource.Name)" " INFO" -ForegroundColor Yellow
-            } else {
-                switch ($resource.ResourceType) {
-                    " Microsoft.Compute/virtualMachines" {
-                        Write-WELog " Stopping VM: $($resource.Name)" " INFO" -ForegroundColor Red
-                        Stop-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -Force -NoWait
-                    }
-                    " Microsoft.Web/sites" {
-                        Write-WELog " Stopping Web App: $($resource.Name)" " INFO" -ForegroundColor Red
-                        Stop-AzWebApp -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name
-                    }
-                }
-                
-               ;  $result = @{
-                    ResourceId = $resource.ResourceId
-                    Action = " ResourceFailure"
-                    Parameters = @{ Type = " Stop" }
-                    Timestamp = Get-Date -ErrorAction Stop
-                    Success = $true
-                }
-                
-                $this.ExperimentResults += $result
-            }
-        }
-    }
-    
-    [void]InjectApplicationStress([bool]$WEDryRun) {
-        Write-WELog " Injecting application stress..." " INFO" -ForegroundColor Red
-        
-        foreach ($resource in $this.TargetResources) {
-            if ($resource.ResourceType -eq " Microsoft.Web/sites" ) {
-                if ($WEDryRun) {
-                    Write-WELog " DRY RUN: Would stress test app: $($resource.Name)" " INFO" -ForegroundColor Yellow
-                } else {
-                    Write-WELog " Starting stress test on: $($resource.Name)" " INFO" -ForegroundColor Red
-                    
-                    # Simulate stress testing
-                   ;  $result = @{
-                        ResourceId = $resource.ResourceId
-                        Action = " ApplicationStress"
-                        Parameters = @{ CPULoad = " 80%" ; MemoryLoad = " 70%" }
-                        Timestamp = Get-Date -ErrorAction Stop
-                        Success = $true
-                    }
-                    
-                    $this.ExperimentResults += $result
-                }
-            }
-        }
-    }
-    
-    [void]TriggerDatabaseFailover([bool]$WEDryRun) {
-        Write-WELog " Triggering database failover..." " INFO" -ForegroundColor Red
-        
-        $databases = $this.TargetResources | Where-Object { $_.ResourceType -like " *Sql*" -or $_.ResourceType -like " *DocumentDB*" }
-        
-        foreach ($db in $databases) {
-            if ($WEDryRun) {
-                Write-WELog " DRY RUN: Would trigger failover for: $($db.Name)" " INFO" -ForegroundColor Yellow
-            } else {
-                Write-WELog " Triggering failover for: $($db.Name)" " INFO" -ForegroundColor Red
-                
-                $result = @{
-                    ResourceId = $db.ResourceId
-                    Action = " DatabaseFailover"
-                    Parameters = @{ Type = " Automatic" }
-                    Timestamp = Get-Date -ErrorAction Stop
-                    Success = $true
-                }
-                
-                $this.ExperimentResults += $result
-            }
-        }
-    }
-    
-    [void]SimulateZoneFailure([bool]$WEDryRun) {
-        Write-WELog " Simulating availability zone failure..." " INFO" -ForegroundColor Red
-        
-        if ($WEDryRun) {
-            Write-WELog " DRY RUN: Would simulate zone failure affecting multiple resources" " INFO" -ForegroundColor Yellow
-        } else {
-            # This would simulate an entire availability zone going down
-            Write-WELog " Simulating zone failure - affecting zone-redundant resources" " INFO" -ForegroundColor Red
-        }
-    }
-    
-    [void]ExecuteFullDRTest([bool]$WEDryRun) {
-        Write-WELog " Executing full disaster recovery test..." " INFO" -ForegroundColor Red
-        
-        if ($WEDryRun) {
-            Write-WELog " DRY RUN: Would execute complete DR failover" " INFO" -ForegroundColor Yellow
-        } else {
-            Write-WELog " *** FULL DR TEST - This will test complete failover procedures ***" " INFO" -ForegroundColor Red
-            # Full DR implementation would go here
-        }
-    }
-    
-    [void]MonitorExperiment([datetime]$WEEndTime, [bool]$WEDryRun) {
-        Write-WELog " `nMonitoring experiment progress..." " INFO" -ForegroundColor Cyan
-        
-        while ((Get-Date) -lt $WEEndTime) {
-            # Collect current metrics
-            $currentMetrics = @{}
-            foreach ($resource in $this.TargetResources) {
-                $currentMetrics[$resource.ResourceId] = $this.CollectResourceMetrics($resource)
-            }
-            
-            $this.ChaosMetrics[(Get-Date)] = $currentMetrics
-            
-            # Check safety breakers
-            if ($this.SafetyEnabled) {
-                $safetyResult = $this.CheckSafetyBreakers($currentMetrics)
-                if (!$safetyResult.Safe) {
-                    Write-WELog " SAFETY BREAKER TRIGGERED: $($safetyResult.Reason)" " INFO" -ForegroundColor Red
-                    break
-                }
-            }
-            
-           ;  $remainingMinutes = [math]::Ceiling(($WEEndTime - (Get-Date)).TotalMinutes)
-            Write-WELog " Experiment running... $remainingMinutes minutes remaining" " INFO" -ForegroundColor Cyan
-            
-            Start-Sleep -Seconds 30
-        }
-    }
-    
-    [hashtable]PerformSafetyCheck() {
-        Write-WELog " Performing pre-experiment safety check..." " INFO" -ForegroundColor Yellow
-        
-        # Check baseline metrics
-        foreach ($resourceId in $this.BaselineMetrics.Keys) {
-           ;  $baseline = $this.BaselineMetrics[$resourceId]
-            
-            if ($baseline.ErrorRate -gt 10) {
-                return @{ Safe = $false; Reason = " Baseline error rate too high: $($baseline.ErrorRate)%" }
-            }
-            
-            if ($baseline.Availability -lt 95) {
-                return @{ Safe = $false; Reason = " Baseline availability too low: $($baseline.Availability)%" }
-            }
-        }
-        
-        return @{ Safe = $true; Reason = " All safety checks passed" }
-    }
-    
-    [hashtable]CheckSafetyBreakers([hashtable]$WECurrentMetrics) {
-        foreach ($breaker in $this.SafetyBreakers) {
-            foreach ($resourceId in $WECurrentMetrics.Keys) {
-                $metrics = $WECurrentMetrics[$resourceId]
-               ;  $metricValue = $metrics[$breaker.MetricName]
-                
-                if ($null -ne $metricValue) {
-                   ;  $thresholdBreached = switch ($breaker.MetricName) {
-                        " ErrorRate" { $metricValue -gt $breaker.Threshold }
-                        " Availability" { $metricValue -lt $breaker.Threshold }
-                        " ResponseTime" { $metricValue -gt $breaker.Threshold }
-                        " CPUUtilization" { $metricValue -gt $breaker.Threshold }
-                        default { $false }
-                    }
-                    
-                    if ($thresholdBreached) {
-                        return @{
-                            Safe = $false
-                            Reason = " $($breaker.Name) threshold breached: $metricValue (threshold: $($breaker.Threshold))"
-                            Action = $breaker.Action
-                        }
-                    }
-                }
-            }
-        }
-        
-        return @{ Safe = $true; Reason = " All safety breakers within limits" }
-    }
-    
-    [void]CleanupExperiment([bool]$WEDryRun) {
-        Write-WELog " Cleaning up chaos experiment..." " INFO" -ForegroundColor Green
-        
-        foreach ($result in $this.ExperimentResults) {
-            switch ($result.Action) {
-                " ResourceFailure" {
-                    if ($WEDryRun) {
-                        Write-WELog " DRY RUN: Would restart stopped resources" " INFO" -ForegroundColor Yellow
-                    } else {
-                        # Restart stopped resources
-                        $resource = Get-AzResource -ResourceId $result.ResourceId
-                        if ($resource.ResourceType -eq " Microsoft.Compute/virtualMachines" ) {
-                            Write-WELog " Restarting VM: $($resource.Name)" " INFO" -ForegroundColor Green
-                            Start-AzVM -ResourceGroupName $resource.ResourceGroupName -Name $resource.Name -NoWait
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    [void]ValidateRecovery() {
-        Write-WELog " `nValidating recovery mechanisms..." " INFO" -ForegroundColor Green
-        
-        Start-Sleep -Seconds 60  # Wait for recovery
-        
-        foreach ($resource in $this.TargetResources) {
-            $postMetrics = $this.CollectResourceMetrics($resource)
-            $baselineMetrics = $this.BaselineMetrics[$resource.ResourceId]
-            
-           ;  $recovery = @{
-                ResourceId = $resource.ResourceId
-                BaselineAvailability = $baselineMetrics.Availability
-                PostExperimentAvailability = $postMetrics.Availability
-                RecoveryTime = " 60 seconds"  # Simplified
-                FullyRecovered = $postMetrics.Availability -ge ($baselineMetrics.Availability * 0.95)
-            }
-            
-            if ($recovery.FullyRecovered) {
-                Write-WELog " ✅ $($resource.Name) - Recovery successful" " INFO" -ForegroundColor Green
-            } else {
-                Write-WELog " ❌ $($resource.Name) - Recovery incomplete" " INFO" -ForegroundColor Red
-            }
-        }
-    }
-    
-    [string]GenerateExperimentReport() {
-       ;  $html = @"
+            $metrics -ge "($baselineMetrics.Availability * 0.95) }  if ($recovery.FullyRecovered) { Write-WELog "  $($resource.Name)" -Debug " Failed to get CPU metrics for $($WEVM.Name)" }  return 0 }  [double]GetWebAppErrorRate([object]$WEWebApp) { # Simulate error rate collection return [math]::Round((Get-Random" -and $metrics.Data) { return ($metrics.Data | Measure-Object -ResourceId $result.ResourceId if ($resource.ResourceType -gt $breaker.Threshold } default { $false } }  if ($thresholdBreached) { return @{ Safe = $false Reason = " $($breaker.Name) threshold breached: $metricValue (threshold: $($breaker.Threshold))" Action = $breaker.Action } } } } }  return @{ Safe = $true; Reason = " All safety breakers within limits" } }  [void]CleanupExperiment([bool]$WEDryRun) { Write-WELog " Cleaning up chaos experiment..." " INFO -Seconds "60  # Wait for recovery  foreach ($resource in $this.TargetResources) { $postMetrics = $this.CollectResourceMetrics($resource) $baselineMetrics = $this.BaselineMetrics[$resource.ResourceId]  ;  $recovery = @{ ResourceId = $resource.ResourceId BaselineAvailability = $baselineMetrics.Availability PostExperimentAvailability = $postMetrics.Availability RecoveryTime = " 60 seconds"  # Simplified FullyRecovered = $postMetrics.Availability" -eq " Microsoft.Compute/virtualMachines" ) { Write-WELog " Restarting VM: $($resource.Name)" " INFO" -ResourceGroupName $resource.ResourceGroupName -Count $failureCount  foreach ($resource in $resourcesToFail) { if ($WEDryRun) { Write-WELog " DRY RUN: Would stop resource: $($resource.Name)" " INFO -Property "Average" -ForegroundColor "Red } } }  [string]GenerateExperimentReport() { ;  $html = @" -Name $resource.Name -EndTime $endTime -ne $metricValue) { ;  $thresholdBreached = switch ($breaker.MetricName) { " ErrorRate" { $metricValue -WELog " Experiment running... $remainingMinutes minutes remaining" " INFO" -ErrorAction "Stop Success = $true }  $this.ExperimentResults += $result } } }  [void]SimulateZoneFailure([bool]$WEDryRun) { Write-WELog " Simulating availability zone failure..." " INFO" -StartTime $startTime -MetricName " Percentage CPU" -or $_.ResourceType -redundant "resources" " INFO" -NoWait "} " Microsoft.Web/sites" { Write-WELog " Stopping Web App: $($resource.Name)" " INFO" -Minimum "98" -lt $breaker.Threshold } " ResponseTime" { $metricValue -like " *DocumentDB*" }  foreach ($db in $databases) { if ($WEDryRun) { Write-WELog " DRY RUN: Would trigger failover for: $($db.Name)" " INFO" -TimeGrain "00:01:00" -WarningAction "SilentlyContinue  if ($metrics" -Maximum "100), 2) }  [double]GetStorageAvailability([object]$WEStorage) { # Simulate storage availability check return [math]::Round((Get-Random" -AggregationType "Average"
 <!DOCTYPE html>
 <html>
 <head>
@@ -767,8 +450,8 @@ class ChaosEngineeringPlatform {
 try {
     Write-WELog " Azure Chaos Engineering Platform v1.0" " INFO" -ForegroundColor Red
     Write-WELog " ====================================" " INFO" -ForegroundColor Red
-    Write-WELog " ⚠️  WARNING: This tool introduces controlled failures!" " INFO" -ForegroundColor Yellow
-    Write-WELog " ⚠️  Use with extreme caution in production environments!" " INFO" -ForegroundColor Yellow
+    Write-WELog " [WARN]️  WARNING: This tool introduces controlled failures!" " INFO" -ForegroundColor Yellow
+    Write-WELog " [WARN]️  Use with extreme caution in production environments!" " INFO" -ForegroundColor Yellow
     
     if (!$WEDryRun) {
         $confirmation = Read-Host " `nAre you sure you want to proceed with chaos engineering? (yes/no)"
@@ -814,7 +497,7 @@ try {
         Write-WELog " `nExperiment report saved to: $reportPath" " INFO" -ForegroundColor Green
     }
     
-    Write-WELog " `n✅ Chaos engineering experiment completed successfully!" " INFO" -ForegroundColor Green
+    Write-WELog " `n Chaos engineering experiment completed successfully!" " INFO" -ForegroundColor Green
     Write-WELog " Experiment ID: $($chaosEngine.ExperimentId)" " INFO" -ForegroundColor Cyan
     
 } catch {
@@ -825,4 +508,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

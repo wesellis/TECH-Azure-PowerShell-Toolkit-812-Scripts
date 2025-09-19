@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Fix Readme.Tests
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -76,11 +81,7 @@
             [string] $WEMarkdown
         ) {
             $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Get-FixedReadMe.ps1"            
-            $result = . $cmdlet `
-                -ReadmeContents $WEReadmeContents `
-                -ExpectedMarkdown $WEMarkdown
-            return $result
-        }
+            $result -ExpectedMarkdown $WEMarkdown return $result } -ReadmeContents $WEReadmeContents
 
         function WE-Test([string] $WEReadmeBaseName, [string] $WEMarkdown) {
             $readmeName = " $dataFolder/$WEReadmeBaseName.md" 
@@ -125,4 +126,5 @@
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

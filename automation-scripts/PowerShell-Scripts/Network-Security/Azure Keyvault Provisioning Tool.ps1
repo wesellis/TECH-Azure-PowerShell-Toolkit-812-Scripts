@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Keyvault Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -89,20 +95,22 @@ param(
     [bool]$WEEnabledForDiskEncryption = $true
 )
 
+#region Functions
+
 Write-WELog " Provisioning Key Vault: $WEVaultName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " SKU: $WESkuName" " INFO"
 
 ; 
-$WEKeyVault = New-AzKeyVault -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -VaultName $WEVaultName `
-    -Location $WELocation `
-    -Sku $WESkuName `
-    -EnabledForDeployment:$WEEnabledForDeployment `
-    -EnabledForTemplateDeployment:$WEEnabledForTemplateDeployment `
-    -EnabledForDiskEncryption:$WEEnabledForDiskEncryption
+$params = @{
+    Sku = $WESkuName
+    ErrorAction = "Stop"
+    VaultName = $WEVaultName
+    ResourceGroupName = $WEResourceGroupName
+    Location = $WELocation
+}
+$WEKeyVault @params
 
 Write-WELog " Key Vault $WEVaultName provisioned successfully" " INFO"
 Write-WELog " Vault URI: $($WEKeyVault.VaultUri)" " INFO"
@@ -117,3 +125,6 @@ Write-WELog " Enabled for Disk Encryption: $WEEnabledForDiskEncryption" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

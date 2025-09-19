@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Ad Group Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [array]$WEMemberEmails = @()
 )
 
+#region Functions
+
 Write-WELog " Creating Azure AD Group: $WEGroupName" " INFO"
 
 try {
@@ -106,7 +114,7 @@ try {
     
    ;  $WEGroup = New-AzADGroup -ErrorAction Stop @GroupParams
     
-    Write-WELog " ✅ Azure AD Group created successfully:" " INFO"
+    Write-WELog "  Azure AD Group created successfully:" " INFO"
     Write-WELog "  Group Name: $($WEGroup.DisplayName)" " INFO"
     Write-WELog "  Object ID: $($WEGroup.Id)" " INFO"
     Write-WELog "  Group Type: $WEGroupType" " INFO"
@@ -124,12 +132,12 @@ try {
                ;  $WEUser = Get-AzADUser -UserPrincipalName $WEEmail
                 if ($WEUser) {
                     Add-AzADGroupMember -GroupObject $WEGroup -MemberObjectId $WEUser.Id
-                    Write-WELog "  ✅ Added: $WEEmail" " INFO"
+                    Write-WELog "   Added: $WEEmail" " INFO"
                 } else {
-                    Write-WELog "  ❌ User not found: $WEEmail" " INFO"
+                    Write-WELog "   User not found: $WEEmail" " INFO"
                 }
             } catch {
-                Write-WELog "  ❌ Failed to add $WEEmail : $($_.Exception.Message)" " INFO"
+                Write-WELog "   Failed to add $WEEmail : $($_.Exception.Message)" " INFO"
             }
         }
     }
@@ -154,4 +162,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

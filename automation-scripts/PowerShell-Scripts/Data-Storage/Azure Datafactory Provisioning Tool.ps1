@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Datafactory Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -103,6 +109,8 @@ param(
     [string]$WEGitCollaborationBranch = " main"
 )
 
+#region Functions
+
 Write-WELog " Provisioning Data Factory: $WEFactoryName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -115,21 +123,27 @@ if ($WEEnableGitIntegration -and $WEGitAccountName -and $WEGitRepositoryName) {
     Write-WELog " Collaboration Branch: $WEGitCollaborationBranch" " INFO"
     
     # Create Data Factory with Git integration
-   ;  $WEDataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEFactoryName `
-        -Location $WELocation `
-        -GitAccountName $WEGitAccountName `
-        -GitProjectName $WEGitProjectName `
-        -GitRepositoryName $WEGitRepositoryName `
-        -GitCollaborationBranch $WEGitCollaborationBranch `
-        -GitRepoType $WEGitRepoType
+   $params = @{
+       ResourceGroupName = $WEResourceGroupName
+       GitRepoType = $WEGitRepoType
+       GitProjectName = $WEGitProjectName
+       Location = $WELocation
+       GitCollaborationBranch = $WEGitCollaborationBranch
+       GitAccountName = $WEGitAccountName
+       GitRepositoryName = $WEGitRepositoryName
+       ErrorAction = "Stop"
+       Name = $WEFactoryName
+   }
+   ; @params
 } else {
     # Create Data Factory without Git integration
-   ;  $WEDataFactory = New-AzDataFactoryV2 -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEFactoryName `
-        -Location $WELocation
+   $params = @{
+       ErrorAction = "Stop"
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WEFactoryName
+       Location = $WELocation
+   }
+   ; @params
 }
 
 Write-WELog " `nData Factory $WEFactoryName provisioned successfully" " INFO"
@@ -164,3 +178,6 @@ Write-WELog " `nData Factory provisioning completed at $(Get-Date)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

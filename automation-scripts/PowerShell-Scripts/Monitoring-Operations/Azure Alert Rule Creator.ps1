@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Alert Rule Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -106,59 +112,65 @@ param(
     [string]$WENotificationEmail
 )
 
+#region Functions
+
 Write-WELog " Creating Alert Rule: $WEAlertRuleName" " INFO"
 
 
 if ($WENotificationEmail) {
     $WEActionGroupName = " $WEAlertRuleName-actiongroup"
     
-    $WEEmailReceiver = New-AzActionGroupReceiver -ErrorAction Stop `
-        -Name " EmailAlert" `
-        -EmailReceiver `
-        -EmailAddress $WENotificationEmail
-    
-    $WEActionGroup = Set-AzActionGroup -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEActionGroupName `
-        -ShortName " AlertAG" `
-        -Receiver $WEEmailReceiver
-    
-    Write-WELog " Action Group created: $WEActionGroupName" " INFO"
+    $params = @{
+        ResourceGroupName = $WEResourceGroupName
+        Name = $WEActionGroupName
+        Receiver = $WEEmailReceiver  Write-WELog " Action Group created: $WEActionGroupName" " INFO
+        ShortName = " AlertAG"
+        ErrorAction = "Stop"
+        EmailAddress = $WENotificationEmail  $WEActionGroup = Set-AzActionGroup
+    }
+    $WEEmailReceiver @params
 }
 
 ; 
-$WECondition = New-AzMetricAlertRuleV2Criteria -ErrorAction Stop `
-    -MetricName $WEMetricName `
-    -TimeAggregation " Average" `
-    -Operator $WEOperator `
-    -Threshold $WEThreshold
+$params = @{
+    Threshold = $WEThreshold
+    ErrorAction = "Stop"
+    MetricName = $WEMetricName
+    TimeAggregation = " Average"
+    Operator = $WEOperator
+}
+$WECondition @params
 
 ; 
-$WEAlertRule = Add-AzMetricAlertRuleV2 `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAlertRuleName `
-    -TargetResourceId $WETargetResourceId `
-    -Condition $WECondition `
-    -Severity 2 `
-    -WindowSize " PT5M" `
-    -Frequency " PT1M"
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEAlertRuleName
+    Severity = "2"
+    Frequency = " PT1M"
+    WindowSize = " PT5M"
+    TargetResourceId = $WETargetResourceId
+    Condition = $WECondition
+}
+$WEAlertRule @params
 
 Write-WELog " Alert Rule ID: $($WEAlertRule.Id)" " INFO"
 
 if ($WEActionGroup) {
     # Associate action group with alert rule
-    Add-AzMetricAlertRuleV2 `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEAlertRuleName `
-        -TargetResourceId $WETargetResourceId `
-        -Condition $WECondition `
-        -ActionGroupId $WEActionGroup.Id `
-        -Severity 2 `
-        -WindowSize " PT5M" `
-        -Frequency " PT1M"
+    $params = @{
+        ResourceGroupName = $WEResourceGroupName
+        Name = $WEAlertRuleName
+        Severity = "2"
+        Condition = $WECondition
+        WindowSize = " PT5M"
+        TargetResourceId = $WETargetResourceId
+        ActionGroupId = $WEActionGroup.Id
+        Frequency = " PT1M"
+    }
+    Add-AzMetricAlertRuleV2 @params
 }
 
-Write-WELog " ✅ Alert Rule created successfully:" " INFO"
+Write-WELog "  Alert Rule created successfully:" " INFO"
 Write-WELog "  Name: $WEAlertRuleName" " INFO"
 Write-WELog "  Metric: $WEMetricName" " INFO"
 Write-WELog "  Threshold: $WEOperator $WEThreshold" " INFO"
@@ -180,3 +192,6 @@ Write-WELog " • Auto-resolution" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

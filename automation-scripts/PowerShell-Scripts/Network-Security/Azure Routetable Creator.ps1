@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Routetable Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -110,15 +116,20 @@ param(
     [string]$WENextHopIpAddress
 )
 
+#region Functions
+
 Write-WELog " Creating Route Table: $WERouteTableName" " INFO"
 
 ; 
-$WERouteTable = New-AzRouteTable -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WERouteTableName `
-    -Location $WELocation
+$params = @{
+    ErrorAction = "Stop"
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WERouteTableName
+    Location = $WELocation
+}
+$WERouteTable @params
 
-Write-WELog " ✅ Route Table created successfully:" " INFO"
+Write-WELog "  Route Table created successfully:" " INFO"
 Write-WELog "  Name: $($WERouteTable.Name)" " INFO"
 Write-WELog "  Location: $($WERouteTable.Location)" " INFO"
 
@@ -127,29 +138,14 @@ if ($WERouteName -and $WEAddressPrefix) {
     Write-WELog " `nAdding custom route: $WERouteName" " INFO"
     
     if ($WENextHopIpAddress -and $WENextHopType -eq " VirtualAppliance" ) {
-        Add-AzRouteConfig `
-            -RouteTable $WERouteTable `
-            -Name $WERouteName `
-            -AddressPrefix $WEAddressPrefix `
-            -NextHopType $WENextHopType `
-            -NextHopIpAddress $WENextHopIpAddress
-    } else {
-        Add-AzRouteConfig `
-            -RouteTable $WERouteTable `
-            -Name $WERouteName `
-            -AddressPrefix $WEAddressPrefix `
-            -NextHopType $WENextHopType
-    }
-    
-    Set-AzRouteTable -RouteTable $WERouteTable
-    
-    Write-WELog " ✅ Custom route added:" " INFO"
-    Write-WELog "  Route Name: $WERouteName" " INFO"
-    Write-WELog "  Address Prefix: $WEAddressPrefix" " INFO"
-    Write-WELog "  Next Hop Type: $WENextHopType" " INFO"
-    if ($WENextHopIpAddress) {
-        Write-WELog "  Next Hop IP: $WENextHopIpAddress" " INFO"
-    }
+        $params = @{
+            NextHopIpAddress = $WENextHopIpAddress } else { Add-AzRouteConfig
+            RouteTable = $WERouteTable  Write-WELog "  Custom route added:" " INFO" Write-WELog "  Route Name: $WERouteName" " INFO" Write-WELog "  Address Prefix: $WEAddressPrefix" " INFO" Write-WELog "  Next Hop Type: $WENextHopType" " INFO" if ($WENextHopIpAddress) { Write-WELog "  Next Hop IP: $WENextHopIpAddress" " INFO" }
+            Name = $WERouteName
+            NextHopType = $WENextHopType }  Set-AzRouteTable
+            AddressPrefix = $WEAddressPrefix
+        }
+        Add-AzRouteConfig @params
 }
 
 Write-WELog " `nNext Steps:" " INFO"
@@ -164,3 +160,6 @@ Write-WELog " 3. Test routing behavior" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

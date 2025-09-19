@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VM Disk Detacher
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Safely detaches data disks from Azure Virtual Machines
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -17,6 +26,8 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$DiskName
 )
+
+#region Functions
 
 Write-Information "Detaching disk from VM: $VmName"
 
@@ -38,8 +49,11 @@ Remove-AzVMDataDisk -VM $VM -Name $DiskName
 # Update the VM
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 
-Write-Information "✅ Disk detached successfully:"
+Write-Information " Disk detached successfully:"
 Write-Information "  Disk: $DiskName"
 Write-Information "  VM: $VmName"
 Write-Information "  LUN: $($DiskToDetach.Lun)"
 Write-Information "  Note: Disk is now available for attachment to other VMs"
+
+
+#endregion

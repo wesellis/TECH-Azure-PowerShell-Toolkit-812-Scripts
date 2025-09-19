@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Bootdiagnostics Enabler
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -86,6 +92,8 @@ param(
     [string]$WEStorageAccountName
 )
 
+#region Functions
+
 Write-WELog " Enabling boot diagnostics for VM: $WEVmName" " INFO"
 ; 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
@@ -100,7 +108,7 @@ if ($WEStorageAccountName) {
 
 Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $WEVM
 
-Write-WELog " ✅ Boot diagnostics enabled successfully:" " INFO"
+Write-WELog "  Boot diagnostics enabled successfully:" " INFO"
 Write-WELog "  VM: $WEVmName" " INFO"
 Write-WELog "  Resource Group: $WEResourceGroupName" " INFO"
 if ($WEStorageAccountName) {
@@ -115,3 +123,6 @@ Write-WELog "  Status: Enabled" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

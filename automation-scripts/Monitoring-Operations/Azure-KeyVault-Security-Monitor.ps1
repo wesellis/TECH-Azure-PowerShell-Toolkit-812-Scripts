@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure Key Vault Security Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure Key Vault security, access policies, and secret management
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$VaultName
 )
+
+#region Functions
 
 Write-Information "Monitoring Key Vault: $VaultName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -60,3 +71,6 @@ try {
 }
 
 Write-Information "`nKey Vault monitoring completed at $(Get-Date)"
+
+
+#endregion

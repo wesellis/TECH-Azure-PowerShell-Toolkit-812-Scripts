@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Autoshutdown Configurator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -100,6 +106,8 @@ param(
     [string]$WENotificationEmail
 )
 
+#region Functions
+
 Write-WELog " Configuring auto-shutdown for VM: $WEVmName" " INFO"
 ; 
 $WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
@@ -122,12 +130,15 @@ if ($WENotificationEmail) {
     }
 }
 
-New-AzResource -ErrorAction Stop `
-    -ResourceId (" /subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}" -f (Get-AzContext).Subscription.Id, $WEResourceGroupName, $WEVmName) `
-    -Properties $WEProperties `
-    -Force
+$params = @{
+    f = "(Get-AzContext).Subscription.Id, $WEResourceGroupName, $WEVmName)"
+    ErrorAction = "Stop"
+    Properties = $WEProperties
+    ResourceId = "(" /subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}"
+}
+New-AzResource @params
 
-Write-WELog " ✅ Auto-shutdown configured successfully:" " INFO"
+Write-WELog "  Auto-shutdown configured successfully:" " INFO"
 Write-WELog "  VM: $WEVmName" " INFO"
 Write-WELog "  Shutdown Time: $WEShutdownTime" " INFO"
 Write-WELog "  Time Zone: $WETimeZone" " INFO"
@@ -142,3 +153,6 @@ if ($WENotificationEmail) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

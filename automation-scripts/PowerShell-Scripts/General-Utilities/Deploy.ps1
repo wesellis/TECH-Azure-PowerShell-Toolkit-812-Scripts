@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Deploy
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -107,18 +113,34 @@ If($context.Subscription.Id -ne $subscriptionId)
     Select-AzureRmSubscription -SubscriptionId $subscriptionId  | Out-null
 }
 
-$certificate = New-SelfSignedCertificate -Type Custom -KeySpec Signature `
-    -Subject (" CN=$certificateNamePrefix" +" P2SRoot" ) -KeyExportPolicy Exportable `
-    -HashAlgorithm sha256 -KeyLength 2048 `
-    -CertStoreLocation " Cert:\CurrentUser\My" -KeyUsageProperty Sign -KeyUsage CertSign
+$params = @{
+    KeyUsage = "CertSign"
+    HashAlgorithm = "sha256"
+    KeySpec = "Signature"
+    Type = "Custom"
+    KeyLength = "2048"
+    KeyExportPolicy = "Exportable"
+    Subject = "(" CN=$certificateNamePrefix" +" P2SRoot" )"
+    KeyUsageProperty = "Sign"
+    CertStoreLocation = " Cert:\CurrentUser\My"
+}
+$certificate @params
 
 $certificateThumbprint = $certificate.Thumbprint
 
-New-SelfSignedCertificate -Type Custom -DnsName ($certificateNamePrefix+" P2SChild" ) -KeySpec Signature `
-    -Subject (" CN=$certificateNamePrefix" +" P2SChild" ) -KeyExportPolicy Exportable `
-    -HashAlgorithm sha256 -KeyLength 2048 `
-    -CertStoreLocation " Cert:\CurrentUser\My" `
-    -Signer $certificate -TextExtension @(" 2.5.29.37={text}1.3.6.1.5.5.7.3.2" ) | Out-null
+$params = @{
+    Signer = $certificate
+    TextExtension = "@(" 2.5.29.37={text}1.3.6.1.5.5.7.3.2" ) | Out-null"
+    HashAlgorithm = "sha256"
+    KeySpec = "Signature"
+    Type = "Custom"
+    KeyLength = "2048"
+    KeyExportPolicy = "Exportable"
+    Subject = "(" CN=$certificateNamePrefix" +" P2SChild" )"
+    CertStoreLocation = " Cert:\CurrentUser\My"
+    DnsName = "($certificateNamePrefix+" P2SChild" )"
+}
+New-SelfSignedCertificate @params
 ; 
 $publicRootCertData = [Convert]::ToBase64String((Get-Item -ErrorAction Stop cert:\currentuser\my\$certificateThumbprint).RawData)
 
@@ -149,3 +171,6 @@ New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -Templa
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

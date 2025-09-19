@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Asr Addmultipleloadbalancers
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -116,9 +122,7 @@ Catch
       $WEErrorMessage = $WEErrorMessage + " `n"
       $WEErrorMessage = $WEErrorMessage + 'Error: '
       $WEErrorMessage = $WEErrorMessage + $_
-      Write-Error -Message $WEErrorMessage `
-                    -ErrorAction Stop
- }
+      Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 Try
  {
     $WERPVariable = Get-AutomationVariable -Name $WERecoveryPlanContext.RecoveryPlanName
@@ -133,10 +137,7 @@ Catch
     $WEErrorMessage = $WEErrorMessage + " `n"
     $WEErrorMessage = $WEErrorMessage + 'Error: '
     $WEErrorMessage = $WEErrorMessage + $_
-    Write-Error -Message $WEErrorMessage `
-                   -ErrorAction Stop
- }
-    #Getting VM details from the Recovery Plan Group, and associate the vNics with the Load Balancer
+    Write-Error -Message $WEErrorMessage -ErrorAction "Stop } #Getting VM details from the Recovery Plan Group, and associate the vNics with the Load Balancer"
 Try
  {
     $WEVMinfo = $WERecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
@@ -178,9 +179,7 @@ Catch
     $WEErrorMessage = $WEErrorMessage + " `n"
     $WEErrorMessage = $WEErrorMessage + 'Error: '
    ;  $WEErrorMessage = $WEErrorMessage + $_
-    Write-Error -Message $WEErrorMessage `
-                   -ErrorAction Stop
- }
+    Write-Error -Message $WEErrorMessage -ErrorAction "Stop }"
 }
 
 
@@ -189,3 +188,6 @@ Catch
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

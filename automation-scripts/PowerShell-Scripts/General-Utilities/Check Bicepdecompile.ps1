@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Check Bicepdecompile
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -50,6 +55,8 @@ param(
     $sampleFolder = $WEENV:SAMPLE_FOLDER
 )
 
+#region Functions
+
 Write-WELog " Finding all bicep files in: $sampleFolder" " INFO"; 
 $bicepFiles = Get-ChildItem -Path " $sampleFolder\*.bicep" -Recurse
 
@@ -72,3 +79,6 @@ foreach ($f in $bicepFiles) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

@@ -1,12 +1,20 @@
-﻿# ============================================================================
-# Script Name: Azure User Access Review Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure AD Access Reviews for periodic access certification
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ReviewName,
@@ -27,6 +35,8 @@ param (
     [array]$ReviewerEmails = @()
 )
 
+#region Functions
+
 Write-Information "Creating Access Review: $ReviewName"
 
 try {
@@ -39,7 +49,7 @@ try {
     # Connect to Microsoft Graph
     Connect-MgGraph -Scopes "AccessReview.ReadWrite.All"
     
-    Write-Information "✅ Connected to Microsoft Graph"
+    Write-Information " Connected to Microsoft Graph"
     
     # Get group information
     $Group = Get-MgGroup -GroupId $GroupId
@@ -48,7 +58,7 @@ try {
         return
     }
     
-    Write-Information "📋 Access Review Configuration:"
+    Write-Information "� Access Review Configuration:"
     Write-Information "  Review Name: $ReviewName"
     Write-Information "  Description: $Description"
     Write-Information "  Target Group: $($Group.DisplayName)"
@@ -115,7 +125,7 @@ try {
         }
     }
     
-    Write-Information "`n⚠️ IMPORTANT NOTES:"
+    Write-Information "`n[WARN] IMPORTANT NOTES:"
     Write-Information "• Access reviews require Azure AD Premium P2"
     Write-Information "• Reviewers will receive email notifications"
     Write-Information "• Configure auto-apply based on your needs"
@@ -149,11 +159,14 @@ try {
     Write-Information "4. Configure scope, reviewers, and settings"
     Write-Information "5. Start the review"
     
-    Write-Information "`n✅ Access review template prepared"
-    Write-Information "🚨 Use Azure Portal to create the actual review for safety"
-    Write-Information "📧 Reviewers will be notified via email when review starts"
+    Write-Information "`n Access review template prepared"
+    Write-Information "� Use Azure Portal to create the actual review for safety"
+    Write-Information "� Reviewers will be notified via email when review starts"
     
 } catch {
     Write-Error "Access review creation failed: $($_.Exception.Message)"
-    Write-Information "💡 Tip: Use Azure Portal for creating Access Reviews"
+    Write-Information "� Tip: Use Azure Portal for creating Access Reviews"
 }
+
+
+#endregion

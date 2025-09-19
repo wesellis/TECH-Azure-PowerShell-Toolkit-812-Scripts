@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Windows Visual Studio Marketplace Utils.Tests
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -57,8 +62,12 @@ function WE-Get-CimInstance -ErrorAction Stop { }
 
     $script:currentAttempt = 0
     $script:sleepTimes = @()
-    Mock -CommandName Start-Sleep -ModuleName $retryModuleName `
-        -MockWith { 
+    $params = @{
+        MockWith = "{"
+        CommandName = "Start-Sleep"
+        ModuleName = $retryModuleName
+    }
+    Mock @params
 
 [CmdletBinding()]
 function Write-WELog {
@@ -659,3 +668,6 @@ Describe 'Get-CurrentPlatform' {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

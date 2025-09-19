@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Functionapp Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,6 +99,8 @@ param(
     [string]$WEStorageAccountName
 )
 
+#region Functions
+
 Write-WELog " Provisioning Function App: $WEAppName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " App Service Plan: $WEPlanName" " INFO"
@@ -100,13 +108,16 @@ Write-WELog " Location: $WELocation" " INFO"
 Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
 
 ; 
-$WEFunctionApp = New-AzFunctionApp -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WEAppName `
-    -AppServicePlan $WEPlanName `
-    -Location $WELocation `
-    -Runtime $WERuntime `
-    -RuntimeVersion $WERuntimeVersion
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WEAppName
+    RuntimeVersion = $WERuntimeVersion
+    AppServicePlan = $WEPlanName
+    Runtime = $WERuntime
+    Location = $WELocation
+    ErrorAction = "Stop"
+}
+$WEFunctionApp @params
 
 if ($WEStorageAccountName) {
     Write-WELog " Storage Account: $WEStorageAccountName" " INFO"
@@ -123,3 +134,6 @@ Write-WELog " State: $($WEFunctionApp.State)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

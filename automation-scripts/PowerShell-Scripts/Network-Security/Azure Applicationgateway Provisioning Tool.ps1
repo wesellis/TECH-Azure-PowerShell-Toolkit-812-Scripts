@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Applicationgateway Provisioning Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -98,6 +104,8 @@ param(
     [int]$WECapacity = 2
 )
 
+#region Functions
+
 Write-WELog " Provisioning Application Gateway: $WEGatewayName" " INFO"
 Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
 Write-WELog " Location: $WELocation" " INFO"
@@ -114,76 +122,102 @@ Write-WELog " Using Subnet: $WESubnetName" " INFO"
 
 
 $WEPublicIpName = " $WEGatewayName-pip"
-$WEPublicIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Location $WELocation `
-    -Name $WEPublicIpName `
-    -AllocationMethod Static `
-    -Sku Standard
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = "Standard"
+    Location = $WELocation
+    AllocationMethod = "Static"
+    ErrorAction = "Stop"
+    Name = $WEPublicIpName
+}
+$WEPublicIp @params
 
 Write-WELog " Public IP created: $WEPublicIpName" " INFO"
 
 
-$WEGatewayIpConfig = New-AzApplicationGatewayIPConfiguration -ErrorAction Stop `
-    -Name " gatewayIP01" `
-    -Subnet $WESubnet
+$params = @{
+    ErrorAction = "Stop"
+    Subnet = $WESubnet
+    Name = " gatewayIP01"
+}
+$WEGatewayIpConfig @params
 
 
-$WEFrontendIpConfig = New-AzApplicationGatewayFrontendIPConfig -ErrorAction Stop `
-    -Name " frontendIP01" `
-    -PublicIPAddress $WEPublicIp
+$params = @{
+    ErrorAction = "Stop"
+    PublicIPAddress = $WEPublicIp
+    Name = " frontendIP01"
+}
+$WEFrontendIpConfig @params
 
 
-$WEFrontendPort = New-AzApplicationGatewayFrontendPort -ErrorAction Stop `
-    -Name " frontendPort01" `
-    -Port 80
+$params = @{
+    ErrorAction = "Stop"
+    Port = "80"
+    Name = " frontendPort01"
+}
+$WEFrontendPort @params
 
 
-$WEBackendPool = New-AzApplicationGatewayBackendAddressPool -ErrorAction Stop `
-    -Name " backendPool01"
+$WEBackendPool -Name " backendPool01" -ErrorAction "Stop"
 
 
-$WEBackendHttpSettings = New-AzApplicationGatewayBackendHttpSetting -ErrorAction Stop `
-    -Name " backendHttpSettings01" `
-    -Port 80 `
-    -Protocol Http `
-    -CookieBasedAffinity Disabled
+$params = @{
+    ErrorAction = "Stop"
+    Port = "80"
+    CookieBasedAffinity = "Disabled"
+    Name = " backendHttpSettings01"
+    Protocol = "Http"
+}
+$WEBackendHttpSettings @params
 
 
-$WEHttpListener = New-AzApplicationGatewayHttpListener -ErrorAction Stop `
-    -Name " httpListener01" `
-    -Protocol Http `
-    -FrontendIPConfiguration $WEFrontendIpConfig `
-    -FrontendPort $WEFrontendPort
+$params = @{
+    FrontendIPConfiguration = $WEFrontendIpConfig
+    ErrorAction = "Stop"
+    FrontendPort = $WEFrontendPort
+    Name = " httpListener01"
+    Protocol = "Http"
+}
+$WEHttpListener @params
 
 
-$WERoutingRule = New-AzApplicationGatewayRequestRoutingRule -ErrorAction Stop `
-    -Name " routingRule01" `
-    -RuleType Basic `
-    -HttpListener $WEHttpListener `
-    -BackendAddressPool $WEBackendPool `
-    -BackendHttpSettings $WEBackendHttpSettings
+$params = @{
+    RuleType = "Basic"
+    Name = " routingRule01"
+    HttpListener = $WEHttpListener
+    BackendAddressPool = $WEBackendPool
+    ErrorAction = "Stop"
+    BackendHttpSettings = $WEBackendHttpSettings
+}
+$WERoutingRule @params
 
 ; 
-$WESku = New-AzApplicationGatewaySku -ErrorAction Stop `
-    -Name $WESkuName `
-    -Tier $WETier `
-    -Capacity $WECapacity
+$params = @{
+    Tier = $WETier
+    ErrorAction = "Stop"
+    Capacity = $WECapacity
+    Name = $WESkuName
+}
+$WESku @params
 
 
 Write-WELog " `nCreating Application Gateway (this may take 10-15 minutes)..." " INFO" ; 
-$WEAppGateway = New-AzApplicationGateway -ErrorAction Stop `
-    -Name $WEGatewayName `
-    -ResourceGroupName $WEResourceGroupName `
-    -Location $WELocation `
-    -GatewayIpConfiguration $WEGatewayIpConfig `
-    -FrontendIpConfiguration $WEFrontendIpConfig `
-    -FrontendPort $WEFrontendPort `
-    -BackendAddressPool $WEBackendPool `
-    -BackendHttpSetting $WEBackendHttpSettings `
-    -HttpListener $WEHttpListener `
-    -RequestRoutingRule $WERoutingRule `
-    -Sku $WESku
+$params = @{
+    ResourceGroupName = $WEResourceGroupName
+    Sku = $WESku
+    GatewayIpConfiguration = $WEGatewayIpConfig
+    FrontendPort = $WEFrontendPort
+    Location = $WELocation
+    BackendHttpSetting = $WEBackendHttpSettings
+    HttpListener = $WEHttpListener
+    RequestRoutingRule = $WERoutingRule
+    BackendAddressPool = $WEBackendPool
+    ErrorAction = "Stop"
+    FrontendIpConfiguration = $WEFrontendIpConfig
+    Name = $WEGatewayName
+}
+$WEAppGateway @params
 
 Write-WELog " `nApplication Gateway $WEGatewayName provisioned successfully" " INFO"
 Write-WELog " Public IP: $($WEPublicIp.IpAddress)" " INFO"
@@ -198,3 +232,6 @@ Write-WELog " `nApplication Gateway provisioning completed at $(Get-Date)" " INF
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

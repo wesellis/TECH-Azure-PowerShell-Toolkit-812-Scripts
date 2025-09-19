@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Lock Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -80,8 +86,10 @@ param(
     [switch]$WEForce
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName " Azure Resource Lock Manager" -Version " 1.0" -Description " Manage resource locks for protection and governance"
 
@@ -100,13 +108,13 @@ try {
             if ($WEResourceName) {
                 $resource = Get-AzResource -ResourceGroupName $WEResourceGroupName -Name $WEResourceName
                 New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -ResourceId $resource.ResourceId -LockNotes $WELockNotes
-                Write-Log " ✓ Created $WELockLevel lock on resource: $WEResourceName" -Level SUCCESS
+                Write-Log " [OK] Created $WELockLevel lock on resource: $WEResourceName" -Level SUCCESS
             } elseif ($WEResourceGroupName) {
                 New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -ResourceGroupName $WEResourceGroupName -LockNotes $WELockNotes
-                Write-Log " ✓ Created $WELockLevel lock on resource group: $WEResourceGroupName" -Level SUCCESS
+                Write-Log " [OK] Created $WELockLevel lock on resource group: $WEResourceGroupName" -Level SUCCESS
             } else {
                 New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -LockNotes $WELockNotes
-                Write-Log " ✓ Created $WELockLevel lock on subscription" -Level SUCCESS
+                Write-Log " [OK] Created $WELockLevel lock on subscription" -Level SUCCESS
             }
         }
         
@@ -128,7 +136,7 @@ try {
                 } else {
                     Remove-AzResourceLock -LockName $WELockName -Force:$WEForce
                 }
-                Write-Log " ✓ Removed lock: $WELockName" -Level SUCCESS
+                Write-Log " [OK] Removed lock: $WELockName" -Level SUCCESS
             }
         }
         
@@ -151,10 +159,10 @@ try {
     }
 
     Write-ProgressStep -StepNumber 3 -TotalSteps 3 -StepName " Complete" -Status " Operation complete"
-    Write-Log " ✅ Resource lock operation completed successfully!" -Level SUCCESS
+    Write-Log "  Resource lock operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
@@ -163,4 +171,5 @@ Write-Progress -Activity " Resource Lock Management" -Completed
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

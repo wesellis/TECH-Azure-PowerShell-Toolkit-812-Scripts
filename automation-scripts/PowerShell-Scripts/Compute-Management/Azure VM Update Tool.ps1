@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Update Tool
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -76,6 +81,8 @@ param(
     [string]$WEVmName
 )
 
+#region Functions
+
 
 Write-WELog " Update VM functionality to be implemented for $WEVmName in $WEResourceGroupName" " INFO"
 
@@ -86,3 +93,6 @@ Write-WELog " Update VM functionality to be implemented for $WEVmName in $WEReso
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

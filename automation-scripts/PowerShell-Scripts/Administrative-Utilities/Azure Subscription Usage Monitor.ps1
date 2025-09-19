@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Subscription Usage Monitor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -63,8 +69,10 @@ param(
     [string]$WEOutputPath = " .\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 
+#region Functions
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName " Azure Subscription Usage Monitor" -Version " 1.0" -Description " Monitor subscription limits, quotas, and resource usage"
 
@@ -132,7 +140,7 @@ try {
     
     if ($WEExportReport) {
         $usageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $WEOutputPath -Encoding UTF8
-        Write-Log " ✓ Usage report exported to: $WEOutputPath" -Level SUCCESS
+        Write-Log " [OK] Usage report exported to: $WEOutputPath" -Level SUCCESS
     }
 
     Write-ProgressStep -StepNumber 5 -TotalSteps 5 -StepName " Summary" -Status " Displaying results"
@@ -151,7 +159,7 @@ try {
     Write-WELog "                              SUBSCRIPTION USAGE REPORT" " INFO" -ForegroundColor Green  
     Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
     Write-WELog "" " INFO"
-    Write-WELog " 📊 Usage Summary for $($WELocation):" " INFO" -ForegroundColor Cyan
+    Write-WELog "  Usage Summary for $($WELocation):" " INFO" -ForegroundColor Cyan
     Write-WELog "   • Critical Items: $($criticalItems.Count)" " INFO" -ForegroundColor Red
     Write-WELog "   • Warning Items: $($warningItems.Count)" " INFO" -ForegroundColor Yellow
     Write-WELog "   • Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)" " INFO" -ForegroundColor White
@@ -166,7 +174,7 @@ try {
     
     if ($warningItems.Count -gt 0) {
         Write-WELog "" " INFO"
-        Write-WELog " ⚠️ Warning Usage (>$WEWarningThreshold%):" " INFO" -ForegroundColor Yellow
+        Write-WELog " [WARN]️ Warning Usage (>$WEWarningThreshold%):" " INFO" -ForegroundColor Yellow
         $warningItems | ForEach-Object {
             Write-WELog "   • $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" " INFO" -ForegroundColor White
         }
@@ -174,10 +182,10 @@ try {
     
     Write-WELog "" " INFO"
 
-    Write-Log " ✅ Subscription usage monitoring completed successfully!" -Level SUCCESS
+    Write-Log "  Subscription usage monitoring completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " ❌ Subscription usage monitoring failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "  Subscription usage monitoring failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
@@ -186,4 +194,5 @@ Write-Progress -Activity " Subscription Usage Monitoring" -Completed
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

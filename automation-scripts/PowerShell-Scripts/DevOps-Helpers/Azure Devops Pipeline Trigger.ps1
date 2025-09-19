@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Devops Pipeline Trigger
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,7 +77,9 @@ param(
     [string]$WESourceBranch = " main"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure DevOps Pipeline Trigger" -Version " 1.0" -Description " Trigger DevOps pipelines remotely"
 
 try {
@@ -94,12 +101,12 @@ try {
 
    ;  $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType " application/json"
     
-    Write-WELog " ✅ Pipeline triggered successfully!" " INFO" -ForegroundColor Green
+    Write-WELog "  Pipeline triggered successfully!" " INFO" -ForegroundColor Green
     Write-WELog " Run ID: $($response.id)" " INFO" -ForegroundColor Cyan
     Write-WELog " URL: $($response._links.web.href)" " INFO" -ForegroundColor Yellow
 
 } catch {
-    Write-Log " ❌ Pipeline trigger failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Pipeline trigger failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -107,4 +114,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

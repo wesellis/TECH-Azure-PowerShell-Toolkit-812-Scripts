@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure Storage Container Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates a new blob container in Azure Storage Account
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -21,6 +30,8 @@ param (
     [string]$PublicAccess = "Off"
 )
 
+#region Functions
+
 Write-Information "Creating storage container: $ContainerName"
 
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
@@ -33,3 +44,6 @@ Write-Information "  Name: $($Container.Name)"
 Write-Information "  Public Access: $PublicAccess"
 Write-Information "  Storage Account: $StorageAccountName"
 Write-Information "  URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
+
+
+#endregion

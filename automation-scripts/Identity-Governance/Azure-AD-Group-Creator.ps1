@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure AD Group Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure Active Directory groups for access management
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$GroupName,
@@ -20,6 +29,8 @@ param (
     [Parameter(Mandatory=$false)]
     [array]$MemberEmails = @()
 )
+
+#region Functions
 
 Write-Information "Creating Azure AD Group: $GroupName"
 
@@ -41,7 +52,7 @@ try {
     
     $Group = New-AzADGroup -ErrorAction Stop @GroupParams
     
-    Write-Information "✅ Azure AD Group created successfully:"
+    Write-Information " Azure AD Group created successfully:"
     Write-Information "  Group Name: $($Group.DisplayName)"
     Write-Information "  Object ID: $($Group.Id)"
     Write-Information "  Group Type: $GroupType"
@@ -59,12 +70,12 @@ try {
                 $User = Get-AzADUser -UserPrincipalName $Email
                 if ($User) {
                     Add-AzADGroupMember -GroupObject $Group -MemberObjectId $User.Id
-                    Write-Information "  ✅ Added: $Email"
+                    Write-Information "   Added: $Email"
                 } else {
-                    Write-Information "  ❌ User not found: $Email"
+                    Write-Information "   User not found: $Email"
                 }
             } catch {
-                Write-Information "  ❌ Failed to add $Email : $($_.Exception.Message)"
+                Write-Information "   Failed to add $Email : $($_.Exception.Message)"
             }
         }
     }
@@ -84,3 +95,6 @@ try {
 } catch {
     Write-Error "Failed to create Azure AD group: $($_.Exception.Message)"
 }
+
+
+#endregion

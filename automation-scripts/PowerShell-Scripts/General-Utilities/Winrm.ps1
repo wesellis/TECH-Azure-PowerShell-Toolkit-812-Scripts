@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Winrm
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -34,9 +39,12 @@
     Requires appropriate permissions and modules
 
 
-$WECert = New-SelfSignedCertificate -DnsName $WERemoteHostName, $WEComputerName `
-    -CertStoreLocation "cert:\LocalMachine\My" `
-    -FriendlyName " Test WinRM Cert"
+$params = @{
+    CertStoreLocation = "cert:\LocalMachine\My"
+    FriendlyName = " Test WinRM Cert"
+    DnsName = $WERemoteHostName, $WEComputerName
+}
+$WECert @params
 
 $WECert | Out-String
 ; 
@@ -56,4 +64,5 @@ netsh advfirewall firewall add rule name=" Windows Remote Management (HTTPS-In)"
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

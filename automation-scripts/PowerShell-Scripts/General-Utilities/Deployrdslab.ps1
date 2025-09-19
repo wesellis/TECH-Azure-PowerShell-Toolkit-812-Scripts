@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Deployrdslab
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -157,47 +162,13 @@ param(
             Script AddExternalZone
             {
                 SetScript = {
-                    Add-DnsServerPrimaryZone -Name $WEUsing:ExternalDnsDomain `
-                        -ReplicationScope " Forest" `
-                        -DynamicUpdate " Secure"
-                }
-    
-                TestScript = {
-                    If (Get-DnsServerZone -Name $WEUsing:ExternalDnsDomain -ErrorAction SilentlyContinue) {
-                        Return $WETrue
-                    } Else {
-                        Return $WEFalse
+                    $params = @{
+                        ErrorAction = "SilentlyContinue } }  DependsOn = " [xDnsServerForwarder]SetForwarders" }  xDnsRecord AddIntLBBrokerIP { Name = " broker" Target = $WEIntBrokerLBIP Zone = $WEExternalDnsDomain Type = " ARecord" Ensure = " Present" DependsOn = " [Script]AddExternalZone" }  xDnsRecord AddIntLBWebGWIP { Name = $WEWebGWDNS Target = $WEIntWebGWLBIP Zone = $WEExternalDnsDomain Type = " ARecord" Ensure = " Present" DependsOn = " [Script]AddExternalZone" }"
+                        DynamicUpdate = " Secure" }  TestScript = { If (Get-DnsServerZone"
+                        ReplicationScope = " Forest"
+                        Name = $WEUsing:ExternalDnsDomain
                     }
-                }
-    
-                GetScript = {
-                    @{
-                        Result = Get-DnsServerZone -Name $WEUsing:ExternalDnsDomain -ErrorAction SilentlyContinue
-                    }
-                }
-    
-                DependsOn = " [xDnsServerForwarder]SetForwarders"
-            }
-    
-            xDnsRecord AddIntLBBrokerIP
-            {
-                Name = " broker"
-                Target = $WEIntBrokerLBIP
-                Zone = $WEExternalDnsDomain
-                Type = " ARecord"
-                Ensure = " Present"
-                DependsOn = " [Script]AddExternalZone"
-            }
-    
-            xDnsRecord AddIntLBWebGWIP
-            {
-                Name = $WEWebGWDNS
-                Target = $WEIntWebGWLBIP
-                Zone = $WEExternalDnsDomain
-                Type = " ARecord"
-                Ensure = " Present"
-                DependsOn = " [Script]AddExternalZone"
-            }
+                    Add-DnsServerPrimaryZone @params
 
             PendingReboot RebootAfterInstallingAD
             {
@@ -699,3 +670,6 @@ param(
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

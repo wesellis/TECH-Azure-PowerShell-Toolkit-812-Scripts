@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Automation Account Manager
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -76,6 +82,8 @@ param(
     [string]$WEAccountName
 )
 
+#region Functions
+
 ; 
 $WEAutomationAccount = Get-AzAutomationAccount -ResourceGroupName $WEResourceGroupName -Name $WEAccountName
 
@@ -93,3 +101,6 @@ Write-WELog " Last Modified: $($WEAutomationAccount.LastModifiedTime)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

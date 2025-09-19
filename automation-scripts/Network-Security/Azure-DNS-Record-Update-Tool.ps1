@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure DNS Record Update Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Updates Azure DNS records with new values and TTL settings
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ZoneName,
@@ -15,6 +24,8 @@ param (
     [int]$TTL,
     [string]$RecordValue
 )
+
+#region Functions
 
 # Get the existing record set
 $RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
@@ -48,3 +59,6 @@ switch ($RecordType) {
 Set-AzDnsRecordSet -RecordSet $RecordSet
 
 Write-Information "DNS record updated successfully"
+
+
+#endregion

@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Tagger
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -80,6 +86,8 @@ param(
     [switch]$WEForce
 )
 
+#region Functions
+
 Write-WELog " Azure Resource Tagger" " INFO" -ForegroundColor Cyan
 Write-WELog " =====================" " INFO" -ForegroundColor Cyan
 
@@ -121,7 +129,7 @@ foreach ($resource in $resources) {
             }
             
             Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$WEForce
-            Write-WELog "  ✓ Tagged: $($resource.Name)" " INFO" -ForegroundColor Green
+            Write-WELog "  [OK] Tagged: $($resource.Name)" " INFO" -ForegroundColor Green
             $taggedCount++
         }
     } catch {
@@ -130,7 +138,7 @@ foreach ($resource in $resources) {
 }
 
 if (-not $WEWhatIf) {
-    Write-WELog " `n✓ Successfully tagged $taggedCount resources" " INFO" -ForegroundColor Green
+    Write-WELog " `n[OK] Successfully tagged $taggedCount resources" " INFO" -ForegroundColor Green
 }
 
 Write-WELog " `nResource tagging completed at $(Get-Date)" " INFO" -ForegroundColor Cyan
@@ -138,4 +146,5 @@ Write-WELog " `nResource tagging completed at $(Get-Date)" " INFO" -ForegroundCo
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

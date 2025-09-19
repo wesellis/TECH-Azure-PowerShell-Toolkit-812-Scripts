@@ -1,6 +1,23 @@
-﻿# Azure App Configuration Service Manager
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure App Configuration Service Manager
 # Professional configuration management for modern applications
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Centralized application configuration
 
 param(
@@ -40,8 +57,10 @@ param(
     [string]$Sku = "Standard"
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName "Azure App Configuration Service Manager" -Version "1.0" -Description "Centralized configuration management for modern applications"
 
@@ -55,51 +74,21 @@ try {
     
     switch ($Action) {
         "Create" {
-            Write-Log "🏗️ Creating App Configuration store..." -Level INFO
+            Write-Log " Creating App Configuration store..." -Level INFO
             
-            $configStore = New-AzAppConfigurationStore -ErrorAction Stop `
-                -ResourceGroupName $ResourceGroupName `
-                -Name $ConfigStoreName `
-                -Location $Location `
-                -Sku $Sku `
-                -Tag $Tags
-            
-            Write-Log "✓ App Configuration store created: $($configStore.Name)" -Level SUCCESS
-        }
-        
-        "AddKey" {
-            Write-Log "🔑 Adding configuration key..." -Level INFO
-            
-            $keyParams = @{
-                Endpoint = "https://$ConfigStoreName.azconfig.io"
-                Key = $KeyName
-                Value = $KeyValue
+            $params = @{
+                ResourceGroupName = $ResourceGroupName
+                Sku = $Sku
+                Key = $KeyName Write-Information "Key: $($key.Key)" Write-Information "Value: $($key.Value)" Write-Information "Label: $($key.Label)" }  "ListKeys" { Write-Log "📋 Listing all configuration keys...
+                gt = "0) { $keyParams.Tag = $Tags }  Set-AzAppConfigurationKeyValue"
+                Location = $Location
+                Endpoint = "https://$ConfigStoreName.azconfig.io" $keys | Format-Table Key, Value, Label, ContentType } }"
+                Level = "INFO  $keys = Get-AzAppConfigurationKeyValue"
+                Tag = $Tags  Write-Log "[OK] App Configuration store created: $($configStore.Name)
+                ErrorAction = "Stop @keyParams Write-Log "[OK] Configuration key added: $KeyName"
+                Name = $ConfigStoreName
             }
-            
-            if ($Label) { $keyParams.Label = $Label }
-            if ($ContentType) { $keyParams.ContentType = $ContentType }
-            if ($Tags.Count -gt 0) { $keyParams.Tag = $Tags }
-            
-            Set-AzAppConfigurationKeyValue -ErrorAction Stop @keyParams
-            Write-Log "✓ Configuration key added: $KeyName" -Level SUCCESS
-        }
-        
-        "GetKey" {
-            Write-Log "📖 Retrieving configuration key..." -Level INFO
-            
-            $key = Get-AzAppConfigurationKeyValue -Endpoint "https://$ConfigStoreName.azconfig.io" -Key $KeyName
-            Write-Information "Key: $($key.Key)"
-            Write-Information "Value: $($key.Value)"
-            Write-Information "Label: $($key.Label)"
-        }
-        
-        "ListKeys" {
-            Write-Log "📋 Listing all configuration keys..." -Level INFO
-            
-            $keys = Get-AzAppConfigurationKeyValue -Endpoint "https://$ConfigStoreName.azconfig.io"
-            $keys | Format-Table Key, Value, Label, ContentType
-        }
-    }
+            $configStore @params
 
     Write-ProgressStep -StepNumber 3 -TotalSteps 4 -StepName "Validation" -Status "Validating configuration"
     
@@ -113,17 +102,19 @@ try {
     Write-Information "                              APP CONFIGURATION OPERATION COMPLETE"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "⚙️ Configuration Store: $ConfigStoreName"
-    Write-Information "🌍 Endpoint: https://$ConfigStoreName.azconfig.io"
-    Write-Information "📍 Location: $($store.Location)"
-    Write-Information "💰 SKU: $($store.Sku.Name)"
+    Write-Information " Configuration Store: $ConfigStoreName"
+    Write-Information "� Endpoint: https://$ConfigStoreName.azconfig.io"
+    Write-Information "� Location: $($store.Location)"
+    Write-Information " SKU: $($store.Sku.Name)"
     Write-Information ""
 
-    Write-Log "✅ App Configuration operation completed successfully!" -Level SUCCESS
+    Write-Log " App Configuration operation completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ App Configuration operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " App Configuration operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "App Configuration Management" -Completed
+
+#endregion

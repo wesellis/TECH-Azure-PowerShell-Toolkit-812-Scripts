@@ -1,6 +1,23 @@
-﻿# Azure Security Assessment Reporter
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Security Assessment Reporter
 # Professional Azure automation script for comprehensive security analysis
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 2.0 | Enhanced for enterprise security governance
 
 param(
@@ -33,8 +50,10 @@ param(
     [string]$LogAnalyticsWorkspaceId
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 # Professional banner
 Show-Banner -ScriptName "Azure Security Assessment Reporter" -Version "2.0" -Description "Comprehensive security posture analysis and compliance reporting"
@@ -74,7 +93,7 @@ try {
     $subscription = Get-AzSubscription -SubscriptionId $assessmentResults.AssessmentMetadata.SubscriptionId
     $assessmentResults.AssessmentMetadata.SubscriptionName = $subscription.Name
     
-    Write-Log "✓ Assessment scope: $($subscription.Name)" -Level SUCCESS
+    Write-Log "[OK] Assessment scope: $($subscription.Name)" -Level SUCCESS
 
     # Security Center Assessment
     Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName "Security Center Analysis" -Status "Analyzing Security Center recommendations"
@@ -100,7 +119,7 @@ try {
         $assessmentResults.SecurityFindings += $finding
     }
     
-    Write-Log "✓ Analyzed $($securityAssessments.Count) Security Center assessments" -Level SUCCESS
+    Write-Log "[OK] Analyzed $($securityAssessments.Count) Security Center assessments" -Level SUCCESS
 
     # Network Security Analysis
     Write-ProgressStep -StepNumber 4 -TotalSteps 10 -StepName "Network Security Analysis" -Status "Analyzing network security configurations"
@@ -136,7 +155,7 @@ try {
     } -OperationName "Analyze Network Security"
     
     $assessmentResults.SecurityFindings += $networkFindings
-    Write-Log "✓ Analyzed network security configurations" -Level SUCCESS
+    Write-Log "[OK] Analyzed network security configurations" -Level SUCCESS
 
     # Key Vault Security Analysis
     Write-ProgressStep -StepNumber 5 -TotalSteps 10 -StepName "Key Vault Security" -Status "Analyzing Key Vault configurations"
@@ -180,7 +199,7 @@ try {
     } -OperationName "Analyze Key Vault Security"
     
     $assessmentResults.SecurityFindings += $keyVaultFindings
-    Write-Log "✓ Analyzed Key Vault security configurations" -Level SUCCESS
+    Write-Log "[OK] Analyzed Key Vault security configurations" -Level SUCCESS
 
     # Resource Compliance Analysis
     Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName "Compliance Analysis" -Status "Analyzing resource compliance"
@@ -221,7 +240,7 @@ try {
     } -OperationName "Analyze Resource Compliance"
     
     $assessmentResults.ComplianceScore = $complianceResults
-    Write-Log "✓ Analyzed resource compliance" -Level SUCCESS
+    Write-Log "[OK] Analyzed resource compliance" -Level SUCCESS
 
     # Policy Compliance Analysis
     Write-ProgressStep -StepNumber 7 -TotalSteps 10 -StepName "Policy Analysis" -Status "Analyzing Azure Policy compliance"
@@ -257,7 +276,7 @@ try {
     }
     
     $assessmentResults.SecurityFindings += $policyFindings
-    Write-Log "✓ Analyzed Azure Policy compliance" -Level SUCCESS
+    Write-Log "[OK] Analyzed Azure Policy compliance" -Level SUCCESS
 
     # Generate Recommendations
     Write-ProgressStep -StepNumber 8 -TotalSteps 10 -StepName "Recommendations" -Status "Generating security recommendations"
@@ -329,13 +348,13 @@ try {
     
     # JSON Export
     $assessmentResults | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-    Write-Log "✓ Assessment results exported to: $OutputPath" -Level SUCCESS
+    Write-Log "[OK] Assessment results exported to: $OutputPath" -Level SUCCESS
     
     # CSV Export if requested
     if ($ExportToCSV) {
         $csvPath = $OutputPath.Replace('.json', '.csv')
         $assessmentResults.SecurityFindings | Export-Csv -Path $csvPath -NoTypeInformation -Force
-        Write-Log "✓ Findings exported to CSV: $csvPath" -Level SUCCESS
+        Write-Log "[OK] Findings exported to CSV: $csvPath" -Level SUCCESS
     }
     
     # Log Analytics Export if requested
@@ -354,9 +373,9 @@ try {
     Write-Information "                              SECURITY ASSESSMENT COMPLETED"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "🛡️  Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
+    Write-Information "  Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
     Write-Information ""
-    Write-Information "📊 Assessment Summary:"
+    Write-Information " Assessment Summary:"
     Write-Information "   • Total Resources: $($complianceResults.TotalResources)"
     Write-Information "   • Security Findings: $($assessmentResults.Summary.TotalFindings)"
     Write-Information "   • Critical Issues: $($assessmentResults.Summary.CriticalFindings)"
@@ -364,7 +383,7 @@ try {
     Write-Information "   • Low Issues: $($assessmentResults.Summary.LowFindings)"
     Write-Information "   • Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%"
     Write-Information ""
-    Write-Information "📂 Output Files:"
+    Write-Information "� Output Files:"
     Write-Information "   • JSON Report: $OutputPath"
     if ($ExportToCSV) {
         Write-Information "   • CSV Export: $csvPath"
@@ -372,17 +391,17 @@ try {
     Write-Information ""
     
     if ($assessmentResults.Summary.CriticalFindings -gt 0) {
-        Write-Information "⚠️  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
+        Write-Information "[WARN]  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
         Write-Information ""
     }
 
-    Write-Log "✅ Security assessment completed successfully!" -Level SUCCESS
+    Write-Log " Security assessment completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
     Write-Information ""
-    Write-Information "🔧 Troubleshooting Tips:"
+    Write-Information " Troubleshooting Tips:"
     Write-Information "   • Verify Security Center is enabled on the subscription"
     Write-Information "   • Check permissions for Security Reader role"
     Write-Information "   • Ensure Az.Security module is installed and updated"
@@ -394,3 +413,6 @@ try {
 
 Write-Progress -Activity "Security Assessment" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
+
+
+#endregion

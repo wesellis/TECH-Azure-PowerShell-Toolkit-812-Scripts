@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Validate Deploymentfile.Tests
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -52,24 +57,20 @@
             $err = $null
             $warn = $null
             $WEError.Clear()
-            $buildHostOutput = . $cmdlet `
-                -SampleFolder $WESampleFolder `
-                -MainTemplateFilenameBicep ($bicepSupported ? $templateFileName : 'main.bicep') `
-                -MainTemplateFilenameJson ($bicepSupported ? 'azuredeploy.json' : $templateFileName) `
-                -BuildReason ($isPR ? 'PullRequest' : 'SomethingOtherThanPullRequest') `
-                -BicepPath ($WEENV:BICEP_PATH ? $WEENV:BICEP_PATH : 'bicep') `
-                -BicepVersion '1.2.3' `
-                -bicepSupported:$bicepSupported `
-                -ErrorVariable err `
-                -ErrorAction SilentlyContinue `
-                -WarningVariable warn `
-                6>&1 2>$null 3>$null
-            # Write-Information $buildHostOutput
-            $WEErrorActionPreference = 'Stop'
-            $vars = Find-VarsFromWriteHostOutput $buildHostOutput
-            $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ] -eq " True"
-            $hasErrors = $err.Count -gt 0
-            $hasWarnings = $warn.Count -gt 0
+            $params = @{
+                SampleFolder = $WESampleFolder
+                WarningVariable = "warn 6>&1 2>$null 3>$null # Write-Information $buildHostOutput $WEErrorActionPreference = 'Stop' $vars = Find-VarsFromWriteHostOutput $buildHostOutput $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ]"
+                MainTemplateFilenameJson = "($bicepSupported ? 'azuredeploy.json' : $templateFileName)"
+                eq = " True" $hasErrors = $err.Count"
+                ErrorVariable = "err"
+                gt = "0"
+                BicepVersion = "1.2.3"
+                BicepPath = "($WEENV:BICEP_PATH ? $WEENV:BICEP_PATH : 'bicep')"
+                ErrorAction = "SilentlyContinue"
+                BuildReason = "($isPR ? 'PullRequest' : 'SomethingOtherThanPullRequest')"
+                MainTemplateFilenameBicep = "($bicepSupported ? $templateFileName : 'main.bicep')"
+            }
+            $buildHostOutput @params
 
             $hasErrors, $hasWarnings, $labelBicepWarnings
         }
@@ -77,56 +78,52 @@
 
     It 'bicep has no errors' {
         $folder = " $dataFolder/bicep-success"
-        $hasErrors, $hasWarnings, $labelBicepWarnings = Validate-DeploymentFile `
-            -SampleFolder $folder `
-            -TemplateFileName " main.bicep"
-        $hasErrors | Should -Be $false
-        $hasWarnings | Should -Be $false
-        $labelBicepWarnings | Should -Be $false    
-    }
+        $params = @{
+            Be = $false }
+            SampleFolder = $folder
+            TemplateFileName = " main.bicep" $hasErrors | Should"
+        }
+        $hasErrors, @params
 
     It 'bicep has errors and warnings' {
         $folder = " $dataFolder/bicep-error"
-        $hasErrors, $hasWarnings, $labelBicepWarnings = Validate-DeploymentFile `
-            -SampleFolder $folder `
-            -TemplateFileName " main.bicep"
-        $hasErrors | Should -Be $true
-        $hasWarnings | Should -Be $true
-        $labelBicepWarnings | Should -Be $false # We only show the label if the build succeeds (no errors)
-    }
+        $params = @{
+            Be = $false # We only show the label if the build succeeds (no errors) }
+            SampleFolder = $folder
+            TemplateFileName = " main.bicep" $hasErrors | Should"
+        }
+        $hasErrors, @params
 
     It 'bicep has linter warnings' {
         $folder = " $dataFolder/bicep-linter-warnings"
-        $hasErrors, $hasWarnings, $labelBicepWarnings = Validate-DeploymentFile `
-            -SampleFolder $folder `
-            -TemplateFileName " main.bicep"
-        $hasErrors | Should -Be $false
-        $hasWarnings | Should -Be $true
-        $labelBicepWarnings | Should -Be $true
-    }
+        $params = @{
+            Be = $true }
+            SampleFolder = $folder
+            TemplateFileName = " main.bicep" $hasErrors | Should"
+        }
+        $hasErrors, @params
 
     It 'bicep has compiler warnings' {
         $folder = " $dataFolder/bicep-compiler-warnings"
-        $hasErrors, $hasWarnings, $labelBicepWarnings = Validate-DeploymentFile `
-            -SampleFolder $folder `
-            -TemplateFileName " main.bicep"
-        $hasErrors | Should -Be $false
-        $hasWarnings | Should -Be $true
-        $labelBicepWarnings | Should -Be $true
-    }
+        $params = @{
+            Be = $true }
+            SampleFolder = $folder
+            TemplateFileName = " main.bicep" $hasErrors | Should"
+        }
+        $hasErrors, @params
 
     It 'not bicep' {
        ;  $folder = " $dataFolder/json-success"
-        $hasErrors, $hasWarnings,;  $labelBicepWarnings = Validate-DeploymentFile `
-            -SampleFolder $folder `
-            -TemplateFileName " azuredeploy.json"
-        $hasErrors | Should -Be $false
-        $hasWarnings | Should -Be $false
-        $labelBicepWarnings | Should -Be $false
-    }
+        $params = @{
+            Be = $false }
+            SampleFolder = $folder
+            TemplateFileName = " azuredeploy.json" $hasErrors | Should"
+        }
+        $hasErrors, @params
 }
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

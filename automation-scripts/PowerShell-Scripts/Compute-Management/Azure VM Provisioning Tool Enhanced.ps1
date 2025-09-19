@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Vm Provisioning Tool Enhanced
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -60,6 +66,8 @@ param(
     [switch]$WEForce
 )
 
+#region Functions
+
 
 $modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " modules" , " AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
@@ -72,7 +80,7 @@ try {
     
     Write-ProgressStep -StepNumber 2 -TotalSteps 6 -StepName " Resource Group" -Status " Validating resource group..."
     $rg = Invoke-AzureOperation -Operation { Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop } -OperationName " Get Resource Group"
-    Write-Log " ✓ Using resource group: $($rg.ResourceGroupName) in $($rg.Location)" -Level SUCCESS
+    Write-Log " [OK] Using resource group: $($rg.ResourceGroupName) in $($rg.Location)" -Level SUCCESS
     
     Write-ProgressStep -StepNumber 3 -TotalSteps 6 -StepName " Network Setup" -Status " Configuring network..."
     $vnet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -109,7 +117,7 @@ try {
         }
         
        ;  $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } -OperationName " Create VM" -MaxRetries 2
-        Write-Log " ✓ VM created successfully: $($vm.Name)" -Level SUCCESS
+        Write-Log " [OK] VM created successfully: $($vm.Name)" -Level SUCCESS
     }
     
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName " Complete" -Status " Finalizing..."
@@ -126,4 +134,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

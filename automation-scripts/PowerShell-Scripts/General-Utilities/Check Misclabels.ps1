@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Check Misclabels
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -49,6 +54,8 @@ $ErrorActionPreference = "Stop"
 param(
     [string]$sampleName = $WEENV:SAMPLE_NAME
 )
+
+#region Functions
 
 Write-WELog " Sample name: $sampleName" " INFO"
 
@@ -93,3 +100,6 @@ if($sampleName -cmatch " [A-Z]" ){
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

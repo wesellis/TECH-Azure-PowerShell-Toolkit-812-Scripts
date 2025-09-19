@@ -1,7 +1,10 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Resources
 
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Spring Apps Enterprise Management Tool
 .DESCRIPTION
@@ -125,6 +128,8 @@ param(
         ManagedBy = "AutomationScript"
     }
 )
+
+#region Functions
 
 # Enhanced logging function
 [CmdletBinding()]
@@ -651,3 +656,5 @@ try {
     Write-EnhancedLog "Tool execution failed: $($_.Exception.Message)" "Error"
     exit 1
 }
+
+#endregion

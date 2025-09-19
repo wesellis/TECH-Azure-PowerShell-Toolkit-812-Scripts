@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Remap Code Drive
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -52,6 +57,8 @@ $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)][PSObject] $WETaskParams
 )
+
+#region Functions
 
 $WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
@@ -102,4 +109,5 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

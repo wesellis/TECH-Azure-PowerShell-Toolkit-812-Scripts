@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resourcegroup Cost Calculator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -72,6 +78,8 @@ param(
     [string]$WEResourceGroupName
 )
 
+#region Functions
+
 Write-WELog " Calculating estimated costs for Resource Group: $WEResourceGroupName" " INFO"
 
 $WEResources = Get-AzResource -ResourceGroupName $WEResourceGroupName
@@ -115,3 +123,6 @@ Write-WELog " Total Estimated Annual Cost: $($WETotalEstimatedCost * 12) USD" " 
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

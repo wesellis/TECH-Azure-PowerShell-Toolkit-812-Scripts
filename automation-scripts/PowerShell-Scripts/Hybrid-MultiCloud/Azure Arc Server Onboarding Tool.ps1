@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Arc Server Onboarding Tool
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -157,14 +163,16 @@ param(
     [string]$WEOperatingSystem = " Both"
 )
 
+#region Functions
+
 
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.ConnectedMachine -Force -ErrorAction Stop
-    Write-WELog " ✅ Successfully imported required Azure modules" " INFO" -ForegroundColor Green
+    Write-WELog "  Successfully imported required Azure modules" " INFO" -ForegroundColor Green
 } catch {
-    Write-Error " ❌ Failed to import required modules: $($_.Exception.Message)"
+    Write-Error "  Failed to import required modules: $($_.Exception.Message)"
     exit 1
 }
 
@@ -536,4 +544,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

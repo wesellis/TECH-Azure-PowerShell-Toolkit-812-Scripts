@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Build Images
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -54,9 +59,14 @@ if ($WEEnv:ARTIFACTS_SOURCE_OBJ) {
 }
 
 Write-WELog " === Building images with deployment $WEEnv:DEPLOYMENT_NAME" " INFO"
-$deploymentOutput = az deployment group create --template-file $imageBicepPath --name $WEEnv:DEPLOYMENT_NAME --subscription $WEEnv:SUBSCRIPTION_ID --resource-group $WEEnv:RESOURCE_GROUP `
-    --parameters location=$WEEnv:RESOURCES_LOCATION builderIdentity=$WEEnv:BUILDER_IDENTITY imageIdentity=$WEEnv:IMAGE_IDENTITY galleryName=$WEEnv:GALLERY_NAME `
-    ignoreBuildFailure=true imageBuildTimeoutInMinutes=$imageBuildTimeoutInMinutes $imageBuildProfileParam $artifactSourceParam
+$params = @{
+    file = $imageBicepPath
+    parameters = "location=$WEEnv:RESOURCES_LOCATION builderIdentity=$WEEnv:BUILDER_IDENTITY imageIdentity=$WEEnv:IMAGE_IDENTITY galleryName=$WEEnv:GALLERY_NAME ignoreBuildFailure=true imageBuildTimeoutInMinutes=$imageBuildTimeoutInMinutes $imageBuildProfileParam $artifactSourceParam"
+    group = $WEEnv:RESOURCE_GROUP
+    name = $WEEnv:DEPLOYMENT_NAME
+    subscription = $WEEnv:SUBSCRIPTION_ID
+}
+$deploymentOutput @params
 
 
 $deploymentOutput -Replace '\\n', [Environment]::NewLine
@@ -90,4 +100,5 @@ else {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

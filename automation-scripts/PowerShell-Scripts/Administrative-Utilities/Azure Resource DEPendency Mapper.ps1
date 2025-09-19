@@ -1,4 +1,10 @@
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Resource Dependency Mapper
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -54,7 +60,9 @@ param(
     [string]$WEOutputPath = " .\resource-dependencies.json"
 )
 
-Import-Module (Join-Path $WEPSScriptRoot " ..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1" ) -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName " Azure Resource Dependency Mapper" -Version " 1.0" -Description " Map resource dependencies"
 
 try {
@@ -96,11 +104,11 @@ try {
 
     if ($WEExportDiagram) {
         $dependencies | ConvertTo-Json -Depth 3 | Out-File -FilePath $WEOutputPath
-        Write-Log " ✓ Dependencies exported to: $WEOutputPath" -Level SUCCESS
+        Write-Log " [OK] Dependencies exported to: $WEOutputPath" -Level SUCCESS
     }
 
 } catch {
-    Write-Log " ❌ Dependency mapping failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log "  Dependency mapping failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
 
@@ -108,4 +116,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

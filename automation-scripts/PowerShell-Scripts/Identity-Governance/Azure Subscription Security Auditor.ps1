@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Subscription Security Auditor
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -76,6 +82,8 @@ param(
     [string]$WEOutputPath = " SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
 )
 
+#region Functions
+
 Write-WELog " Starting Azure Security Audit..." " INFO"
 
 if ($WESubscriptionId) {
@@ -104,10 +112,10 @@ try {
         State = $WESubscription.State
     }
     
-    Write-WELog " ✅ Subscription info collected" " INFO"
+    Write-WELog "  Subscription info collected" " INFO"
     
     # Audit role assignments
-    Write-WELog " 🔍 Auditing role assignments..." " INFO"
+    Write-WELog "  Auditing role assignments..." " INFO"
     $WERoleAssignments = Get-AzRoleAssignment -Scope " /subscriptions/$WESubscriptionId"
     
     foreach ($WEAssignment in $WERoleAssignments) {
@@ -125,14 +133,14 @@ try {
     $WEPrivilegedAssignments = $WERoleAssignments | Where-Object { $_.RoleDefinitionName -in $WEPrivilegedRoles }
     
     if ($WEPrivilegedAssignments.Count -gt 10) {
-        $WEAuditResults.SecurityFindings += " ⚠️ High number of privileged role assignments: $($WEPrivilegedAssignments.Count)"
+        $WEAuditResults.SecurityFindings += " [WARN]️ High number of privileged role assignments: $($WEPrivilegedAssignments.Count)"
         $WEAuditResults.Recommendations += " Review and minimize privileged access assignments"
     }
     
-    Write-WELog " ✅ Role assignments audited: $($WERoleAssignments.Count) found" " INFO"
+    Write-WELog "  Role assignments audited: $($WERoleAssignments.Count) found" " INFO"
     
     # Audit policy assignments
-    Write-WELog " 🔍 Auditing policy assignments..." " INFO"
+    Write-WELog "  Auditing policy assignments..." " INFO"
     $WEPolicyAssignments = Get-AzPolicyAssignment -Scope " /subscriptions/$WESubscriptionId"
     
     foreach ($WEPolicy in $WEPolicyAssignments) {
@@ -144,33 +152,33 @@ try {
         }
     }
     
-    Write-WELog " ✅ Policy assignments audited: $($WEPolicyAssignments.Count) found" " INFO"
+    Write-WELog "  Policy assignments audited: $($WEPolicyAssignments.Count) found" " INFO"
     
     # Security checks
-    Write-WELog " 🔍 Performing security checks..." " INFO"
+    Write-WELog "  Performing security checks..." " INFO"
     
     # Check for guest users with privileged access
     $WEGuestUsers = $WERoleAssignments | Where-Object { $_.DisplayName -like " *#EXT#*" -and $_.RoleDefinitionName -in $WEPrivilegedRoles }
     if ($WEGuestUsers.Count -gt 0) {
-        $WEAuditResults.SecurityFindings += " ⚠️ Guest users with privileged access: $($WEGuestUsers.Count)"
+        $WEAuditResults.SecurityFindings += " [WARN]️ Guest users with privileged access: $($WEGuestUsers.Count)"
         $WEAuditResults.Recommendations += " Review guest user access and implement time-limited assignments"
     }
     
     # Check for service principals with Owner role
     $WEServicePrincipalOwners = $WERoleAssignments | Where-Object { $_.ObjectType -eq " ServicePrincipal" -and $_.RoleDefinitionName -eq " Owner" }
     if ($WEServicePrincipalOwners.Count -gt 0) {
-        $WEAuditResults.SecurityFindings += " ⚠️ Service principals with Owner role: $($WEServicePrincipalOwners.Count)"
+        $WEAuditResults.SecurityFindings += " [WARN]️ Service principals with Owner role: $($WEServicePrincipalOwners.Count)"
         $WEAuditResults.Recommendations += " Consider using more restrictive roles for service principals"
     }
     
     # Check for users with subscription-level Owner access
    ;  $WESubscriptionOwners = $WERoleAssignments | Where-Object { $_.Scope -eq " /subscriptions/$WESubscriptionId" -and $_.RoleDefinitionName -eq " Owner" }
     if ($WESubscriptionOwners.Count -gt 5) {
-        $WEAuditResults.SecurityFindings += " ⚠️ Many subscription owners: $($WESubscriptionOwners.Count)"
+        $WEAuditResults.SecurityFindings += " [WARN]️ Many subscription owners: $($WESubscriptionOwners.Count)"
         $WEAuditResults.Recommendations += " Limit subscription-level Owner assignments"
     }
     
-    Write-WELog " ✅ Security checks completed" " INFO"
+    Write-WELog "  Security checks completed" " INFO"
     
     # Generate HTML report
    ;  $WEHTML = @"
@@ -217,7 +225,7 @@ try {
     $WEHTML = $WEHTML + " <h2>Recommendations</h2>"
     
     foreach ($WERecommendation in $WEAuditResults.Recommendations) {
-        $WEHTML = $WEHTML + " <div class='recommendation'>✅ $WERecommendation</div>"
+        $WEHTML = $WEHTML + " <div class='recommendation'> $WERecommendation</div>"
     }
     
    ;  $WEHTML = $WEHTML + @"
@@ -233,8 +241,8 @@ try {
     # Save report
     $WEHTML | Out-File -FilePath $WEOutputPath -Encoding UTF8
     
-    Write-WELog " ✅ Security audit completed successfully!" " INFO"
-    Write-WELog " 📊 Audit Results:" " INFO"
+    Write-WELog "  Security audit completed successfully!" " INFO"
+    Write-WELog "  Audit Results:" " INFO"
     Write-WELog "  Role Assignments: $($WEAuditResults.RoleAssignments.Count)" " INFO"
     Write-WELog "  Policy Assignments: $($WEAuditResults.PolicyAssignments.Count)" " INFO"
     Write-WELog "  Security Findings: $($WEAuditResults.SecurityFindings.Count)" " INFO"
@@ -248,4 +256,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

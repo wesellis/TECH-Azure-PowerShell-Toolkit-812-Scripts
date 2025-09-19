@@ -1,6 +1,22 @@
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Generate-ScriptCatalog.ps1
 # Generates a comprehensive catalog of all PowerShell scripts in the repository
-# Author: Wesley Ellis | Enhanced by AI
 # Version: 2.0
 
 param(
@@ -10,6 +26,8 @@ param(
     [switch]$IncludeMetrics,
     [switch]$GenerateHTML
 )
+
+#region Functions
 
 function Get-ScriptMetadata {
     param([string]$ScriptPath)
@@ -219,3 +237,5 @@ if ($GenerateHTML) {
 
 Write-Host "`nCatalog generation complete!" -ForegroundColor Cyan
 Write-Host "Total scripts cataloged: $($scriptMetadata.Count)" -ForegroundColor Yellow
+
+#endregion

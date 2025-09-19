@@ -1,4 +1,22 @@
-﻿# Enhanced Azure Environment Cloner
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Enhanced Azure Environment Cloner
 param (
     [Parameter(Mandatory=$true)][string]$SourceResourceGroup,
     [Parameter(Mandatory=$true)][string]$TargetResourceGroup,
@@ -11,6 +29,8 @@ param (
     [Parameter(Mandatory=$false)][switch]$Force
 )
 
+#region Functions
+
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
 
@@ -22,7 +42,7 @@ try {
     Write-ProgressStep -StepNumber 1 -TotalSteps 8 -StepName "Validation" -Status "Validating source environment..."
     
     $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroup -ErrorAction Stop
-    Write-Log "✓ Source RG found: $($sourceRG.ResourceGroupName) in $($sourceRG.Location)" -Level SUCCESS
+    Write-Log "[OK] Source RG found: $($sourceRG.ResourceGroupName) in $($sourceRG.Location)" -Level SUCCESS
     
     # Get target location (default to source location)
     $targetLoc = $TargetLocation ?? $sourceRG.Location
@@ -57,7 +77,7 @@ try {
         $targetRG = Get-AzResourceGroup -Name $TargetResourceGroup -ErrorAction SilentlyContinue
         if (-not $targetRG) {
             $targetRG = New-AzResourceGroup -Name $TargetResourceGroup -Location $targetLoc
-            Write-Log "✓ Created target resource group: $($targetRG.ResourceGroupName)" -Level SUCCESS
+            Write-Log "[OK] Created target resource group: $($targetRG.ResourceGroupName)" -Level SUCCESS
         }
     }
     
@@ -79,9 +99,9 @@ try {
                 Export-AzResourceGroup -ResourceGroupName $SourceResourceGroup -Resource $resourceIds -Path $templatePath -Force
                 $templates[$resourceType.Name] = $templatePath
                 
-                Write-Log "✓ Exported template for $($resourceType.Name)" -Level SUCCESS
+                Write-Log "[OK] Exported template for $($resourceType.Name)" -Level SUCCESS
             } catch {
-                Write-Log "⚠ Failed to export template for $($resourceType.Name): $($_.Exception.Message)" -Level WARN
+                Write-Log "[WARN] Failed to export template for $($resourceType.Name): $($_.Exception.Message)" -Level WARN
             }
         }
     }
@@ -118,11 +138,11 @@ try {
                 } -OperationName "Deploy $($template.Key)"
                 
                 $deployedResources += $deployment
-                Write-Log "✓ Deployed: $($template.Key)" -Level SUCCESS
+                Write-Log "[OK] Deployed: $($template.Key)" -Level SUCCESS
                 
             } catch {
                 $deploymentErrors += "Failed to deploy $($template.Key): $($_.Exception.Message)"
-                Write-Log "✗ Failed to deploy $($template.Key): $($_.Exception.Message)" -Level ERROR
+                Write-Log "[FAIL] Failed to deploy $($template.Key): $($_.Exception.Message)" -Level ERROR
             }
         }
     }
@@ -140,7 +160,7 @@ try {
                 }
                 Set-AzResource -ResourceId $resource.ResourceId -Tag $currentTags -Force
             } catch {
-                Write-Log "⚠ Failed to apply tags to $($resource.Name): $($_.Exception.Message)" -Level WARN
+                Write-Log "[WARN] Failed to apply tags to $($resource.Name): $($_.Exception.Message)" -Level WARN
             }
         }
     }
@@ -171,3 +191,6 @@ try {
     Write-Log "Environment cloning failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     throw
 }
+
+
+#endregion

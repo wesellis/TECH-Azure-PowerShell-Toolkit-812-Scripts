@@ -1,16 +1,27 @@
-﻿# ============================================================================
-# Script Name: Azure DNS Zone Health Monitor
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Monitors Azure DNS Zone health, record sets, and resolution performance
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$ZoneName
 )
+
+#region Functions
 
 Write-Information "Monitoring DNS Zone: $ZoneName"
 Write-Information "Resource Group: $ResourceGroupName"
@@ -106,15 +117,15 @@ $HasNS = $RecordSets | Where-Object { $_.RecordType -eq "NS" -and $_.Name -eq "@
 $HasA = $RecordSets | Where-Object { $_.RecordType -eq "A" -and $_.Name -eq "@" }
 $HasWWW = $RecordSets | Where-Object { $_.Name -eq "www" }
 
-Write-Information "  ✓ SOA Record: $(if ($HasSOA) { 'Present' } else { 'Missing' })"
-Write-Information "  ✓ NS Records: $(if ($HasNS) { 'Present' } else { 'Missing' })"
-Write-Information "  ✓ Root A Record: $(if ($HasA) { 'Present' } else { 'Missing (Optional)' })"
-Write-Information "  ✓ WWW Record: $(if ($HasWWW) { 'Present' } else { 'Missing (Recommended)' })"
+Write-Information "  [OK] SOA Record: $(if ($HasSOA) { 'Present' } else { 'Missing' })"
+Write-Information "  [OK] NS Records: $(if ($HasNS) { 'Present' } else { 'Missing' })"
+Write-Information "  [OK] Root A Record: $(if ($HasA) { 'Present' } else { 'Missing (Optional)' })"
+Write-Information "  [OK] WWW Record: $(if ($HasWWW) { 'Present' } else { 'Missing (Recommended)' })"
 
 # Check TTL values
 $LowTTLRecords = $RecordSets | Where-Object { $_.Ttl -lt 300 -and $_.RecordType -ne "SOA" }
 if ($LowTTLRecords.Count -gt 0) {
-    Write-Information "  ⚠ Low TTL Warning: $($LowTTLRecords.Count) records have TTL < 5 minutes"
+    Write-Information "  [WARN] Low TTL Warning: $($LowTTLRecords.Count) records have TTL < 5 minutes"
     foreach ($Record in $LowTTLRecords) {
         Write-Information "    - $($Record.Name) ($($Record.RecordType)): $($Record.Ttl)s"
     }
@@ -122,7 +133,7 @@ if ($LowTTLRecords.Count -gt 0) {
 
 $HighTTLRecords = $RecordSets | Where-Object { $_.Ttl -gt 86400 -and $_.RecordType -ne "SOA" -and $_.RecordType -ne "NS" }
 if ($HighTTLRecords.Count -gt 0) {
-    Write-Information "  ⚠ High TTL Warning: $($HighTTLRecords.Count) records have TTL > 24 hours"
+    Write-Information "  [WARN] High TTL Warning: $($HighTTLRecords.Count) records have TTL > 24 hours"
 }
 
 # DNS resolution test
@@ -131,20 +142,20 @@ try {
     # Test resolution of the zone itself
     $ResolutionTest = Resolve-DnsName -Name $ZoneName -Type NS -ErrorAction SilentlyContinue
     if ($ResolutionTest) {
-        Write-Information "  ✓ Zone resolution: Successful"
+        Write-Information "  [OK] Zone resolution: Successful"
         Write-Information "    Responding name servers:"
         foreach ($NS in $ResolutionTest | Where-Object { $_.Type -eq "NS" }) {
             Write-Information "      $($NS.NameHost)"
         }
     } else {
-        Write-Information "  ✗ Zone resolution: Failed"
+        Write-Information "  [FAIL] Zone resolution: Failed"
     }
     
     # Test A record resolution if exists
     if ($HasA) {
         $ARecordTest = Resolve-DnsName -Name $ZoneName -Type A -ErrorAction SilentlyContinue
         if ($ARecordTest) {
-            Write-Information "  ✓ A record resolution: Successful"
+            Write-Information "  [OK] A record resolution: Successful"
             foreach ($A in $ARecordTest | Where-Object { $_.Type -eq "A" }) {
                 Write-Information "    $($ZoneName) -> $($A.IPAddress)"
             }
@@ -152,7 +163,7 @@ try {
     }
     
 } catch {
-    Write-Information "  ⚠ DNS resolution test failed: $($_.Exception.Message)"
+    Write-Information "  [WARN] DNS resolution test failed: $($_.Exception.Message)"
 }
 
 Write-Information "`nRecommendations:"
@@ -163,3 +174,6 @@ Write-Information "4. Consider adding health checks for critical records"
 Write-Information "5. Implement DNS monitoring and alerting"
 
 Write-Information "`nDNS Zone monitoring completed at $(Get-Date)"
+
+
+#endregion

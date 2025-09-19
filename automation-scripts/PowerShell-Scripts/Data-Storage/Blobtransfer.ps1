@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Blobtransfer
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -91,6 +96,8 @@ param(
 
 )
 
+#region Functions
+
 
 [CmdletBinding()]
 function getBlobName
@@ -138,16 +145,7 @@ function getBlobCompletionStatus
 		[string]$WEAzCopyLogFile
 	)
 
-; 	$resultObject = New-Object -TypeName PSObject -Property `
-		@{ " TotalFilesTransfered" =0;
-			" TransferSuccessfully" =0;
-			" TransferSkipped" =0;
-			" TransferFailed" =0;
-			" UserCancelled" =$false;
-			" Success" =$false;
-			" SummaryFound" =$false;
-			" ErrorMessage" =[string]::Empty;
-			" ElapsedTime" =[string]::Empty }
+; -TypeName "PSObject" -Property "@{ " TotalFilesTransfered" =0; " TransferSuccessfully" =0; " TransferSkipped" =0; " TransferFailed" =0; " UserCancelled" =$false; " Success" =$false; " SummaryFound" =$false; " ErrorMessage" =[string]::Empty; " ElapsedTime" =[string]::Empty }"
 
 
 	# Parsing log file for errors
@@ -295,4 +293,5 @@ catch
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

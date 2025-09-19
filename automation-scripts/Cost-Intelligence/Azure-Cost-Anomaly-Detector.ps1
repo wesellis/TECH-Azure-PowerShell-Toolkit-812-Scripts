@@ -1,6 +1,23 @@
-﻿# Azure Cost Anomaly Detector
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Cost Anomaly Detector
 # Detect unusual spending patterns and cost anomalies
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -17,7 +34,9 @@ param(
     [switch]$AlertOnAnomalies
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Cost Anomaly Detector" -Version "1.0" -Description "Detect unusual spending patterns"
 
 try {
@@ -57,6 +76,9 @@ try {
     }
 
 } catch {
-    Write-Log "❌ Cost anomaly detection failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Cost anomaly detection failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Check Prereqs
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -51,6 +56,8 @@ param(
     $prereqTemplateFilenameBicep = $WEENV:PREREQ_TEMPLATE_FILENAME_BICEP,
     $prereqTemplateFilenameJson = $WEENV:PREREQ_TEMPLATE_FILENAME_JSON
 )
+
+#region Functions
 
 
 $deployPrereqs = Test-Path " $sampleFolder\prereqs\"
@@ -83,3 +90,6 @@ if ($deployPrereqs) {
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

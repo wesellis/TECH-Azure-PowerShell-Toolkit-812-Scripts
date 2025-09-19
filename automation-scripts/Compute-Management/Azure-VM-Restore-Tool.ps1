@@ -1,12 +1,20 @@
-# ============================================================================
-# Script Name: Azure Virtual Machine Restore Automation Tool
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Automates restore of Azure Virtual Machines from Recovery Services Vault
-# ============================================================================
+#Requires -Version 7.0
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [string]$ResourceGroupName,
     [string]$VaultName,
@@ -14,4 +22,9 @@ param (
     [string]$RestorePoint
 )
 
+#region Functions
+
 Restore-AzVM -ResourceGroupName $ResourceGroupName -VaultName $VaultName -Name $VmName -RestorePoint $RestorePoint
+
+
+#endregion

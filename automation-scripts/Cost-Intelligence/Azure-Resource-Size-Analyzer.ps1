@@ -1,6 +1,23 @@
-﻿# Azure Resource Size Analyzer
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Resource Size Analyzer
 # Analyze and recommend right-sizing for Azure resources
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0
 
 param(
@@ -14,7 +31,9 @@ param(
     [switch]$IncludeRecommendations
 )
 
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+#region Functions
+
+# Module import removed - use #Requires instead
 Show-Banner -ScriptName "Azure Resource Size Analyzer" -Version "1.0" -Description "Analyze resource utilization and sizing"
 
 try {
@@ -58,6 +77,9 @@ try {
     Write-Information "  Stopped VMs: $($totalVMs - $runningVMs)"
 
 } catch {
-    Write-Log "❌ Resource size analysis failed: $($_.Exception.Message)" -Level ERROR
+    Write-Log " Resource size analysis failed: $($_.Exception.Message)" -Level ERROR
     exit 1
 }
+
+
+#endregion

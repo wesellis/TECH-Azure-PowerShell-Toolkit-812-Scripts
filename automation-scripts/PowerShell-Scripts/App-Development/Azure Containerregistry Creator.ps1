@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Containerregistry Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,16 +99,20 @@ param(
     [string]$WESku = " Basic"
 )
 
+#region Functions
+
 Write-WELog " Creating Container Registry: $WERegistryName" " INFO"
 ; 
-$WERegistry = New-AzContainerRegistry -ErrorAction Stop `
-    -ResourceGroupName $WEResourceGroupName `
-    -Name $WERegistryName `
-    -Location $WELocation `
-    -Sku $WESku `
-    -EnableAdminUser
+$params = @{
+    ErrorAction = "Stop"
+    Sku = $WESku
+    ResourceGroupName = $WEResourceGroupName
+    Name = $WERegistryName
+    Location = $WELocation
+}
+$WERegistry @params
 
-Write-WELog " ✅ Container Registry created successfully:" " INFO"
+Write-WELog "  Container Registry created successfully:" " INFO"
 Write-WELog "  Name: $($WERegistry.Name)" " INFO"
 Write-WELog "  Login Server: $($WERegistry.LoginServer)" " INFO"
 Write-WELog "  Location: $($WERegistry.Location)" " INFO"
@@ -122,3 +132,6 @@ Write-WELog "  Password: $($WECreds.Password)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

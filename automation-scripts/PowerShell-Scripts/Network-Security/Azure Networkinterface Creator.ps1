@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Networkinterface Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -100,21 +106,29 @@ param(
     [string]$WEPublicIpId
 )
 
+#region Functions
+
 Write-WELog " Creating Network Interface: $WENicName" " INFO"
 
 if ($WEPublicIpId) {
-   ;  $WENic = New-AzNetworkInterface -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WENicName `
-        -Location $WELocation `
-        -SubnetId $WESubnetId `
-        -PublicIpAddressId $WEPublicIpId
+   $params = @{
+       ResourceGroupName = $WEResourceGroupName
+       Location = $WELocation
+       PublicIpAddressId = $WEPublicIpId
+       SubnetId = $WESubnetId
+       ErrorAction = "Stop"
+       Name = $WENicName
+   }
+   ; @params
 } else {
-   ;  $WENic = New-AzNetworkInterface -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WENicName `
-        -Location $WELocation `
-        -SubnetId $WESubnetId
+   $params = @{
+       ErrorAction = "Stop"
+       SubnetId = $WESubnetId
+       ResourceGroupName = $WEResourceGroupName
+       Name = $WENicName
+       Location = $WELocation
+   }
+   ; @params
 }
 
 Write-WELog " Network Interface created successfully:" " INFO"
@@ -129,3 +143,6 @@ Write-WELog "  Location: $($WENic.Location)" " INFO"
     Write-Error " Script execution failed: $($_.Exception.Message)"
     throw
 }
+
+
+#endregion

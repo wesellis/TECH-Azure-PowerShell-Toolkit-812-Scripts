@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Managedidentity Creator
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -93,66 +99,23 @@ param(
     [string]$WEScope
 )
 
+#region Functions
+
 Write-WELog " Creating Managed Identity: $WEIdentityName" " INFO"
 
 try {
     # Create user-assigned managed identity
-   ;  $WEIdentity = New-AzUserAssignedIdentity -ErrorAction Stop `
-        -ResourceGroupName $WEResourceGroupName `
-        -Name $WEIdentityName `
-        -Location $WELocation
-    
-    Write-WELog " ✅ Managed Identity created successfully:" " INFO"
-    Write-WELog "  Name: $($WEIdentity.Name)" " INFO"
-    Write-WELog "  Client ID: $($WEIdentity.ClientId)" " INFO"
-    Write-WELog "  Principal ID: $($WEIdentity.PrincipalId)" " INFO"
-    Write-WELog "  Resource ID: $($WEIdentity.Id)" " INFO"
-    Write-WELog "  Location: $($WEIdentity.Location)" " INFO"
-    
-    # Assign role if specified
-    if ($WERole -and $WEScope) {
-        Write-WELog " `nAssigning role to managed identity..." " INFO"
-        
-        Start-Sleep -Seconds 10  # Wait for identity propagation
-        
-       ;  $WERoleAssignment = New-AzRoleAssignment -ErrorAction Stop `
-            -ObjectId $WEIdentity.PrincipalId `
-            -RoleDefinitionName $WERole `
-            -Scope $WEScope
-        
-        Write-WELog " ✅ Role assignment completed:" " INFO"
-        Write-WELog "  Assignment ID: $($WERoleAssignment.RoleAssignmentId)" " INFO"
-        Write-WELog "  Role: $WERole" " INFO"
-        Write-WELog "  Scope: $WEScope" " INFO"
-    }
-    
-    Write-WELog " `nManaged Identity Benefits:" " INFO"
-    Write-WELog " • No credential management required" " INFO"
-    Write-WELog " • Automatic credential rotation" " INFO"
-    Write-WELog " • Azure AD authentication" " INFO"
-    Write-WELog " • No secrets in code or config" " INFO"
-    Write-WELog " • Built-in Azure integration" " INFO"
-    
-    Write-WELog " `nUsage Examples:" " INFO"
-    Write-WELog " Virtual Machines:" " INFO"
-    Write-WELog "  - Assign identity to VM" " INFO"
-    Write-WELog "  - Access Azure resources securely" " INFO"
-    Write-WELog "  - No need to store credentials" " INFO"
-    
-    Write-WELog " `nApp Services:" " INFO"
-    Write-WELog "  - Enable managed identity" " INFO"
-    Write-WELog "  - Access Key Vault secrets" " INFO"
-    Write-WELog "  - Connect to databases" " INFO"
-    
-    Write-WELog " `nPowerShell Usage:" " INFO"
-    Write-WELog "  Connect-AzAccount -Identity -AccountId $($WEIdentity.ClientId)" " INFO"
-    
-    Write-WELog " `nNext Steps:" " INFO"
-    Write-WELog " 1. Assign identity to Azure resources (VM, App Service, etc.)" " INFO"
-    Write-WELog " 2. Grant necessary permissions" " INFO"
-    Write-WELog " 3. Update application code to use managed identity" " INFO"
-    Write-WELog " 4. Test secure resource access" " INFO"
-    
+   $params = @{
+       ResourceGroupName = $WEResourceGroupName
+       WELog = " 1. Assign identity to Azure resources (VM, App Service, etc.)" " INFO" Write-WELog " 2. Grant necessary permissions" " INFO" Write-WELog " 3. Update application code to use managed identity" " INFO" Write-WELog " 4. Test secure resource access" " INFO"
+       Location = $WELocation  Write-WELog "  Managed Identity created successfully:" " INFO" Write-WELog "  Name: $($WEIdentity.Name)" " INFO" Write-WELog "  Client ID: $($WEIdentity.ClientId)" " INFO" Write-WELog "  Principal ID: $($WEIdentity.PrincipalId)" " INFO" Write-WELog "  Resource ID: $($WEIdentity.Id)" " INFO" Write-WELog "  Location: $($WEIdentity.Location)" " INFO"  # Assign role if specified if ($WERole
+       RoleDefinitionName = $WERole
+       ObjectId = $WEIdentity.PrincipalId
+       ErrorAction = "Stop"
+       Seconds = "10  # Wait for identity propagation  ;  $WERoleAssignment = New-AzRoleAssignment"
+       Name = $WEIdentityName
+   }
+   ; @params
 } catch {
     Write-Error " Failed to create managed identity: $($_.Exception.Message)"
 }
@@ -161,4 +124,5 @@ try {
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

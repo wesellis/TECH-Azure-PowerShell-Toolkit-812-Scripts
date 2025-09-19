@@ -1,4 +1,9 @@
+#Requires -Version 7.0
+
 <#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Call Getoldestsamplefolder
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -56,12 +61,15 @@ if (($WEStorageAccountKey -eq "" ) -or ($null -eq $WEStorageAccountKey)) {
     Write-Error " Missing StorageAccountKey"
 }
 
-& " $WEPSScriptRoot/../ci-scripts/Get-OldestSampleFolder" `
-    -StorageAccountKey $WEStorageAccountKey `
-    -TableName " QuickStartsMetadataService" `
-    -PurgeOldRows $false #TODO REMOVE
+$params = @{
+    PurgeOldRows = $false #TODO REMOVE
+    TableName = " QuickStartsMetadataService"
+    StorageAccountKey = $WEStorageAccountKey
+}
+& @params
 
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

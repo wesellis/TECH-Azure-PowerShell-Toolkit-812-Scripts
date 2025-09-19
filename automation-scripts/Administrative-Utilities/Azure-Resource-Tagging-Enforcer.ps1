@@ -1,6 +1,23 @@
-﻿# Azure Resource Tagging Enforcer
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Azure Resource Tagging Enforcer
 # Professional Azure utility script for enforcing consistent resource tagging
-# Author: Wesley Ellis | wes@wesellis.com
 # Version: 1.0 | Enterprise tag governance and compliance
 
 param(
@@ -35,8 +52,10 @@ param(
     [string]$OutputPath = ".\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 
+#region Functions
+
 # Import common functions
-Import-Module (Join-Path $PSScriptRoot "..\modules\AzureAutomationCommon\AzureAutomationCommon.psm1") -Force
+# Module import removed - use #Requires instead
 
 Show-Banner -ScriptName "Azure Resource Tagging Enforcer" -Version "1.0" -Description "Enforce consistent resource tagging for governance and compliance"
 
@@ -110,7 +129,7 @@ try {
         }
         
         "Fix" {
-            Write-Log "🔧 Fixing tag compliance..." -Level WARNING
+            Write-Log " Fixing tag compliance..." -Level WARNING
             
             foreach ($resource in $nonCompliantResources) {
                 try {
@@ -134,10 +153,10 @@ try {
                     }
                     
                     Set-AzResource -ResourceId $resourceObj.ResourceId -Tag $newTags -Force
-                    Write-Log "✓ Fixed tags for $($resource.ResourceName)" -Level SUCCESS
+                    Write-Log "[OK] Fixed tags for $($resource.ResourceName)" -Level SUCCESS
                     
                 } catch {
-                    Write-Log "❌ Failed to fix tags for $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
+                    Write-Log " Failed to fix tags for $($resource.ResourceName): $($_.Exception.Message)" -Level ERROR
                 }
             }
         }
@@ -146,7 +165,7 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 6 -StepName "Report Generation" -Status "Generating compliance report"
     
     $nonCompliantResources | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
-    Write-Log "✓ Tag compliance report saved to: $OutputPath" -Level SUCCESS
+    Write-Log "[OK] Tag compliance report saved to: $OutputPath" -Level SUCCESS
 
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName "Summary" -Status "Generating summary"
 
@@ -156,27 +175,29 @@ try {
     Write-Information "                              TAG COMPLIANCE ANALYSIS COMPLETE"  
     Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
     Write-Information ""
-    Write-Information "📊 Compliance Summary:"
+    Write-Information " Compliance Summary:"
     Write-Information "   • Total Resources: $($resources.Count)"
     Write-Information "   • Non-Compliant: $($nonCompliantResources.Count)"
     Write-Information "   • Compliance Rate: $([math]::Round((($resources.Count - $nonCompliantResources.Count) / $resources.Count) * 100, 2))%"
     
     Write-Information ""
-    Write-Information "🏷️ Required Tags:"
+    Write-Information "🏷 Required Tags:"
     foreach ($tag in $RequiredTags.Keys) {
         $allowedValues = if ($RequiredTags[$tag].Count -gt 0) { "($($RequiredTags[$tag] -join ', '))" } else { "(any value)" }
         Write-Information "   • $tag $allowedValues"
     }
     
     Write-Information ""
-    Write-Information "📋 Report: $OutputPath"
+    Write-Information "� Report: $OutputPath"
     Write-Information ""
 
-    Write-Log "✅ Tag compliance analysis completed successfully!" -Level SUCCESS
+    Write-Log " Tag compliance analysis completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log "❌ Tag compliance analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log " Tag compliance analysis failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     exit 1
 }
 
 Write-Progress -Activity "Tag Compliance Analysis" -Completed
+
+#endregion

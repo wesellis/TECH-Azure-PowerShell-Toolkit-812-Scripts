@@ -1,4 +1,10 @@
-﻿<#
+#Requires -Version 7.0
+#Requires -Module Az.Resources
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Webappazureingestion
 
@@ -7,7 +13,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +31,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -52,8 +58,12 @@ $sharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
 
 " Logging in to Azure..."
 $WEConn = Get-AutomationConnection -Name AzureRunAsConnection 
- Add-AzureRMAccount -ServicePrincipal -Tenant $WEConn.TenantID `
- -ApplicationId $WEConn.ApplicationID -CertificateThumbprint $WEConn.CertificateThumbprint
+ $params = @{
+     ApplicationId = $WEConn.ApplicationID
+     CertificateThumbprint = $WEConn.CertificateThumbprint
+     Tenant = $WEConn.TenantID
+ }
+ Add-AzureRMAccount @params
 
 " Selecting Azure subscription..."
 Select-AzureRmSubscription -SubscriptionId $WEConn.SubscriptionID -TenantId $WEConn.tenantid 
@@ -118,4 +128,5 @@ if($WEWebApps -ne $WENull)
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

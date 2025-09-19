@@ -1,12 +1,21 @@
-﻿# ============================================================================
-# Script Name: Azure VPN Gateway Creator
-# Author: Wesley Ellis
-# Email: wes@wesellis.com
-# Website: wesellis.com
-# Date: May 23, 2025
-# Description: Creates Azure VPN Gateway for site-to-site connectivity
-# ============================================================================
+#Requires -Version 7.0
+#Requires -Module Az.Resources
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 param (
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName,
@@ -23,6 +32,8 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$GatewaySku = "VpnGw1"
 )
+
+#region Functions
 
 Write-Information "Creating VPN Gateway: $GatewayName"
 
@@ -41,31 +52,43 @@ if (-not $GatewaySubnet) {
 
 # Create public IP for gateway
 $GatewayIpName = "$GatewayName-pip"
-$GatewayIp = New-AzPublicIpAddress -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $GatewayIpName `
-    -Location $Location `
-    -AllocationMethod Dynamic
+$params = @{
+    ErrorAction = "Stop"
+    AllocationMethod = "Dynamic"
+    ResourceGroupName = $ResourceGroupName
+    Name = $GatewayIpName
+    Location = $Location
+}
+$GatewayIp @params
 
 # Create gateway IP configuration
-$GatewayIpConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop `
-    -Name "gatewayConfig" `
-    -SubnetId $GatewaySubnet.Id `
-    -PublicIpAddressId $GatewayIp.Id
+$params = @{
+    ErrorAction = "Stop"
+    PublicIpAddressId = $GatewayIp.Id
+    SubnetId = $GatewaySubnet.Id
+    Name = "gatewayConfig"
+}
+$GatewayIpConfig @params
 
 # Create VPN gateway
 Write-Information "Creating VPN Gateway (this may take 30-45 minutes)..."
-$Gateway = New-AzVirtualNetworkGateway -ErrorAction Stop `
-    -ResourceGroupName $ResourceGroupName `
-    -Name $GatewayName `
-    -Location $Location `
-    -IpConfigurations $GatewayIpConfig `
-    -GatewayType "Vpn" `
-    -VpnType "RouteBased" `
-    -GatewaySku $GatewaySku
+$params = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    GatewaySku = $GatewaySku
+    VpnType = "RouteBased"
+    IpConfigurations = $GatewayIpConfig
+    GatewayType = "Vpn"
+    ErrorAction = "Stop"
+    Name = $GatewayName
+}
+$Gateway @params
 
-Write-Information "✅ VPN Gateway created successfully:"
+Write-Information " VPN Gateway created successfully:"
 Write-Information "  Name: $($Gateway.Name)"
 Write-Information "  Type: $($Gateway.GatewayType)"
 Write-Information "  SKU: $($Gateway.Sku.Name)"
 Write-Information "  Public IP: $($GatewayIp.IpAddress)"
+
+
+#endregion

@@ -1,4 +1,9 @@
-﻿<#
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
 .SYNOPSIS
     Azure Cli Powershell Bridge
 
@@ -7,7 +12,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -25,7 +30,7 @@
     Optimized for performance, reliability, and error handling.
 
 .AUTHOR
-    Enterprise PowerShell Framework
+    Wes Ellis (wes@wesellis.com)
 
 .VERSION
     1.0
@@ -74,13 +79,15 @@ param(
     [switch]$WEPassThru
 )
 
+#region Functions
+
 Write-WELog " Azure CLI PowerShell Bridge" " INFO" -ForegroundColor Cyan
 Write-WELog " ===========================" " INFO" -ForegroundColor Cyan
 
 
 try {
     $azVersion = az version 2>$null | ConvertFrom-Json
-    Write-WELog " ✓ Azure CLI Version: $($azVersion.'azure-cli')" " INFO" -ForegroundColor Green
+    Write-WELog " [OK] Azure CLI Version: $($azVersion.'azure-cli')" " INFO" -ForegroundColor Green
 } catch {
     Write-Error " Azure CLI is not installed or not in PATH. Please install Azure CLI first."
     return
@@ -89,8 +96,8 @@ try {
 
 try {
     $account = az account show 2>$null | ConvertFrom-Json
-    Write-WELog " ✓ Logged in as: $($account.user.name)" " INFO" -ForegroundColor Green
-    Write-WELog " ✓ Subscription: $($account.name)" " INFO" -ForegroundColor Green
+    Write-WELog " [OK] Logged in as: $($account.user.name)" " INFO" -ForegroundColor Green
+    Write-WELog " [OK] Subscription: $($account.name)" " INFO" -ForegroundColor Green
 } catch {
     Write-Warning " Not logged in to Azure CLI. Please run 'az login' first."
     if (-not $WEForce) {
@@ -116,11 +123,11 @@ try {
     if ($WEOutputFormat -eq " json" -and -not $WEPassThru) {
         # Parse JSON and return as PowerShell objects
        ;  $jsonResult = $result | ConvertFrom-Json
-        Write-WELog " `n✓ Command executed successfully" " INFO" -ForegroundColor Green
+        Write-WELog " `n[OK] Command executed successfully" " INFO" -ForegroundColor Green
         return $jsonResult
     } else {
         # Return raw output
-        Write-WELog " `n✓ Command executed successfully" " INFO" -ForegroundColor Green
+        Write-WELog " `n[OK] Command executed successfully" " INFO" -ForegroundColor Green
         return $result
     }
 } catch {
@@ -133,4 +140,5 @@ Write-WELog " `nAzure CLI bridge completed at $(Get-Date)" " INFO" -ForegroundCo
 
 # Wesley Ellis Enterprise PowerShell Toolkit
 # Enhanced automation solutions: wesellis.com
-# ============================================================================
+
+#endregion

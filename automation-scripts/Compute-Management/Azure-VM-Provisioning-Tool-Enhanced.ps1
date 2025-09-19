@@ -1,6 +1,21 @@
-﻿#Requires -Version 7.0
+#Requires -Version 7.0
 #Requires -Modules Az.Accounts, Az.Compute, Az.Resources, Az.Network
 
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
 # Enhanced Azure VM Provisioning Tool with enterprise features
 param (
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$ResourceGroupName,
@@ -15,6 +30,8 @@ param (
     [switch]$Force
 )
 
+#region Functions
+
 # Import enhanced functions
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "modules", "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
@@ -27,7 +44,7 @@ try {
     
     Write-ProgressStep -StepNumber 2 -TotalSteps 6 -StepName "Resource Group" -Status "Validating resource group..."
     $rg = Invoke-AzureOperation -Operation { Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop } -OperationName "Get Resource Group"
-    Write-Log "✓ Using resource group: $($rg.ResourceGroupName) in $($rg.Location)" -Level SUCCESS
+    Write-Log "[OK] Using resource group: $($rg.ResourceGroupName) in $($rg.Location)" -Level SUCCESS
     
     Write-ProgressStep -StepNumber 3 -TotalSteps 6 -StepName "Network Setup" -Status "Configuring network..."
     $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -64,7 +81,7 @@ try {
         }
         
         $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } -OperationName "Create VM" -MaxRetries 2
-        Write-Log "✓ VM created successfully: $($vm.Name)" -Level SUCCESS
+        Write-Log "[OK] VM created successfully: $($vm.Name)" -Level SUCCESS
     }
     
     Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName "Complete" -Status "Finalizing..."
@@ -76,3 +93,6 @@ try {
     Write-Log "VM provisioning failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     throw
 }
+
+
+#endregion

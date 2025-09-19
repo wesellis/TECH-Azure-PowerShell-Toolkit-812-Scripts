@@ -1,4 +1,21 @@
-﻿# Fix Bookmarks Submodule Issue
+#Requires -Version 7.0
+
+<#
+#endregion
+
+#region Main-Execution
+.SYNOPSIS
+    Azure automation script
+
+.DESCRIPTION
+    Professional PowerShell script for Azure automation
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0.0
+    LastModified: 2025-09-19
+#>
+# Fix Bookmarks Submodule Issue
 # This script removes the bookmarks submodule reference and adds it as a regular directory
 
 Write-Information "Fixing bookmarks submodule issue..."
@@ -29,3 +46,6 @@ try {
     Write-Information "  git add bookmarks/"
     Write-Information "  git commit -m 'Convert bookmarks from submodule to regular directory'"
 }
+
+
+#endregion
