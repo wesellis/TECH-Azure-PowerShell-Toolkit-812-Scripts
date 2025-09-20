@@ -680,7 +680,12 @@ try {
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-Verbose
-        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         Write-Verbose
     }
     switch ($Action) {

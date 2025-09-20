@@ -23,10 +23,27 @@ Write-Host "VM Size: $VmSize"
 # Create VM configuration
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
 # Set operating system
-$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object PSCredential($AdminUsername, $AdminPassword))
+$vmoperatingsystemSplat = @{
+    VM = $VmConfig
+    ComputerName = $VmName
+    Credential = New-Object PSCredential($AdminUsername, $AdminPassword)
+}
+Set-AzVMOperatingSystem @vmoperatingsystemSplat
 # Set source image
-$VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Offer $ImageOffer -Skus $ImageSku -Version "latest"
+$vmsourceimageSplat = @{
+    VM = $VmConfig
+    PublisherName = $ImagePublisher
+    Offer = $ImageOffer
+    Skus = $ImageSku
+    Version = "latest"
+}
+Set-AzVMSourceImage @vmsourceimageSplat
 # Create the VM
-New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
+$vmSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    VM = $VmConfig
+}
+New-AzVM @vmSplat
 Write-Host "Virtual Machine $VmName provisioned successfully"
 

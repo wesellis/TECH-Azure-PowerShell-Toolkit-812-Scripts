@@ -42,7 +42,12 @@ param(
 )
 Write-Host "Creating Resource Group: $ResourceGroupName"
 if ($Tags.Count -gt 0) {
-$ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+$resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
     Write-Host "Tags applied:"
     foreach ($Tag in $Tags.GetEnumerator()) {
         Write-Host "  $($Tag.Key): $($Tag.Value)"
@@ -59,3 +64,4 @@ Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

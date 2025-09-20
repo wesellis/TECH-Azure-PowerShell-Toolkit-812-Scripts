@@ -474,7 +474,12 @@ try {
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-Host "Creating resource group: $ResourceGroupName" "Info"
-        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         Write-Host "Successfully created resource group" "Success"
     }
     switch ($Action) {

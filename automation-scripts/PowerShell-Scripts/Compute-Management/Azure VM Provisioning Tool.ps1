@@ -54,11 +54,29 @@ Write-Host "Resource Group: $ResourceGroupName"
 Write-Host "Location: $Location"
 Write-Host "VM Size: $VmSize"
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
-$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object -ErrorAction Stop PSCredential($AdminUsername, $AdminPassword))
-$VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Offer $ImageOffer -Skus $ImageSku -Version " latest"
-New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
+$vmoperatingsystemSplat = @{
+    VM = $VmConfig
+    ComputerName = $VmName
+    ErrorAction = Stop PSCredential($AdminUsername, $AdminPassword))
+}
+Set-AzVMOperatingSystem @vmoperatingsystemSplat
+$vmsourceimageSplat = @{
+    VM = $VmConfig
+    PublisherName = $ImagePublisher
+    Offer = $ImageOffer
+    Skus = $ImageSku
+    Version = " latest"
+}
+Set-AzVMSourceImage @vmsourceimageSplat
+$vmSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    VM = $VmConfig
+}
+New-AzVM @vmSplat
 Write-Host "Virtual Machine $VmName provisioned successfully"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

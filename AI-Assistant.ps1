@@ -124,10 +124,21 @@ $location = "{Location}"
 # Create VM configuration
 $vmConfig = New-AzVMConfig -VMName $vmName -VMSize "Standard_B2s"
 $vmConfig = Set-AzVMOperatingSystem -VM $vmConfig -Windows -ComputerName $vmName -Credential (Get-Credential)
-$vmConfig = Set-AzVMSourceImage -VM $vmConfig -PublisherName "MicrosoftWindowsServer" -Offer "WindowsServer" -Skus "2019-Datacenter" -Version "latest"
+$vmsourceimageSplat = @{
+    VM = $vmConfig
+    PublisherName = "MicrosoftWindowsServer"
+    Offer = "WindowsServer"
+    Version = "latest"
+}
+Set-AzVMSourceImage @vmsourceimageSplat
 
 # Create the VM
-New-AzVM -ResourceGroupName $resourceGroup -Location $location -VM $vmConfig
+$vmSplat = @{
+    ResourceGroupName = $resourceGroup
+    Location = $location
+    VM = $vmConfig
+}
+New-AzVM @vmSplat
 '@
             
             "list_vm" = @'
@@ -143,7 +154,14 @@ Remove-AzVM -ResourceGroupName "{ResourceGroup}" -Name "{Name}" -Force
             "create_storage" = @'
 # Create Storage Account
 $storageAccountName = "{Name}".ToLower() -replace '[^a-z0-9]', ''
-New-AzStorageAccount -ResourceGroupName "{ResourceGroup}" -Name $storageAccountName -Location "{Location}" -SkuName Standard_LRS -Kind StorageV2
+$storageaccountSplat = @{
+    ResourceGroupName = "{ResourceGroup}"
+    Name = $storageAccountName
+    Location = "{Location}"
+    SkuName = "Standard_LRS"
+    Kind = "StorageV2"
+}
+New-AzStorageAccount @storageaccountSplat
 '@
             
             "secure_storage" = @'

@@ -29,7 +29,12 @@ try {
     
     if (-not $ExportOnly) {
         
-        $null = New-AzResourceGroup -Name $TargetResourceGroupName -Location $TargetLocation -Tag $sourceRG.Tags
+        $resourcegroupSplat = @{
+    Name = $TargetResourceGroupName
+    Location = $TargetLocation
+    Tag = $sourceRG.Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         
         $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath
         if ($deployment.ProvisioningState -eq "Succeeded") {

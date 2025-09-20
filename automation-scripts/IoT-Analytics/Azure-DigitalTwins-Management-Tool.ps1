@@ -156,7 +156,14 @@ function New-PrivateEndpoint -ErrorAction Stop {
         $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $vnetName -ErrorAction SilentlyContinue
         if (-not $vnet) {
             $subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix "10.0.1.0/24"
-            $vnet = New-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Location $Location -Name $vnetName -AddressPrefix "10.0.0.0/16" -Subnet $subnetConfig
+            $virtualnetworkSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    Name = $vnetName
+    AddressPrefix = "10.0.0.0/16"
+    Subnet = $subnetConfig
+}
+New-AzVirtualNetwork @virtualnetworkSplat
         }
         # Create private endpoint connection
         $privateEndpointConnection = New-AzPrivateLinkServiceConnection -Name "$privateEndpointName-connection" -PrivateLinkServiceId $DigitalTwinsInstance.Id -GroupId "API"
@@ -440,7 +447,12 @@ try {
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-Host "Creating resource group: $ResourceGroupName" "Info"
-        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         Write-Host "Successfully created resource group" "Success"
     }
     switch ($Action) {

@@ -40,7 +40,13 @@ $virtualNetwork @params
   $vnet = Get-AzVirtualNetwork -ResourceGroupName TestRG1 -Name VNet1
   Add-AzVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -AddressPrefix 10.1.255.0/27 -VirtualNetwork $vnet
   $vnet | Set-AzVirtualNetwork -ErrorAction Stop
-  $gwpip= New-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1 -Location 'East US' -AllocationMethod Dynamic
+  $publicipaddressSplat = @{
+    Name = VNet1GWIP
+    ResourceGroupName = TestRG1
+    Location = 'East US'
+    AllocationMethod = Dynamic
+}
+New-AzPublicIpAddress @publicipaddressSplat
   $vnet = Get-AzVirtualNetwork -Name VNet1 -ResourceGroupName TestRG1
 $subnet = Get-AzVirtualNetworkSubnetConfig -Name 'GatewaySubnet' -VirtualNetwork $vnet
 $gwipconfig = New-AzVirtualNetworkGatewayIpConfig -Name gwipconfig1 -SubnetId $subnet.Id -PublicIpAddressId $gwpip.Id
@@ -49,3 +55,4 @@ $gwipconfig = New-AzVirtualNetworkGatewayIpConfig -Name gwipconfig1 -SubnetId $s
 -VpnType RouteBased -GatewaySku VpnGw1
 Get-AzVirtualNetworkGateway -Name Vnet1GW -ResourceGroup TestRG1
 Get-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1\n
+

@@ -338,7 +338,12 @@ function Apply-BackupPolicy {
                     $vmName = $resourceId.Split('/')[-1]
                     $rgName = $resourceId.Split('/')[4]
 
-                    $vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName -ErrorAction SilentlyContinue
+                    $vmSplat = @{
+    ResourceGroupName = $rgName
+    Name = $vmName
+    ErrorAction = SilentlyContinue
+}
+Get-AzVM @vmSplat
                     if ($vm) {
                         if ($PSCmdlet.ShouldProcess($vmName, "Enable backup with policy '$($Policy.Name)'")) {
                             $params = @{
@@ -473,3 +478,4 @@ finally {
 }
 
 #endregion\n
+

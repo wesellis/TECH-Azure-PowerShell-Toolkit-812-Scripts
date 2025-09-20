@@ -157,9 +157,20 @@ if ($UploadArtifacts -Or $useAbsolutePathStaging -or $ArtifactsLocationSasTokenP
     if ($null -eq $StorageAccount) {
         $StorageResourceGroupName = 'ARM_Deploy_Staging'
         if ((Get-AzResourceGroup -Name $StorageResourceGroupName -Verbose -ErrorAction SilentlyContinue) -eq $null) {
-            New-AzResourceGroup -Name $StorageResourceGroupName -Location $Location -Verbose -Force -ErrorAction Stop
+            $resourcegroupSplat = @{
+    Name = $StorageResourceGroupName
+    Location = $Location
+    ErrorAction = Stop
+}
+New-AzResourceGroup @resourcegroupSplat
         }
-        $StorageAccount = New-AzStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $StorageResourceGroupName -Location " $Location"
+        $storageaccountSplat = @{
+    StorageAccountName = $StorageAccountName
+    Type = 'Standard_LRS'
+    ResourceGroupName = $StorageResourceGroupName
+    Location = " $Location"
+}
+New-AzStorageAccount @storageaccountSplat
     }
     if ($StorageContainerName.length -gt 63) {
         $StorageContainerName = $StorageContainerName.Substring(0, 63)
@@ -247,3 +258,4 @@ else {
             }
             New-AzResourceGroupDeployment @params
 }\n
+

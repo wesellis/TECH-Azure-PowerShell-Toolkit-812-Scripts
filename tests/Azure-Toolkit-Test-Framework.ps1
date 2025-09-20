@@ -135,7 +135,12 @@ function Initialize-AzureTestEnvironment {
         $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
         if (-not $rg) {
             Write-TestLog "Creating test resource group: $ResourceGroupName" "Info"
-            $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag @{
+            $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = @{
+}
+New-AzResourceGroup @resourcegroupSplat
                 Purpose = "AutomatedTesting"
                 CreatedBy = "TestFramework"
                 Environment = $TestEnvironment
@@ -379,7 +384,12 @@ Describe "Azure Resource Creation" -Tag "Integration", "Azure" {
             { & $script -ResourceGroupName $script:ResourceGroupName -VMName $vmName -Location $script:Location -Size "Standard_B1s" -AdminUsername "testadmin" -AdminPassword (ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force) } | Should -Not -Throw
             
             # Verify resource exists
-            $vm = Get-AzVM -ResourceGroupName $script:ResourceGroupName -Name $vmName -ErrorAction SilentlyContinue
+            $vmSplat = @{
+    ResourceGroupName = $script:ResourceGroupName
+    Name = $vmName
+    ErrorAction = SilentlyContinue
+}
+Get-AzVM @vmSplat
             $vm | Should -Not -BeNullOrEmpty
             
             # Cleanup if destructive tests are enabled

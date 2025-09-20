@@ -40,7 +40,12 @@ try {
     $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $vnet -and -not $WhatIf) {
         $vnet = Invoke-AzureOperation -Operation {
-            New-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name " $ResourceGroupName-vnet" -Location $Location -AddressPrefix " 10.0.0.0/16"
+            $virtualnetworkSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    AddressPrefix = " 10.0.0.0/16"
+}
+New-AzVirtualNetwork @virtualnetworkSplat
         } -OperationName "Create Virtual Network"
     }
     # Progress stepNumber 4 -TotalSteps 6 -StepName "Security" -Status "Setting up security..."
@@ -72,3 +77,4 @@ $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } 
     } catch {
         throw
 }\n
+

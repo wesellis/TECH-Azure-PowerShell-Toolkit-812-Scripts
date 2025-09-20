@@ -111,7 +111,12 @@ function Get-ResourceHealthMetric -ErrorAction Stop {
     try {
         switch ($Resource.ResourceType) {
             "Microsoft.Compute/virtualMachines" {
-                $vm = Get-AzVM -ResourceGroupName $Resource.ResourceGroupName -Name $Resource.Name -Status -ErrorAction SilentlyContinue
+                $vmSplat = @{
+    ResourceGroupName = $Resource.ResourceGroupName
+    Name = $Resource.Name
+    ErrorAction = SilentlyContinue
+}
+Get-AzVM @vmSplat
                 if ($vm) {
                     $powerState = ($vm.Statuses | Where-Object { $_.Code -like "PowerState/*" }).DisplayStatus
                     $metric.Status = if ($powerState -eq "VM running" ) { "Healthy" } else { "Unhealthy" }
@@ -226,3 +231,4 @@ try {
     $script:MonitoringState.Running = $false
 
 }\n
+

@@ -204,7 +204,15 @@ function New-RunnerInfrastructure {
             if (-not $vnet) {
                 Write-EnhancedLog "Creating Virtual Network: $VNetName" "Info"
                 $subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix "10.0.1.0/24"
-                $vnet = New-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Location $Location -Name $VNetName -AddressPrefix "10.0.0.0/16" -Subnet $subnetConfig -Tag $Tags
+                $virtualnetworkSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    Name = $VNetName
+    AddressPrefix = "10.0.0.0/16"
+    Subnet = $subnetConfig
+    Tag = $Tags
+}
+New-AzVirtualNetwork @virtualnetworkSplat
                 Write-EnhancedLog "Successfully created Virtual Network" "Success"
             }
         }
@@ -214,7 +222,13 @@ function New-RunnerInfrastructure {
             $keyVault = Get-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $KeyVaultName -ErrorAction SilentlyContinue
             if (-not $keyVault) {
                 Write-EnhancedLog "Creating Key Vault: $KeyVaultName" "Info"
-                $keyVault = New-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $KeyVaultName -Location $Location -EnabledForDeployment -EnabledForTemplateDeployment -Tag $Tags
+                $keyvaultSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    VaultName = $KeyVaultName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzKeyVault @keyvaultSplat
                 
                 # Store GitHub token in Key Vault
                 if ($GitHubToken) {
@@ -230,11 +244,29 @@ function New-RunnerInfrastructure {
         if (-not $nsg) {
             Write-EnhancedLog "Creating Network Security Group: $nsgName" "Info"
             
-            $sshRule = New-AzNetworkSecurityRuleConfig -Name "SSH" -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow
+            $networksecurityruleconfigSplat = @{
+    Name = "SSH"
+    Protocol = Tcp
+    Direction = Inbound
+    Priority = 1001
+    SourceAddressPrefix = *
+    SourcePortRange = *
+    DestinationAddressPrefix = *
+    DestinationPortRange = 22
+    Access = Allow
+}
+New-AzNetworkSecurityRuleConfig @networksecurityruleconfigSplat
             $rdpRule = New-AzNetworkSecurityRuleConfig -Name "RDP" -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 3389 -Access Allow
             $httpOutRule = New-AzNetworkSecurityRuleConfig -Name "HTTP-Out" -Protocol Tcp -Direction Outbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 80,443 -Access Allow
             
-            $nsg = New-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Location $Location -Name $nsgName -SecurityRules $sshRule, $rdpRule, $httpOutRule -Tag $Tags
+            $networksecuritygroupSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    Name = $nsgName
+    SecurityRules = $sshRule, $rdpRule, $httpOutRule
+    Tag = $Tags
+}
+New-AzNetworkSecurityGroup @networksecuritygroupSplat
             Write-EnhancedLog "Successfully created Network Security Group" "Success"
         }
         
@@ -622,7 +654,12 @@ try {
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-EnhancedLog "Creating resource group: $ResourceGroupName" "Info"
-        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         Write-EnhancedLog "Successfully created resource group" "Success"
     }
     

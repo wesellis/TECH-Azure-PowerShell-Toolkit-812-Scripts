@@ -36,10 +36,24 @@ param(
 )
 $cred = New-Object PSCredential($AdminUser, $AdminPassword)
 Write-Host "Creating SQL Server $ServerName" -ForegroundColor Green
-$server = New-AzSqlServer -ResourceGroupName $ResourceGroup -ServerName $ServerName -Location $Location -SqlAdministratorCredentials $cred
+$sqlserverSplat = @{
+    ResourceGroupName = $ResourceGroup
+    ServerName = $ServerName
+    Location = $Location
+    SqlAdministratorCredentials = $cred
+}
+New-AzSqlServer @sqlserverSplat
 Write-Host "Creating database $DatabaseName" -ForegroundColor Green
-$db = New-AzSqlDatabase -ResourceGroupName $ResourceGroup -ServerName $ServerName -DatabaseName $DatabaseName -Edition Standard -RequestedServiceObjectiveName S0
+$sqldatabaseSplat = @{
+    ResourceGroupName = $ResourceGroup
+    ServerName = $ServerName
+    DatabaseName = $DatabaseName
+    Edition = "Standard"
+    RequestedServiceObjectiveName = "S0"
+}
+New-AzSqlDatabase @sqldatabaseSplat
 Write-Host "SQL Database created successfully" -ForegroundColor Green
 Write-Host "Server: $($server.FullyQualifiedDomainName)"
 Write-Host "Database: $DatabaseName"
 return @{Server = $server; Database = $db}\n
+

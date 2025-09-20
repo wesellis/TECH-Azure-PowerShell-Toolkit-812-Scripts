@@ -104,7 +104,12 @@ function Set-AzVMAutoShutdown -ErrorAction Stop {
         return
     }
     # Retrieve the VM from the defined resource group
-    $vm = Get-AzVm -ResourceGroupName $ResourceGroupName -Name $Name -ErrorAction SilentlyContinue
+    $vmSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $Name
+    ErrorAction = SilentlyContinue
+}
+Get-AzVm @vmSplat
     if ($null -eq $vm) {
         Write-Error -Message "Virtual machine '$Name' under resource group '$ResourceGroupName' was not found."
         return

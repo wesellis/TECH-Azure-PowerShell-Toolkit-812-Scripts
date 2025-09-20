@@ -132,7 +132,12 @@ function New-ResourceGroupWithGovernance {
             $rg = Set-AzResourceGroup -Name $Name -Tag $Tags
         } else {
             Write-Host "Creating resource group: $Name" -ForegroundColor Green
-            $rg = New-AzResourceGroup -Name $Name -Location $Location -Tag $Tags
+            $resourcegroupSplat = @{
+    Name = $Name
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         }
 
         # Apply policy initiative if specified
@@ -230,3 +235,4 @@ Write-Host "`nResource group deployment completed successfully!" -ForegroundColo
 
 # Return resource group object
 return $resourceGroup\n
+

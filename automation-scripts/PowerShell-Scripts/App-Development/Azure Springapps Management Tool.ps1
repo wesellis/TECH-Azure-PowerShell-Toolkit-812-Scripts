@@ -484,7 +484,12 @@ try {
 $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-Verbose "Log entry"ng resource group: $ResourceGroupName" "Info"
-$rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+$resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    Tag = $Tags
+}
+New-AzResourceGroup @resourcegroupSplat
         Write-Verbose "Log entry"n) {
         "Create" {
             New-SpringAppsInstance -ErrorAction Stop
@@ -547,3 +552,4 @@ $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tag
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
     throw
 }\n
+

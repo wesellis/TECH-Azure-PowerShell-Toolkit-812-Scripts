@@ -222,7 +222,12 @@ if ($ExportToFile) {
 if ($ResourceGroupName -ne "" ) {
     # check for the resourceGroup - if it doesn't exist create it and set roleAssignments when RBAC is migrated
     if ($null -eq (Get-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -ErrorAction SilentlyContinue)) {
-        New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -Force -ErrorAction Stop
+        $resourcegroupSplat = @{
+    Name = $ResourceGroupName
+    Location = $Location
+    ErrorAction = Stop
+}
+New-AzResourceGroup @resourcegroupSplat
     }
     # migrate any roleAssignments that exist on the gallery itself
     if ($MigrateRBAC) {
@@ -250,3 +255,4 @@ $t = $t | ConvertTo-Json -depth 50 | ConvertFrom-Json -Depth 50 -AsHashtable # t
         New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateObject $t -Verbose
     }
 } # resourceGroupName -ne "" - Create TemplateSpecs\n
+

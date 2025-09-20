@@ -27,7 +27,13 @@ try {
         if ($StorageResourceGroupLocation -eq "" ) { throw "The StorageResourceGroupLocation parameter is required on first run in a subscription." }
         $StorageResourceGroupName = 'ARM_Deploy_Staging'
         New-AzResourceGroup -Location " $StorageResourceGroupLocation" -Name $StorageResourceGroupName -Force
-        $StorageAccount = New-AzStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $StorageResourceGroupName -Location " $StorageResourceGroupLocation"
+        $storageaccountSplat = @{
+    StorageAccountName = $StorageAccountName
+    Type = 'Standard_LRS'
+    ResourceGroupName = $StorageResourceGroupName
+    Location = " $StorageResourceGroupLocation"
+}
+New-AzStorageAccount @storageaccountSplat
     }
     New-AzStorageContainer -Name $StorageContainerName -Context $StorageAccount.Context -ErrorAction SilentlyContinue *>&1
     Set-AzStorageBlobContent -Container $StorageContainerName -File " $ArtifactsStagingDirectory\$createUIDefFile"  -Context $storageAccount.Context -Force
@@ -50,3 +56,4 @@ Start-Process " microsoft-edge:$target"
 catch {
       throw $_
 }\n
+

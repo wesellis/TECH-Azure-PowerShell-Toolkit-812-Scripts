@@ -28,7 +28,14 @@ $errorDocument404Path = 'error.htm'
 $errorDocumentContents = '<h1>Example 404 error page</h1>'
 $staticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
 if ($null -eq $staticWebsiteStorageAccount) {
-    $staticWebsiteStorageAccount = New-AzStorageAccount -StorageAccountName $staticWebsiteStorageAccountName -Kind StorageV2 -Type 'Standard_LRS' -ResourceGroupName $ResourceGroupName -Location " $Location" -Verbose
+    $storageaccountSplat = @{
+    StorageAccountName = $staticWebsiteStorageAccountName
+    Kind = "StorageV2"
+    Type = 'Standard_LRS'
+    ResourceGroupName = $ResourceGroupName
+    Location = " $Location"
+}
+New-AzStorageAccount @storageaccountSplat
 }
 Do {
     Write-Host "Looking for storageAccount: $staticWebsiteStorageAccount"
@@ -51,3 +58,4 @@ Write-Output $($json | ConvertTo-json -Depth 30)
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

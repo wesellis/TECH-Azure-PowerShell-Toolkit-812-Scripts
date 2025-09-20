@@ -382,7 +382,12 @@ function New-HubNetworkInfrastructure {
         # Create resource group
         $rg = Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
         if (-not $rg) {
-            $rg = New-AzResourceGroup -Name $resourceGroupName -Location $Location -Tag @{
+            $resourcegroupSplat = @{
+    Name = $resourceGroupName
+    Location = $Location
+    Tag = @{
+}
+New-AzResourceGroup @resourcegroupSplat
                 Purpose = "Connectivity Hub"
                 Environment = "Production"
                 Owner = $CompanyName
@@ -400,7 +405,14 @@ function New-HubNetworkInfrastructure {
                 New-AzVirtualNetworkSubnetConfig -Name "SharedServices" -AddressPrefix "10.0.10.0/24"
             )
 
-            $vnet = New-AzVirtualNetwork -Name $vnetName -ResourceGroupName $resourceGroupName -Location $Location -AddressPrefix "10.0.0.0/16" -Subnet $subnetConfigs
+            $virtualnetworkSplat = @{
+    Name = $vnetName
+    ResourceGroupName = $resourceGroupName
+    Location = $Location
+    AddressPrefix = "10.0.0.0/16"
+    Subnet = $subnetConfigs
+}
+New-AzVirtualNetwork @virtualnetworkSplat
             Write-LogMessage "Created hub virtual network: $vnetName" -Level Success
         } else {
             Write-LogMessage "Hub virtual network already exists: $vnetName" -Level Warning
@@ -438,7 +450,12 @@ function New-MonitoringInfrastructure {
         # Create resource group
         $rg = Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
         if (-not $rg) {
-            $rg = New-AzResourceGroup -Name $resourceGroupName -Location $Location -Tag @{
+            $resourcegroupSplat = @{
+    Name = $resourceGroupName
+    Location = $Location
+    Tag = @{
+}
+New-AzResourceGroup @resourcegroupSplat
                 Purpose = "Management and Monitoring"
                 Environment = "Production"
                 Owner = $CompanyName
@@ -525,3 +542,4 @@ catch {
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
     throw
 }
+
