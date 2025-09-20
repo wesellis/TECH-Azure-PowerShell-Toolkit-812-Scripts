@@ -11,7 +11,7 @@ param()
 
 $ErrorActionPreference = 'Stop'
 
-Write-Host "🔧 Quick-fixing critical security and syntax issues..." -ForegroundColor Cyan
+Write-Host "Quick-fixing critical security and syntax issues..." -ForegroundColor Cyan
 
 # Get scripts with ConvertTo-SecureString security issues
 $securityIssueScripts = Get-ChildItem -Path "scripts" -Filter "*.ps1" -Recurse |
@@ -36,17 +36,17 @@ foreach ($script in $securityIssueScripts) {
 
         if ($content -ne $originalContent) {
             Set-Content -Path $script.FullName -Value $content -Encoding UTF8
-            Write-Host "✅ Fixed: $($script.Name)" -ForegroundColor Green
+            Write-Host "FIXED: $($script.Name)" -ForegroundColor Green
             $fixedCount++
         }
     }
     catch {
-        Write-Warning "❌ Error fixing $($script.Name): $_"
+        Write-Warning "ERROR fixing $($script.Name): $_"
     }
 }
 
 # Quick fix for missing #Requires statements in scripts that need them
-Write-Host "`n🔧 Adding missing #Requires statements..." -ForegroundColor Cyan
+Write-Host "`nAdding missing #Requires statements..." -ForegroundColor Cyan
 
 $allScripts = Get-ChildItem -Path "scripts" -Filter "*.ps1" -Recurse | Select-Object -First 50
 $requiresFixedCount = 0
@@ -82,7 +82,7 @@ foreach ($script in $allScripts) {
     }
 }
 
-Write-Host "`n📊 SUMMARY:" -ForegroundColor Cyan
+Write-Host "`nSUMMARY:" -ForegroundColor Cyan
 Write-Host "• Security issues fixed: $fixedCount scripts" -ForegroundColor Green
 Write-Host "• #Requires statements added: $requiresFixedCount scripts" -ForegroundColor Green
-Write-Host "✅ Critical fixes complete!" -ForegroundColor Green
+Write-Host "Critical fixes complete!" -ForegroundColor Green

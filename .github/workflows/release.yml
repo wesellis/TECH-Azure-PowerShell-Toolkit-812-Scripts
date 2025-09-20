@@ -68,7 +68,7 @@ jobs:
 
         This release includes **$totalScripts production-ready PowerShell scripts** organized across **$($categories.Count) service categories**.
 
-        ## 📊 Script Distribution
+        ## Script Distribution
 
         | Category | Scripts | Description |
         |----------|---------|-------------|

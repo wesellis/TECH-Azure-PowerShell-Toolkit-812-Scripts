@@ -98,7 +98,7 @@ jobs:
 
           # Check for ConvertTo-SecureString with plaintext
           if ($content -match 'ConvertTo-SecureString.*-AsPlainText') {
-            $securityIssues += "⚠️ $($script.Name): Uses ConvertTo-SecureString with plaintext"
+            $securityIssues += "WARNING: $($script.Name): Uses ConvertTo-SecureString with plaintext"
           }
         }
 
