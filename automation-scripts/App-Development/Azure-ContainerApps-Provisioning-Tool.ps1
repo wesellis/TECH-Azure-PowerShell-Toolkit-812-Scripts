@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage containers
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Container Apps Provisioning Tool
 #
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]

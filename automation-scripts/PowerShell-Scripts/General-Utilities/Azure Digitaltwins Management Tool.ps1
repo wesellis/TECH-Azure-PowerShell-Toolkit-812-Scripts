@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Digitaltwins Management Tool
@@ -86,16 +90,13 @@ param(
     [switch]$AssignRoles
 )
 try {
-    Import-Module Az.Accounts -Force -ErrorAction Stop
-    Import-Module Az.Resources -Force -ErrorAction Stop
-    Import-Module Az.DigitalTwins -Force -ErrorAction Stop
-    Import-Module Az.EventHub -Force -ErrorAction Stop
-    Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
+                    Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "  Failed to import required modules: $($_.Exception.Message)"
     throw
 }
-function Write-Verbose "Log entry"ndatory=$false)]
+[OutputType([bool])]
+ "Log entry"ndatory=$false)]
     [ValidateNotNullOrEmpty()]
     [Parameter()]
     [ValidateNotNullOrEmpty()]

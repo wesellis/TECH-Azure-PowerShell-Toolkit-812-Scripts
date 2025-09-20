@@ -6,7 +6,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Generate-ScriptCatalog.ps1
 # Generates a
-param(
+[CmdletBinding()]
+
     [string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
     [string]$OutputFormat = "Markdown",
     [string]$OutputPath = (Join-Path $RepositoryPath "SCRIPT-CATALOG.md"),
@@ -16,8 +17,10 @@ param(
 
 #region Functions
 
-function Get-ScriptMetadata {
-    param([string]$ScriptPath)
+[OutputType([PSObject])]
+ {
+    [CmdletBinding()]
+[string]$ScriptPath)
     
     $metadata = @{
         Name = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
@@ -73,7 +76,8 @@ function Get-ScriptMetadata {
 }
 
 function Generate-MarkdownCatalog {
-    param([array]$Scripts)
+    [CmdletBinding()]
+[array]$Scripts)
     
     $markdown = @"
 # Azure Enterprise Toolkit - Script Catalog
@@ -115,7 +119,8 @@ Total Scripts: $($Scripts.Count)
 }
 
 function Generate-HTMLCatalog {
-    param([array]$Scripts)
+    [CmdletBinding()]
+[array]$Scripts)
     
     $html = @"
 <!DOCTYPE html>

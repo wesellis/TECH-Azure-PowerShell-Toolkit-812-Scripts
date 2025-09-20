@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Provisions Azure Container Instances with  configuration
@@ -31,7 +34,8 @@
     .\Azure-ContainerInstance-Provisioning-Tool.ps1 -ResourceGroupName "RG-Containers" -ContainerGroupName "api-app" -Image "myapp:v1" -Ports @(80,443) -EnvironmentVariables @{ENV="prod"}
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -178,3 +182,4 @@ try {
     Write-Error "Failed to provision container instance: $_"
     throw
 }\n
+

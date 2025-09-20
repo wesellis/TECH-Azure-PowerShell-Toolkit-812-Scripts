@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Restarts AKS cluster nodes with proper drain and cordon operations
@@ -18,7 +21,8 @@
     .\Azure-AKS-Node-Restart-Tool.ps1 -ResourceGroupName "RG-AKS" -AksClusterName "my-cluster" -NodeName "aks-nodepool1-12345678-vmss000000"
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -117,3 +121,4 @@ catch {
     Write-Error "Failed to restart AKS node: $_"
     throw
 }\n
+

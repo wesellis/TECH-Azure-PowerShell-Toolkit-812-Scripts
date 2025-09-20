@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Eventgrid Performance Monitor
@@ -157,3 +160,4 @@ Write-Host " 5. Validate event schema compliance" "INFO"
 Write-Host " `nEvent Grid Portal Access:" "INFO"
 Write-Host "URL: https://portal.azure.com/#@/resource$($EventGridTopic.Id)" "INFO"
 Write-Host " `nEvent Grid Topic monitoring completed at $(Get-Date)" "INFO"\n
+

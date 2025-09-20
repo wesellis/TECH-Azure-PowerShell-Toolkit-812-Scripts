@@ -15,6 +15,7 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $GitHubRepository = $ENV:BUILD_REPOSITORY_NAME, # Azure/azure-quickstart-templates
     $RepoRoot = $ENV:BUILD_REPOSITORY_LOCALPATH, # D:\a\1\s
     $commit = $ENV:BUILD_SOURCEVERSION
@@ -71,3 +72,4 @@ Write-Host " ##vso[task.setvariable variable=sample.name]$sampleName"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Tag Manager
@@ -54,3 +57,4 @@ Write-Host "Tags updated successfully for VM: $VmName"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

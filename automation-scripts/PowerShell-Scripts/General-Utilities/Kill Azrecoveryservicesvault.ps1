@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Kill Azrecoveryservicesvault
@@ -224,3 +227,4 @@ if($pvtendpointsFin.count -ne 0) {Write-Host $pvtendpointsFin.count "Private end
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

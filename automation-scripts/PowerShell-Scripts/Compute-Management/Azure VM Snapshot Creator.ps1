@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Vm Snapshot Creator
@@ -31,3 +34,4 @@ New-AzSnapshot -ResourceGroupName $ResourceGroupName -SnapshotName $SnapshotName
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

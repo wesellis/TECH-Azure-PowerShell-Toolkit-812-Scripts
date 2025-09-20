@@ -1,6 +1,6 @@
-#Requires -Module Az.Monitor
-#Requires -Module Az.Profile
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     monitor activity logs
@@ -55,14 +55,11 @@ param(
     [Parameter()]
     [DateTime]$EndTime = (Get-Date),
 
-    [Parameter()]
-    [string]$ResourceGroupName,
+    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName,
 
-    [Parameter()]
-    [string]$ResourceName,
+    [Parameter(ValueFromPipeline)]`n    [string]$ResourceName,
 
-    [Parameter()]
-    [string]$OperationName,
+    [Parameter(ValueFromPipeline)]`n    [string]$OperationName,
 
     [Parameter()]
     [ValidateSet('Critical', 'Error', 'Warning', 'Informational', 'Verbose')]
@@ -72,11 +69,9 @@ param(
     [ValidateSet('Started', 'Succeeded', 'Failed')]
     [string]$Status,
 
-    [Parameter()]
-    [string]$ExportPath,
+    [Parameter(ValueFromPipeline)]`n    [string]$ExportPath,
 
-    [Parameter()]
-    [string]$AlertEmail,
+    [Parameter(ValueFromPipeline)]`n    [string]$AlertEmail,
 
     [Parameter()]
     [switch]$ShowSummary,
@@ -91,7 +86,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -427,3 +423,4 @@ else {
 
     Write-Host "`nMonitoring completed!" -ForegroundColor Green
 }\n
+

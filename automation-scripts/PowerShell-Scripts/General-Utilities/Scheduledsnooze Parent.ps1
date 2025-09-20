@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Scheduledsnooze Parent
@@ -157,3 +160,4 @@ catch {
 $ex = $_.Exception
     Write-Output $_.Exception
 }\n
+

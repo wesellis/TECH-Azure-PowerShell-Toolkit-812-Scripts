@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Servicebusingestion
@@ -69,7 +72,8 @@ Function Get-SbNameSpace -ErrorAction Stop
     }
 return $sbNamespace
 }
-function Publish-SbQueueMetrics
+[OutputType([PSObject])]
+
 {
     [CmdletBinding()]
 param([parameter(mandatory=$true)]
@@ -365,3 +369,4 @@ Publish-SbTopicMetrics -sbNamespace $sbNameSpace
 Publish-SbTopicSubscriptions -sbNamespace $sbNameSpace
 " `n"
 "We're done!"\n
+

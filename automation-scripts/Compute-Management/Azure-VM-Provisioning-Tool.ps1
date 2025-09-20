@@ -1,11 +1,16 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Provision Azure Virtual Machine
 
 .DESCRIPTION
     Create and provision a new Azure Virtual Machine with specified configuration
-    Author: Wes Ellis (wes@wesellis.com)#>
-param (
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$VmName,
     [string]$Location,

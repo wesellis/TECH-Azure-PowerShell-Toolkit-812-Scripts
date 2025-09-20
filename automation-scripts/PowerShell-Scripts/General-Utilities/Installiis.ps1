@@ -10,7 +10,8 @@
     Requires appropriate permissions and modules
 Configuration InstallIIS
 {
-Param ( [string] $nodeName, $WebDeployPackagePath )
+[CmdletBinding()]
+ [string] $nodeName, $WebDeployPackagePath )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Node $nodeName
   {
@@ -123,3 +124,4 @@ $MSDeployPath = (Get-ChildItem -ErrorAction Stop "HKLM:\SOFTWARE\Microsoft\IIS E
 	}
   }
 }\n
+

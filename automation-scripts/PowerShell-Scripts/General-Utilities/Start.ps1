@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Start
@@ -20,3 +23,4 @@ if($userPrincipalId){
     Write-Host "User Principal Name cannot be found."
 }
 Write-Host "Provisioning Completed."\n
+

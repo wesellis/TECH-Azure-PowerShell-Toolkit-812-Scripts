@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Storage Keys Retriever
@@ -53,3 +56,4 @@ Write-Host "Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccoun
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

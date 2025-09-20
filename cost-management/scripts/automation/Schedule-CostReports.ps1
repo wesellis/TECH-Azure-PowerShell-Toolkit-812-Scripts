@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
         Gets email credentials from secure storage or prompts user
@@ -26,7 +29,8 @@
     return $cred
 }
 
-function Get-CostReportData {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
     <#
     .SYNOPSIS

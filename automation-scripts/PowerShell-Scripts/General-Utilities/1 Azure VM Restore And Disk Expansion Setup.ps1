@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure VM Restore And Disk Expansion Setup
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Initialize-RequiredModules {
+[OutputType([bool])]
+ {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -152,3 +156,4 @@ catch {
     Write-Host "Error during setup: $_" -ForegroundColor Red
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Dns Zone Health Monitor
@@ -158,3 +161,4 @@ Write-Host " 3. Monitor DNS query patterns and performance" "INFO"
 Write-Host " 4. Consider adding health checks for critical records" "INFO"
 Write-Host " 5. Implement DNS monitoring and alerting" "INFO"
 Write-Host " `nDNS Zone monitoring completed at $(Get-Date)" "INFO"\n
+

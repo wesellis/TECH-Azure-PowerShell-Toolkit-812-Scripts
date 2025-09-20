@@ -1,5 +1,6 @@
-#Requires -Version 5.1
-#Requires -Module Az.Resources
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Install Prerequisites
@@ -65,7 +66,8 @@ $script:devModules = @(
 
 #region Functions
 
-function Install-ModuleIfMissing {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -262,3 +264,4 @@ finally {
 }
 
 #endregion\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Functions
+
 <#
 .SYNOPSIS
     Manage Function Apps
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage Function Apps
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$AppName,
     [string]$PlanName,
@@ -29,7 +33,7 @@ $params = @{
     Location = $Location
     ErrorAction = "Stop"
 }
-$FunctionApp @params
+$FunctionApp = New-AzFunctionApp @params
 if ($StorageAccountName) {
     Write-Host "Storage Account: $StorageAccountName"
 }

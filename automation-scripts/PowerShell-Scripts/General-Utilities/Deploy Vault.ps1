@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     #	   Deploy a new Key Vault and add a key that will be used as encryption protector for Azure SQL Server
@@ -48,3 +51,4 @@ param(
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

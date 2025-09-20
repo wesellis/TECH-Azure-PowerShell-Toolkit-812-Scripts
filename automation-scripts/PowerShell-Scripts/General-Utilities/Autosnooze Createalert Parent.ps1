@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Autosnooze Createalert Parent
@@ -189,3 +192,4 @@ $params = @{"VMObject" =$VM;"AlertAction" =Create" ;"WebhookUri" =$webhookUri}
 $ex = $_.Exception
         Write-Output $_.Exception
     }\n
+

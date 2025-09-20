@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Real Time Monitor
@@ -11,7 +15,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([bool])]
+ {
     param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -39,8 +44,7 @@ param(
     [Parameter()][switch]$ExportMetrics
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." , " modules" , "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Real-time Monitor" -Description "Live monitoring with web dashboard and alerts"
+if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Real-time Monitor" -Description "Live monitoring with web dashboard and alerts"
 $script:MonitoringState = @{
     Running = $false
     Resources = @{}

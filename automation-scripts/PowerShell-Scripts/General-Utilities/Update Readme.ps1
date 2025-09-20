@@ -50,7 +50,9 @@ if ($currentH1 -eq "" ) {
 else {
     # we found H1 and can update the readme
     # replace # H1 with our new $H1
-    $readme = $readme.Replace($currentH1, $H1)
+    $readme = $readme.Replace($currentH1,
+    [Parameter()]
+    $H1)
     # remove everything before H1 so we can insert clean YAML (i.e. remove he previous YAML or any junk user submitted)
     $readme = $readme.Substring($readme.IndexOf($H1))
     <#
@@ -94,13 +96,17 @@ $YAML = $YAML + " `n---`n"
     # replace disallowed chars
 $metadataDescription = $metadataDescription.Replace(" :" , "&#58;" )
     # set an urlFragment to the path to minimize dupes - we use the last segment of the path, which may not be unique, but it's a friendlier url
-    $YAML = $YAML.Replace('%description%', $metadataDescription)
+    $YAML = $YAML.Replace('%description%',
+    [Parameter()]
+    $metadataDescription)
     if($SampleName.StartsWith('modules')){
         $fragment = $SampleName.Replace('\', '-') # for modules we use version numbers, e.g. 0.9 so will have dupes
     }else{
         $fragment = $SampleName.Split('\')[-1]
     }
-    $YAML = $YAML.Replace('%urlFragment%', $fragment)
+    $YAML = $YAML.Replace('%urlFragment%',
+    [Parameter()]
+    $fragment)
     # prepend the YAML
     $readme = " $YAML$readme"
     # add tags
@@ -145,7 +151,9 @@ $currentTags = ""
     }
     else {
         #replace
-$readme = $readme -replace $currentTags, $newTags
+$readme = $readme -replace $currentTags,
+    [Parameter()]
+    $newTags
     }
     #Write-Output $readme
     $readme | Set-Content -ErrorAction Stop $readmePath -NoNewline
@@ -158,3 +166,4 @@ Write-Output $readme
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

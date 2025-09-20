@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure script
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -67,3 +71,4 @@ Write-Host "Name: $($Vmss.Name)"
 Write-Host "Location: $($Vmss.Location)"
 Write-Host "VM Size: $VmSize"
 Write-Host "Instance Count: $InstanceCount"\n
+

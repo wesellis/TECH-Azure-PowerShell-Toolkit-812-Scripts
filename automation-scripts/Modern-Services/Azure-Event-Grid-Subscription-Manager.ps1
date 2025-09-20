@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Event Grid Subscription Manager
 # Manage Event Grid topics and subscriptions
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -45,7 +49,9 @@ try {
             $subscriptions | Format-Table EventSubscriptionName, Destination
         }
         "DeleteTopic" {
-            Remove-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName -Force
+            if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             
         }
     }

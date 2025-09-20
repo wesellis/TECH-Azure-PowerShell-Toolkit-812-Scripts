@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Azresourcegroup
@@ -13,7 +16,7 @@ function Invoke-AzResourceGroup {
 $ErrorActionPreference = "Stop";
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzResourceGroup {
-    #Region func New-AzResourceGroup -ErrorAction Stop
+    #region func-New-AzResourceGroup -ErrorAction Stop
     #Creating the Resource Group Name
 $newAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
@@ -23,3 +26,4 @@ $newAzResourceGroupSplat = @{
     New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
     #endregion func New-AzResourceGroup -ErrorAction Stop
 }\n
+

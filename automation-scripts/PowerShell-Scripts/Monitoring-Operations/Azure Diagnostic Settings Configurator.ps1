@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Diagnostic Settings Configurator
@@ -114,3 +117,4 @@ Write-Host "Cost optimization insights" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvmconfig
@@ -14,7 +17,7 @@ function Invoke-AzVMConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVMConfig {
-    #Region func New-AzVMConfig -ErrorAction Stop
+    #region func-New-AzVMConfig -ErrorAction Stop
     #Creating the VM Config Object for the VM
 $newAzVMConfigSplat = @{
         VMName       = $VMName
@@ -25,3 +28,4 @@ $newAzVMConfigSplat = @{
 $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
     #endRegion func New-AzVMConfig -ErrorAction Stop
 }\n
+

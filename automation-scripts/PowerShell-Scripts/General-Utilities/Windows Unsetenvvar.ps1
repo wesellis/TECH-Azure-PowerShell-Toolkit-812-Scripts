@@ -15,14 +15,17 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $Variable
 )
-#region Functions
-Set-StrictMode -Version Latest
+#region Functions-Set-StrictMode -Version Latest
 Write-Host "Removing variable $Variable"
-[Environment]::SetEnvironmentVariable(" $Variable" , $null, "Machine" )
+[Environment]::SetEnvironmentVariable(" $Variable" ,
+    [Parameter()]
+    $null, "Machine" )
 Write-Host "Removing variable $Variable complete"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

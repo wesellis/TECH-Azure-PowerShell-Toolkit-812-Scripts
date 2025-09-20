@@ -15,15 +15,18 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $Variable,
+    [Parameter()]
     $Value,
-$PrintValue = " true"
+    [Parameter()]
+    $PrintValue = " true"
 )
-#region Functions
-Set-StrictMode -Version Latest
+#region Functions-Set-StrictMode -Version Latest
 Write-Host $(if ($PrintValue -eq " true" ) { "Setting variable $Variable with value $Value" } else { "Setting variable $Variable" })
 [Environment]::SetEnvironmentVariable(" $Variable" , "$Value" , "Machine" )
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

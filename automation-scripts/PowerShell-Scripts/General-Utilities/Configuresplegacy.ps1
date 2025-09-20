@@ -653,8 +653,7 @@ $sqlConnection = New-Object -ErrorAction Stop System.Data.SqlClient.SqlConnectio
                 $solutionId = $using:LdapcpSolutionId
                 $job = Start-Job -ScriptBlock $jobBlock -ArgumentList @($solutionId) -InitializationScript $initializationScript
                 Receive-Job -Job $job -AutoRemoveJob -Wait
-                #Add-PSSnapin "Microsoft.SharePoint.PowerShell" | Out-Null
-                #$solutionId = $using:LdapcpSolutionId
+                #                #$solutionId = $using:LdapcpSolutionId
                 #Install-SPFeature -SolutionId $solutionId -AllExistingFeatures
             }
             GetScript            =
@@ -1531,3 +1530,4 @@ ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -S
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5\n
+

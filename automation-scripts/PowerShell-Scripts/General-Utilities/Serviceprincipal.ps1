@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Serviceprincipal
@@ -16,8 +19,8 @@ $suffix =               $subscriptionName     #-- Name of the company/deployment
 $tenantID=              ""
 $passwordADApp =        "Password@123"
 $Web1SiteName =         (" cloudwise" + $suffix)
-$displayName1 =         ("CloudWise Governance Advisory Portal (ver." + $suffix +" )" )
-$servicePrincipalPath=  (" .\" + $subscriptionName + " .json" )
+$displayName1 =         ("CloudWise Governance Advisory Portal (ver.$(suffix) )" )
+$servicePrincipalPath=  (" .\$(subscriptionName) .json" )
 if (($subscriptionName -eq "" ) -or ($cloudwiseAppServiceURL -eq "" ))
 {
     Write-Host "Please ensure parameters SubscriptionName and cloudwiseAppServiceURL are not empty" -foreground Red
@@ -40,7 +43,7 @@ Write-Information ("Step 2: Create Azure Active Directory apps in default direct
     $defaultPrincipal = ($u1 + $u3 + " .onmicrosoft.com" )
     # Get tenant ID
     $tenantID = (Get-AzureRmContext).Tenant.TenantId
-    $homePageURL = (" http://" + $defaultPrincipal + " azurewebsites.net" + " /" + $Web1SiteName)
+    $homePageURL = (" http://$(defaultPrincipal) azurewebsites.net" + " /" + $Web1SiteName)
     $replyURLs = @( $cloudwiseAppServiceURL, "http://*.azurewebsites.net" ," http://localhost:62080" )
     # Create Active Directory Application
     $azureAdApplication1 = New-AzureRmADApplication -DisplayName $displayName1 -HomePage $cloudwiseAppServiceURL -IdentifierUris $cloudwiseAppServiceURL -Password $passwordADApp -ReplyUrls $replyURLs
@@ -75,3 +78,4 @@ Write-Information (" '. Cloudwise would atleast need 2 apps" ) -foreground Yello
 Write-Information (" `t 1) Windows Azure Active Directory" ) -foreground Yellow
 Write-Information (" `t 2) Windows Azure Service Management API" ) -foreground Yellow
 Write-Information (" see README.md for details" ) -foreground Yellow\n
+

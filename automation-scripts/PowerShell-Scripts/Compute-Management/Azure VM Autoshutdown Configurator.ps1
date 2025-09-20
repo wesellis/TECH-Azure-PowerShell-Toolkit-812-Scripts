@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Autoshutdown Configurator
@@ -82,3 +85,4 @@ if ($NotificationEmail) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

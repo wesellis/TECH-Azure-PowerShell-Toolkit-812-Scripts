@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Activity Log Checker
@@ -64,3 +67,4 @@ foreach ($Log in $RecentLogs) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

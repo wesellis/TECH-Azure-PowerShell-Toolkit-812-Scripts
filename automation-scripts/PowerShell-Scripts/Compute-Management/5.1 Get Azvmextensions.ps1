@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Get VM extensions
@@ -10,7 +13,8 @@
 .EXAMPLE
     Get-AzVmImagePublisher -Location "CanadaCentral" | Get-AzVMExtensionImageType | Get-AzVMExtensionImage
 #>
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$Location = "CanadaCentral"
 )

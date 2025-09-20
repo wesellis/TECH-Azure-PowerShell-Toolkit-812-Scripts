@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Serviceprincipal Creator
@@ -56,3 +59,4 @@ try {
 } catch {
     Write-Error "Failed to create service principal: $($_.Exception.Message)"
 }\n
+

@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Get VM network details
 
 .DESCRIPTION
     Get VM network details\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -25,3 +29,4 @@ foreach ($NicRef in $VM.NetworkProfile.NetworkInterfaces) {
         Write-Host "Public IP: $($Pip.IpAddress)"
     }
 }\n
+

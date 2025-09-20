@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     AI Assistant
@@ -8,7 +12,8 @@
 # Natural Language AI Assistant for Azure PowerShell Scripts
 # Version: 3.0
 
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Position=0, ValueFromRemainingArguments=$true)]
     [string[]]$Query,
     
@@ -148,7 +153,9 @@ Get-AzVM {ResourceGroup} | Select-Object Name, ResourceGroupName, Location, @{N=
             
             "delete_vm" = @'
 # Delete Virtual Machine
-Remove-AzVM -ResourceGroupName "{ResourceGroup}" -Name "{Name}" -Force
+if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
 '@
             
             "create_storage" = @'
@@ -316,8 +323,10 @@ class ConversationContext {
     }
 }
 
-function Invoke-AIAssistant {
-    param([string]$Query)
+[OutputType([string])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+[string]$Query)
     
     $nlp = [NaturalLanguageProcessor]::new()
     $recommender = [ScriptRecommendationEngine]::new()
@@ -436,7 +445,9 @@ function Start-InteractiveAssistant {
         }
         
         if ($userInput -eq 'clear') {
-            Clear-Host
+            if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             continue
         }
         

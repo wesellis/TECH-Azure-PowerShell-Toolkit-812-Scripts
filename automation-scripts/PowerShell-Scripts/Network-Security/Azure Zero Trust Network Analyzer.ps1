@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Azure Zero Trust Network Analyzer
@@ -32,8 +37,7 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId,
-    [Parameter()]
-    [string]$OutputPath = " .\ZeroTrust-Assessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').html" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\ZeroTrust-Assessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').html" ,
     [Parameter()]
     [switch]$IncludeRemediation,
     [Parameter()]
@@ -61,7 +65,8 @@ $assessmentResults = @{
     NSGCompliance = @()
     Recommendations = @()
 }
-function Test-NetworkSegmentation {
+[OutputType([PSObject])]
+ {
     Write-Host "Analyzing network segmentation..." -ForegroundColor Yellow
     $vnets = Get-AzVirtualNetwork -ErrorAction Stop
     $segmentationIssues = @()
@@ -392,3 +397,4 @@ $remediationScript = Generate-RemediationScripts -AssessmentResults $assessmentR
     Write-Error "An error occurred during assessment: $_"
     throw
 }\n
+

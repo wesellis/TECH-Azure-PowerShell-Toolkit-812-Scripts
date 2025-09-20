@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Autoupdateworker
@@ -195,3 +198,4 @@ catch
     Write-Output "Error Occurred in the AutoUpdate worker runbook..."
     Write-Output $_.Exception
 }\n
+

@@ -1,6 +1,6 @@
-#Requires -Module Az.Consumption
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     create budget alerts
@@ -58,7 +58,8 @@
     Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Create')]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true, ParameterSetName = 'Create')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Update')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Delete')]
@@ -143,8 +144,10 @@ $script:LogPath = ".\BudgetManagement_$(Get-Date -Format 'yyyyMMdd').log"
 #endregion
 
 #region Helper-Functions
-function Write-LogEntry {
-    param(
+[OutputType([bool])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Success')]
         [string]$Level = 'Info'
@@ -171,16 +174,14 @@ function Initialize-RequiredModules {
             Write-LogEntry "Module $module not found. Installing..." -Level Warning
             try {
                 Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser
-                Import-Module $module -Force
-                Write-LogEntry "Successfully installed module: $module" -Level Success
+                                Write-LogEntry "Successfully installed module: $module" -Level Success
             }
             catch {
                 throw "Failed to install required module $module : $_"
             }
         }
         else {
-            Import-Module $module -Force -ErrorAction SilentlyContinue
-        }
+                    }
     }
 }
 
@@ -195,7 +196,8 @@ function Get-CurrentContext {
 }
 
 function Resolve-BudgetScope {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ExplicitScope,
         [string]$ResourceGroup
     )
@@ -215,7 +217,8 @@ function Resolve-BudgetScope {
 }
 
 function Format-CurrencyAmount {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [decimal]$Amount,
         [string]$Currency = 'USD'
     )
@@ -239,7 +242,8 @@ function Format-CurrencyAmount {
 
 #region Core-Functions
 function New-BudgetConfiguration {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [decimal]$Amount,
         [string]$Currency,
@@ -286,7 +290,8 @@ function New-BudgetConfiguration {
 }
 
 function New-BudgetNotifications {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [int[]]$ThresholdPercentages,
         [string[]]$Emails,
         [string]$Webhook,
@@ -328,7 +333,8 @@ function New-BudgetNotifications {
 }
 
 function New-AzureBudget {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [hashtable]$BudgetConfig,
         [hashtable]$Notifications,
         [string]$Scope
@@ -393,7 +399,8 @@ function New-AzureBudget {
 }
 
 function Update-AzureBudget {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [hashtable]$Updates,
         [string]$Scope
@@ -430,7 +437,8 @@ function Update-AzureBudget {
 }
 
 function Remove-AzureBudget {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [string]$Scope
     )
@@ -457,7 +465,8 @@ function Remove-AzureBudget {
 }
 
 function Get-BudgetAlerts {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$BudgetName,
         [string]$Scope,
         [int]$DaysBack = 30
@@ -528,7 +537,8 @@ function Get-BudgetAlerts {
 }
 
 function Get-BudgetUsageReport {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Scope,
         [int]$DaysBack = 30
     )
@@ -753,3 +763,4 @@ finally {
 }
 
 #endregion\n
+

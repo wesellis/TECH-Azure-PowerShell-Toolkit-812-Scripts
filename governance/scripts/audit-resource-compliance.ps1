@@ -1,6 +1,6 @@
-#Requires -Module Az.Resources
-#Requires -Module Az.PolicyInsights
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     audit resource compliance
@@ -41,15 +41,13 @@ param(
     })]
     [string]$SubscriptionId,
 
-    [Parameter()]
-    [string]$ResourceGroup,
+    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroup,
 
     [Parameter()]
     [ValidateSet('JSON', 'CSV', 'HTML')]
     [string]$OutputFormat = 'JSON',
 
-    [Parameter()]
-    [string]$ExportPath,
+    [Parameter(ValueFromPipeline)]`n    [string]$ExportPath,
 
     [Parameter()]
     [switch]$IncludeRemediation,
@@ -60,14 +58,12 @@ param(
 
 # Set up error handling
 $ErrorActionPreference = 'Stop'
-trap {
-    Write-Error "Script failed: $_"
-    throw
-}
+try { } catch { throw }
 
 #region Functions
 
-function Test-AzureConnection {
+[OutputType([bool])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Not connected to Azure. Initiating login..." -ForegroundColor Yellow
@@ -283,7 +279,7 @@ function Get-RemediationTasks {
 
 #endregion
 
-#region Main Execution
+#region Main-Execution
 
 Write-Host "`nAzure Policy Compliance Audit" -ForegroundColor Cyan
 Write-Host ("=" * 50) -ForegroundColor Cyan
@@ -354,3 +350,4 @@ else {
 }
 
 #endregion\n
+

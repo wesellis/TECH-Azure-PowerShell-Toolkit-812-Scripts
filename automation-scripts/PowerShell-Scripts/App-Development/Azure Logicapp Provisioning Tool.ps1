@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Logicapp Provisioning Tool
@@ -128,3 +131,4 @@ Write-Host " `nLogic App provisioning completed at $(Get-Date)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

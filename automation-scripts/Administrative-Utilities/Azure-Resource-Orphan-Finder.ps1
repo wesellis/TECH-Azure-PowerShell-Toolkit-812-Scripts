@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Find orphaned resources
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Orphan Finder Tool
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]
@@ -156,19 +160,29 @@ try {
             try {
                 switch ($resource.ResourceType) {
                     "NetworkInterface" {
-                        Remove-AzNetworkInterface -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                     }
                     "PublicIP" {
-                        Remove-AzPublicIpAddress -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                     }
                     "ManagedDisk" {
-                        Remove-AzDisk -DiskName $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                     }
                     "Snapshot" {
-                        Remove-AzSnapshot -SnapshotName $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                     }
                     "NetworkSecurityGroup" {
-                        Remove-AzNetworkSecurityGroup -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                     }
                 }
                 Write-Host "Successfully removed $($resource.ResourceType): $($resource.ResourceName)" -ForegroundColor Green

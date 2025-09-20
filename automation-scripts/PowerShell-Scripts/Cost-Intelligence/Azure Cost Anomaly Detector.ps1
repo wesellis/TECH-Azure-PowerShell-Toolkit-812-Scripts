@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Cost Anomaly Detector
@@ -56,3 +59,4 @@ $anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $AnomalyT
         $anomalies | Format-Table Date, @{Name="Cost" ;Expression={" $" + " {0:F2}" -f $_.TotalCost}}
     }
 } catch { throw }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Network Info
@@ -56,3 +59,4 @@ $Pip = Get-AzPublicIpAddress -ResourceId $PipId
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

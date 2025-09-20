@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Azure Certificate Monitor
@@ -58,3 +61,4 @@ $expiringCertificates = $expiringCertificates + [PSCustomObject]@{
 
     throw
 }\n
+

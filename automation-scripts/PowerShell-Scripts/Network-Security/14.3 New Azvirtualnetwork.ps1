@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Create virtualnetwork
@@ -29,3 +32,4 @@ $newAzVirtualNetworkSplat = @{
     Subnet = $subnet
 }
 $vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat\n
+

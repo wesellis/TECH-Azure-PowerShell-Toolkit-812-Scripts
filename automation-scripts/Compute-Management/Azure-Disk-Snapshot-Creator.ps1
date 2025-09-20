@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Creates snapshots of Azure managed disks with validation and tagging
@@ -21,7 +24,8 @@
     .\Azure-Disk-Snapshot-Creator.ps1 -ResourceGroupName "RG-Production" -DiskName "VM-DB01_DataDisk" -RetentionDays 30 -Tags @{Backup="Daily"}
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -127,3 +131,4 @@ try {
     Write-Error "Failed to create snapshot: $_"
     throw
 }\n
+

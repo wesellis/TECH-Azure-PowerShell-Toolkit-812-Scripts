@@ -42,21 +42,19 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    [Parameter()]
-    [string]$BackupContainer= 'vhd-backups',
-    [Parameter()]
-    [string]$Environment= "AzureCloud"
+    [Parameter(ValueFromPipeline)]`n    [string]$BackupContainer= 'vhd-backups',
+    [Parameter(ValueFromPipeline)]`n    [string]$Environment= "AzureCloud"
 )
 #region Functions
 $ProgressPreference = 'SilentlyContinue'
-import-module AzureRM
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
 <###############################
  Get Storage Context function
-function Get-StorageObject -ErrorAction Stop
+[OutputType([PSObject])]
+ -ErrorAction Stop
 { [CmdletBinding()]
 param($resourceGroupName, $srcURI)
     $split = $srcURI.Split('/')
@@ -164,3 +162,4 @@ $context = Get-StorageObject -resourceGroupName $resourceGroupName -srcURI $disk
        }
     }
 }\n
+

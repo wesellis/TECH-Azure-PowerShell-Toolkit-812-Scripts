@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Data Factory Modern Pipeline Management Tool
@@ -78,17 +81,14 @@ param(
 )
 # Import required modules
 try {
-    Import-Module Az.Accounts -Force -ErrorAction Stop
-    Import-Module Az.Resources -Force -ErrorAction Stop
-    Import-Module Az.DataFactory -Force -ErrorAction Stop
-    Import-Module Az.Storage -Force -ErrorAction Stop
-    Write-Host "Successfully imported required Azure modules"
+                    Write-Host "Successfully imported required Azure modules"
 } catch {
     Write-Error "Failed to import required modules: $($_.Exception.Message)"
     throw
 }
 # Enhanced logging function
-function Write-Verbose
+[OutputType([bool])]
+
     param(
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]

@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Synapse Analytics Workspace Manager
@@ -22,27 +26,22 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$WorkspaceName,
-    [Parameter()]
-    [string]$Location = "East US" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "East US" ,
     [Parameter()]
     [ValidateSet("Create" , "Delete" , "GetInfo" , "CreateSQLPool" , "CreateSparkPool" , "ManageFirewall" )]
     [string]$Action = "Create" ,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$StorageAccountName,
-    [Parameter()]
-    [string]$FileSystemName = " synapsefs" ,
-    [Parameter()]
-    [string]$SQLAdminUsername = " sqladmin" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$FileSystemName = " synapsefs" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$SQLAdminUsername = " sqladmin" ,
     [Parameter()]
     [SecureString]$SQLAdminPassword,
-    [Parameter()]
-    [string]$SQLPoolName = "DataWarehouse" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$SQLPoolName = "DataWarehouse" ,
     [Parameter()]
     [ValidateSet("DW100c" , "DW200c" , "DW300c" , "DW400c" , "DW500c" , "DW1000c" )]
     [string]$SQLPoolSKU = "DW100c" ,
-    [Parameter()]
-    [string]$SparkPoolName = "SparkPool" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$SparkPoolName = "SparkPool" ,
     [Parameter()]
     [ValidateSet("Small" , "Medium" , "Large" )]
     [string]$SparkPoolSize = "Small" ,
@@ -425,3 +424,4 @@ $workspaceStatus = Invoke-AzureOperation -Operation {
     Write-Host "" "INFO"
     throw
 }\n
+

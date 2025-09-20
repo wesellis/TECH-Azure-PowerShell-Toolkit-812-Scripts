@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Cognitive Services Manager
@@ -66,3 +69,4 @@ try {
         }
     }
 } catch { throw }\n
+

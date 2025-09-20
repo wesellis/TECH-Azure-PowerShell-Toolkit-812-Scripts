@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Subscription Switcher
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -84,3 +88,4 @@ $subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
     Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'" -ForegroundColor White
 }
 Write-Host " `nSubscription switching completed at $(Get-Date)" -ForegroundColor Cyan\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Storage Container Creator
@@ -56,3 +59,4 @@ Write-Host "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

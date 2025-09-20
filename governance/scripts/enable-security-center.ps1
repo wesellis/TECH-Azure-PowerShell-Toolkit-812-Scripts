@@ -1,6 +1,6 @@
-#Requires -Module Az.Security
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     enable security center
@@ -44,7 +44,8 @@
     Enables specific Defender plans with security contact#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
@@ -87,7 +88,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -97,7 +99,8 @@ function Test-AzureConnection {
 }
 
 function Set-SecurityPricing {
-    param(
+    [CmdletBinding()]
+
         [string]$Tier,
         [string[]]$ResourceTypes
     )
@@ -121,7 +124,8 @@ function Set-SecurityPricing {
 }
 
 function Enable-AutoProvisioning {
-    param([string]$WorkspaceId)
+    [CmdletBinding()]
+[string]$WorkspaceId)
 
     Write-Host "Enabling auto-provisioning..." -ForegroundColor Yellow
 
@@ -146,7 +150,8 @@ function Enable-AutoProvisioning {
 }
 
 function Set-SecurityContact {
-    param(
+    [CmdletBinding()]
+
         [string]$Email,
         [string]$Phone,
         [bool]$EnableNotifications,
@@ -182,7 +187,8 @@ function Set-SecurityContact {
 }
 
 function Enable-DefenderForCloud {
-    param([string[]]$Plans)
+    [CmdletBinding()]
+[string[]]$Plans)
 
     Write-Host "Enabling Microsoft Defender plans..." -ForegroundColor Yellow
 
@@ -247,7 +253,8 @@ function Get-SecurityCenterStatus {
 }
 
 function Show-SecurityCenterSummary {
-    param([object]$Status)
+    [CmdletBinding()]
+[object]$Status)
 
     if (-not $Status) {
         Write-Host "Unable to retrieve Security Center status" -ForegroundColor Red
@@ -360,3 +367,4 @@ return @{
     Status = $status
     Recommendations = $recommendations
 }\n
+

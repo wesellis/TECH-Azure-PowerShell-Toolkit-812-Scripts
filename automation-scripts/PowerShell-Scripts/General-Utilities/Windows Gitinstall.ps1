@@ -11,10 +11,10 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
+    [Parameter()]
     $SetCredHelper = $false
 )
-#region Functions
-Set-StrictMode -Version Latest
+#region Functions-Set-StrictMode -Version Latest
 $VerbosePreference = 'Continue'
 function getSimpleValue([string] $url, [string] $filename ) {
     $fullpath = " ${env:Temp}\$filename"
@@ -66,3 +66,4 @@ $arguments = @('config', '--system', 'credential.helper', 'manager')
 } catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
 }\n
+

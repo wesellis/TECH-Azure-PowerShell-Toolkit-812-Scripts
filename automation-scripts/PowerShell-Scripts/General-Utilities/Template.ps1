@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Template
@@ -41,3 +44,4 @@ $newAzResourceGroupSplat = @{
     Tag = $Tags
 }
 New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat\n
+

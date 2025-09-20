@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Servicefabricclustercertificate
@@ -42,3 +45,4 @@ Write-Host "Certificate Thumbprint : " $NewCert.Thumbprint
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

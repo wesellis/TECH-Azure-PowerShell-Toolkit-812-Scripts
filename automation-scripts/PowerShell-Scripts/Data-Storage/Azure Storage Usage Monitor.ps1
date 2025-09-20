@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Storage Usage Monitor
@@ -49,3 +52,4 @@ Write-Host "Usage: $($Usage.CurrentValue) / $($Usage.Limit)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

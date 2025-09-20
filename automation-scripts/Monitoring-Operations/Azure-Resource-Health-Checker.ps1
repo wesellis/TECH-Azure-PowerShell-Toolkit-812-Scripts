@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure script
@@ -5,7 +9,8 @@
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName
 )

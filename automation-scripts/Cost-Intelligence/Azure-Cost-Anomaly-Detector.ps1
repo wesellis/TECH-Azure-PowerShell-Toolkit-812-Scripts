@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Detect cost anomalies
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Find unusual spending patterns in Azure costs
     Author: Wes Ellis (wes@wesellis.com)#>
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]

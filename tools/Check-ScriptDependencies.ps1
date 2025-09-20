@@ -10,7 +10,8 @@
     Check ScriptDependenciescom)#>
 # Check-ScriptDependencies.ps1
 # Analyzes and validates script dependencies across the repository
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$ScriptPath,
     
@@ -23,9 +24,7 @@ param(
     [switch]$ValidateAzureModules
 )
 
-#region Functions
-
-class DependencyAnalyzer {
+#region Functions-class DependencyAnalyzer {
     [hashtable]$Dependencies = @{}
     [hashtable]$MissingDependencies = @{}
     [hashtable]$VersionConflicts = @{}
@@ -285,3 +284,4 @@ if ($ValidateAzureModules) {
 Write-Host "`nDependency analysis complete!" -ForegroundColor Cyan
 
 #endregion\n
+

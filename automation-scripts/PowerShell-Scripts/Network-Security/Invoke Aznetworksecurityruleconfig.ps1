@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Aznetworksecurityruleconfig
@@ -14,7 +17,7 @@ function Invoke-AzNetworkSecurityRuleConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzNetworkSecurityRuleConfig {
-    #Region func New-AzNetworkSecurityRuleConfig;
+    #region func-New-AzNetworkSecurityRuleConfig;
 $newAzNetworkSecurityRuleConfigSplat = @{
     # Name = 'rdp-rule'
     Name                                = 'RDP-rule'
@@ -31,3 +34,4 @@ $newAzNetworkSecurityRuleConfigSplat = @{
 };
 $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
 }\n
+

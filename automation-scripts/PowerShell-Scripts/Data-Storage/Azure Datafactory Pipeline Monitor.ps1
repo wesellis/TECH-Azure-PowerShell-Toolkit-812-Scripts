@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Datafactory Pipeline Monitor
@@ -149,3 +152,4 @@ Write-Host " 3. Check data movement and transformation performance" "INFO"
 Write-Host " 4. Validate trigger schedules and dependencies" "INFO"
 Write-Host " 5. Monitor integration runtime utilization" "INFO"
 Write-Host " `nData Factory monitoring completed at $(Get-Date)" "INFO"\n
+

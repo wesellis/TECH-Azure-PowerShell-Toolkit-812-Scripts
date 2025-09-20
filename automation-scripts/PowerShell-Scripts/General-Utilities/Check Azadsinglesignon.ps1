@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Check Azadsinglesignon
@@ -18,3 +21,4 @@ if ($ssoPolicy.AuthenticationType -eq "CloudSSO" ) {
 } else {
     Write-Host "Single sign-on is not enabled for the domain."
 }\n
+

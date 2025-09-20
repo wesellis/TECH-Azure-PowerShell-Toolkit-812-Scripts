@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Resource Size Analyzer
@@ -53,3 +56,4 @@ $runningVMs = ($sizeAnalysis | Where-Object { $_.PowerState -eq "VM running" }).
     Write-Host "Running VMs: $runningVMs" -ForegroundColor White
     Write-Host "Stopped VMs: $($totalVMs - $runningVMs)" -ForegroundColor Yellow
 } catch { throw }\n
+

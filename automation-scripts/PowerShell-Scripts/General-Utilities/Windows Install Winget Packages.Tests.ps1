@@ -11,8 +11,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 BeforeAll {
     $script:IsUnderTest = $true
-    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot)
-try {
+    try {
     # Main script execution
 '_common/windows-retry-utils.psm1')
     . (Join-Path $PSScriptRoot 'windows-install-winget-packages.ps1') -Packages 'UNUSED'
@@ -23,7 +22,8 @@ Describe "CreateDevVhdTests" {
         $script:sleepTimes = @()
         Mock -CommandName Start-Sleep -ModuleName windows-retry-utils -MockWith {
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -41,7 +41,8 @@ $colorMap = @{
 }
 param ($seconds) $script:sleepTimes += $seconds; Write-Host "Sleeping $seconds seconds" }
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -63,7 +64,8 @@ param(
             throw "Must be mocked by the test! Invoking $commandLine."
         }
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -85,7 +87,8 @@ param(
             Write-Host " === [Mock] Invoking $commandLine"
         } -ParameterFilter { $commandLine -like '*winget.exe --info' }
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -108,7 +111,8 @@ param(
             $script:LASTEXITCODE = 123
         } -ParameterFilter { $commandLine -like '*robocopy.exe /R:5 /W:5 /S *AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir C:\.tools\Setup\Logs\WinGet' }
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -155,7 +159,8 @@ param(
         }
     ) {
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -201,7 +206,8 @@ function Get-Command -ErrorAction Stop { return $null }
     }
     It "ThrowOnInstallFailure" {
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -237,7 +243,8 @@ param(
     }
     It "IgnoreInstallFailure" {
         Mock Invoke-Executable {
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -280,3 +287,4 @@ param(
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

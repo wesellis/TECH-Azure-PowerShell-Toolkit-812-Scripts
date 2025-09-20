@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Azure Bastion Creator
@@ -86,3 +89,4 @@ Write-Host "No VPN client required"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

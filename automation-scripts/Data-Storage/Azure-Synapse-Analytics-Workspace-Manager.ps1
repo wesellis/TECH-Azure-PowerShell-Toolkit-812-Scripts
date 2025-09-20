@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -7,7 +11,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Synapse Analytics Workspace Manager
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -226,17 +231,23 @@ try {
             $sqlPools = Get-AzSynapseSqlPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
             foreach ($pool in $sqlPools) {
                 
-                Remove-AzSynapseSqlPool -WorkspaceName $WorkspaceName -Name $pool.Name -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             }
             # Delete Spark pools
             $sparkPools = Get-AzSynapseSparkPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
             foreach ($pool in $sparkPools) {
                 
-                Remove-AzSynapseSparkPool -WorkspaceName $WorkspaceName -Name $pool.Name -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             }
             # Delete workspace
             Invoke-AzureOperation -Operation {
-                Remove-AzSynapseWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             } -OperationName "Delete Synapse Workspace"
             
         }

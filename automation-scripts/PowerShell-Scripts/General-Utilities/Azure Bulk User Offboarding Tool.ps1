@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Bulk User Offboarding Tool
@@ -102,3 +105,4 @@ $SecurePassword = ConvertTo-SecureString $RandomPassword -AsPlainText -Force
     Write-Log "ERROR: $($_.Exception.Message)"
     throw
 }\n
+

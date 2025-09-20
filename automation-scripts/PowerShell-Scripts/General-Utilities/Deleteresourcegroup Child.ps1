@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Deleteresourcegroup Child
@@ -60,3 +63,4 @@ try
     Write-Output "Error Occurred..."
     Write-Output $_.Exception
 }\n
+

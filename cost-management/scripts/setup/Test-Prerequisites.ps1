@@ -1,5 +1,6 @@
-#Requires -Version 5.1
-#Requires -Module Az.Resources
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Test Prerequisites
@@ -65,7 +66,8 @@ if (-not $ConfigPath) {
 
 #region Functions
 
-function Initialize-TestResults {
+[OutputType([PSCustomObject])]
+ {
     [CmdletBinding()]
     param()
 
@@ -89,11 +91,9 @@ function Write-TestResult {
         [ValidateSet('PASS', 'FAIL', 'WARN', 'INFO', 'SKIP')]
         [string]$Status,
 
-        [Parameter()]
-        [string]$Message = "",
+        [Parameter(ValueFromPipeline)]`n    [string]$Message = "",
 
-        [Parameter()]
-        [string]$Details = ""
+        [Parameter(ValueFromPipeline)]`n    [string]$Details = ""
     )
 
     $icon = switch ($Status) {
@@ -584,3 +584,4 @@ finally {
 }
 
 #endregion\n
+

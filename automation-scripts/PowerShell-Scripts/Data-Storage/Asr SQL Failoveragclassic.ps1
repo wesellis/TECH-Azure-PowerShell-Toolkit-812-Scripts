@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Asr Sql Failoveragclassic
@@ -85,3 +88,4 @@ $scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-template
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

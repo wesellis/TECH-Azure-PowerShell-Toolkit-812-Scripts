@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage NSGs
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage NSGs
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]

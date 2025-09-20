@@ -12,7 +12,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Openai Service Manager
@@ -18,18 +21,12 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$AccountName,
-    [Parameter()]
-    [string]$Location = "East US" ,
-    [Parameter()]
-    [string]$SkuName = "S0",
-    [Parameter()]
-    [string]$Action = "Create",
-    [Parameter()]
-    [string]$ModelName = " gpt-35-turbo" ,
-    [Parameter()]
-    [string]$ModelVersion = " 0613" ,
-    [Parameter()]
-    [string]$DeploymentName = " gpt-35-turbo-deployment" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "East US" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$SkuName = "S0",
+    [Parameter(ValueFromPipeline)]`n    [string]$Action = "Create",
+    [Parameter(ValueFromPipeline)]`n    [string]$ModelName = " gpt-35-turbo" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$ModelVersion = " 0613" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$DeploymentName = " gpt-35-turbo-deployment" ,
     [Parameter()]
     [int]$Capacity = 120,
     [Parameter()]
@@ -262,3 +259,4 @@ $serviceStatus = Invoke-AzureOperation -Operation {
     Write-Host ""
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Virtual Machine restart and management tool
@@ -50,7 +53,8 @@
     -  logging and notifications
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
     [Parameter(Mandatory = $true, ParameterSetName = 'Batch')]
     [ValidateNotNullOrEmpty()]
@@ -92,7 +96,8 @@ $ErrorActionPreference = 'Stop'
 # Global variables for tracking
 $script:RestartResults = @()
 $script:StartTime = Get-Date
-function Test-AzureConnection {
+[OutputType([bool])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -107,7 +112,8 @@ function Test-AzureConnection {
     }
 }
 function Test-MaintenanceWindow {
-    param([string]$Window)
+    [CmdletBinding(SupportsShouldProcess)]
+[string]$Window)
     if (-not $Window) {
         return $true
     }
@@ -130,7 +136,8 @@ function Test-MaintenanceWindow {
     }
 }
 function Get-VMDetails {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -151,7 +158,8 @@ function Get-VMDetails {
     }
 }
 function Test-VMHealth {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$VMDetails,
         [string]$Phase
     )
@@ -197,7 +205,8 @@ function Test-VMHealth {
     return $healthStatus
 }
 function Test-VMDependencies {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$VMName
     )
@@ -253,7 +262,8 @@ function Test-VMDependencies {
     }
 }
 function Invoke-VMShutdown {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$VMName,
         [bool]$Graceful
@@ -276,7 +286,8 @@ function Invoke-VMShutdown {
     }
 }
 function Start-VMRestart {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$VMName,
         [bool]$UseShutdown
@@ -304,7 +315,8 @@ function Start-VMRestart {
     }
 }
 function Wait-ForVMState {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$VMName,
         [string]$TargetState,
@@ -336,7 +348,8 @@ function Wait-ForVMState {
     return $false
 }
 function Invoke-CustomScript {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ScriptPath,
         [string]$Phase,
         [string]$VMName
@@ -357,7 +370,8 @@ function Invoke-CustomScript {
     }
 }
 function Send-RestartNotification {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$EmailAddress,
         [object[]]$Results
     )
@@ -376,7 +390,8 @@ function Send-RestartNotification {
     # - Azure Monitor Action Groups
 }
 function New-RestartReport {
-    param([object[]]$Results)
+    [CmdletBinding(SupportsShouldProcess)]
+[object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         Duration = ((Get-Date) - $script:StartTime)
@@ -400,7 +415,8 @@ function New-RestartReport {
     return $report
 }
 function Restart-AzureVM {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$VMName
     )
@@ -541,3 +557,4 @@ if ($NotificationEmail) {
 $exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
 Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
 exit $exitCode\n
+

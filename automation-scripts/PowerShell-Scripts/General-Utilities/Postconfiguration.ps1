@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Postconfiguration
@@ -164,3 +167,4 @@ Set-GPRegistryValue -Name "AVD-GPO" -ValueName "VolumeType" -Key "HKEY_LOCAL_MAC
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

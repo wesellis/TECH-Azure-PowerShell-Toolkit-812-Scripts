@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Asr Wordpress Changemysqlconfig
@@ -69,3 +72,4 @@ $VM = $vmMap.$VMID
                 }
                 Set-AzureRmVMCustomScriptExtension @params
 }\n
+

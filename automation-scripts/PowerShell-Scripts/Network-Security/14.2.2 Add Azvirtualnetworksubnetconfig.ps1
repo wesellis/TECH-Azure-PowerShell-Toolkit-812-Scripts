@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     14.2.2 Add Azvirtualnetworksubnetconfig
@@ -33,3 +36,4 @@ $addAzVirtualNetworkSubnetConfigSplat = @{
     }
     Add-AzVirtualNetworkSubnetConfig @addAzVirtualNetworkSubnetConfigSplat
     $vnet | Set-AzVirtualNetwork -ErrorAction Stop\n
+

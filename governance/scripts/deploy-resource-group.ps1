@@ -1,5 +1,6 @@
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     deploy resource group
@@ -41,7 +42,8 @@
     Creates dev resource group with custom tags and resource lock#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^RG-[A-Za-z0-9\-]+$')]
     [string]$ResourceGroupName,
@@ -74,7 +76,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -84,7 +87,8 @@ function Test-AzureConnection {
 }
 
 function New-StandardTags {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [hashtable]$CustomTags,
         [string]$Environment,
         [string]$Owner,
@@ -110,7 +114,8 @@ function New-StandardTags {
 }
 
 function New-ResourceGroupWithGovernance {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [string]$Location,
         [hashtable]$Tags,
@@ -182,7 +187,8 @@ New-AzResourceGroup @resourcegroupSplat
 }
 
 function Show-DeploymentSummary {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$ResourceGroup,
         [hashtable]$Tags,
         [string]$PolicyInitiative,

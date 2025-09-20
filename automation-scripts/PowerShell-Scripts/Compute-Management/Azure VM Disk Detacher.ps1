@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Disk Detacher
@@ -14,7 +17,8 @@ try {
     # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -59,3 +63,4 @@ Write-Host "Note: Disk is now available for attachment to other VMs"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

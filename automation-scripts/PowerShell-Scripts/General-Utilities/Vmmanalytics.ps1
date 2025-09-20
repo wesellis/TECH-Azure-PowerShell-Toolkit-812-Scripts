@@ -13,7 +13,8 @@ $lastRunTimestamp��=��Get-Date -ErrorAction Stop (Get-AutomationVariable
 $currentTimestamp��=��Get-Date -ErrorAction Stop
 $workSpaceId=��Get-AutomationVariable -Name 'workspaceId'
 $sharedKey��=��Get-AutomationVariable -Name 'workspaceKey'
-function New-Signature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+[OutputType([PSObject])]
+ ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
 {
     $xHeaders = " x-ms-date:" + $date
     $stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
@@ -95,3 +96,4 @@ $jobsData��=��Get-SCJob��-All��-VMMServer $server_r |��where
 }
 write-output��('Setting lastRunTimestamp varaible as UTC ' + $currentTimestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" ));
 Set-AutomationVariable -Name 'lastRunTime' -Value $currentTimestamp\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Deploy
@@ -46,7 +49,9 @@ function VerifyManagedInstanceName
 {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
-param($managedInstanceName)
+param(
+    [Parameter()]
+    $managedInstanceName)
     Write-Host "Verifying Managed Instance name, must be globally unique."
     if([string]::IsNullOrEmpty($managedInstanceName))
     {
@@ -115,3 +120,4 @@ New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -Templa
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

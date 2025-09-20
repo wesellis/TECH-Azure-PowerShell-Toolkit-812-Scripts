@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Extension Manager
@@ -67,3 +70,4 @@ Write-Host "Type: $ExtensionType"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

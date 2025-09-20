@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Retrieves and manages logs from Azure Container Instances
@@ -45,18 +48,14 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ContainerGroupName,
-    [Parameter()]
-    [string]$ContainerName,
+    [Parameter(ValueFromPipeline)]`n    [string]$ContainerName,
     [Parameter()]
     [int]$Tail = 100,
     [Parameter()]
     [switch]$Follow,
-    [Parameter()]
-    [string]$Since,
-    [Parameter()]
-    [string]$ExportPath,
-    [Parameter()]
-    [string]$FilterPattern,
+    [Parameter(ValueFromPipeline)]`n    [string]$Since,
+    [Parameter(ValueFromPipeline)]`n    [string]$ExportPath,
+    [Parameter(ValueFromPipeline)]`n    [string]$FilterPattern,
     [Parameter()]
     [switch]$ShowTimestamps,
     [Parameter()]
@@ -80,7 +79,8 @@ function (Get-AzContext) {
         return $false
     }
 }
-function Get-ContainerGroupInfo {
+[OutputType([bool])]
+ {
     param(
         [string]$ResourceGroup,
         [string]$GroupName
@@ -364,3 +364,4 @@ catch {
     Write-Error "Failed to retrieve logs: $_"
     throw
 }\n
+

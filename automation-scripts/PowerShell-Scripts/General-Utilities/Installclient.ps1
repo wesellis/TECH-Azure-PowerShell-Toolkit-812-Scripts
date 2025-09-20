@@ -8,7 +8,8 @@
 
     1.0
     Requires appropriate permissions and modules
-Param($DomainFullName,$CMUser,$ClientName,$DPMPName,$Role,$ProvisionToolPath)
+[CmdletBinding()]
+$DomainFullName,$CMUser,$ClientName,$DPMPName,$Role,$ProvisionToolPath)
 $logpath = $ProvisionToolPath+"\InstallClientLog.txt"
 $ConfigurationFile = Join-Path -Path $ProvisionToolPath -ChildPath " $Role.json"
 $Configuration = Get-Content -Path $ConfigurationFile | ConvertFrom-Json
@@ -79,3 +80,4 @@ $machinelist = (get-cmdevice -CollectionName " all systems" ).Name
 $Configuration.InstallClient.Status = 'Completed'
 $Configuration.InstallClient.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
 $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force\n
+

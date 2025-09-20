@@ -54,7 +54,9 @@ foreach ($nextBackupFile in $fileList)
     $relocateFiles -ErrorAction "Stop Microsoft.SqlServer.Management.Smo.RelocateFile( $nextBackupFile.LogicalName, "$env:temp\$($nextBackupFileName)" );"
 }
 $securePassword = ConvertTo-SecureString $password -AsPlainText -Force;
-$credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username, $securePassword)
+$credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username,
+    [Parameter()]
+    $securePassword)
 $params = @{
     RelocateFile = $relocateFiles
     Database = "SampleDatabase"
@@ -67,3 +69,4 @@ Restore-SqlDatabase @params
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Monitor subscription usage
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Subscription Usage Monitor
 #
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Purview Data Governance Manager
@@ -19,8 +22,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$PurviewAccountName,
-    [Parameter()]
-    [string]$Location = "East US",
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "East US",
     [Parameter()]
     [ValidateSet("Create", "Delete", "GetInfo", "RegisterDataSource", "CreateCollection", "ScanDataSource", "ManageClassifications")]
     [string]$Action = "Create",
@@ -39,13 +41,11 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$DataSourceEndpoint,
-    [Parameter()]
-    [string]$CollectionName = "Default",
+    [Parameter(ValueFromPipeline)]`n    [string]$CollectionName = "Default",
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$ScanName,
-    [Parameter()]
-    [string]$ScanRulesetName = "AdlsGen2" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$ScanRulesetName = "AdlsGen2" ,
     [Parameter()]
     [string[]]$ClassificationRules = @(),
     [Parameter()]

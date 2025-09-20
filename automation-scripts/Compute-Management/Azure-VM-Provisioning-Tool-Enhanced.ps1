@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -5,7 +10,8 @@
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 # Enhanced Azure VM Provisioning Tool with enterprise features
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$ResourceGroupName,
     [Parameter(Mandatory)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$VmName,
     [ValidateSet("East US", "West US", "Central US", "East US 2", "West US 2")][string]$Location = "East US",
@@ -19,8 +25,7 @@ param (
 )
 # Import enhanced functions
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "modules", "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-riptName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
+if (Test-Path $modulePath) { riptName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
 try {
     Write-HostNumber 1 -TotalSteps 6 -StepName "Validation" -Status "Checking Azure connection..."
     if (-not ((Get-AzContext))) { throw "Azure connection validation failed" }

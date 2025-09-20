@@ -27,7 +27,6 @@ $maxSize = $size.SizeMax
     Write-Verbose " $driveLetter partition info after resize:"
     Get-Partition -DriveLetter $driveLetter
 }
-Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-retry-utils.psm1');
 $runBlock = {
     Resize-PartitionWithRetries -driveLetter 'C'
 }
@@ -36,3 +35,4 @@ RunWithRetries -runBlock $runBlock -retryAttempts 3 -waitBeforeRetrySeconds 5 -i
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

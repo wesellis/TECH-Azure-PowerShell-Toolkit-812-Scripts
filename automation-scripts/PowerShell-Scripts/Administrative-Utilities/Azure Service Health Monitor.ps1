@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Service Health Monitor
@@ -56,3 +59,4 @@ $eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
         $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
 } catch { throw }\n
+

@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create VM(Linux Without New VNet)
@@ -166,3 +171,4 @@ $newAzVMSplat = @{
     Tag               = $Tags
 }
 New-AzVM -ErrorAction Stop @newAzVMSplat\n
+

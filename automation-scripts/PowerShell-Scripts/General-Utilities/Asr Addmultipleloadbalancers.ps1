@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Asr Addmultipleloadbalancers
@@ -130,3 +133,4 @@ $ErrorMessage = $ErrorMessage + $_
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

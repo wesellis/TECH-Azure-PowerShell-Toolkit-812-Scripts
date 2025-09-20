@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Manage VNets
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage VNets
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$VnetName,
     [string]$AddressPrefix,

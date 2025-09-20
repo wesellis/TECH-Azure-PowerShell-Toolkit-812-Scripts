@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Start Azurev2Vm
@@ -52,10 +55,8 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$TenantId,
-    [Parameter()]
-    [string]$Environment= "AzureCloud" ,
-    [Parameter()]
-    [string]$FirstServer
+    [Parameter(ValueFromPipeline)]`n    [string]$Environment= "AzureCloud" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$FirstServer
 )
 $loginParams = @{
 "CertificateThumbprint" = $CertificateThumbprint
@@ -65,7 +66,6 @@ $loginParams = @{
 "EnvironmentName" = $Environment
 }
 $ProgressPreference = 'SilentlyContinue'
-import-module AzureRM
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 5.5.0" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
    BREAK
@@ -161,3 +161,4 @@ foreach ($vm in $VMs)
 $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
    " $($vm.Name) - $status"
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azroleassignment
@@ -13,7 +16,7 @@ function Invoke-AzRoleAssignment {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzRoleAssignment {
-    #Region func New-AzRoleAssignment -ErrorAction Stop
+    #region func-New-AzRoleAssignment -ErrorAction Stop
     #Post Deployment Configuration #2
     $UsersGroupName = "Azure VM - Standard User"
     #Store the Object ID in a var
@@ -24,3 +27,4 @@ $vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
     New-AzRoleAssignment -ObjectId $ObjectID -RoleDefinitionName 'Virtual Machine User Login' -ResourceGroupName $ResourceGroupName -ResourceName $VMName -ResourceType $vmtype
     #endRegion func New-AzRoleAssignment -ErrorAction Stop
 }\n
+

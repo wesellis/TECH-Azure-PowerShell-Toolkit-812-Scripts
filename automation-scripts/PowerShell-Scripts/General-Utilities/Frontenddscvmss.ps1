@@ -10,7 +10,8 @@
     Requires appropriate permissions and modules
 Configuration Main
 {
-Param ( [string] $nodeName, [string] $webDeployPackage, [string] $certStoreName, [string]  $certDomain  )
+[CmdletBinding(SupportsShouldProcess)]
+ [string] $nodeName, [string] $webDeployPackage, [string] $certStoreName, [string]  $certDomain  )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Import-DscResource -ModuleName WebAdministration
 Node $nodeName
@@ -190,3 +191,4 @@ $certWThumb = $certPath + '\' + $certObj.Thumbprint
 		}
   }
 }\n
+

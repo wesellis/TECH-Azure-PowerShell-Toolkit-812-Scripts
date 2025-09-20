@@ -62,7 +62,8 @@ $migrationStats = @{
 #endregion
 
 #region Functions
-function Write-MigrationHeader {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string]$Title
@@ -341,3 +342,4 @@ finally {
 }
 
 #endregion\n
+

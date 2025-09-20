@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Resource Dependency Mapper
@@ -17,8 +20,7 @@ param(
     [string]$ResourceGroupName,
     [Parameter()]
     [switch]$ExportDiagram,
-    [Parameter()]
-    [string]$OutputPath = " .\resource-dependencies.json"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\resource-dependencies.json"
 )
 Write-Host "Script Started" -ForegroundColor Green
 try {
@@ -57,3 +59,4 @@ $dependencies = $dependencies + [PSCustomObject]@{
 
     }
 } catch { throw }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Set Azvmaddomainextension
@@ -53,3 +56,4 @@ $setAzVMADDomainExtensionSplat = @{
     Verbose = $true
 }
 Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat\n
+

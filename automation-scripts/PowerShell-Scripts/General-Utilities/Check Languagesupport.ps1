@@ -17,7 +17,9 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [Parameter()]
     $mainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME
 )
 Write-Host "Checking languages supported by sample: $sampleFolder"
@@ -53,3 +55,4 @@ Write-Host " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$m
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

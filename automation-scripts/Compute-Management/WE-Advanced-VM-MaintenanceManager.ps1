@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure script
@@ -34,7 +37,8 @@ param (
 $LogPrefix = "[WE-VM-MaintenanceManager]"
 $StartTime = Get-Date -ErrorAction Stop
 # Enhanced logging and reporting
-function Write-WEMaintenanceLog {
+[OutputType([PSCustomObject])]
+ {
     param(
         [string]$Message,
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS", "ACTION")]
@@ -259,3 +263,4 @@ try {
 }
 # Wesley Ellis Enterprise VM Management Toolkit
 #  automation solutions: wesellis.com\n
+

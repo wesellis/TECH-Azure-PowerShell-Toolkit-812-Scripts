@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Sqlazureingestion
@@ -100,3 +103,4 @@ if($FailedConnections -ne $Null)
     "Failed to connect to $($FailedConnections.Count) databases"
     $FailedConnections
 }\n
+

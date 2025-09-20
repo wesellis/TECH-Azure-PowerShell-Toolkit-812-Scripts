@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Release Ttk
@@ -54,3 +57,4 @@ else {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

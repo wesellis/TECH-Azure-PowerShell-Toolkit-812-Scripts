@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Clones Azure resource groups and their resources to new environments
@@ -65,16 +69,14 @@ $ProgressPreference = 'SilentlyContinue'
 # Import required modules
 try {
     Write-Verbose "Importing required Azure modules..."
-    Import-Module Az.Accounts -Force
-    Import-Module Az.Resources -Force
-    Import-Module Az.KeyVault -Force
-}
+            }
 catch {
     Write-Error "Failed to import required modules. Please install Az PowerShell module: Install-Module Az"
     throw
 }
 #endregion
-function Write-Log {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

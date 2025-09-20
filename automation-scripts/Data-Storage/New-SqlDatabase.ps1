@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Sql
+
 <#
 .SYNOPSIS
     Create Azure SQL Database
@@ -20,7 +23,8 @@ SQL admin password (SecureString)
 $pwd = Read-Host -AsSecureString
 .\New-SqlDatabase.ps1 -ResourceGroup rg-sql -ServerName mysqlserver -DatabaseName mydb -Location "East US" -AdminUser sqladmin -AdminPassword $pwd
 #>
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroup,
     [Parameter(Mandatory)]

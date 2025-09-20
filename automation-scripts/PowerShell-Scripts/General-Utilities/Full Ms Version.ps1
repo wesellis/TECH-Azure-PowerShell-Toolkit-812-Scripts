@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Full Ms Version

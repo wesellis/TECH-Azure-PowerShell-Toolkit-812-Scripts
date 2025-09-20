@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Check disk encryption status
@@ -11,7 +14,8 @@ Show only unencrypted resources
 .\Get-DiskEncryption.ps1
 .\Get-DiskEncryption.ps1 -ResourceGroup rg-prod -Unencrypted
 #>
-param(
+[CmdletBinding()]
+
     [string]$ResourceGroup,
     [switch]$Unencrypted
 )
@@ -42,3 +46,4 @@ if ($Unencrypted) {
 } else {
     $results
 }\n
+

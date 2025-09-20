@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Chaos engineering platform
@@ -61,10 +64,10 @@ foreach ($module in $requiredModules) {
     if (!(Get-Module -ListAvailable -Name $module)) {
         throw "Module $module is not installed. Please install it using: Install-Module -Name $module"
     }
-    Import-Module $module -Force
-}
+    }
 #endregion
-function Write-Log {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

@@ -10,7 +10,8 @@
     Requires appropriate permissions and modules
 Configuration Main
 {
-Param ( [string] $nodeName, [string] $webDeployPackage  )
+[CmdletBinding(SupportsShouldProcess)]
+ [string] $nodeName, [string] $webDeployPackage  )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Node $nodeName
   {
@@ -175,3 +176,4 @@ $x = "IIS:\Sites\Default Web Site\" + $appPath.Name
 		}
   }
 }\n
+

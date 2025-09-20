@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Enterprise FinOps automation engine with AI-powered cost optimization and automated remediation.
@@ -32,8 +36,7 @@ param(
     [switch]$EnableMLPredictions,
     [Parameter()]
     [switch]$AutoShutdownNonProd,
-    [Parameter()]
-    [string]$OutputPath = ".\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = ".\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
 )
 # Import required modules
 $requiredModules = @('Az.Billing', 'Az.CostManagement', 'Az.Monitor', 'Az.Resources', 'Az.Compute')
@@ -190,7 +193,8 @@ class FinOpsEngine {
             $metrics @params
 }
 [CmdletBinding()]
-function New-FinOpsReport {
+[OutputType([PSObject])]
+ {
     param(
         [FinOpsEngine]$Engine,
         [hashtable]$Optimizations

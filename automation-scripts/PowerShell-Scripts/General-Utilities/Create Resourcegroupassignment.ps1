@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create Resourcegroupassignment
@@ -40,3 +43,4 @@ $ra | out-string
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

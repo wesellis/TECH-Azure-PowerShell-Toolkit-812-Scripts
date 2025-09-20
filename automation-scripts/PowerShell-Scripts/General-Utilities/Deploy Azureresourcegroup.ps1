@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Deploy Azureresourcegroup
@@ -35,7 +38,8 @@ catch {
     throw
 }
 Set-StrictMode -Version 3
-function Format-ValidationOutput {
+[OutputType([PSObject])]
+ {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -182,3 +186,4 @@ else {
         }
         New-AzureRmDeployment @params
 }\n
+

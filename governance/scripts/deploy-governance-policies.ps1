@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Deploys governance policies and initiatives to Azure subscriptions
@@ -35,7 +38,8 @@
 .NOTES#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$ManagementGroup,
 
@@ -73,7 +77,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([string])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -90,7 +95,8 @@ function Test-AzureConnection {
 }
 
 function Get-PolicyDefinitions {
-    param([string]$SetName)
+    [CmdletBinding()]
+[string]$SetName)
 
     $policies = @{
         'Default' = @(
@@ -138,7 +144,8 @@ function Get-PolicyScope {
 }
 
 function New-PolicyFromFile {
-    param(
+    [CmdletBinding()]
+
         [string]$FilePath,
         [string]$Scope
     )
@@ -172,7 +179,8 @@ function New-PolicyFromFile {
 }
 
 function New-PolicyAssignments {
-    param(
+    [CmdletBinding()]
+
         [array]$PolicyNames,
         [string]$Scope,
         [string]$AssignmentName
@@ -216,7 +224,8 @@ function New-PolicyAssignments {
 }
 
 function Show-DeploymentSummary {
-    param(
+    [CmdletBinding()]
+
         [array]$Assignments,
         [string]$Scope
     )
@@ -293,3 +302,4 @@ if ($assignments.Count -gt 0) {
 else {
     Write-Warning "No policies were deployed"
 }\n
+

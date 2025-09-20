@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvm
@@ -14,7 +17,7 @@ function Invoke-AzVM {
 $ErrorActionPreference = "Stop";
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVM {
-    #Region func New-AzVM -ErrorAction Stop
+    #region func-New-AzVM -ErrorAction Stop
     #Creating the VM
 $newAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
@@ -26,3 +29,4 @@ $newAzVMSplat = @{
     New-AzVM -ErrorAction Stop @newAzVMSplat
     #endRegion func New-AzVM -ErrorAction Stop
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -34,7 +37,8 @@ param (
 $ErrorActionPreference = "Stop"
 $LogPrefix = "[WE-AzureAD-GroupManager]"
 # Enhanced logging function
-function Write-Host {
+[OutputType([bool])]
+ {
     param(
         [string]$Message,
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]

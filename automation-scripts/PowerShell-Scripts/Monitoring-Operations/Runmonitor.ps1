@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Runmonitor
@@ -64,3 +67,4 @@ $result.Error -join " `r`n"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

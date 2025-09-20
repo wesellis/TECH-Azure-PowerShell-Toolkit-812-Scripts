@@ -9,7 +9,8 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-function Test-RequiredPath {
+[OutputType([bool])]
+ {
     [CmdletBinding()
 try {
     # Main script execution
@@ -37,3 +38,4 @@ $commit_message = Read-Host -Prompt 'Please enter commit message'
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Security
+
 <#
 .SYNOPSIS
     Enable Defender
@@ -11,7 +14,8 @@ Enable all standard plans
 .\Enable-Defender.ps1 -All
 .\Enable-Defender.ps1 -Plan VirtualMachines
 #>
-param(
+[CmdletBinding()]
+
     [ValidateSet("VirtualMachines", "AppService", "SqlServers", "StorageAccounts", "KeyVaults", "ContainerRegistry", "KubernetesService")]
     [string]$Plan,
     [switch]$All
@@ -27,3 +31,4 @@ foreach ($p in $plans) {
     Write-Host "Enabling Defender for $p" -ForegroundColor Green
     Set-AzSecurityPricing -Name $p -PricingTier Standard
 }\n
+

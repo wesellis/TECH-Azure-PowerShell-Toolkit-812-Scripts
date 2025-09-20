@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Appservice Config Viewer
@@ -55,3 +58,4 @@ if ($WebApp.SiteConfig.AppSettings) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

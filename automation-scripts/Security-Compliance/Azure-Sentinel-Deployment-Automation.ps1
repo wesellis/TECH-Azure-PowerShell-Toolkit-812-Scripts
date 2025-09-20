@@ -58,7 +58,8 @@
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [ValidateLength(4, 63)]
     [ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]$')]
@@ -119,8 +120,10 @@ $script:LogFile = "Sentinel-Deployment-$script:DeploymentTimestamp.log"
 $script:WorkspaceId = $null
 $script:SentinelResourceId = $null
 
-function Write-LogMessage {
-    param(
+[OutputType([bool])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [Parameter(Mandatory)]
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]
@@ -263,7 +266,8 @@ function New-LogAnalyticsWorkspace {
 }
 
 function Enable-MicrosoftSentinel {
-    param([object]$Workspace)
+    [CmdletBinding(SupportsShouldProcess)]
+[object]$Workspace)
 
     Write-LogMessage "Enabling Microsoft Sentinel on workspace: $WorkspaceName"
 
@@ -753,3 +757,4 @@ catch {
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
     throw
 }
+

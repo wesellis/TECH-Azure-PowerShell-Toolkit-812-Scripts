@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Subscription Security Auditor
@@ -32,8 +35,7 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId,
-    [Parameter()]
-    [string]$OutputPath = "SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = "SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
 )
 Write-Host "Starting Azure Security Audit..."
 if ($SubscriptionId) {

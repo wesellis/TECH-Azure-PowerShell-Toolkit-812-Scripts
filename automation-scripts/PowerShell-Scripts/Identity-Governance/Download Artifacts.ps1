@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Download Artifacts
@@ -12,7 +15,8 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $ProgressPreference = 'SilentlyContinue'
 [CmdletBinding()]
-function Get-ManagedIdentityAccessToken -ErrorAction Stop {
+[OutputType([PSObject])]
+ -ErrorAction Stop {
     [CmdletBinding()
 try {
     # Main script execution
@@ -72,3 +76,4 @@ Write-Host " === Completed downloading artifacts"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

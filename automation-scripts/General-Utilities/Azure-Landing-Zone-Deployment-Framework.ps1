@@ -43,7 +43,8 @@
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$TenantId,
@@ -86,8 +87,10 @@ param(
 $script:DeploymentTimestamp = Get-Date -Format "yyyyMMdd-HHmm"
 $script:LogFile = "LandingZone-Deployment-$script:DeploymentTimestamp.log"
 
-function Write-LogMessage {
-    param(
+[OutputType([PSObject])]
+ {
+    [CmdletBinding()]
+
         [Parameter(Mandatory)]
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]

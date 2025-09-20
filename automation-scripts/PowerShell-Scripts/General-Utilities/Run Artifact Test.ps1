@@ -19,8 +19,7 @@ param(
     [Int] $IntParam,
     [Boolean] $BoolParam
 )
-#region Functions
-Set-StrictMode -Version Latest
+#region Functions-Set-StrictMode -Version Latest
 Write-Host " -- Received params: StrParam=$StrParam, IntParam=$IntParam, BoolParam=$BoolParam"
 $script:TestResults = @{
     StrParam  = $StrParam
@@ -38,3 +37,4 @@ if ((Test-Path variable:global:TestShouldExitWithNonZeroExitCode) -and ($global:
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Asr Addsinglensgpublicip
@@ -70,3 +73,4 @@ param(
         }
         #Add-AzureRmAccount @params
 }\n
+

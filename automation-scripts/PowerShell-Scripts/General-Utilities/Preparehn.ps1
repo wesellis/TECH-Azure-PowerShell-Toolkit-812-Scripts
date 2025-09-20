@@ -60,8 +60,7 @@ Set-StrictMode -Version 3
 $datetimestr = (Get-Date).ToString('yyyyMMddHHmmssfff')
 if ($PsCmdlet.ParameterSetName -eq 'NodeState')
 {
-    Add-PSSnapin Microsoft.HPC
-    $HPCInfoLogFile = " $env:windir\Temp\HpcNodeAutoBringOnline.log"
+        $HPCInfoLogFile = " $env:windir\Temp\HpcNodeAutoBringOnline.log"
     [Environment]::SetEnvironmentVariable("HPCInfoLogFile" , $HPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
     $offlineNodes = @()
     $offlineNodes = $offlineNodes + Get-HpcNode -State Offline -ErrorAction SilentlyContinue
@@ -233,8 +232,7 @@ param($scriptPath, $domainUserCred, $AzureStorageConnStr, $PublicDnsName, $CNSiz
              {
                  TraceInfo 'Succeeded to prepare HPC Head Node'
                  # HPC to do list
-                 Add-PSSnapin Microsoft.HPC
-                 # setting network topology to 5 (enterprise)
+                                  # setting network topology to 5 (enterprise)
                  TraceInfo 'Setting HPC cluster network topologogy...'
                  $nics = @(Get-CimInstance -ErrorAction Stop win32_networkadapterconfiguration -filter "IPEnabled='true' AND DHCPEnabled='true'" )
                  if ($nics.Count -ne 1)
@@ -534,3 +532,4 @@ $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerSh
         }
     }
 }\n
+

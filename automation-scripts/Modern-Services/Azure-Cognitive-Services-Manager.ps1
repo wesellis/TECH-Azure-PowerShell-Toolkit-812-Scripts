@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Cognitive Services Manager
 # Manage Azure Cognitive Services accounts and endpoints
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -50,7 +54,9 @@ try {
             $usage | Format-Table Name, CurrentValue, Limit, QuotaPeriod
         }
         "Delete" {
-            Remove-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AccountName -Force
+            if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             
         }
     }

@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Iaacazvmwindows
@@ -435,3 +440,4 @@ $setAzVMAutoShutdownSplat = @{
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

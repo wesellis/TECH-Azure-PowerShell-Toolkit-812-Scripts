@@ -104,7 +104,6 @@ $DriveLabel = "DevDrive"
     Write-Host "Successfully formatted ReFS $DevBoxRefsDrive volume. Final volume list:"
     Get-Volume -ErrorAction Stop | Out-String
 }
-Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-run-program.psm1') -DisableNameChecking
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
         FindOrCreateReFSOrDevDriveVolume $DevBoxRefsDrive $OsDriveMinSizeGB $IsDevDrive $env:TEMP
@@ -112,3 +111,4 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
 }\n
+

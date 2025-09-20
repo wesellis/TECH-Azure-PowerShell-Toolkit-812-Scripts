@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Create Azvm
@@ -42,3 +45,4 @@ $newAzVmSplat = @{
     # Tag                 = $Tag #causing an error maybe need to be added later
 }
 New-AzVm -ErrorAction Stop @newAzVmSplat\n
+

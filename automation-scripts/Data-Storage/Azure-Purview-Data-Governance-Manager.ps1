@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Purview Data Governance Manager
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -300,7 +304,9 @@ try {
                 return
             }
             Invoke-AzureOperation -Operation {
-                Remove-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             } -OperationName "Delete Purview Account"
             
         }

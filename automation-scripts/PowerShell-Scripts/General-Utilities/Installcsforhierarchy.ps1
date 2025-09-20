@@ -8,7 +8,8 @@
 
     1.0
     Requires appropriate permissions and modules
-Param($DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath,$LogFolder,$PSName,$PSRole)
+[CmdletBinding(SupportsShouldProcess)]
+$DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath,$LogFolder,$PSName,$PSRole)
 $DName = $DomainFullName.Split("." )[0]
 $PSComputerAccount = " $DName\$PSName$"
 $SMSInstallDir="C:\Program Files\Microsoft Configuration Manager"
@@ -406,3 +407,4 @@ $Configuration.PSReadyToUse.Status = 'Completed'
 $Configuration.PSReadyToUse.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
 $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
 Copy-Item $ConfigurationFile -Destination " c:\$LogFolder" -Force\n
+

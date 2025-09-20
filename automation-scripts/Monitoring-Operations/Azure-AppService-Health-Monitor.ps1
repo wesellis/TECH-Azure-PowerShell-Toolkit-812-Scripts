@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Monitor service health
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Monitor service health
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$AppName
 )

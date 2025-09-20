@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Loadbalancer Manager
@@ -49,3 +52,4 @@ Write-Host "Load Balancing Rules: $($LoadBalancer.LoadBalancingRules.Count)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

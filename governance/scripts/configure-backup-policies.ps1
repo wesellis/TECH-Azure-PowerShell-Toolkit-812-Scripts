@@ -1,5 +1,6 @@
-#Requires -Module Az.RecoveryServices, Az.Sql
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     configure backup policies
@@ -98,7 +99,8 @@ $ProgressPreference = 'SilentlyContinue'
 #endregion
 
 #region Functions
-function Test-RecoveryServicesVault {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string]$VaultName,

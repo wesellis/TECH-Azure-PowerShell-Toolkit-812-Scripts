@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Azure Vnet Subnet Creator
@@ -61,3 +64,4 @@ Write-Host "VNet: $VNetName"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

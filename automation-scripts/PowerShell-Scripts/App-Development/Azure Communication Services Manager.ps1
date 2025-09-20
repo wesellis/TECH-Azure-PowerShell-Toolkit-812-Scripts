@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Communication Services Manager
@@ -21,8 +24,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$CommunicationServiceName,
-    [Parameter()]
-    [string]$Location = "Global",
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "Global",
     [Parameter()]
     [ValidateSet("Create", "Delete", "GetInfo", "ConfigureDomain", "ManagePhoneNumbers", "SendSMS", "SendEmail", "CreateIdentity")]
     [string]$Action = "Create",
@@ -32,12 +34,9 @@ param(
     [Parameter()]
     [ValidateSet("AzureManaged", "CustomerManaged")]
     [string]$DomainManagement = "AzureManaged",
-    [Parameter()]
-    [string]$PhoneNumberType = "TollFree",
-    [Parameter()]
-    [string]$PhoneNumberAssignmentType = "Application",
-    [Parameter()]
-    [string]$CountryCode = "US",
+    [Parameter(ValueFromPipeline)]`n    [string]$PhoneNumberType = "TollFree",
+    [Parameter(ValueFromPipeline)]`n    [string]$PhoneNumberAssignmentType = "Application",
+    [Parameter(ValueFromPipeline)]`n    [string]$CountryCode = "US",
     [Parameter()]
     [int]$PhoneNumberQuantity = 1,
     [Parameter()]
@@ -512,3 +511,4 @@ $serviceStatus = Invoke-AzureOperation -Operation {
     Write-Host "" -ForegroundColor Green
     throw
 }\n
+

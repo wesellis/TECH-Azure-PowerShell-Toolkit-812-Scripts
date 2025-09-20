@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Get Oldestsamplefolder
@@ -136,3 +139,4 @@ Write-Host " ##vso[task.setvariable variable=sample.name]$sampleName"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -18,7 +18,6 @@ param(
     [string] $ReadmeContents,
     [string] $ExpectedMarkdown
 )
-Import-Module " $PSScriptRoot/Local.psm1" -force
 $newLine = [System.Environment]::NewLine
 function DoesLineLookLikeBadgeLinkOrButton([string] $line) {
     if ($line -match " !\[" ) {
@@ -50,7 +49,9 @@ if ($fixed -notlike " *$mark*" ) {
         Write-Warning $expectedMsg
         throw "Unable to automatically fix README badges and buttons - no badges or buttons found, and the first line doesn't start with '#'"
     }
-    $lines = @($lines[0], "" , $mark) + $lines[1..$lines.Length]
+    $lines = @($lines[0], "" ,
+    [Parameter()]
+    $mark) + $lines[1..$lines.Length]
     $fixed = Convert-LinesToString $lines
 }
 else {
@@ -68,3 +69,4 @@ return $fixed.Trim() + $newLine
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

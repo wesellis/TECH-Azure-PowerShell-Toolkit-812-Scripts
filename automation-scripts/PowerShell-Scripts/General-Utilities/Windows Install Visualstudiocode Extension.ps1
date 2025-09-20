@@ -42,8 +42,8 @@ param(
     [Parameter(Mandatory = $false)] [bool] $EmitAllInstalledExtensions = $false
 )
 Set-StrictMode -Version Latest
-Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-visual-studio-marketplace-utils.psm1')
-function Confirm-UserRequest (
+[OutputType([bool])]
+ (
     [Parameter(Mandatory = $false)] [String] $extensionId = $null,
     [Parameter(Mandatory = $false)] [String] $extensionName = $null,
     [Parameter(Mandatory = $false)] [String] $extensionVsixPath = $null,
@@ -173,3 +173,4 @@ try {
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
 }\n
+

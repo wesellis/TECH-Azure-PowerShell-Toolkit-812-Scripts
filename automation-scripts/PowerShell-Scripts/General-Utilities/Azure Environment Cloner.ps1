@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Environment Cloner
@@ -29,8 +32,7 @@ param(
     [Parameter()][switch]$Force
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Environment Cloner" -Description "Clone entire Azure environments with intelligent mapping"
+if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Environment Cloner" -Description "Clone entire Azure environments with intelligent mapping"
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     # Progress stepNumber 1 -TotalSteps 8 -StepName "Validation" -Status "Validating source environment..."
@@ -150,3 +152,4 @@ $currentTags = $resource.Tags ?? @{}
 } catch {
         throw
 }\n
+

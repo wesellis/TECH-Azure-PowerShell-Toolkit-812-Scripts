@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Validate resource moves
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Move Validator
 # Validates if resources can be moved between resource groups or subscriptions
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$SourceResourceGroupName,
     [Parameter(Mandatory)]

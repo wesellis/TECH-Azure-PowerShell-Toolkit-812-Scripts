@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Check VM health
 
 .DESCRIPTION
     Check VM health\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$VmName
 )
@@ -19,3 +23,4 @@ Write-Host "Provisioning State: $($VM.ProvisioningState)"
 foreach ($Status in $VM.Statuses) {
     Write-Host "Status: $($Status.Code) - $($Status.DisplayStatus)"
 }\n
+

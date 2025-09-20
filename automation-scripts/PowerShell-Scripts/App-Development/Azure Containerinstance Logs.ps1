@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Containerinstance Logs
@@ -56,3 +59,4 @@ Write-Information -Object $Logs
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

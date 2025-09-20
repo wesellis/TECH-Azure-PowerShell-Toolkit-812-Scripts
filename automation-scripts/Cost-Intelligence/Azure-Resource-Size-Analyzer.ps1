@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Analyze resource sizes
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Size Analyzer
 # Analyze and recommend right-sizing for Azure resources
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$ResourceGroupName,
     [Parameter()]

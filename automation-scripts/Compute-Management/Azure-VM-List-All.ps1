@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     List all Azure VMs
@@ -53,7 +56,8 @@ param (
     [switch]$ShowCosts
 )
 $ErrorActionPreference = 'Stop'
-function Test-AzureConnection {
+[OutputType([bool])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -315,3 +319,4 @@ catch {
     Write-Error "Failed to retrieve VM information: $_"
     throw
 }\n
+

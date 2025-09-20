@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Invoke Azvirtualnetworksubnetconfig
@@ -19,3 +22,4 @@ $newAzVirtualNetworkSubnetConfigSplat = @{
 };
 $SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 }\n
+

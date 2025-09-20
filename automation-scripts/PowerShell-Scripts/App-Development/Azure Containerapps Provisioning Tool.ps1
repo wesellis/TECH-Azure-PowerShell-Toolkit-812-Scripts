@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Containerapps Provisioning Tool
@@ -183,3 +186,4 @@ $appJson = az containerapp show --name $ContainerAppName --resource-group $Resou
     Write-Host ""
     throw
 }\n
+

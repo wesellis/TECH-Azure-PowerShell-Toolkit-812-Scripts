@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Aks
+
 <#
 .SYNOPSIS
     Manage AKS clusters
 
 .DESCRIPTION
     Manage AKS clusters\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$AksClusterName,
     [int]$NodeCount = 3,
@@ -35,7 +39,7 @@ $params = @{
     KubernetesVersion = $KubernetesVersion
     Name = $AksClusterName
 }
-$AksCluster @params
+$AksCluster = New-AzAksCluster @params
 Write-Host "`nAKS Cluster $AksClusterName provisioned successfully!"
 Write-Host "Cluster FQDN: $($AksCluster.Fqdn)"
 Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
@@ -55,3 +59,4 @@ Write-Host "1. Install kubectl: az aks install-cli"
 Write-Host "2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
 Write-Host "3. Verify connection: kubectl get nodes"
 Write-Host "`nAKS Cluster provisioning completed at $(Get-Date)"\n
+

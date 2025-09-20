@@ -11,10 +11,15 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
+    [Parameter()]
     $publicSshKey
 )
 $ProgressPreference = 'SilentlyContinue'
-[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10, $null, ".\chocoInstall.ps1" , $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10,
+    [Parameter()]
+    $null, ".\chocoInstall.ps1" ,
+    [Parameter()]
+    $false)
 & .\chocoInstall.ps1
 choco feature enable -n allowGlobalConfirmation
 choco install --no-progress --limit-output vim
@@ -83,3 +88,4 @@ $result = Invoke-WebRequest -Uri $uri -UseBasicParsing -OutFile $outFile
         return ""
     }
 }\n
+

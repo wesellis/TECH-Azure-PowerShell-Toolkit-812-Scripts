@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Containerregistry Creator
@@ -66,3 +69,4 @@ Write-Host "Password: $($Creds.Password)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

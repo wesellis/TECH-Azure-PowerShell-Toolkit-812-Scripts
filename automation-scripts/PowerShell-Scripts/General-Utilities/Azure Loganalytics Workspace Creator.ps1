@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Loganalytics Workspace Creator
@@ -88,3 +91,4 @@ Write-Host "Custom Applications"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Webappazureingestion
@@ -65,3 +68,4 @@ $jsonTable = ConvertTo-Json -InputObject $table
 		}
     }
 }\n
+

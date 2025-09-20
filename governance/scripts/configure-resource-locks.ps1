@@ -1,5 +1,6 @@
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     configure resource locks
@@ -42,7 +43,8 @@
     Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateSet('Apply', 'Remove', 'List')]
     [string]$Action,
@@ -76,7 +78,8 @@ param(
 # Error handling
 $ErrorActionPreference = 'Stop'
 
-function Test-Connection {
+[OutputType([string])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -107,7 +110,8 @@ function Get-LockScope {
 }
 
 function Apply-ResourceLock {
-    param($Scope, $Name, $Level, $Notes)
+    [CmdletBinding(SupportsShouldProcess)]
+$Scope, $Name, $Level, $Notes)
 
     if (-not $Name) {
         $Name = "$Level-$(Get-Date -Format 'yyyyMMdd')"
@@ -151,7 +155,8 @@ function Apply-ResourceLock {
 }
 
 function Remove-ResourceLock {
-    param($LockId)
+    [CmdletBinding(SupportsShouldProcess)]
+$LockId)
 
     $lock = Get-AzResourceLock -LockId $LockId
 
@@ -162,7 +167,8 @@ function Remove-ResourceLock {
 }
 
 function Get-ResourceLocks {
-    param($Scope)
+    [CmdletBinding(SupportsShouldProcess)]
+$Scope)
 
     $locks = if ($ResourceGroupName) {
         Get-AzResourceLock -ResourceGroupName $ResourceGroupName
@@ -258,3 +264,4 @@ switch ($Action) {
         }
     }
 }\n
+

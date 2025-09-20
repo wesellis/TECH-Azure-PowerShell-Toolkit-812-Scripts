@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Blob File Uploader
@@ -77,3 +80,4 @@ Write-Host "URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

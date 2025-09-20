@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Autosnooze Disable
@@ -104,3 +107,4 @@ catch
     Write-Output "Error Occurred on AutoSnooze Disable Wrapper..."
     Write-Output $_.Exception
 }\n
+

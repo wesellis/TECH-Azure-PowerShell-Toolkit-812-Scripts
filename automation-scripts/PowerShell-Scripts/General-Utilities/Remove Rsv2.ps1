@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Remove Rsv2
@@ -213,3 +216,4 @@ $VaultDeleted = Get-AzRecoveryServicesVault -Name $VaultName -ResourceGroupName 
 if ($null -eq $VaultDeleted) {
 	Write-Host "Recovery Services Vault" $VaultName " successfully deleted"
 }\n
+

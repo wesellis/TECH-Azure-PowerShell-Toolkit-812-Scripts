@@ -17,6 +17,7 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $sampleFolder = $ENV:SAMPLE_FOLDER
 )
 Write-Host "Finding all bicep files in: $sampleFolder";
@@ -35,3 +36,4 @@ $bicepText = Get-Content -Path $f.FullName -Raw
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

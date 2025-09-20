@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azureusage Schedules Ms Mgmt
@@ -80,3 +83,4 @@ Write-Verbose "Creating schedule $ScheduleName for $RunbookScheduleTime for runb
 $Schedule = New-AzureRmAutomationSchedule -Name " $ScheduleName" -StartTime $RunbookScheduleTime -HourInterval $interval -AutomationAccountName $AAAccount -ResourceGroupName $AAResourceGroup;
 $Sch = Register-AzureRmAutomationScheduledRunbook -RunbookName $RunbookName -AutomationAccountName $AAAccount -ResourceGroupName $AAResourceGroup -ScheduleName $ScheduleName -Parameters $params
 Start-AzureRmAutomationRunbook -AutomationAccountName $AAAccount -Name $RunbookName -ResourceGroupName $AAResourceGroup -Parameters $params\n
+

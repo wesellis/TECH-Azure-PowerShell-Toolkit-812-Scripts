@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage AKS clusters
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage AKS clusters
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$ClusterName
 )

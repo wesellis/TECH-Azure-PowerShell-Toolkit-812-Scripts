@@ -9,7 +9,8 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-function Write-Host {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -1059,3 +1060,4 @@ $Results = $Results + $Job.Pipe.EndInvoke($Job.Result)
 $jobs|foreach{$_.Pipe.Dispose()}
 $runspacepool.Close()
 [gc]::Collect()\n
+

@@ -1,5 +1,6 @@
-#Requires -Module Az.Network
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     manage nsg rules
@@ -52,7 +53,8 @@
     Lists all rules in the NSG#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [string]$NSGName,
 
@@ -110,7 +112,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -120,7 +123,8 @@ function Test-AzureConnection {
 }
 
 function Get-NetworkSecurityGroup {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [string]$ResourceGroup
     )
@@ -157,7 +161,8 @@ function Test-RuleParameters {
 }
 
 function New-NSGRule {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$NSG,
         [hashtable]$RuleParams
     )
@@ -185,7 +190,8 @@ function New-NSGRule {
 }
 
 function Remove-NSGRule {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$NSG,
         [string]$Name
     )
@@ -211,7 +217,8 @@ function Remove-NSGRule {
 }
 
 function Update-NSGRule {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$NSG,
         [hashtable]$RuleParams
     )
@@ -247,7 +254,8 @@ function Update-NSGRule {
 }
 
 function Show-NSGRules {
-    param([object]$NSG)
+    [CmdletBinding(SupportsShouldProcess)]
+[object]$NSG)
 
     if ($NSG.SecurityRules.Count -eq 0) {
         Write-Host "No custom security rules found" -ForegroundColor Yellow
@@ -280,7 +288,8 @@ function Show-NSGRules {
 }
 
 function Import-RulesFromCsv {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$NSG,
         [string]$FilePath
     )
@@ -388,3 +397,4 @@ switch ($Action) {
 }
 
 Write-Host "`nOperation completed!" -ForegroundColor Green\n
+

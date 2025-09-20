@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Orphan Finder
@@ -27,8 +30,7 @@ param(
     [switch]$RemoveOrphans,
     [Parameter()]
     [switch]$GenerateReport,
-    [Parameter()]
-    [string]$OutputPath = " .\orphaned-resources-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\orphaned-resources-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv" ,
     [Parameter()]
     [switch]$IncludeCostAnalysis,
     [Parameter()]
@@ -222,3 +224,4 @@ $resourceTypeCounts = $orphanedResources | Group-Object ResourceType
     Write-Host ""
 
 } catch { throw }\n
+

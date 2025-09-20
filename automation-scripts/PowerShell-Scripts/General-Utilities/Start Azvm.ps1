@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Start Azvm
@@ -15,3 +18,4 @@ Start-AzVM -ResourceGroupName "CCI_PS_AUTOMATION_RG" -Name "PSAutomation1" ;
 $pip = Get-AzPublicIpAddress -ResourceGroupName "CCI_PS_AUTOMATION_RG" -Name "PSAutomation1-ip"
 Write-Output $pip.IpAddress
 mstsc.exe\n
+

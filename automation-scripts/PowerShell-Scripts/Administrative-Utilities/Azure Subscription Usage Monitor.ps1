@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Subscription Usage Monitor
@@ -120,3 +123,4 @@ $warningItems = @()
     Write-Host ""
 
 } catch { throw }\n
+

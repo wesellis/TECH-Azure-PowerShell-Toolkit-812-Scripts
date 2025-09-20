@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Update Templatehash
@@ -97,3 +100,4 @@ $r = Get-AzTableRow -table $cloudTable -ColumnName "RowKey" -Value " $templateHa
                 }
                 Add-AzTableRow @params
 }\n
+

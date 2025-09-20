@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Industrial Iot Orchestrator
@@ -41,14 +44,10 @@ param(
     [Parameter()]
     [ValidateSet("Manufacturing" , "Energy" , "Automotive" , "Aerospace" , "SmartBuilding" )]
     [string]$IndustryType = "Manufacturing" ,
-    [Parameter()]
-    [string]$DigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
-    [Parameter()]
-    [string]$IoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
-    [Parameter()]
-    [string]$ResourceGroupName = " rg-industrial-iot" ,
-    [Parameter()]
-    [string]$Location = "East US" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$DigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$IoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName = " rg-industrial-iot" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "East US" ,
     [Parameter()]
     [switch]$EnablePredictiveMaintenance,
     [Parameter()]
@@ -520,3 +519,4 @@ $orchestrator = [IndustrialIoTOrchestrator]::new($IndustryType, $ResourceGroupNa
     Write-Error "An error occurred: $_"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Upload Storagefile
@@ -21,3 +24,4 @@ $tempPath = " ./$($filePath -replace " /" , " _" )"
     $_.Value | Out-File $tempPath
     Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $tempPath -Blob $filePath -Force | Out-Null
 }\n
+

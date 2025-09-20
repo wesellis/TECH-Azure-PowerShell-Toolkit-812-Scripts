@@ -1,13 +1,18 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage resource groups
 
 .DESCRIPTION
     Manage resource groups
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 # Azure Resource Group Cloner
 # Clone entire resource groups with all resources
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$SourceResourceGroupName,
     [Parameter(Mandatory)]

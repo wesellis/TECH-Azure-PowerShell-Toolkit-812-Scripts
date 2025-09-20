@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create Azure resource group
@@ -10,7 +13,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Invoke-CreateAZRG {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline)]
@@ -33,3 +37,4 @@ function Invoke-CreateAZRG {
         return $ResourceGroupConfig
     }
 }\n
+

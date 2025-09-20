@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Azure Ml Workspace Provisioning Tool
@@ -164,3 +168,4 @@ Write-Host " `nML Workspace provisioning completed at $(Get-Date)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Azpublicipaddress
@@ -16,3 +19,4 @@ $newAzPublicIpAddressSplat = @{
     Sku = 'Standard'
 }
 $publicip = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat\n
+

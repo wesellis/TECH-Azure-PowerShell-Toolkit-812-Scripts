@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Sideload Createuidefinition
@@ -50,3 +53,4 @@ Start-Process " microsoft-edge:$target"
 catch {
       throw $_
 }\n
+

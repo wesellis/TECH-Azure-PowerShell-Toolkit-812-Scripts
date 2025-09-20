@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Scale VM sizes
@@ -31,7 +34,8 @@
     .\Azure-VM-Scaling-Tool.ps1 -ResourceGroupName "RG-Test" -VmName "VM-TestServer01" -NewVmSize "Standard_D2s_v3" -DryRun -ShowCostImpact
 #>
 [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -63,7 +67,8 @@ param (
 $ErrorActionPreference = 'Stop'
 # Global tracking variables
 $script:ScalingResults = @()
-function Test-AzureConnection {
+[OutputType([bool])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -78,7 +83,8 @@ function Test-AzureConnection {
     }
 }
 function Get-AvailableVMSizes {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Location
     )
     try {
@@ -91,7 +97,8 @@ function Get-AvailableVMSizes {
     }
 }
 function Test-VMSizeCompatibility {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$VM,
         [string]$TargetSize
     )
@@ -136,7 +143,8 @@ function Test-VMSizeCompatibility {
     return $compatibility
 }
 function Get-VMCostEstimate {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$VM,
         [string]$CurrentSize,
         [string]$TargetSize
@@ -157,7 +165,8 @@ function Get-VMCostEstimate {
     return $costInfo
 }
 function Wait-ForVMScaling {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name,
         [string]$TargetSize,
@@ -192,7 +201,8 @@ function Wait-ForVMScaling {
     return $false
 }
 function Scale-AzureVM {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name,
         [string]$TargetSize
@@ -306,7 +316,8 @@ function Scale-AzureVM {
     return $result
 }
 function New-ScalingReport {
-    param([object[]]$Results)
+    [CmdletBinding(SupportsShouldProcess)]
+[object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         TotalVMs = $Results.Count
@@ -401,3 +412,4 @@ $report = New-ScalingReport -Results $script:ScalingResults
 $exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
 Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
 exit $exitCode\n
+

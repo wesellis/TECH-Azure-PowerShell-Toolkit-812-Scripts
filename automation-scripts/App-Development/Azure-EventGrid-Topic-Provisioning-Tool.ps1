@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage Event Grid
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage Event Grid
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$TopicName,
     [string]$Location,

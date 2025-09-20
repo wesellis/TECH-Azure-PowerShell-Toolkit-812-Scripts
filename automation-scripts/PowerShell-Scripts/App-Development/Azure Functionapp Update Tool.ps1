@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Functionapp Update Tool
@@ -56,3 +59,4 @@ if ($PlanName) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

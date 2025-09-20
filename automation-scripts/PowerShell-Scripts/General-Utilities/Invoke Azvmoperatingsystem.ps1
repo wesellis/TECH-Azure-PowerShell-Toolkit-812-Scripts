@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvmoperatingsystem
@@ -13,7 +16,7 @@ function Invoke-AzVMOperatingSystem {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVMOperatingSystem {
-    #Region func Set-AzVMOperatingSystem -ErrorAction Stop
+    #region func-Set-AzVMOperatingSystem -ErrorAction Stop
     #Creating the OS Object for the VM
 $setAzVMOperatingSystemSplat = @{
         VM               = $VirtualMachine
@@ -27,3 +30,4 @@ $setAzVMOperatingSystemSplat = @{
 $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
     #endRegion func Set-AzVMOperatingSystem -ErrorAction Stop
 }\n
+

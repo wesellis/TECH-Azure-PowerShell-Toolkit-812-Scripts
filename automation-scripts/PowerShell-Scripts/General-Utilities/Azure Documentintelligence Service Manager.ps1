@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Documentintelligence Service Manager
@@ -18,8 +21,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$ServiceName,
-    [Parameter()]
-    [string]$Location = "East US" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$Location = "East US" ,
     [Parameter()]
     [ValidateSet("F0" , "S0" )]
     [string]$SkuName = "S0",
@@ -29,8 +31,7 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$DocumentUrl,
-    [Parameter()]
-    [string]$ModelId = " prebuilt-document" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$ModelId = " prebuilt-document" ,
     [Parameter()]
     [hashtable]$NetworkRules = @{},
     [Parameter()]
@@ -319,3 +320,4 @@ $serviceStatus = Invoke-AzureOperation -Operation {
     Write-Host ""
     throw
 }\n
+

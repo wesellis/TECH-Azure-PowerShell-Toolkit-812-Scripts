@@ -11,7 +11,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -39,8 +40,7 @@ param(
     [string]$GroupId,
     [Parameter()]
     [int]$DurationInDays = 14,
-    [Parameter()]
-    [string]$ReviewerType = "GroupOwners" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$ReviewerType = "GroupOwners" ,
     [Parameter()]
     [array]$ReviewerEmails = @()
 )
@@ -158,3 +158,4 @@ $User = Get-MgUser -Filter " userPrincipalName eq '$Email'"
     Write-Error "Access review creation failed: $($_.Exception.Message)"
     Write-Host "Tip: Use Azure Portal for creating Access Reviews"
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Deletion Tool
@@ -25,3 +28,4 @@ Remove-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Force
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

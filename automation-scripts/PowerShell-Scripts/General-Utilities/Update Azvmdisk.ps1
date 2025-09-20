@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Update Azvmdisk
@@ -39,3 +42,4 @@ $storageType = 'Standard_LRS';
 $disk = Get-AzDisk -DiskName $diskName -ResourceGroupName $rgName
 $disk.Sku = [Microsoft.Azure.Management.Compute.Models.DiskSku]::new($storageType)
 $disk | Update-AzDisk\n
+

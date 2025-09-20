@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Run Image Build
@@ -86,3 +89,4 @@ $logsBlob = Get-AzStorageBlob -Context $ctx -Container packerlogs | Where-Object
 }
 Log " === DONE"
 Start-Sleep -Seconds 15 # Appears to help with the script output being captured in full\n
+

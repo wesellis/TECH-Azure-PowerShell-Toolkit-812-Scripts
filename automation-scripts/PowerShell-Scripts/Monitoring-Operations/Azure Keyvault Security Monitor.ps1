@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Azure Keyvault Security Monitor
@@ -70,3 +73,4 @@ $Certificates = Get-AzKeyVaultCertificate -VaultName $VaultName
     Write-Host " `nVault Contents: Unable to access (check permissions)" "INFO"
 }
 Write-Host " `nKey Vault monitoring completed at $(Get-Date)" "INFO"\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Microsoft.Graph.Identity.Governance
+
 <#
 .SYNOPSIS
     Manage Azure resources
@@ -5,7 +8,8 @@
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations and operations
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ReviewName,
     [Parameter(Mandatory)]

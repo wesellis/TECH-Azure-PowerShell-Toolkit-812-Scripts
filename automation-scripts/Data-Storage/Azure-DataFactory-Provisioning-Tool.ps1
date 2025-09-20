@@ -5,7 +5,8 @@
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$FactoryName,
     [string]$Location,

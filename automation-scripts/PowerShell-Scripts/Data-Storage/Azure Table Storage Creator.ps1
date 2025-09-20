@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Table Storage Creator
@@ -70,3 +73,4 @@ Write-Host "REST API access" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

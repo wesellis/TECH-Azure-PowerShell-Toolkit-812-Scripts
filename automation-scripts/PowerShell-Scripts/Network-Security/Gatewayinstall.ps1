@@ -21,7 +21,8 @@ if (! (Test-Path($logLoc)))
 }
 $logPath = " $logLoc\tracelog.log"
 "Start to excute gatewayInstall.ps1. `n" | Out-File $logPath
-function Now-Value()
+[OutputType([string])]
+()
 {
     return (Get-Date -Format " yyyy-MM-dd HH:mm:ss" )
 }
@@ -90,7 +91,9 @@ function Download-Gateway([string] $url, [string] $gwPath)
     {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $client = New-Object -ErrorAction Stop System.Net.WebClient
-        $client.DownloadFile($url, $gwPath)
+        $client.DownloadFile($url,
+    [Parameter()]
+    $gwPath)
         Trace-Log "Download gateway successfully. Gateway loc: $gwPath"
     }
     catch
@@ -156,3 +159,4 @@ Trace-Log "Gateway download location: $gwPath"
 Download-Gateway $uri $gwPath
 Install-Gateway $gwPath
 Register-Gateway $gatewayKey\n
+

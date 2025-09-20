@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Wait Forresource
@@ -13,8 +16,11 @@ This script will query regional endpoints directly to determine if replication i
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
+    [Parameter()]
     $resourceId,
+    [Parameter()]
     $apiVersion,
+    [Parameter()]
     $timeOutSeconds = 60
 )
 $token = Get-AzAccessToken -ErrorAction Stop
@@ -78,3 +84,4 @@ $r = Invoke-RestMethod -Headers $using:headers -Method "GET" $uri
 $DeploymentScriptOutputs = @{}
 $DeploymentScriptOutputs['ResourceFound'] = $env:FOUND
 Write-Host $DeploymentScriptOutputs['ResourceFound']\n
+

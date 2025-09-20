@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm List All
@@ -32,8 +35,7 @@ $colorMap = @{
 }
 [CmdletBinding()];
 param(
-    [Parameter()]
-    [string]$SubscriptionId
+    [Parameter(ValueFromPipeline)]`n    [string]$SubscriptionId
 )
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId
@@ -50,3 +52,4 @@ foreach ($VM in $VMs) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

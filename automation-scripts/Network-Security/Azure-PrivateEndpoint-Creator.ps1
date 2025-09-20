@@ -5,7 +5,8 @@
 .DESCRIPTION
     Manage Private Endpoints
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]

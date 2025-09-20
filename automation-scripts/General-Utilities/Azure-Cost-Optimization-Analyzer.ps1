@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Analyze cost optimization
@@ -6,7 +10,8 @@
     Analyze cost optimization
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Cost Optimization Analyzer with AI Recommendations
-param (
+[CmdletBinding()]
+
     [Parameter()][string]$SubscriptionId,
     [Parameter()][string]$ResourceGroupName,
     [Parameter()][int]$AnalysisDays = 30,
@@ -16,8 +21,7 @@ param (
     [Parameter()][switch]$GenerateReport
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-try {
+if (Test-Path $modulePath) { try {
     if (-not (Get-AzContext)) { throw "Not connected to Azure" }
         # Set subscription context if specified
     if ($SubscriptionId) {

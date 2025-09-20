@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Test network connectivity
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Network Connectivity Tester
 # Test network connectivity between Azure resources
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$SourceVMName,
     [Parameter(Mandatory)]

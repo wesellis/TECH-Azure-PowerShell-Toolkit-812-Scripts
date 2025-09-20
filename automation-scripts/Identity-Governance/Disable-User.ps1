@@ -13,7 +13,8 @@ Forward email to this address
 .EXAMPLE
 .\Disable-User.ps1 -UserPrincipalName john@company.com -Manager jane@company.com
 #>
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$UserPrincipalName,
     [string]$Manager
@@ -43,3 +44,4 @@ if ($Manager) {
     }
 }
 Write-Host "User $UserPrincipalName disabled" -ForegroundColor Green\n
+

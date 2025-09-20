@@ -1,5 +1,6 @@
-#Requires -Version 5.1
-#Requires -Module Az.Blueprint
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     apply blueprint
@@ -57,7 +58,8 @@
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true, HelpMessage = "Name of the Azure Blueprint to apply")]
     [ValidateNotNullOrEmpty()]
     [string]$BlueprintName,
@@ -117,8 +119,10 @@ if (-not $LogPath) {
     $LogPath = Join-Path $env:TEMP "apply-blueprint_$timestamp.log"
 }
 
-function Write-Log {
-    param(
+[OutputType([PSCustomObject])]
+ {
+    [CmdletBinding()]
+
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Debug')]
         [string]$Level = 'Info'
@@ -151,7 +155,8 @@ function Test-AzureConnection {
 }
 
 function Get-BlueprintDefinition {
-    param(
+    [CmdletBinding()]
+
         [string]$Name,
         [string]$Version,
         [string]$SubscriptionId
@@ -187,7 +192,8 @@ function Get-BlueprintDefinition {
 }
 
 function ConvertTo-BlueprintParameters {
-    param([object]$InputParameters)
+    [CmdletBinding()]
+[object]$InputParameters)
 
     if (-not $InputParameters) {
         return @{}
@@ -220,7 +226,8 @@ function ConvertTo-BlueprintParameters {
 }
 
 function New-BlueprintAssignment {
-    param(
+    [CmdletBinding()]
+
         [object]$Blueprint,
         [string]$Name,
         [string]$SubscriptionId,
@@ -268,7 +275,8 @@ function New-BlueprintAssignment {
 }
 
 function Wait-ForBlueprintAssignment {
-    param(
+    [CmdletBinding()]
+
         [string]$AssignmentName,
         [string]$SubscriptionId,
         [int]$TimeoutMinutes
@@ -408,3 +416,4 @@ finally {
 }
 
 #endregion\n
+

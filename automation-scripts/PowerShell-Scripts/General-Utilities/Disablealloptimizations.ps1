@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Disablealloptimizations
@@ -76,3 +79,4 @@ catch
     Write-Output "Error Occurred on executing AROToolkit Redbutton Abort..."
     Write-Output $_.Exception
 }\n
+

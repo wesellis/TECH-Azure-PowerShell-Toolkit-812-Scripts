@@ -9,7 +9,8 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-function Test-RequiredPath {
+[OutputType([bool])]
+ {
     [CmdletBinding()
 try {
     # Main script execution
@@ -42,3 +43,4 @@ Get-AppxPackage -AllUsers *HP* | Remove-AppxPackage -AllUsers #the AllUsers para
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

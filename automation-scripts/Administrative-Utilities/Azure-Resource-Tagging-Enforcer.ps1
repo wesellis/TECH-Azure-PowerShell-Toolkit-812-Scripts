@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Enforce resource tagging compliance
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Tagging Enforcer
 #
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]

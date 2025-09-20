@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     14.3.1 Get virtualnetwork
@@ -21,3 +24,4 @@ $getAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }
 $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat\n
+

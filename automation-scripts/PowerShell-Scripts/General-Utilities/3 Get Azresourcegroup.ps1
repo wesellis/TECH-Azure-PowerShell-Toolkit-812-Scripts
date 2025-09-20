@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Get resourcegroup
@@ -13,3 +16,4 @@ Get-AzResourceGroup -ErrorAction Stop | Select-Object -Property ResourceGroupNam
 $ErrorActionPreference = "Stop" ;
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 Get-AzResourceGroup -ErrorAction Stop | Select-Object -Property ResourceGroupName, Location\n
+

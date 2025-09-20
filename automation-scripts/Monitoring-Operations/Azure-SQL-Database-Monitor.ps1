@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage SQL resources
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage SQL resources
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$ServerName,
     [string]$DatabaseName

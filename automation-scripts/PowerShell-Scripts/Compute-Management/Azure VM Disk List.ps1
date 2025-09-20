@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Disk List
@@ -56,3 +59,4 @@ if ($VM.StorageProfile.DataDisks.Count -gt 0) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

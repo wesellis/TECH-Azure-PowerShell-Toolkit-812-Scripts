@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Finops Automation Engine
@@ -42,8 +46,7 @@ param(
     [switch]$EnableMLPredictions,
     [Parameter()]
     [switch]$AutoShutdownNonProd,
-    [Parameter()]
-    [string]$OutputPath = " .\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
 )
 $requiredModules = @('Az.Billing', 'Az.CostManagement', 'Az.Monitor', 'Az.Resources', 'Az.Compute')
 foreach ($module in $requiredModules) {
@@ -205,7 +208,8 @@ class FinOpsEngine {
             }
             $metrics @params
 }
-function Generate-FinOpsReport {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()];
 param(
         [FinOpsEngine]$Engine,
@@ -437,3 +441,4 @@ $report = Generate-FinOpsReport -Engine $engine -Optimizations $allOptimizations
     Write-Error "An error occurred: $_"
     throw
 }\n
+

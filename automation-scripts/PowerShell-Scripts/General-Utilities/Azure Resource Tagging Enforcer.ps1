@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Tagging Enforcer
@@ -35,8 +38,7 @@ param(
     [string]$Action = "Audit" ,
     [Parameter()]
     [switch]$IncludeResourceGroups,
-    [Parameter()]
-    [string]$OutputPath = " .\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 Write-Host "Script Started" -ForegroundColor Green
 $nonCompliantResources = @()
@@ -150,3 +152,4 @@ $allowedValues = if ($RequiredTags[$tag].Count -gt 0) { " ($($RequiredTags[$tag]
     Write-Host ""
 
 } catch { throw }\n
+

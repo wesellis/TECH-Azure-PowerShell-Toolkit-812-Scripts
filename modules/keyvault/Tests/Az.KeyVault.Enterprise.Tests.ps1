@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Tests for Az.KeyVault.Enterprise module
@@ -7,8 +10,7 @@
 BeforeAll {
     # Import the module
     $ModulePath = Split-Path -Parent $PSScriptRoot
-    Import-Module "$ModulePath\Az.KeyVault.Enterprise.psd1" -Force
-    
+        
     # Mock Azure cmdlets
     Mock Get-AzKeyVault {
         [PSCustomObject]@{
@@ -315,3 +317,4 @@ Describe "Helper Function Tests" {
 }
 
 #endregion\n
+

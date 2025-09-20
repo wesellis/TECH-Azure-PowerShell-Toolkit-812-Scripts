@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Logicapp Workflow Monitor
@@ -85,3 +88,4 @@ $Duration = $Run.EndTime - $Run.StartTime
 Write-Host " `nLogic App Designer:"
 Write-Host "Portal URL: https://portal.azure.com/#@/resource$($LogicApp.Id)/designer"
 Write-Host " `nMonitoring completed at $(Get-Date)"\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Batchaccount Provisioning Tool
@@ -99,3 +102,4 @@ Write-Host " `nBatch Account provisioning completed at $(Get-Date)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

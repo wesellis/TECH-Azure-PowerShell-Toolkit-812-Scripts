@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Fetch vault ID
@@ -19,3 +22,4 @@ $getAzRecoveryServicesVaultSplat = @{
 $targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
 $targetVault.ID
 $targetVault\n
+

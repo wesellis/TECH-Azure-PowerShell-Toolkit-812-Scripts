@@ -35,7 +35,8 @@ if (Test-Path $ttkFolderInsideTemplateAnalyzer) {
 }
 $templateAnalyzer = " $templateAnalyzerFolderPath\TemplateAnalyzer.exe"
 [CmdletBinding()]
-function Analyze-Template {
+[OutputType([bool])]
+ {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -101,3 +102,4 @@ exit [int]!$passed
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Fileshare Creator
@@ -76,3 +79,4 @@ Write-Host "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

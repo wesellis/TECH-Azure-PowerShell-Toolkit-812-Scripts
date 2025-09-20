@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Azpublicipaddress
@@ -13,7 +16,7 @@ function Invoke-AzPublicIpAddress {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzPublicIpAddress {
- #Region func New-AzPublicIpAddress -ErrorAction Stop
+ #region func-New-AzPublicIpAddress -ErrorAction Stop
 $newAzPublicIpAddressSplat = @{
     Name              = $PublicIPAddressName
     DomainNameLabel   = $DNSNameLabel
@@ -26,3 +29,4 @@ $newAzPublicIpAddressSplat = @{
 };
 $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 }\n
+

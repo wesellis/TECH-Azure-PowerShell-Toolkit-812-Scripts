@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azureautomationtutorial
@@ -48,3 +51,4 @@ $Resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroup.Reso
     }
     Write-Output ("" )
 }\n
+

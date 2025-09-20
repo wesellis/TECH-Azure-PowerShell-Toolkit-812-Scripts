@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Automated Iaas Backup
@@ -70,3 +73,4 @@ $ErrorMessage = 'Failed to enable backup using ARM template.'
         $ErrorMessage = $ErrorMessage + 'Error: '
 $ErrorMessage = $ErrorMessage + $_
         Write-Error -Message $ErrorMessage -ErrorAction "Stop }"\n
+

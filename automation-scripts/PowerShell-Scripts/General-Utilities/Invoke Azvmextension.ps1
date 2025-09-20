@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvmextension
@@ -14,7 +17,7 @@ function Invoke-AzVMExtension {
 $ErrorActionPreference = "Stop";
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVMExtension {
-    #Region func Set-AzVMExtension -ErrorAction Stop
+    #region func-Set-AzVMExtension -ErrorAction Stop
 $setAzVMExtensionSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location = $LocationName
@@ -27,3 +30,4 @@ $setAzVMExtensionSplat = @{
 }
 Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
 }\n
+

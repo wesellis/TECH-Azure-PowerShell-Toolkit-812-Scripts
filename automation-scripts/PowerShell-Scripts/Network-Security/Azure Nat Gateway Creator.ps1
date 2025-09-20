@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Nat Gateway Creator
@@ -80,3 +83,4 @@ Write-Host "Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'subne
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

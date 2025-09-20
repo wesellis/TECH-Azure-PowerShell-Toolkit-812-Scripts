@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create Gen Staticwebsite

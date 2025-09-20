@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure script
@@ -17,8 +21,7 @@ param (
     [Parameter()][switch]$ExportMetrics
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "..", "modules", "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-# Script-level monitoring state (avoiding global variables)
+if (Test-Path $modulePath) { # Script-level monitoring state (avoiding global variables)
 $script:MonitoringState = @{
     Running = $false
     Resources = @{}
@@ -27,7 +30,8 @@ $script:MonitoringState = @{
     StartTime = Get-Date -ErrorAction Stop
 }
 [CmdletBinding()]
-function Start-ResourceMonitoring {
+[OutputType([bool])]
+ {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     $script:MonitoringState.Running = $true

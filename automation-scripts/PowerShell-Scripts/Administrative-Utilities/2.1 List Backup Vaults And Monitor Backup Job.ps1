@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     List Backup Vaults And Monitor Backup Job
@@ -7,8 +10,10 @@
     Wes Ellis (wes@wesellis.com)
 #>
 $ErrorActionPreference = "Stop"
-function Write-Host {
-    param(
+[OutputType([bool])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -22,7 +27,8 @@ $colorMap = @{
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
         [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$JobId,
@@ -38,7 +44,9 @@ param(
         $completed = $false
         $startTime = Get-Date -ErrorAction Stop
         while (-not $completed) {
-            Clear-Host
+            if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             $job = Get-AzRecoveryServicesBackupJob -JobId $JobId -ErrorAction Stop
             $elapsedTime = (Get-Date) - $startTime
             # Header
@@ -150,3 +158,4 @@ $jobProgress = Watch-AzureBackupJob -JobId $selectedJob.JobId -Vault $selectedVa
     Write-Error $_
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Invoke Getazvirtualnetworksubnetconfig
@@ -14,7 +17,7 @@ function Invoke-GetAzVirtualNetworkSubnetConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-GetAzVirtualNetworkSubnetConfig {
-    #Region func Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
+    #region func-Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
     #Creating the IP config for the NIC
     # $vnet = Get-AzVirtualNetwork -Name myvnet -ResourceGroupName myrg
     $getAzVirtualNetworkSubnetConfigSplat = @{
@@ -26,3 +29,4 @@ $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetwor
     Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
     #endRegion func Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
 }\n
+

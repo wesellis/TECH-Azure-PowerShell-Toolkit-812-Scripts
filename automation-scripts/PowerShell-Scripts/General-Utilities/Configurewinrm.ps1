@@ -14,7 +14,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $HostName
 )
-function Delete-WinRMListener
+[OutputType([PSObject])]
+
 {
     try
     {
@@ -93,3 +94,4 @@ $winrmHttpsPort=5986
 winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192" }'
 Configure-WinRMHttpsListener $HostName $port
 Add-FirewallException -port $winrmHttpsPort\n
+

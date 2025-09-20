@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Deploy Aztemplate
@@ -38,7 +42,8 @@ catch {
     throw
 }
 Set-StrictMode -Version 3
-function Format-ValidationOutput {
+[OutputType([PSObject])]
+ {
 function Write-Host {
     [CmdletBinding()]
 param(

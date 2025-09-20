@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Scaling Tool
@@ -48,3 +51,4 @@ Write-Host "VM $VmName has been scaled to size: $NewVmSize"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

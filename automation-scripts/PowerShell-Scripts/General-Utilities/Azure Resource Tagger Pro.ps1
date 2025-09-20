@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Tagger Pro
@@ -29,8 +32,7 @@ param(
     [Parameter()][switch]$Parallel
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Resource Tagger Pro" -Description "Enterprise bulk tagging with  features"
+if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Resource Tagger Pro" -Description "Enterprise bulk tagging with  features"
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     # Progress stepNumber 1 -TotalSteps 5 -StepName "Discovery" -Status "Finding resources..."
@@ -131,3 +133,4 @@ $results = $operations | Select-Object @{N="ResourceName" ;E={$_.Resource.Name}}
 } catch {
         throw
 }\n
+

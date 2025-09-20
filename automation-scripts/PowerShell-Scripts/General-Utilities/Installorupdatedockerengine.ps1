@@ -30,13 +30,17 @@ if (!(Get-WindowsOptionalFeature -FeatureName containers -Online).State -eq 'Ena
 }
 $latestZipFile = (Invoke-WebRequest -UseBasicParsing -uri " https://download.docker.com/win/static/stable/x86_64/" ).Content.split(" `r`n" ) |
                  Where-Object { $_ -like " <a href="" docker-*"" >docker-*" } |
-                 ForEach-Object {;  $zipName = $_.Split('" ')[1]; [Version]($zipName.SubString(7,$zipName.Length-11).Split('-')[0]) } |
+                 ForEach-Object {;  $zipName = $_.Split('" ')[1]; [Version]($zipName.SubString(7,
+    [Parameter()]
+    $zipName.Length-11).Split('-')[0]) } |
                  Sort-Object | Select-Object -Last 1 | ForEach-Object { " docker-$_.zip" }
 if (-not $latestZipFile) {
     throw "Unable to locate latest stable docker download"
 }
 $latestZipFileUrl = "https://download.docker.com/win/static/stable/x86_64/$latestZipFile"
-$latestVersion = [Version]($latestZipFile.SubString(7,$latestZipFile.Length-11))
+$latestVersion = [Version]($latestZipFile.SubString(7,
+    [Parameter()]
+    $latestZipFile.Length-11))
 Write-Host "Latest stable available Docker Engine version is $latestVersion"
 $dockerService = get-service -ErrorAction Stop docker -ErrorAction SilentlyContinue
 if ($dockerService) {
@@ -66,9 +70,13 @@ $tempFile = " $([System.IO.Path]::GetTempFileName()).zip"
 Invoke-WebRequest -UseBasicParsing -Uri $latestZipFileUrl -OutFile $tempFile
 Expand-Archive $tempFile -DestinationPath $env:ProgramFiles -Force
 Remove-Item -ErrorAction Stop $tempFi -Forcel -Forcee -Force
-$path = [System.Environment]::GetEnvironmentVariable("Path" , $envScope)
+$path = [System.Environment]::GetEnvironmentVariable("Path" ,
+    [Parameter()]
+    $envScope)
 if (" ;$path;" -notlike " *;$($env:ProgramFiles)\docker;*" ) {
-    [Environment]::SetEnvironmentVariable("Path" , "$path;$env:ProgramFiles\docker" , $envScope)
+    [Environment]::SetEnvironmentVariable("Path" , "$path;$env:ProgramFiles\docker" ,
+    [Parameter()]
+    $envScope)
 }
 if (-not $dockerService) {
     $dockerdExe = '${env:ProgramFiles}\docker\dockerd.exe'
@@ -83,3 +91,4 @@ try {
 catch {
     Write-Information -ForegroundColor Red "Could not start docker service, you might need to reboot your computer."
 }\n
+

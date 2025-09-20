@@ -34,7 +34,9 @@ if ($MName){
 	$ucfg = [Xml] (Get-Content -ErrorAction Stop " $safekitmod/$MName/conf/userconfig.xml" )
 	$ucfg.safe.service.heart.heartbeat.name=" default"
 	[xml]$rfsconf=" <rfs><replicated dir='$repdir'/></rfs>"
-	$ucfg.safe.service.AppendChild($ucfg.ImportNode($rfsconf.rfs,$true))
+	$ucfg.safe.service.AppendChild($ucfg.ImportNode($rfsconf.rfs,
+    [Parameter()]
+    $true))
 	$ucfg.Save(" $safekitmod/$MName/conf/userconfig.xml" )
 	Log " $ucfg.OuterXml"
 $res = & $safekitcmd -H "*" -E $MName
@@ -47,3 +49,4 @@ Log " end of script"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

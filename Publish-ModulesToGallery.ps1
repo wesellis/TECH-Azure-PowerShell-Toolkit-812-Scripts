@@ -15,7 +15,8 @@
     .\Publish-ModulesToGallery.ps1 -ApiKey $env:PSGALLERY_API_KEY -WhatIf
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ApiKey,
     
@@ -151,3 +152,4 @@ Write-Host ""
 Write-Host "Publish log saved to: $logPath"
 
 #endregion\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Audits Azure resources against defined policies and compliance standards with
@@ -129,7 +132,8 @@ if (-not $LogPath) {
     $LogPath = Join-Path $env:TEMP "audit-resources_$timestamp.log"
 }
 
-function Write-Log {
+[OutputType([PSCustomObject])]
+ {
     param(
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Debug')]
@@ -589,3 +593,4 @@ finally {
 }
 
 #endregion\n
+

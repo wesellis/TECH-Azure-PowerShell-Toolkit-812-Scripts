@@ -19,7 +19,8 @@ param(
     [String] $InstallationDirectory,
     [bool] $SkipNgenAfterInstall = $false
 )
-function Configure-WorkLoads {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string] $WorkLoads
@@ -140,3 +141,4 @@ $cmdLine = " $command $($options -join ' ')"
         }
     }
 }\n
+

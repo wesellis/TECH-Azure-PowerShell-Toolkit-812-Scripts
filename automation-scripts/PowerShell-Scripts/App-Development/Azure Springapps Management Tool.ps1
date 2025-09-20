@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Springapps Management Tool
@@ -118,7 +122,8 @@ param(
         ManagedBy = "AutomationScript"
     }
 )
-function Write-Verbose "Log entry"ndatory=$false)]
+[OutputType([bool])]
+ "Log entry"ndatory=$false)]
     [ValidateNotNullOrEmpty()]
     [Parameter()]
     [ValidateNotNullOrEmpty()]

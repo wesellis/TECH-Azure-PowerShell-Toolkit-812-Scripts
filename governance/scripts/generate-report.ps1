@@ -1,7 +1,6 @@
-#Requires -Module Az.Resources
-#Requires -Module Az.PolicyInsights
-#Requires -Module Az.Monitor
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     generate report
@@ -81,7 +80,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -553,3 +553,4 @@ Write-Host "Files created:" -ForegroundColor Cyan
 $reportFiles | ForEach-Object {
     Write-Host "  - $_" -ForegroundColor Green
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Demoazurefunctionpowershell
@@ -23,3 +26,4 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 $PasswordProfile=New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
 $PasswordProfile.Password="Default1234"
 New-AzureADUser -DisplayName " testAzFuncPSUserDisplayName" -GivenName " testAzFuncPSUserGivenName" -SurName " testAzFuncPSUsersurname" -UserPrincipalName 'testAzFuncPSUser@canadacomputing.ca' -UsageLocation 'CA' -MailNickName 'testAzFuncPSUser' -PasswordProfile $PasswordProfile -AccountEnabled $true\n
+

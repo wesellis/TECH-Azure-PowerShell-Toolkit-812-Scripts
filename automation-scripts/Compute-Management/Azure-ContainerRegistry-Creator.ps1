@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Creates Azure Container Registry with configuration options
@@ -20,7 +23,8 @@
     .\Azure-ContainerRegistry-Creator.ps1 -ResourceGroupName "RG-Containers" -RegistryName "myregistry123" -Location "East US"
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -109,3 +113,4 @@ try {
     Write-Error "Failed to create container registry: $_"
     throw
 }\n
+

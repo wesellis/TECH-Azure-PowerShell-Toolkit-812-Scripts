@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manages RBAC role assignments within subscriptions, management groups, or resource groups
@@ -47,7 +50,8 @@
     Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Direct')]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateSet('Add', 'Remove', 'Audit', 'Validate', 'Export', 'Import')]
     [string]$Action,
@@ -108,8 +112,10 @@ $script:ChangeLog = @()
 #endregion
 
 #region Helper-Functions
-function Write-LogEntry {
-    param(
+[OutputType([PSCustomObject])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Success')]
         [string]$Level = 'Info'
@@ -136,16 +142,14 @@ function Initialize-RequiredModules {
             Write-LogEntry "Module $module not found. Installing..." -Level Warning
             try {
                 Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser
-                Import-Module $module -Force
-                Write-LogEntry "Successfully installed module: $module" -Level Success
+                                Write-LogEntry "Successfully installed module: $module" -Level Success
             }
             catch {
                 throw "Failed to install required module $module : $_"
             }
         }
         else {
-            Import-Module $module -Force -ErrorAction SilentlyContinue
-        }
+                    }
     }
 }
 
@@ -160,7 +164,8 @@ function Get-AzureContext {
 }
 
 function Resolve-Scope {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ManagementGroupId,
         [string]$ResourceGroupName,
         [string]$ExplicitScope
@@ -184,7 +189,8 @@ function Resolve-Scope {
 }
 
 function Test-PrincipalExists {
-    param([string]$PrincipalId)
+    [CmdletBinding(SupportsShouldProcess)]
+[string]$PrincipalId)
 
     try {
         $params = @{
@@ -212,7 +218,8 @@ function Test-PrincipalExists {
 
 #region Core-Functions
 function Add-RoleAssignment {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$PrincipalId,
         [string]$RoleName,
         [string]$RoleId,
@@ -285,7 +292,8 @@ function Add-RoleAssignment {
 }
 
 function Remove-RoleAssignment {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$PrincipalId,
         [string]$RoleName,
         [string]$RoleId,
@@ -345,7 +353,8 @@ function Remove-RoleAssignment {
 }
 
 function Get-RoleAssignmentAudit {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Scope,
         [switch]$IncludeInherited,
         [switch]$CheckOrphaned
@@ -409,7 +418,8 @@ function Get-RoleAssignmentAudit {
 }
 
 function Export-RoleAssignments {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [array]$Assignments,
         [string]$Path,
         [ValidateSet('CSV', 'JSON', 'HTML')]
@@ -516,7 +526,8 @@ function Export-RoleAssignments {
 }
 
 function Import-RoleAssignments {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Path,
         [switch]$ValidateOnly
     )
@@ -597,7 +608,8 @@ function Import-RoleAssignments {
 }
 
 function Remove-OrphanedAssignments {
-    param([string]$Scope)
+    [CmdletBinding(SupportsShouldProcess)]
+[string]$Scope)
 
     try {
         Write-LogEntry "Scanning for orphaned role assignments..." -Level Info

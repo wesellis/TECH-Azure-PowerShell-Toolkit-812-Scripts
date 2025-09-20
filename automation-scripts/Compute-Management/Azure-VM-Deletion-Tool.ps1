@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Delete VMs and optionally their resources
@@ -30,7 +33,8 @@
     WARNING: This tool permanently deletes Azure resources. Use with extreme caution.
 #>
 [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -60,7 +64,8 @@ $ErrorActionPreference = 'Stop'
 # Global tracking variables
 $script:DeletionResults = @()
 $script:BackupResults = @()
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -75,7 +80,8 @@ function Test-AzureConnection {
     }
 }
 function Get-VMDependencies {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -163,7 +169,8 @@ function Get-VMDependencies {
     }
 }
 function New-DiskSnapshot {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$DiskInfo,
         [string]$VMName
     )
@@ -201,7 +208,8 @@ function New-DiskSnapshot {
     }
 }
 function Remove-VMSafely {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -330,7 +338,8 @@ function Remove-VMSafely {
     return $result
 }
 function New-DeletionReport {
-    param([object[]]$Results)
+    [CmdletBinding(SupportsShouldProcess)]
+[object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         TotalVMs = $Results.Count
@@ -425,3 +434,4 @@ if ($BackupFirst -and $script:BackupResults.Count -gt 0) {
 $exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
 Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
 exit $exitCode\n
+

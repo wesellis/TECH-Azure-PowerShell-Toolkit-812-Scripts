@@ -1,5 +1,6 @@
-#Requires -Module Az.Monitor
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     configure diagnostic settings
@@ -30,7 +31,8 @@
     Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $false)]
     [string]$ResourceId,
 
@@ -72,8 +74,10 @@ param(
 )
 
 #region Functions
-function Get-ResourceDiagnosticCategories {
-    param([string]$ResourceId)
+[OutputType([PSCustomObject])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+[string]$ResourceId)
 
     try {
         $categories = Get-AzDiagnosticSettingCategory -ResourceId $ResourceId
@@ -88,7 +92,8 @@ function Get-ResourceDiagnosticCategories {
 }
 
 function New-DiagnosticSetting {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceId,
         [string]$Name,
         [object]$Categories,
@@ -136,8 +141,7 @@ function New-DiagnosticSetting {
 
 #endregion
 
-#region Main
-try {
+#region Main-try {
     if (-not (Get-AzContext)) {
         Connect-AzAccount
     }
@@ -187,3 +191,4 @@ catch {
 }
 
 #endregion\n
+

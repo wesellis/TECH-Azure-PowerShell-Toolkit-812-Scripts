@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Multi Nic Vm Iaasv2
@@ -54,3 +57,4 @@ $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (
 $vm = Set-AzureVMOperatingSystem -VM $vm -Windows -ComputerName $vmname -Credential $cred;
 $vm = Set-AzureVMSourceImage -VM $vm -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2012-R2-Datacenter -Version " latest"
 New-AzureVM -ResourceGroupName $rgname -Location $location -Name $vmname -VM $vm;\n
+

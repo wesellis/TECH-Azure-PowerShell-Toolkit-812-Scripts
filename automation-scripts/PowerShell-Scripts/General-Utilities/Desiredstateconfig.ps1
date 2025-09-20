@@ -10,7 +10,8 @@
     Requires appropriate permissions and modules
 Configuration Main
 {
-Param ( [string] $MachineName)
+[CmdletBinding()]
+ [string] $MachineName)
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Node $MachineName
   {
@@ -72,3 +73,4 @@ Node $MachineName
     }
   }
 }\n
+

@@ -231,8 +231,10 @@ $($this.Metadata.Description)
     }
 }
 
-function Generate-FolderDocumentation {
-    param([string]$FolderPath)
+[OutputType([bool])]
+ {
+    [CmdletBinding()]
+[string]$FolderPath)
     
     $scripts = Get-ChildItem -Path $FolderPath -Filter "*.ps1" -File
     $readmeContent = @"

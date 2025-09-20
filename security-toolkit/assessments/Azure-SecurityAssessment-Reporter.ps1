@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     SecurityAssessment Reporter
@@ -8,7 +11,8 @@
 # Professional Azure automation script for
 # Version: 2.0 | Enhanced for enterprise security governance
 
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$ResourceGroupName,
     

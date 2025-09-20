@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Get available VM sizes
@@ -10,7 +13,8 @@
 .EXAMPLE
     Get-AzVmSize -Location 'CanadaCentral'
 #>
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$Location
 )

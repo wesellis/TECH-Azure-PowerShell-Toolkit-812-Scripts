@@ -8,7 +8,8 @@
 
     1.0
     Requires appropriate permissions and modules
-Param($DomainFullName,$DPMPName,$Role,$ProvisionToolPath)
+[CmdletBinding()]
+$DomainFullName,$DPMPName,$Role,$ProvisionToolPath)
 $logpath = $ProvisionToolPath+"\InstallMPlog.txt"
 $ConfigurationFile = Join-Path -Path $ProvisionToolPath -ChildPath " $Role.json"
 $Configuration = Get-Content -Path $ConfigurationFile | ConvertFrom-Json
@@ -86,3 +87,4 @@ else
 {
     " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] $MachineName is already a management point , skip running this script." | Out-File -Append $logpath
 }\n
+

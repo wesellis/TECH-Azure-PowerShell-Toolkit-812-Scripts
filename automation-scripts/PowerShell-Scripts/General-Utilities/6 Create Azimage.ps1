@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Create Azimage
@@ -32,3 +35,4 @@ $newAzImageSplat = @{
     Image = $imageConfig
 }
 $image = New-AzImage -ErrorAction Stop @newAzImageSplat\n
+

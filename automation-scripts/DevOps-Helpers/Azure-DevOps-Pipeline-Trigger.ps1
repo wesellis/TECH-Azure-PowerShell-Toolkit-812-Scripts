@@ -48,7 +48,8 @@ $ProgressPreference = 'SilentlyContinue'
 $script:ApiVersion = '6.0'
 $script:BaseUri = "https://dev.azure.com"
 #endregion
-function Write-Log {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

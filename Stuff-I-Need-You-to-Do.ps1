@@ -62,7 +62,8 @@ if (-not $ExportPath -and $OutputFormat -ne 'Console') {
 #endregion
 
 #region Functions
-function Write-TaskHeader {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string]$Title,
@@ -345,3 +346,4 @@ try {
 }
 
 #endregion\n
+

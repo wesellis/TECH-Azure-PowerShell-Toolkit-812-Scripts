@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Provisions Azure Batch accounts with optional storage integration
@@ -21,7 +25,8 @@
     .\Azure-BatchAccount-Provisioning-Tool.ps1 -ResourceGroupName "RG-Batch" -AccountName "mybatchaccount123" -Location "East US" -StorageAccountName "batchstorage123"
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -145,3 +150,4 @@ try {
     Write-Error "Failed to provision Batch account: $_"
     throw
 }\n
+

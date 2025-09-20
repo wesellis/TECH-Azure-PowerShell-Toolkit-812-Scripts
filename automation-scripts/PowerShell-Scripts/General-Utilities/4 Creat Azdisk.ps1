@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Creat Azdisk
@@ -25,3 +28,4 @@ $newAzDiskConfigSplat = @{
 }
 $diskconfig = New-AzDiskConfig -ErrorAction Stop @newAzDiskConfigSplat
 New-AzDisk -ResourceGroupName $rgName -DiskName $Diskname -Disk $diskconfig\n
+

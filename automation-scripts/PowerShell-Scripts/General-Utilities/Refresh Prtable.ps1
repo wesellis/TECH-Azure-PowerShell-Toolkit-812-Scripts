@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Refresh Prtable
@@ -47,3 +50,4 @@ $response = curl " $PRUri" | ConvertFrom-Json
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

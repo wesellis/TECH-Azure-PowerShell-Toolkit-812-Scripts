@@ -14,7 +14,8 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 $ProgressPreference = 'SilentlyContinue'
 [CmdletBinding()]
-function Get-WinGetExePath -ErrorAction Stop {
+[OutputType([PSObject])]
+ -ErrorAction Stop {
     $winGetCmd = Get-Command -ErrorAction Stop 'winget.exe' -ErrorAction SilentlyContinue
     if ($winGetCmd) {
         $winGetExe = $winGetCmd.Path
@@ -25,8 +26,7 @@ function Get-WinGetExePath -ErrorAction Stop {
     return $winGetExe
 }
 try {
-    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-retry-utils.psm1')
-    # PowerShell 7 is required for Microsoft.WinGet.* modules
+        # PowerShell 7 is required for Microsoft.WinGet.* modules
     $pwsh7Cmd = Get-Command -ErrorAction Stop 'pwsh.exe' -ErrorAction SilentlyContinue
     if ($pwsh7Cmd) {
         $pwsh7Exe = $pwsh7Cmd.Path
@@ -88,3 +88,4 @@ catch {
     # Do not block image creation if WinGet pre-installation fails. 'configure-winget' logon task will attempt to repait WinGet it needed.
     Write-Host " !!! [WARN] Unhandled exception:`n$_`n$($_.ScriptStackTrace)"
 }\n
+

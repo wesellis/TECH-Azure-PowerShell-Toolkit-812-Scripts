@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Bootdiagnostics Enabler
@@ -62,3 +65,4 @@ Write-Host "Status: Enabled"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

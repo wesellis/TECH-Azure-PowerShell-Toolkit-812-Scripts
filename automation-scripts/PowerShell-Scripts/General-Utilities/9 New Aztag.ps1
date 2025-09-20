@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Aztag
@@ -29,3 +32,4 @@ $tags = @{"Team" ="Compliance" ; "Environment" ="Production" }
 New-AzTag -ResourceId $resource.id -Tag $tags
 $tags = @{"Dept" ="Finance" ; "Status" ="Normal" }
 Update-AzTag -ResourceId $resource.id -Tag $tags -Operation Merge\n
+

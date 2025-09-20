@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Defender For Cloud Automation
@@ -39,8 +42,7 @@ param(
     [string]$MinimumAlertSeverity = "Medium",
     [Parameter()]
     [switch]$EnableMonitoring,
-    [Parameter()]
-    [string]$OutputPath = ".\defender-report.json"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = ".\defender-report.json"
 )
 Write-Host "Script Started" -ForegroundColor Green
 try {

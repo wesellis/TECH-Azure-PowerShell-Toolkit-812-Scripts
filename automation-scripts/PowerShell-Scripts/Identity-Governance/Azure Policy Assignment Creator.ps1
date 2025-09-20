@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Policy Assignment Creator
@@ -96,3 +99,4 @@ Write-Host " 4. Create exemptions if required"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

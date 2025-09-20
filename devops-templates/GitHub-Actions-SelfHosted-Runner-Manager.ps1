@@ -1,3 +1,9 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     GitHub Actions Self-Hosted Runner Enterprise Management Tool
@@ -131,19 +137,15 @@ param(
 
 # Import required modules
 try {
-    Import-Module Az.Accounts -Force -ErrorAction Stop
-    Import-Module Az.Resources -Force -ErrorAction Stop
-    Import-Module Az.Compute -Force -ErrorAction Stop
-    Import-Module Az.Network -Force -ErrorAction Stop
-    Import-Module Az.KeyVault -Force -ErrorAction Stop
-    Write-Host "Successfully imported required Azure modules"
+                        Write-Host "Successfully imported required Azure modules"
 } catch {
     Write-Error "Failed to import required modules: $($_.Exception.Message)"
     throw
 }
 
 # Enhanced logging function
-function Write-EnhancedLog {
+[OutputType([PSCustomObject])]
+ {
     param(
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]

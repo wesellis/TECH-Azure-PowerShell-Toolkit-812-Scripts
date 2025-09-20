@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure script
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -26,10 +30,11 @@ $params = @{
     ErrorAction = "Stop"
     Name = $AvailabilitySetName
 }
-$AvailabilitySet @params
+$AvailabilitySet = New-AzAvailabilitySet @params
 Write-Host "Availability Set created successfully:"
 Write-Host "Name: $($AvailabilitySet.Name)"
 Write-Host "Location: $($AvailabilitySet.Location)"
 Write-Host "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
 Write-Host "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
 Write-Host "SKU: $($AvailabilitySet.Sku)"\n
+

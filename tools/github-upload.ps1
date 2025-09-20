@@ -78,7 +78,8 @@ $uploadStats = @{
 #endregion
 
 #region Functions
-function Write-UploadHeader {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string]$Title
@@ -354,3 +355,4 @@ catch {
 }
 
 #endregion\n
+

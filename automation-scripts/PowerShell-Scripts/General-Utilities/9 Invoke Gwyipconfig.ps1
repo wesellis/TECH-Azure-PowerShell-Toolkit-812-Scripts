@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Invoke Gwyipconfig
@@ -21,7 +24,8 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     Output (if any)
     General notes
 [CmdletBinding()]
-function Invoke-AzVirtualNetworkGatewayIpConfig {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 function Write-Host {
     param(
@@ -52,8 +56,7 @@ $GatewayPublicIPConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop @
         }
         catch {
             Write-Error 'An Error happened when .. script execution will be halted'
-            #Region CatchAll
-            Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
+            #region CatchAll-Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
             Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
             $PSItem
             Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red

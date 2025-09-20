@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Get Azureresourcereport
@@ -16,7 +19,8 @@ if (-not (Get-Module -ListAvailable -Name PSWriteHTML)) {
 }
 Import-Module PSWriteHTML
 [CmdletBinding()]
-function Get-ResourceReport -ErrorAction Stop {
+[OutputType([PSObject])]
+ -ErrorAction Stop {
     $reportData = @{
         Subscriptions = @()
         TotalStats = @{
@@ -184,3 +188,4 @@ catch {
     Write-Host "An error occurred: $_" -ForegroundColor Red
     Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
 }\n
+

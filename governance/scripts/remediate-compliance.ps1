@@ -1,6 +1,6 @@
-#Requires -Module Az.PolicyInsights
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     remediate compliance
@@ -42,7 +42,8 @@
     Preview remediation actions for production resource group#>
 
 [CmdletBinding(SupportsShouldProcess)]
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
@@ -80,7 +81,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -90,7 +92,8 @@ function Test-AzureConnection {
 }
 
 function Get-RemediableViolations {
-    param(
+    [CmdletBinding()]
+
         [string]$PolicyAssignment,
         [string]$ResourceGroup,
         [int]$MaxResults,
@@ -141,7 +144,8 @@ function Get-RemediableViolations {
 }
 
 function Get-PolicyAssignments {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup
     )
 
@@ -168,7 +172,8 @@ function Get-PolicyAssignments {
 }
 
 function New-RemediationTask {
-    param(
+    [CmdletBinding()]
+
         [object]$PolicyAssignment,
         [array]$Violations,
         [string]$Mode
@@ -208,7 +213,8 @@ function New-RemediationTask {
 }
 
 function Wait-ForRemediationCompletion {
-    param(
+    [CmdletBinding()]
+
         [array]$RemediationTasks,
         [int]$TimeoutMinutes
     )
@@ -257,7 +263,8 @@ function Wait-ForRemediationCompletion {
 }
 
 function Show-RemediationSummary {
-    param(
+    [CmdletBinding()]
+
         [array]$Violations,
         [array]$RemediationTasks,
         [bool]$IsDryRun
@@ -295,7 +302,8 @@ function Show-RemediationSummary {
 }
 
 function Get-RemediationGuidance {
-    param([array]$Violations)
+    [CmdletBinding()]
+[array]$Violations)
 
     $guidance = @()
 
@@ -407,3 +415,4 @@ return @{
     RemediationTasks = $remediationTasks
     Guidance = $guidance
 }\n
+

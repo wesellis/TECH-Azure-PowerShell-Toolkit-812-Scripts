@@ -11,14 +11,25 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
+    [Parameter()]
     $userName,
+    [Parameter()]
     $password,
+    [Parameter()]
     $authType,
+    [Parameter()]
     $adouPath,
-    $ip, $port,
+    [Parameter()]
+    $ip,
+    [Parameter()]
+    $port,
+    [Parameter()]
     $domainFqdn,
+    [Parameter()]
     $ifdeleteadou,
+    [Parameter()]
     $deploymentUserName,
+    [Parameter()]
     $deploymentUserPassword
 )
 $script:ErrorActionPreference = 'Stop';
@@ -27,7 +38,9 @@ for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
         $domainShort = $domainFqdn.Split(" ." )[0]
-        $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" , $secpasswd
+        $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" ,
+    [Parameter()]
+    $secpasswd
         if ($authType -eq "CredSSP" ) {
             try {
                 Enable-WSManCredSSP -Role Client -DelegateComputer $ip -Force
@@ -58,7 +71,9 @@ for ($count = 0; $count -lt 6; $count++) {
             }
         }
 $deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
-$lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
+$lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName,
+    [Parameter()]
+    $deploymentSecPasswd
         Invoke-Command -Session $session -ScriptBlock {
             echo "Install Nuget Provider"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false
@@ -84,3 +99,4 @@ $lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredentia
 if ($count -ge 6) {
     throw "Failed to provision AD after 6 retries."
 }\n
+

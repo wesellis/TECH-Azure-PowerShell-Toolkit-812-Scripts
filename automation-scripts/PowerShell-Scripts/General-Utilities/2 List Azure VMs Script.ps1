@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     List Azure VMs Script
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Get-AzureVMDetails -ErrorAction Stop {
+[OutputType([bool])]
+ -ErrorAction Stop {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -94,3 +98,4 @@ catch {
     Write-Host "Error during VM inventory: $_" -ForegroundColor Red
     throw
 }\n
+

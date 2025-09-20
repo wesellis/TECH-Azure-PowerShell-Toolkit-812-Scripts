@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Tests for Az.Monitoring.Enterprise module
@@ -7,8 +10,7 @@
 BeforeAll {
     # Import the module
     $ModulePath = Split-Path -Parent $PSScriptRoot
-    Import-Module "$ModulePath\Az.Monitoring.Enterprise.psd1" -Force
-    
+        
     # Mock Azure cmdlets
     Mock Get-AzOperationalInsightsWorkspace {
         [PSCustomObject]@{
@@ -248,7 +250,8 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         
         BeforeEach {
             Mock New-AzActionGroupReceiver -ErrorAction Stop {
-                param($Name, [switch]$EmailReceiver, [switch]$SmsReceiver, [switch]$WebhookReceiver, $EmailAddress, $CountryCode, $PhoneNumber, $ServiceUri)
+                [CmdletBinding(SupportsShouldProcess)]
+$Name, [switch]$EmailReceiver, [switch]$SmsReceiver, [switch]$WebhookReceiver, $EmailAddress, $CountryCode, $PhoneNumber, $ServiceUri)
                 [PSCustomObject]@{
                     Name = $Name
                     Type = if ($EmailReceiver) { "Email" } elseif ($SmsReceiver) { "SMS" } else { "Webhook" }
@@ -422,3 +425,4 @@ Describe "Helper Function Tests" {
 }
 
 #endregion\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Copy Badges
@@ -87,3 +90,4 @@ $r | Remove-AzTableRow -Table $cloudTablePRs
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Arotoolkit Autoupdate
@@ -71,3 +74,4 @@ catch
     Write-Output "Error Occurred in the AutoUpdate wrapper runbook..."
     Write-Output $_.Exception
 }\n
+

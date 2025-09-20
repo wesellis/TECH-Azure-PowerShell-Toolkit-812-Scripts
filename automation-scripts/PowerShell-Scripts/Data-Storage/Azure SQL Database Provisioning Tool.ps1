@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Sql
+
 <#
 .SYNOPSIS
     Azure Sql Database Provisioning Tool
@@ -102,3 +105,4 @@ Write-Host " `nSQL Database provisioning completed at $(Get-Date)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

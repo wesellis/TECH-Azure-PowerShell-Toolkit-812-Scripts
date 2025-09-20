@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Sql Database Monitor
@@ -74,3 +77,4 @@ Write-Host " `nSQL Database monitoring completed at $(Get-Date)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

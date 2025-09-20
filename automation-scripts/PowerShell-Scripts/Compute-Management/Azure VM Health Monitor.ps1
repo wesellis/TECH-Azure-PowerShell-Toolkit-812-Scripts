@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Health Monitor
@@ -50,3 +53,4 @@ foreach ($Status in $VM.Statuses) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

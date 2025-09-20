@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Switchmysqlnatrule
@@ -32,3 +35,4 @@ Set-AzureNetworkInterface -NetworkInterface $nic1
 $nic0.IpConfigurations[0].LoadBalancerInboundNatRules.add($rule1)
 Set-AzureNetworkInterface -NetworkInterface $nic0
 exit 0\n
+

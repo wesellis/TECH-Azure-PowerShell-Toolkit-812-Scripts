@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure AI-Powered Cost Optimization and Analytics Tool
@@ -47,11 +50,9 @@
 
 [CmdletBinding()]
 param(
-    [Parameter()]
-    [string]$ResourceGroupName,
+    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName,
     
-    [Parameter()]
-    [string]$SubscriptionId,
+    [Parameter(ValueFromPipeline)]`n    [string]$SubscriptionId,
     
     [Parameter(Mandatory)]
     [ValidateSet('Analyze', 'Optimize', 'Forecast', 'Report', 'Alert', 'Recommend', 'Monitor')]
@@ -84,14 +85,12 @@ param(
     [ValidateSet('Console', 'JSON', 'CSV', 'Excel', 'PowerBI')]
     [string]$OutputFormat = 'Console',
     
-    [Parameter()]
-    [string]$OutputPath = '.\CostReports',
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = '.\CostReports',
     
     [Parameter()]
     [switch]$EnableSlackNotifications,
     
-    [Parameter()]
-    [string]$SlackWebhookUrl,
+    [Parameter(ValueFromPipeline)]`n    [string]$SlackWebhookUrl,
     
     [Parameter()]
     [switch]$EnableEmailNotifications,
@@ -109,11 +108,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 # Import required modules
 try {
-    Import-Module Az.Accounts -Force -ErrorAction Stop
-    Import-Module Az.Resources -Force -ErrorAction Stop
-    Import-Module Az.Billing -Force -ErrorAction Stop
-    Import-Module Az.CostManagement -Force -ErrorAction Stop
-    Write-Host "[SUCCESS] Successfully imported required Azure modules" -ForegroundColor Green
+                    Write-Host "[SUCCESS] Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "[ERROR] Failed to import required modules: $($_.Exception.Message)"
     throw
@@ -129,7 +124,8 @@ $script:Insights = @()
 
 #region Functions
 
-function Write-EnhancedLog {
+[OutputType([PSCustomObject])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

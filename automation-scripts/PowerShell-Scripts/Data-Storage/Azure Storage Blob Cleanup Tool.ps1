@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Storage Blob Cleanup Tool
@@ -28,3 +31,4 @@ Remove-AzStorageBlob -ResourceGroupName $ResourceGroupName -StorageAccountName $
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

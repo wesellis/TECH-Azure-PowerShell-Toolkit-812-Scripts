@@ -45,7 +45,8 @@ param(
     [string]$TemplateAnalyzerOutputFilePath = " $ENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
     [string]$TemplateAnalyzerLogsContainerName = " $ENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
 )
-function Get-Regression(
+[OutputType([bool])]
+(
     [object] $oldRow,
     [object] $newRow,
     [string] $propertyName
@@ -559,3 +560,4 @@ Snippet that will be placed in the README.md files
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/FairfaxDeployment.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/BestPracticeResult.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/CredScanResult.svg" />&nbsp;\n
+

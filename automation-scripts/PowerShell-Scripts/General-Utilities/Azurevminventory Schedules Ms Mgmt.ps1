@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azurevminventory Schedules Ms Mgmt
@@ -230,3 +233,4 @@ $RunbookStartTime = $RunbookStartTime.AddMinutes($frequency)
         Start-AzureRmAutomationRunbook -AutomationAccountName $AAAccount -Name $RunbookName -ResourceGroupName $AAResourceGroup -Parameters $params
     }
 }\n
+

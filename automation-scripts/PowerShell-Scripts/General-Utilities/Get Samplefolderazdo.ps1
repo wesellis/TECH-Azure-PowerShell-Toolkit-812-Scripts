@@ -20,7 +20,9 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $RepoRoot = $ENV:BUILD_REPOSITORY_LOCALPATH,
+    [Parameter()]
     $BuildSourcesDirectory = $ENV:BUILD_SOURCESDIRECTORY
 )
 $ChangedFiles = git diff --name-status --diff-filter AMR origin/main # --name-only -- .
@@ -68,3 +70,4 @@ Write-Host " ##vso[task.setvariable variable=sample.name]$sampleName"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

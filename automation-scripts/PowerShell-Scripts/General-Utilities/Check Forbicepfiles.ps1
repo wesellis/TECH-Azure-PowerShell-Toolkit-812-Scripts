@@ -17,10 +17,15 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [Parameter()]
     $mainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME,
+    [Parameter()]
     $prereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+    [Parameter()]
     $prereqTemplateFileName = $ENV:PREREQ_TEMPLATE_FILENAME_JSON,
+    [Parameter()]
     $ttkFolder = $ENV:TTK_FOLDER
 )
 Write-Host "Checking for bicep files in: $sampleFolder"
@@ -51,3 +56,4 @@ if($isBicepFileFound -or $isBicepPrereqFileFound){
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

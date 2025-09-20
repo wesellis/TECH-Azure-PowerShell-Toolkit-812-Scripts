@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Role Assignment Manager
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -71,3 +75,4 @@ Write-Host "Reader - Read-only access"
 Write-Host "User Access Administrator - Manage user access"
 Write-Host "Security Administrator - Security permissions"
 Write-Host "Backup Contributor - Backup management"\n
+

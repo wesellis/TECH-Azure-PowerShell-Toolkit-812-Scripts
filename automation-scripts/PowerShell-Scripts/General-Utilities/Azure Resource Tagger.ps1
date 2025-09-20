@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Tagger
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -83,3 +87,4 @@ if (-not $WhatIf) {
     Write-Host " `n[OK] Successfully tagged $taggedCount resources" -ForegroundColor Green
 }
 Write-Host " `nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Rediscache Provisioning Tool
@@ -80,3 +83,4 @@ Write-Host " `nRedis Cache provisioning completed at $(Get-Date)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Backup Azure VM Script
@@ -12,7 +15,8 @@
 #>
 
 [CmdletBinding()]
-function New-AzureVMBackup {
+[OutputType([bool])]
+ {
 function Write-Host {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Appservice Provisioning Tool
@@ -86,3 +89,4 @@ Write-Host " `nApp Service provisioning completed at $(Get-Date)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

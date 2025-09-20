@@ -6,7 +6,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Launch-AzureToolkit.ps1
 # Interactive CLI launcher for Azure Enterprise Toolkit scripts
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [switch]$GUI,
     [switch]$ListOnly,
     [string]$SearchTerm,
@@ -109,7 +110,9 @@ class ScriptLauncher {
     }
     
     [void] ShowInteractiveMenu() {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host @"
 
 �         Azure Enterprise Toolkit - Script Launcher          �
@@ -146,7 +149,9 @@ class ScriptLauncher {
     }
     
     [void] BrowseByCategory() {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Categories:" -ForegroundColor Cyan
         $i = 1
         $categoryList = $this.Categories.Keys | Sort-Object
@@ -165,7 +170,9 @@ class ScriptLauncher {
     }
     
     [void] ShowScriptsInCategory([string]$Category) {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Scripts in $Category:" -ForegroundColor Cyan
         $scripts = $this.Categories[$Category] | Sort-Object Name
         
@@ -215,7 +222,9 @@ class ScriptLauncher {
             return
         }
         
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Search Results for '$searchTerm':" -ForegroundColor Cyan
         for ($i = 0; $i -lt $results.Count; $i++) {
             $script = $results[$i]
@@ -233,7 +242,9 @@ class ScriptLauncher {
     }
     
     [void] LaunchScript([hashtable]$Script) {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Launching: $($Script.Name)" -ForegroundColor Cyan
         Write-Host "Description: $($Script.Description)" -ForegroundColor Gray
         
@@ -293,7 +304,9 @@ class ScriptLauncher {
             return
         }
         
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Favorite Scripts:" -ForegroundColor Cyan
         $favScripts = $this.Scripts | Where-Object { $_.Path -in $this.Favorites }
         
@@ -319,7 +332,9 @@ class ScriptLauncher {
             return
         }
         
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Recent Script Executions:" -ForegroundColor Cyan
         $recent = $this.History | Select-Object -Last 10
         
@@ -332,7 +347,9 @@ class ScriptLauncher {
     }
     
     [void] ShowStatistics() {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Repository Statistics:" -ForegroundColor Cyan
         Write-Host "Total Scripts: $($this.Scripts.Count)" -ForegroundColor White
         Write-Host "Categories: $($this.Categories.Count)" -ForegroundColor White
@@ -349,7 +366,9 @@ class ScriptLauncher {
     }
     
     [void] ShowScriptInfo([hashtable]$Script) {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Script Information:" -ForegroundColor Cyan
         Write-Host "Name: $($Script.Name)" -ForegroundColor White
         Write-Host "Category: $($Script.Category)" -ForegroundColor White
@@ -390,7 +409,9 @@ class ScriptLauncher {
     }
     
     [void] Configuration() {
-        Clear-Host
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Write-Host "Configuration:" -ForegroundColor Cyan
         Write-Host "1. Clear History" -ForegroundColor White
         Write-Host "2. Clear Favorites" -ForegroundColor White

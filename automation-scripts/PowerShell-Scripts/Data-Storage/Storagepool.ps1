@@ -7,7 +7,8 @@
     Requires appropriate permissions and modules
 Configuration StoragePool
 {
-  param ($MachineName)
+  [CmdletBinding()]
+$MachineName)
   Node $MachineName
   {
 	Script ConfigureStoragePool {
@@ -28,3 +29,4 @@ Configuration StoragePool
 This must return a hash table #> }          }
   }
 }\n
+

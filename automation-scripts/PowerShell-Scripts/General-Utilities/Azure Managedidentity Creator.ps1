@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Managedidentity Creator
@@ -59,3 +62,4 @@ try {
 } catch {
     Write-Error "Failed to create managed identity: $($_.Exception.Message)"
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Tests for Az.Security.Enterprise module
@@ -7,8 +10,7 @@
 BeforeAll {
     # Import the module
     $ModulePath = Split-Path -Parent $PSScriptRoot
-    Import-Module "$ModulePath\Az.Security.Enterprise.psd1" -Force
-    
+        
     # Mock Azure cmdlets
     Mock Get-AzContext {
         [PSCustomObject]@{
@@ -219,3 +221,4 @@ Describe "Helper Function Tests" {
 }
 
 #endregion\n
+

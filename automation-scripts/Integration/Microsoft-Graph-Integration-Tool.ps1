@@ -37,7 +37,8 @@ param(
     [Parameter(HelpMessage="Include detailed output properties")]
     [switch]$DetailedOutput
 )
-function Write-Log {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

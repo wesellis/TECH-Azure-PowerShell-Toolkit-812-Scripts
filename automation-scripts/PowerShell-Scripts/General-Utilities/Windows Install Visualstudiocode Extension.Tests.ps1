@@ -12,18 +12,17 @@ Set-StrictMode -Version Latest
 BeforeAll {
     $script:IsUnderTest = $true
     $retryModuleName = 'windows-retry-utils'
-    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot)
-try {
+    try {
     # Main script execution
 " _common/$retryModuleName.psm1" ) -DisableNameChecking
     $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'
-    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) " _common/$marketplaceModuleName.psm1" ) -DisableNameChecking
-    . (Join-Path $PSScriptRoot " windows-install-visualstudiocode-extension.ps1" )
+        . (Join-Path $PSScriptRoot " windows-install-visualstudiocode-extension.ps1" )
     $script:currentAttempt = 0
     $script:sleepTimes = @()
     Mock -CommandName Start-Sleep -ModuleName $retryModuleName -MockWith {
 [CmdletBinding()]
-function Write-Host {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -130,3 +129,4 @@ function Get-ChildItem -ErrorAction Stop {}
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

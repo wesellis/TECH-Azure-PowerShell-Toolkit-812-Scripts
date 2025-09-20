@@ -17,14 +17,18 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $ttkFolder = $ENV:TTK_FOLDER,
+    [Parameter()]
     $bicepUri = $ENV:BICEP_URI
 )
 $installPath = " $ttkFolder\bicep"
 $bicepFolder = New-Item -ItemType Directory -Path $installPath -Force;
 $bicepPath = " $bicepFolder\bicep.exe"
 Write-Host " $bicepPath"
-(New-Object -ErrorAction Stop Net.WebClient).DownloadFile($bicepUri, $bicepPath)
+(New-Object -ErrorAction Stop Net.WebClient).DownloadFile($bicepUri,
+    [Parameter()]
+    $bicepPath)
 if (!(Test-Path $bicepPath)) {
     Write-Error "Couldn't find downloaded file $bicepPath"
 }
@@ -44,3 +48,4 @@ Write-Host " ##vso[task.setvariable variable=bicep.version]$bicepVersion"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

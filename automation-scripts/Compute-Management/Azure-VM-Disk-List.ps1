@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     List VM disks
 
 .DESCRIPTION
     List VM disks\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -24,3 +28,4 @@ if ($VM.StorageProfile.DataDisks.Count -gt 0) {
 } else {
     Write-Host "`nNo data disks attached."
 }\n
+

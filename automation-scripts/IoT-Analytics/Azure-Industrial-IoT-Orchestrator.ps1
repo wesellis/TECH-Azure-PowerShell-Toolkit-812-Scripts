@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Enterprise Industrial IoT orchestration platform for Azure Digital Twins and IoT Hub management.
@@ -22,7 +25,8 @@
     Date: June 2024    Requires: Az.DigitalTwins, Az.IotHub, Az.TimeSeriesInsights modules
 #>
 [CmdletBinding(SupportsShouldProcess=$true)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [ValidateSet("Deploy", "Monitor", "Analyze", "Predict")]
     [string]$OperationMode,

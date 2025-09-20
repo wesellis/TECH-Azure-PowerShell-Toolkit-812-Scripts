@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Security compliance scan
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Check Azure security assessments and compliance
     Author: Wes Ellis (wes@wesellis.com)#>
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [ValidateSet("All", "CIS", "PCI", "SOC2", "ISO27001", "NIST")]

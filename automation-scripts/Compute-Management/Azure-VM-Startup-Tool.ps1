@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Starts Azure Virtual Machines
@@ -23,7 +26,8 @@
     .\Azure-VM-Startup-Tool.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01" -Wait
 #>
 [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -42,7 +46,8 @@ param (
     [switch]$Force
 )
 $ErrorActionPreference = 'Stop'
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -57,7 +62,8 @@ function Test-AzureConnection {
     }
 }
 function Get-VMStartupState {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -75,7 +81,8 @@ function Get-VMStartupState {
     }
 }
 function Start-AzureVM {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -118,7 +125,8 @@ function Start-AzureVM {
     }
 }
 function Wait-ForVMStartup {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup,
         [string]$Name,
         [int]$TimeoutMinutes
@@ -212,3 +220,4 @@ Write-Host "`nOperation completed!" -ForegroundColor Green
 # Exit with appropriate code
 $exitCode = if ($failed -gt 0) { 1 } else { 0 }
 exit $exitCode\n
+

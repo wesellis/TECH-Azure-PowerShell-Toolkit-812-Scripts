@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Aznetworkinterfaceipconfig
@@ -14,7 +17,7 @@ function Invoke-AzNetworkInterfaceIpConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzNetworkInterfaceIpConfig {
-    #Region func New-AzNetworkInterfaceIpConfig;
+    #region func-New-AzNetworkInterfaceIpConfig;
 $newAzNetworkInterfaceIpConfigSplat = @{
     Name                     = $IPConfigName
     Subnet                   = $Subnet
@@ -26,3 +29,4 @@ $newAzNetworkInterfaceIpConfigSplat = @{
 }
 $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 }\n
+

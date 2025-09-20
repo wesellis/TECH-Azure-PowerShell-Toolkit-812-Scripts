@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Disk Encryption Status Checker
@@ -19,8 +22,7 @@ param(
     [switch]$ShowUnencrypted,
     [Parameter()]
     [switch]$ExportReport,
-    [Parameter()]
-    [string]$OutputPath = " .\encryption-status-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\encryption-status-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
 Write-Host "Script Started" -ForegroundColor Green
 try {
@@ -80,3 +82,4 @@ $encryptionRate = if ($totalResources -gt 0) { [math]::Round(($encryptedResource
     Write-Host "Encrypted: $encryptedResources" -ForegroundColor Green
     Write-Host "Encryption Rate: $encryptionRate%" -ForegroundColor Cyan
 } catch { throw }\n
+

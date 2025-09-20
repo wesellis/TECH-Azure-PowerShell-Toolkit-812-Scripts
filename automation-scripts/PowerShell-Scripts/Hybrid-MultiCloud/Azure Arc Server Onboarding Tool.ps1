@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Arc Server Onboarding Tool
@@ -85,15 +88,13 @@ param(
     [string]$OperatingSystem = "Both"
 )
 try {
-    Import-Module Az.Accounts -Force -ErrorAction Stop
-    Import-Module Az.Resources -Force -ErrorAction Stop
-    Import-Module Az.ConnectedMachine -Force -ErrorAction Stop
-    Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
+                Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "  Failed to import required modules: $($_.Exception.Message)"
     throw
 }
-function Write-Verbose "Log entry"ndatory=$false)]
+[OutputType([bool])]
+ "Log entry"ndatory=$false)]
     [ValidateNotNullOrEmpty()]
     [Parameter()]
     [ValidateNotNullOrEmpty()]

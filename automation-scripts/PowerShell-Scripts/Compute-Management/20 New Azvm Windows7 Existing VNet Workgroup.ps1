@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create VM Windows7 Existing VNet Workgroup
@@ -232,3 +237,4 @@ Write-Information \'The VM is now ready.... here is your login details\'
 Write-Information \'username:\' $VMLocalAdminUser
 Write-Information \'Password:\' $VMLocalAdminPassword
 Write-Information \'DNSName:\' $DNSNameLabel'.canadacentral.cloudapp.azure.com'\n
+

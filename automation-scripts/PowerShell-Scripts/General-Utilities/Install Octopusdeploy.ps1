@@ -29,7 +29,8 @@ $msiLogPath = $installBasePath + $msiFileName + '.log'
 $installerLogPath = $installBasePath + 'Install-OctopusDeploy.ps1.log'
 $octopusLicenseUrl = "https://octopusdeploy.com/api/licenses/trial"
 $OFS = " `r`n"
-function Write-Log
+[OutputType([bool])]
+
 {
   [CmdletBinding()]
 param(
@@ -87,14 +88,20 @@ function Install-OctopusDeploy
   Write-Log "Install Octopus Deploy"
   Write-Log ""
   Write-Log "Downloading Octopus Deploy installer '$downloadUrl' to '$msiPath' ..."
-  (New-Object -ErrorAction Stop Net.WebClient).DownloadFile($downloadUrl, $msiPath)
+  (New-Object -ErrorAction Stop Net.WebClient).DownloadFile($downloadUrl,
+    [Parameter()]
+    $msiPath)
   Write-Log " done."
   Write-Log "Installing via '$msiPath' ..."
   $exe = 'msiexec.exe'
   $args = @(
     '/qn',
-    '/i', $msiPath,
-    '/l*v', $msiLogPath
+    '/i',
+    [Parameter()]
+    $msiPath,
+    '/l*v',
+    [Parameter()]
+    $msiLogPath
   )
   $output = .$exe $args
   Write-CommandOutput $output
@@ -184,7 +191,9 @@ $postParams = @{ FullName=" $($config.licenseFullName)" ;Organization=" $($confi
     'license',
     '--console',
     '--instance', 'OctopusServer',
-    '--licenseBase64', $licenseBase64
+    '--licenseBase64',
+    [Parameter()]
+    $licenseBase64
   )
   $output = .$exe $args
   Write-CommandOutput $output
@@ -251,3 +260,4 @@ catch
 {
   Write-Log $_
 }\n
+

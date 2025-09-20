@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Check backup status
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Backup Status Checker
 # Quick backup status verification for VMs and other resources
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$ResourceGroupName,
     [Parameter()]

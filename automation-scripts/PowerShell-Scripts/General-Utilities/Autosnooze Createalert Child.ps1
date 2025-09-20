@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Autosnooze Createalert Child
@@ -17,7 +20,8 @@ param(
     [string]$AlertAction,
         [string]$WebhookUri
     )
-function Generate-AlertName
+[OutputType([PSObject])]
+
 {
     param ([string] $OldAlertName ,
      [string] $VMName)
@@ -150,3 +154,4 @@ $NewAlertName = Generate-AlertName -OldAlertName $Alert.Name -VMName $VMObject.N
                                      Name = $NewAlertName
                                  }
                                  Add-AzureRmMetricAlertRule @params\n
+

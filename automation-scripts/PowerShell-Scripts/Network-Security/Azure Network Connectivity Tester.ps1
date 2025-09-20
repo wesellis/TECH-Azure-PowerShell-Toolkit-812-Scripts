@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Network Connectivity Tester
@@ -53,3 +56,4 @@ $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @con
     Write-Host "Probes Sent: $($result.ProbesSent)" -ForegroundColor White
     Write-Host "Probes Failed: $($result.ProbesFailed)" -ForegroundColor White
 } catch { throw }\n
+

@@ -1,6 +1,6 @@
-#Requires -Module Az.PolicyInsights
-#Requires -Module Az.Resources
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     enable policy compliance scans
@@ -79,7 +79,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     $context = Get-AzContext
     if (-not $context) {
         Write-Host "Connecting to Azure..." -ForegroundColor Yellow
@@ -333,3 +334,4 @@ Write-Host "`nCompliance scan configuration completed!" -ForegroundColor Green
 
 # Return compliance data
 return $complianceData\n
+

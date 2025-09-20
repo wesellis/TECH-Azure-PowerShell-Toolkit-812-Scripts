@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Lock Manager
@@ -98,3 +101,4 @@ $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
     # Progress stepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
 
 } catch { throw }\n
+

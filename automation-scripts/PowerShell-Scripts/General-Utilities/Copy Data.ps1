@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Copy Data
@@ -19,3 +22,4 @@ $params = @{
     StandardBlobTier = "Hot"
 }
 Set-AzStorageBlobContent @params\n
+

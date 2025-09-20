@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvmosdisk
@@ -13,7 +16,7 @@ function FunctionName {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function FunctionName {
-    #Region func Set-AzVMOSDisk -ErrorAction Stop
+    #region func-Set-AzVMOSDisk -ErrorAction Stop
     #Setting the VM OS Disk to the VM
 $setAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
@@ -28,3 +31,4 @@ $setAzVMOSDiskSplat = @{
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
     #endRegion func Set-AzVMOSDisk -ErrorAction Stop
 }\n
+

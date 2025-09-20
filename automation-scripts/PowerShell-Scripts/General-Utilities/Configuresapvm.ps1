@@ -41,9 +41,12 @@ function Create-Pool
 {
     [CmdletBinding()]
 param(
-        $arraystring,
-        $name,
-        $path
+    [Parameter()]
+    $arraystring,
+    [Parameter()]
+    $name,
+    [Parameter()]
+    $path
     )
     Log ("Creating volume for " + $arraystring);
     $luns = $arraystring.Split(" ," );
@@ -84,3 +87,4 @@ Create-Pool -arraystring $DBLogLUNS -name $DBLogName -path $DBLogDrive
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -22,8 +22,7 @@
 
 [CmdletBinding()]
 param(
-    [Parameter()]
-    [string]$OutputPath = 'dashboards\Excel',
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = 'dashboards\Excel',
     
     [Parameter()]
     [switch]$IncludeSampleData,
@@ -38,8 +37,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 # Import required modules
 try {
-    Import-Module ImportExcel -Force
-    Write-Host "ImportExcel module loaded successfully" -ForegroundColor Green
+        Write-Host "ImportExcel module loaded successfully" -ForegroundColor Green
 }
 catch {
     Write-Error "ImportExcel module is required. Install with: Install-Module ImportExcel"
@@ -53,9 +51,7 @@ if (-not (Test-Path $OutputPath)) {
 
 #endregion
 
-#region Functions
-
-function New-CostAnalysisTemplate {
+#region Functions-function New-CostAnalysisTemplate {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]

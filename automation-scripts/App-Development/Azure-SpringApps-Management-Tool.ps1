@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Spring Apps Enterprise Management Tool
@@ -101,7 +105,8 @@ param(
     }
 )
 # Enhanced logging function
-function Write-Host {
+[OutputType([bool])]
+ {
     param(
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]

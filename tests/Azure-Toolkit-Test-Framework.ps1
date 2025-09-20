@@ -1,3 +1,10 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     
@@ -102,10 +109,7 @@ function Initialize-TestEnvironment {
             Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
         }
         
-        Import-Module Pester -Force
-        Import-Module Az.Accounts -Force
-        Import-Module Az.Resources -Force
-        
+                                
         # Create output directory
         if (-not (Test-Path $OutputPath)) {
             New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null

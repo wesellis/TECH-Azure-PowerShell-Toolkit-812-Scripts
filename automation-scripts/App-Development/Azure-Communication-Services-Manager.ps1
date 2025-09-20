@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage NICs
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Communication Services Manager
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -305,7 +309,9 @@ try {
                 return
             }
             Invoke-AzureOperation -Operation {
-                Remove-AzCommunicationService -ResourceGroupName $ResourceGroupName -Name $CommunicationServiceName -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             } -OperationName "Delete Communication Service"
             
         }

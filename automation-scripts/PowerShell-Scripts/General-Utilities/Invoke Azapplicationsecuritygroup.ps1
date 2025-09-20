@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Azapplicationsecuritygroup
@@ -14,7 +17,7 @@ function Invoke-AzApplicationSecurityGroup {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzApplicationSecurityGroup {
-    #Region func New-AzApplicationSecurityGroup -ErrorAction Stop
+    #region func-New-AzApplicationSecurityGroup -ErrorAction Stop
     #Creating the Application Security Group
     $ASGName = -join (" $VMName" , "_ASG1" )
 $newAzApplicationSecurityGroupSplat = @{
@@ -26,3 +29,4 @@ $newAzApplicationSecurityGroupSplat = @{
 $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
     #endRegion func New-AzApplicationSecurityGroup -ErrorAction Stop
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Containerinstance Status Monitor
@@ -159,3 +162,4 @@ $Protocol = if ($Port.Port -eq 443) { " https" } else { " http" }
     }
 }
 Write-Host " `nContainer Instance monitoring completed at $(Get-Date)"\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Stop Azurev2Vmrunbook
@@ -26,8 +29,7 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
    LASTEDIT: Sept 6, 2016
 [CmdletBinding()]
 param(
-    [Parameter()]
-    [string]$automationConnectionName = 'AzureRunAsConnection',
+    [Parameter(ValueFromPipeline)]`n    [string]$automationConnectionName = 'AzureRunAsConnection',
     [Parameter()]
     [String] $ResourceGroupName
 )
@@ -89,3 +91,4 @@ $stopRtn = Stop-AzureRMVM -Name $VMName -ResourceGroupName $resourceGroupName -f
 		Write-Output ($VMName + " is already stopped" )
 	}
 }\n
+

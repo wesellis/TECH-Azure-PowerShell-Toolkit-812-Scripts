@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Policy Assignment Auditor
@@ -63,3 +66,4 @@ $totalResources = $states.Count
 $avgCompliance = ($complianceReport | Measure-Object ComplianceRate -Average).Average
     Write-Host "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%" -ForegroundColor Green
 } catch { throw }\n
+

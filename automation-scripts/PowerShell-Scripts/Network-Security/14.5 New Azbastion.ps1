@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create bastion
@@ -46,3 +49,4 @@ $newAzBastionSplat = @{
     Tag               = $Tags
 }
 $bastion = New-AzBastion -ErrorAction Stop @newAzBastionSplat\n
+

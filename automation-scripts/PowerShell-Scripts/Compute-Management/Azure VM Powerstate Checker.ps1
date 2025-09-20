@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Vm Powerstate Checker
@@ -47,3 +50,4 @@ Write-Host "Status: $($VM.Statuses | Where-Object { $_.Code -like 'PowerState*' 
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

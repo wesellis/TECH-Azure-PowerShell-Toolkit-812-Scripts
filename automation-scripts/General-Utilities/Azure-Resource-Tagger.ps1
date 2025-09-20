@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Tag resources
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Tag resources
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [hashtable]$Tags = @{},
     [string]$ResourceType,

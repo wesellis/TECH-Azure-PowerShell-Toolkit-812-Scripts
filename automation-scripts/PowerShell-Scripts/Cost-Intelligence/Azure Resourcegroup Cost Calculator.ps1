@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resourcegroup Cost Calculator
@@ -65,3 +68,4 @@ Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

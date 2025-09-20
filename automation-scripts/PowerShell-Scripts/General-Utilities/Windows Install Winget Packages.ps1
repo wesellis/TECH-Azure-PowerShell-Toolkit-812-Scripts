@@ -38,7 +38,8 @@ param(
 )
 Set-StrictMode -Version Latest
 $ProgressPreference = 'SilentlyContinue'
-function Invoke-Executable {
+[OutputType([bool])]
+ {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -124,10 +125,10 @@ $winGetLogsDir = 'C:\.tools\Setup\Logs\WinGet'
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
-        Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-retry-utils.psm1')
-        Install-WinGet-Packages -Packages $Packages -IgnorePackageInstallFailures $IgnorePackageInstallFailures
+                Install-WinGet-Packages -Packages $Packages -IgnorePackageInstallFailures $IgnorePackageInstallFailures
     }
     catch {
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
 }\n
+

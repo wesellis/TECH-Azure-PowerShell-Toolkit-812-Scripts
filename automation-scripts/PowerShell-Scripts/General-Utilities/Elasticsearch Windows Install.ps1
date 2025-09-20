@@ -73,7 +73,8 @@ param(
 	[switch]$jmeterConfig
 )
 Set-Variable -ErrorAction Stop regEnvPath -Option Constant -Value 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment'
-function Log-Output(){
+[OutputType([bool])]
+(){
 	$args | Write-Information -ForegroundColor Cyan
 }
 function Log-Error(){
@@ -567,3 +568,4 @@ function Startup-Output
     if($marvelOnlyNode) { lmsg 'Node installation mode: Marvel' }
 }
 Install-WorkFlow\n
+

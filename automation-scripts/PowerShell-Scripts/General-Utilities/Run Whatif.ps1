@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Run Whatif
@@ -15,15 +18,25 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $url,
+    [Parameter()]
     $ttkFolder = $ENV:TTK_FOLDER,
+    [Parameter()]
     $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [Parameter()]
     $sampleName = $ENV:SAMPLE_NAME,
+    [Parameter()]
     $paramFileName = $ENV:GEN_PARAMETERS_FILENAME,
+    [Parameter()]
     $resourceGroupName = $ENV:RESOURCEGROUP_NAME,
+    [Parameter()]
     $filename = "PSWhatIf.zip" ,
+    [Parameter()]
     $StorageAccountKey,
+    [Parameter()]
     $txtFileName = " results.txt" ,
+    [Parameter()]
     $jsonFileName = " results.json" ,
     [switch]$uploadResults
 )
@@ -76,3 +89,4 @@ $RowKey = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

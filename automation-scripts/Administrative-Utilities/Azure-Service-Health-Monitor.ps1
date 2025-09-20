@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Monitor service health
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Service Health Monitor
 # Monitor Azure service health and incidents
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]

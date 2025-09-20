@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Aks
+
 <#
 .SYNOPSIS
     Manage AKS clusters
 
 .DESCRIPTION
     Manage AKS clusters\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -23,3 +27,4 @@ if ($Admin) {
 Write-Host "`nTesting connection..."
 kubectl get nodes
 Write-Host "`nKubectl is now configured for cluster: $ClusterName"\n
+

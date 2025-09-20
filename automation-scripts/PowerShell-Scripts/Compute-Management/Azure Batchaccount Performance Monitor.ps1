@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Batchaccount Performance Monitor
@@ -111,3 +114,4 @@ Write-Host " 3. Optimize task distribution across nodes"
 Write-Host " 4. Consider using low-priority VMs for cost savings"
 Write-Host " 5. Implement auto-scaling for dynamic workloads"
 Write-Host " `nBatch Account monitoring completed at $(Get-Date)"\n
+

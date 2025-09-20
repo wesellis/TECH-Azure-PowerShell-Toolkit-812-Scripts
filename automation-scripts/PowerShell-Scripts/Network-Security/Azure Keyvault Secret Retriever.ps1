@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.KeyVault
+
 <#
 .SYNOPSIS
     Azure Keyvault Secret Retriever
@@ -56,3 +59,4 @@ Write-Host "Updated: $($Secret.Updated)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Azure Backup Status Checker
@@ -53,3 +56,4 @@ $unprotectedVMs = $allVMs | Where-Object { $_.Name -notin $protectedVMs.Name }
     $backupReport | Format-Table -AutoSize
 
 } catch { throw }\n
+

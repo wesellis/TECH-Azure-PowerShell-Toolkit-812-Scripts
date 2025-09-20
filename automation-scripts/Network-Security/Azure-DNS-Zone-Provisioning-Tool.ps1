@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage DNS
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Manage DNS
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$ZoneName,
     [array]$Tags = @()

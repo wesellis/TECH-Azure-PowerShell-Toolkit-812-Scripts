@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Invoke Aznetworkinterface
@@ -14,7 +17,7 @@ function Invoke-AzNetworkInterface {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzNetworkInterface {
-    #Region func New-AzNetworkInterface -ErrorAction Stop
+    #region func-New-AzNetworkInterface -ErrorAction Stop
     #Creating the NIC for the VM
 $newAzNetworkInterfaceSplat = @{
         Name                   = $NICName
@@ -30,3 +33,4 @@ $newAzNetworkInterfaceSplat = @{
 $NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
     #endRegion func New-AzNetworkInterface -ErrorAction Stop
 }\n
+

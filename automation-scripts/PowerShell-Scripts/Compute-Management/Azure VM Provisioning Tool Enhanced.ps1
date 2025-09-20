@@ -1,3 +1,8 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Vm Provisioning Tool Enhanced
@@ -28,8 +33,7 @@ param(
     [switch]$Force
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " modules" , "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
+if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
 try {
     # Progress stepNumber 1 -TotalSteps 6 -StepName "Validation" -Status "Checking Azure connection..."
     if (-not (Get-AzContext)) { Connect-AzAccount }

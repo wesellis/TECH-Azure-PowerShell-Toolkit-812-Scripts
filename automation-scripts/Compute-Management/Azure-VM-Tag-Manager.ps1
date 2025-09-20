@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Manage VM tags
 
 .DESCRIPTION
     Manage VM tags\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -23,3 +27,4 @@ foreach ($Tag in $Tags.GetEnumerator()) {
 }
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
 Write-Host "Tags updated successfully for VM: $VmName"\n
+

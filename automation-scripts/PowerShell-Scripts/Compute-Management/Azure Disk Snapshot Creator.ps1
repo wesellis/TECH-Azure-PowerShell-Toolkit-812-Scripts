@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Disk Snapshot Creator
@@ -52,3 +55,4 @@ Write-Host "Location: $($Snapshot.Location)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Connect
@@ -128,3 +131,4 @@ $ready = $true
 if ($count -ge 6) {
     throw "Failed to connect Arc server after 6 retries."
 }\n
+

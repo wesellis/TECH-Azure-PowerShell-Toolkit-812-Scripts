@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Resourcegroup Empty For Permissions
@@ -37,3 +40,4 @@ $newAzResourceGroupSplat = @{
     Tag      = $Tags
 }
 New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat\n
+

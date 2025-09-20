@@ -19,7 +19,8 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 # Output (if any)
 # General notes
 [CmdletBinding()]
-function Invoke-DefineParam {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 function Write-Host {
     param(
@@ -52,14 +53,14 @@ param(
     }
     process {
         try {
-            #Region Param Global
+            #region Param-Global
             $LocationName = 'CanadaCentral'
             $CustomerName = 'CCI'
             $VMName = 'VPN505050'
             $CustomerName = 'CanadaComputing'
             $ResourceGroupName = -join ("$CustomerName", "_$VMName", "_RG")
             #EndRegion Param Global
-            #Region Param Date
+            #region Param-Date
             #Creating the Tag Hashtable for the VM
             $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
             [hashtable]$Tags = @{
@@ -84,7 +85,7 @@ param(
                 Tag      = $Tags
             }
             #endRegion Param Date
-            #Region Param VNETSubnet
+            #region Param-VNETSubnet
             $SubnetName = -join (" $VMName" , "-subnet" )
             $SubnetAddressPrefix = " 10.0.0.0/24"
             $newAzVirtualNetworkSubnetConfigSplat = @{
@@ -93,7 +94,7 @@ param(
                 # VirtualNetwork = $VNET
             }
             #EndRegion Param VNETSubnet
-            #Region Param VNET
+            #region Param-VNET
             $NetworkName = -join (" $VMName" , "_group-vnet" )
             $VnetAddressPrefix = " 10.0.0.0/16"
             $newAzVirtualNetworkSplat = @{
@@ -109,7 +110,7 @@ param(
                 Name              = $NetworkName
                 ResourceGroupName = $ResourceGroupName
             }
-            #Region Param VNET Gateway Subnet
+            #region Param-VNET Gateway Subnet
             $GatewaySubnetName = 'GatewaySubnet'
             $SubnetAddressPrefix = " 10.0.255.0/27"
             $newAzVirtualNetworkGatewaySubnetConfigSplat = @{
@@ -164,8 +165,7 @@ $mypscustomobject = [PSCustomObject]@{
 
 } catch {
             Write-Error 'An Error happened when .. script execution will be halted'
-            #Region CatchAll
-            Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
+            #region CatchAll-Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
             Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
             $PSItem
             Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red

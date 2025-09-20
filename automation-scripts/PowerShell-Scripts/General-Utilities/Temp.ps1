@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Temp
@@ -70,3 +73,4 @@ Write-Information \'The VM is now ready.... here is your login details\'
 Write-Information \'username:\' $VMLocalAdminUser
 Write-Information \'Password:\' $VMLocalAdminPassword
 Write-Information \'DNSName:\' $DNSNameLabel\n
+

@@ -13,7 +13,8 @@ Days until expiration to warn (default 30)
 .\Get-CertExpiry.ps1 -Vault myvault
 .\Get-CertExpiry.ps1 -Days 60
 #>
-param(
+[CmdletBinding()]
+
     [string]$Vault,
     [int]$Days = 30
 )
@@ -33,3 +34,4 @@ foreach ($kv in $vaults) {
         }
     }
 }\n
+

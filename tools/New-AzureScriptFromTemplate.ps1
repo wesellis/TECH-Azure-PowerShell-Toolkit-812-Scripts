@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     $script = $script -replace '{DESCRIPTION}', $template
@@ -15,8 +18,10 @@
     return $script
 }
 
-function New-PesterTest {
-    param([string]$ScriptName)
+[OutputType([PSObject])]
+ {
+    [CmdletBinding()]
+[string]$ScriptName)
     
     return @"
 # $ScriptName.Tests.ps1
@@ -138,3 +143,4 @@ Write-Host "3. Add your specific logic" -ForegroundColor White
 if ($IncludeTests) {
     Write-Host "4. Run tests: Invoke-Pester $testPath" -ForegroundColor White
 }\n
+

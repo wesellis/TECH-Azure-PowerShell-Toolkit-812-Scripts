@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage Azure resources
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Policy Assignment Auditor
 # Audit policy assignments and compliance across subscriptions
-param(
+[CmdletBinding()]
+
     [Parameter()]
     [string]$SubscriptionId,
     [Parameter()]

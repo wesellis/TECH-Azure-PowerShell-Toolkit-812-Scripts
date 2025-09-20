@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Ad Group Creator
@@ -34,8 +37,7 @@ param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Description,
-    [Parameter()]
-    [string]$GroupType = "Security" ,
+    [Parameter(ValueFromPipeline)]`n    [string]$GroupType = "Security" ,
     [Parameter()]
     [array]$MemberEmails = @()
 )
@@ -91,3 +93,4 @@ $User = Get-AzADUser -UserPrincipalName $Email
 } catch {
     Write-Error "Failed to create Azure AD group: $($_.Exception.Message)"
 }\n
+

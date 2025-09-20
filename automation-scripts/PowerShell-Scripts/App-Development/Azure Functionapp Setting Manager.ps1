@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Functionapp Setting Manager
@@ -54,3 +57,4 @@ Write-Host "Function App settings updated successfully!"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

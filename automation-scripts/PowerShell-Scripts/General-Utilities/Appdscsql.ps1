@@ -7,7 +7,8 @@
     Requires appropriate permissions and modules
 Configuration Main
 {
-Param ( [string] $nodeName )
+[CmdletBinding()]
+ [string] $nodeName )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Node $nodeName
   {
@@ -179,3 +180,4 @@ $ldf = New-Object -ErrorAction Stop Microsoft.SqlServer.Management.Smo.RelocateF
 }
   }
 }\n
+

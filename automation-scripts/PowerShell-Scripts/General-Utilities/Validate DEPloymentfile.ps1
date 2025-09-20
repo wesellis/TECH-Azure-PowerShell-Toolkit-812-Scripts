@@ -19,7 +19,8 @@ try {
 ]
 $ErrorActionPreference = "Stop" # Cmdlet binding needed to enable using -ErrorAction, -ErrorVariable etc from testing
 [CmdletBinding()]
-function Write-Host {
+[OutputType([PSObject])]
+ {
     [CmdletBinding()]
 param(
         [Parameter()]
@@ -107,3 +108,4 @@ $errors = $errors + 1
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

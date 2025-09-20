@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage resource locks
@@ -6,7 +9,8 @@
     Create, list, remove, or audit Azure resource locks
     Author: Wes Ellis (wes@wesellis.com)#>
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [ValidateSet("Create", "List", "Remove", "Audit")]
     [string]$Action,
@@ -53,9 +57,13 @@ try {
         "Remove" {
             if ($LockName) {
                 if ($ResourceGroupName) {
-                    Remove-AzResourceLock -LockName $LockName -ResourceGroupName $ResourceGroupName -Force:$Force
+                    if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                 } else {
-                    Remove-AzResourceLock -LockName $LockName -Force:$Force
+                    if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
                 }
                 
             }

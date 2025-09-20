@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Enable Static Website
@@ -18,3 +21,4 @@ Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempIndexFile -B
 $tempErrorDocument404File = New-TemporaryFile -ErrorAction Stop
 Set-Content $tempErrorDocument404File $env:ErrorDocument404Contents -Force
 Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempErrorDocument404File -Blob $env:ErrorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force\n
+

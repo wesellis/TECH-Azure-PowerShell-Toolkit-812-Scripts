@@ -13,7 +13,8 @@ Start-Process -FilePath "C:\ovpn.msi" -ArgumentList " /qn"
 Start-Sleep -s 20
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;
 [CmdletBinding()]
-function Ignore-SelfSignedCerts
+[OutputType([PSObject])]
+
 {
 try
 {
@@ -53,3 +54,4 @@ $headers.Add( "Accept" , "application/octet-stream" )
 $clientpack1 = " 100_127_255_193"
 Invoke-WebRequest -Uri https://" $ip1" :8000/api/clientpack?name=$clientpack1" &" fileformat=ovpn -UseBasicParsing -Headers $Headers -ContentType " application/json" -Method GET -o " c:\Program Files\OpenVPN\config\$clientpack1.ovpn"
 Start-Service -Name "OpenVPNServiceInteractive"\n
+

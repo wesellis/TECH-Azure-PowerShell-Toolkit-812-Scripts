@@ -8,7 +8,8 @@
 
     1.0
     Requires appropriate permissions and modules
-Param($DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath,$CSName,$CSRole,$LogFolder)
+[CmdletBinding(SupportsShouldProcess)]
+$DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath,$CSName,$CSRole,$LogFolder)
 $SMSInstallDir="${env:ProgramFiles}\Microsoft Configuration Manager"
 $logpath = $ProvisionToolPath+" \InstallSCCMlog.txt"
 $ConfigurationFile = Join-Path -Path $ProvisionToolPath -ChildPath " $Role.json"
@@ -117,3 +118,4 @@ $CSConfiguration = Get-Content -Path $CSConfigurationFile | ConvertFrom-Json
 $Configuration.InstallSCCM.Status = 'Completed'
 $Configuration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
 $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force\n
+

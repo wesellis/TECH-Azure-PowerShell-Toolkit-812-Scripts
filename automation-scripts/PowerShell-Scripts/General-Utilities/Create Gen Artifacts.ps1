@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create Gen Artifacts
@@ -262,3 +265,4 @@ Write-Output $($json | ConvertTo-json -Depth 30)
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

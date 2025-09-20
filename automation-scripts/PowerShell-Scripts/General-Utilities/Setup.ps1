@@ -11,10 +11,15 @@
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
+    [Parameter()]
     $mail,
+    [Parameter()]
     $publicdnsname,
+    [Parameter()]
     $adminPwd,
+    [Parameter()]
     $basePath,
+    [Parameter()]
     $publicSshKey
 )
 $ProgressPreference = 'SilentlyContinue'
@@ -24,7 +29,11 @@ New-Item -Path f:\le\acme.json | Out-Null
 New-Item -Path f:\dockerdata -ItemType Directory | Out-Null
 New-Item -Path f:\portainerdata -ItemType Directory | Out-Null
 New-Item -Path f:\compose -ItemType Directory | Out-Null
-[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10, $null, ".\chocoInstall.ps1" , $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://chocolatey.org/install.ps1" , 5, 10,
+    [Parameter()]
+    $null, ".\chocoInstall.ps1" ,
+    [Parameter()]
+    $false)
 & .\chocoInstall.ps1
 choco feature enable -n allowGlobalConfirmation
 choco install --no-progress --limit-output vim
@@ -53,7 +62,11 @@ Add-MpPreference -ExclusionPath '${env:ProgramFiles}\docker\'
 Add-MpPreference -ExclusionPath 'f:\dockerdata'
 Start-Service docker
 $adminPwd | Out-File -NoNewline -Encoding ascii " f:\portainerdata\passwordfile"
-[DownloadWithRetry]::DoDownloadWithRetry(" https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe" , 5, 10, $null, "$($Env:ProgramFiles)\Docker\docker-compose.exe" , $false)
+[DownloadWithRetry]::DoDownloadWithRetry(" https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe" , 5, 10,
+    [Parameter()]
+    $null, "$($Env:ProgramFiles)\Docker\docker-compose.exe" ,
+    [Parameter()]
+    $false)
 $template = Get-Content -ErrorAction Stop (Join-Path $basepath 'docker-compose.yml.template') -Raw
 $expanded = Invoke-Expression " @`" `r`n$template`r`n`" @"
 $expanded | Out-File " f:\compose\docker-compose.yml" -Encoding ASCII
@@ -111,3 +124,4 @@ $result = Invoke-WebRequest -Uri $uri -UseBasicParsing -OutFile $outFile
         return ""
     }
 }\n
+

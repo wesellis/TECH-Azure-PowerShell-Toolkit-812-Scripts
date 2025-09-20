@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Trafficmanagerwebapp
@@ -9,8 +12,6 @@
     1.0
     Requires appropriate permissions and modules
 $rgName = "TrafficManagerWebAppExample"
-Import-Module AzureRM.TrafficManager
-Import-Module AzureRM.Resources
 Login-AzureRmAccount
 $scriptDir = Split-Path $MyInvocation.MyCommand.Path
 New-AzureRmResourceGroup -Location " northeurope" -Name $rgName
@@ -18,3 +19,4 @@ New-AzureRmResourceGroupDeployment -Verbose -Force -ResourceGroupName $rgName -T
 $x = Get-AzureRmTrafficManagerProfile -ResourceGroupName $rgName
 $x
 $x.Endpoints\n
+

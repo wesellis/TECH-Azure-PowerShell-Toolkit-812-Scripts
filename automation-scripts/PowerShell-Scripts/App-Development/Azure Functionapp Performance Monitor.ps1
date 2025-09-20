@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Functionapp Performance Monitor
@@ -71,3 +74,4 @@ try {
     Write-Host " `nFunctions: Unable to enumerate (check permissions)"
 }
 Write-Host " `nFunction App monitoring completed at $(Get-Date)"\n
+

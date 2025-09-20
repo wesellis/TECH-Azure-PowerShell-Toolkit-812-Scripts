@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Azure Vpn Gateway Creator
@@ -102,3 +105,4 @@ Write-Host "Public IP: $($GatewayIp.IpAddress)" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

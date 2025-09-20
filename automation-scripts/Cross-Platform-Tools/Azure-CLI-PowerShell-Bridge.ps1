@@ -1,3 +1,5 @@
+#Requires -Version 7.0
+
 <#
 .SYNOPSIS
     Manage Azure resources
@@ -5,7 +7,8 @@
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations and operations
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$Command,
     [string]$OutputFormat = "json",
     [switch]$PassThru

@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Resource Health Checker
@@ -77,3 +81,4 @@ $StatusColor = switch ($Health.Status) {
     }
     Write-Information -Object " $StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
 }\n
+

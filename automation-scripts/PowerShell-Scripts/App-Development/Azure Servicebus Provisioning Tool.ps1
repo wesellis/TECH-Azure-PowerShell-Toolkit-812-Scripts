@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Servicebus Provisioning Tool
@@ -135,3 +138,4 @@ Write-Host "   Reliable message delivery"
 Write-Host "   Event-driven architectures"
 Write-Host "   Integrating on-premises and cloud systems"
 Write-Host " `nService Bus Namespace provisioning completed at $(Get-Date)"\n
+

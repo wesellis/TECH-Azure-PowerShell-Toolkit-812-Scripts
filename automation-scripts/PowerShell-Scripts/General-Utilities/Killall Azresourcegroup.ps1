@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Killall Azresourcegroup
@@ -85,3 +88,4 @@ $bypassTag = $(Get-AzTag -ResourceId $rg.ResourceId).properties.tagsproperty.byp
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

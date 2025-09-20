@@ -12,15 +12,14 @@ Set-StrictMode -Version Latest
 BeforeAll {
     $script:IsUnderTest = $true
     $retryModuleName = 'windows-retry-utils'
-    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $PSScriptRoot)
-try {
+    try {
     # Main script execution
 " _common/$retryModuleName.psm1" )
     $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'
-    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $PSScriptRoot) " _common/$marketplaceModuleName.psm1" )
-    # Mock a x64 processor by default
+        # Mock a x64 processor by default
     [CmdletBinding()]
-function Get-CimInstance -ErrorAction Stop { }
+[OutputType([PSCustomObject])]
+ -ErrorAction Stop { }
     Mock Get-CimInstance -ErrorAction Stop {
         [pscustomobject]@{ Architecture = 9 }
     } -Verifiable -ModuleName $marketplaceModuleName
@@ -507,3 +506,4 @@ $result = Get-CurrentPlatform -ErrorAction Stop
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

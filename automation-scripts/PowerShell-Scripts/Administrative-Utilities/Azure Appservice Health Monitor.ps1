@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Appservice Health Monitor
@@ -67,3 +70,4 @@ Write-Host " `nApp Service monitoring completed at $(Get-Date)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

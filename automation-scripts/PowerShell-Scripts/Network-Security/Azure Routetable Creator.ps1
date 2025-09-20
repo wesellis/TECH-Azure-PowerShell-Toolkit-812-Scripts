@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Routetable Creator
@@ -83,3 +86,4 @@ Write-Host " 3. Test routing behavior"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Provision Azure Storage Account
@@ -5,7 +8,8 @@
 .DESCRIPTION
     Create and configure Azure Storage Account with specified settings
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding()]
+
     [string]$ResourceGroupName,
     [string]$StorageAccountName,
     [string]$Location,

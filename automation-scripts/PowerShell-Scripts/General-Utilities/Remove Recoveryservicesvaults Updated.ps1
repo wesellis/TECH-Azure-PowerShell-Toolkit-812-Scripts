@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Remove Recoveryservicesvaults Updated
@@ -11,7 +14,8 @@
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Remove-SingleVault -ErrorAction Stop {
+[OutputType([PSObject])]
+ -ErrorAction Stop {
 function Write-Host {
     [CmdletBinding()]
 param(
@@ -193,3 +197,4 @@ $allVaults = $allVaults + $vaults
     }
 }
 Remove-AllRecoveryServicesVaults -ErrorAction Stop    # To run with confirmation\n
+

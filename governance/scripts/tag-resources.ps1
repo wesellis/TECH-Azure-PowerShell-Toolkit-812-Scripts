@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manages and enforces resource tagging across subscriptions and resource groups
@@ -41,7 +44,8 @@
     Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateSet('Apply', 'Remove', 'Validate', 'Report', 'Inherit', 'Fix')]
     [string]$Action,
@@ -97,8 +101,10 @@ $script:ModifiedResources = @()
 #endregion
 
 #region Functions
-function Write-LogEntry {
-    param(
+[OutputType([bool])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Success')]
         [string]$Level = 'Info'
@@ -127,7 +133,8 @@ function Initialize-Azure {
 }
 
 function Get-ScopedResources {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Scope,
         [string[]]$ResourceGroups,
         [string[]]$ResourceTypes
@@ -190,7 +197,8 @@ function Get-ScopedResources {
 }
 
 function Apply-ResourceTags {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$Resource,
         [hashtable]$TagsToApply,
         [switch]$Merge
@@ -237,7 +245,8 @@ function Apply-ResourceTags {
 }
 
 function Remove-ResourceTags {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$Resource,
         [string[]]$TagsToRemove
     )
@@ -269,7 +278,8 @@ function Remove-ResourceTags {
 }
 
 function Test-TagCompliance {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$Resource,
         [string[]]$RequiredTagNames,
         [hashtable]$RequiredTagValues
@@ -317,7 +327,8 @@ function Test-TagCompliance {
 }
 
 function Export-ComplianceReport {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [array]$ComplianceData,
         [string]$Path
     )
@@ -343,7 +354,8 @@ function Export-ComplianceReport {
 }
 
 function Invoke-TagInheritance {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$ResourceGroup,
         [object[]]$Resources
     )
@@ -370,8 +382,7 @@ function Invoke-TagInheritance {
 
 #endregion
 
-#region Main
-try {
+#region Main-try {
     Write-Host "`nResource Tagging Management" -ForegroundColor Cyan
     Write-Host "============================" -ForegroundColor Cyan
 

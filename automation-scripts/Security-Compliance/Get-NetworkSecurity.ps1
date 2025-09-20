@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Check network security configuration
@@ -11,7 +14,8 @@ Resource group to check
 .EXAMPLE
 .\Get-NetworkSecurity.ps1 -ResourceGroup rg-prod
 #>
-param([string]$ResourceGroup)
+[CmdletBinding()]
+[string]$ResourceGroup)
 # Get NSGs
 $nsgs = if ($ResourceGroup) { Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroup } else { Get-AzNetworkSecurityGroup }
 foreach ($nsg in $nsgs) {
@@ -43,3 +47,4 @@ foreach ($vnet in $vnets) {
         }
     }
 }\n
+

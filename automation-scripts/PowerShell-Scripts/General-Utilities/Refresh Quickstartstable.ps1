@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Refresh Quickstartstable
@@ -153,3 +156,4 @@ $v = $v.Replace(" ." , "-" )
     }
     Add-AzTableRow @params
 } #foreach\n
+

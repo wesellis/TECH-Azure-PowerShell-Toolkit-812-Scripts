@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Resizes Azure managed disks with safety checks
@@ -16,7 +19,8 @@
     .\Azure-Disk-Resize-Tool.ps1 -ResourceGroupName "RG-Production" -DiskName "VM-WebServer01_disk1" -NewSizeGB 128
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -72,3 +76,4 @@ try {
     Write-Error "Failed to resize disk: $_"
     throw
 }\n
+

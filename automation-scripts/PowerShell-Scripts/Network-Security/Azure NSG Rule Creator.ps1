@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Nsg Rule Creator
@@ -92,3 +95,4 @@ Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName" "INFO
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

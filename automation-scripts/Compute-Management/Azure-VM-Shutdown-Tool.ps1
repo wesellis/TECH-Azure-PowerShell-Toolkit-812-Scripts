@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Safely shuts down Azure Virtual Machines
@@ -26,7 +29,8 @@
     Graceful shutdown preserves allocated resources while standard shutdown deallocates them.
 #>
 [CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -46,7 +50,8 @@ param (
     [int]$TimeoutMinutes = 10
 )
 $ErrorActionPreference = 'Stop'
-function Test-AzureConnection {
+[OutputType([PSCustomObject])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -61,7 +66,8 @@ function Test-AzureConnection {
     }
 }
 function Get-VMShutdownState {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name
     )
@@ -78,7 +84,8 @@ function Get-VMShutdownState {
     }
 }
 function Stop-AzureVM {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name,
         [bool]$UseGraceful
@@ -126,7 +133,8 @@ function Stop-AzureVM {
     }
 }
 function Wait-ForVMShutdown {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$ResourceGroup,
         [string]$Name,
         [int]$TimeoutMinutes
@@ -226,3 +234,4 @@ Write-Host "`nOperation completed!" -ForegroundColor Green
 # Exit with appropriate code
 $exitCode = if ($failed -gt 0) { 1 } else { 0 }
 exit $exitCode\n
+

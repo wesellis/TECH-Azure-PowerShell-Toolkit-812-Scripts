@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Get Azvm Status
@@ -14,8 +18,7 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 function Get-ARMVM -ErrorAction Stop {
     [CmdletBinding()]
     param(
-        [Parameter()]
-        [String]$RGNAME,
+        [Parameter(ValueFromPipeline)]`n    [String]$RGNAME,
         [String]$VMNAME
     )
     begin {
@@ -49,3 +52,4 @@ $VMStatusDetail = $VMStatus.DisplayStatus
     }
 }
 Get-ARMVM -RGNAME "CCI_PS_AUTOMATION_RG" -VMName "PSAutomation1"\n
+

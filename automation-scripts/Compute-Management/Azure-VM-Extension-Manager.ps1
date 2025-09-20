@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Manage VM extensions
 
 .DESCRIPTION
     Manage VM extensions\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -34,3 +38,4 @@ Write-Host "Extension '$ExtensionName' installed successfully"
 Write-Host "VM: $VmName"
 Write-Host "Publisher: $Publisher"
 Write-Host "Type: $ExtensionType"\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Sequencedsnooze Parent
@@ -150,3 +153,4 @@ catch
     Write-Output "Error Occurred in the sequence $($Action) runbook..."
     Write-Output $_.Exception
 }\n
+

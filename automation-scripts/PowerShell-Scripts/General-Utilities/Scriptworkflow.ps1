@@ -8,7 +8,8 @@
 
     1.0
     Requires appropriate permissions and modules
-Param($DomainFullName,$CM,$CMUser,$DPMPName,$ClientName,$Config,$CurrentRole,$LogFolder,$CSName,$PSName)
+[CmdletBinding()]
+$DomainFullName,$CM,$CMUser,$DPMPName,$ClientName,$Config,$CurrentRole,$LogFolder,$CSName,$PSName)
 $CSRole = "CAS"
 $PSRole = "PS1"
 $Role = $PSRole
@@ -152,3 +153,4 @@ $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallClient.ps1"
         . $ScriptFile $DomainFullName $CMUser $ClientName $DPMPName $Role $ProvisionToolPath
     }
 }\n
+

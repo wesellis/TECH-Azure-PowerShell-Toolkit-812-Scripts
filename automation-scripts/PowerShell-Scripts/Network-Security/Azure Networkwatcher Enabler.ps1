@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Networkwatcher Enabler
@@ -70,3 +73,4 @@ Write-Host "   Connection Troubleshoot"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

@@ -54,14 +54,14 @@ param(
     [string]$OptionalEnvironment
 )
 $ProgressPreference = 'SilentlyContinue'
-import-module AzureRM
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
 }
 <###############################
  Get Storage Context function
-function Get-StorageObject -ErrorAction Stop
+[OutputType([bool])]
+ -ErrorAction Stop
 { [CmdletBinding()]
 param($resourceGroupName, $srcURI)
     $split = $srcURI.Split('/')
@@ -353,3 +353,4 @@ $copyResult = Set-AzureStorageBlobContent -File $tempFilePath -Blob $RehydrateFi
         }
      }
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Asr Dns Updateip
@@ -116,3 +119,4 @@ $csextension = $DNSVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

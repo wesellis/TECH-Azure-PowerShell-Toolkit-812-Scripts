@@ -1,5 +1,6 @@
-#Requires -Module Az.Resources, Az.PolicyInsights
-#Requires -Version 5.1
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     create initiative
@@ -95,7 +96,8 @@ if (-not $Description) {
 #endregion
 
 #region Functions
-function Get-InitiativeTemplate {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     param(
         [string]$TemplateName
@@ -416,3 +418,4 @@ finally {
 }
 
 #endregion\n
+

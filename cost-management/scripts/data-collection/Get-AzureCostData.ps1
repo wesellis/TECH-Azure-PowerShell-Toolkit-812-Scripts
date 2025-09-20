@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
         Tests if user is connected to Azure
@@ -19,7 +22,8 @@
     }
 }
 
-function Get-CostManagementData {
+[OutputType([bool])]
+ {
     [CmdletBinding()]
     <#
     .SYNOPSIS

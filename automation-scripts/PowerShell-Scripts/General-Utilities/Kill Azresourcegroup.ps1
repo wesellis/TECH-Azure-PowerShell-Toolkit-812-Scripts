@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Kill Azresourcegroup
@@ -210,3 +214,4 @@ Remove-AzResourceGroup -Force -Verbose -Name $ResourceGroupName
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

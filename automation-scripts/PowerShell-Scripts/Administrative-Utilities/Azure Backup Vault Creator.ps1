@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Backup Vault Creator
@@ -39,8 +42,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$Location,
-    [Parameter()]
-    [string]$StorageType = "GeoRedundant"
+    [Parameter(ValueFromPipeline)]`n    [string]$StorageType = "GeoRedundant"
 )
 Write-Host "Creating Recovery Services Vault: $VaultName"
 $params = @{
@@ -89,3 +91,4 @@ Write-Host "SAP HANA in Azure VMs"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

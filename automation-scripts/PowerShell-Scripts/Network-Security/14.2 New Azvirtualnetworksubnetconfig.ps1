@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Create virtualnetworksubnetconfig
@@ -24,3 +27,4 @@ $newAzVirtualNetworkSubnetConfigSplat = @{
     AddressPrefix = '10.0.0.0/24'
 }
 $subnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat\n
+

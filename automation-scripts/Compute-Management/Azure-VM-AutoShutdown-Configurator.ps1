@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Configures auto-shutdown for Azure Virtual Machines
@@ -23,7 +26,8 @@
     .\Azure-VM-AutoShutdown-Configurator.ps1 -ResourceGroupName "RG-Dev" -VmName "VM-DevServer01" -ShutdownTime "18:30" -TimeZone "Eastern Standard Time" -NotificationEmail "admin@company.com"
 #>
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -137,3 +141,4 @@ try {
     Write-Error "Failed to configure auto-shutdown: $_"
     throw
 }\n
+

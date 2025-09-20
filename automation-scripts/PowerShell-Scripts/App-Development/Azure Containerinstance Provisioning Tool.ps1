@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Containerinstance Provisioning Tool
@@ -116,3 +119,4 @@ Write-Host " `nContainer Instance provisioning completed at $(Get-Date)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

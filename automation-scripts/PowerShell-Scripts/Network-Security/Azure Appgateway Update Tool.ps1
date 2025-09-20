@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Appgateway Update Tool
@@ -57,3 +60,4 @@ Write-Host "Application Gateway $GatewayName updated successfully" "INFO"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

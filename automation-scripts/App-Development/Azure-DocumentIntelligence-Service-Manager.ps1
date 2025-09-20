@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure script
@@ -7,7 +10,8 @@
     Author: Wes Ellis (wes@wesellis.com)#>
 # Azure AI Document Intelligence Service Manager
 #
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -158,7 +162,9 @@ try {
                 return
             }
             Invoke-AzureOperation -Operation {
-                Remove-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -Force
+                if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
             } -OperationName "Delete Document Intelligence Service"
             
         }

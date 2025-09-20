@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure script
@@ -34,7 +38,8 @@ $ToolName = "WE-Azure-ResourceOptimizer"
 $Version = "4.0"
 $StartTime = Get-Date -ErrorAction Stop
 # Enhanced enterprise logging
-function Write-WEOptimizationLog {
+[OutputType([PSCustomObject])]
+ {
     param(
         [string]$Message,
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS", "ANALYZE", "RECOMMEND")]

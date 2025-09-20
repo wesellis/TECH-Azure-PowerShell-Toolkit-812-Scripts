@@ -113,7 +113,8 @@ class CostForecast {
     [string]$SeasonalityFactor
 }
 
-function Write-LogMessage {
+[OutputType([PSObject])]
+ {
     param(
         [Parameter(Mandatory)]
         [string]$Message,
@@ -603,3 +604,4 @@ catch {
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
     throw
 }
+

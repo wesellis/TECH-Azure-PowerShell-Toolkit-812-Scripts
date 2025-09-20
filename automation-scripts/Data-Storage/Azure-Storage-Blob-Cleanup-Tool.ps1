@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Manage storage
@@ -5,10 +8,13 @@
 .DESCRIPTION
     Manage storage
     Author: Wes Ellis (wes@wesellis.com)#>
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [string]$ResourceGroupName,
     [string]$StorageAccountName,
     [string]$ContainerName
 )
-Remove-AzStorageBlob -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName -ContainerName $ContainerName -Force
+if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
 

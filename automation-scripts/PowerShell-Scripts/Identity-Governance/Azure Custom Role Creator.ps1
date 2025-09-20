@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Custom Role Creator
@@ -42,8 +45,7 @@ param(
     [array]$DataActions = @(),
     [Parameter()]
     [array]$NotDataActions = @(),
-    [Parameter()]
-    [string]$SubscriptionId
+    [Parameter(ValueFromPipeline)]`n    [string]$SubscriptionId
 )
 Write-Host "Creating custom Azure role: $RoleName"
 if (-not $SubscriptionId) {
@@ -113,3 +115,4 @@ $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
 } catch {
     Write-Error "Failed to create custom role: $($_.Exception.Message)"
 }\n
+

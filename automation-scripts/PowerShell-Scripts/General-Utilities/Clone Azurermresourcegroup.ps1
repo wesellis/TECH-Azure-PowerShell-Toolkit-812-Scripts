@@ -62,7 +62,6 @@ $resourceGroupVmSizeResumePath = " $env:TEMP\$resourcegroupname.resourceGroupVMs
 $VHDstorageObjectsResumePath = " $env:TEMP\$resourcegroupname.VHDstorageObjects.resume.json"
 $jsonBackupPath = " $env:TEMP\$resourcegroupname.json"
 $ProgressPreference = 'SilentlyContinue'
-import-module AzureRM
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 6.7" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 6.7 required. Run Update-Module AzureRM"
    BREAK
@@ -75,7 +74,8 @@ if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 6.7" ) {
     Author: Wes Ellis (wes@wesellis.com)
 #>
 Get Storage Context function
-function Get-StorageObject -ErrorAction Stop
+[OutputType([PSObject])]
+ -ErrorAction Stop
 { [CmdletBinding()]
 param($resourceGroupName, $srcURI, $srcName)
     $split = $srcURI.Split('/')
@@ -1373,3 +1373,4 @@ $dataDiskSku = $mdDataDisk.sku.Name
          write-warning "Failed to create Virtual Machine $VMName"
     }
 }\n
+

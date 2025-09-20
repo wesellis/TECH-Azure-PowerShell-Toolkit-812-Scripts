@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Get location
@@ -15,3 +18,4 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName
 Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -eq 'CanadaCentral'}
 Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}\n
+

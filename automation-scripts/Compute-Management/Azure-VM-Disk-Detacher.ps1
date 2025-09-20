@@ -1,10 +1,14 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Detach VM disks
 
 .DESCRIPTION
     Detach VM disks\n    Author: Wes Ellis (wes@wesellis.com)\n#>
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -22,7 +26,9 @@ if (-not $DiskToDetach) {
 }
 Write-Host "Found disk: $DiskName (LUN: $($DiskToDetach.Lun))"
 # Remove the disk
-Remove-AzVMDataDisk -VM $VM -Name $DiskName
+if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
 # Update the VM
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
 Write-Host "Disk detached successfully:"
@@ -30,3 +36,4 @@ Write-Host "Disk: $DiskName"
 Write-Host "VM: $VmName"
 Write-Host "LUN: $($DiskToDetach.Lun)"
 Write-Host "Note: Disk is now available for attachment to other VMs"\n
+

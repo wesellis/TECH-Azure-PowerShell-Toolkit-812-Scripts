@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Azstorageblobsastoken($Templateblobfulluri)
@@ -25,3 +28,4 @@ $newAzStorageBlobSASTokenSplat = @{
 
 $templateBlobFullURI = New-AzStorageBlobSASToken -ErrorAction Stop @newAzStorageBlobSASTokenSplat
 $templateBlobFullURI\n
+

@@ -1,3 +1,7 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+#Requires -Modules Az.Storage
+
 <#
 .SYNOPSIS
     Azure Cost Optimization Analyzer
@@ -25,8 +29,7 @@ param(
     [Parameter()][switch]$GenerateReport
 )
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Cost Optimization Analyzer" -Description "AI-powered cost analysis with optimization recommendations"
+if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Cost Optimization Analyzer" -Description "AI-powered cost analysis with optimization recommendations"
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     # Progress stepNumber 1 -TotalSteps 7 -StepName "Data Collection" -Status "Gathering cost data..."
@@ -292,3 +295,4 @@ $htmlReport = @"
 } catch {
         throw
 }\n
+

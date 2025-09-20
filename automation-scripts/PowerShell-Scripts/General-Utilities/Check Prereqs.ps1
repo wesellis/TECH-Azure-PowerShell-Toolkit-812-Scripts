@@ -17,8 +17,11 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
+    [Parameter()]
     $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [Parameter()]
     $prereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+    [Parameter()]
     $prereqTemplateFilenameJson = $ENV:PREREQ_TEMPLATE_FILENAME_JSON
 )
 $deployPrereqs = Test-Path " $sampleFolder\prereqs\"
@@ -42,3 +45,4 @@ if ($deployPrereqs) {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

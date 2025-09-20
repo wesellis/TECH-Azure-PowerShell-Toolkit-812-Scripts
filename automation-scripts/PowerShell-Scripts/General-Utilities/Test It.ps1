@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Test It
@@ -20,3 +23,4 @@ $params = @{
     " dnsZoneName" = " default.local" ;
 }
 New-AzureRmResourceGroupDeployment -Name " <deployment name>" -ResourceGroupName $rgname -TemplateFile " $PSScriptRoot/azuredeploy.json"  -TemplateParameterObject $params\n
+

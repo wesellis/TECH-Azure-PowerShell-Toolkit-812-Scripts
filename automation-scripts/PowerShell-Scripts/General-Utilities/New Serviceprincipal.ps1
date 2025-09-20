@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Serviceprincipal
@@ -37,3 +40,4 @@ $tenantId = (get-azurermsubscription).TenantId | select -Unique
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

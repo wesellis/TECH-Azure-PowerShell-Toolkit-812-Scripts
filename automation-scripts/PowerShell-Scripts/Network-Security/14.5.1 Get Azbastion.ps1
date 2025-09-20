@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     14.5.1 Get bastion
@@ -65,3 +68,4 @@ Id                   : /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resou
                        /bastionHosts/FGC_Prod_Bastion
     General notes
 Get-AzBastion -ErrorAction Stop | Format-Table\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Remove Oldresources
@@ -20,3 +23,4 @@ $DeploymentScriptOutputs[" deleteTriggers" ] = $triggers | Remove-AzDataFactoryV
 $DeploymentScriptOutputs[" -ErrorAction "SilentlyContinue"
 | -match "^(msexports_(backfill|extract|fill|get|run|setup|transform)|config_(BackfillData|ExportData|RunBackfill|RunExports))$' }" -Object "{ $_.Name"
 | Remove-AzDataFactoryV2Pipeline -Force -ErrorAction SilentlyContinue\n
+

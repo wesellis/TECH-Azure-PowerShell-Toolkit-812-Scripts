@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Aznetworksecuritygroup
@@ -43,3 +46,4 @@ $newAzNetworkSecurityGroupSplat = @{
     SecurityRules = $rule1, $rule2
 }
 $nsg = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat\n
+

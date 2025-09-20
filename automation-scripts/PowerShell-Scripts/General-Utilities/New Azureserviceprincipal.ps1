@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     New Azureserviceprincipal
@@ -37,7 +40,6 @@ param(
     [Parameter()]
     [string]$Environment= "AzureCloud"
 )
-import-module AzureRM
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
    BREAK
@@ -177,3 +179,4 @@ Get-AzureRmResourceGroup -ErrorAction Stop
 " @
     $outstring | out-file 'Login-AzureRM.ps1'
 }\n
+

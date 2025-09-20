@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Eventgrid Topic Provisioning Tool
@@ -97,3 +100,4 @@ Write-Information @"
 ]
 " @
 Write-Host " `nEvent Grid Topic provisioning completed at $(Get-Date)"\n
+

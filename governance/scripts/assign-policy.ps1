@@ -1,5 +1,6 @@
-#Requires -Version 5.1
-#Requires -Module Az.Resources
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     assign policy
@@ -69,7 +70,8 @@
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
-param (
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter(ParameterSetName = "ByDefinitionId", Mandatory = $true, HelpMessage = "Policy definition resource ID")]
     [ValidateNotNullOrEmpty()]
     [string]$PolicyDefinitionId,
@@ -153,8 +155,10 @@ if (-not $LogPath) {
     $LogPath = Join-Path $env:TEMP "assign-policy_$timestamp.log"
 }
 
-function Write-Log {
-    param(
+[OutputType([bool])]
+ {
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Debug')]
         [string]$Level = 'Info'
@@ -187,7 +191,8 @@ function Test-AzureConnection {
 }
 
 function Get-PolicyDefinition {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$DefinitionId,
         [string]$PolicyName
     )
@@ -224,7 +229,8 @@ function Get-PolicyDefinition {
 }
 
 function Resolve-AssignmentScope {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Scope,
         [string]$SubscriptionId,
         [string]$ResourceGroupName,
@@ -266,7 +272,8 @@ function Resolve-AssignmentScope {
 }
 
 function ConvertTo-PolicyParameters {
-    param([object]$InputParameters)
+    [CmdletBinding(SupportsShouldProcess)]
+[object]$InputParameters)
 
     if (-not $InputParameters) {
         return $null
@@ -293,7 +300,8 @@ function ConvertTo-PolicyParameters {
 }
 
 function New-PolicyAssignmentObject {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [object]$PolicyDefinition,
         [string]$Name,
         [string]$DisplayName,
@@ -366,7 +374,8 @@ function New-PolicyAssignmentObject {
 }
 
 function Test-PolicyAssignment {
-    param(
+    [CmdletBinding(SupportsShouldProcess)]
+
         [string]$Name,
         [string]$Scope
     )
@@ -470,7 +479,9 @@ try {
     # Remove existing assignment if forcing
     if ($existingAssignment -and $Force) {
         Write-Log "Removing existing assignment: $AssignmentName"
-        Remove-AzPolicyAssignment -Name $AssignmentName -Scope $assignmentScope -Force
+        if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
         Start-Sleep -Seconds 5  # Allow time for cleanup
     }
 
@@ -505,3 +516,4 @@ finally {
 }
 
 #endregion\n
+

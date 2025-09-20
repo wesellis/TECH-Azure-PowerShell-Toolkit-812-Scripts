@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Appservice Scaling Tool
@@ -28,3 +31,4 @@ Set-AzAppServicePlan -ResourceGroupName $ResourceGroupName -Name $PlanName -Numb
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

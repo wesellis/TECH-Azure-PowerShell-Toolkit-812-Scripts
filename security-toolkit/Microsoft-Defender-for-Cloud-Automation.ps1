@@ -13,7 +13,8 @@
 # Professional Azure security automation script
 # Version: 1.0 | Enterprise security posture management automation
 
-param(
+[CmdletBinding(SupportsShouldProcess)]
+
     [Parameter()]
     [string]$SubscriptionId,
     
@@ -481,3 +482,4 @@ Write-Progress -Activity "Microsoft Defender for Cloud Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
 
 #endregion\n
+

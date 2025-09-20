@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Checks and reports Azure VM power states with  status information
@@ -24,7 +27,8 @@
     .\Azure-VM-PowerState-Checker.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01" -Watch -WatchInterval 60
 #>
 [CmdletBinding(DefaultParameterSetName = 'Single')]
-param (
+[CmdletBinding()]
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -45,7 +49,8 @@ param (
     [int]$WatchInterval = 30
 )
 $ErrorActionPreference = 'Stop'
-function Test-AzureConnection {
+[OutputType([bool])]
+ {
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -60,7 +65,8 @@ function Test-AzureConnection {
     }
 }
 function Get-VMPowerState {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup,
         [string]$Name,
         [bool]$IncludeDetails
@@ -104,7 +110,8 @@ function Get-VMPowerState {
     }
 }
 function Format-Output {
-    param(
+    [CmdletBinding()]
+
         [object[]]$VMStates,
         [string]$Format
     )
@@ -122,7 +129,8 @@ function Format-Output {
     }
 }
 function Show-PowerStateColor {
-    param([string]$PowerState)
+    [CmdletBinding()]
+[string]$PowerState)
     switch -Wildcard ($PowerState) {
         "*running*" { return 'Green' }
         "*stopped*" { return 'Red' }
@@ -133,7 +141,8 @@ function Show-PowerStateColor {
     }
 }
 function Start-VMWatcher {
-    param(
+    [CmdletBinding()]
+
         [string]$ResourceGroup,
         [string]$Name,
         [int]$Interval
@@ -228,3 +237,4 @@ catch {
     Write-Error "Failed to check VM power state: $_"
     throw
 }\n
+

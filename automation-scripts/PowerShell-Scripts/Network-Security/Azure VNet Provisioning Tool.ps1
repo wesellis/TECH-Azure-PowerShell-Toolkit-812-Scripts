@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Azure Vnet Provisioning Tool
@@ -80,3 +83,4 @@ Write-Host "VNet ID: $($VNet.Id)"
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }\n
+

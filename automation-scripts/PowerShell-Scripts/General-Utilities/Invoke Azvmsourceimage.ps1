@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Compute
+
 <#
 .SYNOPSIS
     Invoke Azvmsourceimage
@@ -14,7 +17,7 @@ function Invoke-AzVMSourceImage {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVMSourceImage {
-    #Region func Set-AzVMSourceImage -ErrorAction Stop
+    #region func-Set-AzVMSourceImage -ErrorAction Stop
 $setAzVMSourceImageSplat = @{
         VM            = $VirtualMachine
         # PublisherName = "Canonical"
@@ -34,3 +37,4 @@ $setAzVMSourceImageSplat = @{
 $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
     #endRegion func Set-AzVMSourceImage -ErrorAction Stop
 }\n
+

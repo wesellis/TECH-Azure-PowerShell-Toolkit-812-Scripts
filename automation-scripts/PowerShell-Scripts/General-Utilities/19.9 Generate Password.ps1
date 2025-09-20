@@ -14,7 +14,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Get-RandomCharacters {
+[OutputType([PSObject])]
+ {
     param(
         [int]$length,
         [string]$characters

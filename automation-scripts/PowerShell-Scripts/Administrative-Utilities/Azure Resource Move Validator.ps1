@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azure Resource Move Validator
@@ -47,3 +50,4 @@ $validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action "
         Write-Host "Some resources cannot be moved. Check Azure portal for details." -ForegroundColor Red
     }
 } catch { throw }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Network
+
 <#
 .SYNOPSIS
     Invoke Azvirtualnetwork
@@ -25,3 +28,4 @@ $newAzVirtualNetworkSplat = @{
 };
 $Vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 }\n
+

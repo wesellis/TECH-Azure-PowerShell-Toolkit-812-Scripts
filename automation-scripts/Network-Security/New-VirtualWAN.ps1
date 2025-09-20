@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Create VWAN
@@ -17,7 +20,8 @@ Hub address prefix (e.g. 10.0.0.0/24)
 .EXAMPLE
 .\New-VirtualWAN.ps1 -ResourceGroup rg-network -Name corp-wan -Location "East US" -HubName hub-east -HubPrefix "10.0.0.0/24"
 #>
-param(
+[CmdletBinding()]
+
     [Parameter(Mandatory)]
     [string]$ResourceGroup,
     [Parameter(Mandatory)]
@@ -39,3 +43,4 @@ if ($HubName -and $HubPrefix) {
     Write-Host "Virtual WAN created successfully" -ForegroundColor Green
     return $wan
 }\n
+

@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Azuresacreateschedules Ms Mgmt Sa
@@ -8,7 +11,8 @@
 
     1.0
     Requires appropriate permissions and modules
-param ($collectAuditLogs,$collectionFromAllSubscriptions)
+[CmdletBinding(SupportsShouldProcess)]
+$collectAuditLogs,$collectionFromAllSubscriptions)
 "Logging in to Azure..."
 $ArmConn = Get-AutomationConnection -Name AzureRunAsConnection
 if ($null -eq $ArmConn)
@@ -134,7 +138,9 @@ foreach ($sch in  $allSchedules|where{$_.Name -match $MetricsScheduleName -or $_
 	    Name = $sch.Name
 	    AutomationAccountName = $AAAccount
 	}
-	Remove-AzureRmAutomationSchedule @params
+	if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
 }
 Write-output  "Creating schedule $MetricsScheduleName for runbook $MetricsRunbookName"
 $i=1
@@ -246,5 +252,8 @@ $params = @{
     Name = $mainSchedulerName
     AutomationAccountName = $AAAccount
 }
-Remove-AzureRmAutomationSchedule @params
+if ($PSCmdlet.ShouldProcess("target", "operation")) {
+        
+    }
 }\n
+

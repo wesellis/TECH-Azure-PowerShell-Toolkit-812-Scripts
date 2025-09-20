@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
         Validates Azure connection and permissions
@@ -18,7 +21,8 @@
     }
 }
 
-function Get-BudgetScope {
+[OutputType([PSCustomObject])]
+ {
     [CmdletBinding()]
     <#
     .SYNOPSIS

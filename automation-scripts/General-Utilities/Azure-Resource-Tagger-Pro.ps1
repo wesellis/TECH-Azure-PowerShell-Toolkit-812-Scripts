@@ -1,3 +1,6 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
 <#
 .SYNOPSIS
     Tag resources
@@ -6,7 +9,8 @@
     Tag resources
     Author: Wes Ellis (wes@wesellis.com)#>
 # Enhanced Azure Resource Tagger with Bulk Operations
-param (
+[CmdletBinding()]
+
     [Parameter()][string]$ResourceGroupName,
     [Parameter()][string]$SubscriptionId,
     [Parameter(Mandatory)][hashtable]$Tags,
@@ -19,8 +23,7 @@ param (
 )
 # Import enhanced functions
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-try {
+if (Test-Path $modulePath) { try {
     if (-not (Get-AzContext)) { throw "Not connected to Azure" }
         # Get resources based on scope
     $resources = if ($ResourceGroupName) {
