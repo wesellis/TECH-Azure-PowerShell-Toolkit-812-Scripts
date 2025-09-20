@@ -1,337 +1,362 @@
-# Excel Dashboard Templates
+# Excel Dashboard Templates for Azure Cost Management
 
-Professional Excel templates for Azure cost analysis and reporting when Power BI is not available.
+Professional Excel templates for organizations that need comprehensive cost analysis without Power BI licensing requirements.
 
 ## Available Templates
 
-### Cost-Analysis-Template.xlsx
+### Cost Analysis Dashboard (`CostAnalysisDashboard.xlsx`)
+**Purpose**: Complete cost visibility and trend analysis
+**Key Features**:
+- Automated data refresh from CSV exports
+- Interactive pivot tables with drill-down capability
+- Month-over-month variance analysis
+- Service and resource group breakdowns
+- Cost trend visualization with forecasting
+**Best For**: Finance analysts, cost center managers, monthly reporting
 
-- **Purpose**: Comprehensive cost analysis and visualization
-- **Features**:
-  - Automated data import from CSV exports
-  - Interactive pivot tables and charts
-  - Month-over-month comparison
-  - Service category breakdown
-  - Resource group analysis
-- **Macros**: VBA automation for data refresh
-- **Target Users**: Finance analysts, Cost center managers
+### Budget Tracking Dashboard (`BudgetTrackingDashboard.xlsx`)
+**Purpose**: Budget monitoring and variance management
+**Key Features**:
+- Budget vs actual comparison with alerts
+- Department-level budget allocation
+- Quarterly projection calculations
+- Conditional formatting for budget status
+- Variance analysis with root cause tracking
+**Best For**: Finance teams, department managers, budget planning
 
-### Budget-Tracking-Template.xlsx
+### Executive Summary Report (`ExecutiveSummaryReport.xlsx`)
+**Purpose**: High-level strategic cost reporting
+**Key Features**:
+- Single-page executive dashboard
+- Key performance indicators (KPIs)
+- Cost optimization recommendations
+- Print-ready formatting for presentations
+- Automated summary calculations
+**Best For**: C-level executives, board presentations, stakeholder reports
 
-- **Purpose**: Budget monitoring and variance analysis
-- **Features**:
-  - Budget vs actual comparison
-  - Variance analysis with conditional formatting
-  - Department-level budget allocation
-  - Quarterly and annual projections
-  - Alert systems for budget overruns
-- **Data Sources**: Manual input or CSV import
-- **Target Users**: Finance teams, Department managers
+## Quick Start Setup
 
-### Executive-Summary-Template.xlsx
+### Prerequisites
+- Excel 2016 or later (Excel 365 recommended)
+- Macro-enabled workbooks support (.xlsm files)
+- CSV export capability from Azure Cost Management
 
-- **Purpose**: High-level executive reporting
-- **Features**:
-  - KPI dashboard with charts
-  - One-page executive summary
-  - Trend analysis and forecasting
-  - Cost optimization recommendations
-  - Print-friendly formatting
-- **Update Frequency**: Monthly
-- **Target Users**: Executives, Finance leadership
+### Initial Setup Process
 
-## Quick Start Guide
+1. **Download and Enable**
+   ```
+   • Download your required template
+   • Open Excel and enable macros when prompted
+   • Save the file to your preferred location
+   • Review the 'Instructions' worksheet
+   ```
 
-### 1. Download and Setup
+2. **Data Connection Setup**
+   ```
+   • Generate CSV export using: Get-AzureCostData.ps1 -Format CSV
+   • In Excel: Data → Get Data → From Text/CSV
+   • Select your cost data CSV file
+   • Configure data types and relationships
+   • Save the data connection for future refreshes
+   ```
 
-1. Download the Excel template you need
-2. Enable macros when prompted (required for auto-refresh)
-3. Save to your desired location
-4. Review the Instructions worksheet
+3. **Initial Validation**
+   ```
+   • Verify data loaded correctly in 'Raw Data' worksheet
+   • Check date ranges and cost amounts
+   • Refresh all calculations (Ctrl+Alt+F9)
+   • Review dashboard for any error indicators
+   ```
 
-### 2. Data Import
+## Template Architecture
 
-**Option A: CSV Import (Recommended)**
-
-- Export cost data using `Get-AzureCostData.ps1`
-- Use Data → Get Data → From Text/CSV
-- Select your exported cost data file
-- Follow the import wizard
-
-**Option B: Manual Entry**
-
-- Use the Data Entry worksheet
-- Follow the column format exactly
-- Validate data using built-in checks
-
-### 3. Refresh and Analyze
-
-1. Click "Refresh All Data" button
-2. Review the Dashboard worksheet
-3. Use filters to drill down into specific areas
-4. Export or print reports as needed
-
-## Template Details
-
-### Cost Analysis Template Structure
-
+### Cost Analysis Dashboard Structure
 ```
-Cost-Analysis-Template.xlsx
-├── Dashboard              # Main view with charts and KPIs
-├── Raw Data              # Imported cost data
-├── Pivot Analysis        # Interactive pivot tables
-├── Trends               # Historical trend analysis
-├── Service Breakdown    # By Azure service
-├── Resource Groups      # By resource group
-├── Instructions         # How to use guide
-└── Settings            # Configuration and parameters
+CostAnalysisDashboard.xlsx
+├── Executive Summary     (High-level overview)
+├── Cost Dashboard       (Main analytical view)
+├── Service Analysis     (By Azure service type)
+├── Resource Groups      (By resource group)
+├── Trend Analysis       (Historical patterns)
+├── Raw Data            (Imported cost data)
+└── Configuration       (Settings and parameters)
 ```
 
-### Budget Tracking Template Structure
+### Key Calculations and Formulas
 
-```
-Budget-Tracking-Template.xlsx
-├── Budget Dashboard      # Main budget overview
-├── Department Budgets    # By department/cost center
-├── Monthly Tracking      # Month-by-month analysis
-├── Variance Analysis     # Budget vs actual
-├── Forecasting          # Projection calculations
-├── Data Entry           # Manual budget input
-└── Instructions         # Setup and usage guide
-```
-
-## Features & Formulas
-
-### Key Excel Formulas Used
-
-#### Cost Calculations
-
+#### Essential Cost Metrics
 ```excel
-// Total Monthly Cost
-=SUMIFS(RawData[Cost], RawData[Date], ">="&DATE(YEAR(TODAY()),MONTH(TODAY()),1))
+# Monthly Total Cost
+=SUMIFS(RawData[Cost], RawData[Date], ">="&EOMONTH(TODAY(),-1)+1, RawData[Date], "<="&EOMONTH(TODAY(),0))
 
-// Month-over-Month Growth
-=((CurrentMonth-PreviousMonth)/PreviousMonth)*100
+# Month-over-Month Growth
+=IFERROR((ThisMonth-LastMonth)/ABS(LastMonth), 0)
 
-// Service Cost Percentage
-=RawData[Cost]/SUM(RawData[Cost])
+# Service Cost Distribution
+=RawData[Cost]/SUMIF(RawData[Date], ">="&StartDate, RawData[Cost])
 
-// Budget Variance
-=Actual-Budget
+# Budget Utilization
+=ActualCost/BudgetAmount
 
-// Variance Percentage
-=(Actual-Budget)/Budget*100
+# Cost per Resource
+=SUMIF(RawData[ResourceGroup], ResourceGroupName, RawData[Cost])/COUNTIF(RawData[ResourceGroup], ResourceGroupName)
 ```
 
 #### Conditional Formatting Rules
+```excel
+# Budget Status Indicators
+Green (≤75% of budget): <=0.75
+Yellow (76-90% of budget): >0.75 AND <=0.90
+Red (>90% of budget): >0.90
+
+# Cost Trend Indicators
+Increasing (↑): >105% of previous period
+Stable (→): 95% to 105% of previous period
+Decreasing (↓): <95% of previous period
+```
+
+## Data Import and Refresh
+
+### Automated CSV Import
+Configure Power Query for seamless data updates:
 
 ```excel
-// Budget Status (Green/Yellow/Red)
-Green: <=80% of budget
-Yellow: 80-95% of budget
-Red: >95% of budget
-
-// Cost Trend (Up/Down arrows)
-Up Arrow: >5% increase
-Down Arrow: >5% decrease
-Flat: -5% to +5% change
+1. Data → Get Data → From Text/CSV
+2. Browse to your cost data export location
+3. Configure column data types:
+   • Date: Date format
+   • Cost: Currency or Number
+   • Tags: Text
+4. Load to existing table in 'Raw Data' worksheet
+5. Save query for future refreshes
 ```
 
-#### Data Validation
-
-```excel
-// Date Range Validation
->=TODAY()-365 AND <=TODAY()
-
-// Cost Amount Validation
->=0 AND <=1000000
-
-// Service Name Validation
-List: "Virtual Machines","Storage","Networking","Databases"
-```
-
-### VBA Macros (Optional)
-
-#### Auto-Refresh Macro
-
-```vb
-Sub RefreshCostData()
-    ' Refresh all external data connections
-    ActiveWorkbook.RefreshAll
-
-    ' Update last refresh timestamp
-    Range("LastRefresh").Value = Now()
-
-    ' Recalculate all formulas
-    Application.CalculateFullRebuild
-
-    MsgBox "Cost data refreshed successfully!"
-End Sub
-```
-
-#### Export Report Macro
-
-```vb
-Sub ExportToPDF()
-    Dim ws As Worksheet
-    Set ws = Worksheets("Dashboard")
-
-    ' Export dashboard to PDF
-    ws.ExportAsFixedFormat _
-        Type:=xlTypePDF, _
-        Filename:="Azure-Cost-Report-" & Format(Date, "yyyy-mm-dd") & ".pdf"
-
-    MsgBox "Report exported to PDF successfully!"
-End Sub
-```
-
-## Sample Data & Templates
-
-### Sample Cost Data Format
-
-```csv
-Date,SubscriptionName,ResourceGroup,ServiceName,ResourceName,Location,Cost,Currency,Tags
-2025-05-01,Production,Production-RG,Virtual Machines,WebServer-01,East US,245.50,USD,Environment:Prod|Department:IT
-2025-05-01,Production,Production-RG,Storage Accounts,proddata001,East US,89.25,USD,Environment:Prod|Department:IT
-2025-05-01,Development,Dev-RG,Virtual Machines,DevServer-01,West US,125.75,USD,Environment:Dev|Department:IT
-```
-
-### Sample Budget Data Format
-
-```csv
-Department,Service,MonthlyBudget,Q1Budget,AnnualBudget,CostCenter
-IT Operations,Virtual Machines,5000,15000,60000,CC001
-IT Operations,Storage,2000,6000,24000,CC001
-Development,Virtual Machines,3000,9000,36000,CC002
-Development,Storage,1000,3000,12000,CC002
-```
-
-## Use Case Scenarios
-
-### Monthly Finance Close
-
-1. **Export** cost data for the month using PowerShell script
-2. **Import** data into Cost Analysis template
-3. **Review** dashboard for anomalies or unexpected costs
-4. **Generate** executive summary report
-5. **Distribute** to finance team and stakeholders
-
-### Department Chargeback
-
-1. **Filter** cost data by department tags
-2. **Export** department-specific cost breakdown
-3. **Create** chargeback reports using Budget template
-4. **Send** to department managers for review
-5. **Track** budget utilization throughout the month
-
-### Cost Optimization Review
-
-1. **Analyze** service-level spending trends
-2. **Identify** top cost drivers and inefficiencies
-3. **Compare** costs across environments (Prod vs Dev)
-4. **Document** optimization opportunities
-5. **Track** savings from implemented changes
-
-## Data Refresh Options
-
-### Option 1: PowerShell Integration
+### PowerShell Integration
+Combine with PowerShell scripts for end-to-end automation:
 
 ```powershell
-# Export cost data and open Excel automatically
-.\Get-AzureCostData.ps1 -Days 30 -ExportPath "cost-data.csv" -OutputFormat "Excel"
-Start-Process "Cost-Analysis-Template.xlsx"
+# Generate fresh cost data and refresh Excel
+.\Export-AzureCostData.ps1 -Days 30 -OutputPath "CostData.csv"
+
+# Open Excel file and refresh data connections
+$excel = New-Object -ComObject Excel.Application
+$workbook = $excel.Workbooks.Open("$PWD\CostAnalysisDashboard.xlsx")
+$workbook.RefreshAll()
+$workbook.Save()
+$excel.Quit()
 ```
 
-### Option 2: Power Query Refresh
+### Manual Data Entry Option
+For scenarios requiring manual input:
 
-1. **Data** tab → **Refresh All**
-2. **Queries** will automatically pull from configured CSV files
-3. **Charts and tables** update automatically
-4. **Save** the workbook with refreshed data
+1. Navigate to 'Data Entry' worksheet
+2. Follow the provided column format
+3. Use data validation dropdowns for consistency
+4. Click 'Validate Data' button before proceeding
+5. Refresh dashboards using 'Update All' button
 
-### Option 3: Manual Data Entry
+## Advanced Features
 
-1. **Navigate** to Data Entry worksheet
-2. **Follow** the column format guidelines
-3. **Use** data validation to ensure accuracy
-4. **Click** Refresh button to update dashboards
+### VBA Automation (Optional)
+Enhance templates with custom macros:
 
-## Customization Guide
+```vb
+Sub RefreshAllData()
+    Application.ScreenUpdating = False
+    
+    ' Refresh external data connections
+    ActiveWorkbook.RefreshAll
+    
+    ' Update timestamp
+    Range("LastRefreshTime").Value = Now()
+    
+    ' Recalculate formulas
+    Application.CalculateFullRebuild
+    
+    ' Update status
+    Range("RefreshStatus").Value = "Data refreshed at " & Format(Now(), "yyyy-mm-dd hh:mm")
+    
+    Application.ScreenUpdating = True
+    MsgBox "Cost data refresh completed successfully!"
+End Sub
 
-### Adding New Charts
+Sub ExportExecutiveSummary()
+    Dim ws As Worksheet
+    Set ws = Worksheets("Executive Summary")
+    
+    ' Export to PDF
+    ws.ExportAsFixedFormat _
+        Type:=xlTypePDF, _
+        Filename:="ExecutiveCostSummary_" & Format(Date, "yyyymmdd") & ".pdf", _
+        Quality:=xlQualityStandard
+        
+    MsgBox "Executive summary exported to PDF!"
+End Sub
+```
 
-1. **Select** data range for new chart
-2. **Insert** → **Chart** → Choose appropriate type
-3. **Format** chart to match template style
-4. **Add** to dashboard worksheet as needed
-
-### Custom Calculations
+### Custom KPI Calculations
+Build organization-specific metrics:
 
 ```excel
-// Custom KPI Formula Example
-=IF(CurrentMonthCost>BudgetAmount, "Over Budget",
-    IF(CurrentMonthCost>BudgetAmount*0.8, "Warning", "On Track"))
+# Cost per Employee
+=TotalMonthlyCost/EmployeeCount
 
-// Department Ranking
-=RANK(DepartmentCost, DepartmentCostRange, 0)
+# Cloud Efficiency Ratio
+=ProductionCost/(ProductionCost+DevelopmentCost)
 
-// Cost per Resource
-=TotalCost/ResourceCount
+# Service Utilization Score
+=SUMPRODUCT(ServiceUsage*ServiceCost)/SUM(ServiceCost)
+
+# Budget Forecast Accuracy
+=1-ABS((ForecastedCost-ActualCost)/ActualCost)
 ```
 
-### Branding and Colors
+## Common Use Cases
 
-- **Primary Color**: RGB(0, 120, 212) - Azure Blue
-- **Secondary Color**: RGB(16, 110, 190) - Dark Blue
-- **Success Color**: RGB(16, 124, 16) - Green
-- **Warning Color**: RGB(255, 140, 0) - Orange
-- **Error Color**: RGB(209, 52, 56) - Red
+### Monthly Financial Close
+**Process Flow**:
+1. Export previous month's cost data using PowerShell
+2. Import into Cost Analysis Dashboard
+3. Review variance analysis and anomalies
+4. Generate executive summary report
+5. Distribute to finance team and stakeholders
+
+**Key Deliverables**:
+- Month-end cost summary
+- Variance explanation report
+- Service-level cost breakdown
+- Budget utilization status
+
+### Department Chargeback
+**Process Flow**:
+1. Filter cost data by department tags
+2. Export department-specific breakdowns
+3. Calculate chargeback amounts using Budget template
+4. Generate individual department reports
+5. Send to department managers for review
+
+**Key Deliverables**:
+- Department cost allocation
+- Service usage by department
+- Chargeback invoices
+- Utilization efficiency metrics
+
+### Cost Optimization Analysis
+**Process Flow**:
+1. Analyze 90-day cost trends by service
+2. Identify top cost drivers and anomalies
+3. Compare costs across environments
+4. Document optimization opportunities
+5. Track savings from implemented changes
+
+**Key Deliverables**:
+- Cost optimization recommendations
+- Savings opportunity analysis
+- Environment comparison report
+- ROI tracking for optimization efforts
 
 ## Troubleshooting
 
-### Common Issues
+### Data Import Issues
+**Problem**: CSV import fails or shows errors
+**Solutions**:
+- Verify CSV format matches expected structure
+- Check for special characters in cost amounts
+- Ensure date formats are consistent (YYYY-MM-DD)
+- Validate file permissions and accessibility
 
-#### Macros Not Working
+**Problem**: Formulas showing #REF! or #VALUE! errors
+**Solutions**:
+- Check named ranges in Formula → Name Manager
+- Verify data types match formula expectations
+- Ensure all referenced worksheets exist
+- Update cell references if data structure changed
 
-- **Enable macros** in Excel security settings
-- **Check** if VBA references are broken
-- **Verify** file is saved as .xlsm (macro-enabled)
+### Performance Optimization
+**For Large Datasets** (>50K rows):
+- Enable manual calculation mode (Formulas → Calculation Options → Manual)
+- Use structured tables instead of cell ranges
+- Limit conditional formatting to essential cells only
+- Consider splitting data across multiple workbooks by time period
 
-#### Data Import Errors
+**Memory Management**:
+- Close unused applications while working with large files
+- Save frequently to prevent data loss
+- Use 64-bit Excel for datasets larger than 100K rows
+- Consider Power Query for data transformation instead of formulas
 
-- **Check CSV format** matches expected structure
-- **Verify date formats** are consistent
-- **Ensure no special characters** in cost amounts
-- **Check file permissions** and location
+### Macro Security
+**Issue**: Macros disabled or not working
+**Resolution**:
+1. File → Options → Trust Center → Trust Center Settings
+2. Macro Settings → Enable all macros (for trusted files)
+3. Save file as .xlsm (macro-enabled workbook)
+4. Add file location to Trusted Locations if needed
 
-#### Formula Errors
+## Customization Guide
 
-- **Verify data ranges** in named ranges
-- **Check for missing data** in key columns
-- **Ensure proper data types** (dates, numbers, text)
-- **Update references** if worksheet names changed
+### Adding Custom Charts
+```excel
+1. Select your data range
+2. Insert → Charts → Choose appropriate chart type
+3. Apply consistent formatting:
+   • Font: Segoe UI, 10pt
+   • Colors: Azure theme palette
+   • Remove unnecessary gridlines
+4. Position on dashboard worksheet
+5. Link chart title to dynamic cell reference
+```
 
-#### Performance Issues
+### Custom Conditional Formatting
+Create visual indicators for cost thresholds:
 
-- **Limit data range** to current year only
-- **Remove unnecessary formatting** from large ranges
-- **Use manual calculation** mode for large datasets
-- **Close other applications** to free up memory
+```excel
+# High Cost Alert (>$1000)
+Format: Red fill, bold text
+Formula: =AND(CostValue>1000, CostValue<>"")
 
-## Support & Resources
+# Budget Warning (>80% of budget)
+Format: Yellow fill, dark text
+Formula: =CostValue/BudgetValue>0.8
 
-### Getting Help
+# Savings Opportunity (decreasing trend)
+Format: Green fill, white text
+Formula: =TrendValue<-0.05
+```
 
-- **Documentation**: See `/docs` folder for detailed guides
-- **Issues**: Report problems on GitHub with "excel" label
-- **Community**: Excel community forums for general Excel help
+### Branding and Styling
+**Color Palette**:
+- Primary: #0078D4 (Azure Blue)
+- Secondary: #106EBE (Dark Blue)  
+- Success: #107C10 (Green)
+- Warning: #FF8C00 (Orange)
+- Error: #D13438 (Red)
+- Neutral: #605E5C (Gray)
 
-### Additional Resources
+**Typography**:
+- Headers: Segoe UI Semibold, 14pt
+- Body text: Segoe UI, 11pt
+- Data values: Segoe UI, 10pt
 
-- **Microsoft Excel Help**: https://support.microsoft.com/excel
-- **Power Query Documentation**: https://docs.microsoft.com/power-query/
-- **VBA Reference**: https://docs.microsoft.com/office/vba/excel
+## Support and Resources
+
+### Template Support
+- **Documentation**: Complete user guides included in each template
+- **Issues**: Report template bugs with specific error messages
+- **Customization**: Contact wes@wesellis.com for custom template development
+- **Training**: Excel training resources available for complex features
+
+### Best Practices
+- **Data Backup**: Save original templates before customization
+- **Version Control**: Use descriptive file names with dates
+- **Testing**: Validate formulas with known data before production use
+- **Security**: Protect sensitive worksheets and consider file encryption
+
+### Update Process
+- **Monthly**: Check for template updates and new features
+- **Quarterly**: Review custom formulas for accuracy
+- **Annually**: Validate data connections and refresh procedures
 
 ---
 
-**Note**: Excel templates provide full functionality for cost analysis when Power BI is not available. Templates include comprehensive documentation and examples for easy adoption.
+**Templates provide complete Azure cost analysis functionality in Excel when Power BI is not available. Each template includes comprehensive documentation, examples, and support for immediate deployment.**

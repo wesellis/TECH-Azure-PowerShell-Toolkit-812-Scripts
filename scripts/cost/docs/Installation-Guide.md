@@ -1,303 +1,443 @@
-# Installation Guide
-
-This guide will walk you through setting up the Azure Cost Management Dashboard from scratch.
+# Azure Cost Management Dashboard Installation Guide
 
 ## Prerequisites
 
 ### Azure Requirements
-
-- **Azure Subscription** with active resources
-- **Cost Management Reader** role or higher
-- **Resource Reader** role for resource analysis
-- **Service Principal** for automated data collection (optional but recommended)
+- Active Azure subscription with cost data
+- **Cost Management Reader** role (minimum required)
+- **Reader** role for resource metadata access
+- Administrative access to create service principals (for automation)
 
 ### Software Requirements
+- **PowerShell 7.0+** ([Download here](https://github.com/PowerShell/PowerShell/releases))
+- **Azure PowerShell Module** (Az)
+- **Git** for repository management
+- **Modern web browser** (Chrome, Firefox, Edge, Safari)
 
-- **PowerShell 5.1+** (PowerShell 7+ recommended)
-- **Azure PowerShell Module** (Az module)
-- **Power BI Desktop** (for dashboard customization)
-- **Excel 2016+** or **Excel Online** (for Excel templates)
-- **Web Browser** (Chrome, Firefox, Edge, Safari)
+### Optional Components
+- **Power BI Desktop** (for advanced visualizations)
+- **Excel 2016+** (for Excel-based reports)
+- **Visual Studio Code** (for customization)
 
-### Development Requirements (Optional)
+## Installation Steps
 
-- **Visual Studio Code** with PowerShell extension
-- **Git** for version control
-- **Node.js** (if extending web dashboard)
+### Step 1: Download the Dashboard
 
-## Step 1: Clone the Repository
-
-```bash
+#### Option A: Git Clone (Recommended)
+```powershell
 # Clone the repository
 git clone https://github.com/wesellis/Azure-Cost-Management-Dashboard.git
-
-# Navigate to the project directory
 cd Azure-Cost-Management-Dashboard
 ```
 
-## Step 2: Install PowerShell Dependencies
+#### Option B: Direct Download
+Download and extract the ZIP file from the repository to your desired location.
 
-### Automatic Installation
+### Step 2: Install PowerShell Dependencies
+
+Run the automated installer:
 
 ```powershell
-# Run the automated prerequisite installer
-.\scripts\setup\Install-Prerequisites.ps1
+# Navigate to the dashboard directory
+cd Azure-Cost-Management-Dashboard
+
+# Execute the setup script
+.\Install-Prerequisites.ps1
 ```
 
-### Manual Installation
+If you prefer manual installation:
 
 ```powershell
 # Install Azure PowerShell module
-Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
+if (-not (Get-Module -ListAvailable -Name Az)) {
+    Install-Module -Name Az -Repository PSGallery -Force -AllowClobber -Scope CurrentUser
+}
 
 # Install Excel module for report generation
-Install-Module -Name ImportExcel -Repository PSGallery -Force
-
-# Install HTML report module
-Install-Module -Name PSWriteHTML -Repository PSGallery -Force
+if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
+    Install-Module -Name ImportExcel -Repository PSGallery -Force -Scope CurrentUser
+}
 
 # Verify installations
-Get-Module -Name Az -ListAvailable
-Get-Module -Name ImportExcel -ListAvailable
+Get-Module -Name Az, ImportExcel -ListAvailable
 ```
 
-## Step 3: Azure Authentication Setup
+### Step 3: Azure Authentication
 
-### Option A: Interactive Authentication (Quick Start)
-
+#### Quick Start (Interactive Login)
 ```powershell
-# Connect to Azure interactively
+# Connect to Azure
 Connect-AzAccount
 
-# Select subscription if you have multiple
+# Select your subscription (if you have multiple)
 Set-AzContext -SubscriptionId "your-subscription-id"
 
 # Verify connection
 Get-AzContext
 ```
 
-### Option B: Service Principal Authentication (Recommended for Automation)
+#### Production Setup (Service Principal)
+For automated scenarios, create a service principal:
 
 ```powershell
-# Run the authentication setup script
-.\scripts\setup\Setup-Authentication.ps1
+# Run the authentication setup wizard
+.\Setup-Authentication.ps1
 
 # Or create manually:
-# 1. Create service principal
-$sp = New-AzADServicePrincipal -DisplayName "Azure-Cost-Dashboard"
+$servicePrincipal = New-AzADServicePrincipal -DisplayName "CostDashboard-SP"
 
-# 2. Assign required roles
-New-AzRoleAssignment -ObjectId $sp.Id -RoleDefinitionName "Cost Management Reader" -Scope "/subscriptions/your-subscription-id"
-New-AzRoleAssignment -ObjectId $sp.Id -RoleDefinitionName "Reader" -Scope "/subscriptions/your-subscription-id"
+# Assign minimum required permissions
+$subscriptionScope = "/subscriptions/$(Get-AzContext | Select-Object -ExpandProperty Subscription | Select-Object -ExpandProperty Id)"
+New-AzRoleAssignment -ObjectId $servicePrincipal.Id -RoleDefinitionName "Cost Management Reader" -Scope $subscriptionScope
+New-AzRoleAssignment -ObjectId $servicePrincipal.Id -RoleDefinitionName "Reader" -Scope $subscriptionScope
 
-# 3. Create configuration file
-@{
-    TenantId = "your-tenant-id"
-    ClientId = $sp.ApplicationId
-    ClientSecret = "your-client-secret"
-    SubscriptionId = "your-subscription-id"
-} | ConvertTo-Json | Out-File -FilePath "config\auth.json"
+Write-Host "Service Principal Created:" -ForegroundColor Green
+Write-Host "Application ID: $($servicePrincipal.ApplicationId)" -ForegroundColor Yellow
+Write-Host "Store the secret securely!" -ForegroundColor Red
 ```
 
-## Step 4: Configuration
+### Step 4: Configuration
 
-### Create Configuration File
+Create your configuration file:
 
 ```powershell
-# Copy sample configuration
-Copy-Item "config\sample-config.json" "config\config.json"
+# Copy the template configuration
+Copy-Item "config\template.json" "config\settings.json"
 
-# Edit configuration with your details
-notepad config\config.json
+# Edit the configuration
+notepad config\settings.json
 ```
 
-### Sample Configuration
+Minimal configuration example:
 
 ```json
 {
-    "azure": {
-        "subscriptionId": "your-subscription-id",
-        "tenantId": "your-tenant-id",
-        "resourceGroups": ["Production-RG", "Development-RG"],
-        "excludedServices": ["Microsoft.Insights"]
-    },
-    "dashboard": {
-        "refreshSchedule": "Daily",
-        "dataRetentionDays": 90,
-        "currencyCode": "USD"
-    },
-    "notifications": {
-        "enabled": true,
-        "emailRecipients": ["finance@company.com"],
-        "budgetThresholds": [50, 80, 95]
-    },
-    "exports": {
-        "autoExport": true,
-        "formats": ["Excel", "CSV"],
-        "exportPath": "data\\exports"
-    }
+  "azure": {
+    "subscriptionId": "your-subscription-id",
+    "scope": "subscription"
+  },
+  "reporting": {
+    "defaultCurrency": "USD",
+    "defaultDateRange": 30,
+    "outputDirectory": "reports"
+  },
+  "performance": {
+    "maxRecordsPerQuery": 50000,
+    "enableCaching": true
+  }
 }
 ```
 
-## Step 5: Test Installation
+### Step 5: Validation
 
-### Run Basic Cost Data Test
-
-```powershell
-# Test cost data retrieval
-.\scripts\data-collection\Get-AzureCostData.ps1 -Days 7 -OutputFormat "Console"
-```
-
-### Verify Module Installation
+Test your installation:
 
 ```powershell
-# Run system check
-.\scripts\setup\Test-Prerequisites.ps1
+# Run the validation script
+.\Test-Installation.ps1
 ```
+
+The validation script checks:
+- PowerShell version compatibility
+- Required modules installation
+- Azure authentication status
+- Cost Management API access
+- Configuration file validity
 
 Expected output:
-
 ```
-✓ PowerShell version: 7.3.4
-✓ Az module installed: 10.0.0
-✓ ImportExcel module installed: 7.8.4
-✓ Azure connection: Connected
-✓ Subscription access: Verified
-✓ Cost Management permissions: Verified
+✓ PowerShell 7.3.4 - Compatible
+✓ Az module 10.4.1 - Installed
+✓ ImportExcel module 7.8.4 - Installed
+✓ Azure authentication - Active
+✓ Subscription access - Verified
+✓ Cost Management API - Accessible
+✓ Configuration file - Valid
+Installation validation completed successfully!
 ```
 
-## Step 6: Deploy Dashboards
+### Step 6: Generate Your First Report
 
-### Power BI Dashboard
-
-1. **Open Power BI Desktop**
-2. **Open** `dashboards\PowerBI\Azure-Cost-Dashboard.pbix`
-3. **Update data source** with your Azure credentials
-4. **Refresh data** to populate with your cost information
-5. **Publish** to Power BI Service (optional)
-
-### Excel Dashboard
-
-1. **Open** `dashboards\Excel\Cost-Analysis-Template.xlsx`
-2. **Enable macros** if prompted
-3. **Update data connections** in Data tab
-4. **Refresh all** to load your cost data
-
-### Web Dashboard
-
-1. **Open** `dashboards\Web\index.html` in a web browser
-2. **Configure API endpoints** (if using real-time data)
-3. **Host on web server** (optional)
-
-## Step 7: Setup Automation (Optional)
-
-### Schedule Automated Reports
+Test the dashboard with a simple cost report:
 
 ```powershell
-# Setup daily cost reports
-.\scripts\automation\Schedule-CostReports.ps1 -Type "Daily" -Recipients "finance@company.com"
+# Generate a 7-day cost summary
+.\Get-CostReport.ps1 -Days 7 -Format Console
 
-# Setup budget alerts
-.\scripts\automation\Setup-BudgetAlerts.ps1 -BudgetAmount 10000 -AlertThreshold @(80, 95)
+# Generate an Excel report
+.\Get-CostReport.ps1 -Days 30 -Format Excel -OutputPath "reports\first-report.xlsx"
 ```
 
-### Windows Task Scheduler
+## Dashboard Components
+
+### PowerShell Reports
+The core reporting engine with multiple output formats:
 
 ```powershell
-# Create scheduled task for daily reports
-$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File `"C:\Azure-Cost-Dashboard\scripts\automation\Daily-Report.ps1`""
-$trigger = New-ScheduledTaskTrigger -Daily -At "08:00AM"
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+# Daily cost summary
+.\Get-DailyCosts.ps1
+
+# Resource group breakdown
+.\Get-ResourceGroupCosts.ps1
+
+# Service-wise analysis
+.\Get-ServiceCosts.ps1
+
+# Budget tracking
+.\Get-BudgetStatus.ps1
+```
+
+### Power BI Dashboard (Optional)
+If you have Power BI Desktop installed:
+
+1. Open `dashboards\PowerBI\AzureCostDashboard.pbix`
+2. Update data source parameters with your subscription details
+3. Refresh the data to populate with your cost information
+4. Publish to Power BI Service if needed
+
+### Excel Templates (Optional)
+Pre-built Excel templates with charts and pivot tables:
+
+1. Open `dashboards\Excel\CostAnalysisTemplate.xlsx`
+2. Enable content and macros if prompted
+3. Use the "Refresh Data" button to load your cost information
+
+## Automation Setup (Optional)
+
+### Schedule Regular Reports
+
+Create a scheduled task for daily cost reports:
+
+```powershell
+# Create daily report task
+.\Setup-Automation.ps1 -Schedule Daily -Recipients "finance@company.com"
+```
+
+Manual task creation:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File `"$(Get-Location)\Get-DailyCosts.ps1`""
+$trigger = New-ScheduledTaskTrigger -Daily -At "8:00 AM"
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
 
 Register-ScheduledTask -TaskName "Azure Cost Daily Report" -Action $action -Trigger $trigger -Settings $settings
 ```
 
-## Step 8: Verification
+### Budget Alerts
 
-### Verify Installation
+Set up automated budget monitoring:
 
 ```powershell
-# Run comprehensive test
-.\scripts\setup\Verify-Installation.ps1
+# Configure budget alerts
+.\Setup-BudgetAlerts.ps1 -BudgetAmount 5000 -AlertThresholds @(80, 90, 95)
 ```
 
-### Generate Test Report
+## Security Configuration
+
+### Credential Storage
+
+Store service principal credentials securely:
 
 ```powershell
-# Generate sample report to verify everything works
-.\scripts\utilities\Export-CostReports.ps1 -Type "Weekly" -Format "Excel" -OutputPath "test-report.xlsx"
+# Option 1: Environment variables
+$env:AZURE_CLIENT_ID = "your-client-id"
+$env:AZURE_CLIENT_SECRET = "your-client-secret"
+$env:AZURE_TENANT_ID = "your-tenant-id"
+
+# Option 2: Windows Credential Manager
+cmdkey /add:AzureCostDashboard /user:your-client-id /pass:your-client-secret
+
+# Option 3: Azure Key Vault (recommended for production)
+Set-AzKeyVaultSecret -VaultName "your-keyvault" -Name "cost-dashboard-secret" -SecretValue (ConvertTo-SecureString "your-client-secret" -AsPlainText -Force)
+```
+
+### Access Control
+
+Implement role-based access for teams:
+
+```json
+{
+  "security": {
+    "allowedUsers": [
+      "finance@company.com",
+      "manager@company.com"
+    ],
+    "auditLogging": true,
+    "encryptExports": false
+  }
+}
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Common Installation Issues
 
-#### Authentication Errors
+#### PowerShell Module Conflicts
+```powershell
+# Remove old AzureRM modules
+Uninstall-Module AzureRM -AllVersions -Force
 
+# Clean module cache
+Remove-Module Az* -Force
+Import-Module Az -Force
+```
+
+#### Authentication Problems
 ```powershell
 # Clear cached credentials
-Disconnect-AzAccount
 Clear-AzContext -Force
+Disconnect-AzAccount
 
 # Reconnect
 Connect-AzAccount
 ```
 
-#### Permission Issues
-
-- Verify you have **Cost Management Reader** role
-- Check subscription access with `Get-AzSubscription`
-- Ensure service principal has correct permissions
-
-#### Module Installation Issues
-
+#### Permission Errors
 ```powershell
-# Update PowerShellGet
-Install-Module PowerShellGet -Force -AllowClobber
+# Check current role assignments
+Get-AzRoleAssignment -SignInName (Get-AzContext).Account.Id
 
-# Install modules with admin privileges
-Install-Module Az -Force -AllowClobber -Scope AllUsers
+# Verify Cost Management access
+try {
+    Get-AzConsumptionUsageDetail -Top 1
+    Write-Host "Cost Management access: OK" -ForegroundColor Green
+}
+catch {
+    Write-Host "Cost Management access: Failed - $($_.Exception.Message)" -ForegroundColor Red
+}
 ```
 
-#### Data Collection Issues
+### Performance Issues
 
-- Verify subscription has cost data (some new subscriptions may have delays)
-- Check date ranges (cost data may not be available for current day)
-- Ensure resources exist in the subscription
+For large subscriptions, optimize queries:
+
+```json
+{
+  "performance": {
+    "maxRecordsPerQuery": 10000,
+    "enableCaching": true,
+    "cacheExpirationHours": 4,
+    "excludedResourceGroups": ["logs-rg", "monitoring-rg"]
+  }
+}
+```
+
+### Data Availability
+
+Cost data characteristics:
+- **Current day**: Usually not available until next day
+- **Previous day**: Available by 8-24 hours
+- **Historical data**: Typically available up to 13 months
+- **New subscriptions**: May have 24-48 hour delay for first data
+
+## Advanced Configuration
+
+### Multi-Subscription Setup
+
+For organizations with multiple subscriptions:
+
+```json
+{
+  "azure": {
+    "subscriptions": [
+      {
+        "id": "prod-subscription-id",
+        "name": "Production",
+        "scope": "subscription"
+      },
+      {
+        "id": "dev-subscription-id", 
+        "name": "Development",
+        "scope": "resourceGroup",
+        "resourceGroups": ["dev-rg", "test-rg"]
+      }
+    ]
+  }
+}
+```
+
+### Custom Cost Allocation
+
+Implement department-based cost allocation:
+
+```json
+{
+  "costAllocation": {
+    "enabled": true,
+    "rules": [
+      {
+        "name": "Department Allocation",
+        "tagKey": "Department",
+        "method": "tagBased",
+        "fallback": "resourceGroup"
+      }
+    ]
+  }
+}
+```
+
+### Integration with External Systems
+
+Export data to external systems:
+
+```powershell
+# Export to CSV for external analysis
+.\Export-CostData.ps1 -Format CSV -OutputPath "exports\cost-data.csv"
+
+# Push to database
+.\Export-CostData.ps1 -Format Database -ConnectionString "your-connection-string"
+
+# Send to REST API
+.\Export-CostData.ps1 -Format API -Endpoint "https://your-api.com/costs"
+```
+
+## Maintenance
+
+### Regular Updates
+
+Keep the dashboard updated:
+
+```powershell
+# Update PowerShell modules
+Update-Module Az, ImportExcel
+
+# Update dashboard code (if using Git)
+git pull origin main
+
+# Verify after updates
+.\Test-Installation.ps1
+```
+
+### Monitoring
+
+Monitor dashboard health:
+
+```powershell
+# Check dashboard status
+.\Get-DashboardStatus.ps1
+
+# Review logs
+Get-Content "logs\dashboard.log" -Tail 50
+
+# Test API connectivity
+.\Test-AzureConnectivity.ps1
+```
+
+## Support and Documentation
+
+### Additional Resources
+- **Configuration Guide**: Detailed configuration options
+- **User Guide**: How to use dashboards and reports
+- **API Reference**: PowerShell cmdlet documentation
+- **FAQ**: Common questions and solutions
 
 ### Getting Help
-
-1. **Check logs** in `logs\` directory
-2. **Run diagnostics** with `.\scripts\setup\Diagnose-Issues.ps1`
-3. **Review documentation** in `docs\` folder
-4. **Check GitHub Issues** for known problems
-5. **Contact support** at wes@wesellis.com
-
-## Next Steps
-
-1. **Customize dashboards** to match your organization's needs
-2. **Setup automated reporting** for stakeholders
-3. **Configure budget alerts** for proactive monitoring
-4. **Explore optimization recommendations** to reduce costs
-5. **Setup role-based access** for different user groups
-
-## Security Considerations
-
-- **Store credentials securely** using Azure Key Vault or Windows Credential Manager
-- **Use managed identities** when running on Azure VMs
-- **Limit service principal permissions** to minimum required
-- **Regularly rotate secrets** and access keys
-- **Enable audit logging** for compliance
-
-## Performance Optimization
-
-- **Use specific date ranges** to reduce data volume
-- **Filter by resource groups** when possible
-- **Cache frequently accessed data** to reduce API calls
-- **Schedule reports during off-peak hours** - **Use incremental data refresh** for large datasets
+1. Check the troubleshooting section above
+2. Review logs in the `logs\` directory
+3. Run diagnostic script: `.\Diagnose-Installation.ps1`
+4. Check GitHub Issues for known problems
+5. Contact support: wes@wesellis.com
 
 ---
 
-**Installation Complete!** Your Azure Cost Management Dashboard is now ready to use. Start by generating your first cost report and exploring the interactive dashboards.
-
-For additional configuration options, see the [Configuration Guide](Configuration-Guide.md).
+**Installation Complete!** Your Azure Cost Management Dashboard is ready. Start by generating your first report and exploring the available dashboards. Consider setting up automation for regular cost monitoring and alerts.

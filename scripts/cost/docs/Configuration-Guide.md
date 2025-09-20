@@ -1,1 +1,478 @@
-# Configuration Guide This guide covers all configuration options for the Azure Cost Management Dashboard. ## **Configuration Files** ### **Main Configuration (config.json)** Primary configuration file containing Azure connection settings, dashboard preferences, and automation parameters. ```json { "azure": { "subscriptionId": "12345678-1234-1234-1234-123456789012", "tenantId": "87654321-4321-4321-4321-210987654321", "resourceGroups": ["Production-RG", "Development-RG", "Testing-RG"], "excludedServices": ["Microsoft.Insights", "Microsoft.Advisor"], "defaultRegion": "East US", "costManagementScope": "subscription" }, "dashboard": { "refreshSchedule": "Daily", "dataRetentionDays": 90, "currencyCode": "USD", "timeZone": "Eastern Standard Time", "theme": "Azure", "defaultDateRange": 30 }, "notifications": { "enabled": true, "emailRecipients": ["finance@company.com", "it-manager@company.com"], "budgetThresholds": [50, 80, 95], "anomalyDetection": true, "weeklyReports": true, "monthlyReports": true }, "exports": { "autoExport": true, "formats": ["Excel", "CSV", "PDF"], "exportPath": "data\\exports", "retentionDays": 365, "compression": true }, "security": { "encryptExports": false, "auditLogging": true, "accessControl": true, "dataClassification": "Internal" }, "performance": { "maxRecordsPerQuery": 100000, "queryTimeout": 300, "cacheEnabled": true, "cacheDuration": 3600 } } ``` ### **Authentication Configuration (auth.json)** Secure authentication settings for Azure API access. ```json { "tenantId": "your-tenant-id", "clientId": "your-service-principal-client-id", "clientSecret": "your-service-principal-secret", "subscriptionId": "your-default-subscription-id", "authMethod": "ServicePrincipal", "scope": ["https://management.azure.com/.default"], "tokenCacheEnabled": true } ``` ## ⚙️ **Configuration Sections** ### **Azure Settings** #### **subscriptionId** - **Type**: String (GUID) - **Required**: Yes - **Description**: Primary Azure subscription for cost analysis - **Example**: `"12345678-1234-1234-1234-123456789012"` #### **tenantId** - **Type**: String (GUID) - **Required**: Yes (for service principal auth) - **Description**: Azure Active Directory tenant identifier - **Example**: `"87654321-4321-4321-4321-210987654321"` #### **resourceGroups** - **Type**: Array of strings - **Required**: No - **Description**: Specific resource groups to monitor (empty = all) - **Example**: `["Production-RG", "Development-RG"]` #### **excludedServices** - **Type**: Array of strings - **Required**: No - **Description**: Azure services to exclude from cost analysis - **Common Values**: - `"Microsoft.Insights"` (Application Insights) - `"Microsoft.Advisor"` (Azure Advisor) - `"Microsoft.Support"` (Support plans) #### **costManagementScope** - **Type**: String - **Required**: No - **Default**: `"subscription"` - **Options**: `"subscription"`, `"resourceGroup"`, `"managementGroup"` - **Description**: Default scope for cost queries ### **Dashboard Settings** #### **refreshSchedule** - **Type**: String - **Required**: No - **Default**: `"Daily"` - **Options**: `"Hourly"`, `"Daily"`, `"Weekly"`, `"Manual"` - **Description**: How frequently to refresh dashboard data #### **dataRetentionDays** - **Type**: Integer - **Required**: No - **Default**: `90` - **Range**: 30-730 - **Description**: How long to retain historical cost data #### **currencyCode** - **Type**: String - **Required**: No - **Default**: `"USD"` - **Options**: `"USD"`, `"EUR"`, `"GBP"`, `"CAD"`, etc. - **Description**: Display currency for cost amounts #### **timeZone** - **Type**: String - **Required**: No - **Default**: `"UTC"` - **Description**: Time zone for date/time displays - **Example**: `"Eastern Standard Time"`, `"Pacific Standard Time"` #### **theme** - **Type**: String - **Required**: No - **Default**: `"Azure"` - **Options**: `"Azure"`, `"Dark"`, `"Light"`, `"Custom"` - **Description**: Visual theme for dashboards ### **Notification Settings** #### **emailRecipients** - **Type**: Array of strings - **Required**: Yes (if notifications enabled) - **Description**: Email addresses for cost alerts and reports - **Example**: `["finance@company.com", "manager@company.com"]` #### **budgetThresholds** - **Type**: Array of integers - **Required**: No - **Default**: `[80, 95]` - **Range**: 1-100 - **Description**: Budget percentage thresholds for alerts #### **anomalyDetection** - **Type**: Boolean - **Required**: No - **Default**: `true` - **Description**: Enable automated anomaly detection and alerts ### **Export Settings** #### **autoExport** - **Type**: Boolean - **Required**: No - **Default**: `false` - **Description**: Automatically export reports on schedule #### **formats** - **Type**: Array of strings - **Required**: No - **Default**: `["Excel"]` - **Options**: `"Excel"`, `"CSV"`, `"PDF"`, `"HTML"`, `"JSON"` - **Description**: Export formats to generate #### **exportPath** - **Type**: String - **Required**: No - **Default**: `"data\\exports"` - **Description**: Directory for exported reports ## **Security Configuration** ### **Service Principal Setup** ```powershell # Create service principal for dashboard authentication $sp = New-AzADServicePrincipal -DisplayName "Azure-Cost-Dashboard" # Assign minimum required permissions New-AzRoleAssignment -ObjectId $sp.Id -RoleDefinitionName "Cost Management Reader" -Scope "/subscriptions/your-subscription-id" New-AzRoleAssignment -ObjectId $sp.Id -RoleDefinitionName "Reader" -Scope "/subscriptions/your-subscription-id" # Save credentials securely $authConfig = @{ tenantId = "your-tenant-id" clientId = $sp.ApplicationId clientSecret = "your-client-secret" subscriptionId = "your-subscription-id" } $authConfig | ConvertTo-Json | Out-File "config\auth.json" ``` ### **Encryption Settings** ```json { "security": { "encryptExports": true, "encryptionKey": "your-encryption-key", "auditLogging": true, "logLevel": "Information", "accessControl": true, "allowedUsers": ["user1@company.com", "user2@company.com"], "dataClassification": "Confidential" } } ``` ## **Email Configuration** ### **SMTP Settings** ```json { "email": { "smtpServer": "smtp.office365.com", "smtpPort": 587, "useSSL": true, "authMethod": "Basic", "fromAddress": "costmanagement@company.com", "fromDisplayName": "Azure Cost Management", "templatePath": "templates\\email" } } ``` ### **Office 365 Configuration** ```json { "email": { "smtpServer": "smtp.office365.com", "smtpPort": 587, "useSSL": true, "authMethod": "OAuth2", "tenantId": "your-tenant-id", "clientId": "your-email-app-id", "clientSecret": "your-email-app-secret" } } ``` ### **Gmail Configuration** ```json { "email": { "smtpServer": "smtp.gmail.com", "smtpPort": 587, "useSSL": true, "authMethod": "AppPassword", "username": "your-gmail@gmail.com", "appPassword": "your-app-password" } } ``` ## **Environment-Specific Configurations** ### **Development Environment** ```json { "azure": { "subscriptionId": "dev-subscription-id", "resourceGroups": ["Dev-RG", "Test-RG"] }, "dashboard": { "refreshSchedule": "Manual", "dataRetentionDays": 30 }, "notifications": { "enabled": false }, "exports": { "autoExport": false } } ``` ### **Production Environment** ```json { "azure": { "subscriptionId": "prod-subscription-id", "resourceGroups": [] }, "dashboard": { "refreshSchedule": "Daily", "dataRetentionDays": 365 }, "notifications": { "enabled": true, "budgetThresholds": [75, 90, 95, 100] }, "exports": { "autoExport": true, "retentionDays": 1095 }, "security": { "encryptExports": true, "auditLogging": true } } ``` ## **comprehensive Configuration** ### **Custom Cost Allocation** ```json { "costAllocation": { "enabled": true, "rules": [ { "name": "Department Allocation", "tagKey": "Department", "method": "TagBased", "fallbackMethod": "ResourceGroup" }, { "name": "Project Allocation", "tagKey": "Project", "method": "TagBased", "includeSharedCosts": true } ], "sharedCostDistribution": { "method": "Proportional", "sharedServices": ["Networking", "Security", "Management"] } } } ``` ### **Custom Dashboards** ```json { "customDashboards": [ { "name": "Executive Summary", "type": "PowerBI", "file": "dashboards\\PowerBI\\Executive-Summary.pbix", "refreshSchedule": "Weekly", "recipients": ["executives@company.com"] }, { "name": "Department Breakdown", "type": "Excel", "template": "dashboards\\Excel\\Department-Template.xlsx", "refreshSchedule": "Daily", "recipients": ["managers@company.com"] } ] } ``` ### **API Rate Limiting** ```json { "apiLimits": { "costManagementApi": { "requestsPerMinute": 30, "requestsPerHour": 1000, "retryAttempts": 3, "retryDelay": 5000 }, "resourceGraphApi": { "requestsPerMinute": 60, "requestsPerHour": 2000, "retryAttempts": 5, "retryDelay": 2000 } } } ``` ## ️ **Configuration Management** ### **Environment Variables** Set sensitive values using environment variables: ```powershell # Set Azure authentication $env:AZURE_TENANT_ID = "your-tenant-id" $env:AZURE_CLIENT_ID = "your-client-id" $env:AZURE_CLIENT_SECRET = "your-client-secret" # Set email credentials $env:SMTP_USERNAME = "your-email@company.com" $env:SMTP_PASSWORD = "your-password" ``` ### **Configuration Validation** ```powershell # Validate configuration file .\scripts\utilities\Test-Configuration.ps1 -ConfigPath "config\config.json" # Validate Azure connectivity .\scripts\utilities\Test-AzureConnection.ps1 # Validate email settings .\scripts\utilities\Test-EmailConfiguration.ps1 ``` ### **Configuration Templates** Create configuration templates for different scenarios: ```powershell # Generate configuration for new environment .\scripts\setup\New-Configuration.ps1 -Environment "Production" -SubscriptionId "your-sub-id" # Update existing configuration .\scripts\setup\Update-Configuration.ps1 -ConfigPath "config\config.json" -Setting "dashboard.refreshSchedule" -Value "Hourly" ``` ## **Troubleshooting Configuration** ### **Common Configuration Issues** #### **Azure Authentication Failures** - Check service principal permissions - Verify tenant ID and client ID - Ensure client secret hasn't expired - Check subscription access #### **Email Delivery Issues** - Verify SMTP server settings - Check firewall and network connectivity - Validate email credentials - Test with simple SMTP client #### **Data Access Problems** - Confirm Cost Management Reader role assignment - Check subscription scope and permissions - Verify resource group access - Test with Azure CLI/PowerShell ### **Configuration Validation Script** ```powershell # Run comprehensive configuration test .\scripts\setup\Validate-Configuration.ps1 -Verbose # Test specific configuration section .\scripts\setup\Test-ConfigSection.ps1 -Section "azure" -ConfigPath "config\config.json" ``` ## **Configuration Support** For configuration assistance: - **Documentation**: See `/docs` folder for detailed guides - **Examples**: Check `/config/examples` for sample configurations - **Issues**: Report configuration problems on GitHub - **Email**: wes@wesellis.com for configuration consultation --- **Next Steps**: After configuring, run the installation validation script and generate your first cost report to verify everything is working correctly. 
+# Azure Cost Management Dashboard Configuration Guide
+
+## Prerequisites
+
+- Azure PowerShell module (Az.Accounts, Az.CostManagement, Az.Resources)
+- PowerShell 7.0 or later
+- Azure subscription with appropriate permissions
+- Cost Management Reader role minimum
+
+## Quick Start
+
+1. Clone or download the dashboard files
+2. Run the initial setup script: `.\Setup-CostDashboard.ps1`
+3. Configure authentication using one of the methods below
+4. Test the configuration: `.\Test-Configuration.ps1`
+5. Generate your first report: `.\Get-CostReport.ps1`
+
+## Authentication Configuration
+
+### Method 1: Azure CLI (Recommended for Development)
+
+```powershell
+# Login with your Azure account
+Connect-AzAccount
+
+# Set default subscription
+Set-AzContext -SubscriptionId "your-subscription-id"
+```
+
+### Method 2: Service Principal (Recommended for Production)
+
+Create a service principal with minimal required permissions:
+
+```powershell
+# Create service principal
+$sp = New-AzADServicePrincipal -DisplayName "CostDashboard-ServicePrincipal"
+
+# Assign Cost Management Reader role
+New-AzRoleAssignment -ObjectId $sp.Id -RoleDefinitionName "Cost Management Reader" -Scope "/subscriptions/your-subscription-id"
+
+# Store credentials in secure configuration
+$authConfig = @{
+    TenantId = "your-tenant-id"
+    ClientId = $sp.ApplicationId
+    SubscriptionId = "your-subscription-id"
+}
+
+# Save to secure configuration file
+$authConfig | ConvertTo-Json | Set-Content "config\authentication.json"
+```
+
+Store the client secret separately using Azure Key Vault or environment variables:
+
+```powershell
+# Using environment variable (recommended)
+$env:AZURE_CLIENT_SECRET = "your-client-secret"
+
+# Or using Azure Key Vault
+Set-AzKeyVaultSecret -VaultName "your-keyvault" -Name "cost-dashboard-secret" -SecretValue (ConvertTo-SecureString "your-client-secret" -AsPlainText -Force)
+```
+
+## Primary Configuration File
+
+Create `config\settings.json`:
+
+```json
+{
+  "azure": {
+    "subscriptionId": "your-subscription-id",
+    "defaultScope": "subscription",
+    "includedResourceGroups": [],
+    "excludedResourceGroups": [],
+    "excludedServices": [
+      "Microsoft.Insights/components",
+      "Microsoft.Advisor"
+    ]
+  },
+  "reporting": {
+    "defaultCurrency": "USD",
+    "defaultDateRange": 30,
+    "timeZone": "UTC",
+    "dataRetentionDays": 90
+  },
+  "output": {
+    "exportFormats": ["Excel", "CSV"],
+    "outputDirectory": "reports",
+    "includeCharts": true,
+    "compressExports": false
+  },
+  "performance": {
+    "maxRecordsPerQuery": 50000,
+    "queryTimeoutSeconds": 300,
+    "enableCaching": true,
+    "cacheExpirationHours": 4
+  }
+}
+```
+
+## Email Notifications (Optional)
+
+Create `config\notifications.json` for email alerts:
+
+```json
+{
+  "enabled": false,
+  "smtp": {
+    "server": "smtp.office365.com",
+    "port": 587,
+    "useSSL": true,
+    "fromAddress": "costmanagement@yourcompany.com"
+  },
+  "recipients": [
+    "finance@yourcompany.com",
+    "manager@yourcompany.com"
+  ],
+  "alerts": {
+    "budgetThresholds": [80, 90, 95],
+    "anomalyDetection": true,
+    "weeklyReports": true,
+    "monthlyReports": true
+  }
+}
+```
+
+Store SMTP credentials securely:
+
+```powershell
+# Store SMTP credentials as environment variables
+$env:SMTP_USERNAME = "your-email@yourcompany.com"
+$env:SMTP_PASSWORD = "your-app-password"
+```
+
+## Advanced Configuration Options
+
+### Custom Cost Allocation
+
+For organizations needing department or project-based cost allocation:
+
+```json
+{
+  "costAllocation": {
+    "enabled": true,
+    "tagBasedAllocation": {
+      "departmentTag": "Department",
+      "projectTag": "Project",
+      "costCenterTag": "CostCenter"
+    },
+    "sharedCostDistribution": {
+      "method": "proportional",
+      "sharedServices": ["networking", "security"]
+    }
+  }
+}
+```
+
+### Regional Configuration
+
+For multi-region deployments:
+
+```json
+{
+  "regions": {
+    "primary": "East US",
+    "includedRegions": ["East US", "West US", "Central US"],
+    "excludedRegions": ["West Europe", "Southeast Asia"]
+  }
+}
+```
+
+## Environment-Specific Configurations
+
+### Development Environment
+
+Create `config\development.json`:
+
+```json
+{
+  "azure": {
+    "subscriptionId": "dev-subscription-id",
+    "defaultScope": "resourceGroup",
+    "includedResourceGroups": ["dev-rg", "test-rg"]
+  },
+  "reporting": {
+    "defaultDateRange": 7,
+    "dataRetentionDays": 30
+  },
+  "notifications": {
+    "enabled": false
+  }
+}
+```
+
+### Production Environment
+
+Create `config\production.json`:
+
+```json
+{
+  "azure": {
+    "subscriptionId": "prod-subscription-id",
+    "defaultScope": "subscription"
+  },
+  "reporting": {
+    "defaultDateRange": 30,
+    "dataRetentionDays": 365
+  },
+  "notifications": {
+    "enabled": true
+  },
+  "security": {
+    "auditLogging": true,
+    "encryptExports": true
+  }
+}
+```
+
+## Configuration Management Scripts
+
+### Setup Script (`Setup-CostDashboard.ps1`)
+
+```powershell
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)]
+    [string]$SubscriptionId,
+    
+    [Parameter()]
+    [string]$Environment = "development",
+    
+    [Parameter()]
+    [string]$ConfigPath = "config"
+)
+
+# Create configuration directory
+if (-not (Test-Path $ConfigPath)) {
+    New-Item -ItemType Directory -Path $ConfigPath -Force
+}
+
+# Generate base configuration
+$baseConfig = @{
+    azure = @{
+        subscriptionId = $SubscriptionId
+        defaultScope = "subscription"
+    }
+    reporting = @{
+        defaultCurrency = "USD"
+        defaultDateRange = 30
+        timeZone = [System.TimeZoneInfo]::Local.Id
+    }
+}
+
+$configFile = Join-Path $ConfigPath "settings.json"
+$baseConfig | ConvertTo-Json -Depth 3 | Set-Content $configFile
+
+Write-Host "Configuration created at: $configFile" -ForegroundColor Green
+Write-Host "Next steps:" -ForegroundColor Yellow
+Write-Host "1. Configure authentication" -ForegroundColor White
+Write-Host "2. Run Test-Configuration.ps1" -ForegroundColor White
+Write-Host "3. Generate your first report" -ForegroundColor White
+```
+
+### Validation Script (`Test-Configuration.ps1`)
+
+```powershell
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [string]$ConfigPath = "config\settings.json"
+)
+
+function Test-Configuration {
+    param($ConfigPath)
+    
+    $errors = @()
+    
+    # Test configuration file exists
+    if (-not (Test-Path $ConfigPath)) {
+        $errors += "Configuration file not found: $ConfigPath"
+        return $errors
+    }
+    
+    # Test JSON validity
+    try {
+        $config = Get-Content $ConfigPath | ConvertFrom-Json
+    }
+    catch {
+        $errors += "Invalid JSON in configuration file: $($_.Exception.Message)"
+        return $errors
+    }
+    
+    # Test Azure connectivity
+    try {
+        $context = Get-AzContext
+        if (-not $context) {
+            $errors += "Not authenticated to Azure. Run Connect-AzAccount."
+        }
+        elseif ($context.Subscription.Id -ne $config.azure.subscriptionId) {
+            $errors += "Azure context subscription mismatch. Expected: $($config.azure.subscriptionId), Current: $($context.Subscription.Id)"
+        }
+    }
+    catch {
+        $errors += "Azure PowerShell module error: $($_.Exception.Message)"
+    }
+    
+    # Test Cost Management API access
+    try {
+        $scope = "/subscriptions/$($config.azure.subscriptionId)"
+        $costData = Get-AzCostManagementUsageByScope -Scope $scope -TimePeriod (Get-Date).AddDays(-1) -Granularity "Daily" -ErrorAction Stop
+        Write-Host "Cost Management API access: OK" -ForegroundColor Green
+    }
+    catch {
+        $errors += "Cost Management API access failed: $($_.Exception.Message)"
+    }
+    
+    return $errors
+}
+
+$errors = Test-Configuration -ConfigPath $ConfigPath
+
+if ($errors.Count -eq 0) {
+    Write-Host "Configuration validation passed!" -ForegroundColor Green
+}
+else {
+    Write-Host "Configuration validation failed:" -ForegroundColor Red
+    $errors | ForEach-Object { Write-Host "  - $_" -ForegroundColor Red }
+    exit 1
+}
+```
+
+## Security Best Practices
+
+### Credential Management
+
+1. **Never store secrets in configuration files**
+2. **Use environment variables for sensitive data**
+3. **Implement Azure Key Vault for production**
+4. **Rotate service principal secrets regularly**
+
+### File Permissions
+
+```powershell
+# Secure configuration directory (Windows)
+$configPath = "config"
+$acl = Get-Acl $configPath
+$acl.SetAccessRuleProtection($true, $false)
+$adminRule = New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators", "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+$userRule = New-Object System.Security.AccessControl.FileSystemAccessRule($env:USERNAME, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+$acl.SetAccessRule($adminRule)
+$acl.SetAccessRule($userRule)
+Set-Acl -Path $configPath -AclObject $acl
+```
+
+### Audit Logging
+
+Enable audit logging in production:
+
+```json
+{
+  "security": {
+    "auditLogging": true,
+    "logPath": "logs\\audit.log",
+    "logLevel": "Information",
+    "retentionDays": 90
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Authentication Failures**
+- Verify service principal hasn't expired
+- Check role assignments
+- Confirm subscription access
+
+**Permission Errors**
+- Ensure Cost Management Reader role
+- Verify subscription scope
+- Check resource group permissions
+
+**API Rate Limiting**
+- Reduce query frequency
+- Implement exponential backoff
+- Cache results appropriately
+
+**Performance Issues**
+- Reduce date range for large subscriptions
+- Exclude unnecessary resource groups
+- Enable caching
+
+### Diagnostic Commands
+
+```powershell
+# Check Azure PowerShell modules
+Get-Module Az.* -ListAvailable
+
+# Verify authentication
+Get-AzContext
+
+# Test Cost Management API
+Get-AzCostManagementUsageByScope -Scope "/subscriptions/your-sub-id" -TimePeriod (Get-Date).AddDays(-1)
+
+# Check permissions
+Get-AzRoleAssignment -Scope "/subscriptions/your-sub-id" | Where-Object { $_.DisplayName -eq "your-service-principal" }
+```
+
+## Configuration Reference
+
+### Complete Settings Schema
+
+```json
+{
+  "azure": {
+    "subscriptionId": "string (required)",
+    "tenantId": "string (optional)",
+    "defaultScope": "subscription|resourceGroup|managementGroup",
+    "includedResourceGroups": ["array of strings"],
+    "excludedResourceGroups": ["array of strings"],
+    "excludedServices": ["array of strings"],
+    "regions": {
+      "included": ["array of strings"],
+      "excluded": ["array of strings"]
+    }
+  },
+  "reporting": {
+    "defaultCurrency": "USD|EUR|GBP|...",
+    "defaultDateRange": "number (days)",
+    "timeZone": "string (timezone ID)",
+    "dataRetentionDays": "number",
+    "granularity": "Daily|Monthly"
+  },
+  "output": {
+    "exportFormats": ["Excel", "CSV", "JSON"],
+    "outputDirectory": "string (path)",
+    "includeCharts": "boolean",
+    "compressExports": "boolean",
+    "fileNamePattern": "string (pattern)"
+  },
+  "notifications": {
+    "enabled": "boolean",
+    "smtp": {
+      "server": "string",
+      "port": "number",
+      "useSSL": "boolean",
+      "fromAddress": "string"
+    },
+    "recipients": ["array of email addresses"],
+    "alerts": {
+      "budgetThresholds": ["array of percentages"],
+      "anomalyDetection": "boolean",
+      "schedules": {
+        "daily": "boolean",
+        "weekly": "boolean",
+        "monthly": "boolean"
+      }
+    }
+  },
+  "performance": {
+    "maxRecordsPerQuery": "number",
+    "queryTimeoutSeconds": "number",
+    "enableCaching": "boolean",
+    "cacheExpirationHours": "number",
+    "parallelQueries": "boolean",
+    "maxParallelism": "number"
+  },
+  "security": {
+    "auditLogging": "boolean",
+    "logPath": "string",
+    "encryptExports": "boolean",
+    "allowedUsers": ["array of user identities"]
+  }
+}
+```
+
+---
+
+**Next Steps**: After configuration, run `Test-Configuration.ps1` to validate your setup, then execute `Get-CostReport.ps1` to generate your first cost analysis report.
