@@ -1,1 +1,80 @@
-# Azure Enterprise PowerShell Toolkit > **800+ production-ready PowerShell scripts for Azure cloud infrastructure management, automation, and governance** > > **Quality**: enterprise, professionally reviewed | **Security**: SOC 2 compliant | **Performance**: PowerShell 7.0+ optimized [![PowerShell](https://img.shields.io/badge/PowerShell-7.0%2B-blue.svg)](https://github.com/PowerShell/PowerShell) [![Azure](https://img.shields.io/badge/Azure-Enterprise-0078D4.svg)](https://azure.microsoft.com) [![Scripts](https://img.shields.io/badge/Scripts-800-green.svg)](./scripts) [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./docs/contributing/CONTRIBUTING.md) [![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg)](https://github.com/wesellis) ## Overview The Azure Enterprise PowerShell Toolkit is a comprehensive collection of 800+ production-ready PowerShell scripts designed for enterprise Azure environments. Every script has been systematically reviewed, modernized, and tested to meet professional PowerShell development standards. ### Key Features - **Complete Azure Coverage**: Compute, Storage, Networking, Security, Governance, and Cost Management - **Enterprise-Ready**: Professional error handling, comprehensive logging, reliable parameter validation - **PowerShell 7.0+ Compliant**: Modern PowerShell syntax following community practices - **Professional Code Quality**: Eliminated AI-generated patterns, fixed common syntax issues - **Cost Optimization**: Automated cost management and resource optimization tools - **Security First**: Compliance checking, security hardening, comprehensive audit trails - **DevOps Integration**: CI/CD pipelines, Infrastructure as Code templates, automation workflows ### Recent Quality Improvements (January 2025) - **800+ Scripts Reviewed**: Systematic modernization of entire codebase - **Fixed Comment Blocks**: Corrected malformed PowerShell help documentation - **Enhanced Error Handling**: Removed invalid ErrorAction parameters, improved exception handling - **Standardized Requirements**: Added proper #Requires statements for PowerShell 7.0+ and Az modules - **Professional Formatting**: Eliminated AI-generated patterns that appeared unprofessional - **Validated Syntax**: Fixed ValidateSet parameters, function definitions, and parameter hashtables ## Why This Toolkit? - **Save 40+ hours/week** on repetitive Azure tasks - **Optimize cloud resources** with automated efficiency scripts - **Ensure compliance** with automated security checks - **Deploy faster** with battle-tested automation - **Scale confidently** with enterprise scripts - **Professional Quality**: Code that passes rigorous PowerShell community standards - **Maintained & Updated**: Continuously improved with modern practices ## Repository Structure ``` ├── scripts/ # Core PowerShell scripts organized by service │ ├── compute/ # Virtual machines and container management │ ├── storage/ # Storage accounts and data operations │ ├── network/ # Virtual networks and security groups │ ├── identity/ # Azure AD and identity management │ ├── cost/ # Cost analysis and optimization │ ├── monitoring/ # Monitoring and alerting scripts │ └── utilities/ # General utilities and tools ├── templates/ # Infrastructure as Code templates │ ├── arm/ # Azure Resource Manager templates │ ├── bicep/ # Bicep infrastructure templates │ └── terraform/ # Terraform configurations ├── modules/ # PowerShell modules │ ├── AzureErrorHandler/ # Error handling utilities │ ├── keyvault/ # Key Vault operations │ ├── monitoring/ # Monitoring functions │ └── security/ # Security utilities ├── monitoring/ # Monitoring and observability assets │ ├── azure-monitor-workbooks/ # Azure Monitor workbook templates │ ├── grafana-dashboards/ # Grafana dashboard configurations │ ├── power-bi-templates/ # Power BI dashboard templates │ ├── kql-queries/ # KQL query libraries │ ├── alert-templates/ # ARM templates for alerting │ └── custom-metrics/ # Custom telemetry definitions ├── docs/ # Comprehensive documentation │ ├── guides/ # practices and how-to guides │ ├── api/ # API and module documentation │ ├── tutorials/ # Step-by-step tutorials │ ├── reference/ # Reference documentation │ ├── contributing/ # Contribution guidelines │ ├── security/ # Security policies and compliance │ ├── templates/ # Template documentation │ └── governance/ # Governance framework docs ├── governance/ # Azure governance automation │ ├── scripts/ # Governance PowerShell scripts │ ├── templates/ # Policy and initiative templates │ └── docs/ # Governance documentation ├── tests/ # Test scripts and validation └── tools/ # Development and utility tools ``` ## Quick Start ### Prerequisites ```powershell # PowerShell 7.0+ is required for recommended compatibility # Install required modules Install-Module -Name Az -AllowClobber -Scope CurrentUser Install-Module -Name AzureAD -AllowClobber -Scope CurrentUser # Verify PowerShell version $PSVersionTable.PSVersion # Should be 7.0 or higher ``` ### Basic Usage ```powershell # Clone the repository git clone https://github.com/wesellis/azure-enterprise-powershell-toolkit.git # Navigate to scripts cd azure-enterprise-powershell-toolkit/scripts # Run cost optimization analysis .\cost\Azure-FinOps-Automation-Engine.ps1 -GenerateRecommendations -IncludeForecast # Analyze resource optimization opportunities .\cost\WE-Azure-ResourceOptimization-Analyzer.ps1 -ResourceGroup "production-rg" # Validate resource moves before migration .\utilities\Azure-Resource-Move-Validator.ps1 -SourceResourceGroup "dev-rg" -TargetResourceGroup "prod-rg" ``` ## Script Categories ### Compute & Infrastructure (150+ scripts) - VM lifecycle management and automation - Scale set deployment and management - Container instance operations - Kubernetes cluster administration ### Storage & Data (120+ scripts) - Blob storage automation and lifecycle management - Database provisioning and maintenance - Backup and disaster recovery automation - Data migration and synchronization tools ### Networking (100+ scripts) - Virtual network configuration and management - Network Security Group automation - Load balancer deployment and configuration - ExpressRoute and VPN gateway setup ### Security & Compliance (180+ scripts) - Automated security assessments and audits - Compliance framework implementation - Key Vault management and secret rotation - Identity and access management automation ### Cost Management (80+ scripts) - comprehensive usage analysis and reporting - Resource optimization recommendations - Automated monitoring and alerting - Unused resource identification and cleanup ### Monitoring & Governance (90+ scripts) - Log Analytics workspace management - Alert rule configuration and management - Policy assignment and enforcement - Comprehensive tagging strategies ### DevOps & Automation (93+ scripts) - CI/CD pipeline automation - Infrastructure as Code deployment - GitOps workflow implementation - Automated testing and validation ## Featured Enterprise Scripts ### FinOps Automation Engine ```powershell # Comprehensive cost optimization with ML predictions .\scripts\cost\Azure-FinOps-Automation-Engine.ps1 ` -OptimizationMode "AutoRemediate" ` -CostThreshold 50000 ` -EnableMLPredictions ` -AutoShutdownNonProd ``` ### Resource Optimization Analyzer ```powershell # Analyze resource optimization opportunities .\scripts\cost\WE-Azure-ResourceOptimization-Analyzer.ps1 ` -ResourceGroup "production-rg" ` -AnalysisPeriod 30 ` -GenerateReport ``` ### Resource Move Validation ```powershell # Validate resource moves before migration .\scripts\utilities\Azure-Resource-Move-Validator.ps1 ` -SourceResourceGroup "dev-rg" ` -TargetResourceGroup "prod-rg" ` -ValidateCompatibility ``` ## Performance & Scale - **Parallel Processing**: Multi-threaded operations for large-scale deployments - **Handles 10,000+ resources**: Tested with enterprise-scale Azure environments - **Idempotent Operations**: Safe to run multiple times without side effects - **Comprehensive Logging**: Detailed logs for audit trails and troubleshooting - **Error Recovery**: reliable error handling with automatic retry logic ## Code Quality Standards Our scripts meet professional PowerShell development standards: - **Proper Comment Blocks**: Well-structured PowerShell help documentation with examples - **Error Handling**: Professional exception handling without invalid parameters - **Parameter Validation**: Correctly formatted ValidateSet and other validation attributes - **Module Requirements**: Explicit #Requires statements for dependencies and versions - **Consistent Formatting**: Standardized indentation, syntax patterns, and naming conventions - **practices**: Follows PowerShell community guidelines and enterprise standards ## Real-World Use Cases ### Cost Management Examples ```powershell # Automated cost anomaly detection .\scripts\cost\Azure-Cost-Anomaly-Detector.ps1 -ThresholdPercentage 20 -AlertEmail "admin@company.com" # Comprehensive cost optimization analysis .\scripts\cost\Azure-Cost-Optimization-Analyzer.ps1 -SubscriptionId "sub-id" -GenerateRecommendations ``` ### Compute Management Examples ```powershell # VM provisioning and configuration .\scripts\compute\Azure-VM-Provisioning-comprehensive.ps1 -ResourceGroup "prod-rg" -VMName "web-server-01" # Container management and optimization .\scripts\compute\Azure-Container-Management.ps1 -Operation "Scale" -ContainerGroup "app-containers" ``` ### Storage and Network Examples ```powershell # Storage account optimization .\scripts\storage\Azure-Storage-Optimization.ps1 -StorageAccount "prodstorageacct" -OptimizePerformance # Network security configuration .\scripts\network\Azure-Network-Security-Config.ps1 -VNet "prod-vnet" -ApplyrecommendedPractices ``` ## Contributing We welcome contributions from the PowerShell community! Please see our [Contributing Guide](docs/contributing/CONTRIBUTING.md) for development setup and guidelines. ### Development Workflow 1. **Fork** the repository 2. **Create** a feature branch (`git checkout -b feature/enhancement-name`) 3. **Follow** PowerShell practices and our coding standards 4. **Test** your changes thoroughly 5. **Commit** with descriptive messages 6. **Push** to your branch (`git push origin feature/enhancement-name`) 7. **Open** a Pull Request with detailed description ### Code Standards - **PowerShell 7.0+** compatibility required - **Comprehensive error handling** with meaningful messages - **Parameter validation** using appropriate attributes - **Comment-based help** with examples and parameter descriptions - **Idempotent operations** safe for repeated execution ## Project Stats - **Actively Maintained**: Updated weekly with quality improvements - **Enterprise Usage**: Deployed in 50+ Fortune 500 companies - **Community**: 1000+ Azure professionals using this toolkit - **Growth**: New enterprise scripts added monthly - **Quality Focus**: All 800 scripts modernized and professionally reviewed (January 2025) - **PowerShell 7.0+ Ready**: Full compatibility with modern PowerShell versions ## Documentation Comprehensive documentation is available in the [`docs/`](docs/) directory: - **[Getting Started Guide](docs/guides/POWERSHELL_MODERNIZATION_GUIDE.md)** - practices and modernization guidelines - **[API Documentation](docs/api/)** - Detailed module and script references - **[Security Guidelines](docs/security/)** - Security policies and compliance frameworks - **[Contributing Guidelines](docs/contributing/)** - How to contribute to the project - **[Templates](docs/templates/)** - DevOps and Infrastructure as Code templates - **[Reference Documentation](docs/reference/)** - Changelog, roadmap, and implementation guides For quick navigation, see the [Documentation Index](docs/README.md). ## License This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. ## Author **Wesley Ellis** - LinkedIn: [linkedin.com/in/wesleyellis](https://linkedin.com/in/wesleyellis) - Email: [wes@wesellis.com](mailto:wes@wesellis.com) - Twitter: [@wesellis](https://twitter.com/wesellis) - Senior Cloud Architect | Azure Expert | PowerShell Automation Specialist ## Support This Project If this toolkit saves you time or helps your organization: - **Star this repository** to show your support - **Watch for updates** on new scripts and features - **Fork** to customize for your organizational needs - **Share** with your team and professional network ## Acknowledgments - Microsoft Azure team for comprehensive documentation and platform excellence - PowerShell community for continuous support and recommended practice guidance - All contributors who have helped improve and maintain these scripts - Enterprise customers who provided real-world testing and feedback --- **Powered by**: PowerShell 7.0+ | Microsoft Azure | Enterprise practices **Last Updated**: January 19, 2025 | **Status**: Production Ready | **Version**: 3.0.0
+# Azure PowerShell Toolkit
+
+A collection of PowerShell scripts for Azure infrastructure management and automation.
+
+[![PowerShell](https://img.shields.io/badge/PowerShell-7.0%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
+[![Azure](https://img.shields.io/badge/Azure-Ready-0078D4.svg)](https://azure.microsoft.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+## Overview
+
+This repository contains PowerShell scripts organized by Azure service categories. Scripts include proper error handling, parameter validation, and follow PowerShell best practices.
+
+## Features
+
+- **Organized by Service**: Scripts categorized by Azure service (Compute, Storage, Network, etc.)
+- **PowerShell 7.0+ Compatible**: Modern PowerShell syntax and features
+- **Proper Error Handling**: Comprehensive error handling and logging
+- **Parameter Validation**: Input validation and help documentation
+- **Security Focus**: Secure credential handling and compliance features
+
+## Repository Structure
+
+```
+├── scripts/          # PowerShell scripts organized by Azure service
+│   ├── compute/      # Virtual machines and containers
+│   ├── storage/      # Storage accounts and databases
+│   ├── network/      # Networking and security
+│   ├── identity/     # Azure AD and RBAC
+│   ├── cost/         # Cost management and optimization
+│   ├── monitoring/   # Monitoring and alerting
+│   └── utilities/    # General utilities
+├── docs/             # Documentation
+├── modules/          # PowerShell modules
+└── tests/            # Test scripts
+```
+
+## Quick Start
+
+### Prerequisites
+
+```powershell
+# Install required modules
+Install-Module -Name Az -Scope CurrentUser
+Install-Module -Name AzureAD -Scope CurrentUser
+
+# Verify PowerShell 7.0+
+$PSVersionTable.PSVersion
+```
+
+### Basic Usage
+
+```powershell
+# Clone the repository
+git clone https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts.git
+cd TECH-Azure-PowerShell-Toolkit-812-Scripts
+
+# Connect to Azure
+Connect-AzAccount
+
+# Run a script
+.\scripts\compute\Azure-VM-List-All.ps1
+```
+
+## Script Categories
+
+- **Compute**: VM management, containers, app services
+- **Storage**: Storage accounts, databases, backup
+- **Network**: Virtual networks, security groups, load balancers
+- **Identity**: Azure AD, RBAC, security policies
+- **Cost**: Cost analysis, optimization, budgets
+- **Monitoring**: Alerts, diagnostics, logging
+- **Utilities**: Helper functions and tools
+
+## Contributing
+
+See [Contributing Guidelines](docs/contributing/CONTRIBUTING.md) for development setup and standards.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
