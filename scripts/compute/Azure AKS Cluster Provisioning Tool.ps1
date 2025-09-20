@@ -1,97 +1,163 @@
 #Requires -Version 7.0
 
-<#`n.SYNOPSIS
-    Azure Aks Cluster Provisioning Tool
+<#
+.SYNOPSIS
+    Azure AKS Cluster Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-
-
+    Azure automation script for provisioning AKS clusters
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
-try {
-    # Main script execution
-) { "Continue" } else { "SilentlyContinue" }
+
+.PARAMETER ResourceGroupName
+    Name of the Azure Resource Group
+
+.PARAMETER AksClusterName
+    Name of the AKS cluster to create
+
+.PARAMETER NodeCount
+    Number of nodes in the cluster (default: 3)
+
+.PARAMETER Location
+    Azure region for the cluster
+
+.PARAMETER NodeVmSize
+    VM size for cluster nodes (default: Standard_DS2_v2)
+
+.PARAMETER KubernetesVersion
+    Kubernetes version (default: 1.28.0)
+
+.PARAMETER NetworkPlugin
+    Network plugin to use (default: azure)
+
+.PARAMETER EnableRBAC
+    Enable RBAC (default: true)
+
+.PARAMETER EnableManagedIdentity
+    Enable managed identity (default: true)
+
+.EXAMPLE
+    .\Provision-AKS.ps1 -ResourceGroupName "myRG" -AksClusterName "myCluster" -Location "eastus"
+#>
+
 [CmdletBinding()]
-function Write-Host {
-    [CmdletBinding()]
 param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-[CmdletBinding()];
-param(
-    [Parameter()]
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    [Parameter()]
+    
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$AksClusterName,
-    [int]$NodeCount = 3,
+    
     [Parameter()]
+    [int]$NodeCount = 3,
+    
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$Location,
-    [string]$NodeVmSize = "Standard_DS2_v2" ,
-    [string]$KubernetesVersion = " 1.28.0" ,
-    [string]$NetworkPlugin = " azure" ,
+    
+    [Parameter()]
+    [string]$NodeVmSize = "Standard_DS2_v2",
+    
+    [Parameter()]
+    [string]$KubernetesVersion = "1.28.0",
+    
+    [Parameter()]
+    [string]$NetworkPlugin = "azure",
+    
+    [Parameter()]
     [bool]$EnableRBAC = $true,
+    
+    [Parameter()]
     [bool]$EnableManagedIdentity = $true
 )
-Write-Host "Provisioning AKS Cluster: $AksClusterName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Node Count: $NodeCount"
-Write-Host "Node VM Size: $NodeVmSize"
-Write-Host "Kubernetes Version: $KubernetesVersion"
-Write-Host "Network Plugin: $NetworkPlugin"
-Write-Host "RBAC Enabled: $EnableRBAC"
-Write-Host " `nCreating AKS cluster (this may take 10-15 minutes)..." ;
-$params = @{
-    ResourceGroupName = $ResourceGroupName
-    NodeVmSize = $NodeVmSize
-    NodeCount = $NodeCount
-    Location = $Location
-    NetworkPlugin = $NetworkPlugin
-    ErrorAction = "Stop"
-    KubernetesVersion = $KubernetesVersion
-    Name = $AksClusterName
+
+# Set error handling and verbose preferences
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+# Custom logging function
+function Write-LogMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+        
+        [Parameter()]
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $colorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
+    }
+    
+    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-$AksCluster @params
-Write-Host " `nAKS Cluster $AksClusterName provisioned successfully!"
-Write-Host "Cluster FQDN: $($AksCluster.Fqdn)"
-Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
-Write-Host "Provisioning State: $($AksCluster.ProvisioningState)"
-Write-Host "Power State: $($AksCluster.PowerState.Code)"
-Write-Host " `nNode Pool Information:"
-foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
-    Write-Host "Pool Name: $($NodePool.Name)"
-    Write-Host "VM Size: $($NodePool.VmSize)"
-    Write-Host "Node Count: $($NodePool.Count)"
-    Write-Host "OS Type: $($NodePool.OsType)"
-    Write-Host "OS Disk Size: $($NodePool.OsDiskSizeGB) GB"
-}
-Write-Host " `nNext Steps:"
-Write-Host " 1. Install kubectl: az aks install-cli"
-Write-Host " 2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
-Write-Host " 3. Verify connection: kubectl get nodes"
-Write-Host " `nAKS Cluster provisioning completed at $(Get-Date)"
+
+try {
+    # Display configuration
+    Write-LogMessage "Provisioning AKS Cluster: $AksClusterName" -Level "INFO"
+    Write-LogMessage "Resource Group: $ResourceGroupName" -Level "INFO"
+    Write-LogMessage "Location: $Location" -Level "INFO"
+    Write-LogMessage "Node Count: $NodeCount" -Level "INFO"
+    Write-LogMessage "Node VM Size: $NodeVmSize" -Level "INFO"
+    Write-LogMessage "Kubernetes Version: $KubernetesVersion" -Level "INFO"
+    Write-LogMessage "Network Plugin: $NetworkPlugin" -Level "INFO"
+    Write-LogMessage "RBAC Enabled: $EnableRBAC" -Level "INFO"
+    Write-LogMessage "Managed Identity Enabled: $EnableManagedIdentity" -Level "INFO"
+
+    Write-LogMessage "`nCreating AKS cluster (this may take 10-15 minutes)..." -Level "INFO"
+
+    # Parameters for AKS cluster creation
+    $aksParams = @{
+        ResourceGroupName = $ResourceGroupName
+        Name = $AksClusterName
+        Location = $Location
+        NodeCount = $NodeCount
+        NodeVmSize = $NodeVmSize
+        KubernetesVersion = $KubernetesVersion
+        NetworkPlugin = $NetworkPlugin
+        EnableRBAC = $EnableRBAC
+        EnableManagedIdentity = $EnableManagedIdentity
+        ErrorAction = "Stop"
+    }
+
+    # Create the AKS cluster
+    $AksCluster = New-AzAksCluster @aksParams
+
+    Write-LogMessage "`nAKS Cluster $AksClusterName provisioned successfully!" -Level "SUCCESS"
+    Write-LogMessage "Cluster FQDN: $($AksCluster.Fqdn)" -Level "INFO"
+    Write-LogMessage "Kubernetes Version: $($AksCluster.KubernetesVersion)" -Level "INFO"
+    Write-LogMessage "Provisioning State: $($AksCluster.ProvisioningState)" -Level "INFO"
+    Write-LogMessage "Power State: $($AksCluster.PowerState.Code)" -Level "INFO"
+
+    Write-LogMessage "`nNode Pool Information:" -Level "INFO"
+    foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
+        Write-LogMessage "  Pool Name: $($NodePool.Name)" -Level "INFO"
+        Write-LogMessage "  VM Size: $($NodePool.VmSize)" -Level "INFO"
+        Write-LogMessage "  Node Count: $($NodePool.Count)" -Level "INFO"
+        Write-LogMessage "  OS Type: $($NodePool.OsType)" -Level "INFO"
+        Write-LogMessage "  OS Disk Size: $($NodePool.OsDiskSizeGB) GB" -Level "INFO"
+        Write-LogMessage "" -Level "INFO"
+    }
+
+    Write-LogMessage "`nNext Steps:" -Level "SUCCESS"
+    Write-LogMessage "1. Install kubectl: az aks install-cli" -Level "INFO"
+    Write-LogMessage "2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName" -Level "INFO"
+    Write-LogMessage "3. Verify connection: kubectl get nodes" -Level "INFO"
+    Write-LogMessage "`nAKS Cluster provisioning completed at $(Get-Date)" -Level "SUCCESS"
+
 } catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+    Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
+    Write-Error $_.Exception.Message
     throw
 }
