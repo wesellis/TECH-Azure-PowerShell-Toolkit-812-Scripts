@@ -8,34 +8,46 @@ param environment string
 @description('Location for resources')
 param location string = resourceGroup().location
 
-@description('Data retention in days')
-@minValue(30)
-@maxValue(730)
-param retentionInDays int = environment == 'prod' ? 180 : 90
+@description('Admin email for alerts')
+param adminEmail string = 'admin@company.com'
 
-@description('Pricing tier')
-@allowed(['Free', 'PerGB2018', 'PerNode', 'Premium', 'Standalone', 'Standard'])
-param sku string = 'PerGB2018'
+@description('Enable Application Insights')
+param enableAppInsights bool = true
 
-@description('Daily quota in GB')
-@minValue(1)
-@maxValue(1000)
-param dailyQuotaGb int = environment == 'prod' ? 50 : 10
+@description('Enable alerting')
+param enableAlerting bool = true
 
-@description('Enable solutions')
-param enableSolutions array = [
-  'Security'
-  'Updates'
-  'ChangeTracking'
-]
+@description('Solutions to enable')
+@allowed(['Security', 'Updates', 'ChangeTracking', 'VMInsights'])
+param enableSolutions array = ['Security', 'Updates']
 
 @description('Resource tags')
 param tags object = {
   Environment: environment
   Service: 'Monitoring'
+  DeployedBy: 'Bicep'
 }
 
-// Variables
+// Environment-specific configurations
+var environmentConfig = {
+  dev: {
+    retentionInDays: 30
+    dailyQuotaGb: 5
+    sku: 'PerGB2018'
+  }
+  test: {
+    retentionInDays: 90
+    dailyQuotaGb: 10
+    sku: 'PerGB2018'
+  }
+  prod: {
+    retentionInDays: 180
+    dailyQuotaGb: 50
+    sku: 'PerGB2018'
+  }
+}
+
+// Solution gallery mapping
 var solutionMap = {
   Security: {
     name: 'Security'
@@ -59,6 +71,8 @@ var solutionMap = {
   }
 }
 
+var config = environmentConfig[environment]
+
 // Log Analytics Workspace
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: workspaceName
@@ -66,18 +80,18 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
   tags: tags
   properties: {
     sku: {
-      name: sku
+      name: config.sku
     }
-    retentionInDays: retentionInDays
+    retentionInDays: config.retentionInDays
     workspaceCapping: {
-      dailyQuotaGb: dailyQuotaGb
+      dailyQuotaGb: config.dailyQuotaGb
     }
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
-// Solutions
+// Log Analytics Solutions
 resource solutions 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = [for solution in enableSolutions: {
   name: '${solutionMap[solution].name}(${logAnalyticsWorkspace.name})'
   location: location
@@ -86,15 +100,14 @@ resource solutions 'Microsoft.OperationsManagement/solutions@2015-11-01-preview'
     name: '${solutionMap[solution].name}(${logAnalyticsWorkspace.name})'
     publisher: solutionMap[solution].publisher
     product: solutionMap[solution].product
-    promotionCode: ''
   }
   properties: {
     workspaceResourceId: logAnalyticsWorkspace.id
   }
 }]
 
-// Application Insights
-resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+// Application Insights (conditional)
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = if (enableAppInsights) {
   name: '${workspaceName}-insights'
   location: location
   tags: tags
@@ -107,8 +120,8 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-// Action Group for alerts
-resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+// Action Group (conditional)
+resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableAlerting) {
   name: '${workspaceName}-alerts'
   location: 'Global'
   tags: tags
@@ -118,21 +131,21 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
     emailReceivers: [
       {
         name: 'admin'
-        emailAddress: 'admin@company.com'
+        emailAddress: adminEmail
         useCommonAlertSchema: true
       }
     ]
   }
 }
 
-// Sample alert rule
-resource alertRule 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+// High CPU Alert Rule (conditional)
+resource highCpuAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (enableAlerting) {
   name: '${workspaceName}-high-cpu-alert'
   location: location
   tags: tags
   properties: {
     displayName: 'High CPU Usage Alert'
-    description: 'Alert when CPU usage exceeds 80%'
+    description: 'Alert when CPU usage exceeds 80% for 15 minutes'
     severity: 2
     enabled: true
     evaluationFrequency: 'PT5M'
@@ -143,7 +156,14 @@ resource alertRule 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' =
     criteria: {
       allOf: [
         {
-          query: 'Perf | where ObjectName == "Processor" and CounterName == "% Processor Time" and InstanceName == "_Total" | summarize avg(CounterValue) by bin(TimeGenerated, 5m), Computer | where avg_CounterValue > 80'
+          query: '''
+            Perf 
+            | where ObjectName == "Processor" 
+              and CounterName == "% Processor Time" 
+              and InstanceName == "_Total" 
+            | summarize avg(CounterValue) by bin(TimeGenerated, 5m), Computer 
+            | where avg_CounterValue > 80
+          '''
           timeAggregation: 'Count'
           operator: 'GreaterThan'
           threshold: 0
@@ -151,9 +171,48 @@ resource alertRule 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' =
       ]
     }
     actions: {
-      actionGroups: [
+      actionGroups: enableAlerting ? [
         actionGroup.id
+      ] : []
+    }
+  }
+}
+
+// High Memory Alert Rule (conditional)
+resource highMemoryAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (enableAlerting) {
+  name: '${workspaceName}-high-memory-alert'
+  location: location
+  tags: tags
+  properties: {
+    displayName: 'High Memory Usage Alert'
+    description: 'Alert when memory usage exceeds 85% for 15 minutes'
+    severity: 2
+    enabled: true
+    evaluationFrequency: 'PT5M'
+    scopes: [
+      logAnalyticsWorkspace.id
+    ]
+    windowSize: 'PT15M'
+    criteria: {
+      allOf: [
+        {
+          query: '''
+            Perf 
+            | where ObjectName == "Memory" 
+              and CounterName == "% Committed Bytes In Use" 
+            | summarize avg(CounterValue) by bin(TimeGenerated, 5m), Computer 
+            | where avg_CounterValue > 85
+          '''
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+        }
       ]
+    }
+    actions: {
+      actionGroups: enableAlerting ? [
+        actionGroup.id
+      ] : []
     }
   }
 }
@@ -165,11 +224,14 @@ output workspaceId string = logAnalyticsWorkspace.id
 @description('Log Analytics workspace customer ID')
 output customerId string = logAnalyticsWorkspace.properties.customerId
 
+@description('Log Analytics workspace name')
+output workspaceName string = logAnalyticsWorkspace.name
+
 @description('Application Insights instrumentation key')
-output instrumentationKey string = applicationInsights.properties.InstrumentationKey
+output instrumentationKey string = enableAppInsights ? applicationInsights.properties.InstrumentationKey : ''
 
 @description('Application Insights connection string')
-output connectionString string = applicationInsights.properties.ConnectionString
+output connectionString string = enableAppInsights ? applicationInsights.properties.ConnectionString : ''
 
 @description('Action group ID')
-output actionGroupId string = actionGroup.id
+output actionGroupId string = enableAlerting ? actionGroup.id : ''
