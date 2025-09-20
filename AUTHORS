@@ -1,0 +1,19 @@
+# Authors and Contributors
+
+## Primary Author
+- Wes Ellis <wes@wesellis.com>
+  - Original creator and maintainer
+  - All PowerShell scripts and modules
+  - Infrastructure as Code templates
+  - Documentation and guides
+
+## Project History
+This Azure PowerShell Toolkit was developed by Wes Ellis as a comprehensive collection of enterprise-grade Azure management scripts. The toolkit represents years of experience in Azure administration and automation.
+
+## Acknowledgments
+- Microsoft Azure documentation and community
+- PowerShell community contributors
+- Open source projects that inspired various approaches
+
+## Note on Development Tools
+Various development tools and assistants were used during the creation and maintenance of this project, as is standard practice in modern software development. All code represents original work by the human authors listed above.
