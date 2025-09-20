@@ -52,7 +52,7 @@ jobs:
           Write-Error "Found $($issues.Count) PSScriptAnalyzer issues"
           exit 1
         } else {
-          Write-Host "✅ All scripts passed PSScriptAnalyzer validation" -ForegroundColor Green
+          Write-Host "All scripts passed PSScriptAnalyzer validation" -ForegroundColor Green
         }
 
     - name: Syntax Validation
@@ -65,9 +65,9 @@ jobs:
         foreach ($script in $scripts) {
           try {
             $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $script.FullName -Raw), [ref]$null)
-            Write-Host "✅ $($script.Name)" -ForegroundColor Green
+            Write-Host "PASS: $($script.Name)" -ForegroundColor Green
           } catch {
-            $errors += "❌ $($script.Name): $($_.Exception.Message)"
+            $errors += "FAIL: $($script.Name): $($_.Exception.Message)"
             Write-Error "Syntax error in $($script.Name): $($_.Exception.Message)"
           }
         }
@@ -76,7 +76,7 @@ jobs:
           Write-Error "Found $($errors.Count) syntax errors"
           exit 1
         } else {
-          Write-Host "✅ All scripts have valid PowerShell syntax" -ForegroundColor Green
+          Write-Host "All scripts have valid PowerShell syntax" -ForegroundColor Green
         }
 
     - name: Security Scan
@@ -93,7 +93,7 @@ jobs:
           if ($content -match 'password\s*=\s*["\'][^"\']+["\']' -or
               $content -match 'secret\s*=\s*["\'][^"\']+["\']' -or
               $content -match 'key\s*=\s*["\'][^"\']+["\']') {
-            $securityIssues += "❌ $($script.Name): Potential hardcoded credentials"
+            $securityIssues += "FAIL: $($script.Name): Potential hardcoded credentials"
           }
 
           # Check for ConvertTo-SecureString with plaintext
@@ -107,7 +107,7 @@ jobs:
             Write-Warning $issue
           }
         } else {
-          Write-Host "✅ No security issues detected" -ForegroundColor Green
+          Write-Host "No security issues detected" -ForegroundColor Green
         }
 
   test-framework:
@@ -138,7 +138,7 @@ jobs:
           Write-Host "Running Pester tests..."
           Invoke-Pester -Path "./tests/" -OutputFormat NUnitXml -OutputFile "TestResults.xml"
         } else {
-          Write-Host "⚠️ No Pester tests found - creating basic validation test"
+          Write-Host "WARNING: No Pester tests found - creating basic validation test"
           $testFile = @"
         Describe "Basic Toolkit Validation" {
           It "Should have main launcher script" {
@@ -170,7 +170,7 @@ jobs:
 
     - name: Check Documentation
       run: |
-        echo "📋 Checking documentation completeness..."
+        echo "Checking documentation completeness..."
 
         # Check for required files
         files=("README.md" "Get-Started.md" "scripts/README.md" ".gitignore" "CODEOWNERS")
@@ -180,14 +180,14 @@ jobs:
           if [ ! -f "$file" ]; then
             missing_files+=("$file")
           else
-            echo "✅ $file exists"
+            echo "FOUND: $file exists"
           fi
         done
 
         if [ ${#missing_files[@]} -gt 0 ]; then
-          echo "❌ Missing required files:"
+          echo "MISSING required files:"
           printf '%s\n' "${missing_files[@]}"
           exit 1
         fi
 
-        echo "✅ All required documentation files present"
+        echo "All required documentation files present"

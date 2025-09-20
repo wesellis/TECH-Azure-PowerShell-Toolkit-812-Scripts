@@ -64,7 +64,7 @@ jobs:
         $releaseNotes = @"
         # Azure PowerShell Toolkit $version
 
-        ## 🚀 Enterprise-Grade Azure Automation
+        ## Enterprise-Grade Azure Automation
 
         This release includes **$totalScripts production-ready PowerShell scripts** organized across **$($categories.Count) service categories**.
 
@@ -72,20 +72,20 @@ jobs:
 
         | Category | Scripts | Description |
         |----------|---------|-------------|
-        | 📱 Compute | $($scriptCounts['compute']) | VMs, containers, app services |
-        | 💾 Storage | $($scriptCounts['storage']) | Storage accounts, databases, data services |
-        | 🌐 Network | $($scriptCounts['network']) | Virtual networks, load balancers, security |
-        | 🔐 Identity | $($scriptCounts['identity']) | Azure AD, RBAC, security policies |
-        | 📊 Monitoring | $($scriptCounts['monitoring']) | Alerts, logs, diagnostics |
-        | 💰 Cost | $($scriptCounts['cost']) | Cost analysis, optimization, budgets |
-        | 🚀 DevOps | $($scriptCounts['devops']) | CI/CD, automation, deployment |
-        | 🔄 Backup | $($scriptCounts['backup']) | Data protection, disaster recovery |
-        | 🔄 Migration | $($scriptCounts['migration']) | Cloud migration tools |
-        | 🤖 AI/ML | $($scriptCounts['ai']) | Azure AI services, machine learning |
-        | 📱 IoT | $($scriptCounts['iot']) | IoT Hub, device management |
-        | 🔧 Utilities | $($scriptCounts['utilities']) | General tools and helpers |
+        | Compute | $($scriptCounts['compute']) | VMs, containers, app services |
+        | Storage | $($scriptCounts['storage']) | Storage accounts, databases, data services |
+        | Network | $($scriptCounts['network']) | Virtual networks, load balancers, security |
+        | Identity | $($scriptCounts['identity']) | Azure AD, RBAC, security policies |
+        | Monitoring | $($scriptCounts['monitoring']) | Alerts, logs, diagnostics |
+        | Cost | $($scriptCounts['cost']) | Cost analysis, optimization, budgets |
+        | DevOps | $($scriptCounts['devops']) | CI/CD, automation, deployment |
+        | Backup | $($scriptCounts['backup']) | Data protection, disaster recovery |
+        | Migration | $($scriptCounts['migration']) | Cloud migration tools |
+        | AI/ML | $($scriptCounts['ai']) | Azure AI services, machine learning |
+        | IoT | $($scriptCounts['iot']) | IoT Hub, device management |
+        | Utilities | $($scriptCounts['utilities']) | General tools and helpers |
 
-        ## ✅ Enterprise Features
+        ## Enterprise Features
 
         - **Production Ready**: All scripts follow PowerShell best practices
         - **Security First**: No hardcoded credentials, proper error handling
@@ -94,7 +94,7 @@ jobs:
         - **Centralized Logging**: Structured logging and audit trails
         - **Documentation**: Complete documentation and getting started guides
 
-        ## 🛠️ Quick Start
+        ## Quick Start
 
         ``````powershell
         # Clone the repository
@@ -110,17 +110,17 @@ jobs:
         ./Launch-AzureToolkit.ps1
         ``````
 
-        ## 📋 Requirements
+        ## Requirements
 
         - PowerShell 7.0+
         - Azure PowerShell module (Az)
         - Azure subscription with appropriate permissions
 
-        ## 🔧 Installation
+        ## Installation
 
         See [Get-Started.md](./Get-Started.md) for detailed installation and usage instructions.
 
-        ## 🐛 Bug Reports & 💡 Feature Requests
+        ## Bug Reports & Feature Requests
 
         Please use the [GitHub Issues](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/issues) to report bugs or request features.
 
