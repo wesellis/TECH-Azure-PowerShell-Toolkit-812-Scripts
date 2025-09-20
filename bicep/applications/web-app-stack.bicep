@@ -1,58 +1,84 @@
-@description('Application name prefix')
+@description('Application name prefix (used for resource naming)')
 @minLength(2)
 @maxLength(10)
 param appName string
 
-@description('Environment (dev, test, prod)')
+@description('Environment designation')
 @allowed(['dev', 'test', 'prod'])
 param environment string
 
-@description('Location for resources')
+@description('Azure region for resource deployment')
 param location string = resourceGroup().location
 
 @description('Administrator object ID for Key Vault access')
 param administratorObjectId string
 
 @description('Database administrator username')
+@minLength(4)
 param dbAdminUsername string
 
 @description('Database administrator password')
 @secure()
+@minLength(12)
 param dbAdminPassword string
 
-@description('Application Insights workspace ID')
+@description('Application Insights workspace ID (optional)')
 param logAnalyticsWorkspaceId string = ''
 
-@description('Enable Application Gateway')
-param enableApplicationGateway bool = environment == 'prod'
+@description('Enable Application Gateway for production workloads')
+param enableApplicationGateway bool = (environment == 'prod')
+
+@description('Enable private endpoints for enhanced security')
+param enablePrivateEndpoints bool = (environment == 'prod')
+
+@description('Custom domain name for Application Gateway (optional)')
+param customDomainName string = ''
 
 @description('Resource tags')
 param tags object = {
   Environment: environment
   Application: appName
+  Deployment: 'Bicep'
+  LastDeployed: utcNow('yyyy-MM-dd')
 }
 
-// Variables
+// Variables for consistent naming and configuration
 var resourcePrefix = '${appName}-${environment}'
 var isProd = environment == 'prod'
+var isNonProd = environment != 'prod'
 
-// App Service Plan
+// Standardized SKU configurations
+var appServicePlanSku = {
+  dev: { name: 'B2', tier: 'Basic', capacity: 1 }
+  test: { name: 'S1', tier: 'Standard', capacity: 1 }
+  prod: { name: 'P2v3', tier: 'PremiumV3', capacity: 2 }
+}
+
+var sqlDatabaseSku = {
+  dev: { name: 'Basic', tier: 'Basic', capacity: 5 }
+  test: { name: 'S2', tier: 'Standard', capacity: 50 }
+  prod: { name: 'GP_Gen5_4', tier: 'GeneralPurpose', family: 'Gen5', capacity: 4 }
+}
+
+var storageAccountSku = {
+  dev: 'Standard_LRS'
+  test: 'Standard_ZRS'
+  prod: 'Standard_GRS'
+}
+
+// App Service Plan with environment-appropriate sizing
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: '${resourcePrefix}-asp'
   location: location
   tags: tags
-  sku: {
-    name: isProd ? 'P1v3' : 'S1'
-    tier: isProd ? 'PremiumV3' : 'Standard'
-    capacity: isProd ? 2 : 1
-  }
+  sku: appServicePlanSku[environment]
   properties: {
-    reserved: false // Windows
+    reserved: false // Windows hosting
     zoneRedundant: isProd
   }
 }
 
-// Web App
+// Web App with comprehensive security configuration
 resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   name: '${resourcePrefix}-web'
   location: location
@@ -60,14 +86,33 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
+    clientAffinityEnabled: false
     siteConfig: {
       netFrameworkVersion: 'v8.0'
       use32BitWorkerProcess: false
       alwaysOn: true
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
+      scmMinTlsVersion: '1.2'
       http20Enabled: true
+      httpLoggingEnabled: true
+      detailedErrorLoggingEnabled: isNonProd
       healthCheckPath: '/health'
+      publicNetworkAccess: enablePrivateEndpoints ? 'Disabled' : 'Enabled'
+      ipSecurityRestrictions: isNonProd ? [] : [
+        {
+          action: 'Allow'
+          description: 'Allow Application Gateway'
+          ipAddress: '${virtualNetwork.properties.subnets[2].properties.addressPrefix}'
+          priority: 100
+        }
+        {
+          action: 'Deny'
+          description: 'Deny all other traffic'
+          ipAddress: '0.0.0.0/0'
+          priority: 200
+        }
+      ]
       appSettings: [
         {
           name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
@@ -85,6 +130,14 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'ASPNETCORE_ENVIRONMENT'
           value: environment
         }
+        {
+          name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED'
+          value: 'true'
+        }
+        {
+          name: 'WEBSITE_HTTPLOGGING_RETENTION_DAYS'
+          value: isProd ? '30' : '7'
+        }
       ]
       connectionStrings: [
         {
@@ -100,7 +153,17 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
-// Application Insights
+// VNet integration for App Service (production)
+resource appServiceVnetIntegration 'Microsoft.Web/sites/networkConfig@2023-01-01' = if (isProd) {
+  name: 'virtualNetwork'
+  parent: webApp
+  properties: {
+    subnetResourceId: virtualNetwork.properties.subnets[0].id
+    swiftSupported: true
+  }
+}
+
+// Application Insights with proper workspace integration
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${resourcePrefix}-insights'
   location: location
@@ -108,15 +171,35 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    WorkspaceResourceId: !empty(logAnalyticsWorkspaceId) ? logAnalyticsWorkspaceId : null
+    WorkspaceResourceId: !empty(logAnalyticsWorkspaceId) ? logAnalyticsWorkspaceId : logAnalyticsWorkspace.id
     publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
+    publicNetworkAccessForQuery: isProd ? 'Disabled' : 'Enabled'
+    DisableIpMasking: isNonProd
   }
 }
 
-// Key Vault
+// Log Analytics Workspace (created if not provided)
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = if (empty(logAnalyticsWorkspaceId)) {
+  name: '${resourcePrefix}-law'
+  location: location
+  tags: tags
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: isProd ? 90 : 30
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+    workspaceCapping: {
+      dailyQuotaGb: isProd ? 10 : 1
+    }
+  }
+}
+
+// Key Vault with enhanced security
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: '${resourcePrefix}-kv'
+  name: '${resourcePrefix}-kv-${uniqueString(resourceGroup().id)}'
   location: location
   tags: tags
   properties: {
@@ -125,21 +208,30 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
       name: isProd ? 'premium' : 'standard'
     }
     tenantId: tenant().tenantId
-    enabledForTemplateDeployment: true
+    enabledForTemplateDeployment: false
+    enabledForDiskEncryption: false
+    enabledForDeployment: false
     enableSoftDelete: true
     softDeleteRetentionInDays: isProd ? 90 : 30
     enablePurgeProtection: isProd
     enableRbacAuthorization: true
+    publicNetworkAccess: enablePrivateEndpoints ? 'Disabled' : 'Enabled'
     networkAcls: {
       defaultAction: isProd ? 'Deny' : 'Allow'
       bypass: 'AzureServices'
+      virtualNetworkRules: isProd ? [
+        {
+          id: virtualNetwork.properties.subnets[1].id
+          ignoreMissingVnetServiceEndpoint: false
+        }
+      ] : []
     }
   }
 }
 
-// SQL Server
+// SQL Server with enhanced security
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
-  name: '${resourcePrefix}-sql'
+  name: '${resourcePrefix}-sql-${uniqueString(resourceGroup().id)}'
   location: location
   tags: tags
   properties: {
@@ -147,33 +239,58 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     administratorLoginPassword: dbAdminPassword
     version: '12.0'
     minimalTlsVersion: '1.2'
-    publicNetworkAccess: isProd ? 'Disabled' : 'Enabled'
+    publicNetworkAccess: enablePrivateEndpoints ? 'Disabled' : 'Enabled'
+    restrictOutboundNetworkAccess: 'Disabled'
   }
   identity: {
     type: 'SystemAssigned'
   }
 }
 
-// SQL Database
+// SQL Database with environment-appropriate configuration
 resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
   name: '${appName}db'
   parent: sqlServer
   location: location
   tags: tags
-  sku: {
-    name: isProd ? 'GP_Gen5_2' : 'S1'
-    tier: isProd ? 'GeneralPurpose' : 'Standard'
-  }
+  sku: sqlDatabaseSku[environment]
   properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
     maxSizeBytes: isProd ? 1099511627776 : 268435456000 // 1TB for prod, 250GB for others
     zoneRedundant: isProd
     readScale: isProd ? 'Enabled' : 'Disabled'
     requestedBackupStorageRedundancy: isProd ? 'GeoZone' : 'Local'
+    isLedgerOn: false
   }
 }
 
-// SQL Firewall Rule for Azure Services
-resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview' = {
+// SQL Server Advanced Threat Protection
+resource sqlServerSecurityAlert 'Microsoft.Sql/servers/securityAlertPolicies@2023-05-01-preview' = {
+  name: 'Default'
+  parent: sqlServer
+  properties: {
+    state: 'Enabled'
+    emailAddresses: []
+    emailAccountAdmins: true
+    retentionDays: isProd ? 90 : 30
+  }
+}
+
+// SQL Database Auditing
+resource sqlDatabaseAuditing 'Microsoft.Sql/servers/auditingSettings@2023-05-01-preview' = {
+  name: 'default'
+  parent: sqlServer
+  properties: {
+    state: 'Enabled'
+    storageEndpoint: storageAccount.properties.primaryEndpoints.blob
+    storageAccountAccessKey: storageAccount.listKeys().keys[0].value
+    retentionDays: isProd ? 90 : 30
+    isAzureMonitorTargetEnabled: true
+  }
+}
+
+// SQL Firewall rule (only for non-production with private endpoints disabled)
+resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview' = if (!enablePrivateEndpoints) {
   name: 'AllowAllWindowsAzureIps'
   parent: sqlServer
   properties: {
@@ -182,34 +299,61 @@ resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2023-05-01-preview
   }
 }
 
-// Storage Account for static content and logs
+// Storage Account with enhanced security
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: '${replace(resourcePrefix, '-', '')}stor'
+  name: '${replace(resourcePrefix, '-', '')}stor${uniqueString(resourceGroup().id)}'
   location: location
   tags: tags
   sku: {
-    name: isProd ? 'Standard_GRS' : 'Standard_LRS'
+    name: storageAccountSku[environment]
   }
   kind: 'StorageV2'
   properties: {
     allowBlobPublicAccess: false
+    allowSharedKeyAccess: !isProd
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
+    defaultToOAuthAuthentication: isProd
+    publicNetworkAccess: enablePrivateEndpoints ? 'Disabled' : 'Enabled'
     networkAcls: {
-      defaultAction: 'Allow'
+      defaultAction: isProd ? 'Deny' : 'Allow'
+      bypass: 'AzureServices'
+      virtualNetworkRules: isProd ? [
+        {
+          id: virtualNetwork.properties.subnets[1].id
+          action: 'Allow'
+        }
+      ] : []
+    }
+    encryption: {
+      services: {
+        blob: {
+          enabled: true
+          keyType: 'Account'
+        }
+        file: {
+          enabled: true
+          keyType: 'Account'
+        }
+      }
+      keySource: 'Microsoft.Storage'
+      requireInfrastructureEncryption: isProd
     }
   }
 }
 
-// Blob container for static content
+// Blob container for application data
 resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${storageAccount.name}/default/static-content'
+  name: '${storageAccount.name}/default/app-data'
   properties: {
     publicAccess: 'None'
+    metadata: {
+      purpose: 'Application data storage'
+    }
   }
 }
 
-// Virtual Network (for production with private endpoints)
+// Virtual Network (enhanced for production)
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = if (isProd) {
   name: '${resourcePrefix}-vnet'
   location: location
@@ -225,6 +369,17 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = if (isP
         name: 'app-service-subnet'
         properties: {
           addressPrefix: '10.0.1.0/24'
+          serviceEndpoints: [
+            {
+              service: 'Microsoft.KeyVault'
+            }
+            {
+              service: 'Microsoft.Storage'
+            }
+            {
+              service: 'Microsoft.Sql'
+            }
+          ]
           delegations: [
             {
               name: 'app-service-delegation'
@@ -240,6 +395,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = if (isP
         properties: {
           addressPrefix: '10.0.2.0/24'
           privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
@@ -252,18 +408,123 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' = if (isP
   }
 }
 
-// Application Gateway (for production)
+// Network Security Group for App Service subnet
+resource appServiceNsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = if (isProd) {
+  name: '${resourcePrefix}-app-nsg'
+  location: location
+  tags: tags
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowHTTPSInbound'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: '10.0.3.0/24'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'DenyAllInbound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 4096
+          direction: 'Inbound'
+        }
+      }
+    ]
+  }
+}
+
+// Private Endpoints (production only)
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (enablePrivateEndpoints) {
+  name: '${resourcePrefix}-kv-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: virtualNetwork.properties.subnets[1].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'keyVaultConnection'
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource sqlPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (enablePrivateEndpoints) {
+  name: '${resourcePrefix}-sql-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: virtualNetwork.properties.subnets[1].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'sqlConnection'
+        properties: {
+          privateLinkServiceId: sqlServer.id
+          groupIds: [
+            'sqlServer'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = if (enablePrivateEndpoints) {
+  name: '${resourcePrefix}-stor-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: virtualNetwork.properties.subnets[1].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'storageConnection'
+        properties: {
+          privateLinkServiceId: storageAccount.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+// Application Gateway with WAF (production only)
 resource applicationGatewayPublicIP 'Microsoft.Network/publicIPAddresses@2023-05-01' = if (enableApplicationGateway) {
   name: '${resourcePrefix}-agw-pip'
   location: location
   tags: tags
   sku: {
     name: 'Standard'
+    tier: 'Regional'
   }
   properties: {
     publicIPAllocationMethod: 'Static'
     dnsSettings: {
-      domainNameLabel: '${resourcePrefix}-app'
+      domainNameLabel: !empty(customDomainName) ? customDomainName : '${resourcePrefix}-app'
     }
   }
 }
@@ -278,12 +539,16 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
       tier: 'WAF_v2'
       capacity: 2
     }
+    autoscaleConfiguration: {
+      minCapacity: 1
+      maxCapacity: 10
+    }
     gatewayIPConfigurations: [
       {
         name: 'appGatewayIpConfig'
         properties: {
           subnet: {
-            id: isProd ? resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetwork.name, 'application-gateway-subnet') : null
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetwork.name, 'application-gateway-subnet')
           }
         }
       }
@@ -293,7 +558,7 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
         name: 'appGatewayFrontendIP'
         properties: {
           publicIPAddress: {
-            id: enableApplicationGateway ? applicationGatewayPublicIP.id : null
+            id: applicationGatewayPublicIP.id
           }
         }
       }
@@ -381,6 +646,7 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
           timeout: 30
           unhealthyThreshold: 3
           pickHostNameFromBackendHttpSettings: true
+          minServers: 0
         }
       }
     ]
@@ -389,75 +655,166 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
       firewallMode: 'Prevention'
       ruleSetType: 'OWASP'
       ruleSetVersion: '3.2'
+      disabledRuleGroups: []
+      exclusions: []
+      requestBodyCheck: true
+      maxRequestBodySizeInKb: 128
+      fileUploadLimitInMb: 100
     }
   }
 }
 
-// Key Vault secrets
+// Key Vault secrets with proper security
 resource databaseConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'database-connection-string'
   parent: keyVault
   properties: {
-    value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${dbAdminUsername};Password=${dbAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+    value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDatabase.name};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
     attributes: {
       enabled: true
+      exp: dateTimeToEpoch(dateTimeAdd(utcNow(), 'P1Y')) // Expire in 1 year
     }
+    contentType: 'Connection String'
   }
 }
 
-// Key Vault access policy for Web App
-resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
-  name: 'add'
+resource storageConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'storage-connection-string'
   parent: keyVault
   properties: {
-    accessPolicies: [
+    value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+    attributes: {
+      enabled: true
+      exp: dateTimeToEpoch(dateTimeAdd(utcNow(), 'P1Y'))
+    }
+    contentType: 'Connection String'
+  }
+}
+
+// RBAC assignments for managed identities
+resource webAppKeyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, webApp.id, 'Key Vault Secrets User')
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
+    principalId: webApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource webAppStorageBlobDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, webApp.id, 'Storage Blob Data Contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: webApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Diagnostic settings for monitoring
+resource webAppDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'webapp-diagnostics'
+  scope: webApp
+  properties: {
+    workspaceId: !empty(logAnalyticsWorkspaceId) ? logAnalyticsWorkspaceId : logAnalyticsWorkspace.id
+    logs: [
       {
-        tenantId: tenant().tenantId
-        objectId: webApp.identity.principalId
-        permissions: {
-          secrets: [
-            'get'
-            'list'
-          ]
+        category: 'AppServiceHTTPLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 30 : 7
         }
       }
       {
-        tenantId: tenant().tenantId
-        objectId: administratorObjectId
-        permissions: {
-          keys: [
-            'all'
-          ]
-          secrets: [
-            'all'
-          ]
-          certificates: [
-            'all'
-          ]
+        category: 'AppServiceConsoleLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 30 : 7
+        }
+      }
+      {
+        category: 'AppServiceAppLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 30 : 7
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 30 : 7
         }
       }
     ]
   }
 }
 
-// Outputs
-@description('Web App URL')
+resource sqlDatabaseDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'sqldb-diagnostics'
+  scope: sqlDatabase
+  properties: {
+    workspaceId: !empty(logAnalyticsWorkspaceId) ? logAnalyticsWorkspaceId : logAnalyticsWorkspace.id
+    logs: [
+      {
+        category: 'SQLInsights'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 90 : 30
+        }
+      }
+      {
+        category: 'QueryStoreRuntimeStatistics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 90 : 30
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'Basic'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: isProd ? 90 : 30
+        }
+      }
+    ]
+  }
+}
+
+// Outputs with comprehensive information
 output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
-
-@description('Application Gateway URL (if created)')
-output applicationGatewayUrl string = enableApplicationGateway ? 'http://${applicationGatewayPublicIP.properties.dnsSettings.fqdn}' : 'Not created'
-
-@description('SQL Server FQDN')
-output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-
-@description('Key Vault URI')
-output keyVaultUri string = keyVault.properties.vaultUri
-
-@description('Storage Account name')
-output storageAccountName string = storageAccount.name
-
-@description('Application Insights instrumentation key')
-output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey
-
-@description('Web App principal ID')
+output webAppName string = webApp.name
 output webAppPrincipalId string = webApp.identity.principalId
+
+output applicationGatewayUrl string = enableApplicationGateway ? 'https://${applicationGatewayPublicIP.properties.dnsSettings.fqdn}' : 'Not deployed'
+output applicationGatewayPublicIP string = enableApplicationGateway ? applicationGatewayPublicIP.properties.ipAddress : 'Not deployed'
+
+output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
+output sqlDatabaseName string = sqlDatabase.name
+output sqlServerName string = sqlServer.name
+
+output keyVaultUri string = keyVault.properties.vaultUri
+output keyVaultName string = keyVault.name
+
+output storageAccountName string = storageAccount.name
+output storageAccountPrimaryEndpoint string = storageAccount.properties.primaryEndpoints.blob
+
+output applicationInsightsInstrumentationKey string = applicationInsights.properties.InstrumentationKey
+output applicationInsightsConnectionString string = applicationInsights.properties.ConnectionString
+
+output logAnalyticsWorkspaceId string = !empty(logAnalyticsWorkspaceId) ? logAnalyticsWorkspaceId : logAnalyticsWorkspace.id
+
+output virtualNetworkId string = isProd ? virtualNetwork.id : 'Not deployed'
+output privateEndpointsEnabled bool = enablePrivateEndpoints
