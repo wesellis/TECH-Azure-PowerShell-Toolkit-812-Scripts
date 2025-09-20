@@ -1,0 +1,85 @@
+{
+  "development": {
+    "defaultLocation": "East US 2",
+    "resourcePrefix": "dev",
+    "subscriptionId": "",
+    "resourceGroups": {
+      "compute": "rg-dev-compute",
+      "storage": "rg-dev-storage",
+      "network": "rg-dev-network",
+      "monitoring": "rg-dev-monitoring"
+    },
+    "tags": {
+      "Environment": "Development",
+      "CostCenter": "IT-Dev",
+      "Owner": "DevOps Team"
+    },
+    "vmSizes": {
+      "small": "Standard_B1s",
+      "medium": "Standard_B2s",
+      "large": "Standard_B4ms"
+    },
+    "monitoring": {
+      "enableDetailedMetrics": false,
+      "logRetentionDays": 30
+    }
+  },
+  "staging": {
+    "defaultLocation": "East US",
+    "resourcePrefix": "stg",
+    "subscriptionId": "",
+    "resourceGroups": {
+      "compute": "rg-stg-compute",
+      "storage": "rg-stg-storage",
+      "network": "rg-stg-network",
+      "monitoring": "rg-stg-monitoring"
+    },
+    "tags": {
+      "Environment": "Staging",
+      "CostCenter": "IT-Staging",
+      "Owner": "QA Team"
+    },
+    "vmSizes": {
+      "small": "Standard_B2s",
+      "medium": "Standard_D2s_v3",
+      "large": "Standard_D4s_v3"
+    },
+    "monitoring": {
+      "enableDetailedMetrics": true,
+      "logRetentionDays": 90
+    }
+  },
+  "production": {
+    "defaultLocation": "East US",
+    "resourcePrefix": "prod",
+    "subscriptionId": "",
+    "resourceGroups": {
+      "compute": "rg-prod-compute",
+      "storage": "rg-prod-storage",
+      "network": "rg-prod-network",
+      "monitoring": "rg-prod-monitoring"
+    },
+    "tags": {
+      "Environment": "Production",
+      "CostCenter": "IT-Production",
+      "Owner": "Operations Team",
+      "Backup": "Required",
+      "Compliance": "SOC2"
+    },
+    "vmSizes": {
+      "small": "Standard_D2s_v3",
+      "medium": "Standard_D4s_v3",
+      "large": "Standard_D8s_v3"
+    },
+    "monitoring": {
+      "enableDetailedMetrics": true,
+      "logRetentionDays": 365,
+      "enableAlerts": true
+    },
+    "security": {
+      "requireEncryption": true,
+      "enableBackup": true,
+      "networkSecurityLevel": "strict"
+    }
+  }
+}

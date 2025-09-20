@@ -1,174 +1,123 @@
-# Security Policy - Azure Enterprise Toolkit
+# Security Policy
 
 ## Supported Versions
 
+We provide security updates for the following versions of the Azure Enterprise PowerShell Toolkit:
+
 | Version | Supported          |
 | ------- | ------------------ |
-| Latest  | :white_check_mark: |
-| Previous| :white_check_mark: |
-| Older   | :x:                |
-
-## Security Features
-
-### Enterprise Security Controls
-- Azure Active Directory integration
-- Role-based access control (RBAC)
-- Multi-factor authentication enforcement
-- Conditional access policies
-- Privileged Identity Management (PIM)
-- Compliance monitoring and reporting
-
-### Azure Infrastructure Security
-- Network security group configurations
-- Azure Security Center integration
-- Key Vault secrets management
-- Managed identity implementation
-- Azure Policy enforcement
-- Resource locks and governance
-
-### Data Protection
-- Data encryption at rest and in transit
-- Azure Information Protection integration
-- Secure API endpoints with OAuth 2.0
-- Audit logging and monitoring
-- Backup encryption and recovery
-- Data residency compliance
-
-### Infrastructure Security
-- HTTPS enforcement across all services
-- Security headers implementation
-- Rate limiting and throttling
-- DDoS protection via Azure Front Door
-- Regular security updates and patching
-- Vulnerability assessments
+| 3.0.x   | Yes                |
+| 2.x.x   | Yes                |
+| < 2.0   | No                 |
 
 ## Reporting a Vulnerability
 
-**DO NOT** create a public GitHub issue for security vulnerabilities.
+The Azure Enterprise PowerShell Toolkit team takes security vulnerabilities seriously. We appreciate your efforts to responsibly disclose your findings.
 
 ### How to Report
-Email: **security@azure-enterprise-toolkit.com**
 
-### Information to Include
+**Please do not report security vulnerabilities through public GitHub issues.**
+
+Instead, please report them via email to:
+- **Primary Contact**: wes@wesellis.com
+- **Subject**: [SECURITY] Azure PowerShell Toolkit Vulnerability
+
+### What to Include
+
+Please include the following information in your report:
 - Description of the vulnerability
-- Steps to reproduce
-- Potential impact assessment
-- Affected Azure services/components
-- Suggested fixes (if any)
-- Azure subscription/tenant details (if applicable)
+- Steps to reproduce the issue
+- Affected versions
+- Potential impact
+- Any suggested fixes or mitigations
 
 ### Response Timeline
-- **Acknowledgment**: Within 24 hours
-- **Initial Assessment**: Within 72 hours
-- **Status Updates**: Weekly until resolved
-- **Fix Development**: 1-14 days (severity dependent)
-- **Security Release**: ASAP after testing
 
-## Severity Classification
+- **Acknowledgment**: We will acknowledge receipt of your vulnerability report within 48 hours
+- **Initial Assessment**: We will provide an initial assessment within 5 business days
+- **Updates**: We will keep you informed of our progress throughout the investigation
+- **Resolution**: We aim to resolve critical vulnerabilities within 30 days
 
-### Critical (CVSS 9.0-10.0)
-- Privilege escalation to Global Admin
-- Data exfiltration from Azure tenant
-- Complete Azure infrastructure compromise
-- Bypass of enterprise security controls
+### Disclosure Policy
 
-**Response**: 24-48 hours
-
-### High (CVSS 7.0-8.9)
-- Unauthorized resource access
-- Significant data exposure
-- Authentication vulnerabilities
-- Azure AD security bypass
-
-**Response**: 3-7 days
-
-### Medium (CVSS 4.0-6.9)
-- Limited data exposure
-- Service disruption
-- Information disclosure
-- Configuration vulnerabilities
-
-**Response**: 7-14 days
-
-### Low (CVSS 0.1-3.9)
-- Minor information leakage
-- Security hardening opportunities
-- Non-critical misconfigurations
-
-**Response**: 14-30 days
+- We request that you do not publicly disclose the vulnerability until we have had a chance to investigate and address it
+- Once a fix is available, we will coordinate the disclosure timeline with you
+- We will credit you in our security advisory (unless you prefer to remain anonymous)
 
 ## Security Best Practices
 
-### For Enterprise Users
-- Enable multi-factor authentication
-- Use strong, unique passwords
+When using the Azure Enterprise PowerShell Toolkit:
+
+### For Users
+
+1. **Keep Scripts Updated**: Always use the latest version of scripts
+2. **Review Before Execution**: Understand what a script does before running it
+3. **Secure Credentials**: Never hardcode credentials in scripts
+4. **Use Secure Methods**: Utilize Azure Key Vault, Managed Identities, or secure credential storage
+5. **Principle of Least Privilege**: Run scripts with minimal required permissions
+6. **Audit Logging**: Enable logging for all script executions in production
+
+### For Contributors
+
+1. **No Hardcoded Secrets**: Never commit credentials, API keys, or secrets
+2. **Input Validation**: Always validate user inputs and parameters
+3. **Error Handling**: Implement proper error handling to prevent information disclosure
+4. **Secure Defaults**: Use secure default configurations
+5. **Dependencies**: Keep dependencies updated and scan for vulnerabilities
+
+## Security Features
+
+The repository includes several security measures:
+
+### Automated Security Scanning
+- **Secrets Detection**: GitLeaks scans for accidentally committed secrets
+- **Dependency Scanning**: Regular checks for vulnerable dependencies
+- **Code Analysis**: Static analysis for security anti-patterns
+
+### Secure Coding Standards
+- **PSScriptAnalyzer**: Enforces secure PowerShell coding practices
+- **Code Review**: All changes require review before merging
+- **Testing**: Comprehensive testing including security test cases
+
+### Access Controls
+- **Branch Protection**: Main branch requires reviews and status checks
+- **Signed Commits**: Contributors are encouraged to sign commits
+- **Release Management**: Controlled release process with security validation
+
+## Known Security Considerations
+
+### Azure Authentication
+- Scripts use Azure PowerShell modules for authentication
+- Supports Azure AD, Service Principals, and Managed Identities
+- No credentials are stored in the repository
+
+### Permissions
+- Scripts require appropriate Azure RBAC permissions
 - Follow principle of least privilege
-- Regular access reviews
-- Monitor Azure Security Center recommendations
+- Document required permissions in script headers
 
-### For Administrators
-- Implement Azure Policy governance
-- Enable Azure Security Center
-- Configure conditional access policies
-- Use Privileged Identity Management
-- Regular security audits and assessments
-- Monitor Azure Activity Logs
+### Data Handling
+- Scripts may process sensitive Azure configuration data
+- No data is transmitted outside Azure environments
+- Local temporary files are cleaned up appropriately
 
-### For Developers
-- Use managed identities for authentication
-- Store secrets in Azure Key Vault
-- Implement proper RBAC controls
-- Follow secure coding practices
-- Regular security testing and validation
+## Security Updates
 
-## Enterprise Compliance
+Security updates will be:
+- Documented in the CHANGELOG.md
+- Tagged with appropriate version bumps
+- Announced through GitHub releases
+- Communicated via security advisories when applicable
 
-### Supported Standards
-- SOC 2 Type II
-- ISO 27001
-- PCI DSS
-- HIPAA (when configured)
-- GDPR compliance
-- Industry-specific regulations
+## Contact
 
-### Azure Native Security
-- Azure Security Benchmark compliance
-- Microsoft Cloud Security Benchmark
-- CIS Controls implementation
-- NIST Cybersecurity Framework alignment
+For general security questions or concerns:
+- Email: wes@wesellis.com
+- Create a GitHub issue (for non-sensitive topics only)
 
-## Security Contact
+For urgent security matters, please use the vulnerability reporting process described above.
 
-- **Primary**: security@azure-enterprise-toolkit.com
-- **Enterprise Support**: Available via Azure Support
-- **Response Time**: 24 hours maximum
-- **PGP Key**: Available upon request
+---
 
-## Acknowledgments
-
-We appreciate security researchers and enterprise security teams who responsibly disclose vulnerabilities and help improve our security posture.
-
-## Legal
-
-### Safe Harbor
-We commit to not pursuing legal action against security researchers who:
-- Follow responsible disclosure practices
-- Avoid privacy violations
-- Do not access data beyond demonstration needs
-- Report through proper channels
-- Respect enterprise tenant boundaries
-
-### Scope
-This policy applies to:
-- Azure toolkit components and scripts
-- API endpoints and services
-- Infrastructure and deployment templates
-- Documentation and examples
-- Enterprise integrations
-
-### Out of Scope
-- Azure platform services (report to Microsoft)
-- Third-party integrations
-- Customer-specific configurations
-- Social engineering attacks
-- Physical security
+**Last Updated**: September 19, 2025
+**Security Policy Version**: 1.0

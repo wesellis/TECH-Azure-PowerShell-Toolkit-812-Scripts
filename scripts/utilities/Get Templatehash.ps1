@@ -1,0 +1,144 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
+<#`n.SYNOPSIS
+    Get Templatehash
+
+.DESCRIPTION
+    Azure automation
+
+
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+    Wes Ellis (wes@wesellis.com)
+
+    1.0
+    Requires appropriate permissions and modules
+[CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+    [string][Parameter(Mandatory = $true)] $templateFilePath,
+    [string][Parameter(Mandatory = $false)] $bearerToken,
+    # If this is set, the hash obtained will *not* be the official template hash that Azure would compute.
+    [switch][Parameter(Mandatory = $false)] $removeGeneratorMetadata
+)
+if ($bearerToken -eq "" ) {
+    Write-Host "Getting token..."
+    Import-Module Az.Accounts
+    $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+    $azContext = Get-AzContext -ErrorAction Stop
+    $profileClient = New-Object -ErrorAction Stop Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
+    $bearerToken = ($profileClient.AcquireAccessToken($azContext.Tenant.TenantId)).AccessToken
+    if (!$bearerToken) {
+        Write-Error "Could not retrieve token"
+    }
+}
+$uri = "https://management.azure.com/providers/Microsoft.Resources/calculateTemplateHash?api-version=2019-10-01"
+$Headers = @{
+    'Authorization' = "Bearer $bearerToken"
+    'Content-Type'  = 'application/json'
+}
+$raw = Get-Content -Path $templateFilePath -Raw -ErrorAction Stop
+if ($RemoveGeneratorMetadata) {
+    $withoutGeneratorMetadata = Remove-GeneratorMetadata -ErrorAction Stop $raw
+}
+else {
+    $withoutGeneratorMetadata = $raw
+}
+if ($null -eq $withoutGeneratorMetadata -or $withoutGeneratorMetadata -eq "" ) {
+    Write-Error "JSON is empty"
+}
+Write-Host "Requesting Hash for file: $templateFilePath"
+try {
+    #fail the build for now so we can find issues
+   $params = @{
+       Method = "POST"
+       Uri = $uri
+       Headers = $Headers
+       Body = $withoutGeneratorMetadata ;  $templateHash = $response.templateHash
+   }
+   ; @params
+}
+catch {
+    Write-Warning #Requires -Version 7.0
+#Requires -Modules Az.Resources
+
+<#`n.SYNOPSIS
+    Get Templatehash
+
+.DESCRIPTION
+    Azure automation
+
+
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+    Wes Ellis (wes@wesellis.com)
+
+    1.0
+    Requires appropriate permissions and modules
+[CmdletBinding()]
+$ErrorActionPreference = "Stop"
+param(
+    [string][Parameter(Mandatory = $true)] $templateFilePath,
+    [string][Parameter(Mandatory = $false)] $bearerToken,
+    # If this is set, the hash obtained will *not* be the official template hash that Azure would compute.
+    [switch][Parameter(Mandatory = $false)] $removeGeneratorMetadata
+)
+if ($bearerToken -eq "" ) {
+    Write-Host "Getting token..."
+    Import-Module Az.Accounts
+    $azProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+    $azContext = Get-AzContext -ErrorAction Stop
+    $profileClient = New-Object -ErrorAction Stop Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azProfile)
+    $bearerToken = ($profileClient.AcquireAccessToken($azContext.Tenant.TenantId)).AccessToken
+    if (!$bearerToken) {
+        Write-Error "Could not retrieve token"
+    }
+}
+$uri = "https://management.azure.com/providers/Microsoft.Resources/calculateTemplateHash?api-version=2019-10-01"
+$Headers = @{
+    'Authorization' = "Bearer $bearerToken"
+    'Content-Type'  = 'application/json'
+}
+$raw = Get-Content -Path $templateFilePath -Raw -ErrorAction Stop
+if ($RemoveGeneratorMetadata) {
+    $withoutGeneratorMetadata = Remove-GeneratorMetadata -ErrorAction Stop $raw
+}
+else {
+    $withoutGeneratorMetadata = $raw
+}
+if ($null -eq $withoutGeneratorMetadata -or $withoutGeneratorMetadata -eq "" ) {
+    Write-Error "JSON is empty"
+}
+Write-Host "Requesting Hash for file: $templateFilePath"
+try {
+    #fail the build for now so we can find issues
+   $params = @{
+       Method = "POST"
+       Uri = $uri
+       Headers = $Headers
+       Body = $withoutGeneratorMetadata ;  $templateHash = $response.templateHash
+   }
+   ; @params
+}
+catch {
+    Write-Warning $Error[0]
+    Write-Warning ($response ? $response : " (no response)" )
+    Write-Error "Failed to get hash for: $templateFilePath"
+}
+Write-Host "Template hash: $templateHash"
+if (!$templateHash -or !($templateHash -gt 0)) {
+    Write-Error "Failed to get hash for: $templateFilePath"
+}
+Return $templateHash
+.Exception.Message
+    Write-Warning ($response ? $response : " (no response)" )
+    Write-Error "Failed to get hash for: $templateFilePath"
+}
+Write-Host "Template hash: $templateHash"
+if (!$templateHash -or !($templateHash -gt 0)) {
+    Write-Error "Failed to get hash for: $templateFilePath"
+}
+Return $templateHash
+
+

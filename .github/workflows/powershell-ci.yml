@@ -2,47 +2,116 @@ name: PowerShell CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
 jobs:
-  test:
+  lint:
+    name: PowerShell Lint
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install PowerShell modules
-      shell: pwsh
-      run: |
-        Set-PSRepository PSGallery -InstallationPolicy Trusted
-        Install-Module -Name PSScriptAnalyzer -Force
-        Install-Module -Name Pester -Force
-    
-    - name: Validate PowerShell scripts
-      shell: pwsh
-      run: |
-        Write-Host "Validating PowerShell script syntax..."
-        $scripts = Get-ChildItem -Path . -Recurse -Include *.ps1
-        Write-Host "Found $($scripts.Count) PowerShell scripts"
-        $errors = 0
-        foreach ($script in $scripts) {
-          try {
-            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $script.FullName -Raw), [ref]$null)
-          } catch {
-            Write-Warning "Syntax error in $($script.Name)"
-            $errors++
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell modules
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+          Import-Module PSScriptAnalyzer
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path ./scripts -Settings ./PSScriptAnalyzerSettings.psd1 -Recurse
+
+          if ($results) {
+            Write-Host "PSScriptAnalyzer found $($results.Count) issues:" -ForegroundColor Red
+            $results | ForEach-Object {
+              Write-Host "  $($_.Severity): $($_.RuleName) in $($_.ScriptName) at line $($_.Line)" -ForegroundColor Yellow
+              Write-Host "    $($_.Message)" -ForegroundColor White
+            }
+
+            $errors = $results | Where-Object { $_.Severity -eq 'Error' }
+            if ($errors.Count -gt 0) {
+              Write-Host "Found $($errors.Count) errors. Failing build." -ForegroundColor Red
+              exit 1
+            } else {
+              Write-Host "No errors found, but $($results.Count) warnings exist." -ForegroundColor Yellow
+            }
+          } else {
+            Write-Host "PSScriptAnalyzer found no issues!" -ForegroundColor Green
           }
-        }
-        if ($errors -eq 0) {
-          Write-Host "✅ All scripts have valid PowerShell syntax!" -ForegroundColor Green
-        } else {
-          Write-Host "⚠️ Found $errors scripts with syntax issues (non-blocking)" -ForegroundColor Yellow
-        }
-    
-    - name: Count scripts
-      shell: pwsh
-      run: |
-        $count = (Get-ChildItem -Path . -Recurse -Include *.ps1).Count
-        Write-Host "📊 Repository contains $count PowerShell scripts"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate-standards:
+    name: Validate PowerShell Standards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate PowerShell Standards
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem -Path ./scripts -Filter "*.ps1" -Recurse
+          $issues = @()
+          $syntaxErrors = 0
+
+          foreach ($script in $scripts) {
+            # Check syntax
+            try {
+              $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $script.FullName -Raw), [ref]$null)
+            } catch {
+              Write-Warning "Syntax error in $($script.Name): $($_.Exception.Message)"
+              $syntaxErrors++
+              continue
+            }
+
+            $content = Get-Content -Path $script.FullName -Raw
+
+            # Check for required elements
+            if ($content -notmatch '#Requires -Version') {
+              $issues += "$($script.Name): Missing #Requires -Version"
+            }
+
+            if ($content -match 'param\s*\(' -and $content -notmatch '\[CmdletBinding') {
+              $issues += "$($script.Name): Missing [CmdletBinding()] with param block"
+            }
+
+            if ($content -notmatch '\.SYNOPSIS') {
+              $issues += "$($script.Name): Missing .SYNOPSIS in comment-based help"
+            }
+          }
+
+          Write-Host "Validation Summary:" -ForegroundColor Cyan
+          Write-Host "  Total scripts: $($scripts.Count)" -ForegroundColor White
+          Write-Host "  Syntax errors: $syntaxErrors" -ForegroundColor $(if($syntaxErrors -gt 0){'Red'}else{'Green'})
+          Write-Host "  Standard violations: $($issues.Count)" -ForegroundColor $(if($issues.Count -gt 0){'Yellow'}else{'Green'})
+
+          if ($syntaxErrors -gt 0) {
+            Write-Host "Found syntax errors. Failing build." -ForegroundColor Red
+            exit 1
+          }
+
+          if ($issues.Count -gt 0) {
+            Write-Host "PowerShell standard violations found:" -ForegroundColor Yellow
+            $issues | ForEach-Object { Write-Host "    $_" -ForegroundColor Gray }
+          } else {
+            Write-Host "All scripts meet PowerShell standards." -ForegroundColor Green
+          }

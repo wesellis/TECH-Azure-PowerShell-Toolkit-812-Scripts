@@ -1,0 +1,87 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
+<#`n.SYNOPSIS
+    Azure script
+
+.DESCRIPTION
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
+[CmdletBinding()]
+
+    [Parameter(Mandatory)]
+    [string]$ResourceId,
+    [Parameter(Mandatory)]
+    [string]$DiagnosticSettingName,
+    [Parameter()]
+    [string]$WorkspaceId,
+    [Parameter()]
+    [string]$StorageAccountId,
+    [Parameter()]
+    [array]$LogCategories = @("Administrative", "Security", "ServiceHealth", "Alert"),
+    [Parameter()]
+    [array]$MetricCategories = @("AllMetrics")
+)
+Write-Host "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])"
+# Build diagnostic setting parameters
+$DiagnosticParams = @{
+    ResourceId = $ResourceId
+    Name = $DiagnosticSettingName
+}
+# Configure destinations
+if ($WorkspaceId) {
+    $DiagnosticParams.WorkspaceId = $WorkspaceId
+    Write-Host "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])"
+}
+if ($StorageAccountId) {
+    $DiagnosticParams.StorageAccountId = $StorageAccountId
+    Write-Host "Storage Account: $($StorageAccountId.Split('/')[-1])"
+}
+# Configure log categories
+$LogSettings = @()
+foreach ($Category in $LogCategories) {
+    $LogSettings += @{
+        Category = $Category
+        Enabled = $true
+        RetentionPolicy = @{
+            Enabled = $true
+            Days = 30
+        }
+    }
+}
+# Configure metric categories
+$MetricSettings = @()
+foreach ($Category in $MetricCategories) {
+    $MetricSettings += @{
+        Category = $Category
+        Enabled = $true
+        RetentionPolicy = @{
+            Enabled = $true
+            Days = 30
+        }
+    }
+}
+$DiagnosticParams.Log = $LogSettings
+$DiagnosticParams.Metric = $MetricSettings
+# Create diagnostic setting
+$DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
+Write-Host "Diagnostic settings configured successfully:"
+Write-Host "Setting ID: $($DiagnosticSetting.Id)"
+Write-Host "Name: $DiagnosticSettingName"
+Write-Host "Resource: $($ResourceId.Split('/')[-1])"
+Write-Host "Log Categories: $($LogCategories -join ', ')"
+Write-Host "Metric Categories: $($MetricCategories -join ', ')"
+Write-Host "`nDiagnostic Data Destinations:"
+if ($WorkspaceId) {
+    Write-Host "   Log Analytics Workspace (for queries and alerts)"
+}
+if ($StorageAccountId) {
+    Write-Host "   Storage Account (for long-term archival)"
+}
+Write-Host "`nDiagnostic Benefits:"
+Write-Host "Centralized logging and monitoring"
+Write-Host "Compliance and audit trails"
+Write-Host "Performance troubleshooting"
+Write-Host "Security event tracking"
+Write-Host "Cost optimization insights"
+

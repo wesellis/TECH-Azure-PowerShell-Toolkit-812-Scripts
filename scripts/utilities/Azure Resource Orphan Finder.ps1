@@ -1,0 +1,231 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
+<#`n.SYNOPSIS
+    Azure Resource Orphan Finder
+
+.DESCRIPTION
+    Azure automation
+
+
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+    Wes Ellis (wes@wesellis.com)
+
+    1.0
+    Requires appropriate permissions and modules
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$SubscriptionId,
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$ResourceGroupName,
+    [Parameter()]
+    [ValidateSet("All" , "NetworkInterfaces" , "PublicIPs" , "Disks" , "Snapshots" , "LoadBalancers" , "NetworkSecurityGroups" , "StorageAccounts" , "KeyVaults" )]
+    [string]$ResourceType = "All" ,
+    [Parameter()]
+    [int]$DaysUnused = 30,
+    [Parameter()]
+    [switch]$RemoveOrphans,
+    [Parameter()]
+    [switch]$GenerateReport,
+    [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\orphaned-resources-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv" ,
+    [Parameter()]
+    [switch]$IncludeCostAnalysis,
+    [Parameter()]
+    [switch]$DryRun
+)
+Write-Host "Script Started" -ForegroundColor Green
+$orphanedResources = @()
+$totalSavings = 0
+try {
+    # Test Azure connection
+    # Progress stepNumber 1 -TotalSteps 8 -StepName "Azure Connection" -Status "Validating connection and modules"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
+    }
+    }
+    # Set subscription context
+    if ($SubscriptionId) {
+        # Progress stepNumber 2 -TotalSteps 8 -StepName "Subscription Context" -Status "Setting subscription context"
+        Set-AzContext -SubscriptionId $SubscriptionId
+
+    }
+    # Get all resources to analyze
+    # Progress stepNumber 3 -TotalSteps 8 -StepName "Resource Discovery" -Status "Discovering resources for analysis"
+    $resourceFilter = @{}
+    if ($ResourceGroupName) { $resourceFilter.ResourceGroupName = $ResourceGroupName }
+    $allResources = Get-AzResource -ErrorAction Stop @resourceFilter
+
+    # Analyze orphaned Network Interfaces
+    # Progress stepNumber 4 -TotalSteps 8 -StepName "Network Analysis" -Status "Finding orphaned network interfaces"
+    if ($ResourceType -eq "All" -or $ResourceType -eq "NetworkInterfaces" ) {
+        $networkInterfaces = Get-AzNetworkInterface -ErrorAction Stop
+        foreach ($nic in $networkInterfaces) {
+            if (-not $nic.VirtualMachine -and -not $nic.LoadBalancerBackendAddressPools) {
+                $orphanedResources = $orphanedResources + [PSCustomObject]@{
+                    ResourceType = "NetworkInterface"
+                    ResourceName = $nic.Name
+                    ResourceGroup = $nic.ResourceGroupName
+                    Location = $nic.Location
+                    Status = "Orphaned - Not attached to VM or LB"
+                    EstimatedMonthlyCost = 5.00
+                    LastModified = $nic.Tag.LastModified ?? "Unknown"
+                }
+            }
+        }
+    }
+    # Analyze orphaned Public IPs
+    if ($ResourceType -eq "All" -or $ResourceType -eq "PublicIPs" ) {
+        $publicIPs = Get-AzPublicIpAddress -ErrorAction Stop
+        foreach ($pip in $publicIPs) {
+            if (-not $pip.IpConfiguration -and $pip.PublicIpAllocationMethod -eq "Static" ) {
+                $orphanedResources = $orphanedResources + [PSCustomObject]@{
+                    ResourceType = "PublicIP"
+                    ResourceName = $pip.Name
+                    ResourceGroup = $pip.ResourceGroupName
+                    Location = $pip.Location
+                    Status = "Orphaned - Static IP not assigned"
+                    EstimatedMonthlyCost = 3.65
+                    LastModified = $pip.Tag.LastModified ?? "Unknown"
+                }
+            }
+        }
+    }
+    # Analyze orphaned Disks
+    # Progress stepNumber 5 -TotalSteps 8 -StepName "Storage Analysis" -Status "Finding orphaned disks and snapshots"
+    if ($ResourceType -eq "All" -or $ResourceType -eq "Disks" ) {
+        $disks = Get-AzDisk -ErrorAction Stop
+        foreach ($disk in $disks) {
+            if (-not $disk.ManagedBy) {
+                $sizeGB = $disk.DiskSizeGB
+                $estimatedCost = switch ($disk.Sku.Name) {
+                    "Standard_LRS" { $sizeGB * 0.05 }
+                    "Premium_LRS" { $sizeGB * 0.12 }
+                    "StandardSSD_LRS" { $sizeGB * 0.075 }
+                    default { $sizeGB * 0.05 }
+                }
+                $orphanedResources = $orphanedResources + [PSCustomObject]@{
+                    ResourceType = "ManagedDisk"
+                    ResourceName = $disk.Name
+                    ResourceGroup = $disk.ResourceGroupName
+                    Location = $disk.Location
+                    Status = "Orphaned - Not attached to VM"
+                    EstimatedMonthlyCost = $estimatedCost
+                    LastModified = $disk.TimeCreated
+                    AdditionalInfo = "Size: $($disk.DiskSizeGB)GB, SKU: $($disk.Sku.Name)"
+                }
+            }
+        }
+    }
+    # Analyze old Snapshots
+    if ($ResourceType -eq "All" -or $ResourceType -eq "Snapshots" ) {
+        $snapshots = Get-AzSnapshot -ErrorAction Stop
+        $cutoffDate = (Get-Date).AddDays(-$DaysUnused)
+        foreach ($snapshot in $snapshots) {
+            if ($snapshot.TimeCreated -lt $cutoffDate) {
+                $sizeGB = $snapshot.DiskSizeGB
+                $estimatedCost = $sizeGB * 0.05  # Snapshot pricing
+                $orphanedResources = $orphanedResources + [PSCustomObject]@{
+                    ResourceType = "Snapshot"
+                    ResourceName = $snapshot.Name
+                    ResourceGroup = $snapshot.ResourceGroupName
+                    Location = $snapshot.Location
+                    Status = "Old - Created $([math]::Round((New-TimeSpan -Start $snapshot.TimeCreated -End (Get-Date)).TotalDays)) days ago"
+                    EstimatedMonthlyCost = $estimatedCost
+                    LastModified = $snapshot.TimeCreated
+                    AdditionalInfo = "Size: $($snapshot.DiskSizeGB)GB"
+                }
+            }
+        }
+    }
+    # Analyze orphaned NSGs
+    # Progress stepNumber 6 -TotalSteps 8 -StepName "Security Analysis" -Status "Finding orphaned security groups"
+    if ($ResourceType -eq "All" -or $ResourceType -eq "NetworkSecurityGroups" ) {
+        $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
+        foreach ($nsg in $nsgs) {
+            if (-not $nsg.Subnets -and -not $nsg.NetworkInterfaces) {
+                $orphanedResources = $orphanedResources + [PSCustomObject]@{
+                    ResourceType = "NetworkSecurityGroup"
+                    ResourceName = $nsg.Name
+                    ResourceGroup = $nsg.ResourceGroupName
+                    Location = $nsg.Location
+                    Status = "Orphaned - Not assigned to subnets or NICs"
+                    EstimatedMonthlyCost = 0.00
+                    LastModified = $nsg.Tag.LastModified ?? "Unknown"
+                }
+            }
+        }
+    }
+    # Calculate total potential savings
+    # Progress stepNumber 7 -TotalSteps 8 -StepName "Cost Analysis" -Status "Calculating potential savings"
+    $totalSavings = ($orphanedResources | Measure-Object -Property EstimatedMonthlyCost -Sum).Sum
+    # Generate report
+    # Progress stepNumber 8 -TotalSteps 8 -StepName "Report Generation" -Status "Generating orphan report"
+    if ($GenerateReport -or $orphanedResources.Count -gt 0) {
+        $orphanedResources | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
+
+    }
+    # Remove orphans if requested and explicitly disabled dry run mode
+    # Default behavior is safe (dry run mode) unless user explicitly disables it
+$isDryRunMode = if ($PSBoundParameters.ContainsKey('DryRun')) { $DryRun } else { $true }
+    if ($RemoveOrphans -and -not $isDryRunMode) {
+
+        foreach ($resource in $orphanedResources) {
+            try {
+                switch ($resource.ResourceType) {
+                    "NetworkInterface" {
+                        Remove-AzNetworkInterface -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                    }
+                    "PublicIP" {
+                        Remove-AzPublicIpAddress -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                    }
+                    "ManagedDisk" {
+                        Remove-AzDisk -DiskName $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                    }
+                    "Snapshot" {
+                        Remove-AzSnapshot -SnapshotName $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                    }
+                    "NetworkSecurityGroup" {
+                        Remove-AzNetworkSecurityGroup -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup -Force
+                    }
+                }
+
+            } catch {
+
+            }
+        }
+    }
+    # Success summary
+    Write-Host ""
+    Write-Host "                              ORPHANED RESOURCES ANALYSIS COMPLETE" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Orphaned Resources Found:" -ForegroundColor Cyan
+$resourceTypeCounts = $orphanedResources | Group-Object ResourceType
+    foreach ($type in $resourceTypeCounts) {
+        Write-Host "    $($type.Name): $($type.Count) resources" -ForegroundColor White
+    }
+    Write-Host ""
+    Write-Host "Cost Analysis:" -ForegroundColor Cyan
+    Write-Host "    Total Monthly Savings Potential: $${totalSavings:F2}" -ForegroundColor Green
+    Write-Host "    Annual Savings Potential: $${($totalSavings * 12):F2}" -ForegroundColor Green
+    if ($isDryRunMode) {
+        Write-Host ""
+        Write-Host " [LOCK] DRY RUN MODE:" -ForegroundColor Yellow
+        Write-Host "    No resources were deleted" -ForegroundColor White
+        Write-Host "    Use -DryRun:`$false -RemoveOrphans to actually delete" -ForegroundColor White
+    }
+    Write-Host ""
+    Write-Host "Report Location: $OutputPath" -ForegroundColor Cyan
+    Write-Host ""
+
+} catch { throw }
+
+

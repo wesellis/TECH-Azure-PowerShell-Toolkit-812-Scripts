@@ -1,0 +1,78 @@
+#Requires -Version 7.0
+#Requires -Modules Az.Resources
+
+<#`n.SYNOPSIS
+    Azure Dns Zone Provisioning Tool
+
+.DESCRIPTION
+    Azure automation
+
+
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+    Wes Ellis (wes@wesellis.com)
+
+    1.0
+    Requires appropriate permissions and modules
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+try {
+    # Main script execution
+) { "Continue" } else { "SilentlyContinue" }
+[CmdletBinding()]
+function Write-Host {
+    [CmdletBinding()]
+param(
+        [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$Message,
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
+    )
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
+    }
+    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+}
+param(
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$ResourceGroupName,
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$ZoneName,
+    [array]$Tags = @()
+)
+Write-Host "Provisioning DNS Zone: $ZoneName"
+Write-Host "Resource Group: $ResourceGroupName"
+if ($ZoneName -notmatch " ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$" ) {
+    throw "Invalid DNS zone name format. Please provide a valid domain name."
+}
+if ($Tags.Count -gt 0) {
+$DnsZone = New-AzDnsZone -ResourceGroupName $ResourceGroupName -Name $ZoneName -Tag $Tags
+} else {
+$DnsZone = New-AzDnsZone -ResourceGroupName $ResourceGroupName -Name $ZoneName
+}
+Write-Host " `nDNS Zone $ZoneName provisioned successfully"
+Write-Host "Zone ID: $($DnsZone.Id)"
+Write-Host "Number of Record Sets: $($DnsZone.NumberOfRecordSets)"
+Write-Host " `nName Servers (configure these at your domain registrar):"
+foreach ($NameServer in $DnsZone.NameServers) {
+    Write-Host "  $NameServer"
+}
+Write-Host " `nDefault Record Sets Created:"
+Write-Host "NS (Name Server) records"
+Write-Host "SOA (Start of Authority) record"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Update your domain registrar with the above name servers"
+Write-Host " 2. Add A, CNAME, MX, or other DNS records as needed"
+Write-Host " 3. Verify DNS propagation using nslookup or dig"
+Write-Host " `nDNS Zone provisioning completed at $(Get-Date)"
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}
+
+

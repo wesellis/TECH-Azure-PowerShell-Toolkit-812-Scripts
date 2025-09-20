@@ -1,19 +1,19 @@
 # Azure Enterprise PowerShell Toolkit
 
-> **812+ production-ready PowerShell scripts for Azure cloud infrastructure management, automation, and governance**
+> **800+ production-ready PowerShell scripts for Azure cloud infrastructure management, automation, and governance**
 >
 > **Quality**: Enterprise-grade, professionally reviewed | **Security**: SOC 2 compliant | **Performance**: PowerShell 7.0+ optimized
 
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.0%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
 [![Azure](https://img.shields.io/badge/Azure-Enterprise-0078D4.svg)](https://azure.microsoft.com)
-[![Scripts](https://img.shields.io/badge/Scripts-812-green.svg)](./automation-scripts)
+[![Scripts](https://img.shields.io/badge/Scripts-800-green.svg)](./scripts)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./docs/contributing/CONTRIBUTING.md)
 [![Maintained](https://img.shields.io/badge/Maintained-Yes-green.svg)](https://github.com/wesellis)
 
 ## Overview
 
-The Azure Enterprise PowerShell Toolkit is a comprehensive collection of 812+ production-ready PowerShell scripts designed for enterprise Azure environments. Every script has been systematically reviewed, modernized, and tested to meet professional PowerShell development standards.
+The Azure Enterprise PowerShell Toolkit is a comprehensive collection of 800+ production-ready PowerShell scripts designed for enterprise Azure environments. Every script has been systematically reviewed, modernized, and tested to meet professional PowerShell development standards.
 
 ### Key Features
 
@@ -27,7 +27,7 @@ The Azure Enterprise PowerShell Toolkit is a comprehensive collection of 812+ pr
 
 ### Recent Quality Improvements (January 2025)
 
-- **812+ Scripts Reviewed**: Systematic modernization of entire codebase
+- **800+ Scripts Reviewed**: Systematic modernization of entire codebase
 - **Fixed Comment Blocks**: Corrected malformed PowerShell help documentation
 - **Enhanced Error Handling**: Removed invalid ErrorAction parameters, improved exception handling
 - **Standardized Requirements**: Added proper #Requires statements for PowerShell 7.0+ and Az modules
@@ -47,22 +47,45 @@ The Azure Enterprise PowerShell Toolkit is a comprehensive collection of 812+ pr
 ## Repository Structure
 
 ```
-├── automation-scripts/       # Core automation & management scripts
-│   ├── PowerShell-Scripts/    # 812 PowerShell scripts organized by function
-│   ├── Administrative-Utilities/  # VM, Storage, Network administration
-│   ├── Security-Compliance/   # Security tools and compliance checking
-│   ├── Cost-Intelligence/     # Advanced cost analysis and optimization
-│   ├── Network-Security/      # Networking and security automation
-│   ├── Compute-Management/    # VM and container management
-│   ├── Data-Storage/          # Storage and database operations
-│   ├── Identity-Governance/   # Identity and access management
-│   └── Monitoring-Operations/ # Monitoring, alerting, and health checks
-├── cost-management/           # Resource optimization & financial operations
-├── security/                 # Security & compliance automation
-├── iac-templates/            # Infrastructure as Code templates
-├── devops-templates/         # CI/CD pipeline templates
-├── governance/               # Policy & governance automation
-└── docker/                  # Containerized script runners
+├── scripts/                  # Core PowerShell scripts organized by service
+│   ├── compute/              # Virtual machines and container management
+│   ├── storage/              # Storage accounts and data operations
+│   ├── network/              # Virtual networks and security groups
+│   ├── identity/             # Azure AD and identity management
+│   ├── cost/                 # Cost analysis and optimization
+│   ├── monitoring/           # Monitoring and alerting scripts
+│   └── utilities/            # General utilities and tools
+├── templates/                # Infrastructure as Code templates
+│   ├── arm/                  # Azure Resource Manager templates
+│   ├── bicep/                # Bicep infrastructure templates
+│   └── terraform/            # Terraform configurations
+├── modules/                  # PowerShell modules
+│   ├── AzureErrorHandler/    # Error handling utilities
+│   ├── keyvault/             # Key Vault operations
+│   ├── monitoring/           # Monitoring functions
+│   └── security/             # Security utilities
+├── monitoring/               # Monitoring and observability assets
+│   ├── azure-monitor-workbooks/  # Azure Monitor workbook templates
+│   ├── grafana-dashboards/   # Grafana dashboard configurations
+│   ├── power-bi-templates/   # Power BI dashboard templates
+│   ├── kql-queries/          # KQL query libraries
+│   ├── alert-templates/      # ARM templates for alerting
+│   └── custom-metrics/       # Custom telemetry definitions
+├── docs/                     # Comprehensive documentation
+│   ├── guides/               # Best practices and how-to guides
+│   ├── api/                  # API and module documentation
+│   ├── tutorials/            # Step-by-step tutorials
+│   ├── reference/            # Reference documentation
+│   ├── contributing/         # Contribution guidelines
+│   ├── security/             # Security policies and compliance
+│   ├── templates/            # Template documentation
+│   └── governance/           # Governance framework docs
+├── governance/               # Azure governance automation
+│   ├── scripts/              # Governance PowerShell scripts
+│   ├── templates/            # Policy and initiative templates
+│   └── docs/                 # Governance documentation
+├── tests/                    # Test scripts and validation
+└── tools/                    # Development and utility tools
 ```
 
 ## Quick Start
@@ -86,16 +109,16 @@ $PSVersionTable.PSVersion  # Should be 7.0 or higher
 git clone https://github.com/wesellis/azure-enterprise-powershell-toolkit.git
 
 # Navigate to scripts
-cd azure-enterprise-powershell-toolkit/automation-scripts
+cd azure-enterprise-powershell-toolkit/scripts
 
 # Run cost optimization analysis
-.\Cost-Intelligence\Azure-FinOps-Advanced-Analytics.ps1 -GenerateRecommendations -IncludeForecast
+.\cost\Azure-FinOps-Automation-Engine.ps1 -GenerateRecommendations -IncludeForecast
 
-# Deploy Azure Landing Zone
-.\General-Utilities\Azure-Landing-Zone-Deployment-Framework.ps1 -TenantId "your-tenant-id" -ManagementGroupPrefix "CORP"
+# Analyze resource optimization opportunities
+.\cost\WE-Azure-ResourceOptimization-Analyzer.ps1 -ResourceGroup "production-rg"
 
-# Automate Sentinel deployment
-.\Security-Compliance\Azure-Sentinel-Deployment-Automation.ps1 -WorkspaceName "sentinel-prod" -ResourceGroupName "rg-security"
+# Validate resource moves before migration
+.\utilities\Azure-Resource-Move-Validator.ps1 -SourceResourceGroup "dev-rg" -TargetResourceGroup "prod-rg"
 ```
 
 ## Script Categories
@@ -144,34 +167,32 @@ cd azure-enterprise-powershell-toolkit/automation-scripts
 
 ## Featured Enterprise Scripts
 
-### Azure Landing Zone Deployment Framework
+### FinOps Automation Engine
 ```powershell
-# Deploy complete enterprise-scale Azure Landing Zone
-.\Azure-Landing-Zone-Deployment-Framework.ps1 `
-  -TenantId "12345678-1234-1234-1234-123456789012" `
-  -ManagementGroupPrefix "CORP" `
-  -HubSubscriptionId "hub-subscription-id" `
-  -CompanyName "Contoso"
+# Comprehensive cost optimization with ML predictions
+.\scripts\cost\Azure-FinOps-Automation-Engine.ps1 `
+  -OptimizationMode "AutoRemediate" `
+  -CostThreshold 50000 `
+  -EnableMLPredictions `
+  -AutoShutdownNonProd
 ```
 
-### Advanced FinOps Analytics
+### Resource Optimization Analyzer
 ```powershell
-# Comprehensive cost analysis with forecasting
-.\Azure-FinOps-Advanced-Analytics.ps1 `
-  -AnalysisPeriod 180 `
-  -GenerateRecommendations `
-  -IncludeForecast `
-  -ExportPath "C:\Reports"
+# Analyze resource optimization opportunities
+.\scripts\cost\WE-Azure-ResourceOptimization-Analyzer.ps1 `
+  -ResourceGroup "production-rg" `
+  -AnalysisPeriod 30 `
+  -GenerateReport
 ```
 
-### Microsoft Sentinel Automation
+### Resource Move Validation
 ```powershell
-# Complete Sentinel workspace deployment
-.\Azure-Sentinel-Deployment-Automation.ps1 `
-  -WorkspaceName "sentinel-prod-workspace" `
-  -ResourceGroupName "rg-security-prod" `
-  -EnableDataConnectors @("AzureActiveDirectory", "AzureSecurityCenter") `
-  -DeployAnalyticsRules
+# Validate resource moves before migration
+.\scripts\utilities\Azure-Resource-Move-Validator.ps1 `
+  -SourceResourceGroup "dev-rg" `
+  -TargetResourceGroup "prod-rg" `
+  -ValidateCompatibility
 ```
 
 ## Performance & Scale
@@ -195,36 +216,36 @@ Our scripts meet professional PowerShell development standards:
 
 ## Real-World Use Cases
 
-### Resource Optimization Example
+### Cost Management Examples
 ```powershell
-# Identify and remediate unused resources across subscriptions
-.\Cost-Intelligence\Azure-Resource-Orphan-Finder.ps1 -ResourceType "All" -RemoveOrphans -DryRun:$false
+# Automated cost anomaly detection
+.\scripts\cost\Azure-Cost-Anomaly-Detector.ps1 -ThresholdPercentage 20 -AlertEmail "admin@company.com"
 
-# Optimize VM sizes based on utilization patterns
-.\Compute-Management\Azure-VM-Scaling-Tool.ps1 -AnalysisPeriod 30 -ApplyRecommendations
+# Comprehensive cost optimization analysis
+.\scripts\cost\Azure-Cost-Optimization-Analyzer.ps1 -SubscriptionId "sub-id" -GenerateRecommendations
 ```
 
-### Security Automation Example
+### Compute Management Examples
 ```powershell
-# Run comprehensive security assessment
-.\Security-Compliance\Azure-Security-Center-Compliance-Scanner.ps1 -GenerateReport -EmailResults
+# VM provisioning and configuration
+.\scripts\compute\Azure-VM-Provisioning-Advanced.ps1 -ResourceGroup "prod-rg" -VMName "web-server-01"
 
-# Implement Zero Trust architecture assessment
-.\Security-Compliance\Azure-Zero-Trust-Assessment.ps1 -ComprehensiveAnalysis
+# Container management and optimization
+.\scripts\compute\Azure-Container-Management.ps1 -Operation "Scale" -ContainerGroup "app-containers"
 ```
 
-### Infrastructure Deployment Example
+### Storage and Network Examples
 ```powershell
-# Deploy hub-spoke network topology
-.\Network-Security\Azure-VNet-Provisioning-Tool.ps1 -VnetName "hub-vnet" -AddressPrefix "10.0.0.0/16"
+# Storage account optimization
+.\scripts\storage\Azure-Storage-Optimization.ps1 -StorageAccount "prodstorageacct" -OptimizePerformance
 
-# Configure disaster recovery automation
-.\Administrative-Utilities\Azure-Backup-Status-Checker.ps1 -ShowUnprotected -VaultName "backup-vault"
+# Network security configuration
+.\scripts\network\Azure-Network-Security-Config.ps1 -VNet "prod-vnet" -ApplyBestPractices
 ```
 
 ## Contributing
 
-We welcome contributions from the PowerShell community! Please see our [Contributing Guide](CONTRIBUTING.md) for development setup and guidelines.
+We welcome contributions from the PowerShell community! Please see our [Contributing Guide](docs/contributing/CONTRIBUTING.md) for development setup and guidelines.
 
 ### Development Workflow
 1. **Fork** the repository
@@ -248,8 +269,21 @@ We welcome contributions from the PowerShell community! Please see our [Contribu
 - **Enterprise Usage**: Deployed in 50+ Fortune 500 companies
 - **Community**: 1000+ Azure professionals using this toolkit
 - **Growth**: New enterprise-grade scripts added monthly
-- **Quality Focus**: All 812 scripts modernized and professionally reviewed (January 2025)
+- **Quality Focus**: All 800 scripts modernized and professionally reviewed (January 2025)
 - **PowerShell 7.0+ Ready**: Full compatibility with modern PowerShell versions
+
+## Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[Getting Started Guide](docs/guides/POWERSHELL_MODERNIZATION_GUIDE.md)** - Best practices and modernization guidelines
+- **[API Documentation](docs/api/)** - Detailed module and script references
+- **[Security Guidelines](docs/security/)** - Security policies and compliance frameworks
+- **[Contributing Guidelines](docs/contributing/)** - How to contribute to the project
+- **[Templates](docs/templates/)** - DevOps and Infrastructure as Code templates
+- **[Reference Documentation](docs/reference/)** - Changelog, roadmap, and implementation guides
+
+For quick navigation, see the [Documentation Index](docs/README.md).
 
 ## License
 

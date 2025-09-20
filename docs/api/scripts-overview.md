@@ -1,0 +1,98 @@
+# Azure PowerShell Scripts Collection
+
+This directory contains production-ready PowerShell scripts organized by Azure service domain.
+
+## Script Categories
+
+### 📱 **Compute** (`/compute/`)
+Virtual machines, containers, app services, and compute resources
+- VM lifecycle management and automation
+- Azure Kubernetes Service (AKS) operations
+- Container instances and registries
+- App Service and Function App management
+
+### 💾 **Storage** (`/storage/`)
+Data storage, databases, and data services
+- Storage account management
+- SQL Database operations
+- Cosmos DB administration
+- File shares and blob storage
+
+### 🌐 **Network** (`/network/`)
+Networking, security, and connectivity
+- Virtual networks and subnets
+- Load balancers and application gateways
+- Network security groups and rules
+- VPN and ExpressRoute management
+
+### 🔐 **Identity** (`/identity/`)
+Authentication, authorization, and governance
+- Azure Active Directory management
+- Role-based access control (RBAC)
+- Security policies and compliance
+- Conditional access and PIM
+
+### 📊 **Monitoring** (`/monitoring/`)
+Observability, alerting, and diagnostics
+- Azure Monitor configuration
+- Log Analytics workspaces
+- Alert rules and action groups
+- Health checks and diagnostics
+
+### 💰 **Cost** (`/cost/`)
+Financial operations and optimization
+- Cost analysis and reporting
+- Budget management
+- Resource optimization
+- FinOps automation
+
+### 🚀 **DevOps** (`/devops/`)
+CI/CD, automation, and deployment
+- Azure DevOps integration
+- GitHub Actions workflows
+- Build and release pipelines
+- Infrastructure deployment
+
+### 🔄 **Backup** (`/backup/`)
+Data protection and disaster recovery
+- Backup vault management
+- Recovery services configuration
+- Site recovery automation
+- Data retention policies
+
+### 🔄 **Migration** (`/migration/`)
+Cloud migration and modernization
+- Azure Migrate automation
+- Database migration tools
+- Application migration helpers
+- Assessment and planning
+
+### 🔧 **Utilities** (`/utilities/`)
+General tools and helper functions
+- Cross-platform utilities
+- Administrative helpers
+- Resource management tools
+- Automation frameworks
+
+## Usage Guidelines
+
+1. **Prerequisites**: Ensure Azure PowerShell modules are installed
+2. **Authentication**: Use managed identities or service principals in production
+3. **Testing**: Always test scripts in development environments first
+4. **Logging**: Enable script logging for audit trails
+5. **Security**: Never hardcode credentials in scripts
+
+## Getting Started
+
+```powershell
+# Install required modules
+Install-Module -Name Az -Force -AllowClobber
+
+# Connect to Azure
+Connect-AzAccount
+
+# Run a script
+./scripts/compute/Azure-VM-List-All.ps1
+```
+
+All scripts follow PowerShell best practices and include proper error handling, parameter validation, and help documentation.

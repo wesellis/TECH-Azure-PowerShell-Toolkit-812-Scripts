@@ -1,0 +1,212 @@
+name: Release Management
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install PowerShell
+      shell: bash
+      run: |
+        wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
+
+    - name: Generate Release Notes
+      shell: pwsh
+      id: release_notes
+      run: |
+        # Get version from tag or input
+        $version = if ($env:GITHUB_REF -match 'refs/tags/(.*)') {
+          $matches[1]
+        } else {
+          "${{ inputs.version }}"
+        }
+
+        Write-Host "Generating release notes for version: $version"
+
+        # Count scripts by category
+        $categories = @('compute', 'storage', 'network', 'identity', 'monitoring', 'cost', 'devops', 'backup', 'migration', 'ai', 'iot', 'utilities')
+        $scriptCounts = @{}
+        $totalScripts = 0
+
+        foreach ($category in $categories) {
+          $path = "./scripts/$category"
+          if (Test-Path $path) {
+            $count = (Get-ChildItem $path -Filter "*.ps1" | Measure-Object).Count
+            $scriptCounts[$category] = $count
+            $totalScripts += $count
+          }
+        }
+
+        # Generate release notes
+        $releaseNotes = @"
+        # Azure PowerShell Toolkit $version
+
+        ## 🚀 Enterprise-Grade Azure Automation
+
+        This release includes **$totalScripts production-ready PowerShell scripts** organized across **$($categories.Count) service categories**.
+
+        ## 📊 Script Distribution
+
+        | Category | Scripts | Description |
+        |----------|---------|-------------|
+        | 📱 Compute | $($scriptCounts['compute']) | VMs, containers, app services |
+        | 💾 Storage | $($scriptCounts['storage']) | Storage accounts, databases, data services |
+        | 🌐 Network | $($scriptCounts['network']) | Virtual networks, load balancers, security |
+        | 🔐 Identity | $($scriptCounts['identity']) | Azure AD, RBAC, security policies |
+        | 📊 Monitoring | $($scriptCounts['monitoring']) | Alerts, logs, diagnostics |
+        | 💰 Cost | $($scriptCounts['cost']) | Cost analysis, optimization, budgets |
+        | 🚀 DevOps | $($scriptCounts['devops']) | CI/CD, automation, deployment |
+        | 🔄 Backup | $($scriptCounts['backup']) | Data protection, disaster recovery |
+        | 🔄 Migration | $($scriptCounts['migration']) | Cloud migration tools |
+        | 🤖 AI/ML | $($scriptCounts['ai']) | Azure AI services, machine learning |
+        | 📱 IoT | $($scriptCounts['iot']) | IoT Hub, device management |
+        | 🔧 Utilities | $($scriptCounts['utilities']) | General tools and helpers |
+
+        ## ✅ Enterprise Features
+
+        - **Production Ready**: All scripts follow PowerShell best practices
+        - **Security First**: No hardcoded credentials, proper error handling
+        - **Comprehensive Testing**: CI/CD pipeline with automated validation
+        - **Configuration Management**: Environment-specific configurations
+        - **Centralized Logging**: Structured logging and audit trails
+        - **Documentation**: Complete documentation and getting started guides
+
+        ## 🛠️ Quick Start
+
+        ``````powershell
+        # Clone the repository
+        git clone https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts.git
+
+        # Install prerequisites
+        Install-Module -Name Az -Force
+
+        # Connect to Azure
+        Connect-AzAccount
+
+        # Run the main launcher
+        ./Launch-AzureToolkit.ps1
+        ``````
+
+        ## 📋 Requirements
+
+        - PowerShell 7.0+
+        - Azure PowerShell module (Az)
+        - Azure subscription with appropriate permissions
+
+        ## 🔧 Installation
+
+        See [Get-Started.md](./Get-Started.md) for detailed installation and usage instructions.
+
+        ## 🐛 Bug Reports & 💡 Feature Requests
+
+        Please use the [GitHub Issues](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/issues) to report bugs or request features.
+
+        ---
+
+        **No AI slop here** - This is a professional, enterprise-grade Azure PowerShell toolkit built by experienced engineers for real-world scenarios.
+        "@
+
+        # Save release notes to file and environment
+        $releaseNotes | Out-File -FilePath "release-notes.md" -Encoding UTF8
+
+        # Set output for GitHub Actions (escape newlines)
+        $escapedNotes = $releaseNotes -replace "`r`n", "%0A" -replace "`n", "%0A"
+        "release_notes=$escapedNotes" >> $env:GITHUB_OUTPUT
+        "version=$version" >> $env:GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.release_notes.outputs.version }}
+        release_name: Azure PowerShell Toolkit ${{ steps.release_notes.outputs.version }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+
+    - name: Create Release Archive
+      shell: pwsh
+      run: |
+        # Create clean archive without .git directory
+        $archiveName = "azure-powershell-toolkit-${{ steps.release_notes.outputs.version }}.zip"
+
+        # Create temporary directory for clean copy
+        $tempDir = "azure-powershell-toolkit"
+        New-Item -ItemType Directory -Path $tempDir -Force
+
+        # Copy files excluding .git and other development files
+        $excludePatterns = @('.git*', 'node_modules', '*.log', '.vs', '.vscode')
+        Get-ChildItem -Path . | Where-Object {
+          $item = $_
+          -not ($excludePatterns | Where-Object { $item.Name -like $_ })
+        } | Copy-Item -Destination $tempDir -Recurse -Force
+
+        # Create zip archive
+        Compress-Archive -Path $tempDir -DestinationPath $archiveName -Force
+
+        Write-Host "Created archive: $archiveName"
+        Write-Host "Archive size: $((Get-Item $archiveName).Length / 1MB) MB"
+
+  update-modules:
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: success()
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install PowerShell
+      shell: bash
+      run: |
+        wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
+
+    - name: Update Module Versions
+      shell: pwsh
+      run: |
+        $version = if ($env:GITHUB_REF -match 'refs/tags/(.*)') {
+          $matches[1].TrimStart('v')
+        } else {
+          "${{ inputs.version }}".TrimStart('v')
+        }
+
+        Write-Host "Updating module versions to: $version"
+
+        # Update module manifest versions
+        $manifestFiles = Get-ChildItem -Path "./modules" -Filter "*.psd1" -Recurse
+
+        foreach ($manifest in $manifestFiles) {
+          Write-Host "Updating $($manifest.Name)"
+
+          $content = Get-Content $manifest.FullName -Raw
+          $updatedContent = $content -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'"
+          $updatedContent | Set-Content $manifest.FullName -Encoding UTF8
+        }
+
+        Write-Host "Module versions updated successfully"

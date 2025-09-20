@@ -1,0 +1,35 @@
+# PowerShell specific
+*.ps1xml
+*.psm1.backup  
+*.psd1.backup
+
+# Logs
+*.log
+logs/
+
+# Azure PowerShell session cache
+*.azureProfile
+*.azureSession
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Test results
+TestResults/
+*.trx
+test-results.xml
+coverage.xml
+
+# Sensitive data files
+*.key
+*.pem
+*.crt
+*.pfx
+secrets.json
+config.local.json
+
+# Azure specific
+.azure/
+*.publishsettings

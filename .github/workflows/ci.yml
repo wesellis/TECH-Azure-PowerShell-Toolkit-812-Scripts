@@ -1,0 +1,193 @@
+name: Azure PowerShell Toolkit CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+
+jobs:
+  validate-scripts:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install PowerShell
+      shell: bash
+      run: |
+        wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
+
+    - name: Install Required Modules
+      shell: pwsh
+      run: |
+        Set-PSRepository PSGallery -InstallationPolicy Trusted
+        Install-Module -Name PSScriptAnalyzer -Force
+        Install-Module -Name Pester -Force
+        Install-Module -Name Az.Accounts -Force
+
+    - name: PowerShell Script Analysis
+      shell: pwsh
+      run: |
+        Write-Host "Running PSScriptAnalyzer on all PowerShell scripts..."
+        $scripts = Get-ChildItem -Path . -Filter "*.ps1" -Recurse | Where-Object { $_.Directory.Name -ne 'tests' }
+        $issues = @()
+
+        foreach ($script in $scripts) {
+          $analysis = Invoke-ScriptAnalyzer -Path $script.FullName -Severity Warning,Error
+          if ($analysis) {
+            $issues += $analysis
+            Write-Warning "Issues found in $($script.Name):"
+            $analysis | Format-Table -AutoSize
+          }
+        }
+
+        if ($issues.Count -gt 0) {
+          Write-Error "Found $($issues.Count) PSScriptAnalyzer issues"
+          exit 1
+        } else {
+          Write-Host "✅ All scripts passed PSScriptAnalyzer validation" -ForegroundColor Green
+        }
+
+    - name: Syntax Validation
+      shell: pwsh
+      run: |
+        Write-Host "Validating PowerShell syntax..."
+        $scripts = Get-ChildItem -Path . -Filter "*.ps1" -Recurse
+        $errors = @()
+
+        foreach ($script in $scripts) {
+          try {
+            $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content $script.FullName -Raw), [ref]$null)
+            Write-Host "✅ $($script.Name)" -ForegroundColor Green
+          } catch {
+            $errors += "❌ $($script.Name): $($_.Exception.Message)"
+            Write-Error "Syntax error in $($script.Name): $($_.Exception.Message)"
+          }
+        }
+
+        if ($errors.Count -gt 0) {
+          Write-Error "Found $($errors.Count) syntax errors"
+          exit 1
+        } else {
+          Write-Host "✅ All scripts have valid PowerShell syntax" -ForegroundColor Green
+        }
+
+    - name: Security Scan
+      shell: pwsh
+      run: |
+        Write-Host "Scanning for security issues..."
+        $scripts = Get-ChildItem -Path . -Filter "*.ps1" -Recurse
+        $securityIssues = @()
+
+        foreach ($script in $scripts) {
+          $content = Get-Content $script.FullName -Raw
+
+          # Check for hardcoded credentials
+          if ($content -match 'password\s*=\s*["\'][^"\']+["\']' -or
+              $content -match 'secret\s*=\s*["\'][^"\']+["\']' -or
+              $content -match 'key\s*=\s*["\'][^"\']+["\']') {
+            $securityIssues += "❌ $($script.Name): Potential hardcoded credentials"
+          }
+
+          # Check for ConvertTo-SecureString with plaintext
+          if ($content -match 'ConvertTo-SecureString.*-AsPlainText') {
+            $securityIssues += "⚠️ $($script.Name): Uses ConvertTo-SecureString with plaintext"
+          }
+        }
+
+        if ($securityIssues.Count -gt 0) {
+          foreach ($issue in $securityIssues) {
+            Write-Warning $issue
+          }
+        } else {
+          Write-Host "✅ No security issues detected" -ForegroundColor Green
+        }
+
+  test-framework:
+    runs-on: ubuntu-latest
+    needs: validate-scripts
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install PowerShell
+      shell: bash
+      run: |
+        wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
+
+    - name: Install Test Modules
+      shell: pwsh
+      run: |
+        Set-PSRepository PSGallery -InstallationPolicy Trusted
+        Install-Module -Name Pester -Force
+
+    - name: Run Tests
+      shell: pwsh
+      run: |
+        if (Test-Path "./tests/*.Tests.ps1") {
+          Write-Host "Running Pester tests..."
+          Invoke-Pester -Path "./tests/" -OutputFormat NUnitXml -OutputFile "TestResults.xml"
+        } else {
+          Write-Host "⚠️ No Pester tests found - creating basic validation test"
+          $testFile = @"
+        Describe "Basic Toolkit Validation" {
+          It "Should have main launcher script" {
+            Test-Path "./Launch-AzureToolkit.ps1" | Should -Be `$true
+          }
+
+          It "Should have AI Assistant script" {
+            Test-Path "./AI-Assistant.ps1" | Should -Be `$true
+          }
+
+          It "Should have scripts directory" {
+            Test-Path "./scripts" | Should -Be `$true
+          }
+
+          It "Should have documentation" {
+            Test-Path "./Get-Started.md" | Should -Be `$true
+          }
+        }
+        "@
+          $testFile | Out-File -FilePath "./tests/Basic.Tests.ps1" -Encoding UTF8
+          Invoke-Pester -Path "./tests/Basic.Tests.ps1"
+        }
+
+  documentation-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check Documentation
+      run: |
+        echo "📋 Checking documentation completeness..."
+
+        # Check for required files
+        files=("README.md" "Get-Started.md" "scripts/README.md" ".gitignore" "CODEOWNERS")
+        missing_files=()
+
+        for file in "${files[@]}"; do
+          if [ ! -f "$file" ]; then
+            missing_files+=("$file")
+          else
+            echo "✅ $file exists"
+          fi
+        done
+
+        if [ ${#missing_files[@]} -gt 0 ]; then
+          echo "❌ Missing required files:"
+          printf '%s\n' "${missing_files[@]}"
+          exit 1
+        fi
+
+        echo "✅ All required documentation files present"

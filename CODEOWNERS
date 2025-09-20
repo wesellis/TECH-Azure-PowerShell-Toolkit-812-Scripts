@@ -1,0 +1,24 @@
+# Global owners
+* @wesellis
+
+# Script categories
+/scripts/compute/ @wesellis
+/scripts/storage/ @wesellis
+/scripts/network/ @wesellis
+/scripts/identity/ @wesellis
+/scripts/monitoring/ @wesellis
+/scripts/cost/ @wesellis
+/scripts/devops/ @wesellis
+/scripts/backup/ @wesellis
+
+# Templates and modules
+/templates/ @wesellis
+/modules/ @wesellis
+
+# Documentation
+/docs/ @wesellis
+*.md @wesellis
+
+# Security and compliance
+/scripts/identity/azure-policies/ @wesellis
+/scripts/identity/security-baselines/ @wesellis

@@ -1,0 +1,189 @@
+# Getting Started with Azure PowerShell Toolkit
+
+This guide will help you quickly get up and running with the Azure PowerShell Toolkit.
+
+## Prerequisites
+
+### PowerShell Requirements
+```powershell
+# Check PowerShell version (requires 7.0+)
+$PSVersionTable.PSVersion
+
+# Install PowerShell 7 if needed
+# Windows: winget install Microsoft.PowerShell
+# macOS: brew install powershell
+# Linux: See https://docs.microsoft.com/powershell/scripting/install/installing-powershell-linux
+```
+
+### Azure PowerShell Module
+```powershell
+# Install the latest Azure PowerShell module
+Install-Module -Name Az -Force -AllowClobber -Scope CurrentUser
+
+# Verify installation
+Get-Module -Name Az -ListAvailable
+```
+
+## Authentication
+
+### Interactive Login
+```powershell
+# Connect to Azure (opens browser for authentication)
+Connect-AzAccount
+
+# Select subscription
+Set-AzContext -SubscriptionId "your-subscription-id"
+```
+
+### Service Principal (Production)
+```powershell
+# Using service principal for automation
+$cred = Get-Credential
+Connect-AzAccount -ServicePrincipal -Credential $cred -TenantId "your-tenant-id"
+```
+
+### Managed Identity (Azure VMs)
+```powershell
+# Use managed identity on Azure VMs
+Connect-AzAccount -Identity
+```
+
+## Quick Start Examples
+
+### 1. Launch the Main Toolkit
+```powershell
+# Run the main launcher
+./Launch-AzureToolkit.ps1
+```
+
+### 2. List Virtual Machines
+```powershell
+# Get all VMs in subscription
+./scripts/compute/Azure-VM-List-All.ps1
+
+# Get VMs in specific resource group
+./scripts/compute/Azure-VM-List-All.ps1 -ResourceGroupName "rg-production"
+```
+
+### 3. Create a Storage Account
+```powershell
+# Create storage account
+./scripts/storage/Azure-StorageAccount-Provisioning-Tool.ps1 -ResourceGroupName "rg-storage" -StorageAccountName "mystorageaccount" -Location "East US"
+```
+
+### 4. Monitor Costs
+```powershell
+# Get cost analysis
+./scripts/cost/Azure-Cost-Anomaly-Detector.ps1 -SubscriptionId "your-subscription-id"
+```
+
+### 5. Security Assessment
+```powershell
+# Run security scan
+./scripts/identity/Get-NetworkSecurity.ps1 -ResourceGroupName "rg-production"
+```
+
+## Script Organization
+
+Scripts are organized by Azure service category:
+
+- **📱 Compute** - VMs, containers, app services
+- **💾 Storage** - Storage accounts, databases, data services
+- **🌐 Network** - Virtual networks, load balancers, security
+- **🔐 Identity** - Azure AD, RBAC, security policies
+- **📊 Monitoring** - Alerts, logs, diagnostics
+- **💰 Cost** - Cost analysis, optimization, budgets
+- **🚀 DevOps** - CI/CD, automation, deployment
+- **🔄 Backup** - Data protection, disaster recovery
+- **🔄 Migration** - Cloud migration tools
+- **🤖 AI** - AI services, machine learning
+- **📱 IoT** - IoT Hub, device management
+- **🔧 Utilities** - General tools and helpers
+
+## Common Parameters
+
+Most scripts support these common parameters:
+
+- `-ResourceGroupName` - Azure resource group
+- `-Location` - Azure region (default: East US)
+- `-SubscriptionId` - Azure subscription ID
+- `-Verbose` - Enable detailed output
+- `-WhatIf` - Preview actions without executing
+- `-Confirm` - Prompt for confirmation
+
+## Best Practices
+
+### 1. Test Before Production
+```powershell
+# Always test with -WhatIf first
+./scripts/compute/Azure-VM-Deletion-Tool.ps1 -VMName "test-vm" -WhatIf
+```
+
+### 2. Use Resource Groups
+```powershell
+# Organize resources in logical groups
+New-AzResourceGroup -Name "rg-webservers" -Location "East US"
+```
+
+### 3. Enable Logging
+```powershell
+# Enable script logging
+Start-Transcript -Path "azure-operations.log"
+# Run your scripts
+Stop-Transcript
+```
+
+### 4. Secure Credentials
+```powershell
+# Never hardcode credentials
+$cred = Get-Credential
+# Or use Azure Key Vault
+$secret = Get-AzKeyVaultSecret -VaultName "my-vault" -Name "my-secret"
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Module Not Found**
+```powershell
+# Install missing module
+Install-Module -Name Az.Compute -Force
+```
+
+**Authentication Expired**
+```powershell
+# Refresh authentication
+Connect-AzAccount
+```
+
+**Permission Denied**
+```powershell
+# Check your Azure RBAC permissions
+Get-AzRoleAssignment -SignInName "your-email@domain.com"
+```
+
+### Getting Help
+
+```powershell
+# Get help for any script
+Get-Help ./scripts/compute/Azure-VM-List-All.ps1 -Full
+
+# Show examples
+Get-Help ./scripts/compute/Azure-VM-List-All.ps1 -Examples
+```
+
+## Support
+
+- 📖 [Full Documentation](./docs/)
+- 🐛 [Report Issues](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/issues)
+- 💡 [Request Features](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/issues/new?template=feature_request.md)
+
+## Next Steps
+
+1. Explore the `/scripts/` directory for available tools
+2. Read the category-specific documentation in `/docs/`
+3. Try the AI Assistant: `./AI-Assistant.ps1`
+4. Set up automated monitoring with scripts from `/scripts/monitoring/`
+
+Happy automating! 🚀
