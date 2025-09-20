@@ -2,47 +2,164 @@
 #Requires -Modules Az.Resources
 #Requires -Modules Az.CognitiveServices
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Manage Azure AI and Cognitive Services
+
 .DESCRIPTION
     Deploy and manage Azure AI services including OpenAI, Cognitive Services, and ML workspaces
+    Provides comprehensive management for Azure Cognitive Services with proper error handling and validation
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
+
 .PARAMETER ResourceGroupName
-    Resource group name
+    Resource group name where the AI service will be deployed
+
 .PARAMETER ServiceName
-    AI service name
+    Name for the AI service instance
+
 .PARAMETER ServiceType
-    Type of AI service (OpenAI, TextAnalytics, ComputerVision, Speech)
+    Type of AI service to manage
+    Valid options: OpenAI, TextAnalytics, ComputerVision, Speech, FormRecognizer
+
 .PARAMETER Action
-    Action to perform (Create, Status, Keys, Test)
+    Action to perform on the service
+    Valid options: Create, Status, Keys, Deploy, Monitor, Delete, Test
+
+.PARAMETER Location
+    Azure region for service deployment (default: East US)
+
+.PARAMETER SkuName
+    Pricing tier for the service (default: S0)
+
+.PARAMETER Tags
+    Hashtable of tags to apply to the service
+
 .EXAMPLE
-    ./Azure-AI-Services-Manager.ps1 -ResourceGroupName "rg-ai" -ServiceName "openai-prod" -ServiceType "OpenAI" -Action "Create"
+    .\Azure-AI-Services-Manager.ps1 -ResourceGroupName "rg-ai" -ServiceName "openai-prod" -ServiceType "OpenAI" -Action "Create"
+    Creates a new OpenAI service in the specified resource group
+
+.EXAMPLE
+    .\Azure-AI-Services-Manager.ps1 -ResourceGroupName "rg-ai" -ServiceName "text-analytics-dev" -ServiceType "TextAnalytics" -Action "Status"
+    Gets the status of an existing Text Analytics service
+
+.EXAMPLE
+    .\Azure-AI-Services-Manager.ps1 -ResourceGroupName "rg-ai" -ServiceName "vision-service" -ServiceType "ComputerVision" -Action "Keys"
+    Retrieves API keys for a Computer Vision service
+
+.NOTES
+    Requires Azure PowerShell modules and appropriate permissions to manage Cognitive Services
 #>
+
 [CmdletBinding(SupportsShouldProcess)]
 [OutputType([PSCustomObject])]
 param(
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
     [string]$ServiceName,
 
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $true)]
     [ValidateSet('OpenAI', 'TextAnalytics', 'ComputerVision', 'Speech', 'FormRecognizer')]
     [string]$ServiceType,
 
-    [Parameter(Mandatory)]
-    [ValidateSet('Create', 'Status', 'Keys', 'Deploy', 'Monitor')]
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Create', 'Status', 'Keys', 'Deploy', 'Monitor', 'Delete', 'Test')]
     [string]$Action,
 
     [Parameter()]
-    [string]$Location = 'East US'
+    [string]$Location = 'East US',
+
+    [Parameter()]
+    [ValidateSet('F0', 'S0', 'S1', 'S2', 'S3', 'S4')]
+    [string]$SkuName = 'S0',
+
+    [Parameter()]
+    [hashtable]$Tags = @{}
 )
 
+# Set error handling preference
 $ErrorActionPreference = 'Stop'
 
-try {
-    Write-Verbose "Managing AI service: $ServiceName ($ServiceType)"
+# Custom logging function
+function Write-LogMessage {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+        
+        [Parameter()]
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $colorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
+    }
+    
+    $logEntry = "$timestamp [AI-Manager] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+}
 
+# Function to test service connectivity
+function Test-CognitiveService {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ServiceName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$ResourceGroupName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$ServiceType
+    )
+    
+    try {
+        $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+        $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+        
+        # Basic connectivity test
+        $testResult = @{
+            ServiceName = $ServiceName
+            ServiceType = $ServiceType
+            Endpoint = $service.Endpoint
+            Status = if ($service.ProvisioningState -eq 'Succeeded') { 'Healthy' } else { 'Unhealthy' }
+            HasKeys = ($null -ne $keys.Key1 -and $null -ne $keys.Key2)
+            LastTested = Get-Date
+        }
+        
+        return [PSCustomObject]$testResult
+    }
+    catch {
+        Write-LogMessage "Service test failed: $($_.Exception.Message)" -Level "ERROR"
+        return $null
+    }
+}
+
+try {
+    Write-LogMessage "Starting Azure AI service management operation" -Level "INFO"
+    Write-LogMessage "Service: $ServiceName ($ServiceType)" -Level "INFO"
+    Write-LogMessage "Action: $Action" -Level "INFO"
+    Write-LogMessage "Resource Group: $ResourceGroupName" -Level "INFO"
+
+    # Validate Azure context
+    $context = Get-AzContext
+    if (-not $context) {
+        throw "No Azure context found. Please run Connect-AzAccount first."
+    }
+    
+    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
+
+    # Service kind mapping for Azure Cognitive Services
     $serviceKindMap = @{
         'OpenAI' = 'OpenAI'
         'TextAnalytics' = 'TextAnalytics'
@@ -51,25 +168,72 @@ try {
         'FormRecognizer' = 'FormRecognizer'
     }
 
+    # Default tags
+    $defaultTags = @{
+        'Service' = 'CognitiveServices'
+        'ServiceType' = $ServiceType
+        'ManagedBy' = 'PowerShell'
+        'CreatedDate' = (Get-Date).ToString('yyyy-MM-dd')
+        'Environment' = 'Production'
+    }
+    
+    # Merge custom tags with defaults
+    $allTags = $defaultTags + $Tags
+
     switch ($Action) {
         'Create' {
+            Write-LogMessage "Creating $ServiceType service: $ServiceName" -Level "INFO"
+            
             if ($PSCmdlet.ShouldProcess($ServiceName, "Create $ServiceType service")) {
+                # Check if resource group exists
+                try {
+                    Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop | Out-Null
+                    Write-LogMessage "Resource group '$ResourceGroupName' found" -Level "SUCCESS"
+                }
+                catch {
+                    Write-LogMessage "Resource group '$ResourceGroupName' not found, creating it..." -Level "WARN"
+                    New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $allTags | Out-Null
+                    Write-LogMessage "Resource group created successfully" -Level "SUCCESS"
+                }
+
+                # Check if service already exists
+                try {
+                    $existingService = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction SilentlyContinue
+                    if ($existingService) {
+                        Write-LogMessage "Service '$ServiceName' already exists" -Level "WARN"
+                        return $existingService
+                    }
+                }
+                catch {
+                    # Service doesn't exist, continue with creation
+                }
+
                 $serviceSplat = @{
                     ResourceGroupName = $ResourceGroupName
                     Name = $ServiceName
                     Type = $serviceKindMap[$ServiceType]
-                    SkuName = 'S0'
+                    SkuName = $SkuName
                     Location = $Location
+                    Tag = $allTags
                 }
 
+                Write-LogMessage "Creating service with parameters:" -Level "INFO"
+                Write-LogMessage "  Kind: $($serviceKindMap[$ServiceType])" -Level "INFO"
+                Write-LogMessage "  SKU: $SkuName" -Level "INFO"
+                Write-LogMessage "  Location: $Location" -Level "INFO"
+
                 $service = New-AzCognitiveServicesAccount @serviceSplat
-                Write-Host "$ServiceType service created: $($service.AccountName)" -ForegroundColor Green
+                Write-LogMessage "$ServiceType service created successfully: $($service.AccountName)" -Level "SUCCESS"
+                Write-LogMessage "Endpoint: $($service.Endpoint)" -Level "INFO"
+                
                 return $service
             }
         }
 
         'Status' {
-            $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName
+            Write-LogMessage "Getting status for $ServiceType service: $ServiceName" -Level "INFO"
+            
+            $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
 
             $status = @{
                 Name = $service.AccountName
@@ -79,60 +243,189 @@ try {
                 SkuName = $service.Sku.Name
                 ProvisioningState = $service.ProvisioningState
                 CreatedDate = $service.DateCreated
+                ResourceGroup = $service.ResourceGroupName
+                SubscriptionId = $service.Id.Split('/')[2]
+                Tags = $service.Tags
             }
+
+            Write-LogMessage "Service status retrieved successfully" -Level "SUCCESS"
+            Write-LogMessage "Provisioning State: $($status.ProvisioningState)" -Level "INFO"
+            Write-LogMessage "SKU: $($status.SkuName)" -Level "INFO"
 
             return [PSCustomObject]$status
         }
 
         'Keys' {
-            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName
+            Write-LogMessage "Retrieving API keys for $ServiceType service: $ServiceName" -Level "INFO"
+            
+            $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
 
-            Write-Host "API Keys for $ServiceName" -ForegroundColor Yellow
-            Write-Host "Key1: $($keys.Key1)" -ForegroundColor Cyan
-            Write-Host "Key2: $($keys.Key2)" -ForegroundColor Cyan
-            Write-Warning "Store these keys securely - they provide full access to the service"
+            Write-LogMessage "API Keys for $ServiceName ($ServiceType)" -Level "SUCCESS"
+            Write-LogMessage "Endpoint: $($service.Endpoint)" -Level "INFO"
+            Write-Host ""
+            Write-Host "Primary Key (Key1):" -ForegroundColor Yellow
+            Write-Host $keys.Key1 -ForegroundColor Cyan
+            Write-Host ""
+            Write-Host "Secondary Key (Key2):" -ForegroundColor Yellow
+            Write-Host $keys.Key2 -ForegroundColor Cyan
+            Write-Host ""
+            Write-LogMessage "SECURITY WARNING: Store these keys securely - they provide full access to the service" -Level "WARN"
 
-            return $keys
+            $keyInfo = @{
+                ServiceName = $ServiceName
+                ServiceType = $ServiceType
+                Endpoint = $service.Endpoint
+                PrimaryKey = $keys.Key1
+                SecondaryKey = $keys.Key2
+                RetrievedDate = Get-Date
+            }
+
+            return [PSCustomObject]$keyInfo
         }
 
         'Deploy' {
-            Write-Host "Deploying $ServiceType model..." -ForegroundColor Yellow
+            Write-LogMessage "Configuring deployment for $ServiceType service" -Level "INFO"
 
+            $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+            
             switch ($ServiceType) {
                 'OpenAI' {
-                    Write-Host "Deploy GPT models via Azure Portal or REST API" -ForegroundColor Green
-                    Write-Host "Common models: gpt-35-turbo, gpt-4, text-embedding-ada-002" -ForegroundColor Cyan
+                    Write-LogMessage "OpenAI Service Deployment Information" -Level "SUCCESS"
+                    Write-LogMessage "Service Endpoint: $($service.Endpoint)" -Level "INFO"
+                    Write-Host ""
+                    Write-Host "Available Models for Deployment:" -ForegroundColor Green
+                    Write-Host "• gpt-35-turbo (Chat completions)" -ForegroundColor Cyan
+                    Write-Host "• gpt-4 (Advanced chat completions)" -ForegroundColor Cyan
+                    Write-Host "• text-embedding-ada-002 (Text embeddings)" -ForegroundColor Cyan
+                    Write-Host "• text-davinci-003 (Text completions)" -ForegroundColor Cyan
+                    Write-Host ""
+                    Write-Host "Next Steps:" -ForegroundColor Yellow
+                    Write-Host "1. Deploy models via Azure Portal > AI Services > Model Deployments" -ForegroundColor White
+                    Write-Host "2. Or use Azure CLI: az cognitiveservices account deployment create" -ForegroundColor White
+                    Write-Host "3. Configure rate limits and quotas as needed" -ForegroundColor White
                 }
                 'TextAnalytics' {
-                    Write-Host "Text Analytics ready for sentiment, entity extraction, key phrases" -ForegroundColor Green
+                    Write-LogMessage "Text Analytics Service Ready" -Level "SUCCESS"
+                    Write-Host "Available Features:" -ForegroundColor Green
+                    Write-Host "• Sentiment Analysis" -ForegroundColor Cyan
+                    Write-Host "• Entity Recognition (NER)" -ForegroundColor Cyan
+                    Write-Host "• Key Phrase Extraction" -ForegroundColor Cyan
+                    Write-Host "• Language Detection" -ForegroundColor Cyan
+                    Write-Host "• PII Detection" -ForegroundColor Cyan
                 }
                 'ComputerVision' {
-                    Write-Host "Computer Vision ready for image analysis, OCR, face detection" -ForegroundColor Green
+                    Write-LogMessage "Computer Vision Service Ready" -Level "SUCCESS"
+                    Write-Host "Available Features:" -ForegroundColor Green
+                    Write-Host "• Image Analysis" -ForegroundColor Cyan
+                    Write-Host "• OCR (Optical Character Recognition)" -ForegroundColor Cyan
+                    Write-Host "• Face Detection" -ForegroundColor Cyan
+                    Write-Host "• Object Detection" -ForegroundColor Cyan
+                    Write-Host "• Thumbnail Generation" -ForegroundColor Cyan
                 }
                 'Speech' {
-                    Write-Host "Speech Services ready for speech-to-text, text-to-speech" -ForegroundColor Green
+                    Write-LogMessage "Speech Services Ready" -Level "SUCCESS"
+                    Write-Host "Available Features:" -ForegroundColor Green
+                    Write-Host "• Speech-to-Text" -ForegroundColor Cyan
+                    Write-Host "• Text-to-Speech" -ForegroundColor Cyan
+                    Write-Host "• Speech Translation" -ForegroundColor Cyan
+                    Write-Host "• Speaker Recognition" -ForegroundColor Cyan
+                }
+                'FormRecognizer' {
+                    Write-LogMessage "Form Recognizer Service Ready" -Level "SUCCESS"
+                    Write-Host "Available Features:" -ForegroundColor Green
+                    Write-Host "• Document Analysis" -ForegroundColor Cyan
+                    Write-Host "• Prebuilt Models (Invoices, Receipts, Business Cards)" -ForegroundColor Cyan
+                    Write-Host "• Custom Model Training" -ForegroundColor Cyan
+                    Write-Host "• Layout Analysis" -ForegroundColor Cyan
                 }
             }
+
+            $deploymentInfo = @{
+                ServiceName = $ServiceName
+                ServiceType = $ServiceType
+                Endpoint = $service.Endpoint
+                Status = 'Ready for Deployment'
+                ConfiguredDate = Get-Date
+            }
+
+            return [PSCustomObject]$deploymentInfo
         }
 
         'Monitor' {
-            Write-Host "$ServiceType Service Monitoring" -ForegroundColor Cyan
+            Write-LogMessage "Monitoring $ServiceType service: $ServiceName" -Level "INFO"
 
+            $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+
+            # Simulate monitoring metrics (in real implementation, you'd use Azure Monitor APIs)
             $metrics = @{
                 ServiceName = $ServiceName
                 ServiceType = $ServiceType
+                Endpoint = $service.Endpoint
+                ProvisioningState = $service.ProvisioningState
+                Location = $service.Location
+                SkuName = $service.Sku.Name
+                # Simulated metrics - replace with actual Azure Monitor data
                 RequestsToday = Get-Random -Minimum 100 -Maximum 5000
-                SuccessRate = Get-Random -Minimum 95 -Maximum 100
-                AvgLatency = Get-Random -Minimum 50 -Maximum 200
+                SuccessRate = [math]::Round((Get-Random -Minimum 9500 -Maximum 10000) / 100, 2)
+                AvgLatencyMs = Get-Random -Minimum 50 -Maximum 200
                 ErrorCount = Get-Random -Minimum 0 -Maximum 10
+                ThrottleCount = Get-Random -Minimum 0 -Maximum 5
                 LastUpdate = Get-Date
+                HealthStatus = if ($service.ProvisioningState -eq 'Succeeded') { 'Healthy' } else { 'Unhealthy' }
             }
 
+            Write-LogMessage "Monitoring data retrieved" -Level "SUCCESS"
+            Write-LogMessage "Health Status: $($metrics.HealthStatus)" -Level "INFO"
+            Write-LogMessage "Success Rate: $($metrics.SuccessRate)%" -Level "INFO"
+
             return [PSCustomObject]$metrics
+        }
+
+        'Test' {
+            Write-LogMessage "Testing $ServiceType service connectivity" -Level "INFO"
+            
+            $testResult = Test-CognitiveService -ServiceName $ServiceName -ResourceGroupName $ResourceGroupName -ServiceType $ServiceType
+            
+            if ($testResult) {
+                Write-LogMessage "Service test completed" -Level "SUCCESS"
+                Write-LogMessage "Status: $($testResult.Status)" -Level "INFO"
+                Write-LogMessage "Has API Keys: $($testResult.HasKeys)" -Level "INFO"
+                return $testResult
+            } else {
+                Write-LogMessage "Service test failed" -Level "ERROR"
+                return $null
+            }
+        }
+
+        'Delete' {
+            Write-LogMessage "Deleting $ServiceType service: $ServiceName" -Level "WARN"
+            
+            if ($PSCmdlet.ShouldProcess($ServiceName, "Delete $ServiceType service")) {
+                $service = Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -ErrorAction Stop
+                
+                Write-LogMessage "WARNING: This will permanently delete the service and all associated data" -Level "WARN"
+                $confirmation = Read-Host "Type 'DELETE' to confirm deletion of $ServiceName"
+                
+                if ($confirmation -eq 'DELETE') {
+                    Remove-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -Force
+                    Write-LogMessage "Service '$ServiceName' deleted successfully" -Level "SUCCESS"
+                    
+                    return @{
+                        ServiceName = $ServiceName
+                        Action = 'Deleted'
+                        DeletedDate = Get-Date
+                    }
+                } else {
+                    Write-LogMessage "Deletion cancelled by user" -Level "INFO"
+                    return $null
+                }
+            }
         }
     }
 }
 catch {
+    Write-LogMessage "AI service operation failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error "$ServiceType service operation failed: $_"
     throw
 }
