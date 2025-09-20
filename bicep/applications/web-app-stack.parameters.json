@@ -3,29 +3,52 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appName": {
-      "value": "webapp"
+      "value": "myapp"
     },
     "environment": {
       "value": "dev"
     },
+    "location": {
+      "value": "East US 2"
+    },
     "administratorObjectId": {
-      "value": "12345678-1234-1234-1234-123456789012"
+      "value": "YOUR_AZURE_AD_OBJECT_ID_HERE"
     },
     "dbAdminUsername": {
-      "value": "dbadmin"
+      "value": "sqladmin"
     },
     "dbAdminPassword": {
-      "value": "P@ssw0rd123!"
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_KEYVAULT_RG/providers/Microsoft.KeyVault/vaults/YOUR_KEYVAULT_NAME"
+        },
+        "secretName": "sql-admin-password"
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "value": ""
     },
     "enableApplicationGateway": {
       "value": false
     },
+    "enablePrivateEndpoints": {
+      "value": false
+    },
+    "customDomainName": {
+      "value": ""
+    },
     "tags": {
       "value": {
-        "Environment": "dev",
-        "Application": "webapp",
-        "Owner": "DevTeam",
-        "CostCenter": "IT-001"
+        "Environment": "Development",
+        "Application": "MyWebApp",
+        "Owner": "Development Team",
+        "CostCenter": "IT-DEV-001",
+        "Project": "WebApp-Modernization",
+        "DataClassification": "Internal",
+        "BusinessUnit": "Technology",
+        "SupportContact": "devteam@company.com",
+        "BackupRequired": "Yes",
+        "MaintenanceWindow": "Sunday 02:00-04:00 UTC"
       }
     }
   }
