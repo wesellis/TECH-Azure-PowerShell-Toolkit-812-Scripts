@@ -1,44 +1,90 @@
 # Bicep Templates
 
-Azure Bicep templates for common infrastructure patterns.
+Production-ready Azure Bicep templates with enterprise features.
 
-## Usage
+## Features
+
+- **Parameter Validation**: Length limits, allowed values, regex patterns
+- **Environment Awareness**: Different configurations per environment
+- **Security First**: Restricted network access, secure authentication
+- **Conditional Resources**: Optional public IPs, monitoring features
+- **Best Practices**: Proper naming, tagging, zones for production
+
+## Quick Start
 
 ```bash
-# Deploy a template
+# 1. Use parameter file (recommended)
 az deployment group create \
   --resource-group myResourceGroup \
   --template-file compute/virtual-machine.bicep \
-  --parameters vmName=myVM adminUsername=azureuser adminPassword=SecurePassword123!
+  --parameters @compute/parameters.json
+
+# 2. Or specify parameters inline
+az deployment group create \
+  --resource-group myResourceGroup \
+  --template-file compute/virtual-machine.bicep \
+  --parameters vmName=web-server environment=dev
 ```
 
 ## Templates
 
-### Compute
-- `virtual-machine.bicep` - Windows/Linux VM with networking
+### Compute (`virtual-machine.bicep`)
+- Windows/Linux VM with comprehensive configuration
+- SSH key or password authentication
+- Optional public IP with DNS name
+- Network security groups with environment-based rules
+- Availability zones for production environments
+- Managed identity and monitoring support
 
-### Storage
-- `storage-account.bicep` - Standard storage account with container
+### Storage (`storage-account.bicep`)
+- Storage account with security defaults
+- HTTPS enforcement and TLS 1.2 minimum
+- Private blob access by default
 
-### Network
-- `virtual-network.bicep` - VNet with configurable subnets
+### Network (`virtual-network.bicep`)
+- Virtual network with configurable subnets
+- NSG association support
 
-## Parameters
+## Parameter Files
 
-Each template includes parameter descriptions and allowed values. Use `--parameters` to override defaults.
+Use parameter files for consistent deployments:
+
+```json
+{
+  "vmName": { "value": "web-server" },
+  "environment": { "value": "dev" },
+  "adminUsername": { "value": "azureuser" },
+  "osType": { "value": "Ubuntu" },
+  "networkAccess": { "value": "restricted" }
+}
+```
 
 ## Examples
 
 ```bash
-# Create Linux VM
+# Development VM with public IP
 az deployment group create \
   --resource-group rg-dev \
   --template-file compute/virtual-machine.bicep \
-  --parameters vmName=web-server osType=Linux adminUsername=admin
+  --parameters vmName=dev-web environment=dev createPublicIP=true
 
-# Create storage account
+# Production VM without public IP
 az deployment group create \
-  --resource-group rg-storage \
-  --template-file storage/storage-account.bicep \
-  --parameters storageAccountName=mystorageacct storageAccountType=Standard_GRS
+  --resource-group rg-prod \
+  --template-file compute/virtual-machine.bicep \
+  --parameters vmName=prod-web environment=prod createPublicIP=false
+
+# Use SSH key authentication
+az deployment group create \
+  --resource-group rg-prod \
+  --template-file compute/virtual-machine.bicep \
+  --parameters authenticationType=sshPublicKey adminPasswordOrKey="ssh-rsa AAAA..."
 ```
+
+## Validation
+
+Templates include comprehensive validation:
+- VM names: 1-15 characters
+- Environment: dev/test/prod only
+- Authentication types: password or SSH key
+- Network access: restricted or open

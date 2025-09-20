@@ -1,0 +1,355 @@
+name: Hybrid IaC and PowerShell Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      iac_tool:
+        description: 'Infrastructure as Code tool'
+        required: true
+        default: 'bicep'
+        type: choice
+        options:
+          - bicep
+          - terraform
+      deploy_advanced:
+        description: 'Deploy advanced resources'
+        required: false
+        default: false
+        type: boolean
+      location:
+        description: 'Azure region'
+        required: true
+        default: 'East US'
+        type: string
+
+env:
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+jobs:
+  validate-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      resource-group: ${{ steps.setup.outputs.resource-group }}
+      deployment-name: ${{ steps.setup.outputs.deployment-name }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup environment variables
+      id: setup
+      run: |
+        RESOURCE_GROUP="toolkit-${{ inputs.environment }}-$(date +%Y%m%d)-rg"
+        DEPLOYMENT_NAME="toolkit-${{ inputs.environment }}-$(date +%Y%m%d-%H%M%S)"
+        echo "resource-group=$RESOURCE_GROUP" >> $GITHUB_OUTPUT
+        echo "deployment-name=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
+        echo "Resource Group: $RESOURCE_GROUP"
+        echo "Deployment Name: $DEPLOYMENT_NAME"
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Validate Azure connection
+      run: |
+        az account show
+        az group list --output table
+
+  infrastructure-deployment:
+    needs: validate-environment
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Setup Bicep
+      if: inputs.iac_tool == 'bicep'
+      uses: azure/setup-bicep@v1
+      with:
+        version: 'latest'
+
+    - name: Setup Terraform
+      if: inputs.iac_tool == 'terraform'
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Setup PowerShell
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
+          Write-Host "Az module version: $(Get-Module Az -ListAvailable | Select-Object -First 1 | Select-Object -ExpandProperty Version)"
+
+    - name: Deploy with Bicep
+      if: inputs.iac_tool == 'bicep'
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $deployParams = @{
+            Environment = "${{ inputs.environment }}"
+            Location = "${{ inputs.location }}"
+            ResourceGroupName = "${{ needs.validate-environment.outputs.resource-group }}"
+            DeployAdvanced = [bool]::Parse("${{ inputs.deploy_advanced }}")
+          }
+
+          ./iac/bicep/deploy.ps1 @deployParams
+
+    - name: Deploy with Terraform
+      if: inputs.iac_tool == 'terraform'
+      working-directory: ./iac/terraform
+      run: |
+        terraform init
+
+        cat > terraform.tfvars << EOF
+        environment = "${{ inputs.environment }}"
+        location = "${{ inputs.location }}"
+        admin_password = "${{ secrets.VM_ADMIN_PASSWORD }}"
+        deploy_advanced = ${{ inputs.deploy_advanced }}
+        EOF
+
+        terraform plan -var-file="terraform.tfvars"
+        terraform apply -var-file="terraform.tfvars" -auto-approve
+
+    - name: Store deployment outputs
+      id: outputs
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+          $resources = Get-AzResource -ResourceGroupName $resourceGroup
+
+          Write-Host "Deployed Resources:"
+          $resources | Format-Table Name, ResourceType, Location
+
+          # Store key outputs for next job
+          $storageAccounts = $resources | Where-Object ResourceType -eq "Microsoft.Storage/storageAccounts"
+          $keyVaults = $resources | Where-Object ResourceType -eq "Microsoft.KeyVault/vaults"
+          $vms = $resources | Where-Object ResourceType -eq "Microsoft.Compute/virtualMachines"
+
+          if ($storageAccounts) {
+            echo "storage-account=$($storageAccounts[0].Name)" >> $GITHUB_OUTPUT
+          }
+          if ($keyVaults) {
+            echo "key-vault=$($keyVaults[0].Name)" >> $GITHUB_OUTPUT
+          }
+          if ($vms) {
+            echo "vm-name=$($vms[0].Name)" >> $GITHUB_OUTPUT
+          }
+
+  powershell-automation:
+    needs: [validate-environment, infrastructure-deployment]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Post-deployment configuration
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+
+          # Resource health check
+          Write-Host "Running resource health check..."
+          if (Test-Path "./scripts/monitoring/Azure-Resource-Health-Checker.ps1") {
+            ./scripts/monitoring/Azure-Resource-Health-Checker.ps1 -ResourceGroupName $resourceGroup
+          }
+
+          # VM management
+          Write-Host "Checking VM status..."
+          if (Test-Path "./scripts/compute/Azure-VM-List-All.ps1") {
+            ./scripts/compute/Azure-VM-List-All.ps1 -ResourceGroupName $resourceGroup
+          }
+
+          # Storage security audit
+          Write-Host "Running storage security audit..."
+          if (Test-Path "./scripts/storage/Azure-Storage-Security-Audit.ps1") {
+            ./scripts/storage/Azure-Storage-Security-Audit.ps1 -ResourceGroupName $resourceGroup
+          }
+
+          # Key Vault security check
+          Write-Host "Checking Key Vault security..."
+          if (Test-Path "./scripts/network/Azure-KeyVault-Security-Monitor.ps1") {
+            ./scripts/network/Azure-KeyVault-Security-Monitor.ps1 -ResourceGroupName $resourceGroup
+          }
+
+    - name: Generate compliance report
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+          $environment = "${{ inputs.environment }}"
+
+          # Generate comprehensive report
+          $report = @{
+            DeploymentId = "${{ needs.validate-environment.outputs.deployment-name }}"
+            Environment = $environment
+            ResourceGroup = $resourceGroup
+            IaCTool = "${{ inputs.iac_tool }}"
+            DeploymentTime = Get-Date
+            Resources = @()
+          }
+
+          # Get all resources
+          $resources = Get-AzResource -ResourceGroupName $resourceGroup
+          foreach ($resource in $resources) {
+            $report.Resources += @{
+              Name = $resource.Name
+              Type = $resource.ResourceType
+              Location = $resource.Location
+              Tags = $resource.Tags
+            }
+          }
+
+          # Save report
+          $reportJson = $report | ConvertTo-Json -Depth 5
+          $reportPath = "deployment-report-$environment-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+          Set-Content -Path $reportPath -Value $reportJson
+
+          Write-Host "Deployment report saved to: $reportPath"
+          Write-Host "Report summary:"
+          Write-Host "- Environment: $environment"
+          Write-Host "- Resources deployed: $($resources.Count)"
+          Write-Host "- Resource types: $($resources | Group-Object ResourceType | Measure-Object | Select-Object -ExpandProperty Count)"
+
+    - name: Upload deployment artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-report-${{ inputs.environment }}
+        path: "deployment-report-*.json"
+        retention-days: 30
+
+  validation-and-testing:
+    needs: [validate-environment, infrastructure-deployment, powershell-automation]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Run Pester tests
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          # Install Pester if not available
+          if (-not (Get-Module -ListAvailable -Name Pester)) {
+            Install-Module -Name Pester -Force -SkipPublisherCheck
+          }
+
+          # Run infrastructure tests
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+
+          $testResults = Invoke-Pester -Path "./tests/" -PassThru -OutputFormat NUnitXml -OutputFile "test-results.xml"
+
+          Write-Host "Test Results:"
+          Write-Host "- Passed: $($testResults.PassedCount)"
+          Write-Host "- Failed: $($testResults.FailedCount)"
+          Write-Host "- Skipped: $($testResults.SkippedCount)"
+
+          if ($testResults.FailedCount -gt 0) {
+            Write-Host "Some tests failed. Check the test results for details." -ForegroundColor Yellow
+            exit 1
+          }
+
+    - name: Security compliance check
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+
+          # Check resource compliance
+          Write-Host "Running security compliance checks..."
+
+          # Check NSG rules
+          $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $resourceGroup
+          foreach ($nsg in $nsgs) {
+            Write-Host "Checking NSG: $($nsg.Name)"
+            $openRules = $nsg.SecurityRules | Where-Object { $_.SourceAddressPrefix -eq "*" -and $_.Access -eq "Allow" }
+            if ($openRules.Count -gt 0) {
+              Write-Host "  Warning: Found $($openRules.Count) open security rules" -ForegroundColor Yellow
+            } else {
+              Write-Host "  OK: No overly permissive rules found" -ForegroundColor Green
+            }
+          }
+
+          # Check storage account security
+          $storageAccounts = Get-AzStorageAccount -ResourceGroupName $resourceGroup
+          foreach ($sa in $storageAccounts) {
+            Write-Host "Checking Storage Account: $($sa.StorageAccountName)"
+            if ($sa.EnableHttpsTrafficOnly) {
+              Write-Host "  OK: HTTPS-only traffic enabled" -ForegroundColor Green
+            } else {
+              Write-Host "  Warning: HTTPS-only traffic not enforced" -ForegroundColor Yellow
+            }
+          }
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ inputs.environment }}
+        path: "test-results.xml"
+        retention-days: 30
+
+  cleanup-on-dev:
+    if: inputs.environment == 'dev' && github.event_name == 'workflow_dispatch'
+    needs: [validate-environment, validation-and-testing]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Cleanup dev environment
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          $resourceGroup = "${{ needs.validate-environment.outputs.resource-group }}"
+
+          # For dev environment, optionally cleanup after testing
+          Write-Host "Development environment cleanup initiated for: $resourceGroup"
+          Write-Host "To preserve resources, this step can be commented out"
+
+          # Uncomment the following line to enable automatic cleanup
+          # Remove-AzResourceGroup -Name $resourceGroup -Force -AsJob

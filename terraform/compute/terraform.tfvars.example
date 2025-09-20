@@ -1,0 +1,19 @@
+# Example terraform.tfvars file
+# Copy to terraform.tfvars and customize
+
+vm_name             = "web-server"
+environment         = "dev"
+resource_group_name = "rg-web-dev"
+location           = "East US"
+vm_size            = "Standard_B2s"
+admin_username     = "azureuser"
+admin_password     = "ChangeMe123!@#"
+create_public_ip   = true
+network_access     = "restricted"
+
+tags = {
+  Project     = "WebApp"
+  Owner       = "DevTeam"
+  CostCenter  = "IT-001"
+  Department  = "Engineering"
+}
