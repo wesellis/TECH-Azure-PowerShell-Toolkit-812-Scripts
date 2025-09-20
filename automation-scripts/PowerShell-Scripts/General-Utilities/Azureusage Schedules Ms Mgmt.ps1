@@ -3,8 +3,7 @@
     Azureusage Schedules Ms Mgmt
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -80,5 +79,4 @@ $Count = 0
 Write-Verbose "Creating schedule $ScheduleName for $RunbookScheduleTime for runbook $RunbookName";
 $Schedule = New-AzureRmAutomationSchedule -Name " $ScheduleName" -StartTime $RunbookScheduleTime -HourInterval $interval -AutomationAccountName $AAAccount -ResourceGroupName $AAResourceGroup;
 $Sch = Register-AzureRmAutomationScheduledRunbook -RunbookName $RunbookName -AutomationAccountName $AAAccount -ResourceGroupName $AAResourceGroup -ScheduleName $ScheduleName -Parameters $params
-Start-AzureRmAutomationRunbook -AutomationAccountName $AAAccount -Name $RunbookName -ResourceGroupName $AAResourceGroup -Parameters $params
-
+Start-AzureRmAutomationRunbook -AutomationAccountName $AAAccount -Name $RunbookName -ResourceGroupName $AAResourceGroup -Parameters $params\n

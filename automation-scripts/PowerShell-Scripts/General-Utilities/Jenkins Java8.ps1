@@ -3,8 +3,7 @@
     Jenkins Java8
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -13,5 +12,4 @@ Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; [System.Net.
 choco install jdk8 maven vscode git -y
 choco install springtoolsuite -y
 choco install jenkins -y
-choco install firefox -y
-
+choco install firefox -y\n

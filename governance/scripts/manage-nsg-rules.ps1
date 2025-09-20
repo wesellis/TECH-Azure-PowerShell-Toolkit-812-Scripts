@@ -1,5 +1,12 @@
 #Requires -Module Az.Network
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    manage nsg rules
+.DESCRIPTION
+    manage nsg rules operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Manages Network Security Group (NSG) rules in Azure
 
@@ -380,5 +387,4 @@ switch ($Action) {
     }
 }
 
-Write-Host "`nOperation completed!" -ForegroundColor Green
-
+Write-Host "`nOperation completed!" -ForegroundColor Green\n

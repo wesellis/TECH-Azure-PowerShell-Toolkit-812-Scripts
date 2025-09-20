@@ -3,8 +3,7 @@
     Remove Oldresources
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,5 +19,4 @@ $DeploymentScriptOutputs["stopTriggers" ] = $triggers | Stop-AzDataFactoryV2Trig
 $DeploymentScriptOutputs[" deleteTriggers" ] = $triggers | Remove-AzDataFactoryV2Trigger -Force -ErrorAction SilentlyContinue
 $DeploymentScriptOutputs[" -ErrorAction "SilentlyContinue"
 | -match "^(msexports_(backfill|extract|fill|get|run|setup|transform)|config_(BackfillData|ExportData|RunBackfill|RunExports))$' }" -Object "{ $_.Name"
-| Remove-AzDataFactoryV2Pipeline -Force -ErrorAction SilentlyContinue
-
+| Remove-AzDataFactoryV2Pipeline -Force -ErrorAction SilentlyContinue\n

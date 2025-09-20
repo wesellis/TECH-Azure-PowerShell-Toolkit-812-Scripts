@@ -838,5 +838,4 @@ $path = [Environment]::GetLogicalDrives()
 }
 Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
-Say "Installation finished"
-
+Say "Installation finished"\n

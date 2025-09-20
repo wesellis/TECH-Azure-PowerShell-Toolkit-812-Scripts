@@ -3,8 +3,7 @@
     Omsasr
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -48,5 +47,4 @@ $OMSWorkspaceKey = Get-AutomationVariable -Name 'OMSWorkspaceKey'
             DependsOn = '[xRemoteFile]OMSPackage'
         }
     }
-}
-
+}\n

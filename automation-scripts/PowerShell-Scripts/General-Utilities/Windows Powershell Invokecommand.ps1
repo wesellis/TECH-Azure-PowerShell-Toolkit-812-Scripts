@@ -3,8 +3,7 @@
     Windows Powershell Invokecommand
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -24,5 +23,4 @@ $scriptBlock = [Scriptblock]::Create($Script)
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

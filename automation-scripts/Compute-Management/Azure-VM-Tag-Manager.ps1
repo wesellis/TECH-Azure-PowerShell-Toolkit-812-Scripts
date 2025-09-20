@@ -3,8 +3,7 @@
     Manage VM tags
 
 .DESCRIPTION
-    Manage VM tags
-#>
+    Manage VM tags\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -23,5 +22,4 @@ foreach ($Tag in $Tags.GetEnumerator()) {
     Write-Host "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
 }
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
-Write-Host "Tags updated successfully for VM: $VmName"
-
+Write-Host "Tags updated successfully for VM: $VmName"\n

@@ -434,5 +434,4 @@ $setAzVMAutoShutdownSplat = @{
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

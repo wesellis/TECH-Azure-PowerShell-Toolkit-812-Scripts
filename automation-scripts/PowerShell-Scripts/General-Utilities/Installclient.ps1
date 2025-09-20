@@ -3,8 +3,7 @@
     Installclient
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -79,5 +78,4 @@ $machinelist = (get-cmdevice -CollectionName " all systems" ).Name
 }
 $Configuration.InstallClient.Status = 'Completed'
 $Configuration.InstallClient.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
-
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force\n

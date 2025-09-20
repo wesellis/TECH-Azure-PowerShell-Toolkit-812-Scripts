@@ -3,8 +3,7 @@
     Gatewayinstall
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -156,5 +155,4 @@ $gwPath= " $PWD\gateway.msi"
 Trace-Log "Gateway download location: $gwPath"
 Download-Gateway $uri $gwPath
 Install-Gateway $gwPath
-Register-Gateway $gatewayKey
-
+Register-Gateway $gatewayKey\n

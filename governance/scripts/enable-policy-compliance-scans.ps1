@@ -1,6 +1,13 @@
 #Requires -Module Az.PolicyInsights
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    enable policy compliance scans
+.DESCRIPTION
+    enable policy compliance scans operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Enables and configures periodic Azure Policy compliance scans
 
@@ -325,5 +332,4 @@ if ($NotificationEmail) {
 Write-Host "`nCompliance scan configuration completed!" -ForegroundColor Green
 
 # Return compliance data
-return $complianceData
-
+return $complianceData\n

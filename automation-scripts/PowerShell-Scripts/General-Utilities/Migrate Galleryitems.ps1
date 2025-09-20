@@ -249,5 +249,4 @@ $existingRoleAssignment = Get-AzRoleAssignment -Scope $s -ObjectId $ra.ObjectId 
 $t = $t | ConvertTo-Json -depth 50 | ConvertFrom-Json -Depth 50 -AsHashtable # this is needed to overcome a limitation in deploying a templateObject that contains a PSCustomObject - removing that PSCustomObject changes the sort order of the properties in the inline template
         New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateObject $t -Verbose
     }
-} # resourceGroupName -ne "" - Create TemplateSpecs
-
+} # resourceGroupName -ne "" - Create TemplateSpecs\n

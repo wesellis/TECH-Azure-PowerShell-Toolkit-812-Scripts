@@ -3,8 +3,7 @@
     Installscript
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -33,5 +32,4 @@ Restart-Computer -Force
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

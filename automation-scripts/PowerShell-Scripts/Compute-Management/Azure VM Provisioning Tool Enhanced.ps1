@@ -3,8 +3,7 @@
     Azure Vm Provisioning Tool Enhanced
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -72,5 +71,4 @@ $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } 
     # Progress stepNumber 6 -TotalSteps 6 -StepName "Complete" -Status "Finalizing..."
     } catch {
         throw
-}
-
+}\n

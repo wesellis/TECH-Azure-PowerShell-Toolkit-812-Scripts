@@ -7,6 +7,12 @@
     1.0
     Requires appropriate permissions and modules
 <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 This script is used to update the table where the test results for each sample are stored.
 Typical scenario is that results will be passed in for only one cloud Public or Fairfax - so the
 [CmdletBinding()]
@@ -485,7 +491,13 @@ foreach ($badge in $badges) {
     $badgeTempPath = Join-Path $tempFolder $badge.filename
     (Invoke-WebRequest -Uri $($badge.url)).Content | Set-Content -Path $badgeTempPath -Force
     <#
-        if this is just a PR, we don't want to overwrite the live badges until it's merged
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+if this is just a PR, we don't want to overwrite the live badges until it's merged
         just create the badges in the " pr" folder and they will be copied over by a CI build when merged
         scheduled builds should be put into the " live" container (i.e. badges)
     #>
@@ -525,7 +537,14 @@ catch {
     Write-Host "Failed to upload $TemplateAnalyzerOutputFilePath   "
     Write-Host " ===================================================="
 }
-<#Debugging only
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Debugging only
 $HTML = " <HTML>"
 foreach ($badge in $badges) {
 $HTML = $HTML + " <IMG SRC=`" $($badge.url)`" />&nbsp;"
@@ -539,5 +558,4 @@ Snippet that will be placed in the README.md files
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/FairfaxLastTestDate.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/FairfaxDeployment.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/BestPracticeResult.svg" />&nbsp;
-<IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/CredScanResult.svg" />&nbsp;
-
+<IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/CredScanResult.svg" />&nbsp;\n

@@ -3,8 +3,7 @@
     Azure Network Connectivity Tester
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @con
     Write-Host "Max Latency: $($result.MaxLatencyInMs) ms" -ForegroundColor White
     Write-Host "Probes Sent: $($result.ProbesSent)" -ForegroundColor White
     Write-Host "Probes Failed: $($result.ProbesFailed)" -ForegroundColor White
-} catch { throw }
-
+} catch { throw }\n

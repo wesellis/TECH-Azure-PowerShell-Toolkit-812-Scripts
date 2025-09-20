@@ -3,8 +3,7 @@
     Get Azvm Status
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -49,5 +48,4 @@ $VMStatusDetail = $VMStatus.DisplayStatus
     end {
     }
 }
-Get-ARMVM -RGNAME "CCI_PS_AUTOMATION_RG" -VMName "PSAutomation1"
-
+Get-ARMVM -RGNAME "CCI_PS_AUTOMATION_RG" -VMName "PSAutomation1"\n

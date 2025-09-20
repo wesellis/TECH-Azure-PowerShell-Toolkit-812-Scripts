@@ -23,5 +23,4 @@ winget install graphviz
 Install-Module -Name AzViz -Scope CurrentUser -Repository PSGallery -Force
 Import-Module AzViz -Verbose
 Connect-AzAccount
-Export-AzViz -ResourceGroup demo-2 -Theme Neon -OutputFormat png -Show
-
+Export-AzViz -ResourceGroup demo-2 -Theme Neon -OutputFormat png -Show\n

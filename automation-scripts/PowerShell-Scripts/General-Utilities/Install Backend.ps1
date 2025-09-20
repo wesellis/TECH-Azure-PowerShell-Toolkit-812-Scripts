@@ -3,8 +3,7 @@
     Install Backend
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -34,5 +33,4 @@ cmd.exe /c mysql -u root -p$mysqlpassword -e " grant all privileges on *.* to $m
 cmd.exe /c mysql -u root -p$mysqlpassword -e " create user $mySqlUser@'%' identified by '$mySqlPasswordForUser'" ;
 cmd.exe /c mysql -u root -p$mysqlpassword -e " grant all privileges on *.* to $mySqlUser@'%'" ;
 net stop mysql
-net start mysql
-
+net start mysql\n

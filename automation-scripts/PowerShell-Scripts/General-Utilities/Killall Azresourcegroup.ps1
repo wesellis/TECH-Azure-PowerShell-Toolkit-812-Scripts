@@ -84,5 +84,4 @@ $bypassTag = $(Get-AzTag -ResourceId $rg.ResourceId).properties.tagsproperty.byp
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Run Artifact Test
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -38,5 +37,4 @@ if ((Test-Path variable:global:TestShouldExitWithNonZeroExitCode) -and ($global:
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

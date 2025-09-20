@@ -3,8 +3,7 @@
     Invoke Azapplicationsecuritygroup
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $newAzApplicationSecurityGroupSplat = @{
     }
 $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
     #endRegion func New-AzApplicationSecurityGroup -ErrorAction Stop
-}
-
+}\n

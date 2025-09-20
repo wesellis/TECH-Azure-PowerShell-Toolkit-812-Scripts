@@ -3,8 +3,7 @@
     Test It
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,5 +19,4 @@ $params = @{
     " adminPassword" = " <admin password>" ;
     " dnsZoneName" = " default.local" ;
 }
-New-AzureRmResourceGroupDeployment -Name " <deployment name>" -ResourceGroupName $rgname -TemplateFile " $PSScriptRoot/azuredeploy.json"  -TemplateParameterObject $params
-
+New-AzureRmResourceGroupDeployment -Name " <deployment name>" -ResourceGroupName $rgname -TemplateFile " $PSScriptRoot/azuredeploy.json"  -TemplateParameterObject $params\n

@@ -3,8 +3,7 @@
     Windows Python 311
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -30,5 +29,4 @@ $pythonInstallerArgs = '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 Ta
         Write-Error -Message "Failed to install python  : $_.Message" -ErrorAction Stop
     }
 }
-Get-Python -ErrorAction Stop
-
+Get-Python -ErrorAction Stop\n

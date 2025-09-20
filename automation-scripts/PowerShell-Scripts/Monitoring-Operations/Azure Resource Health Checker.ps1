@@ -3,8 +3,7 @@
     Azure Resource Health Checker
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -77,5 +76,4 @@ $StatusColor = switch ($Health.Status) {
         default { " [WARN]" }
     }
     Write-Information -Object " $StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
-}
-
+}\n

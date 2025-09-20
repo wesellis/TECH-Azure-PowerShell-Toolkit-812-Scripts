@@ -3,8 +3,7 @@
     Winrm
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -24,5 +23,4 @@ Write-Host "Set Basic Auth in WinRM"
 $WinRmBasic = " @{Basic=`" true`" }"
 winrm set winrm/config/service/Auth $WinRmBasic
 Write-Host "Open Firewall Port"
-netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
-
+netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985\n

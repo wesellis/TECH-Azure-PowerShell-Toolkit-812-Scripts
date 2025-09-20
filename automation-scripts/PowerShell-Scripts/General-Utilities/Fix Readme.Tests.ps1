@@ -2,8 +2,7 @@
 .SYNOPSIS
     Fix Readme.Tests
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -71,5 +70,4 @@ $result = Get-FixedReadMe -ErrorAction Stop $readme $markdown
     It 'fixes bad links' {
         Test "README.outoforder" $markdownWithBicep
     }
-}
-
+}\n

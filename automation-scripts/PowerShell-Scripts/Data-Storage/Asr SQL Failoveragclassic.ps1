@@ -84,5 +84,4 @@ $scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-template
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

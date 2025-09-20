@@ -77,5 +77,4 @@ $r = Invoke-RestMethod -Headers $using:headers -Method "GET" $uri
 }
 $DeploymentScriptOutputs = @{}
 $DeploymentScriptOutputs['ResourceFound'] = $env:FOUND
-Write-Host $DeploymentScriptOutputs['ResourceFound']
-
+Write-Host $DeploymentScriptOutputs['ResourceFound']\n

@@ -3,8 +3,7 @@
     Azure Resource Size Analyzer
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ $runningVMs = ($sizeAnalysis | Where-Object { $_.PowerState -eq "VM running" }).
     Write-Host "Total VMs: $totalVMs" -ForegroundColor White
     Write-Host "Running VMs: $runningVMs" -ForegroundColor White
     Write-Host "Stopped VMs: $($totalVMs - $runningVMs)" -ForegroundColor Yellow
-} catch { throw }
-
+} catch { throw }\n

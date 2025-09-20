@@ -3,8 +3,7 @@
     Remove Recoveryservicesvaults Updated
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -193,5 +192,4 @@ $allVaults = $allVaults + $vaults
         Write-Error "An error occurred: $_"
     }
 }
-Remove-AllRecoveryServicesVaults -ErrorAction Stop    # To run with confirmation
-
+Remove-AllRecoveryServicesVaults -ErrorAction Stop    # To run with confirmation\n

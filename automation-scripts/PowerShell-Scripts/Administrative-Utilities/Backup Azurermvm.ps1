@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Backup Azurermvm
+.DESCRIPTION
+    Backup Azurermvm operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
     Backup Azurermvm
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -156,5 +163,4 @@ $context = Get-StorageObject -resourceGroupName $resourceGroupName -srcURI $disk
          copy-azureBlob -srcUri $diskURI -srcContext $context -destContext $context -containerName $backupContainer
        }
     }
-}
-
+}\n

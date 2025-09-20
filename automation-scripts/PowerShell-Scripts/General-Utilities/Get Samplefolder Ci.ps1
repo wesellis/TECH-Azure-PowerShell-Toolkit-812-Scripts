@@ -23,7 +23,14 @@ $uri = "https://api.github.com/repos/$($GitHubRepository)/commits/$($commit)"
 $r = Invoke-Restmethod -method GET -uri " $uri"
 $FolderArray = @()
 foreach ($f in $r.files) {
-    <# $f is tr.files tem #>
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+$f is tr.files tem #>
     Write-Output $f.filename
     if ($f.status -ne " removed" ) {
         # ignore deleted files, for example when a sample folder is renamed
@@ -63,5 +70,4 @@ Write-Host " ##vso[task.setvariable variable=sample.name]$sampleName"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

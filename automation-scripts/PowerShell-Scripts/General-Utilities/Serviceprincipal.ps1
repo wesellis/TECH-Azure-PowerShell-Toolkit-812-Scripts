@@ -3,8 +3,7 @@
     Serviceprincipal
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -75,5 +74,4 @@ Write-Host $displayName1 -foreground Red NoNewLine
 Write-Information (" '. Cloudwise would atleast need 2 apps" ) -foreground Yellow
 Write-Information (" `t 1) Windows Azure Active Directory" ) -foreground Yellow
 Write-Information (" `t 2) Windows Azure Service Management API" ) -foreground Yellow
-Write-Information (" see README.md for details" ) -foreground Yellow
-
+Write-Information (" see README.md for details" ) -foreground Yellow\n

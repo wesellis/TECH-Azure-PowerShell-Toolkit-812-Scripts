@@ -47,5 +47,4 @@ $Resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroup.Reso
         Write-Output ($Resource.ResourceName + " of type " +  $Resource.ResourceType)
     }
     Write-Output ("" )
-}
-
+}\n

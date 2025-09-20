@@ -3,8 +3,7 @@
     Azure Disk Encryption Status Checker
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -80,5 +79,4 @@ $encryptionRate = if ($totalResources -gt 0) { [math]::Round(($encryptedResource
     Write-Host "Total Resources: $totalResources" -ForegroundColor White
     Write-Host "Encrypted: $encryptedResources" -ForegroundColor Green
     Write-Host "Encryption Rate: $encryptionRate%" -ForegroundColor Cyan
-} catch { throw }
-
+} catch { throw }\n

@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    fix remaining backticks
+.DESCRIPTION
+    fix remaining backticks operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Aggressively fixes remaining backticks and modernization issues in PowerShell scripts
 
@@ -104,5 +111,4 @@ if ($fixed -gt 0) {
     Write-Host "`nBackticks have been removed from $fixed scripts!" -ForegroundColor Green
 }
 
-#endregion
-
+#endregion\n

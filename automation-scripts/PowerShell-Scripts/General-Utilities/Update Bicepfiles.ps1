@@ -3,8 +3,7 @@
     Update Bicepfiles
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -15,5 +14,4 @@ ForEach($s in $bicepSamples){
     if($s.FullName -notlike "*\azure-quickstart-templates\test\*" ){
         bicep build $s.FullName --outfile " $($s.DirectoryName)/azuredeploy.json"
     }
-}
-
+}\n

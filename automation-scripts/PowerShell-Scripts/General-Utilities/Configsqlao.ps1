@@ -3,8 +3,7 @@
     Configsqlao
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -383,5 +382,4 @@ param(
         New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -value " wsman/*.$DomainName" -PropertyType string -ErrorAction SilentlyContinue
     }
     Write-Verbose "DONE:Setting up CredSSP for NTLM"
-}
-
+}\n

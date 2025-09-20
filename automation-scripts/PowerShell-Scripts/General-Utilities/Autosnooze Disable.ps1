@@ -103,5 +103,4 @@ catch
 {
     Write-Output "Error Occurred on AutoSnooze Disable Wrapper..."
     Write-Output $_.Exception
-}
-
+}\n

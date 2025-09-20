@@ -1,5 +1,12 @@
 #Requires -Version 5.1
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Test Prerequisites
+.DESCRIPTION
+    Test Prerequisites operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Validates all Azure Cost Management Dashboard prerequisites and configuration
 
@@ -576,5 +583,4 @@ finally {
     Write-Verbose "Test execution completed"
 }
 
-#endregion
-
+#endregion\n

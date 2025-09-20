@@ -46,5 +46,4 @@ $response = curl " $PRUri" | ConvertFrom-Json
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

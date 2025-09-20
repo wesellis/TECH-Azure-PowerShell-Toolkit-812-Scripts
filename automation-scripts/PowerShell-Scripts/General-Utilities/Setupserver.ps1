@@ -3,8 +3,7 @@
     Setupserver
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -39,5 +38,4 @@ if ($LastExitCode -ne 0)
 {
     " exit code configuring reverse zone ($args[1]) was non-zero ($LastExitCode), bailing..."
     exit $LastExitCode
-}
-
+}\n

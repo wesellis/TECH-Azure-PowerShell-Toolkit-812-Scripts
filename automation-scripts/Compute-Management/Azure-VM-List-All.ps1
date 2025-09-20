@@ -314,5 +314,4 @@ try {
 catch {
     Write-Error "Failed to retrieve VM information: $_"
     throw
-}
-
+}\n

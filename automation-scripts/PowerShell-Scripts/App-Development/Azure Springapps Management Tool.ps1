@@ -546,5 +546,4 @@ $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tag
 } catch {
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
     throw
-}
-
+}\n

@@ -136,5 +136,4 @@ try {
 } catch {
     Write-Error "Failed to configure auto-shutdown: $_"
     throw
-}
-
+}\n

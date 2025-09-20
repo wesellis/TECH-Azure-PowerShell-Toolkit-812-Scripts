@@ -1,6 +1,13 @@
 #Requires -Module Az.Monitor
 #Requires -Module Az.Profile
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    monitor activity logs
+.DESCRIPTION
+    monitor activity logs operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Monitors Azure Activity Logs for specific events and security incidents
 
@@ -419,5 +426,4 @@ else {
     }
 
     Write-Host "`nMonitoring completed!" -ForegroundColor Green
-}
-
+}\n

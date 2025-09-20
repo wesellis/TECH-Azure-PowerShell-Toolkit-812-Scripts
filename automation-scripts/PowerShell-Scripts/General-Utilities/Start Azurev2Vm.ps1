@@ -160,5 +160,4 @@ foreach ($vm in $VMs)
 {
 $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
    " $($vm.Name) - $status"
-}
-
+}\n

@@ -42,5 +42,4 @@ if ($Manager) {
         Write-Warning "Could not set email forwarding: $_"
     }
 }
-Write-Host "User $UserPrincipalName disabled" -ForegroundColor Green
-
+Write-Host "User $UserPrincipalName disabled" -ForegroundColor Green\n

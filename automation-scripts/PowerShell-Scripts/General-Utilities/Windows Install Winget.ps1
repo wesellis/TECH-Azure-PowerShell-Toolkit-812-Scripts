@@ -87,5 +87,4 @@ $settingsJsonPath = " $env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8
 catch {
     # Do not block image creation if WinGet pre-installation fails. 'configure-winget' logon task will attempt to repait WinGet it needed.
     Write-Host " !!! [WARN] Unhandled exception:`n$_`n$($_.ScriptStackTrace)"
-}
-
+}\n

@@ -227,5 +227,4 @@ try {
 catch {
     Write-Error "Failed to check VM power state: $_"
     throw
-}
-
+}\n

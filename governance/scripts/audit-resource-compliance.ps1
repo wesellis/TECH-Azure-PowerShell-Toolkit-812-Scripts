@@ -1,6 +1,13 @@
 #Requires -Module Az.Resources
 #Requires -Module Az.PolicyInsights
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    audit resource compliance
+.DESCRIPTION
+    audit resource compliance operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Audits Azure resource compliance against policies
 
@@ -346,5 +353,4 @@ else {
     Write-Host "`nAll resources are compliant!" -ForegroundColor Green
 }
 
-#endregion
-
+#endregion\n

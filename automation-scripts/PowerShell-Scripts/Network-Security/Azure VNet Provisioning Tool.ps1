@@ -3,8 +3,7 @@
     Azure Vnet Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -80,5 +79,4 @@ Write-Host "VNet ID: $($VNet.Id)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

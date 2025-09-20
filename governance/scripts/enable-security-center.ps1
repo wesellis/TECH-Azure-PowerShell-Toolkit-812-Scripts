@@ -1,6 +1,13 @@
 #Requires -Module Az.Security
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    enable security center
+.DESCRIPTION
+    enable security center operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Enables and configures Azure Security Center (Microsoft Defender for Cloud)
 
@@ -352,5 +359,4 @@ Write-Host "`nSecurity Center configuration completed!" -ForegroundColor Green
 return @{
     Status = $status
     Recommendations = $recommendations
-}
-
+}\n

@@ -3,8 +3,7 @@
     Get VM network details
 
 .DESCRIPTION
-    Get VM network details
-#>
+    Get VM network details\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -25,5 +24,4 @@ foreach ($NicRef in $VM.NetworkProfile.NetworkInterfaces) {
         $Pip = Get-AzPublicIpAddress -ResourceId $PipId
         Write-Host "Public IP: $($Pip.IpAddress)"
     }
-}
-
+}\n

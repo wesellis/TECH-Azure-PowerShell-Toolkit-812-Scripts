@@ -3,8 +3,7 @@
     Azure Resource Tagging Enforcer
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -150,5 +149,4 @@ $allowedValues = if ($RequiredTags[$tag].Count -gt 0) { " ($($RequiredTags[$tag]
     Write-Host "Report: $OutputPath" -ForegroundColor Cyan
     Write-Host ""
 
-} catch { throw }
-
+} catch { throw }\n

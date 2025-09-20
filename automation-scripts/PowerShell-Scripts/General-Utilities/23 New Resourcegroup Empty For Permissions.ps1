@@ -3,8 +3,7 @@
     New Resourcegroup Empty For Permissions
 
 .DESCRIPTION
-    New Resourcegroup Empty For Permissions operation
-#>
+    New Resourcegroup Empty For Permissions operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -37,5 +36,4 @@ $newAzResourceGroupSplat = @{
     Location = $LocationName
     Tag      = $Tags
 }
-New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-
+New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat\n

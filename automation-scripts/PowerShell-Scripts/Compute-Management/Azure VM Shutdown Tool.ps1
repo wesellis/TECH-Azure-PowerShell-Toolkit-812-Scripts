@@ -3,8 +3,7 @@
     Azure Vm Shutdown Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ Stop-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Force
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

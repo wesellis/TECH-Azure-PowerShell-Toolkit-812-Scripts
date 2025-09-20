@@ -1,5 +1,12 @@
 #Requires -Version 5.1
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    assign policy
+.DESCRIPTION
+    assign policy operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Assigns Azure policies to subscriptions, resource groups, or management groups with
 
@@ -497,5 +504,4 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-#endregion
-
+#endregion\n

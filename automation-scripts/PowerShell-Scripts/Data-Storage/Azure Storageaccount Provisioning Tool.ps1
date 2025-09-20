@@ -3,8 +3,7 @@
     Azure Storageaccount Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -69,5 +68,4 @@ Write-Host "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

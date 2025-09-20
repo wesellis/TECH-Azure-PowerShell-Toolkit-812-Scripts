@@ -5,7 +5,14 @@
 
     1.0
     Requires appropriate permissions and modules
-<#PSScriptInfo
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+PSScriptInfo
 .VERSION 0.2.0
 .GUID a38fa39f-f93d-4cf4-9e08-fa8f880e6187
 .AUTHOR Michael Greene
@@ -51,4 +58,4 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
        IdentityType          = 'ApplicationPoolIdentity'
        DependsOn             = '[WindowsFeature]WebServer'
     }
-}
+}\n

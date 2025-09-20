@@ -3,8 +3,7 @@
     Azure Role Assignment Manager
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -71,5 +70,4 @@ Write-Host "Contributor - Full access except access management"
 Write-Host "Reader - Read-only access"
 Write-Host "User Access Administrator - Manage user access"
 Write-Host "Security Administrator - Security permissions"
-Write-Host "Backup Contributor - Backup management"
-
+Write-Host "Backup Contributor - Backup management"\n

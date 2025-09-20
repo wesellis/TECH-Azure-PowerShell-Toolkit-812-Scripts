@@ -1,6 +1,13 @@
 #Requires -Module Az.PolicyInsights
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    remediate compliance
+.DESCRIPTION
+    remediate compliance operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Remediates non-compliant Azure resources based on policy assignments
 
@@ -399,5 +406,4 @@ return @{
     ViolationsFound = $violations.Count
     RemediationTasks = $remediationTasks
     Guidance = $guidance
-}
-
+}\n

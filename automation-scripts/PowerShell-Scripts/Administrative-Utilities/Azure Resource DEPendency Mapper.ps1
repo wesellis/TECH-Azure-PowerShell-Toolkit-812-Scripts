@@ -3,8 +3,7 @@
     Azure Resource Dependency Mapper
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -57,5 +56,4 @@ $dependencies = $dependencies + [PSCustomObject]@{
         $dependencies | ConvertTo-Json -Depth 3 | Out-File -FilePath $OutputPath
 
     }
-} catch { throw }
-
+} catch { throw }\n

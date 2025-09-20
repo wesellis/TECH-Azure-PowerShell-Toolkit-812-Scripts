@@ -3,8 +3,7 @@
     Installros
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -22,5 +21,4 @@ cmd.exe /C $command
 $localDeviceIdPath = "HKLM:SOFTWARE\Microsoft\SQMClient";
 $localDeviceIdName = "MachineId" ;
 $localDeviceIdValue = " {df713376-9b62-46d6-a363-cede5b1bf2c5}"
-New-ItemProperty -Path $localDeviceIdPath -Name $localDeviceIdName -Value $localDeviceIdValue -PropertyType String -Force | Out-Null
-
+New-ItemProperty -Path $localDeviceIdPath -Name $localDeviceIdName -Value $localDeviceIdValue -PropertyType String -Force | Out-Null\n

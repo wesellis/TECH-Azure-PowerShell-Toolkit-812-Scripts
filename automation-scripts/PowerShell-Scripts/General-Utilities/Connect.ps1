@@ -3,8 +3,7 @@
     Connect
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -128,5 +127,4 @@ $ready = $true
 }
 if ($count -ge 6) {
     throw "Failed to connect Arc server after 6 retries."
-}
-
+}\n

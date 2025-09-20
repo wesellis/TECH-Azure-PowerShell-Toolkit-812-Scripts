@@ -38,5 +38,4 @@ if ($HubName -and $HubPrefix) {
 } else {
     Write-Host "Virtual WAN created successfully" -ForegroundColor Green
     return $wan
-}
-
+}\n

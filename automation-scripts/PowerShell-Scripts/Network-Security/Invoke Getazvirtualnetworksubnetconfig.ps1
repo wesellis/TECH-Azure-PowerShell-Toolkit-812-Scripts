@@ -3,8 +3,7 @@
     Invoke Getazvirtualnetworksubnetconfig
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetwor
     #;  $PIP1 = Get-AzPublicIPAddress -Name "PIP1" -ResourceGroupName "RG1"
     Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
     #endRegion func Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop
-}
-
+}\n

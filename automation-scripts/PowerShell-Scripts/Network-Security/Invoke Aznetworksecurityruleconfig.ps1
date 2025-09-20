@@ -3,8 +3,7 @@
     Invoke Aznetworksecurityruleconfig
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -31,5 +30,4 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationApplicationSecurityGroup = $ASG
 };
 $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
-}
-
+}\n

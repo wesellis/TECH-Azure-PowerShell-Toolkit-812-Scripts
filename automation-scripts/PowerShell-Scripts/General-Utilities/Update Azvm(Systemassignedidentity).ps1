@@ -3,8 +3,7 @@
     Update Azvm(Systemassignedidentity)
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -16,5 +15,4 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 $VMName = "TrueSky1";
 $ResourceGroupName = "CCI_TrueSky1_RG" ;
 $vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
-Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm -IdentityType SystemAssigned
-
+Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm -IdentityType SystemAssigned\n

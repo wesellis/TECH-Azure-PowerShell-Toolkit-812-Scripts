@@ -3,8 +3,7 @@
     Convertpfx Tobase64
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -24,5 +23,4 @@ $fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

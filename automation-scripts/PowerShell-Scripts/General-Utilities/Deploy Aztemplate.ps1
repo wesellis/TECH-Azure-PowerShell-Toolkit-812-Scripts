@@ -3,8 +3,7 @@
     Deploy Aztemplate
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -247,5 +246,4 @@ else {
                 Name = $DeploymentName
             }
             New-AzResourceGroupDeployment @params
-}
-
+}\n

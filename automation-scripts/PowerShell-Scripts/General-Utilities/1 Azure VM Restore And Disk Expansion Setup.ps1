@@ -3,8 +3,7 @@
     Azure VM Restore And Disk Expansion Setup
 
 .DESCRIPTION
-    Azure VM Restore And Disk Expansion Setup operation
-#>
+    Azure VM Restore And Disk Expansion Setup operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -152,5 +151,4 @@ $connectionInfo = Connect-AzureEnvironment
 catch {
     Write-Host "Error during setup: $_" -ForegroundColor Red
     throw
-}
-
+}\n

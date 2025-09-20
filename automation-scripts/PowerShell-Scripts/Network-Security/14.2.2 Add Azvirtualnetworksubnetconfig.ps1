@@ -32,5 +32,4 @@ $addAzVirtualNetworkSubnetConfigSplat = @{
         AddressPrefix = " 10.0.2.0/24"
     }
     Add-AzVirtualNetworkSubnetConfig @addAzVirtualNetworkSubnetConfigSplat
-    $vnet | Set-AzVirtualNetwork -ErrorAction Stop
-
+    $vnet | Set-AzVirtualNetwork -ErrorAction Stop\n

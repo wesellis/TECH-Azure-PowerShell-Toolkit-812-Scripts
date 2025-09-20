@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    Measure ScriptPerformance
+.DESCRIPTION
+    Measure ScriptPerformance operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Measure ScriptPerformancecom)#>
 # Measure-ScriptPerformance.ps1
@@ -391,5 +398,4 @@ if ($ExportReport) {
 
 Write-Host "`n���" -ForegroundColor Gray
 
-#endregion
-
+#endregion\n

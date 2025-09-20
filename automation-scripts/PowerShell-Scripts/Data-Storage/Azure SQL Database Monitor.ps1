@@ -3,8 +3,7 @@
     Azure Sql Database Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -74,5 +73,4 @@ Write-Host " `nSQL Database monitoring completed at $(Get-Date)" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

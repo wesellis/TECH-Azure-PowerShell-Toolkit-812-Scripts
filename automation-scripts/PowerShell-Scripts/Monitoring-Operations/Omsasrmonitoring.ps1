@@ -179,5 +179,4 @@ $LogType = "RecoveryServices"
          }
       }
    }
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Sql Connection Tester
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -63,5 +62,4 @@ try {
 } catch {
     Write-Host "Connection failed!" "INFO"
     Write-Host "Error: $($_.Exception.Message)" "INFO"
-}
-
+}\n

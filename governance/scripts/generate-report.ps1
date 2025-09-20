@@ -2,6 +2,13 @@
 #Requires -Module Az.PolicyInsights
 #Requires -Module Az.Monitor
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    generate report
+.DESCRIPTION
+    generate report operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Generates
 
@@ -545,5 +552,4 @@ Write-Host "`nReport generation completed!" -ForegroundColor Green
 Write-Host "Files created:" -ForegroundColor Cyan
 $reportFiles | ForEach-Object {
     Write-Host "  - $_" -ForegroundColor Green
-}
-
+}\n

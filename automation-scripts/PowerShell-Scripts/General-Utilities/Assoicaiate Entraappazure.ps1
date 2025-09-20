@@ -3,8 +3,7 @@
     Assoicaiate Entraappazure
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -12,5 +11,4 @@
 az account set --subscription 28c8da4f-f7e4-40b4-9fe8-fd53e4581d26
 $ErrorActionPreference = "Stop" ;
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-az account set --subscription 28c8da4f-f7e4-40b4-9fe8-fd53e4581d26
-
+az account set --subscription 28c8da4f-f7e4-40b4-9fe8-fd53e4581d26\n

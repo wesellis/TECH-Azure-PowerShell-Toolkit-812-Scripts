@@ -69,5 +69,4 @@ param(
             And = "($Using:NSGRGname"
         }
         #Add-AzureRmAccount @params
-}
-
+}\n

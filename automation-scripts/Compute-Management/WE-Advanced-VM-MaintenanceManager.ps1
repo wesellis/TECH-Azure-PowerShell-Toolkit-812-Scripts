@@ -3,8 +3,7 @@
     Azure script
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations
-#>
+.DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 # Wesley Ellis  Azure VM Maintenance & Update Manager
 # Contact: wesellis.com
 # Version: 2.5 Enterprise Edition
@@ -259,5 +258,4 @@ try {
     throw
 }
 # Wesley Ellis Enterprise VM Management Toolkit
-#  automation solutions: wesellis.com
-
+#  automation solutions: wesellis.com\n

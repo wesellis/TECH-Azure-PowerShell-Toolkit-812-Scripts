@@ -1,6 +1,13 @@
 #Requires -Module Az.Consumption
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    create budget alerts
+.DESCRIPTION
+    create budget alerts operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Creates and manages budget alerts for cost monitoring and control
     and sends notifications when thresholds are reached. Supports multiple budget types,
@@ -745,5 +752,4 @@ finally {
     $ProgressPreference = 'Continue'
 }
 
-#endregion
-
+#endregion\n

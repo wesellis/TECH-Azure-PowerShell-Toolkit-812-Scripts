@@ -3,8 +3,7 @@
     Create VM(Linux Without New VNet)
 
 .DESCRIPTION
-    Create VM(Linux Without New VNet) operation
-#>
+    Create VM(Linux Without New VNet) operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -166,5 +165,4 @@ $newAzVMSplat = @{
     Verbose           = $true
     Tag               = $Tags
 }
-New-AzVM -ErrorAction Stop @newAzVMSplat
-
+New-AzVM -ErrorAction Stop @newAzVMSplat\n

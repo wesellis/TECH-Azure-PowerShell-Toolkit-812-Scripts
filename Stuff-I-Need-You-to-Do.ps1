@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Stuff I Need You to Do
+.DESCRIPTION
+    Stuff I Need You to Do operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Displays manual tasks required for Azure Enterprise Toolkit setup and monetization
 
@@ -337,5 +344,4 @@ try {
     throw
 }
 
-#endregion
-
+#endregion\n

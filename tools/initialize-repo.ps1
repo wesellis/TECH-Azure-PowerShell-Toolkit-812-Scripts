@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    initialize repo
+.DESCRIPTION
+    initialize repo operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     initialize repocom)#>
 # Initialize Azure Enterprise Toolkit Repository
@@ -53,5 +60,4 @@ Write-Host "Repository pushed to GitHub"
 Write-Host "`n Repository is now initialized and connected to GitHub!"
 Write-Host "Ready for content migration from existing repositories."
 
-#endregion
-
+#endregion\n

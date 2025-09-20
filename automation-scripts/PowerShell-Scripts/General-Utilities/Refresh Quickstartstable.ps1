@@ -152,5 +152,4 @@ $v = $v.Replace(" ." , "-" )
         rowKey = $RowKey
     }
     Add-AzTableRow @params
-} #foreach
-
+} #foreach\n

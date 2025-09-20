@@ -3,8 +3,7 @@
     Manage AKS clusters
 
 .DESCRIPTION
-    Manage AKS clusters
-#>
+    Manage AKS clusters\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -23,5 +22,4 @@ if ($Admin) {
 }
 Write-Host "`nTesting connection..."
 kubectl get nodes
-Write-Host "`nKubectl is now configured for cluster: $ClusterName"
-
+Write-Host "`nKubectl is now configured for cluster: $ClusterName"\n

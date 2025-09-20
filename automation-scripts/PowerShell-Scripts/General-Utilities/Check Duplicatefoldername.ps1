@@ -36,5 +36,4 @@ if($d.count -gt 1){ # there should be at least one since this sample should be f
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

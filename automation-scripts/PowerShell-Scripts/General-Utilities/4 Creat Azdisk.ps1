@@ -3,8 +3,7 @@
     Creat Azdisk
 
 .DESCRIPTION
-    Creat Azdisk operation
-#>
+    Creat Azdisk operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ $newAzDiskConfigSplat = @{
     HyperVGeneration = 'V2'
 }
 $diskconfig = New-AzDiskConfig -ErrorAction Stop @newAzDiskConfigSplat
-New-AzDisk -ResourceGroupName $rgName -DiskName $Diskname -Disk $diskconfig
-
+New-AzDisk -ResourceGroupName $rgName -DiskName $Diskname -Disk $diskconfig\n

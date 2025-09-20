@@ -32,5 +32,4 @@ foreach ($kv in $vaults) {
             }
         }
     }
-}
-
+}\n

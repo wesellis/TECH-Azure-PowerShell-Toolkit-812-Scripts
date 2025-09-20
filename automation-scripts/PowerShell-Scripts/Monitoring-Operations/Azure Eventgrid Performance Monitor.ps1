@@ -3,8 +3,7 @@
     Azure Eventgrid Performance Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -157,5 +156,4 @@ Write-Host " 4. Monitor event throughput and latency" "INFO"
 Write-Host " 5. Validate event schema compliance" "INFO"
 Write-Host " `nEvent Grid Portal Access:" "INFO"
 Write-Host "URL: https://portal.azure.com/#@/resource$($EventGridTopic.Id)" "INFO"
-Write-Host " `nEvent Grid Topic monitoring completed at $(Get-Date)" "INFO"
-
+Write-Host " `nEvent Grid Topic monitoring completed at $(Get-Date)" "INFO"\n

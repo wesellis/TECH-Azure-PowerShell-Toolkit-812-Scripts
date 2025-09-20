@@ -1,5 +1,12 @@
 #Requires -Module Az.Resources, Az.PolicyInsights
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    create initiative
+.DESCRIPTION
+    create initiative operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Creates and manages Azure Policy initiatives (policy sets)
     Supports bundling multiple policy definitions into cohesive governance packages
@@ -408,5 +415,4 @@ finally {
     $ProgressPreference = 'Continue'
 }
 
-#endregion
-
+#endregion\n

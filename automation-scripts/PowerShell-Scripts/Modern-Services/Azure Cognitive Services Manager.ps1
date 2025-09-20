@@ -65,5 +65,4 @@ try {
             Write-Host "Cognitive Services account deleted successfully" -ForegroundColor Green
         }
     }
-} catch { throw }
-
+} catch { throw }\n

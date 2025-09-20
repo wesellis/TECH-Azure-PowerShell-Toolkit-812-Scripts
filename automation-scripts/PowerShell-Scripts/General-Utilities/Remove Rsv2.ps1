@@ -3,8 +3,7 @@
     Remove Rsv2
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -213,5 +212,4 @@ $response = Invoke-RestMethod -Uri $restUri -Headers $authHeader -Method DELETE
 $VaultDeleted = Get-AzRecoveryServicesVault -Name $VaultName -ResourceGroupName $ResourceGroup -erroraction 'silentlycontinue'
 if ($null -eq $VaultDeleted) {
 	Write-Host "Recovery Services Vault" $VaultName " successfully deleted"
-}
-
+}\n

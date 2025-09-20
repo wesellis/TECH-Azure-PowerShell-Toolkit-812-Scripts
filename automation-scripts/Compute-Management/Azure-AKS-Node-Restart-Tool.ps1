@@ -116,5 +116,4 @@ try {
 catch {
     Write-Error "Failed to restart AKS node: $_"
     throw
-}
-
+}\n

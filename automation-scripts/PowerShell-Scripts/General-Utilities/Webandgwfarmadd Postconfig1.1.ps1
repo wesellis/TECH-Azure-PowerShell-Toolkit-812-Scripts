@@ -2,8 +2,7 @@
 .SYNOPSIS
     Webandgwfarmadd Postconfig1.1
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -229,5 +228,4 @@ else
 }
 } -ArgumentList $validationKey64,$decryptionKey24 # end of Script Block
 Remove-PSSession -Session $session
-} # end of foreach $item in $webServername
-
+} # end of foreach $item in $webServername\n

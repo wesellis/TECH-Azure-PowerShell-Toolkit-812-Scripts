@@ -123,5 +123,4 @@ $NewIaaCAzVMWindowsSplat = @{
     TimeZone                 = $TimeZone
     Email                    = $Email
 }
-New-IaaCAzVMWindows -ErrorAction Stop @NewIaaCAzVMWindowsSplat
-
+New-IaaCAzVMWindows -ErrorAction Stop @NewIaaCAzVMWindowsSplat\n

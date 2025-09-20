@@ -3,8 +3,7 @@
     Azure Aks Credentials Configurator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -56,5 +55,4 @@ Write-Host " `nKubectl is now configured for cluster: $ClusterName"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

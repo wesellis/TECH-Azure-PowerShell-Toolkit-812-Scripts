@@ -3,8 +3,7 @@
     Manage VM extensions
 
 .DESCRIPTION
-    Manage VM extensions
-#>
+    Manage VM extensions\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -34,5 +33,4 @@ Set-AzVMExtension @params
 Write-Host "Extension '$ExtensionName' installed successfully"
 Write-Host "VM: $VmName"
 Write-Host "Publisher: $Publisher"
-Write-Host "Type: $ExtensionType"
-
+Write-Host "Type: $ExtensionType"\n

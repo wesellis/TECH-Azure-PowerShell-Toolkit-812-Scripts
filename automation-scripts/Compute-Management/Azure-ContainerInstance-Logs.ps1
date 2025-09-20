@@ -363,5 +363,4 @@ try {
 catch {
     Write-Error "Failed to retrieve logs: $_"
     throw
-}
-
+}\n

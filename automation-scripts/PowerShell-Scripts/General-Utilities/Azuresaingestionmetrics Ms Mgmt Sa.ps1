@@ -3,8 +3,7 @@
     Azuresaingestionmetrics Ms Mgmt Sa
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -1823,5 +1822,4 @@ Remove-Variable -ErrorAction Stop uploadToOms -Force -Scope Global -ErrorAction 
 Remove-Variable -ErrorAction Stop jsonlogs -Force -Scope Global -ErrorAction SilentlyContinue
 Remove-Variable -ErrorAction Stop spltlist -Force -Scope Global -ErrorAction SilentlyContinue
 [System.gc]::Collect()
-"Final Memory Consumption: $([System.gc]::gettotalmemory('forcefullcollection') /1MB) MB"
-
+"Final Memory Consumption: $([System.gc]::gettotalmemory('forcefullcollection') /1MB) MB"\n

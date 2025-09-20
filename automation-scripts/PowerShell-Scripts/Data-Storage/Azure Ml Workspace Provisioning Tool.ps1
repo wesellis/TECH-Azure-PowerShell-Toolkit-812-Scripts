@@ -3,8 +3,7 @@
     Azure Ml Workspace Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -164,5 +163,4 @@ Write-Host " `nML Workspace provisioning completed at $(Get-Date)" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

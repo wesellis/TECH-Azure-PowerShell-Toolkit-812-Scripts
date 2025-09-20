@@ -149,5 +149,4 @@ if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
             DesktopShortcutIconPath = $DesktopShortcutIconPath
         }
         RunScriptCreatehortcut @params
-}
-
+}\n

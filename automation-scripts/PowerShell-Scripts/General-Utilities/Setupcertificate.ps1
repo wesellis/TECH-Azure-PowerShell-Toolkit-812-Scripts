@@ -3,8 +3,7 @@
     Setupcertificate
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -158,5 +157,4 @@ $dnsidentity = $dnsidentity.Substring($dnsidentity.IndexOf(" ." )+1)
     Get-Website -ErrorAction Stop | Where-Object { $_.Name -ne 'challenge' } | Start-Website
 } else {
     . (Join-Path $runPath $MyInvocation.MyCommand.Name)
-}
-
+}\n

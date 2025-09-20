@@ -3,8 +3,7 @@
     Azure Subscription Switcher
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -84,5 +83,4 @@ $subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
     Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionName 'Production'" -ForegroundColor White
     Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'" -ForegroundColor White
 }
-Write-Host " `nSubscription switching completed at $(Get-Date)" -ForegroundColor Cyan
-
+Write-Host " `nSubscription switching completed at $(Get-Date)" -ForegroundColor Cyan\n

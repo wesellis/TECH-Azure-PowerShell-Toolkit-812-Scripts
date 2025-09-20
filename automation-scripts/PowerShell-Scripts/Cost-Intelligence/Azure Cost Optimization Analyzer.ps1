@@ -3,8 +3,7 @@
     Azure Cost Optimization Analyzer
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -253,8 +252,7 @@ $htmlReport = @"
             $costData.Recommendations | ForEach-Object {
                 $priorityClass = if ($_.Priority -eq "High" ) { " high-priority" } else { "" }
                 " <div class='recommendation $priorityClass'><strong>$($_.Type)</strong> - $($_.Description) $(if ($_.PotentialSavings -gt 0) { " (Save: $$($_.PotentialSavings)/month)" })</div>"
-            }
-#>
+            }\n    Author: Wes Ellis (wes@wesellis.com)\n#>
         } else {
             " <p>No optimization recommendations at this time.</p>"
         })
@@ -293,5 +291,4 @@ $htmlReport = @"
     }
 } catch {
         throw
-}
-
+}\n

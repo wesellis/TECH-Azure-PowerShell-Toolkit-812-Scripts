@@ -42,5 +42,4 @@ foreach ($vnet in $vnets) {
             }
         }
     }
-}
-
+}\n

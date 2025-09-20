@@ -3,8 +3,7 @@
     Azure Policy Assignment Auditor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -63,5 +62,4 @@ $totalResources = $states.Count
     $complianceReport | Format-Table PolicyName, TotalResources, CompliantResources, NonCompliantResources, ComplianceRate
 $avgCompliance = ($complianceReport | Measure-Object ComplianceRate -Average).Average
     Write-Host "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%" -ForegroundColor Green
-} catch { throw }
-
+} catch { throw }\n

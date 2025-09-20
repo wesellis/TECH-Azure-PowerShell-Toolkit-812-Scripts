@@ -3,8 +3,7 @@
     Create Azimage
 
 .DESCRIPTION
-    Create Azimage operation
-#>
+    Create Azimage operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -32,5 +31,4 @@ $newAzImageSplat = @{
     ResourceGroupName = $rgName
     Image = $imageConfig
 }
-$image = New-AzImage -ErrorAction Stop @newAzImageSplat
-
+$image = New-AzImage -ErrorAction Stop @newAzImageSplat\n

@@ -3,8 +3,7 @@
     Installgithubagent
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -76,5 +75,4 @@ $GitHubToken = $r.token
 .\config.cmd --unattended --url $serverUrl --token $GitHubToken --runasservice
 Pop-Location
 Write-Verbose "Agent install output: $LASTEXITCODE" -Verbose
-Write-Verbose "Exiting InstallGitHubAgent.ps1" -Verbose
-
+Write-Verbose "Exiting InstallGitHubAgent.ps1" -Verbose\n

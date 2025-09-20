@@ -156,5 +156,4 @@ $ActualAzureVMList = $AzureVMList
 catch {
 $ex = $_.Exception
     Write-Output $_.Exception
-}
-
+}\n

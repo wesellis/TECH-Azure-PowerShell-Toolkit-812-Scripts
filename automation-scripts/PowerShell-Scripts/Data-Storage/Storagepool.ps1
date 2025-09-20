@@ -18,7 +18,13 @@ Configuration StoragePool
 		TestScript = {
 			Test-Path H:\
 		}
-		GetScript = { <# This must return a hash table #> }          }
+		GetScript = { <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+This must return a hash table #> }          }
   }
-}
-
+}\n

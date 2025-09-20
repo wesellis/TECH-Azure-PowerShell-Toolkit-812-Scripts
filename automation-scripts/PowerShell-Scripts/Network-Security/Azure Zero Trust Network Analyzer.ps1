@@ -391,5 +391,4 @@ $remediationScript = Generate-RemediationScripts -AssessmentResults $assessmentR
 } catch {
     Write-Error "An error occurred during assessment: $_"
     throw
-}
-
+}\n

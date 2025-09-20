@@ -3,8 +3,7 @@
     Netapp Connect Ontap Win
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -237,5 +236,4 @@ Install-NetAppPSToolkit
 Get-ONTAPClusterDetails -ErrorAction Stop $email $password $ocmip
 Connect-ONTAP $AdminLIF $iScSILIF $SVMName $SVMPwd $Capacity
 Load-SampleDatabase
-Remove-Password -ErrorAction Stop $password
-
+Remove-Password -ErrorAction Stop $password\n

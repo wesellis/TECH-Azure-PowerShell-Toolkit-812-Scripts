@@ -3,8 +3,7 @@
     Connect Az Secure App Model
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -51,5 +50,4 @@ $connectAzAccountSplat_3001 = @{
     GraphAccessToken = $graphToken_3001.AccessToken
     Tenant           = $TenantID_3001
 }
-Connect-AzAccount @connectAzAccountSplat_3001
-
+Connect-AzAccount @connectAzAccountSplat_3001\n

@@ -34,5 +34,4 @@ $PublicIPConfig = $param.newAzPublicIpAddressSplat | Invoke-AzPublicIP
 $Param = $GatewaySubnetConfig | Invoke-DefineParam
 $Param = $PublicIPConfig | Invoke-DefineParam;
 $GatewayPublicIPConfig = $Param.newAzVirtualNetworkGatewayIpConfigSplat | Invoke-AzVirtualNetworkGatewayIpConfig
-$Param = $GatewayPublicIPConfig | Invoke-DefineParam
-
+$Param = $GatewayPublicIPConfig | Invoke-DefineParam\n

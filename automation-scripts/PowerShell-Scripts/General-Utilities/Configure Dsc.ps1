@@ -3,8 +3,7 @@
     Configure Dsc
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -34,5 +33,4 @@ Write-Verbose "Configuring swapfile for D:"
 Write-Verbose "Post settings for the swapfile(s)"
 wmic pagefile list /format:list
 Write-Verbose "Settings will be effective after the next reboot."
-exit 0
-
+exit 0\n

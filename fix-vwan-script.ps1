@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    fix vwan script
+.DESCRIPTION
+    fix vwan script operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 #!/usr/bin/env pwsh
 
 # Fix the Virtual WAN script that has multiple broken function definitions
@@ -27,4 +34,4 @@ if ($content -ne $originalContent) {
         $content | Set-Content $scriptPath -Encoding UTF8
     }
     Write-Host "Applied
-}
+}\n

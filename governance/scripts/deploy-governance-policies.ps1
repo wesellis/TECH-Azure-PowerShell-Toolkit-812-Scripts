@@ -292,5 +292,4 @@ if ($assignments.Count -gt 0) {
 }
 else {
     Write-Warning "No policies were deployed"
-}
-
+}\n

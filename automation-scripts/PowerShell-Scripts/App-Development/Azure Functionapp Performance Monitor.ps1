@@ -3,8 +3,7 @@
     Azure Functionapp Performance Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -71,5 +70,4 @@ try {
 } catch {
     Write-Host " `nFunctions: Unable to enumerate (check permissions)"
 }
-Write-Host " `nFunction App monitoring completed at $(Get-Date)"
-
+Write-Host " `nFunction App monitoring completed at $(Get-Date)"\n

@@ -104,5 +104,4 @@ $json = $json -ireplace " `" $($size.old)`"" , "`" $($size.new)`""
             $json | Set-Content -Path $f.FullName
         }
     }
-}
-
+}\n

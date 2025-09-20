@@ -101,5 +101,4 @@ $SecurePassword = ConvertTo-SecureString $RandomPassword -AsPlainText -Force
 } catch {
     Write-Log "ERROR: $($_.Exception.Message)"
     throw
-}
-
+}\n

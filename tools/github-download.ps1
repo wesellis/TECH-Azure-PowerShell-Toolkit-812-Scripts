@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    github download
+.DESCRIPTION
+    github download operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     github downloadcom)#>
 # GitHub Repository Downloader
@@ -83,5 +90,4 @@ Write-Host "Total: $($repositories.Count) repositories"
 
 Write-Host "`nAll repositories are now up to date!"
 
-#endregion
-
+#endregion\n

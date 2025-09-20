@@ -29,5 +29,4 @@ if ($isFailed) {
     Uninstall-Module Microsoft.WinGet.Client -AllowPrerelease -AllVersions -Force -ErrorAction Continue
     Install-Module Microsoft.WinGet.Client -Scope AllUsers -Force -ErrorAction Continue
     Repair-WinGetPackageManager -Latest -Force
-}
-
+}\n

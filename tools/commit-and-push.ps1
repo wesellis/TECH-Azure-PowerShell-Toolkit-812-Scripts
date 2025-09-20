@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    commit and push
+.DESCRIPTION
+    commit and push operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     commit and pushcom)#>
 # Commit and push the consolidated Azure Enterprise Toolkit
@@ -49,5 +56,4 @@ Write-Host "`n Azure Enterprise Toolkit is now live on GitHub!"
 Write-Host "�� View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
 Write-Host "[*] Don't forget to star your own repository!"
 
-#endregion
-
+#endregion\n

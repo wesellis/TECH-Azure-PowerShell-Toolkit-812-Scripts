@@ -3,8 +3,7 @@
     Check VM health
 
 .DESCRIPTION
-    Check VM health
-#>
+    Check VM health\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [string]$ResourceGroupName,
     [string]$VmName
@@ -19,5 +18,4 @@ Write-Host "Provisioning State: $($VM.ProvisioningState)"
 # Display status information
 foreach ($Status in $VM.Statuses) {
     Write-Host "Status: $($Status.Code) - $($Status.DisplayStatus)"
-}
-
+}\n

@@ -1,5 +1,12 @@
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    deploy resource group
+.DESCRIPTION
+    deploy resource group operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Deploys Azure resource groups with governance policies and tags
 
@@ -222,5 +229,4 @@ Show-DeploymentSummary -ResourceGroup $resourceGroup -Tags $allTags -PolicyIniti
 Write-Host "`nResource group deployment completed successfully!" -ForegroundColor Green
 
 # Return resource group object
-return $resourceGroup
-
+return $resourceGroup\n

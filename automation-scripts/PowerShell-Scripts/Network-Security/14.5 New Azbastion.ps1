@@ -45,5 +45,4 @@ $newAzBastionSplat = @{
     VirtualNetwork    = $vnet
     Tag               = $Tags
 }
-$bastion = New-AzBastion -ErrorAction Stop @newAzBastionSplat
-
+$bastion = New-AzBastion -ErrorAction Stop @newAzBastionSplat\n

@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    fix bookmarks submodule
+.DESCRIPTION
+    fix bookmarks submodule operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     fix bookmarks submodulecom)#>
 # Fix Bookmarks Submodule Issue
@@ -33,5 +40,4 @@ try {
     Write-Host "  git commit -m 'Convert bookmarks from submodule to regular directory'"
 }
 
-#endregion
-
+#endregion\n

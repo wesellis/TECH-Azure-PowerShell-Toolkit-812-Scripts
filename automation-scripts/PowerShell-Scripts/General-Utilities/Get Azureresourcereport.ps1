@@ -3,8 +3,7 @@
     Get Azureresourcereport
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -184,5 +183,4 @@ $reportData = Get-ResourceReport -ErrorAction Stop
 catch {
     Write-Host "An error occurred: $_" -ForegroundColor Red
     Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
-}
-
+}\n

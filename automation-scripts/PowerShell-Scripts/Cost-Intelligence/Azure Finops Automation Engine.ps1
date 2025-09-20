@@ -436,5 +436,4 @@ $report = Generate-FinOpsReport -Engine $engine -Optimizations $allOptimizations
 } catch {
     Write-Error "An error occurred: $_"
     throw
-}
-
+}\n

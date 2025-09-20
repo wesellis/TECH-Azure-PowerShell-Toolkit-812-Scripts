@@ -3,8 +3,7 @@
     Configurewinrm
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -93,5 +92,4 @@ param([string] $port)
 $winrmHttpsPort=5986
 winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192" }'
 Configure-WinRMHttpsListener $HostName $port
-Add-FirewallException -port $winrmHttpsPort
-
+Add-FirewallException -port $winrmHttpsPort\n

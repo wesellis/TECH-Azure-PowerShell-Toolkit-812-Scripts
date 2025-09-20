@@ -3,8 +3,7 @@
     Invoke Azvmconfig
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ $newAzVMConfigSplat = @{
     }
 $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
     #endRegion func New-AzVMConfig -ErrorAction Stop
-}
-
+}\n

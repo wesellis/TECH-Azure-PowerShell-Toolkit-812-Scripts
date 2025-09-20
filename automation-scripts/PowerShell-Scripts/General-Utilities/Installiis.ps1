@@ -3,8 +3,7 @@
     Installiis
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -123,5 +122,4 @@ $MSDeployPath = (Get-ChildItem -ErrorAction Stop "HKLM:\SOFTWARE\Microsoft\IIS E
         }
 	}
   }
-}
-
+}\n

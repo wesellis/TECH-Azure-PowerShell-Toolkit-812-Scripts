@@ -3,8 +3,7 @@
     Azure Vm Disk Detacher
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -59,5 +58,4 @@ Write-Host "Note: Disk is now available for attachment to other VMs"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

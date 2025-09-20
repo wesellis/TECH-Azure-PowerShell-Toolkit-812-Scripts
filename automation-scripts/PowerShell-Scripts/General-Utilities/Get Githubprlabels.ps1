@@ -35,5 +35,4 @@ $r = Invoke-Restmethod " $PRUri" -Verbose
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

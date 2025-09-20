@@ -3,8 +3,7 @@
     Azure Dns Zone Health Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -158,5 +157,4 @@ Write-Host " 2. Verify name server configuration at your registrar" "INFO"
 Write-Host " 3. Monitor DNS query patterns and performance" "INFO"
 Write-Host " 4. Consider adding health checks for critical records" "INFO"
 Write-Host " 5. Implement DNS monitoring and alerting" "INFO"
-Write-Host " `nDNS Zone monitoring completed at $(Get-Date)" "INFO"
-
+Write-Host " `nDNS Zone monitoring completed at $(Get-Date)" "INFO"\n

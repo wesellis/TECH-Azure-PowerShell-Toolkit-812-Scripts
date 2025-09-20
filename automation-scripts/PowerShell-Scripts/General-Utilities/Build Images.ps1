@@ -3,8 +3,7 @@
     Build Images
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -52,5 +51,4 @@ if (($failuresCount -gt 0) -or ($imageTemplates.Count -eq 0)) {
 }
 else {
     Write-Host " === Success: $($imageTemplates.Count) image build(s) succeeded"
-}
-
+}\n

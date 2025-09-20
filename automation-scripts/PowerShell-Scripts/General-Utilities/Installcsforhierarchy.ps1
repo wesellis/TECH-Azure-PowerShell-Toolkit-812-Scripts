@@ -3,8 +3,7 @@
     Installcsforhierarchy
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -406,5 +405,4 @@ $replicationStatus = Get-CMDatabaseReplicationStatus -ErrorAction Stop
 $Configuration.PSReadyToUse.Status = 'Completed'
 $Configuration.PSReadyToUse.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
 $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
-Copy-Item $ConfigurationFile -Destination " c:\$LogFolder" -Force
-
+Copy-Item $ConfigurationFile -Destination " c:\$LogFolder" -Force\n

@@ -3,8 +3,7 @@
     Azure Resource Move Validator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -47,5 +46,4 @@ $validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action "
     } else {
         Write-Host "Some resources cannot be moved. Check Azure portal for details." -ForegroundColor Red
     }
-} catch { throw }
-
+} catch { throw }\n

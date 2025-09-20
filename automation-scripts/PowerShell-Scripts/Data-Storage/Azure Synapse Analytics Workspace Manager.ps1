@@ -3,8 +3,7 @@
     Azure Synapse Analytics Workspace Manager
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -425,5 +424,4 @@ $workspaceStatus = Invoke-AzureOperation -Operation {
     Write-Host "    Check firewall rules and network connectivity" -ForegroundColor White
     Write-Host "" "INFO"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure script
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations
-#>
+.DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -29,5 +28,4 @@ Write-Host "Resource Group: $ResourceGroupName"
 if ($StorageAccountName) {
     Write-Host "Storage Account: $StorageAccountName"
 }
-Write-Host "Status: Enabled"
-
+Write-Host "Status: Enabled"\n

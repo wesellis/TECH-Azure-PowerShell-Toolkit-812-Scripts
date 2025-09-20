@@ -966,5 +966,4 @@ Remove-Variable -Name  logArray -ea 0
 Remove-Variable -Name  fresponse -ea 0
 Remove-Variable -Name  auditlog -ea 0
 Remove-Variable -Name  jsonlogs  -ea 0
-[gc]::Collect()
-
+[gc]::Collect()\n

@@ -38,7 +38,14 @@ Write-Host "Applying Azure baseline"
 [scriptblock];  $remediation = {
     $env:PSModulePath += ';c:\ProgramData\GuestConfig\modules'
     Import-Module 'GuestConfiguration'
-    <# Future
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Future
     $Parameter = @(
         @{
             ResourceType          = ''
@@ -117,5 +124,4 @@ $filterAdminTokenTask.XmlText = $taskDefinition;
 $rootTaskFolder = $schedServiceCom.GetFolder('\')
 [void] $rootTaskFolder.RegisterTaskDefinition('FilterAdministratorTokenEnablement', $filterAdminTokenTask, 6, 'SYSTEM', $null, 1, $null)
 Remove-Item -Path 'c:\ProgramData\GuestConfig' -Recurse -Force
-Remove-Item -Path $env:LOCALAPPDATA\PackageManagement\ProviderAssemblies\NuGet -Recurse -Force
-
+Remove-Item -Path $env:LOCALAPPDATA\PackageManagement\ProviderAssemblies\NuGet -Recurse -Force\n

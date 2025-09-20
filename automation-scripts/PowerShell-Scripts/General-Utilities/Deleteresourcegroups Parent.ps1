@@ -88,5 +88,4 @@ $Resources = $Resources + $Resource
 {
     Write-Output "Error Occurred in the Delete ResourceGroup Wrapper..."
     Write-Output $_.Exception
-}
-
+}\n

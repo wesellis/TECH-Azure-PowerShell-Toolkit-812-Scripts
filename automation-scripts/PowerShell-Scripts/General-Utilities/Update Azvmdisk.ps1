@@ -3,8 +3,7 @@
     Update Azvmdisk
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -39,5 +38,4 @@ $rgName = $ResourceGroupName;
 $storageType = 'Standard_LRS';
 $disk = Get-AzDisk -DiskName $diskName -ResourceGroupName $rgName
 $disk.Sku = [Microsoft.Azure.Management.Compute.Models.DiskSku]::new($storageType)
-$disk | Update-AzDisk
-
+$disk | Update-AzDisk\n

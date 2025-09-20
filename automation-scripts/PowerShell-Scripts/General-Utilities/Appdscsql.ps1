@@ -11,7 +11,14 @@ Param ( [string] $nodeName )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 Node $nodeName
   {
-   <# This commented section represents an example configuration that can be updated as required.
+   <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+This commented section represents an example configuration that can be updated as required.
     WindowsFeature WebServerRole
     {
       Name = "Web-Server"
@@ -171,5 +178,4 @@ $ldf = New-Object -ErrorAction Stop Microsoft.SqlServer.Management.Smo.RelocateF
         GetScript = {@{Result = "ConfigureSql" }}
 }
   }
-}
-
+}\n

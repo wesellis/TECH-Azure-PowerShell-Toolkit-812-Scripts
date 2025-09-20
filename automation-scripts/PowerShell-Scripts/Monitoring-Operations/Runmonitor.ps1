@@ -63,5 +63,4 @@ $result.Error -join " `r`n"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

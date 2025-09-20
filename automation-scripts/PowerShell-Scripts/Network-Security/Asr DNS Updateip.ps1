@@ -115,5 +115,4 @@ $csextension = $DNSVM.Extensions |  Where-Object {$_.VirtualMachineExtensionType
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

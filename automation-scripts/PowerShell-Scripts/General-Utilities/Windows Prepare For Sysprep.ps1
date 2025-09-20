@@ -3,8 +3,7 @@
     Windows Prepare For Sysprep
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -28,5 +27,4 @@ Invoke-WebRequest -Uri $wingetUrl -OutFile $wingetPath;
 $wingetLicensePath = " $env:TEMP/winget-license.xml"
 Invoke-WebRequest -Uri $wingetLicenseUrl -OutFile $wingetLicensePath
 Write-Host " === Installing winget bundle from $wingetPath and license from $wingetLicensePath"
-Add-AppxProvisionedPackage -Online -PackagePath $wingetPath -LicensePath $wingetLicensePath -ErrorAction Continue
-
+Add-AppxProvisionedPackage -Online -PackagePath $wingetPath -LicensePath $wingetLicensePath -ErrorAction Continue\n

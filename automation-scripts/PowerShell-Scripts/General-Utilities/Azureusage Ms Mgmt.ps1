@@ -3,8 +3,7 @@
     Azureusage Ms Mgmt
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -1059,5 +1058,4 @@ $Results = $Results + $Job.Pipe.EndInvoke($Job.Result)
 }
 $jobs|foreach{$_.Pipe.Dispose()}
 $runspacepool.Close()
-[gc]::Collect()
-
+[gc]::Collect()\n

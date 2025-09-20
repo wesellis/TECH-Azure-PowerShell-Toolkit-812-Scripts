@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Archive Azurermvm
+.DESCRIPTION
+    Archive Azurermvm operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
     Archive Azurermvm
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -345,5 +352,4 @@ $copyResult = Set-AzureStorageBlobContent -File $tempFilePath -Blob $RehydrateFi
             }
         }
      }
-}
-
+}\n

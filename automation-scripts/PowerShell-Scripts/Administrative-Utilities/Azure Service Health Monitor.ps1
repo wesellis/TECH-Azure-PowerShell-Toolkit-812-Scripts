@@ -3,8 +3,7 @@
     Azure Service Health Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -56,5 +55,4 @@ $eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
         Write-Host "Recent Events:" -ForegroundColor Yellow
         $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
-} catch { throw }
-
+} catch { throw }\n

@@ -3,8 +3,7 @@
     Azure Nsg Rule Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -92,5 +91,4 @@ Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName" "INFO
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

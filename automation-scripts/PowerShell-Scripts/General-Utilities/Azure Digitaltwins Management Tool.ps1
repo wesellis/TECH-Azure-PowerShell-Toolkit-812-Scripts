@@ -491,5 +491,4 @@ $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -Re
 } catch {
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
     throw
-}
-
+}\n

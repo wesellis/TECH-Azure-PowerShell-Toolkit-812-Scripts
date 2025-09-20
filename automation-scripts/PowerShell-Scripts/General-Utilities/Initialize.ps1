@@ -3,8 +3,7 @@
     Initialize
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -83,5 +82,4 @@ $result = Invoke-WebRequest -Uri $uri -UseBasicParsing -OutFile $outFile
         }
         return ""
     }
-}
-
+}\n

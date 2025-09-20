@@ -3,8 +3,7 @@
     Azure Subscription Usage Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -120,5 +119,4 @@ $warningItems = @()
     }
     Write-Host ""
 
-} catch { throw }
-
+} catch { throw }\n

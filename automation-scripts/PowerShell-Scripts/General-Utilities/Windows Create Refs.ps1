@@ -111,5 +111,4 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
     } catch {
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
-}
-
+}\n

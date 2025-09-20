@@ -3,8 +3,7 @@
     Sqlazureingestion
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -100,5 +99,4 @@ if($FailedConnections -ne $Null)
     ""
     "Failed to connect to $($FailedConnections.Count) databases"
     $FailedConnections
-}
-
+}\n

@@ -52,5 +52,4 @@ Write-Host " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$m
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

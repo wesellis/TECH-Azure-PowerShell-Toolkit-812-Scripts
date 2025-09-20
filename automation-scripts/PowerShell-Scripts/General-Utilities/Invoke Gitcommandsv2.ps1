@@ -3,8 +3,7 @@
     Invoke Gitcommandsv2
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -37,5 +36,4 @@ $commit_message = Read-Host -Prompt 'Please enter commit message'
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

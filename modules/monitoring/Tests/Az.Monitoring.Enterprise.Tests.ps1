@@ -2,7 +2,7 @@
 .SYNOPSIS
     Tests for Az.Monitoring.Enterprise module
 .DESCRIPTION
-#>
+\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 
 BeforeAll {
     # Import the module
@@ -421,5 +421,4 @@ Describe "Helper Function Tests" {
     }
 }
 
-#endregion
-
+#endregion\n

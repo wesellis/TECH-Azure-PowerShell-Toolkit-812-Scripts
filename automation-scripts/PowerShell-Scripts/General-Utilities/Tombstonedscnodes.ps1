@@ -6,7 +6,14 @@
 
     1.0
     Requires appropriate permissions and modules
-<#PSScriptInfo
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+PSScriptInfo
 .VERSION 1.0.0
 .GUID 4e07bb61-3d86-4150-8436-73d420d34457
 .AUTHOR Michael Greene
@@ -87,5 +94,4 @@ if ($true -eq $UnregisterAction) {
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

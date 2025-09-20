@@ -3,8 +3,7 @@
     Azure Servicebus Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -135,5 +134,4 @@ Write-Host "   Load balancing across worker instances"
 Write-Host "   Reliable message delivery"
 Write-Host "   Event-driven architectures"
 Write-Host "   Integrating on-premises and cloud systems"
-Write-Host " `nService Bus Namespace provisioning completed at $(Get-Date)"
-
+Write-Host " `nService Bus Namespace provisioning completed at $(Get-Date)"\n

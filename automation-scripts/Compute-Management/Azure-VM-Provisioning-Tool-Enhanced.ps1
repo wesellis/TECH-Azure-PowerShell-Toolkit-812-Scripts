@@ -3,8 +3,7 @@
     Azure script
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations
-#>
+.DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 # Enhanced Azure VM Provisioning Tool with enterprise features
 param (
     [Parameter(Mandatory)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$ResourceGroupName,
@@ -54,5 +53,4 @@ try {
     Write-HostNumber 6 -TotalSteps 6 -StepName "Complete" -Status "Finalizing..."
     } catch {
         throw
-}
-
+}\n

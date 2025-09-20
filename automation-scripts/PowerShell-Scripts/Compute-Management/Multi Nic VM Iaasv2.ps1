@@ -3,8 +3,7 @@
     Multi Nic Vm Iaasv2
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -54,5 +53,4 @@ $securePassword = ConvertTo-SecureString $password -AsPlainText -Force;
 $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($user, $securePassword);
 $vm = Set-AzureVMOperatingSystem -VM $vm -Windows -ComputerName $vmname -Credential $cred;
 $vm = Set-AzureVMSourceImage -VM $vm -PublisherName MicrosoftWindowsServer -Offer WindowsServer -Skus 2012-R2-Datacenter -Version " latest"
-New-AzureVM -ResourceGroupName $rgname -Location $location -Name $vmname -VM $vm;
-
+New-AzureVM -ResourceGroupName $rgname -Location $location -Name $vmname -VM $vm;\n

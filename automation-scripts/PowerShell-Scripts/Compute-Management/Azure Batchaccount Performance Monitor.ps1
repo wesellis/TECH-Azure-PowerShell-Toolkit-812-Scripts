@@ -3,8 +3,7 @@
     Azure Batchaccount Performance Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -111,5 +110,4 @@ Write-Host " 2. Monitor job completion times and failure rates"
 Write-Host " 3. Optimize task distribution across nodes"
 Write-Host " 4. Consider using low-priority VMs for cost savings"
 Write-Host " 5. Implement auto-scaling for dynamic workloads"
-Write-Host " `nBatch Account monitoring completed at $(Get-Date)"
-
+Write-Host " `nBatch Account monitoring completed at $(Get-Date)"\n

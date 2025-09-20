@@ -3,8 +3,7 @@
     Get Templatehash
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -64,5 +63,4 @@ Write-Host "Template hash: $templateHash"
 if (!$templateHash -or !($templateHash -gt 0)) {
     Write-Error "Failed to get hash for: $templateFilePath"
 }
-Return $templateHash
-
+Return $templateHash\n

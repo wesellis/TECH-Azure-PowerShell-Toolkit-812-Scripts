@@ -261,5 +261,4 @@ Write-Output $($json | ConvertTo-json -Depth 30)
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Custom Role Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -67,8 +66,7 @@ $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
     Write-Host "Name: $($CustomRole.Name)"
     Write-Host "ID: $($CustomRole.Id)"
     Write-Host "Description: $($CustomRole.Description)"
-    Write-Host "Type: $($CustomRole.RoleType)"
-#>
+    Write-Host "Type: $($CustomRole.RoleType)"\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Write-Host " `nPermissions:"
     Write-Host "Actions ($($Actions.Count)):"
     foreach ($Action in $Actions) {
@@ -114,5 +112,4 @@ $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
     Write-Host "Specific resource types: Microsoft.Compute/virtualMachines/*"
 } catch {
     Write-Error "Failed to create custom role: $($_.Exception.Message)"
-}
-
+}\n

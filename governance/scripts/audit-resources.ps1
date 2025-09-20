@@ -588,5 +588,4 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-#endregion
-
+#endregion\n

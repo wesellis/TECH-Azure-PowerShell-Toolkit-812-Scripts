@@ -3,8 +3,7 @@
     Switchmysqlnatrule
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -32,5 +31,4 @@ $nic1.IpConfigurations[0].LoadBalancerInboundNatRules.add($rule0)
 Set-AzureNetworkInterface -NetworkInterface $nic1
 $nic0.IpConfigurations[0].LoadBalancerInboundNatRules.add($rule1)
 Set-AzureNetworkInterface -NetworkInterface $nic0
-exit 0
-
+exit 0\n

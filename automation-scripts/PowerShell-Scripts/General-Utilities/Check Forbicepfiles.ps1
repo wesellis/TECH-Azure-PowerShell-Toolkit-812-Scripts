@@ -50,5 +50,4 @@ if($isBicepFileFound -or $isBicepPrereqFileFound){
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

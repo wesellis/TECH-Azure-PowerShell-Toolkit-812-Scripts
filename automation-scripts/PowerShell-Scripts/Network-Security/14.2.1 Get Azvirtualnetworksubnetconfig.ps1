@@ -77,5 +77,4 @@ $getAzVirtualNetworkSplat = @{
 }
 $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
 Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet | Select-Object -Property AddressPrefix,Name
-Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name 'InsideSubnet' | Select-Object -Property AddressPrefix,Name
-
+Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name 'InsideSubnet' | Select-Object -Property AddressPrefix,Name\n

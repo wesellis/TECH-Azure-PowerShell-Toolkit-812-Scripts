@@ -3,8 +3,7 @@
     Wait Azrecoveryservicesbackupjob
 
 .DESCRIPTION
-    Wait Azrecoveryservicesbackupjob operation
-#>
+    Wait Azrecoveryservicesbackupjob operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -13,5 +12,4 @@ $waitAzRecoveryServicesBackupJobSplat = @{
     Job = $restorejob
     Timeout = 43200
 }
-Wait-AzRecoveryServicesBackupJob @waitAzRecoveryServicesBackupJobSplat
-
+Wait-AzRecoveryServicesBackupJob @waitAzRecoveryServicesBackupJobSplat\n

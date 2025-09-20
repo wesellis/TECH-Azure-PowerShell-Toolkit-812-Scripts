@@ -3,8 +3,7 @@
     Az 500
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -13,5 +12,4 @@ Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; [System.Net.
 choco install vscode git sql-server-management-studio -y
 choco install -y visualstudio2019community --package-parameters "--allWorkloads --includeRecommended --passive --locale en-IN"
 choco install -y azure-cli
-install-module Az -AllowClobber -Scope AllUsers -Force -Confirm
-
+install-module Az -AllowClobber -Scope AllUsers -Force -Confirm\n

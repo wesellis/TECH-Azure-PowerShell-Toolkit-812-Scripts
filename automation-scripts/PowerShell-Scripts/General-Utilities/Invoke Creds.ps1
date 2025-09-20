@@ -3,8 +3,7 @@
     Invoke Creds
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ $VMLocalAdminSecurePassword = $VMLocalAdminPassword | ConvertTo-SecureString -Fo
     #;  $Credential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
     $Credential = Get-Credential -ErrorAction Stop
     #endRegion func Generate-Password
-}
-
+}\n

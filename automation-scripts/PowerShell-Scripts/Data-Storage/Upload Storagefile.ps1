@@ -3,8 +3,7 @@
     Upload Storagefile
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -21,5 +20,4 @@ $tempPath = " ./$($filePath -replace " /" , " _" )"
     Write-Output "  Uploading $filePath..."
     $_.Value | Out-File $tempPath
     Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $tempPath -Blob $filePath -Force | Out-Null
-}
-
+}\n

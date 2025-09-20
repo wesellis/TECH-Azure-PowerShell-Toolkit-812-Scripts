@@ -3,8 +3,7 @@
     Azure Containerinstance Status Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -159,5 +158,4 @@ $Protocol = if ($Port.Port -eq 443) { " https" } else { " http" }
         }
     }
 }
-Write-Host " `nContainer Instance monitoring completed at $(Get-Date)"
-
+Write-Host " `nContainer Instance monitoring completed at $(Get-Date)"\n

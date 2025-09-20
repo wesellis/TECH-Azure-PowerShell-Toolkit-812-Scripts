@@ -3,8 +3,7 @@
     Azure Resourcegroup Cost Calculator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -65,5 +64,4 @@ Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

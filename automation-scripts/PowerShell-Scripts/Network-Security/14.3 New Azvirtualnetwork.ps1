@@ -28,5 +28,4 @@ $newAzVirtualNetworkSplat = @{
     AddressPrefix = '10.0.0.0/16'
     Subnet = $subnet
 }
-$vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
-
+$vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat\n

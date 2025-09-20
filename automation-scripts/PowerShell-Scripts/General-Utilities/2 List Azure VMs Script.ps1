@@ -3,8 +3,7 @@
     List Azure VMs Script
 
 .DESCRIPTION
-    List Azure VMs Script operation
-#>
+    List Azure VMs Script operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -94,5 +93,4 @@ $vms = Get-AzureVMDetails -ErrorAction Stop
 catch {
     Write-Host "Error during VM inventory: $_" -ForegroundColor Red
     throw
-}
-
+}\n

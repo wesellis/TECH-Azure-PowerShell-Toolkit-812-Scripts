@@ -176,5 +176,4 @@ catch
 Get-AzureRmResourceGroup -ErrorAction Stop
 " @
     $outstring | out-file 'Login-AzureRM.ps1'
-}
-
+}\n

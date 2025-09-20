@@ -3,8 +3,7 @@
     Template
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -41,5 +40,4 @@ $newAzResourceGroupSplat = @{
     Location = $LocationName
     Tag = $Tags
 }
-New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-
+New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat\n

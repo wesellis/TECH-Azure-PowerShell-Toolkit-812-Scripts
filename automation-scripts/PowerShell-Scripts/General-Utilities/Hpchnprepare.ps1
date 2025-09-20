@@ -316,5 +316,4 @@ catch
 {
     WriteLog ("Failed to Prepare HPC head node: " + ($_ | Out-String)) -LogLevel Error
     throw
-}
-
+}\n

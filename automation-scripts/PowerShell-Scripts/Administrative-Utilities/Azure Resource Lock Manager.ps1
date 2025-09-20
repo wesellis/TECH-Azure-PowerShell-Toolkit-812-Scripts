@@ -3,8 +3,7 @@
     Azure Resource Lock Manager
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -98,5 +97,4 @@ $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
     }
     # Progress stepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
 
-} catch { throw }
-
+} catch { throw }\n

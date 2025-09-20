@@ -37,5 +37,4 @@ $DeploymentScriptOutputs['myObject'] = $myObject
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

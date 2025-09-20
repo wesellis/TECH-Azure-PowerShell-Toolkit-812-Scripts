@@ -3,8 +3,7 @@
     Hvhostsetup
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -50,5 +49,4 @@ Get-Disk -ErrorAction Stop | Where-Object -Property PartitionStyle -EQ "RAW" | I
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

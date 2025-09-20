@@ -3,8 +3,7 @@
     New Serviceprincipal
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -37,5 +36,4 @@ $tenantId = (get-azurermsubscription).TenantId | select -Unique
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

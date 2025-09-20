@@ -3,8 +3,7 @@
     Push Changes
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -61,5 +60,4 @@ $msg = " update $files $msg ***NO_CI***" # add ***NO_CI*** so this commit doesn'
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

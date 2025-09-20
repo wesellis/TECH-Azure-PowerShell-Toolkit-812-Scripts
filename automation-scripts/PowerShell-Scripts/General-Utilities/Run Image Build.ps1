@@ -3,8 +3,7 @@
     Run Image Build
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -86,5 +85,4 @@ $logsBlob = Get-AzStorageBlob -Context $ctx -Container packerlogs | Where-Object
     }
 }
 Log " === DONE"
-Start-Sleep -Seconds 15 # Appears to help with the script output being captured in full
-
+Start-Sleep -Seconds 15 # Appears to help with the script output being captured in full\n

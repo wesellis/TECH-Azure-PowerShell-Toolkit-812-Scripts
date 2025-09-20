@@ -42,5 +42,4 @@ $db = New-AzSqlDatabase -ResourceGroupName $ResourceGroup -ServerName $ServerNam
 Write-Host "SQL Database created successfully" -ForegroundColor Green
 Write-Host "Server: $($server.FullyQualifiedDomainName)"
 Write-Host "Database: $DatabaseName"
-return @{Server = $server; Database = $db}
-
+return @{Server = $server; Database = $db}\n

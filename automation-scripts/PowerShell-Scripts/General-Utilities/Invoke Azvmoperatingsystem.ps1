@@ -3,8 +3,7 @@
     Invoke Azvmoperatingsystem
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -27,5 +26,4 @@ $setAzVMOperatingSystemSplat = @{
     }
 $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
     #endRegion func Set-AzVMOperatingSystem -ErrorAction Stop
-}
-
+}\n

@@ -27,5 +27,4 @@ $enrollmentAccounts = ($(Invoke-AzRestMethod -Method "GET" -path $enrollmentAcco
     foreach($account in $enrollmentAccounts){
         Write-Host "Enrollment Account: $($account.name)"
     }
-}
-
+}\n

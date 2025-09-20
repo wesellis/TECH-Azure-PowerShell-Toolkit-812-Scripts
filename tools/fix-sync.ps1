@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    fix sync
+.DESCRIPTION
+    fix sync operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     fix synccom)#>
 # Fix GitHub sync issue
@@ -12,5 +19,4 @@ Write-Host "Pulled remote changes"
 git push -u origin main
 Write-Host "Repository fully synchronized!"
 
-#endregion
-
+#endregion\n

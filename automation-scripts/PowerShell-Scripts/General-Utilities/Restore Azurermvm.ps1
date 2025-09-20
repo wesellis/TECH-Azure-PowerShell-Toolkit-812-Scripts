@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Restore Azurermvm
+.DESCRIPTION
+    Restore Azurermvm operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
     Restore Azurermvm
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -269,5 +276,4 @@ $drtn = Get-AzureStorageBlob -Context $diskStorageContext -container $diskContai
          $_
          write-warning "Failed to create Virtual Machine $VMName"
     }
-}
-
+}\n

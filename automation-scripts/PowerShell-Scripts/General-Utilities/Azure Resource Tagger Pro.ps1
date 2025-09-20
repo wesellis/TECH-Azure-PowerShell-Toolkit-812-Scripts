@@ -3,8 +3,7 @@
     Azure Resource Tagger Pro
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -131,5 +130,4 @@ $results = $operations | Select-Object @{N="ResourceName" ;E={$_.Resource.Name}}
         Write-Log "  Failed: $errorCount resources" -Level $(if ($errorCount -gt 0) { "WARN" } else { "SUCCESS" })
 } catch {
         throw
-}
-
+}\n

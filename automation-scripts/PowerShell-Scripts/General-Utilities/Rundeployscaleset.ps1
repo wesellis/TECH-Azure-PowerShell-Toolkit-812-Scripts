@@ -3,8 +3,7 @@
     Rundeployscaleset
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,5 +17,4 @@ $args=@{
     'scaleSetVMSize'='Standard_DS1';
     'newStorageAccountType'='Premium_LRS';
 }
-.\deployscaleset.ps1 @args
-
+.\deployscaleset.ps1 @args\n

@@ -23,5 +23,4 @@ catch {
     Write-Host "[WARN] Unhandled exception:"
     Write-Information -Object $_
     Write-Information -Object $_.ScriptStackTrace
-}
-
+}\n

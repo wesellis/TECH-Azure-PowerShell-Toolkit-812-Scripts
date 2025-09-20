@@ -3,8 +3,7 @@
     Azure Documentintelligence Service Manager
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -319,5 +318,4 @@ $serviceStatus = Invoke-AzureOperation -Operation {
     Write-Host "    Validate document URL accessibility for testing" -ForegroundColor White
     Write-Host ""
     throw
-}
-
+}\n

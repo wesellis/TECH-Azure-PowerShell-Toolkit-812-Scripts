@@ -3,8 +3,7 @@
     Windows Msiinstaller
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $output = " $PSScriptRoot\file.msi"
     Remove-Item -ErrorAction Stop $outpu -Forcet -Force
 } catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

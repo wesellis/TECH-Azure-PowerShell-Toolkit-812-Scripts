@@ -3,8 +3,7 @@
     Invoke Azvirtualnetwork
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ $newAzVirtualNetworkSplat = @{
     Tag               = $Tags
 };
 $Vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
-}
-
+}\n

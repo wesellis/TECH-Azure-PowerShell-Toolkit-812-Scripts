@@ -64,5 +64,4 @@ Etag                 : W/" acaaca63-d235-4519-8151-28ccd7461cd4"
 Id                   : /subscriptions/3532a85c-c00a-4465-9b09-388248166360/resourceGroups/FGC_Prod_Bastion_RG/providers/Microsoft.Network
                        /bastionHosts/FGC_Prod_Bastion
     General notes
-Get-AzBastion -ErrorAction Stop | Format-Table
-
+Get-AzBastion -ErrorAction Stop | Format-Table\n

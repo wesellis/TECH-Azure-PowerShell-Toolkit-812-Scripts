@@ -3,8 +3,7 @@
     Azure Resource Tagger
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -83,5 +82,4 @@ $existingTags = $resource.Tags ?? @{}
 if (-not $WhatIf) {
     Write-Host " `n[OK] Successfully tagged $taggedCount resources" -ForegroundColor Green
 }
-Write-Host " `nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan
-
+Write-Host " `nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan\n

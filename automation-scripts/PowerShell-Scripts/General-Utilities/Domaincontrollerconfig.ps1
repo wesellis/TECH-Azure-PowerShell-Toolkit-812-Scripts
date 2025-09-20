@@ -5,7 +5,14 @@
 
     1.0
     Requires appropriate permissions and modules
-<#PSScriptInfo
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+PSScriptInfo
 .VERSION 0.3.1
 .GUID edd05043-2acc-48fa-b5b3-dab574621ba1
 .AUTHOR Michael Greene
@@ -87,5 +94,4 @@ $safeModeCredential = Get-AutomationPSCredential -ErrorAction Stop 'Credential'
         DependsOn = '[xADDomain]Domain'
     }
   }
-}
-
+}\n

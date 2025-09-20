@@ -163,5 +163,4 @@ Set-GPRegistryValue -Name "AVD-GPO" -ValueName "VolumeType" -Key "HKEY_LOCAL_MAC
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

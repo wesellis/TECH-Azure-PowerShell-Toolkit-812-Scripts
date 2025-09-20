@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Microsoft Defender for Cloud Automation
+.DESCRIPTION
+    Microsoft Defender for Cloud Automation operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Microsoft Defender for Cloud Automationcom)#>
 # Microsoft Defender for Cloud Automation Tool
@@ -473,5 +480,4 @@ try {
 Write-Progress -Activity "Microsoft Defender for Cloud Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
 
-#endregion
-
+#endregion\n

@@ -3,8 +3,7 @@
     Check Azadsinglesignon
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,5 +17,4 @@ if ($ssoPolicy.AuthenticationType -eq "CloudSSO" ) {
     Write-Host "Single sign-on is enabled for the domain."
 } else {
     Write-Host "Single sign-on is not enabled for the domain."
-}
-
+}\n

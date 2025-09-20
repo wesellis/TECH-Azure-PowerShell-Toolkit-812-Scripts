@@ -3,8 +3,7 @@
     Preparehn
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -246,8 +245,7 @@ $startTime = Get-Date -ErrorAction Stop
                  while($true)
                  {
                      Set-HpcNetwork -Topology 'Enterprise' -Enterprise $nics.Description -EnterpriseFirewall $true -ErrorAction SilentlyContinue
-$topo = Get-HpcNetworkTopology -ErrorAction SilentlyContinue
-#>
+$topo = Get-HpcNetworkTopology -ErrorAction SilentlyContinue\n    Author: Wes Ellis (wes@wesellis.com)\n#>
                      if ([String]::IsNullOrWhiteSpace($topo))
                      {
                          TraceInfo "Failed to set Hpc network topology, maybe the head node is still on initialization, retry after 10 seconds"
@@ -535,5 +533,4 @@ $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerSh
             }
         }
     }
-}
-
+}\n

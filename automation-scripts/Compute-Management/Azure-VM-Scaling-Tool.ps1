@@ -400,5 +400,4 @@ $report = New-ScalingReport -Results $script:ScalingResults
 # Exit with appropriate code
 $exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
 Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
-exit $exitCode
-
+exit $exitCode\n

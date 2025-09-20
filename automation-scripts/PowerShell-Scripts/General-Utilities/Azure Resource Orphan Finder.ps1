@@ -3,8 +3,7 @@
     Azure Resource Orphan Finder
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -222,5 +221,4 @@ $resourceTypeCounts = $orphanedResources | Group-Object ResourceType
     Write-Host "Report Location: $OutputPath" -ForegroundColor Cyan
     Write-Host ""
 
-} catch { throw }
-
+} catch { throw }\n

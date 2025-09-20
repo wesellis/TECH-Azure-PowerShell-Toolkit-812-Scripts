@@ -3,8 +3,7 @@
     Testbandwidth
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -39,5 +38,4 @@ $latency = .\psping.exe -q -accepteula -l $PacketSize -n $TestNumber $TestIPPort
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azurevminventory Ms Mgmt
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -1231,5 +1230,4 @@ If($jsoninveextensions){$postres8=Post-OMSData -customerId $customerId -sharedKe
 	{
 		Write-Warning "Failed to upload  $($invendpoints.count) extensions  to OMS"
 	}
-Write-output " $(get-date) - Uploading all data to OMS  "
-
+Write-output " $(get-date) - Uploading all data to OMS  "\n

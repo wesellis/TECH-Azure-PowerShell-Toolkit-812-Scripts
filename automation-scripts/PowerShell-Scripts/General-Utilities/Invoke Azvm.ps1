@@ -3,8 +3,7 @@
     Invoke Azvm
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $newAzVMSplat = @{
     }
     New-AzVM -ErrorAction Stop @newAzVMSplat
     #endRegion func New-AzVM -ErrorAction Stop
-}
-
+}\n

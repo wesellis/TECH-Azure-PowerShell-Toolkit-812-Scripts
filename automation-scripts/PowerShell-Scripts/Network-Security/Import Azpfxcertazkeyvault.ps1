@@ -49,5 +49,4 @@ Id            : https://miaqbrdskv1.vault.azure.net:443/certificates/MIASSLRDSCE
 Connect-AzAccount
 $CertPassword = Read-Host -AsSecureString -Prompt 'Enter your cert password';
 $Password = ConvertTo-SecureString -String $CertPassword -AsPlainText -Force
-Import-AzKeyVaultCertificate -VaultName "MIAQBRDSKV1" -Name "MIASSLRDSCERT1" -FilePath "C:\Users\Abdullah.Ollivierre\AzureRepos2\Git-HubRepositry\Functions\Export-CertToPFX\PlaceZeroSSLCertfileshere\rds.miaonline.org\cert.pfx" -Password $Password
-
+Import-AzKeyVaultCertificate -VaultName "MIAQBRDSKV1" -Name "MIASSLRDSCERT1" -FilePath "C:\Users\Abdullah.Ollivierre\AzureRepos2\Git-HubRepositry\Functions\Export-CertToPFX\PlaceZeroSSLCertfileshere\rds.miaonline.org\cert.pfx" -Password $Password\n

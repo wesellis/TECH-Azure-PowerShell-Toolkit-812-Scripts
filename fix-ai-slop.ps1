@@ -1,5 +1,12 @@
 #Requires -Version 5.1
 #Requires -Module Az.Accounts
+<#
+.SYNOPSIS
+    fix ai slop
+.DESCRIPTION
+    fix ai slop operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
 #!/usr/bin/env pwsh
 
@@ -34,5 +41,4 @@ foreach ($file in $files) {
     }
 }
 
-Write-Host "Fixed $fixedCount files" -ForegroundColor Cyan
-
+Write-Host "Fixed $fixedCount files" -ForegroundColor Cyan\n

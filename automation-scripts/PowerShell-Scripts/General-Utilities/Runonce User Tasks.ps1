@@ -42,5 +42,4 @@ Set-StrictMode -Version Latest
     }
     # Ensure all output is captured (https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/output-missing-from-transcript?view=powershell-7.3#a-way-to-ensure-full-transcription)
 } Out-Default
-exit 0
-
+exit 0\n

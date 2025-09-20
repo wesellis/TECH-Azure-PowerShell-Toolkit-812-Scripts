@@ -126,5 +126,4 @@ try {
 } catch {
     Write-Error "Failed to create snapshot: $_"
     throw
-}
-
+}\n

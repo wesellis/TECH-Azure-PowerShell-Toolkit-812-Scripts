@@ -719,5 +719,4 @@ C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

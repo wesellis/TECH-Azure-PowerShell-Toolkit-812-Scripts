@@ -3,8 +3,7 @@
     Sample
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,5 +19,4 @@ New-AzureRmResourceGroup -Name $RGName -Location $DeployLocation -Force
 $sw = [system.diagnostics.stopwatch]::startNew()
 New-AzureRmResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile $ARMTemplate -deployLocation $DeployLocation -vmName $VMName -vmAdminUserName $VMUsername -vmIPPublicDnsName $VMName -chocoPackages $ChocoPackages -Mode Complete -Force
 $sw | Format-List -Property *
-Get-AzureRmRemoteDesktopFile -ResourceGroupName $RGName -Name $VMName -Launch -Verbose -Debug
-
+Get-AzureRmRemoteDesktopFile -ResourceGroupName $RGName -Name $VMName -Launch -Verbose -Debug\n

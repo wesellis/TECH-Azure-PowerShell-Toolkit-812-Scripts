@@ -3,8 +3,7 @@
     Servicebusingestion
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -365,5 +364,4 @@ Publish-SbQueueMetrics -sbNamespace $sbNameSpace
 Publish-SbTopicMetrics -sbNamespace $sbNameSpace
 Publish-SbTopicSubscriptions -sbNamespace $sbNameSpace
 " `n"
-"We're done!"
-
+"We're done!"\n

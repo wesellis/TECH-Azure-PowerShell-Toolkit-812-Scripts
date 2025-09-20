@@ -519,5 +519,4 @@ $orchestrator = [IndustrialIoTOrchestrator]::new($IndustryType, $ResourceGroupNa
 } catch {
     Write-Error "An error occurred: $_"
     throw
-}
-
+}\n

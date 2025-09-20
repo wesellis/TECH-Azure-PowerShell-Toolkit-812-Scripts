@@ -198,5 +198,4 @@ $result = getBlobCompletionStatus -AzCopyLogFile $azCopyLogFile
 catch
 {
 	"An error ocurred: $_" | Out-File " c:\$scriptName.txt" -Append
-}
-
+}\n

@@ -3,8 +3,7 @@
     Installandupdatesccm
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -397,5 +396,4 @@ if($downloadretrycount -ge 2)
     throw
 }
 $Configuration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
-
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force\n

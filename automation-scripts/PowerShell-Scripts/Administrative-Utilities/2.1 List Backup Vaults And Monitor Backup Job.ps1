@@ -149,5 +149,4 @@ $jobProgress = Watch-AzureBackupJob -JobId $selectedJob.JobId -Vault $selectedVa
 } catch {
     Write-Error $_
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Storage Keys Retriever
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ Write-Host "Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccoun
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Invoke Azvmosdisk
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -28,5 +27,4 @@ $setAzVMOSDiskSplat = @{
     }
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
     #endRegion func Set-AzVMOSDisk -ErrorAction Stop
-}
-
+}\n

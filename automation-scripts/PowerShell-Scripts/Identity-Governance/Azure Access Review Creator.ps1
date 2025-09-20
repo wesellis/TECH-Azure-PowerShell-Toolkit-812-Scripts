@@ -3,8 +3,7 @@
     Azure Access Review Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -158,5 +157,4 @@ $User = Get-MgUser -Filter " userPrincipalName eq '$Email'"
 } catch {
     Write-Error "Access review creation failed: $($_.Exception.Message)"
     Write-Host "Tip: Use Azure Portal for creating Access Reviews"
-}
-
+}\n

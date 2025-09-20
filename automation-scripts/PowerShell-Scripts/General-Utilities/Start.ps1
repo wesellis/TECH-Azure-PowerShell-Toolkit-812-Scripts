@@ -3,8 +3,7 @@
     Start
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,5 +19,4 @@ if($userPrincipalId){
 }else {
     Write-Host "User Principal Name cannot be found."
 }
-Write-Host "Provisioning Completed."
-
+Write-Host "Provisioning Completed."\n

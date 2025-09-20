@@ -41,5 +41,4 @@ if ($Unencrypted) {
     $results | Where-Object { $_.OSEncrypted -ne "Encrypted" -and $_.OSEncrypted -ne $true }
 } else {
     $results
-}
-
+}\n

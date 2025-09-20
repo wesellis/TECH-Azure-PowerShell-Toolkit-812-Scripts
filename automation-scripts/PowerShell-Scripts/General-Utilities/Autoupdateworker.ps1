@@ -194,5 +194,4 @@ catch
 {
     Write-Output "Error Occurred in the AutoUpdate worker runbook..."
     Write-Output $_.Exception
-}
-
+}\n

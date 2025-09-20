@@ -71,5 +71,4 @@ try {
 } catch {
     Write-Error "Failed to resize disk: $_"
     throw
-}
-
+}\n

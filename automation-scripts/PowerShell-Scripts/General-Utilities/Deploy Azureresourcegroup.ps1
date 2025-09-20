@@ -3,8 +3,7 @@
     Deploy Azureresourcegroup
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -182,5 +181,4 @@ else {
             Location = $Location @TemplateArgs @OptionalParameters
         }
         New-AzureRmDeployment @params
-}
-
+}\n

@@ -3,8 +3,7 @@
     New Aztag
 
 .DESCRIPTION
-    New Aztag operation
-#>
+    New Aztag operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -29,5 +28,4 @@ $Tag = @{
 $tags = @{"Team" ="Compliance" ; "Environment" ="Production" }
 New-AzTag -ResourceId $resource.id -Tag $tags
 $tags = @{"Dept" ="Finance" ; "Status" ="Normal" }
-Update-AzTag -ResourceId $resource.id -Tag $tags -Operation Merge
-
+Update-AzTag -ResourceId $resource.id -Tag $tags -Operation Merge\n

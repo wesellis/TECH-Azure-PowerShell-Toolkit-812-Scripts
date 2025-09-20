@@ -1,5 +1,12 @@
 #Requires -Module Az.Monitor
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    configure diagnostic settings
+.DESCRIPTION
+    configure diagnostic settings operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Configures diagnostic settings for Azure resources
 
@@ -179,5 +186,4 @@ catch {
     throw
 }
 
-#endregion
-
+#endregion\n

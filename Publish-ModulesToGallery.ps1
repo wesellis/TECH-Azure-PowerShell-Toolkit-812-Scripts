@@ -150,5 +150,4 @@ $publishLog | ConvertTo-Json -Depth 3 | Out-File $logPath -Force
 Write-Host ""
 Write-Host "Publish log saved to: $logPath"
 
-#endregion
-
+#endregion\n

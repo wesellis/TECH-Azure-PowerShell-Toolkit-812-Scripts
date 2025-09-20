@@ -88,8 +88,14 @@ if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 6.7.0" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 6.7 required. Run Update-Module AzureRM"
    BREAK
 }
-<###############################
- Get Storage Context function
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Get Storage Context function
 function Get-StorageObject -ErrorAction Stop
 { [CmdletBinding()]
 param($resourceGroupName, $srcURI, $srcName)
@@ -129,8 +135,14 @@ param($resourceGroupName, $srcURI, $srcName)
      $PSobjSourceStorage | Add-Member -MemberType NoteProperty -Name SrcSkuName -Value $skuName
     return $PSobjSourceStorage
 } # end of Get-StorageObject -ErrorAction Stop function
-<###############################
-  get available resources function
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+get available resources function
 function get-availableResources -ErrorAction Stop
 { [CmdletBinding()]
 param($resourceType, $location)
@@ -138,8 +150,14 @@ param($resourceType, $location)
     [int32]$availabe = $resource.limit - $resource.currentvalue
     return $availabe
 }
-<###############################
-  get blob copy status
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+get blob copy status
 function Get-BlobCopyStatus -ErrorAction Stop
 { [CmdletBinding()]
 param($context, $containerName, $blobName)
@@ -172,8 +190,14 @@ param($context, $containerName, $blobName)
     # exit script if user breaks out of above loop
     if($rtn.status  -ne 'Success'){EXIT}
 }
-<###############################
-  Copy blob function
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Copy blob function
 function copy-azureBlob
 {  [CmdletBinding()]
 param($srcUri, $srcContext, $destContext, $containerName)
@@ -229,8 +253,14 @@ $newRtn = New-AzureStorageContainer -Context $destContext -Name $containerName -
    }
 } # end of copy-azureBlob function
 if(! $resume){
-<###############################
- Read resource group from old Sub
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Read resource group from old Sub
 if($OptionalSourceEnvironment -and (Get-AzureRMEnvironment -Name $OptionalSourceEnvironment) -eq $null)
 {
    write-warning "The specified -OptionalSourceEnvironment could not be found. Specify one of these valid environments."
@@ -375,8 +405,14 @@ foreach($sourceStorageAccount in $resourceGroupStorageAccounts)
 Write-Host "Additional storage blobs:" -f DarkGreen
 $sourceStorageObjects.srcURI
 } # end of if not resume
-<#############################################################
- Recreate resource group in new Sub
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Recreate resource group in new Sub
 $login = $null
 $sub = $null
 $SourceSubscriptionID = $subscriptionID
@@ -425,8 +461,14 @@ if(! $resume)
     {
         [bool]$isSameEnv = $false
     }
-    <###############################
-     Verify Location
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Verify Location
     ################################>
     $srcLocation = $location
     if($OptionalNewLocation)
@@ -441,8 +483,14 @@ if(! $resume)
         write-warning " $OptionalNewLocation is an invalid Azure Resource Group location for this environment.  Please select a valid location and click OK"
         $location = (Get-AzureRMlocation -ErrorAction Stop | Where-Object { $_.Providers -eq 'Microsoft.Compute'} | Select-Object DisplayName, Providers, Location | Out-GridView -Title "Select Azure Resource Group Location" -OutputMode Single).location
     }
-    <###############################
-     Verify Available Resources
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Verify Available Resources
     ################################>
     foreach ($vmSize in ($resourceGroupVMs.hardwareprofile.vmsize))
     {
@@ -468,8 +516,14 @@ if(! $resume)
         Write-Warning "Insufficent Availability Sets in location $location. Script halted."
         break
     }
-    <###############################
-    Create new Resource Group - using same name as source
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Create new Resource Group - using same name as source
     ################################>
     do
     {
@@ -501,8 +555,14 @@ if(! $resume)
         write-warning "Failed to create the new resource group $resourceGroupName  Exiting the script."
         break
     }
-  <###############################
-   Create new destination storage accounts
+  <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Create new destination storage accounts
    and copy blobs
    ################################>
     # initialize array to store new destination storage account names relative to srcURI
@@ -693,8 +753,14 @@ if(! $resume)
         $PSobjVHDstorage | Add-Member -MemberType NoteProperty -Name srcSkuName -Value $srcSkuName
         [array]$VHDstorageObjects = $VHDstorageObjects + $PSobjVHDstorage
     }
-    <###############################
-    Create new network resources.
+    <#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Create new network resources.
     Vnets, NICs, Loadbalancers, PIPs
     ################################>
     # create new Network Security Groups
@@ -1231,8 +1297,14 @@ if($resourceGroupVMs.storageprofile.osdisk.manageddisk -and $location -ne $srcLo
     Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $tempStorageAccountName -Force | out-null
     Write-output "The storage account $tempStorageAccountName was removed"
 }
-<###############################
- Create new Virtual Machines.
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Create new Virtual Machines.
 foreach($srcVM in $resourceGroupVMs)
 {
     # get source VM attributes
@@ -1394,5 +1466,4 @@ $dataDiskSku = $mdDataDisk.sku.Name
          $_
          write-warning "Failed to create Virtual Machine $VMName"
     }
-}
-
+}\n

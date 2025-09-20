@@ -3,8 +3,7 @@
     Azure Appservice Health Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -67,5 +66,4 @@ Write-Host " `nApp Service monitoring completed at $(Get-Date)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

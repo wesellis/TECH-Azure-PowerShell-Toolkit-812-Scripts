@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    modernize all scripts
+.DESCRIPTION
+    modernize all scripts operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Modernizes all PowerShell scripts in the toolkit according to 2024 best practices
 
@@ -168,5 +175,4 @@ finally {
     $ProgressPreference = 'Continue'
 }
 
-#endregion
-
+#endregion\n

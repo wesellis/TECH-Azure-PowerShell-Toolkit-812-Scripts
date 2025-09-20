@@ -78,5 +78,4 @@ $Status = Start-AzureRmVM -Name $VMName -ResourceGroupName $ResourceGroupName
 {
     Write-Output "Error Occurred..."
     Write-Output $_.Exception
-}
-
+}\n

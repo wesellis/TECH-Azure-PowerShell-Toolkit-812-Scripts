@@ -69,5 +69,4 @@ $ErrorMessage = 'Failed to enable backup using ARM template.'
         $ErrorMessage = $ErrorMessage + " `n"
         $ErrorMessage = $ErrorMessage + 'Error: '
 $ErrorMessage = $ErrorMessage + $_
-        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-
+        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"\n

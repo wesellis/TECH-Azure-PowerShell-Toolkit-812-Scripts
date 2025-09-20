@@ -3,8 +3,7 @@
     Azure Keyvault Security Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -70,5 +69,4 @@ $Certificates = Get-AzKeyVaultCertificate -VaultName $VaultName
 } catch {
     Write-Host " `nVault Contents: Unable to access (check permissions)" "INFO"
 }
-Write-Host " `nKey Vault monitoring completed at $(Get-Date)" "INFO"
-
+Write-Host " `nKey Vault monitoring completed at $(Get-Date)" "INFO"\n

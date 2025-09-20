@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    Check ScriptDependencies
+.DESCRIPTION
+    Check ScriptDependencies operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Check ScriptDependenciescom)#>
 # Check-ScriptDependencies.ps1
@@ -277,5 +284,4 @@ if ($ValidateAzureModules) {
 
 Write-Host "`nDependency analysis complete!" -ForegroundColor Cyan
 
-#endregion
-
+#endregion\n

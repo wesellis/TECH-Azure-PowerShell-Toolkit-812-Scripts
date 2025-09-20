@@ -77,5 +77,4 @@ $scriptLocation = [System.IO.Path]::Combine($env:TEMP, 'dotnet-install.ps1')
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

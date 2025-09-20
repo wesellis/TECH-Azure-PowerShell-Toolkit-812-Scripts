@@ -3,8 +3,7 @@
     Azure Dns Zone Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -68,5 +67,4 @@ Write-Host " `nDNS Zone provisioning completed at $(Get-Date)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

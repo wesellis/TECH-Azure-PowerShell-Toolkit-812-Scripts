@@ -3,8 +3,7 @@
     Create Azvm
 
 .DESCRIPTION
-    Create Azvm operation
-#>
+    Create Azvm operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -42,5 +41,4 @@ $newAzVmSplat = @{
     OpenPorts           = 3389
     # Tag                 = $Tag #causing an error maybe need to be added later
 }
-New-AzVm -ErrorAction Stop @newAzVmSplat
-
+New-AzVm -ErrorAction Stop @newAzVmSplat\n

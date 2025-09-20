@@ -39,5 +39,4 @@ Write-Host " ##vso[task.setvariable variable=prereq.resourceGroup.name]$resource
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

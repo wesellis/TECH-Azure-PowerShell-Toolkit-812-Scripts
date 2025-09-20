@@ -70,5 +70,4 @@ catch
 {
     Write-Output "Error Occurred in the AutoUpdate wrapper runbook..."
     Write-Output $_.Exception
-}
-
+}\n

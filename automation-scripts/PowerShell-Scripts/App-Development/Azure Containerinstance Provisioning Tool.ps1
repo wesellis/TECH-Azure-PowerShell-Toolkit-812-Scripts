@@ -3,8 +3,7 @@
     Azure Containerinstance Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -116,5 +115,4 @@ Write-Host " `nContainer Instance provisioning completed at $(Get-Date)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

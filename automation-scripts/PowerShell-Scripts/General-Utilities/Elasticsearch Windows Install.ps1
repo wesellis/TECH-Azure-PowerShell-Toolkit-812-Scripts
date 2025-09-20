@@ -566,5 +566,4 @@ function Startup-Output
     if($dataOnlyNode) { lmsg 'Node installation mode: Data' }
     if($marvelOnlyNode) { lmsg 'Node installation mode: Marvel' }
 }
-Install-WorkFlow
-
+Install-WorkFlow\n

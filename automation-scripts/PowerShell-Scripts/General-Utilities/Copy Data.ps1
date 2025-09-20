@@ -3,8 +3,7 @@
     Copy Data
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -19,5 +18,4 @@ $params = @{
     Container = " ${Env:containerName}"
     StandardBlobTier = "Hot"
 }
-Set-AzStorageBlobContent @params
-
+Set-AzStorageBlobContent @params\n

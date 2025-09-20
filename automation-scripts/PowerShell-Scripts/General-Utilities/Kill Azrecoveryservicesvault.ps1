@@ -3,8 +3,7 @@
     Kill Azrecoveryservicesvault
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -224,5 +223,4 @@ if($pvtendpointsFin.count -ne 0) {Write-Host $pvtendpointsFin.count "Private end
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

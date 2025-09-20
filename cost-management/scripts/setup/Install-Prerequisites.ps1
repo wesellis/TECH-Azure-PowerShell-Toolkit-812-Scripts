@@ -1,5 +1,12 @@
 #Requires -Version 5.1
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Install Prerequisites
+.DESCRIPTION
+    Install Prerequisites operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Installs all prerequisites for the Azure Cost Management Dashboard
 
@@ -254,5 +261,4 @@ finally {
     Write-Verbose "Installation script completed"
 }
 
-#endregion
-
+#endregion\n

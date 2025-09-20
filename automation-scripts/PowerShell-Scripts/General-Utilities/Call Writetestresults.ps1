@@ -3,8 +3,7 @@
     Call Writetestresults
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -37,5 +36,4 @@ $params = @{
     TableNamePRs = "QuickStartsMetadataServiceTestPRs"
     StorageAccountKey = $StorageAccountKey
 }
-& @params
-
+& @params\n

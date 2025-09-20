@@ -15,5 +15,4 @@ $newAzPublicIpAddressSplat = @{
     AllocationMethod = 'Static'
     Sku = 'Standard'
 }
-$publicip = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-
+$publicip = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat\n

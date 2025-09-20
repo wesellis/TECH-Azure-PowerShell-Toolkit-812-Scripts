@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    github upload
+.DESCRIPTION
+    github upload operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Uploads local repository changes to GitHub with detailed status reporting
 
@@ -346,5 +353,4 @@ catch {
     throw
 }
 
-#endregion
-
+#endregion\n

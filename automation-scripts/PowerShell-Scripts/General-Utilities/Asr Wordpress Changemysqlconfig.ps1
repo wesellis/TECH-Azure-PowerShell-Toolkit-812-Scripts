@@ -68,5 +68,4 @@ $VM = $vmMap.$VMID
                     VMName = $Using:VM.RoleName
                 }
                 Set-AzureRmVMCustomScriptExtension @params
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Managedidentity Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -59,5 +58,4 @@ try {
    ; @params
 } catch {
     Write-Error "Failed to create managed identity: $($_.Exception.Message)"
-}
-
+}\n

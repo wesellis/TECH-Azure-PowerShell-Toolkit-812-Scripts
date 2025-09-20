@@ -3,8 +3,7 @@
     Hyperv Wds Installation
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -31,5 +30,4 @@ Start-Process -FilePath msiexec.exe -ArgumentList " /i `" $mdtInstallerPath`" /q
 Write-Output "Configuring firewall rules for Microsoft Deployment Toolkit..."
 New-NetFirewallRule -DisplayName "MDT Deployment Share" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow
 Write-Output "Restarting the computer..."
-Restart-Computer -Force
-
+Restart-Computer -Force\n

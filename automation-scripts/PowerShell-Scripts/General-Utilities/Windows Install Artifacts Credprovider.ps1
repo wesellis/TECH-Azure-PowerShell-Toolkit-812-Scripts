@@ -90,5 +90,4 @@ $targetDirectory = [System.IO.Path]::Combine($optionalCopyNugetPluginsRoot, ".nu
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

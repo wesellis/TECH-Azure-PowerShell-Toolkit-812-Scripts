@@ -3,8 +3,7 @@
     Installvstsagent (Case Conflict)
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -118,5 +117,4 @@ Foreach ($Module in $DefaultModules)
 $programName = "Microsoft Azure PowerShell" ;
 $app = Get-CimInstance -Class Win32_Product -Filter "Name Like '$($programName)%'" -Verbose
 $app.Uninstall()
-Write-Verbose "Exiting InstallVSTSAgent.ps1" -Verbose
-
+Write-Verbose "Exiting InstallVSTSAgent.ps1" -Verbose\n

@@ -50,5 +50,4 @@ $dismExitCode = (Start-Process -FilePath "DISM.exe" -ArgumentList " /Online /Set
 }
 catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

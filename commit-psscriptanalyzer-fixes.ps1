@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    commit psscriptanalyzer fixes
+.DESCRIPTION
+    commit psscriptanalyzer fixes operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     commit psscriptanalyzer fixescom)#>
 # Commit PSScriptAnalyzer fixes for Virtual WAN Management Tool
@@ -48,5 +55,4 @@ Write-Host "`n PSScriptAnalyzer fixes deployed!"
 Write-Host "CI pipeline should now pass on next run"
 Write-Host "�� View CI status at: https://github.com/wesellis/Azure-Enterprise-Toolkit/actions"
 
-#endregion
-
+#endregion\n

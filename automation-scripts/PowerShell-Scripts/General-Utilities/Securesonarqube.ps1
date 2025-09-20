@@ -89,5 +89,4 @@ $filterRoot = " /system.webserver/rewrite/rules/rule[@name='ReverseProxyInboundR
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

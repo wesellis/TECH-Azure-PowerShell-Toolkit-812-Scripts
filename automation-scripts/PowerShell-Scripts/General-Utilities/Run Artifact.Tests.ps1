@@ -2,8 +2,7 @@
 .SYNOPSIS
     Run Artifact.Tests
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -63,5 +62,4 @@ $inputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -V
         ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $script:defaultParams
         Should -Invoke ____ExitOne -Times 1 -Exactly
     }
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Datafactory Pipeline Monitor
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -149,5 +148,4 @@ Write-Host " 2. Monitor pipeline execution duration trends" "INFO"
 Write-Host " 3. Check data movement and transformation performance" "INFO"
 Write-Host " 4. Validate trigger schedules and dependencies" "INFO"
 Write-Host " 5. Monitor integration runtime utilization" "INFO"
-Write-Host " `nData Factory monitoring completed at $(Get-Date)" "INFO"
-
+Write-Host " `nData Factory monitoring completed at $(Get-Date)" "INFO"\n

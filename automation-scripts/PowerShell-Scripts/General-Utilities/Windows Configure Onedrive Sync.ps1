@@ -41,5 +41,4 @@ $registryValue = $_.Value
 }
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     ConfigureOnedriveSync -enableDocumentsSync $EnableDocumentsSync -enablePicturesSync $EnablePicturesSync -enableDesktopSync $EnableDesktopSync
-}
-
+}\n

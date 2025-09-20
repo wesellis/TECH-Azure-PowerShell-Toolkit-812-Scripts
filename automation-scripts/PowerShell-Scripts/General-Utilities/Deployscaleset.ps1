@@ -3,8 +3,7 @@
     Deployscaleset
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -123,5 +122,4 @@ $parameters=@{" vmSSName" =" $scaleSetName" ;" instanceCount" =$scaleSetInstance
 catch
 {
     Write-Error $_
-}
-
+}\n

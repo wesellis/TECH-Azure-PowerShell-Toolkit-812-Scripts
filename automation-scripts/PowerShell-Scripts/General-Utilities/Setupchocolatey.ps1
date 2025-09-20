@@ -3,8 +3,7 @@
     Setupchocolatey
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -27,8 +26,7 @@ $user = $cn.Create("User" , $userName)
 $user.SetPassword($password)
 $user.SetInfo()
 $user.description = "Choco artifact installer"
-$user.SetInfo()
-#>
+$user.SetInfo()\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 $group = [ADSI]"WinNT://$env:ComputerName/Administrators,group"
 $group.add("WinNT://$env:ComputerName/$userName" )
 $secPassword = ConvertTo-SecureString $password -AsPlainText -Force
@@ -52,5 +50,4 @@ gwmi win32_userprofile | where { $_.LocalPath -like " *$userName*" } | foreach {
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

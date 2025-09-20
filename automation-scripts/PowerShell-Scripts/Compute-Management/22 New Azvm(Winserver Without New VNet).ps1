@@ -3,8 +3,7 @@
     Create VM(Winserver Without New VNet)
 
 .DESCRIPTION
-    Create VM(Winserver Without New VNet) operation
-#>
+    Create VM(Winserver Without New VNet) operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -335,5 +334,4 @@ New-IaaCAzVM -ErrorAction Stop @NewIaaCAzVMSplat
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

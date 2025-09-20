@@ -26,5 +26,4 @@ winget install graphviz
 Install-Module -Name AzViz -Scope CurrentUser -Repository PSGallery -Force
 Import-Module AzViz -Verbose
 Connect-AzAccount
-Export-AzViz -ResourceGroup demo-2, demo-3 -LabelVerbosity 1 -CategoryDepth 1 -Theme light -Show -OutputFormat png
-
+Export-AzViz -ResourceGroup demo-2, demo-3 -LabelVerbosity 1 -CategoryDepth 1 -Theme light -Show -OutputFormat png\n

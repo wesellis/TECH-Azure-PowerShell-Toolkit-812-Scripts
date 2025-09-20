@@ -3,8 +3,7 @@
     Autosnooze Createalert Child
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -150,5 +149,4 @@ $NewAlertName = Generate-AlertName -OldAlertName $Alert.Name -VMName $VMObject.N
                                      TimeAggregationOperator = $timeAggregationOperator
                                      Name = $NewAlertName
                                  }
-                                 Add-AzureRmMetricAlertRule @params
-
+                                 Add-AzureRmMetricAlertRule @params\n

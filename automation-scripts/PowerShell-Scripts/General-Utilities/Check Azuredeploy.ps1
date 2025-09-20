@@ -3,8 +3,7 @@
     Check Azuredeploy
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,5 +17,4 @@ $path = $b.FullName | Split-Path -Parent
             Write-Error " $($b.FullName) is missing azuredeploy.json"
         }
     }
-}
-
+}\n

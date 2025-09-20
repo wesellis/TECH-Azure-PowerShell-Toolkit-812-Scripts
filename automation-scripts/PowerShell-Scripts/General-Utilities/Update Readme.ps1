@@ -54,7 +54,13 @@ else {
     # remove everything before H1 so we can insert clean YAML (i.e. remove he previous YAML or any junk user submitted)
     $readme = $readme.Substring($readme.IndexOf($H1))
     <#
-    This YAML is case sensitive in places
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+This YAML is case sensitive in places
     ---
     description: // replace with description property from metadata.json
     page_type: sample // must always be 'sample'
@@ -151,5 +157,4 @@ Write-Output $readme
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

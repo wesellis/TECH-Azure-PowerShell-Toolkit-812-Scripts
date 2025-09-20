@@ -3,8 +3,7 @@
     Prepvhdfile
 
 .DESCRIPTION
-    Prepvhdfile operation
-#>
+    Prepvhdfile operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -42,5 +41,4 @@ Get-AppxPackage -AllUsers *HP* | Remove-AppxPackage -AllUsers #the AllUsers para
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

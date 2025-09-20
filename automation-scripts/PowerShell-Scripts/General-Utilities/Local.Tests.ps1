@@ -2,8 +2,7 @@
 .SYNOPSIS
     Local.Tests
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -34,5 +33,4 @@ $b = Convert-LinesToString $a
         Test-ConvertStringToLinesAndViceVersa " abc$($newline)def$($newline)ghi" @(" abc" , "def" , "ghi" )
         Test-ConvertStringToLinesAndViceVersa " abc$($newline)$($newline)def" @(" abc" , "" , "def" )
     }
-}
-
+}\n

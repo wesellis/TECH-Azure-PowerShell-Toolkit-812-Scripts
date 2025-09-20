@@ -3,8 +3,7 @@
     New Aznetworksecuritygroup
 
 .DESCRIPTION
-    New Aznetworksecuritygroup operation
-#>
+    New Aznetworksecuritygroup operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -43,5 +42,4 @@ $newAzNetworkSecurityGroupSplat = @{
     Name = "NSG-FrontEnd"
     SecurityRules = $rule1, $rule2
 }
-$nsg = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-
+$nsg = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat\n

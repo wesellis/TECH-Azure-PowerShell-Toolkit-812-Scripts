@@ -21,5 +21,4 @@ $maxValueLength = 8
     Get-ChildItem -ErrorAction Stop env: | ForEach-Object { " $($_.Name)=$(if ($_.Name -notin $EnvVarExclusionList) { $(if ($_.Value.Length -gt $maxValueLength) { "" $($_.Value.Substring(0,$maxValueLength))..."" } else { $_.Value }) } else { " <redacted>" })"
 } catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

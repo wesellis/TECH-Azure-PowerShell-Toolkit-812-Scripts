@@ -1,5 +1,12 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
+<#
+.SYNOPSIS
+    Getprincipalobjectid
+.DESCRIPTION
+    Getprincipalobjectid operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
     Getprincipalobjectid
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -12,5 +19,4 @@ Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
 $name = "<AAD_Username>"
 $null = Connect-AzureAD
 $output = (Get-AzAdUser -UserPrincipalName $name).Id
-Write-Host "Azure AD principal object ID is: $output"
-
+Write-Host "Azure AD principal object ID is: $output"\n

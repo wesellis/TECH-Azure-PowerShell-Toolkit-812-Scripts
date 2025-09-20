@@ -75,5 +75,4 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
     catch {
         Write-Host " !!! [WARN] Unhandled exception (will be ignored):`n$_`n$($_.ScriptStackTrace)"
     }
-}
-
+}\n

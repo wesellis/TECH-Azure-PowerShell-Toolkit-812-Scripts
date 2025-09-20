@@ -32,5 +32,4 @@ try {
     Write-Host "[WARN] Unhandled exception (will be ignored):" -ForegroundColor Yellow
     Write-Information -Object $_
     Write-Information -Object $_.ScriptStackTrace
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Eventgrid Topic Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -97,5 +96,4 @@ Write-Information @"
   }
 ]
 " @
-Write-Host " `nEvent Grid Topic provisioning completed at $(Get-Date)"
-
+Write-Host " `nEvent Grid Topic provisioning completed at $(Get-Date)"\n

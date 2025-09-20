@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    migrate content
+.DESCRIPTION
+    migrate content operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Migrates content from existing Azure repositories into consolidated structure
 
@@ -333,5 +340,4 @@ finally {
     }
 }
 
-#endregion
-
+#endregion\n

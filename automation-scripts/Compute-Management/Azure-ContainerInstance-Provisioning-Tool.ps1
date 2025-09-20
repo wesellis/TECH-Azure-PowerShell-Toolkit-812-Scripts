@@ -177,5 +177,4 @@ try {
 } catch {
     Write-Error "Failed to provision container instance: $_"
     throw
-}
-
+}\n

@@ -33,5 +33,4 @@ $diskParamsKey = " $deviceParamsKey\Disk"
     New-Item -Path $deviceParamsKey -Name Disk -Force
     Write-Output "Setting CacheIsPowerProtected in regkey: $diskParamsKey"
     Set-ItemProperty -Path $diskParamsKey -Name CacheIsPowerProtected -Value 1
-}
-
+}\n

@@ -3,8 +3,7 @@
     Installvstsagent
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -133,5 +132,4 @@ else {
 }
 Pop-Location
 Write-Verbose "Agent install output: $LASTEXITCODE" -Verbose
-Write-Verbose "Exiting InstallVSTSAgent.ps1" -Verbose
-
+Write-Verbose "Exiting InstallVSTSAgent.ps1" -Verbose\n

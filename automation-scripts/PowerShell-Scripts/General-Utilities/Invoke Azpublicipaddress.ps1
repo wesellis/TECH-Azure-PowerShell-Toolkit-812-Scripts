@@ -3,8 +3,7 @@
     Invoke Azpublicipaddress
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $newAzPublicIpAddressSplat = @{
     Tag               = $Tags
 };
 $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-}
-
+}\n

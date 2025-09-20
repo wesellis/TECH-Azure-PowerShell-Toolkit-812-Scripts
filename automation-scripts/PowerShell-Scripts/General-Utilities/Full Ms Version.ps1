@@ -48,5 +48,4 @@ $gwipconfig = New-AzVirtualNetworkGatewayIpConfig -Name gwipconfig1 -SubnetId $s
 -Location -GatewayType "Vpn" -IpConfigurations $gwipconfig
 -VpnType RouteBased -GatewaySku VpnGw1
 Get-AzVirtualNetworkGateway -Name Vnet1GW -ResourceGroup TestRG1
-Get-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1
-
+Get-AzPublicIpAddress -Name VNet1GWIP -ResourceGroupName TestRG1\n

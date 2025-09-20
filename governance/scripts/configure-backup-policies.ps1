@@ -1,5 +1,12 @@
 #Requires -Module Az.RecoveryServices, Az.Sql
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    configure backup policies
+.DESCRIPTION
+    configure backup policies operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Configures backup policies for Azure VMs and SQL databases
     Virtual Machines, SQL databases, and file shares. Supports creating custom
@@ -465,5 +472,4 @@ finally {
     $ProgressPreference = 'Continue'
 }
 
-#endregion
-
+#endregion\n

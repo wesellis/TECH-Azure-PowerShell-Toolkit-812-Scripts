@@ -97,5 +97,4 @@ $txt | Out-File -FilePath $NewTemplateParametersFile
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

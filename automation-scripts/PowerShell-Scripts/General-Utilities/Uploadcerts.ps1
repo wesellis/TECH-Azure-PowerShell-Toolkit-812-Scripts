@@ -3,8 +3,7 @@
     Uploadcerts
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ for($i=1; $i -lt $targets.Length; $i++) {
 	& $curlcmd " -k" " -u" " $userpwd" " -X" "POST" " -F" " file=@safeweb/conf/sslclient.crl" " -F" " action=import" " -F" " target=T_CRL" " -F" " add=yes" " https://$($targetip):9001/caserv"
 	& $curlcmd " -k" " -u" " $userpwd" " -X" "POST" " -F" " action=swhttps" " https://$($targetip):9001/caserv"
 	& $curlcmd " -k" " -u" " $userpwd" " -X" "POST" " -F" " action=shutdown" " https://$($targetip):9001/caserv"
-}
-
+}\n

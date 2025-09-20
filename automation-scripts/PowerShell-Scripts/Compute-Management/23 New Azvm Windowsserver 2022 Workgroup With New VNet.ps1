@@ -3,8 +3,7 @@
     Create VM Windowsserver 2022 Workgroup With New VNet
 
 .DESCRIPTION
-    Create VM Windowsserver 2022 Workgroup With New VNet operation
-#>
+    Create VM Windowsserver 2022 Workgroup With New VNet operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -228,5 +227,4 @@ Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 Write-Information \'The VM is now ready.... here is your login details\'
 Write-Information \'username:\' $VMLocalAdminUser
 Write-Information \'Password:\' $VMLocalAdminPassword
-Write-Host "DNSName:' $DNSNameLabel'.$LocationName.cloudapp.azure.com"
-
+Write-Host "DNSName:' $DNSNameLabel'.$LocationName.cloudapp.azure.com"\n

@@ -3,8 +3,7 @@
     List VM disks
 
 .DESCRIPTION
-    List VM disks
-#>
+    List VM disks\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -24,5 +23,4 @@ if ($VM.StorageProfile.DataDisks.Count -gt 0) {
     }
 } else {
     Write-Host "`nNo data disks attached."
-}
-
+}\n

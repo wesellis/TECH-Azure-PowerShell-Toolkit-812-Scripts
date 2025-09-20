@@ -3,8 +3,7 @@
     Temp
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -70,5 +69,4 @@ Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 Write-Information \'The VM is now ready.... here is your login details\'
 Write-Information \'username:\' $VMLocalAdminUser
 Write-Information \'Password:\' $VMLocalAdminPassword
-Write-Information \'DNSName:\' $DNSNameLabel
-
+Write-Information \'DNSName:\' $DNSNameLabel\n

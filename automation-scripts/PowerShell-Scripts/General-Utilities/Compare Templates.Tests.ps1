@@ -46,5 +46,4 @@ $same = Compare-Templates " $dataFolder/TemplateWithMetadata.json" " $dataFolder
 $same = Compare-Templates " $dataFolder/TemplateWithMetadata.json" " $dataFolder/TemplateWithoutMetadata.json" -RemoveGeneratorMetadata
         $same | Should -Be $true
     }
-}
-
+}\n

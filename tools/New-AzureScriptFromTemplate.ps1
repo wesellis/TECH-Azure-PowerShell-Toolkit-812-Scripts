@@ -2,8 +2,7 @@
 .SYNOPSIS
     $script = $script -replace '{DESCRIPTION}', $template
 .DESCRIPTION
-    $script = $script -replace '{SCRIPTNAME}', $ScriptName
-#>
+    $script = $script -replace '{SCRIPTNAME}', $ScriptName\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     $script = $script -replace '{AUTHOR}', $Author
     $script = $script -replace '{EMAIL}', $Email
     $script = $script -replace '{DATE}', (Get-Date -Format "yyyy-MM-dd")
@@ -138,5 +137,4 @@ Write-Host "2. Update the synopsis and description" -ForegroundColor White
 Write-Host "3. Add your specific logic" -ForegroundColor White
 if ($IncludeTests) {
     Write-Host "4. Run tests: Invoke-Pester $testPath" -ForegroundColor White
-}
-
+}\n

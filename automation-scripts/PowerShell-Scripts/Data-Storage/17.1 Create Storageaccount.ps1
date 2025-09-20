@@ -7,5 +7,4 @@
     Wes Ellis (wes@wesellis.com)
 #>
 $ErrorActionPreference = "Stop" ;
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }\n

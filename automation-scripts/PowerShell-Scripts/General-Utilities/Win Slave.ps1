@@ -3,8 +3,7 @@
     Win Slave
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -17,5 +16,4 @@ cd \
 wget -outFile sonar.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-windows.zip
 Expand-Archive -Path sonar.zip -DestinationPath .
 Ren -path sonar-scanner-cli-4.2.0.1873-windows -NewName sonar
-del sonar.zip
-
+del sonar.zip\n

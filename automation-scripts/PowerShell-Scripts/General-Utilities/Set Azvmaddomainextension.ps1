@@ -3,8 +3,7 @@
     Set Azvmaddomainextension
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ $setAzVMADDomainExtensionSplat = @{
     Restart = $true
     Verbose = $true
 }
-Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat
-
+Set-AzVMADDomainExtension -ErrorAction Stop @setAzVMADDomainExtensionSplat\n

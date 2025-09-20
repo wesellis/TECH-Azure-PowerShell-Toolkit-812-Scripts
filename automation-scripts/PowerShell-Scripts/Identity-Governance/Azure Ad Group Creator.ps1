@@ -3,8 +3,7 @@
     Azure Ad Group Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -50,8 +49,7 @@ try {
     }
     if ($Description) {
         $GroupParams.Description = $Description
-    }
-#>
+    }\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     if ($GroupType -eq "Mail" ) {
         $GroupParams.MailNickname = ($GroupName -replace '\s', '').ToLower()
     }
@@ -92,5 +90,4 @@ $User = Get-AzADUser -UserPrincipalName $Email
     Write-Host " 4. Set up group-based licensing"
 } catch {
     Write-Error "Failed to create Azure AD group: $($_.Exception.Message)"
-}
-
+}\n

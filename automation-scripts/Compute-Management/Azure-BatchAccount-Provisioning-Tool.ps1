@@ -144,5 +144,4 @@ try {
 } catch {
     Write-Error "Failed to provision Batch account: $_"
     throw
-}
-
+}\n

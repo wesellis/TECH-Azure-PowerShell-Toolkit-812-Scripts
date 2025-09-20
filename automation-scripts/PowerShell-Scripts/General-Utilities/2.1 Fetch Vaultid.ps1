@@ -18,5 +18,4 @@ $getAzRecoveryServicesVaultSplat = @{
 }
 $targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
 $targetVault.ID
-$targetVault
-
+$targetVault\n

@@ -3,8 +3,7 @@
     Azure Data Factory Modern Pipeline Management Tool
 
 .DESCRIPTION
-    Tool for creating, managing, and monitoring Azure Data Factory pipelines
-#>
+    Tool for creating, managing, and monitoring Azure Data Factory pipelines\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     with modern data integration capabilities including real-time analytics and AI/ML integration.
 .PARAMETER ResourceGroupName
     Target Resource Group for Data Factory
@@ -716,5 +715,4 @@ $runId = Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -D
 } catch {
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
     throw
-}
-
+}\n

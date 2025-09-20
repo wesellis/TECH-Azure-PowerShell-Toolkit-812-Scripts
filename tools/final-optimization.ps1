@@ -1,4 +1,11 @@
 #Requires -Version 7.0
+<#
+.SYNOPSIS
+    final optimization
+.DESCRIPTION
+    final optimization operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     final optimizationcom)#>
 # Final optimization push for Azure Enterprise Toolkit
@@ -50,5 +57,4 @@ Write-Host "�� GitHub Pages will be live at: https://wesellis.github.io/Azur
 Write-Host "�� GitHub Actions will automate testing and deployment"
 Write-Host "[*] Repository is now
 
-#endregion
-
+#endregion\n

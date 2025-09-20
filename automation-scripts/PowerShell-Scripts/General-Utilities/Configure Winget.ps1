@@ -19,5 +19,4 @@ $pwsh7Exe = " $($env:ProgramFiles)\PowerShell\7\pwsh.exe"
 }
 catch {
     LogWithTimestamp " !!! [WARN] Unhandled exception (will be ignored):`n$_`n$($_.ScriptStackTrace)"
-}
-
+}\n

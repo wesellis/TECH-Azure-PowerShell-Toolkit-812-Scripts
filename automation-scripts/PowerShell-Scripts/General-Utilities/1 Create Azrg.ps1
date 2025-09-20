@@ -32,5 +32,4 @@ function Invoke-CreateAZRG {
     end {
         return $ResourceGroupConfig
     }
-}
-
+}\n

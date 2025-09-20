@@ -3,8 +3,7 @@
     Azuresametricsenabler Ms Mgmt Sa
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -449,5 +448,4 @@ $response=invoke-StorageREST -sharedKey $sa.Key -method PUT -resource $sa.name -
 			}
 		}
 	}
-}
-
+}\n

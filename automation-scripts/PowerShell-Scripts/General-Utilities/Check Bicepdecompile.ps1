@@ -34,5 +34,4 @@ $bicepText = Get-Content -Path $f.FullName -Raw
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

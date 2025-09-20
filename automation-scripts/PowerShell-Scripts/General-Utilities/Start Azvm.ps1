@@ -3,8 +3,7 @@
     Start Azvm
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -15,5 +14,4 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 Start-AzVM -ResourceGroupName "CCI_PS_AUTOMATION_RG" -Name "PSAutomation1" ;
 $pip = Get-AzPublicIpAddress -ResourceGroupName "CCI_PS_AUTOMATION_RG" -Name "PSAutomation1-ip"
 Write-Output $pip.IpAddress
-mstsc.exe
-
+mstsc.exe\n

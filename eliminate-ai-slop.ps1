@@ -1,4 +1,11 @@
 <#
+.SYNOPSIS
+    eliminate ai slop
+.DESCRIPTION
+    eliminate ai slop operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+<#
 .SYNOPSIS', '<#' + "`n.SYNOPSIS"
         $changed = $true
     }
@@ -22,5 +29,4 @@
     }
 }
 
-Write-Host "Fixed AI slop in $scriptsFixed scripts" -ForegroundColor Cyan
-
+Write-Host "Fixed AI slop in $scriptsFixed scripts" -ForegroundColor Cyan\n

@@ -188,5 +188,4 @@ $params = @{"VMObject" =$VM;"AlertAction" =Create" ;"WebhookUri" =$webhookUri}
     {
 $ex = $_.Exception
         Write-Output $_.Exception
-    }
-
+    }\n

@@ -3,8 +3,7 @@
     Update Templatehash
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -97,5 +96,4 @@ $r = Get-AzTableRow -table $cloudTable -ColumnName "RowKey" -Value " $templateHa
                     Format = "yyyy-MM-dd')" ; " file" = " $($file"
                 }
                 Add-AzTableRow @params
-}
-
+}\n

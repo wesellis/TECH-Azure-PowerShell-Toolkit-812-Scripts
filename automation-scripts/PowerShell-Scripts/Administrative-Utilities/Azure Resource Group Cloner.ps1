@@ -3,8 +3,7 @@
     Azure Resource Group Cloner
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -46,5 +45,4 @@ $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGr
 
         }
     }
-} catch { throw }
-
+} catch { throw }\n

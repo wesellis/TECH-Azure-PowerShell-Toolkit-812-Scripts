@@ -3,8 +3,7 @@
     Vmmanalytics
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -95,5 +94,4 @@ $jobsData��=��Get-SCJob��-All��-VMMServer $server_r |��where
     }
 }
 write-output��('Setting lastRunTimestamp varaible as UTC ' + $currentTimestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" ));
-Set-AutomationVariable -Name 'lastRunTime' -Value $currentTimestamp
-
+Set-AutomationVariable -Name 'lastRunTime' -Value $currentTimestamp\n

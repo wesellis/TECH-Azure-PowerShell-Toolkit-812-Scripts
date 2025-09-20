@@ -3,8 +3,7 @@
     Invoke Azroleassignment
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -24,5 +23,4 @@ $vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
     #Create a new AZ Role Assignment at the Azure RBAC Level for that VM for Standard users
     New-AzRoleAssignment -ObjectId $ObjectID -RoleDefinitionName 'Virtual Machine User Login' -ResourceGroupName $ResourceGroupName -ResourceName $VMName -ResourceType $vmtype
     #endRegion func New-AzRoleAssignment -ErrorAction Stop
-}
-
+}\n

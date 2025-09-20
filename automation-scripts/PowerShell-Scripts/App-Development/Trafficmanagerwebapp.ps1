@@ -3,8 +3,7 @@
     Trafficmanagerwebapp
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,5 +17,4 @@ New-AzureRmResourceGroup -Location " northeurope" -Name $rgName
 New-AzureRmResourceGroupDeployment -Verbose -Force -ResourceGroupName $rgName -TemplateFile " $scriptDir\azuredeploy.json" -TemplateParameterFile " $scriptDir\azuredeploy.parameters.json"
 $x = Get-AzureRmTrafficManagerProfile -ResourceGroupName $rgName
 $x
-$x.Endpoints
-
+$x.Endpoints\n

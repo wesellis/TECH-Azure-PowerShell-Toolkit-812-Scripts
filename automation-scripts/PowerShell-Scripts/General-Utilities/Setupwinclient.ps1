@@ -3,8 +3,7 @@
     Setupwinclient
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,5 +17,4 @@ REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegistrationE
 REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v RegisterAdapterName         /t REG_DWORD /d 1        /f
 REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v UpdateSecurityLevel         /t REG_DWORD /d 16       /f
 REG add "HKLM\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" /v AdapterDomainName           /t REG_SZ    /d $args[0] /f
-shutdown /r /t 120
-
+shutdown /r /t 120\n

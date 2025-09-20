@@ -3,8 +3,7 @@
     Azure script
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations
-#>
+.DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -33,5 +32,4 @@ Write-Host "Name: $($AvailabilitySet.Name)"
 Write-Host "Location: $($AvailabilitySet.Location)"
 Write-Host "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
 Write-Host "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
-Write-Host "SKU: $($AvailabilitySet.Sku)"
-
+Write-Host "SKU: $($AvailabilitySet.Sku)"\n

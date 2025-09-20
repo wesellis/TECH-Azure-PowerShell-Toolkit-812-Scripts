@@ -1,5 +1,12 @@
 #Requires -Module Az.Resources
 #Requires -Version 5.1
+<#
+.SYNOPSIS
+    configure resource locks
+.DESCRIPTION
+    configure resource locks operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Manages resource locks to prevent accidental deletion or modification
 
@@ -250,5 +257,4 @@ switch ($Action) {
             Write-Host "ReadOnly: $(($locks | Where-Object Level -eq 'ReadOnly').Count)"
         }
     }
-}
-
+}\n

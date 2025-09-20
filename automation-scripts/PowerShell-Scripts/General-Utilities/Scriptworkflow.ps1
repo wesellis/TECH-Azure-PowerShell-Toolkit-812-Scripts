@@ -3,8 +3,7 @@
     Scriptworkflow
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -152,5 +151,4 @@ $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallMP.ps1"
 $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallClient.ps1"
         . $ScriptFile $DomainFullName $CMUser $ClientName $DPMPName $Role $ProvisionToolPath
     }
-}
-
+}\n

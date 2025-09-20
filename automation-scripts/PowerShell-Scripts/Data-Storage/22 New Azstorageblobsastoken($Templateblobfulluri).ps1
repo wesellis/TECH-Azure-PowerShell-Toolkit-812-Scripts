@@ -3,8 +3,7 @@
     New Azstorageblobsastoken($Templateblobfulluri)
 
 .DESCRIPTION
-    New Azstorageblobsastoken($Templateblobfulluri) operation
-#>
+    New Azstorageblobsastoken($Templateblobfulluri) operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -25,5 +24,4 @@ $newAzStorageBlobSASTokenSplat = @{
 }
 
 $templateBlobFullURI = New-AzStorageBlobSASToken -ErrorAction Stop @newAzStorageBlobSASTokenSplat
-$templateBlobFullURI
-
+$templateBlobFullURI\n

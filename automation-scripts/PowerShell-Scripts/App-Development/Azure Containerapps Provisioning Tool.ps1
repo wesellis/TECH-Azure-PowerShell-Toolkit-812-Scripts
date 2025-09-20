@@ -3,8 +3,7 @@
     Azure Containerapps Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -183,5 +182,4 @@ $appJson = az containerapp show --name $ContainerAppName --resource-group $Resou
     Write-Host "    Check resource group permissions" -ForegroundColor White
     Write-Host ""
     throw
-}
-
+}\n

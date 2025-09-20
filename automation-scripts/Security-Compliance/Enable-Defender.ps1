@@ -26,5 +26,4 @@ $plans = if ($All) {
 foreach ($p in $plans) {
     Write-Host "Enabling Defender for $p" -ForegroundColor Green
     Set-AzSecurityPricing -Name $p -PricingTier Standard
-}
-
+}\n

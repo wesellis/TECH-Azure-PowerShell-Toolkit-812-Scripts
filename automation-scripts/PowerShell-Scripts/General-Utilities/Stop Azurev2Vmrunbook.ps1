@@ -88,5 +88,4 @@ $stopRtn = Stop-AzureRMVM -Name $VMName -ResourceGroupName $resourceGroupName -f
 	{
 		Write-Output ($VMName + " is already stopped" )
 	}
-}
-
+}\n

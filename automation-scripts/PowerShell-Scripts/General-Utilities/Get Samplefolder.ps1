@@ -16,7 +16,13 @@ if ($ENV:BUILD_REASON -eq "PullRequest" ) {
 }
 elseif ($ENV:BUILD_REASON -eq "BatchedCI" -or $ENV:BUILD_REASON -eq "IndividualCI" -or $ENV:BUILD_REASON -eq "Manual" ) {
     <#
-        When a CI trigger is running, we get no information in the environment about what changed in the incoming PUSH (i.e. PR# or files changed) except...
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+When a CI trigger is running, we get no information in the environment about what changed in the incoming PUSH (i.e. PR# or files changed) except...
         In the source version message - so even though this fragile, we can extract from there - the expected format is:
         BUILD_SOURCEVERSIONMESSAGE = "Merge pull request #9 from bmoore-msft/bmoore-msft-patch-2"
         2021-04-18 - they changed the format of the message again, now its:
@@ -92,4 +98,4 @@ $sampleName = $FolderString.Replace(" $ENV:BUILD_SOURCESDIRECTORY\" , "" ).Repla
 Write-Output "Using sample name: $sampleName"
 Write-Host " ##vso[task.setvariable variable=sample.name]$sampleName"
 Write-Output "Using github PR#: $GitHubPRNumber"
-Write-Host " ##vso[task.setvariable variable=github.pr.number]$GitHubPRNumber"
+Write-Host " ##vso[task.setvariable variable=github.pr.number]$GitHubPRNumber"\n

@@ -5,7 +5,14 @@
 
     1.0
     Requires appropriate permissions and modules
-<# Qlik Sense Installation #>
+<#
+.SYNOPSIS
+    PowerShell script
+.DESCRIPTION
+    PowerShell operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+Qlik Sense Installation #>
 $adminUser = $Args[0]
 $adminPass = $Args[1]
 $serviceAccountUser = $Args[2]
@@ -146,5 +153,4 @@ $statusCode = 0
     }
 $connectResult = Connect-Qlik $env:COMPUTERNAME -UseDefaultCredentials
 $licenseResult = Set-QlikLicense -serial $qlikSenseSerial -control $qlikSenseControl -name " $($qlikSenseName)" -organization " $($qlikSenseOrganization)"
-}
-
+}\n

@@ -3,8 +3,7 @@
     Ad
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -84,5 +83,4 @@ $lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredentia
 }
 if ($count -ge 6) {
     throw "Failed to provision AD after 6 retries."
-}
-
+}\n

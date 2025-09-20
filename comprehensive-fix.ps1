@@ -1,4 +1,11 @@
 <#
+.SYNOPSIS
+    comprehensive fix
+.DESCRIPTION
+    comprehensive fix operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
+<#
 .SYNOPSIS') {
         $content = $content -replace '<#\s*#endregion\s*#region\s+Main-Execution\s*\.SYNOPSIS', '<#' + "`n.SYNOPSIS"
     }
@@ -60,5 +67,4 @@
 
 Write-Host "`nFix Complete:" -ForegroundColor Cyan
 Write-Host "Files processed: $totalFiles" -ForegroundColor White
-Write-Host "Files fixed: $fixedCount" -ForegroundColor Green
-
+Write-Host "Files fixed: $fixedCount" -ForegroundColor Green\n

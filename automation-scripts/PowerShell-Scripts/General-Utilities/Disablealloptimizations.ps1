@@ -75,5 +75,4 @@ catch
 {
     Write-Output "Error Occurred on executing AROToolkit Redbutton Abort..."
     Write-Output $_.Exception
-}
-
+}\n

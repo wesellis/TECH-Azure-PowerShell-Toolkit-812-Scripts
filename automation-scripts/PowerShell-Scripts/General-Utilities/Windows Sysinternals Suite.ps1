@@ -54,5 +54,4 @@ $invokecommandScriptPath = (Join-Path $(Split-Path -Parent $PSScriptRoot) 'windo
 
 } catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
+}\n

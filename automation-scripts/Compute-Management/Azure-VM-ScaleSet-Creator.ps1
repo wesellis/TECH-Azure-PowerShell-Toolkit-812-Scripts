@@ -3,8 +3,7 @@
     Azure script
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations
-#>
+.DESCRIPTION`n    Automate Azure operations\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -67,5 +66,4 @@ Write-Host "VM Scale Set created successfully:"
 Write-Host "Name: $($Vmss.Name)"
 Write-Host "Location: $($Vmss.Location)"
 Write-Host "VM Size: $VmSize"
-Write-Host "Instance Count: $InstanceCount"
-
+Write-Host "Instance Count: $InstanceCount"\n

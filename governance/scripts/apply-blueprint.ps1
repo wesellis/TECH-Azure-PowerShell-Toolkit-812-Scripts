@@ -1,5 +1,12 @@
 #Requires -Version 5.1
 #Requires -Module Az.Blueprint
+<#
+.SYNOPSIS
+    apply blueprint
+.DESCRIPTION
+    apply blueprint operation
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
     Applies an Azure Blueprint to a subscription with
 
@@ -400,5 +407,4 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-#endregion
-
+#endregion\n

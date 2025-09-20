@@ -3,8 +3,7 @@
     Detach VM disks
 
 .DESCRIPTION
-    Detach VM disks
-#>
+    Detach VM disks\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -30,5 +29,4 @@ Write-Host "Disk detached successfully:"
 Write-Host "Disk: $DiskName"
 Write-Host "VM: $VmName"
 Write-Host "LUN: $($DiskToDetach.Lun)"
-Write-Host "Note: Disk is now available for attachment to other VMs"
-
+Write-Host "Note: Disk is now available for attachment to other VMs"\n

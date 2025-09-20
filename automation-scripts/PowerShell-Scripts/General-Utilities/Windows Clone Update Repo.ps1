@@ -601,5 +601,4 @@ $sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
         repoUrl = $repoUrl
     }
     RunScriptSyncRepo @params
-}
-
+}\n

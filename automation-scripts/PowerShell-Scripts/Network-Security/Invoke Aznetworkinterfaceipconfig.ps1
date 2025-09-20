@@ -3,8 +3,7 @@
     Invoke Aznetworkinterfaceipconfig
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +25,4 @@ $newAzNetworkInterfaceIpConfigSplat = @{
     Primary                  = $true
 }
 $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-}
-
+}\n

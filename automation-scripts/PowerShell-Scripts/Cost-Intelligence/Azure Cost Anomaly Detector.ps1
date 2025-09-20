@@ -3,8 +3,7 @@
     Azure Cost Anomaly Detector
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -56,5 +55,4 @@ $anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $AnomalyT
         Write-Host " `nAnomalous Days:" -ForegroundColor Red
         $anomalies | Format-Table Date, @{Name="Cost" ;Expression={" $" + " {0:F2}" -f $_.TotalCost}}
     }
-} catch { throw }
-
+} catch { throw }\n

@@ -3,8 +3,7 @@
     Zulu Install
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -35,5 +34,4 @@ $INSTALL_DIR = $INSTALL_DIRS[$idx]
  }
  Invoke-WebRequest -Uri http://repos.azul.com/azure-only/zulu/packages/$PACKAGE_DIR/$VERSION/$ZULU_PACK -OutFile C:\Windows\Temp\$ZULU_PACK
  msiexec /quiet /i C:\Windows\Temp\$ZULU_PACK
- setx /m JAVA_HOME "C:\Program Files\Zulu\$INSTALL_DIR"
-
+ setx /m JAVA_HOME "C:\Program Files\Zulu\$INSTALL_DIR"\n

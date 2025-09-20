@@ -3,8 +3,7 @@
     Installdp
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -72,5 +71,4 @@ if((get-cmdistributionpoint -SiteSystemServerName $MachineName).count -ne 1)
 else
 {
     " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] $MachineName is already a distribution point , skip running this script." | Out-File -Append $logpath
-}
-
+}\n

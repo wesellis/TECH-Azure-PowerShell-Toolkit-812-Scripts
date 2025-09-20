@@ -568,5 +568,4 @@ $allHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName
 } catch {
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
     throw
-}
-
+}\n

@@ -3,8 +3,7 @@
     Customextensionwindows
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ $headers.Add( "Authorization" , $basicAuthValue )
 $headers.Add( "Accept" , "application/octet-stream" )
 $clientpack1 = " 100_127_255_193"
 Invoke-WebRequest -Uri https://" $ip1" :8000/api/clientpack?name=$clientpack1" &" fileformat=ovpn -UseBasicParsing -Headers $Headers -ContentType " application/json" -Method GET -o " c:\Program Files\OpenVPN\config\$clientpack1.ovpn"
-Start-Service -Name "OpenVPNServiceInteractive"
-
+Start-Service -Name "OpenVPNServiceInteractive"\n

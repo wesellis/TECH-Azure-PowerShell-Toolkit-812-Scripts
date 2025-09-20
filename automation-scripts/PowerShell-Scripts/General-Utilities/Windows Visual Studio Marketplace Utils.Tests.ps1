@@ -2,8 +2,7 @@
 .SYNOPSIS
     Windows Visual Studio Marketplace Utils.Tests
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -507,5 +506,4 @@ $result = Get-CurrentPlatform -ErrorAction Stop
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

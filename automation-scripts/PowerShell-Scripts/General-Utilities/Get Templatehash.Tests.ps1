@@ -2,8 +2,7 @@
 .SYNOPSIS
     Get Templatehash.Tests
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -47,5 +46,4 @@ $hash1 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadata.j
 $hash2 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadataWithChanges.json" -RemoveGeneratorMetadata
         $hash1 | Should -Not -Be $hash2
     }
-}
-
+}\n

@@ -3,8 +3,7 @@
     Azure Backup Status Checker
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -53,5 +52,4 @@ $unprotectedVMs = $allVMs | Where-Object { $_.Name -notin $protectedVMs.Name }
     }
     $backupReport | Format-Table -AutoSize
 
-} catch { throw }
-
+} catch { throw }\n

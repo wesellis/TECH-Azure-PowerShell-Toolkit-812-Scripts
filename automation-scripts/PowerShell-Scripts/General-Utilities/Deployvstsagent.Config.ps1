@@ -162,5 +162,4 @@ $CurrentValue = [Environment]::GetEnvironmentVariable("PSModulePath" , "Machine"
         }
     }
   }
-}
-
+}\n

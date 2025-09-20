@@ -3,8 +3,7 @@
     Run Artifact
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -71,5 +70,4 @@ $exitCodeMsg = " (exit code $LASTEXITCODE)"
         Write-Information -Object $_.ScriptStackTrace
         ____ExitOne
     }
-}
-
+}\n

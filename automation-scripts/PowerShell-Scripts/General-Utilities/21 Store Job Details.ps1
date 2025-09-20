@@ -3,8 +3,7 @@
     Store Job Details
 
 .DESCRIPTION
-    Store Job Details operation
-#>
+    Store Job Details operation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -22,5 +21,4 @@ $templateBlobURI = $properties["Template Blob Uri" ]
 $templateBlobURI
 $Templatename = $templateBlobURI -split (" /" );
 $Templatename = $Templatename[4]
-$Templatename
-
+$Templatename\n

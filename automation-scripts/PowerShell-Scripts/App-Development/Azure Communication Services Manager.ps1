@@ -511,5 +511,4 @@ $serviceStatus = Invoke-AzureOperation -Operation {
     Write-Host "    Check domain ownership for email configuration" -ForegroundColor White
     Write-Host "" -ForegroundColor Green
     throw
-}
-
+}\n

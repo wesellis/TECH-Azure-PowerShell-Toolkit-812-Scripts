@@ -211,5 +211,4 @@ if ($failed -gt 0) {
 Write-Host "`nOperation completed!" -ForegroundColor Green
 # Exit with appropriate code
 $exitCode = if ($failed -gt 0) { 1 } else { 0 }
-exit $exitCode
-
+exit $exitCode\n

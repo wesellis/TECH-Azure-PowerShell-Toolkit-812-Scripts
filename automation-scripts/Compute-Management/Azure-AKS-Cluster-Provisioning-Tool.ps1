@@ -3,8 +3,7 @@
     Manage AKS clusters
 
 .DESCRIPTION
-    Manage AKS clusters
-#>
+    Manage AKS clusters\n    Author: Wes Ellis (wes@wesellis.com)\n#>
 param (
     [string]$ResourceGroupName,
     [string]$AksClusterName,
@@ -55,5 +54,4 @@ Write-Host "`nNext Steps:"
 Write-Host "1. Install kubectl: az aks install-cli"
 Write-Host "2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
 Write-Host "3. Verify connection: kubectl get nodes"
-Write-Host "`nAKS Cluster provisioning completed at $(Get-Date)"
-
+Write-Host "`nAKS Cluster provisioning completed at $(Get-Date)"\n

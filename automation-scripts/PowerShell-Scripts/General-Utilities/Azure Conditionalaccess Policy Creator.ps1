@@ -3,8 +3,7 @@
     Azure Conditionalaccess Policy Creator
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -102,5 +101,4 @@ try {
 } catch {
     Write-Error "Conditional Access policy creation failed: $($_.Exception.Message)"
     Write-Host "Tip: Use Azure Portal for creating Conditional Access policies"
-}
-
+}\n

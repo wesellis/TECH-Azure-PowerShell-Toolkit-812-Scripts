@@ -3,8 +3,7 @@
     Installmp
 
 .DESCRIPTION
-    Azure automation
-#>
+    Azure automation\n    Author: Wes Ellis (wes@wesellis.com)\n#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -86,5 +85,4 @@ $command = new-object -ErrorAction Stop system.data.sqlclient.sqlcommand($sqlCom
 else
 {
     " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] $MachineName is already a management point , skip running this script." | Out-File -Append $logpath
-}
-
+}\n

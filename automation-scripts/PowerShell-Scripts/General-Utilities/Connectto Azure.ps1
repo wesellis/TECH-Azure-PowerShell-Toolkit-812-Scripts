@@ -43,5 +43,4 @@ Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId $tenantI
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
-}
-
+}\n

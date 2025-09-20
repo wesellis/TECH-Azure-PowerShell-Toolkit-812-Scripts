@@ -45,5 +45,4 @@ $taskParams = $firstLogonTask.Parameters
         Write-Information -Object $_.ScriptStackTrace
     }
 }
-Write-Host " === Done executing tasks from $firstLogonTasksFile"
-
+Write-Host " === Done executing tasks from $firstLogonTasksFile"\n

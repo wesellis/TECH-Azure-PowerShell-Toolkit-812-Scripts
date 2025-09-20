@@ -108,5 +108,4 @@ try {
 } catch {
     Write-Error "Failed to create container registry: $_"
     throw
-}
-
+}\n

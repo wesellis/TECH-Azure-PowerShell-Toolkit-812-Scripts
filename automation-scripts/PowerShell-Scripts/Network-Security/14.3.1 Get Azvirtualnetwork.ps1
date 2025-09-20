@@ -20,5 +20,4 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 $getAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }
-$vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
-
+$vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat\n

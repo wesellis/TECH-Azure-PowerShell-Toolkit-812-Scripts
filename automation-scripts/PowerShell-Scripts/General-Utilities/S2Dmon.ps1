@@ -1170,5 +1170,4 @@ $events = Get-Event -ErrorAction Stop | Remove-Event -ErrorAction Stop
     Log " $scriptName -Service # Exiting"
   }
   return
-}
-
+}\n
