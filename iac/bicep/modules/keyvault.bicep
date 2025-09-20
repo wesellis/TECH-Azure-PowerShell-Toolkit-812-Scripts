@@ -12,9 +12,11 @@ param tags object
 @description('Environment name')
 param environment string
 
-// Get current user/service principal
+// Get current user/service principal from parameter
+param userObjectId string = ''
+
 var currentUser = {
-  objectId: 'REPLACE_WITH_USER_OBJECT_ID'
+  objectId: empty(userObjectId) ? '00000000-0000-0000-0000-000000000000' : userObjectId
   tenantId: tenant().tenantId
 }
 
@@ -94,7 +96,7 @@ resource adminPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'vm-admin-password'
   properties: {
-    value: 'ComplexPassword123!'
+    value: 'P@ssw0rd${uniqueString(resourceGroup().id, deployment().name)}'
     attributes: {
       enabled: true
     }

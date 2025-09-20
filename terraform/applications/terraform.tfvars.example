@@ -1,0 +1,25 @@
+# Three-Tier Application Example Configuration
+
+# Application settings
+app_name    = "myapp"
+environment = "dev"
+location    = "East US"
+
+# VM configuration
+admin_username = "azureuser"
+admin_password = "ChangeMe123!@#"
+
+# Database configuration
+db_admin_username = "dbadmin"
+db_admin_password = "DbPass123!@#"
+
+# Scaling configuration
+web_tier_vm_count = 2
+app_tier_vm_count = 2
+
+# Example for production
+# app_name           = "prodapp"
+# environment        = "prod"
+# location          = "East US"
+# web_tier_vm_count = 3
+# app_tier_vm_count = 3

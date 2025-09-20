@@ -3,6 +3,7 @@
 This document provides comprehensive, real-world examples of how to use the Azure PowerShell Toolkit in production environments.
 
 ## Table of Contents
+
 1. [Enterprise Migration Project](#enterprise-migration-project)
 2. [Daily Operations Automation](#daily-operations-automation)
 3. [Disaster Recovery Implementation](#disaster-recovery-implementation)
@@ -16,7 +17,9 @@ This document provides comprehensive, real-world examples of how to use the Azur
 ## Enterprise Migration Project
 
 ### Scenario
+
 A large enterprise is migrating from on-premises infrastructure to Azure. They need to:
+
 - Assess current infrastructure
 - Plan resource allocation
 - Execute phased migration
@@ -107,6 +110,7 @@ Get-AzVM -ResourceGroupName $prodRG | ForEach-Object {
 ```
 
 ### Expected Outcomes
+
 - **Migration Time**: 40% reduction using automation
 - **Cost Savings**: 25% through right-sizing and optimization
 - **Error Reduction**: 90% fewer configuration errors
@@ -117,6 +121,7 @@ Get-AzVM -ResourceGroupName $prodRG | ForEach-Object {
 ## Daily Operations Automation
 
 ### Scenario
+
 IT operations team managing 200+ Azure VMs across multiple environments needs daily operational tasks automated including health checks, cost monitoring, and maintenance.
 
 ### Implementation
@@ -255,6 +260,7 @@ while ($true) {
 ## Disaster Recovery Implementation
 
 ### Scenario
+
 Enterprise needs comprehensive disaster recovery for critical Azure workloads with RTO of 4 hours and RPO of 1 hour.
 
 ### Implementation
@@ -431,6 +437,7 @@ Write-Host "Disaster recovery procedures completed!" -ForegroundColor Green
 ## Cost Optimization Initiative
 
 ### Scenario
+
 Organization needs to reduce Azure spending by 30% while maintaining performance and availability.
 
 ### Implementation
@@ -620,6 +627,7 @@ $implementationResults | ConvertTo-Json -Depth 3 | Out-File "Cost-Optimization-I
 ## Security and Compliance Automation
 
 ### Scenario
+
 Organization needs to maintain SOC 2 and ISO 27001 compliance across multiple Azure environments with automated security monitoring and remediation.
 
 ### Implementation

@@ -1,0 +1,358 @@
+name: Infrastructure as Code Validation
+
+on:
+  push:
+    paths:
+      - 'iac/**'
+      - '.github/workflows/iac-validation.yml'
+  pull_request:
+    paths:
+      - 'iac/**'
+      - '.github/workflows/iac-validation.yml'
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+jobs:
+  bicep-validation:
+    runs-on: ubuntu-latest
+    name: Validate Bicep Templates
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Bicep
+      uses: azure/setup-bicep@v1
+      with:
+        version: 'latest'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Lint Bicep templates
+      run: |
+        echo "Linting Bicep templates..."
+        find iac/bicep -name "*.bicep" -type f | while read -r template; do
+          echo "Linting: $template"
+          bicep build "$template" --outfile /dev/null
+          if [ $? -eq 0 ]; then
+            echo "✓ $template: Valid"
+          else
+            echo "✗ $template: Invalid"
+            exit 1
+          fi
+        done
+
+    - name: Validate main Bicep template
+      run: |
+        echo "Validating main Bicep template deployment..."
+        az deployment sub validate \
+          --location "East US" \
+          --template-file iac/bicep/main.bicep \
+          --parameters environment=dev adminPassword='TempP@ssw0rd123!' \
+          --output table
+
+    - name: Test Bicep deployment (What-If)
+      run: |
+        echo "Running Bicep What-If analysis..."
+
+        # Create temporary resource group for validation
+        TEMP_RG="bicep-validation-$(date +%s)"
+        az group create --name "$TEMP_RG" --location "East US" --tags Purpose=CI-Validation
+
+        # Run what-if deployment
+        az deployment group what-if \
+          --resource-group "$TEMP_RG" \
+          --template-file iac/bicep/main.bicep \
+          --parameters environment=dev adminPassword='TempP@ssw0rd123!' \
+          --output table
+
+        # Cleanup
+        az group delete --name "$TEMP_RG" --yes --no-wait
+
+  terraform-validation:
+    runs-on: ubuntu-latest
+    name: Validate Terraform Configuration
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Terraform Format Check
+      working-directory: iac/terraform
+      run: |
+        echo "Checking Terraform formatting..."
+        terraform fmt -check -recursive
+        if [ $? -ne 0 ]; then
+          echo "Terraform files are not properly formatted"
+          echo "Run 'terraform fmt -recursive' to fix formatting"
+          exit 1
+        fi
+
+    - name: Terraform Init
+      working-directory: iac/terraform
+      run: |
+        echo "Initializing Terraform..."
+        terraform init -input=false
+
+    - name: Terraform Validate
+      working-directory: iac/terraform
+      run: |
+        echo "Validating Terraform configuration..."
+        terraform validate
+
+    - name: Terraform Plan
+      working-directory: iac/terraform
+      run: |
+        echo "Running Terraform plan..."
+
+        # Create terraform.tfvars for validation
+        cat > terraform.tfvars << EOF
+        environment = "dev"
+        location = "East US"
+        admin_password = "TempP@ssw0rd123!"
+        deploy_advanced = false
+        EOF
+
+        # Run plan
+        terraform plan -var-file="terraform.tfvars" -input=false -out=tfplan
+
+        # Display plan summary
+        terraform show -json tfplan | jq -r '.planned_values.root_module.resources[].address' | sort
+
+    - name: Upload Terraform Plan
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-plan
+        path: iac/terraform/tfplan
+        retention-days: 5
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scan IaC Templates
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Checkov security scan
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: iac/
+        framework: terraform,arm
+        output_format: sarif
+        output_file_path: checkov-results.sarif
+        quiet: true
+        soft_fail: true
+
+    - name: Upload Checkov results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: checkov-results.sarif
+
+    - name: Run TFSec security scan
+      uses: aquasecurity/tfsec-action@v1.0.3
+      with:
+        working_directory: iac/terraform
+        soft_fail: true
+        format: sarif
+        output: tfsec-results.sarif
+
+    - name: Upload TFSec results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: tfsec-results.sarif
+
+  cost-estimation:
+    runs-on: ubuntu-latest
+    name: Infrastructure Cost Estimation
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Setup Infracost
+      uses: infracost/actions/setup@v2
+      with:
+        api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+    - name: Generate Infracost cost estimate
+      working-directory: iac/terraform
+      run: |
+        # Create terraform.tfvars for cost estimation
+        cat > terraform.tfvars << EOF
+        environment = "prod"
+        location = "East US"
+        admin_password = "TempP@ssw0rd123!"
+        deploy_advanced = true
+        EOF
+
+        # Initialize Terraform
+        terraform init -input=false
+
+        # Generate cost estimate
+        infracost breakdown --path . \
+          --format json \
+          --out-file /tmp/infracost.json \
+          --terraform-var-file terraform.tfvars
+
+    - name: Post Infracost comment
+      uses: infracost/actions/comment@v1
+      with:
+        path: /tmp/infracost.json
+        behavior: update
+
+  documentation-check:
+    runs-on: ubuntu-latest
+    name: Documentation Validation
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Check Terraform documentation
+      run: |
+        echo "Checking Terraform module documentation..."
+
+        # Check if README exists for each module
+        for module_dir in iac/terraform/modules/*/; do
+          module_name=$(basename "$module_dir")
+          if [ ! -f "$module_dir/README.md" ]; then
+            echo "Warning: Missing README.md in $module_name module"
+          fi
+
+          # Check if all variables have descriptions
+          if [ -f "$module_dir/variables.tf" ]; then
+            if grep -q 'description.*=""' "$module_dir/variables.tf"; then
+              echo "Error: Empty descriptions found in $module_name variables"
+              exit 1
+            fi
+          fi
+        done
+
+    - name: Check Bicep documentation
+      run: |
+        echo "Checking Bicep module documentation..."
+
+        # Check parameter descriptions
+        find iac/bicep/modules -name "*.bicep" | while read -r bicep_file; do
+          if grep -q '@description.*""' "$bicep_file"; then
+            echo "Error: Empty descriptions found in $(basename "$bicep_file")"
+            exit 1
+          fi
+        done
+
+  drift-detection:
+    runs-on: ubuntu-latest
+    name: Infrastructure Drift Detection
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: '1.5.0'
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Terraform Drift Check
+      working-directory: iac/terraform
+      run: |
+        echo "Checking for infrastructure drift..."
+
+        # Initialize Terraform with backend
+        terraform init -input=false \
+          -backend-config="resource_group_name=${{ secrets.TF_STATE_RESOURCE_GROUP }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=terraform.tfstate"
+
+        # Run plan to detect drift
+        terraform plan -detailed-exitcode -input=false -no-color > drift-report.txt
+
+        PLAN_EXIT_CODE=$?
+        if [ $PLAN_EXIT_CODE -eq 1 ]; then
+          echo "Terraform plan failed"
+          cat drift-report.txt
+          exit 1
+        elif [ $PLAN_EXIT_CODE -eq 2 ]; then
+          echo "Infrastructure drift detected!"
+          cat drift-report.txt
+
+          # Create GitHub issue for drift
+          gh issue create \
+            --title "Infrastructure Drift Detected - $(date +%Y-%m-%d)" \
+            --body "$(cat drift-report.txt)" \
+            --label "infrastructure,drift" \
+            --assignee "${{ github.actor }}"
+        else
+          echo "No infrastructure drift detected"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload drift report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: drift-report
+        path: iac/terraform/drift-report.txt
+        retention-days: 30
+
+  validation-summary:
+    runs-on: ubuntu-latest
+    name: Validation Summary
+    needs: [bicep-validation, terraform-validation, security-scan, documentation-check]
+    if: always()
+
+    steps:
+    - name: Validation Summary
+      run: |
+        echo "## Infrastructure as Code Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Bicep Validation | ${{ needs.bicep-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Terraform Validation | ${{ needs.terraform-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Documentation Check | ${{ needs.documentation-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        if [[ "${{ needs.bicep-validation.result }}" == "success" &&
+              "${{ needs.terraform-validation.result }}" == "success" &&
+              "${{ needs.security-scan.result }}" == "success" &&
+              "${{ needs.documentation-check.result }}" == "success" ]]; then
+          echo "✅ All IaC validation checks passed!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Some IaC validation checks failed. Please review the logs above." >> $GITHUB_STEP_SUMMARY
+        fi

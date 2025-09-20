@@ -81,6 +81,27 @@ az deployment group create \
   --parameters authenticationType=sshPublicKey adminPasswordOrKey="ssh-rsa AAAA..."
 ```
 
+## Available Templates
+
+### Infrastructure Templates
+- **`compute/virtual-machine.bicep`** - Enterprise VM with security features
+- **`storage/storage-account.bicep`** - Secure storage with compliance defaults
+- **`storage/sql-database.bicep`** - SQL Server with advanced security
+- **`network/virtual-network.bicep`** - VNet with configurable subnets
+- **`monitoring/log-analytics.bicep`** - Complete monitoring stack
+- **`security/key-vault.bicep`** - Key Vault with RBAC and private endpoints
+
+### Application Templates
+- **`applications/web-app-stack.bicep`** - Complete web application stack with App Service, SQL, Key Vault, and Application Gateway
+
+## Template Features
+
+- **Environment Awareness**: Different configurations for dev/test/prod
+- **Security by Default**: Private endpoints, RBAC, minimal permissions
+- **Monitoring Integration**: Built-in diagnostics and alerting
+- **High Availability**: Availability zones and redundancy for production
+- **Cost Optimization**: Environment-appropriate SKUs and features
+
 ## Validation
 
 Templates include comprehensive validation:

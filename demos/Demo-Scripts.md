@@ -5,14 +5,17 @@ This document provides comprehensive scripts for creating professional video dem
 ## Demo Structure Overview
 
 ### Demo 1: Quick Start (5 minutes)
+
 **Target Audience**: Azure administrators new to the toolkit
 **Objective**: Show how quickly someone can get started and see value
 
 ### Demo 2: Enterprise Features (10 minutes)
+
 **Target Audience**: IT managers and senior administrators
 **Objective**: Demonstrate enterprise-grade capabilities and professional quality
 
 ### Demo 3: Real-World Scenarios (15 minutes)
+
 **Target Audience**: PowerShell professionals and Azure specialists
 **Objective**: Show complex automation scenarios and advanced features
 
@@ -21,6 +24,7 @@ This document provides comprehensive scripts for creating professional video dem
 ## Demo 1: Quick Start (5 minutes)
 
 ### Setup Required
+
 - Clean Azure subscription or test environment
 - PowerShell 7.0+ with Azure PowerShell modules
 - Screen recording software (OBS Studio recommended)
@@ -89,6 +93,7 @@ Get-AzContext
 ## Demo 2: Enterprise Features (10 minutes)
 
 ### Setup Required
+
 - Production-like Azure environment with multiple resource groups
 - Multiple Azure services deployed
 - Cost management scenarios
@@ -185,6 +190,7 @@ Get-Help .\scripts\compute\Azure-VM-Provisioning-Tool.ps1 -Full
 ## Demo 3: Real-World Scenarios (15 minutes)
 
 ### Setup Required
+
 - Complex multi-tier Azure environment
 - Multiple subscriptions or complex resource hierarchy
 - Real-world scenarios like disaster recovery, compliance reporting
@@ -298,18 +304,21 @@ Get-AzToolkitModules
 ## Video Production Guidelines
 
 ### Technical Requirements
+
 - **Resolution**: 1920x1080 minimum
 - **Frame Rate**: 30 FPS
 - **Audio**: Clear, professional quality
 - **Format**: MP4 with H.264 encoding
 
 ### Visual Guidelines
+
 - Use consistent terminal themes (dark background recommended)
 - Highlight important output with cursor or annotations
 - Keep font sizes large enough for mobile viewing
 - Use consistent color schemes (Green for success, Red for errors, Yellow for warnings)
 
 ### Content Guidelines
+
 - Speak clearly and at moderate pace
 - Pause briefly after each command execution
 - Explain what's happening before running commands
@@ -317,12 +326,14 @@ Get-AzToolkitModules
 - Include professional output formatting examples
 
 ### Recording Setup
+
 1. **Clean Environment**: Start with fresh PowerShell session
 2. **Prepared Data**: Have test Azure resources ready
 3. **Script Flow**: Practice the demo flow beforehand
 4. **Backup Plan**: Have alternative scenarios ready if something fails
 
 ### Post-Production
+
 - Add intro/outro with toolkit branding
 - Include captions for accessibility
 - Add chapter markers for longer videos
@@ -334,6 +345,7 @@ Get-AzToolkitModules
 ## Demo Environment Setup Scripts
 
 ### Create Demo Environment
+
 ```powershell
 # Script to create demo environment
 .\scripts\identity\Azure-ResourceGroup-Creator.ps1 -ResourceGroupName "demo-environment" -Location "East US"
@@ -343,12 +355,14 @@ Get-AzToolkitModules
 ```
 
 ### Cleanup Demo Environment
+
 ```powershell
 # Script to cleanup demo environment
 Remove-AzResourceGroup -Name "demo-environment" -Force -AsJob
 ```
 
 ### Demo Data Generator
+
 ```powershell
 # Generate sample data for demonstrations
 function New-DemoData {

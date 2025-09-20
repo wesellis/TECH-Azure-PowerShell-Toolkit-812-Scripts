@@ -26,22 +26,48 @@ terraform plan
 terraform apply
 ```
 
-## Configurations
+## Available Configurations
 
-### Compute (`/compute/`)
+### Infrastructure Components
+
+#### Compute (`/compute/`)
 - Linux VM with optional public IP
 - Network security groups with environment-based rules
 - Managed identity and boot diagnostics
 - Availability zones for production
 
-### Storage (`/storage/`)
+#### Storage (`/storage/`)
 - Storage account with secure defaults
 - Private containers and HTTPS enforcement
 - Environment-appropriate replication
 
-### Network (`/network/`)
+#### Network (`/network/`)
 - Virtual network with configurable subnets
 - Proper resource dependencies
+
+### Terraform Modules (`/modules/`)
+
+#### Networking Module (`/modules/networking`)
+- Complete virtual network with configurable subnets
+- Network security groups with purpose-based rules
+- NAT Gateway for outbound connectivity
+- Route tables and service endpoints
+
+#### Compute Module (`/modules/compute`)
+- Multi-instance VM deployment
+- Support for both Linux and Windows
+- Availability sets and zones
+- Data disk management
+- Custom initialization scripts
+
+### Application Templates (`/applications/`)
+
+#### Three-Tier Application (`/applications/three-tier-app.tf`)
+- Complete multi-tier architecture
+- Load balancers for web and app tiers
+- SQL Database with security features
+- Application Gateway for production
+- Environment-specific configurations
 
 ## Variable Examples
 
@@ -66,6 +92,7 @@ network_access     = "restricted"
 ## Validation
 
 Variables include validation rules:
+
 - VM names: 1-15 characters, alphanumeric + hyphens
 - Environment: Must be dev/test/prod
 - VM sizes: Only approved SKUs
@@ -74,6 +101,7 @@ Variables include validation rules:
 ## Outputs
 
 All configurations provide useful outputs:
+
 - Resource IDs and connection strings
 - IP addresses and FQDNs
 - SSH/RDP connection commands
