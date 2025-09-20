@@ -29,6 +29,14 @@ This repository contains PowerShell scripts organized by Azure service categorie
 │   ├── cost/         # Cost management and optimization
 │   ├── monitoring/   # Monitoring and alerting
 │   └── utilities/    # General utilities
+├── bicep/            # Azure Bicep templates
+│   ├── compute/      # VM and compute resources
+│   ├── storage/      # Storage account templates
+│   └── network/      # Networking templates
+├── terraform/        # Terraform configurations
+│   ├── compute/      # VM infrastructure
+│   ├── storage/      # Storage resources
+│   └── network/      # Network infrastructure
 ├── docs/             # Documentation
 ├── modules/          # PowerShell modules
 └── tests/            # Test scripts
@@ -61,8 +69,9 @@ Connect-AzAccount
 .\scripts\compute\Azure-VM-List-All.ps1
 ```
 
-## Script Categories
+## Content
 
+### PowerShell Scripts
 - **Compute**: VM management, containers, app services
 - **Storage**: Storage accounts, databases, backup
 - **Network**: Virtual networks, security groups, load balancers
@@ -70,6 +79,10 @@ Connect-AzAccount
 - **Cost**: Cost analysis, optimization, budgets
 - **Monitoring**: Alerts, diagnostics, logging
 - **Utilities**: Helper functions and tools
+
+### Infrastructure as Code
+- **Bicep**: Azure-native declarative templates
+- **Terraform**: Multi-cloud infrastructure provisioning
 
 ## Contributing
 
