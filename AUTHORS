@@ -2,18 +2,15 @@
 
 ## Primary Author
 - Wes Ellis <wes@wesellis.com>
-  - Original creator and maintainer
-  - All PowerShell scripts and modules
-  - Infrastructure as Code templates
-  - Documentation and guides
+  - Project owner and maintainer
+  - Original script collection curator
+  - Quality control and review
 
-## Project History
-This Azure PowerShell Toolkit was developed by Wes Ellis as a comprehensive collection of enterprise-grade Azure management scripts. The toolkit represents years of experience in Azure administration and automation.
+## Development Notes
+This repository contains a collection of Azure PowerShell scripts gathered and refined from various sources. Recent updates include:
+- Security vulnerability fixes
+- Code standardization and cleanup
+- Repository organization improvements
+- Documentation updates
 
-## Acknowledgments
-- Microsoft Azure documentation and community
-- PowerShell community contributors
-- Open source projects that inspired various approaches
-
-## Note on Development Tools
-Various development tools and assistants were used during the creation and maintenance of this project, as is standard practice in modern software development. All code represents original work by the human authors listed above.
+AI assistance was used for code review and cleanup tasks, similar to using a linter or code formatter. All scripts remain functional tools for Azure administration.
