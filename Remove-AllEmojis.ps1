@@ -31,7 +31,6 @@ $emojiPatterns = @(
 # Define superlative language patterns to replace
 $superlativeReplacements = @{
     'best practices' = 'practices'
-    'BEST' = ''
     'best' = 'recommended'
     'amazing' = 'effective'
     'awesome' = 'comprehensive'
