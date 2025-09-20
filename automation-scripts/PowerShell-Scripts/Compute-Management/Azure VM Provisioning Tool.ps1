@@ -1,134 +1,66 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$VmName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [string]$VmSize = "Standard_B2s" ,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEVmName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WEVmSize = " Standard_B2s" ,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAdminUsername,
-    [securestring]$WEAdminPassword,
-    [string]$WEImagePublisher = " MicrosoftWindowsServer" ,
-    [string]$WEImageOffer = " WindowsServer" ,
-    [string]$WEImageSku = " 2022-Datacenter"
+    [string]$AdminUsername,
+    [securestring]$AdminPassword,
+    [string]$ImagePublisher = "MicrosoftWindowsServer" ,
+    [string]$ImageOffer = "WindowsServer" ,
+    [string]$ImageSku = " 2022-Datacenter"
 )
-
-#region Functions
-
-Write-WELog " Provisioning Virtual Machine: $WEVmName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " VM Size: $WEVmSize" " INFO"
-
-
-$WEVmConfig = New-AzVMConfig -VMName $WEVmName -VMSize $WEVmSize
-
-; 
-$WEVmConfig = Set-AzVMOperatingSystem -VM $WEVmConfig -Windows -ComputerName $WEVmName -Credential (New-Object -ErrorAction Stop PSCredential($WEAdminUsername, $WEAdminPassword))
-
-; 
-$WEVmConfig = Set-AzVMSourceImage -VM $WEVmConfig -PublisherName $WEImagePublisher -Offer $WEImageOffer -Skus $WEImageSku -Version " latest"
-
-
-New-AzVM -ResourceGroupName $WEResourceGroupName -Location $WELocation -VM $WEVmConfig
-
-Write-WELog " Virtual Machine $WEVmName provisioned successfully" " INFO"
-
-
-
-
+Write-Host "Provisioning Virtual Machine: $VmName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "VM Size: $VmSize"
+$VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
+$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object -ErrorAction Stop PSCredential($AdminUsername, $AdminPassword))
+$VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Offer $ImageOffer -Skus $ImageSku -Version " latest"
+New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
+Write-Host "Virtual Machine $VmName provisioned successfully"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

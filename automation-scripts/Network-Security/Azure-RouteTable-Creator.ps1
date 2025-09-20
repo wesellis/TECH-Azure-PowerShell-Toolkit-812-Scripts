@@ -1,48 +1,27 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Route Tables
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Route Tables
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$RouteTableName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$RouteName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$AddressPrefix,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$NextHopType = "VirtualAppliance",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$NextHopIpAddress
 )
-
-#region Functions
-
-Write-Information "Creating Route Table: $RouteTableName"
-
+Write-Host "Creating Route Table: $RouteTableName"
 # Create route table
 $params = @{
     ErrorAction = "Stop"
@@ -51,30 +30,24 @@ $params = @{
     Location = $Location
 }
 $RouteTable @params
-
-Write-Information " Route Table created successfully:"
-Write-Information "  Name: $($RouteTable.Name)"
-Write-Information "  Location: $($RouteTable.Location)"
-
+Write-Host "Route Table created successfully:"
+Write-Host "Name: $($RouteTable.Name)"
+Write-Host "Location: $($RouteTable.Location)"
 # Add custom route if parameters provided
 if ($RouteName -and $AddressPrefix) {
-    Write-Information "`nAdding custom route: $RouteName"
-    
+    Write-Host "`nAdding custom route: $RouteName"
     if ($NextHopIpAddress -and $NextHopType -eq "VirtualAppliance") {
         $params = @{
             NextHopIpAddress = $NextHopIpAddress } else { Add-AzRouteConfig
-            RouteTable = $RouteTable  Write-Information " Custom route added:" Write-Information "  Route Name: $RouteName" Write-Information "  Address Prefix: $AddressPrefix" Write-Information "  Next Hop Type: $NextHopType" if ($NextHopIpAddress) { Write-Information "  Next Hop IP: $NextHopIpAddress" }
+            RouteTable = $RouteTable  Write-Host "Custom route added:" Write-Host "Route Name: $RouteName"Write-Host "Address Prefix: $AddressPrefix"Write-Host "Next Hop Type: $NextHopType" if ($NextHopIpAddress) { Write-Host "Next Hop IP: $NextHopIpAddress" }
             Name = $RouteName
             NextHopType = $NextHopType }  Set-AzRouteTable
             AddressPrefix = $AddressPrefix
         }
         Add-AzRouteConfig @params
 }
+Write-Host "`nNext Steps:"
+Write-Host "1. Associate route table with subnet(s)"
+Write-Host "2. Add additional routes as needed"
+Write-Host "3. Test routing behavior"
 
-Write-Information "`nNext Steps:"
-Write-Information "1. Associate route table with subnet(s)"
-Write-Information "2. Add additional routes as needed"
-Write-Information "3. Test routing behavior"
-
-
-#endregion

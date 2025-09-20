@@ -1,7 +1,3 @@
-#Requires -Module Az.Resources
-#Requires -Module Az.Profile
-#Requires -Version 5.1
-
 <#
 .SYNOPSIS
     Deploys governance policies and initiatives to Azure subscriptions
@@ -10,48 +6,33 @@
     Automates the deployment of common Azure governance policies including
     tagging requirements, resource location restrictions, and security policies.
     Supports custom policy definitions and built-in policies.
-
 .PARAMETER ManagementGroup
     Management group scope for policy assignment
-
 .PARAMETER SubscriptionId
     Subscription ID for policy assignment (uses current context if not specified)
-
 .PARAMETER ResourceGroupName
     Resource group scope for policy assignment
-
 .PARAMETER PolicySetName
     Name of the policy set to deploy (Default, Security, Tagging, Location)
-
 .PARAMETER CustomPolicyPath
     Path to custom policy definition JSON file
-
 .PARAMETER AssignmentName
     Name for the policy assignment
-
 .PARAMETER ExcludedScopes
     Array of resource IDs to exclude from policy assignment
-
 .PARAMETER EnforcementMode
     Policy enforcement mode: Default, DoNotEnforce
-
 .PARAMETER WhatIf
     Show what would be deployed without making changes
 
-.EXAMPLE
     .\deploy-governance-policies.ps1 -PolicySetName "Security" -EnforcementMode "Default"
 
     Deploys security policy set to current subscription
 
-.EXAMPLE
     .\deploy-governance-policies.ps1 -CustomPolicyPath ".\custom-policy.json" -ResourceGroupName "RG-Test"
 
     Deploys custom policy to specific resource group
-
-.NOTES
-    Version: 1.0.0
-    Created: 2024-11-15
-#>
+.NOTES#>
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -184,8 +165,7 @@ function New-PolicyFromFile {
             Write-Host "Created policy definition: $($definition.Name)" -ForegroundColor Green
             return $definition
         }
-    }
-    catch {
+    } catch {
         Write-Error "Failed to create policy from file: $_"
         throw
     }
@@ -227,8 +207,7 @@ function New-PolicyAssignments {
                 $assignments += $assignment
                 Write-Host "Assigned policy: $policyName" -ForegroundColor Green
             }
-        }
-        catch {
+        } catch {
             Write-Warning "Failed to assign policy '$policyName': $_"
         }
     }
@@ -243,12 +222,12 @@ function Show-DeploymentSummary {
     )
 
     Write-Host "`nDeployment Summary:" -ForegroundColor Cyan
-    Write-Host "  Scope: $Scope"
-    Write-Host "  Enforcement Mode: $EnforcementMode"
-    Write-Host "  Policies Assigned: $($Assignments.Count)"
+    Write-Host "Scope: $Scope"
+    Write-Host "Enforcement Mode: $EnforcementMode"
+    Write-Host "Policies Assigned: $($Assignments.Count)"
 
     if ($ExcludedScopes) {
-        Write-Host "  Excluded Scopes: $($ExcludedScopes.Count)"
+        Write-Host "Excluded Scopes: $($ExcludedScopes.Count)"
     }
 
     Write-Host "`nAssigned Policies:" -ForegroundColor Cyan
@@ -314,3 +293,4 @@ if ($assignments.Count -gt 0) {
 else {
     Write-Warning "No policies were deployed"
 }
+

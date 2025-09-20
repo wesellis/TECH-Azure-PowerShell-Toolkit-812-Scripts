@@ -1,59 +1,22 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    19 Get Azrecoveryservicesbackupjobdetails
+    Get recoveryservicesbackupjobdetails
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
+    Get recoveryservicesbackupjobdetails operation
+    Author: Wes Ellis (wes@wesellis.com)
 
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced 19 Get Azrecoveryservicesbackupjobdetails
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS
     Short description
-.DESCRIPTION
     Long description
-.EXAMPLE
     PS C:\> <example usage>
     Explanation of what the example does
 .INPUTS
     Inputs (if any)
 .OUTPUTS
     Output (if any)
-
-    
 VmVersion            : Compute
 IsCancellable        : False
 IsRetriable          : False
@@ -67,13 +30,8 @@ StartTime            : 2020-12-13 1:17:35 AM
 EndTime              : 2020-12-13 1:20:41 AM
 Duration             : 00:03:06.3374736
 BackupManagementType : AzureVM
-
-
-
-
-
 DynamicErrorMessage  :
-Properties           : {[Job Type, Recover disks], [Target Storage Account Name, outlook1restoredsa], [Recovery point time , 12/12/2020   
+Properties           : {[Job Type, Recover disks], [Target Storage Account Name, outlook1restoredsa], [Recovery point time , 12/12/2020
                        11:18:41 PM], [Config Blob Name, config-outlook1-064ee552-fb05-4d1c-a2c3-80051f40b533.json]...}
 SubTasks             : {Transfer data from vault}
 VmVersion            : Compute
@@ -89,10 +47,7 @@ StartTime            : 2020-12-13 1:17:35 AM
 EndTime              : 2020-12-13 1:20:41 AM
 Duration             : 00:03:06.3374736
 BackupManagementType : AzureVM
-.NOTES
     General notes
-
-
 $getAzRecoveryServicesBackupJobSplat = @{
     # Job = $restorejob
     # JobId = '064ee552-fb05-4d1c-a2c3-80051f40b533'
@@ -101,16 +56,10 @@ $getAzRecoveryServicesBackupJobSplat = @{
     From = (Get-Date).AddDays(-30).ToUniversalTime()
 }
 $restorejob = Get-AzRecoveryServicesBackupJob -ErrorAction Stop @getAzRecoveryServicesBackupJobSplat | Where-Object {$_.JobId -eq '064ee552-fb05-4d1c-a2c3-80051f40b533'}
-
-; 
 $getAzRecoveryServicesBackupJobDetailsSplat = @{
     Job = $restorejob
     VaultId = $targetVault.ID
-}; 
+};
 $details = Get-AzRecoveryServicesBackupJobDetail -ErrorAction Stop @getAzRecoveryServicesBackupJobDetailsSplat
 $details | Format-List
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

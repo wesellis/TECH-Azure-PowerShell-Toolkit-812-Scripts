@@ -1,223 +1,26 @@
 #Requires -Version 7.0
 
-<#
-.SYNOPSIS
     Modernizes all PowerShell scripts in the toolkit according to 2024 best practices
 
-.DESCRIPTION
     Batch modernization script that applies the PowerShell Modernization Guide rules
     to all scripts in the repository. Fixes backticks, Unicode characters, parameter
     issues, and updates metadata.
-
 .PARAMETER Path
     Root path to scan for PowerShell scripts
-
 .PARAMETER WhatIf
     Preview changes without applying them
-
 .PARAMETER LogPath
     Path to save detailed modernization log
 
-.EXAMPLE
     .\modernize-all-scripts.ps1 -Path . -WhatIf
 
     Preview modernization changes for all scripts
 
-.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    Created: 2025-09-19
-#>
-
-[CmdletBinding(SupportsShouldProcess = $true)]
-param(
-    [Parameter(Mandatory = $false)]
-    [string]$Path = ".",
-
-    [Parameter()]
-    [string]$LogPath
-)
-
-#region Initialize-Configuration
-$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'Continue'
-
-if (-not $LogPath) {
-    $LogPath = Join-Path $PWD "modernization_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
-}
-
-$script:ModernizationStats = @{
-    TotalScripts = 0
-    ModernizedScripts = 0
-    EmptyStubs = 0
-    BackticksFixed = 0
-    UnicodeFixed = 0
-    ParametersFixed = 0
-    Errors = 0
-}
-#endregion
-
-#region Functions
-function Write-ModernizationLog {
-    param(
-        [string]$Message,
-        [ValidateSet('Info', 'Warning', 'Error', 'Success')]
-        [string]$Level = 'Info'
-    )
-
-    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    $logEntry = "[$timestamp] [$Level] $Message"
-
-    Add-Content -Path $LogPath -Value $logEntry
-
-    switch ($Level) {
-        'Error' { Write-Host $Message -ForegroundColor Red }
-        'Warning' { Write-Host $Message -ForegroundColor Yellow }
-        'Success' { Write-Host $Message -ForegroundColor Green }
-        default { Write-Host $Message -ForegroundColor Cyan }
-    }
-}
-
-function Test-EmptyStub {
-    param([string]$Content)
-
-    # Check if script is essentially empty (just comments, no real code)
-    $lines = $Content -split "`n"
-    $codeLines = $lines | Where-Object {
-        $_ -notmatch '^\s*#' -and
-        $_ -notmatch '^\s*$' -and
-        $_ -notmatch '^\s*<#' -and
-        $_ -notmatch '^\s*#>'
-    }
-
-    return $codeLines.Count -lt 5
-}
-
-function Fix-Backticks {
-    param([string]$Content)
-
-    $lines = $Content -split "`n"
-    $fixedLines = [System.Collections.ArrayList]::new()
-    $inSplatting = $false
-    $splattingParams = [System.Collections.ArrayList]::new()
-
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        $line = $lines[$i]
-
-        # Check for line continuation with backtick
-        if ($line -match '`\s*$') {
-            # Start collecting for splatting
-            if (-not $inSplatting) {
-                $inSplatting = $true
-                $commandLine = $line -replace '`\s*$', ''
-
-                # Extract command and first parameter
-                if ($commandLine -match '^(\s*)(\S+)\s+(.*)$') {
-                    $indent = $Matches[1]
-                    $command = $Matches[2]
-                    $firstParam = $Matches[3]
-
-                    [void]$splattingParams.Add($firstParam)
-                }
-            }
-            else {
-                # Continue collecting parameters
-                $paramLine = $line -replace '`\s*$', '' -replace '^\s+', ''
-                [void]$splattingParams.Add($paramLine)
-            }
-
-            # Check if next line doesn't have backtick
-            if ($i + 1 -lt $lines.Count -and $lines[$i + 1] -notmatch '`\s*$') {
-                $inSplatting = $false
-                $paramLine = $lines[$i + 1] -replace '^\s+', ''
-                [void]$splattingParams.Add($paramLine)
-                $i++ # Skip next line as we've processed it
-
-                # Convert to splatting
-                [void]$fixedLines.Add("${indent}`$params = @{")
-                foreach ($param in $splattingParams) {
-                    if ($param -match '^-(\w+)\s+(.+)$') {
-                        $paramName = $Matches[1]
-                        $paramValue = $Matches[2]
-                        [void]$fixedLines.Add("${indent}    $paramName = $paramValue")
-                    }
-                }
-                [void]$fixedLines.Add("${indent}}")
-                [void]$fixedLines.Add("${indent}$command @params")
-
-                $splattingParams.Clear()
-            }
-        }
-        else {
-            if (-not $inSplatting) {
-                [void]$fixedLines.Add($line)
-            }
-        }
-    }
-
-    return $fixedLines -join "`n"
-}
-
-function Fix-UnicodeCharacters {
-    param([string]$Content)
-
-    $replacements = @{
-        '[OK]' = '[OK]'
-        '[FAIL]' = '[FAIL]'
-        '[WARN]' = '[WARN]'
-        '[OK]' = '[OK]'
-        '[FAIL]' = '[FAIL]'
-        '[!]' = '[!]'
-        '[LOCK]' = '[LOCK]'
-        '[UNLOCK]' = '[UNLOCK]'
-        '[FOLDER]' = '[FOLDER]'
-        '[FILE]' = '[FILE]'
-        '[*]' = '[*]'
-        '->' = '->'
-        '<-' = '<-'
-        '^' = '^'
-        'v' = 'v'
-    }
-
-    foreach ($unicode in $replacements.Keys) {
-        $Content = $Content -replace [regex]::Escape($unicode), $replacements[$unicode]
-    }
-
-    return $Content
-}
-
-function Fix-ParameterDefaults {
-    param([string]$Content)
-
-    # Fix default parameter values with subexpressions
-    $pattern = 'param\s*\([^)]*\$(.*?)\s*=\s*"[^"]*\$\([^)]+\)[^"]*"[^)]*\)'
-
-    if ($Content -match $pattern) {
-        # Extract parameter block and fix it
-        $Content = $Content -replace '(\$\w+\s*=\s*)"([^"]*)\$\(([^)]+)\)([^"]*)"', '$1$null # Set in script body'
-    }
-
-    return $Content
-}
-
-function Update-ScriptMetadata {
-    param(
-        [string]$Content,
-        [string]$FilePath
-    )
-
-    # Get actual file creation date
-    $fileInfo = Get-Item $FilePath
-    $creationDate = $fileInfo.CreationTime.ToString('yyyy-MM-dd')
-
-    # Replace "" attributions
-    $Content = $Content -replace '', ''
-    $Content = $Content -replace '', ''
-    $Content = $Content -replace 'Wes Ellis (wes@wesellis.com)', 'Wes Ellis (wes@wesellis.com)'
 
     # Update author information if needed
     if ($Content -notmatch 'Wes Ellis') {
-        $Content = $Content -replace '\.AUTHOR\s*\n\s*[^\n]+', ".AUTHOR`n    Wes Ellis (wes@wesellis.com)"
+
     }
 
     # Add LastModified date
@@ -305,13 +108,13 @@ function Modernize-Script {
         }
         else {
             Write-ModernizationLog "  No changes needed" -Level Info
-        }
-    }
-    catch {
+
+} catch {
         $script:ModernizationStats.Errors++
         Write-ModernizationLog "  Error: $_" -Level Error
     }
 }
+
 #endregion
 
 #region Main-Execution
@@ -364,5 +167,6 @@ catch {
 finally {
     $ProgressPreference = 'Continue'
 }
+
 #endregion
 

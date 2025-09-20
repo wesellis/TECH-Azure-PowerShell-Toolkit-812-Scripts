@@ -1,140 +1,75 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Functionapp Performance Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Functionapp Performance Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEAppName
+    [string]$ResourceGroupName,
+    [string]$AppName
 )
-
-#region Functions
-
-Write-WELog " Monitoring Function App: $WEAppName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEFunctionApp = Get-AzFunctionApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName
-
-Write-WELog " Function App Information:" " INFO"
-Write-WELog "  Name: $($WEFunctionApp.Name)" " INFO"
-Write-WELog "  State: $($WEFunctionApp.State)" " INFO"
-Write-WELog "  Location: $($WEFunctionApp.Location)" " INFO"
-Write-WELog "  Default Hostname: $($WEFunctionApp.DefaultHostName)" " INFO"
-Write-WELog "  Kind: $($WEFunctionApp.Kind)" " INFO"
-Write-WELog "  App Service Plan: $($WEFunctionApp.AppServicePlan)" " INFO"
-
-
-Write-WELog " `nRuntime Configuration:" " INFO"
-Write-WELog "  Runtime: $($WEFunctionApp.Runtime)" " INFO"
-Write-WELog "  Runtime Version: $($WEFunctionApp.RuntimeVersion)" " INFO"
-Write-WELog "  OS Type: $($WEFunctionApp.OSType)" " INFO"
-
-; 
-$WEAppSettings = $WEFunctionApp.ApplicationSettings
-if ($WEAppSettings) {
-    Write-WELog " `nApplication Settings: $($WEAppSettings.Count) configured" " INFO"
+Write-Host "Monitoring Function App: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host " ============================================"
+$FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
+Write-Host "Function App Information:"
+Write-Host "Name: $($FunctionApp.Name)"
+Write-Host "State: $($FunctionApp.State)"
+Write-Host "Location: $($FunctionApp.Location)"
+Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Host "Kind: $($FunctionApp.Kind)"
+Write-Host "App Service Plan: $($FunctionApp.AppServicePlan)"
+Write-Host " `nRuntime Configuration:"
+Write-Host "Runtime: $($FunctionApp.Runtime)"
+Write-Host "Runtime Version: $($FunctionApp.RuntimeVersion)"
+Write-Host "OS Type: $($FunctionApp.OSType)"
+$AppSettings = $FunctionApp.ApplicationSettings
+if ($AppSettings) {
+    Write-Host " `nApplication Settings: $($AppSettings.Count) configured"
     # List non-sensitive setting keys
-   ;  $WESafeSettings = $WEAppSettings.Keys | Where-Object { 
-        $_ -notlike " *KEY*" -and 
-        $_ -notlike " *SECRET*" -and 
+$SafeSettings = $AppSettings.Keys | Where-Object {
+        $_ -notlike " *KEY*" -and
+        $_ -notlike " *SECRET*" -and
         $_ -notlike " *PASSWORD*" -and
         $_ -notlike " *CONNECTION*"
     }
-    if ($WESafeSettings) {
-        Write-WELog "  Non-sensitive settings: $($WESafeSettings -join ', ')" " INFO"
+    if ($SafeSettings) {
+        Write-Host "Non-sensitive settings: $($SafeSettings -join ', ')"
     }
 }
-
-
-Write-WELog " `nSecurity:" " INFO"
-Write-WELog "  HTTPS Only: $($WEFunctionApp.HttpsOnly)" " INFO"
-
-
+Write-Host " `nSecurity:"
+Write-Host "HTTPS Only: $($FunctionApp.HttpsOnly)"
 try {
     # Note: This would require additional permissions and might not always be accessible
-    Write-WELog " `nFunctions: Use Azure Portal or Azure CLI for detailed function metrics" " INFO"
+    Write-Host " `nFunctions: Use Azure Portal or Azure CLI for  function metrics"
 } catch {
-    Write-WELog " `nFunctions: Unable to enumerate (check permissions)" " INFO"
+    Write-Host " `nFunctions: Unable to enumerate (check permissions)"
 }
+Write-Host " `nFunction App monitoring completed at $(Get-Date)"
 
-Write-WELog " `nFunction App monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

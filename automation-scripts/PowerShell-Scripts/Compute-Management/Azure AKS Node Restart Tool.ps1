@@ -1,118 +1,57 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Aks Node Restart Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Aks Node Restart Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAksClusterName,
-    [string]$WENodeName
+    [string]$AksClusterName,
+    [string]$NodeName
 )
-
-#region Functions
-
-Write-WELog " Restarting AKS Node: $WENodeName" " INFO"
-Write-WELog " Cluster: $WEAksClusterName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-
-; 
-$WEAksCluster = Get-AzAksCluster -ResourceGroupName $WEResourceGroupName -Name $WEAksClusterName
-
-Write-WELog " Cluster Status: $($WEAksCluster.ProvisioningState)" " INFO"
-Write-WELog " Kubernetes Version: $($WEAksCluster.KubernetesVersion)" " INFO"
-
-
-Write-WELog " Warning: Node restart requires kubectl access to the cluster" " INFO"
-Write-WELog " Use: kubectl drain $WENodeName --ignore-daemonsets --delete-emptydir-data" " INFO"
-Write-WELog " Then: kubectl uncordon $WENodeName" " INFO"
-
-
-
-
-
-
+Write-Host "Restarting AKS Node: $NodeName"
+Write-Host "Cluster: $AksClusterName"
+Write-Host "Resource Group: $ResourceGroupName"
+$AksCluster = Get-AzAksCluster -ResourceGroupName $ResourceGroupName -Name $AksClusterName
+Write-Host "Cluster Status: $($AksCluster.ProvisioningState)"
+Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
+Write-Host "Warning: Node restart requires kubectl access to the cluster"
+Write-Host "Use: kubectl drain $NodeName --ignore-daemonsets --delete-emptydir-data"
+Write-Host "Then: kubectl uncordon $NodeName"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

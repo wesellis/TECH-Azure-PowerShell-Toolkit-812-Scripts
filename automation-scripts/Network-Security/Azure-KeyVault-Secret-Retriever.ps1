@@ -1,49 +1,28 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Key Vault
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Key Vault
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VaultName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SecretName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$AsPlainText
 )
-
-#region Functions
-
-Write-Information "Retrieving secret from Key Vault: $VaultName"
-
+Write-Host "Retrieving secret from Key Vault: $VaultName"
 $Secret = Get-AzKeyVaultSecret -VaultName $VaultName -Name $SecretName
-
 if ($AsPlainText) {
     $SecretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secret.SecretValue))
-    Write-Information "Secret Value: $SecretValue"
+    Write-Host "Secret Value: $SecretValue"
 } else {
-    Write-Information "Secret retrieved (use -AsPlainText to display value):"
+    Write-Host "Secret retrieved (use -AsPlainText to display value):"
 }
+Write-Host "Name: $($Secret.Name)"
+Write-Host "Version: $($Secret.Version)"
+Write-Host "Created: $($Secret.Created)"
+Write-Host "Updated: $($Secret.Updated)"
 
-Write-Information "  Name: $($Secret.Name)"
-Write-Information "  Version: $($Secret.Version)"
-Write-Information "  Created: $($Secret.Created)"
-Write-Information "  Updated: $($Secret.Updated)"
-
-
-#endregion

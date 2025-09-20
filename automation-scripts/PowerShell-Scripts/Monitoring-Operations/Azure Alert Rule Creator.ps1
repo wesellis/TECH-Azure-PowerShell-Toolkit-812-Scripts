@@ -1,197 +1,127 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Alert Rule Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Alert Rule Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAlertRuleName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$AlertRuleName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WETargetResourceId,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$TargetResourceId,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEMetricName,
-    
-    [Parameter(Mandatory=$true)]
-    [double]$WEThreshold,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEOperator = " GreaterThan" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WENotificationEmail
+    [string]$MetricName,
+    [Parameter(Mandatory)]
+    [double]$Threshold,
+    [Parameter()]
+    [string]$Operator = "GreaterThan" ,
+    [Parameter()]
+    [string]$NotificationEmail
 )
-
-#region Functions
-
-Write-WELog " Creating Alert Rule: $WEAlertRuleName" " INFO"
-
-
-if ($WENotificationEmail) {
-    $WEActionGroupName = " $WEAlertRuleName-actiongroup"
-    
+Write-Host "Creating Alert Rule: $AlertRuleName" "INFO"
+if ($NotificationEmail) {
+    $ActionGroupName = " $AlertRuleName-actiongroup"
     $params = @{
-        ResourceGroupName = $WEResourceGroupName
-        Name = $WEActionGroupName
-        Receiver = $WEEmailReceiver  Write-WELog " Action Group created: $WEActionGroupName" " INFO
-        ShortName = " AlertAG"
+        ResourceGroupName = $ResourceGroupName
+        Name = $ActionGroupName
+        Receiver = $EmailReceiver  Write-Host "Action Group created: $ActionGroupName" " INFO
+        ShortName = "AlertAG"
         ErrorAction = "Stop"
-        EmailAddress = $WENotificationEmail  $WEActionGroup = Set-AzActionGroup
+        EmailAddress = $NotificationEmail  $ActionGroup = Set-AzActionGroup
     }
-    $WEEmailReceiver @params
+    $EmailReceiver @params
 }
 
-; 
 $params = @{
-    Threshold = $WEThreshold
+    Threshold = $Threshold
     ErrorAction = "Stop"
-    MetricName = $WEMetricName
-    TimeAggregation = " Average"
-    Operator = $WEOperator
+    MetricName = $MetricName
+    TimeAggregation = "Average"
+    Operator = $Operator
 }
-$WECondition @params
+$Condition @params
 
-; 
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEAlertRuleName
+    ResourceGroupName = $ResourceGroupName
+    Name = $AlertRuleName
     Severity = "2"
-    Frequency = " PT1M"
-    WindowSize = " PT5M"
-    TargetResourceId = $WETargetResourceId
-    Condition = $WECondition
+    Frequency = "PT1M"
+    WindowSize = "PT5M"
+    TargetResourceId = $TargetResourceId
+    Condition = $Condition
 }
-$WEAlertRule @params
-
-Write-WELog " Alert Rule ID: $($WEAlertRule.Id)" " INFO"
-
-if ($WEActionGroup) {
+$AlertRule @params
+Write-Host "Alert Rule ID: $($AlertRule.Id)" "INFO"
+if ($ActionGroup) {
     # Associate action group with alert rule
     $params = @{
-        ResourceGroupName = $WEResourceGroupName
-        Name = $WEAlertRuleName
+        ResourceGroupName = $ResourceGroupName
+        Name = $AlertRuleName
         Severity = "2"
-        Condition = $WECondition
-        WindowSize = " PT5M"
-        TargetResourceId = $WETargetResourceId
-        ActionGroupId = $WEActionGroup.Id
-        Frequency = " PT1M"
+        Condition = $Condition
+        WindowSize = "PT5M"
+        TargetResourceId = $TargetResourceId
+        ActionGroupId = $ActionGroup.Id
+        Frequency = "PT1M"
     }
     Add-AzMetricAlertRuleV2 @params
 }
-
-Write-WELog "  Alert Rule created successfully:" " INFO"
-Write-WELog "  Name: $WEAlertRuleName" " INFO"
-Write-WELog "  Metric: $WEMetricName" " INFO"
-Write-WELog "  Threshold: $WEOperator $WEThreshold" " INFO"
-Write-WELog "  Target Resource: $($WETargetResourceId.Split('/')[-1])" " INFO"
-if ($WENotificationEmail) {
-    Write-WELog "  Notification Email: $WENotificationEmail" " INFO"
+Write-Host "Alert Rule created successfully:" "INFO"
+Write-Host "Name: $AlertRuleName" "INFO"
+Write-Host "Metric: $MetricName" "INFO"
+Write-Host "Threshold: $Operator $Threshold" "INFO"
+Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])" "INFO"
+if ($NotificationEmail) {
+    Write-Host "Notification Email: $NotificationEmail" "INFO"
 }
-
-Write-WELog " `nAlert Rule Features:" " INFO"
-Write-WELog " • Real-time monitoring" " INFO"
-Write-WELog " • Configurable thresholds" " INFO"
-Write-WELog " • Multiple notification channels" " INFO"
-Write-WELog " • Auto-resolution" " INFO"
-
-
-
-
+Write-Host " `nAlert Rule Features:" "INFO"
+Write-Host "Real-time monitoring" "INFO"
+Write-Host "Configurable thresholds" "INFO"
+Write-Host "Multiple notification channels" "INFO"
+Write-Host "Auto-resolution" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

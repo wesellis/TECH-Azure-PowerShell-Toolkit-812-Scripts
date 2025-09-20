@@ -1,162 +1,96 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Nsg Rule Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Nsg Rule Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WENsgName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$NsgName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WERuleName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$RuleName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEProtocol,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$Protocol,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WESourcePortRange,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$SourcePortRange,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEDestinationPortRange,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$DestinationPortRange,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAccess,
-    
-    [Parameter(Mandatory=$true)]
-    [int]$WEPriority
+    [string]$Access,
+    [Parameter(Mandatory)]
+    [int]$Priority
 )
+Write-Host "Adding security rule to NSG: $NsgName" "INFO"
 
-#region Functions
-
-Write-WELog " Adding security rule to NSG: $WENsgName" " INFO"
-; 
-$WENsg = Get-AzNetworkSecurityGroup -ResourceGroupName $WEResourceGroupName -Name $WENsgName
-
+$Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
 $params = @{
     DestinationAddressPrefix = " *"
     Direction = "Inbound"
-    Protocol = $WEProtocol
-    Name = $WERuleName
-    Priority = $WEPriority
-    DestinationPortRange = $WEDestinationPortRange
-    SourcePortRange = $WESourcePortRange
-    Access = $WEAccess
-    NetworkSecurityGroup = $WENsg
+    Protocol = $Protocol
+    Name = $RuleName
+    Priority = $Priority
+    DestinationPortRange = $DestinationPortRange
+    SourcePortRange = $SourcePortRange
+    Access = $Access
+    NetworkSecurityGroup = $Nsg
     SourceAddressPrefix = " *"
 }
 Add-AzNetworkSecurityRuleConfig @params
-
-Set-AzNetworkSecurityGroup -NetworkSecurityGroup $WENsg
-Write-WELog " Security rule '$WERuleName' added successfully to NSG: $WENsgName" " INFO"
-
-
-
-
+Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
+Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

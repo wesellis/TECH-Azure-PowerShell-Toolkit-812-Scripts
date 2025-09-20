@@ -1,132 +1,79 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Copy Badges
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Copy Badges
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-This script is used to copy the badges from the "prs" container to the " badges" container.  
+This script is used to copy the badges from the "prs" container to the " badges" container.
 The badges are created in the " prs" container when the pipleline test is executed on the PR, but we don't want to copy those results until approved
 Then, when the PR is merged, the CI pipeline copies the badges to the " badges" folder to reflect the live/current results
-
-
-
 [CmdletBinding()
 try {
     # Main script execution
 ]
-$ErrorActionPreference = " Stop"
+$ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    [string]$WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
-    [string]$WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    [string]$WETableName = " QuickStartsMetadataService" ,
-    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs" ,
-    [Parameter(mandatory = $true)]$WEStorageAccountKey
+    [string]$SampleName = $ENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
+    [string]$StorageAccountName = $ENV:STORAGE_ACCOUNT_NAME,
+    [string]$TableName = "QuickStartsMetadataService" ,
+    [string]$TableNamePRs = "QuickStartsMetadataServicePRs" ,
+    [Parameter(mandatory = $true)]$StorageAccountKey
 )
-
-#region Functions
-
-if ([string]::IsNullOrWhiteSpace($WESampleName)) {
-    Write-Error " SampleName is empty"
+if ([string]::IsNullOrWhiteSpace($SampleName)) {
+    Write-Error "SampleName is empty"
 }
 else {
-    Write-WELog " SampleName: $WESampleName" " INFO"
+    Write-Host "SampleName: $SampleName"
 }
-
-$storageFolder = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
-$WERowKey = $storageFolder
-Write-WELog " RowKey: $WERowKey" " INFO"
-
-
-$ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
+$storageFolder = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
+$RowKey = $storageFolder
+Write-Host "RowKey: $RowKey"
+$ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
 $cloudTable = (Get-AzStorageTable -Name $tableName -Context $ctx).CloudTable
 $cloudTablePRs = (Get-AzStorageTable -Name $tableNamePRs -Context $ctx).CloudTable
-
-
-$blobs = Get-AzStorageBlob -Context $ctx -Container " prs" -Prefix $storageFolder.Replace(" @" , " /" ) 
+$blobs = Get-AzStorageBlob -Context $ctx -Container " prs" -Prefix $storageFolder.Replace(" @" , "/" )
 $blobs | Start-AzStorageBlobCopy -DestContainer " badges" -Verbose -Force
 $blobs | Remove-AzStorageBlob -Verbose -Force
-
-
-Write-WELog " Fetching row for: $WERowKey in Table: $cloudTablePRs" " INFO"
-$r = Get-AzTableRow -table $cloudTablePRs -ColumnName " RowKey" -Value $WERowKey -Operator Equal
+Write-Host "Fetching row for: $RowKey in Table: $cloudTablePRs"
+$r = Get-AzTableRow -table $cloudTablePRs -ColumnName "RowKey" -Value $RowKey -Operator Equal
 if ($null -eq $r) {
-    Write-Error " Could not find row with key $WERowKey in table $cloudTablePRs"
+    Write-Error "Could not find row with key $RowKey in table $cloudTablePRs"
     Return
 }
-Write-WELog " Result from Table: $r" " INFO"
-
-
+Write-Host "Result from Table: $r"
 if ($null -eq $r.status) {
-    Write-WELog " Adding status column..." " INFO"
-    Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue " Live"
+    Write-Host "Adding status column..."
+    Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue "Live"
 }
 else {
-    $r.status = " Live"
+    $r.status = "Live"
 }
-
-Write-WELog " Updating LIVE table with..." " INFO"
+Write-Host "Updating LIVE table with..."
 $r | Format-List *
-
 $p = @{ }
 foreach ($i in $r.PSObject.Properties) {
-    if ($i.Name -ne " Etag" ) {
+    if ($i.Name -ne "Etag" ) {
         if ($i.value -eq " true" ) {
-            $newValue = " PASS"
+            $newValue = "PASS"
         }
         elseif ($i.value -eq " false" ) {
-           ;  $newValue = " FAIL"
+$newValue = "FAIL"
         }
-        else { 
-           ;  $newValue = $i.Value
+        else {
+$newValue = $i.Value
         }
         $p.Add($i.Name, $newValue)
     }
 }
-
-Write-WELog " New properties..." " INFO"
+Write-Host "New properties..."
 $p | out-string
-
-
-Write-WELog " Add/Update Row in live table..." " INFO"
+Write-Host "Add/Update Row in live table..."
 $params = @{
     table = $cloudTable
     property = $p
@@ -134,16 +81,10 @@ $params = @{
     rowKey = $r.rowKey
 }
 Add-AzTableRow @params
-Write-WELog " Removing row from PR table..." " INFO"
+Write-Host "Removing row from PR table..."
 $r | Remove-AzTableRow -Table $cloudTablePRs
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,142 +1,78 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Sql Database Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Sql Database Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEServerName,
-    [string]$WEDatabaseName
+    [string]$ServerName,
+    [string]$DatabaseName
 )
+Write-Host "Monitoring SQL Database: $DatabaseName" "INFO"
+Write-Host "Server: $ServerName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host " ============================================" "INFO"
+$SqlServer = Get-AzSqlServer -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+Write-Host "SQL Server Information:" "INFO"
+Write-Host "Server Name: $($SqlServer.ServerName)" "INFO"
+Write-Host "Location: $($SqlServer.Location)" "INFO"
+Write-Host "Server Version: $($SqlServer.ServerVersion)" "INFO"
+Write-Host "Fully Qualified Domain Name: $($SqlServer.FullyQualifiedDomainName)" "INFO"
 
-#region Functions
+$SqlDatabase = Get-AzSqlDatabase -ResourceGroupName $ResourceGroupName -ServerName $ServerName -DatabaseName $DatabaseName
+Write-Host " `nSQL Database Information:" "INFO"
+Write-Host "Database Name: $($SqlDatabase.DatabaseName)" "INFO"
+Write-Host "Status: $($SqlDatabase.Status)" "INFO"
+Write-Host "Edition: $($SqlDatabase.Edition)" "INFO"
+Write-Host "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)" "INFO"
+Write-Host "Max Size (GB): $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2))" "INFO"
+Write-Host "Collation: $($SqlDatabase.CollationName)" "INFO"
+Write-Host "Creation Date: $($SqlDatabase.CreationDate)" "INFO"
+Write-Host "Earliest Restore Date: $($SqlDatabase.EarliestRestoreDate)" "INFO"
 
-Write-WELog " Monitoring SQL Database: $WEDatabaseName" " INFO"
-Write-WELog " Server: $WEServerName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WESqlServer = Get-AzSqlServer -ResourceGroupName $WEResourceGroupName -ServerName $WEServerName
-
-Write-WELog " SQL Server Information:" " INFO"
-Write-WELog "  Server Name: $($WESqlServer.ServerName)" " INFO"
-Write-WELog "  Location: $($WESqlServer.Location)" " INFO"
-Write-WELog "  Server Version: $($WESqlServer.ServerVersion)" " INFO"
-Write-WELog "  Fully Qualified Domain Name: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
-
-; 
-$WESqlDatabase = Get-AzSqlDatabase -ResourceGroupName $WEResourceGroupName -ServerName $WEServerName -DatabaseName $WEDatabaseName
-
-Write-WELog " `nSQL Database Information:" " INFO"
-Write-WELog "  Database Name: $($WESqlDatabase.DatabaseName)" " INFO"
-Write-WELog "  Status: $($WESqlDatabase.Status)" " INFO"
-Write-WELog "  Edition: $($WESqlDatabase.Edition)" " INFO"
-Write-WELog "  Service Objective: $($WESqlDatabase.CurrentServiceObjectiveName)" " INFO"
-Write-WELog "  Max Size (GB): $([math]::Round($WESqlDatabase.MaxSizeBytes / 1GB, 2))" " INFO"
-Write-WELog "  Collation: $($WESqlDatabase.CollationName)" " INFO"
-Write-WELog "  Creation Date: $($WESqlDatabase.CreationDate)" " INFO"
-Write-WELog "  Earliest Restore Date: $($WESqlDatabase.EarliestRestoreDate)" " INFO"
-
-; 
-$WEFirewallRules = Get-AzSqlServerFirewallRule -ResourceGroupName $WEResourceGroupName -ServerName $WEServerName
-Write-WELog " `nFirewall Rules: $($WEFirewallRules.Count)" " INFO"
-foreach ($WERule in $WEFirewallRules) {
-    Write-WELog "  - $($WERule.FirewallRuleName): $($WERule.StartIpAddress) - $($WERule.EndIpAddress)" " INFO"
+$FirewallRules = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
+Write-Host " `nFirewall Rules: $($FirewallRules.Count)" "INFO"
+foreach ($Rule in $FirewallRules) {
+    Write-Host "  - $($Rule.FirewallRuleName): $($Rule.StartIpAddress) - $($Rule.EndIpAddress)" "INFO"
 }
-
-
-Write-WELog " `nDatabase Metrics:" " INFO"
-Write-WELog "  Note: Use Azure Monitor or Azure Portal for detailed performance metrics" " INFO"
-Write-WELog "  Current Service Level: $($WESqlDatabase.CurrentServiceObjectiveName)" " INFO"
-
-Write-WELog " `nSQL Database monitoring completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nDatabase Metrics:" "INFO"
+Write-Host "Note: Use Azure Monitor or Azure Portal for  performance metrics" "INFO"
+Write-Host "Current Service Level: $($SqlDatabase.CurrentServiceObjectiveName)" "INFO"
+Write-Host " `nSQL Database monitoring completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

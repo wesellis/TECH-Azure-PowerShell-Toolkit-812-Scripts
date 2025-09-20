@@ -1,124 +1,63 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Resourcegroup Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Resourcegroup Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [hashtable]$WETags = @{}
+    [string]$Location,
+    [Parameter()]
+    [hashtable]$Tags = @{}
 )
-
-#region Functions
-
-Write-WELog " Creating Resource Group: $WEResourceGroupName" " INFO"
-
-if ($WETags.Count -gt 0) {
-   ;  $WEResourceGroup = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Tag $WETags
-    Write-WELog " Tags applied:" " INFO"
-    foreach ($WETag in $WETags.GetEnumerator()) {
-        Write-WELog "  $($WETag.Key): $($WETag.Value)" " INFO"
+Write-Host "Creating Resource Group: $ResourceGroupName"
+if ($Tags.Count -gt 0) {
+$ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+    Write-Host "Tags applied:"
+    foreach ($Tag in $Tags.GetEnumerator()) {
+        Write-Host "  $($Tag.Key): $($Tag.Value)"
     }
 } else {
-   ;  $WEResourceGroup = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation
+$ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 }
-
-Write-WELog "  Resource Group created successfully:" " INFO"
-Write-WELog "  Name: $($WEResourceGroup.ResourceGroupName)" " INFO"
-Write-WELog "  Location: $($WEResourceGroup.Location)" " INFO"
-Write-WELog "  Provisioning State: $($WEResourceGroup.ProvisioningState)" " INFO"
-Write-WELog "  Resource ID: $($WEResourceGroup.ResourceId)" " INFO"
-
-
-
-
+Write-Host "Resource Group created successfully:"
+Write-Host "Name: $($ResourceGroup.ResourceGroupName)"
+Write-Host "Location: $($ResourceGroup.Location)"
+Write-Host "Provisioning State: $($ResourceGroup.ProvisioningState)"
+Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

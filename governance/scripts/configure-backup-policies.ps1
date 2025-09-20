@@ -1,61 +1,39 @@
 #Requires -Module Az.RecoveryServices, Az.Sql
-#Requires -Version 7.0
+#Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Configures backup policies for Azure VMs and SQL databases
-
-.DESCRIPTION
-    Comprehensive backup policy configuration tool for Azure resources including
     Virtual Machines, SQL databases, and file shares. Supports creating custom
     backup policies with configurable retention periods and schedules.
-
 .PARAMETER VaultName
     Name of the Recovery Services vault
-
 .PARAMETER ResourceGroupName
     Name of the resource group containing the vault
-
 .PARAMETER PolicyName
     Name of the backup policy to create or update
-
 .PARAMETER BackupType
     Type of backup policy: VM, SQL, FileShare
-
 .PARAMETER RetentionDaily
     Number of days to retain daily backups
-
 .PARAMETER RetentionWeekly
     Number of weeks to retain weekly backups
-
 .PARAMETER RetentionMonthly
     Number of months to retain monthly backups
-
 .PARAMETER RetentionYearly
     Number of years to retain yearly backups
-
 .PARAMETER ScheduleTime
     Time of day to run backups (24-hour format)
-
 .PARAMETER ApplyToResources
     Apply the policy to specific resources immediately
 
-.EXAMPLE
     .\configure-backup-policies.ps1 -VaultName "MyVault" -ResourceGroupName "MyRG" -PolicyName "DailyVM" -BackupType VM
 
     Creates a VM backup policy with default retention settings
 
-.EXAMPLE
     .\configure-backup-policies.ps1 -VaultName "MyVault" -ResourceGroupName "MyRG" -PolicyName "SQLPolicy" -BackupType SQL -RetentionDaily 30
 
     Creates SQL backup policy with 30-day retention
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-    LastModified: 2025-09-19
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -109,6 +87,7 @@ param(
 #region Initialize-Configuration
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+
 #endregion
 
 #region Functions
@@ -218,7 +197,7 @@ function New-VMBackupPolicy {
             }
         }
 
-        Write-Information "VM backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        Write-Host "VM backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
@@ -277,7 +256,7 @@ function New-SQLBackupPolicy {
             New-AzRecoveryServicesBackupProtectionPolicy @params
         }
 
-        Write-Information "SQL backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        Write-Host "SQL backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
@@ -322,7 +301,7 @@ function New-FileShareBackupPolicy {
             New-AzRecoveryServicesBackupProtectionPolicy @params
         }
 
-        Write-Information "FileShare backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        Write-Host "FileShare backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
@@ -361,7 +340,7 @@ function Apply-BackupPolicy {
                                 Policy = $Policy
                             }
                             Enable-AzRecoveryServicesBackupProtection @params
-                            Write-Information "Backup enabled for VM: $vmName" -InformationAction Continue
+                            Write-Host "Backup enabled for VM: $vmName" -InformationAction Continue
                         }
                     }
                     else {
@@ -377,9 +356,8 @@ function Apply-BackupPolicy {
                     Write-Verbose "FileShare backup configuration for: $resourceId"
                 }
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Error "Failed to apply backup policy: $_"
         throw
     }
@@ -410,11 +388,12 @@ function Get-BackupPolicySummary {
 
     return $summary
 }
+
 #endregion
 
 #region Main-Execution
 try {
-    Write-Information "[START] Configuring backup policies" -InformationAction Continue
+    Write-Host "[START] Configuring backup policies" -InformationAction Continue
 
     # Validate Recovery Services vault
     $vault = Test-RecoveryServicesVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName
@@ -423,28 +402,50 @@ try {
     $policy = switch ($BackupType) {
         'VM' {
             $params = @{
-                RetentionYearly = $RetentionYearly } 'FileShare' { New-FileShareBackupPolicy
+                RetentionYearly = $RetentionYearly
                 RetentionWeekly = $RetentionWeekly
                 RetentionMonthly = $RetentionMonthly
                 RetentionDaily = $RetentionDaily
                 Vault = $vault
-                ScheduleTime = $ScheduleTime } }
+                ScheduleTime = $ScheduleTime
                 PolicyName = $PolicyName
             }
             New-VMBackupPolicy @params
+        }
+        'SQL' {
+            $params = @{
+                RetentionMonthly = $RetentionMonthly
+                RetentionYearly = $RetentionYearly
+                PolicyName = $PolicyName
+                Vault = $vault
+                RetentionWeekly = $RetentionWeekly
+                RetentionDaily = $RetentionDaily
+            }
+            New-SQLBackupPolicy @params
+        }
+        'FileShare' {
+            $params = @{
+                RetentionDaily = $RetentionDaily
+                PolicyName = $PolicyName
+                Vault = $vault
+                ScheduleTime = $ScheduleTime
+            }
+            New-FileShareBackupPolicy @params
+        }
+    }
 
     # Apply policy to resources if specified
     if ($ApplyToResources -and $ApplyToResources.Count -gt 0) {
-        Write-Information "[APPLY] Applying policy to specified resources" -InformationAction Continue
+        Write-Host "[APPLY] Applying policy to specified resources" -InformationAction Continue
         Apply-BackupPolicy -Vault $vault -Policy $policy -ResourceIds $ApplyToResources -BackupType $BackupType
     }
 
     # Display policy summary
     $summary = Get-BackupPolicySummary -Policy $policy -BackupType $BackupType
-    Write-Information "`n[SUMMARY] Backup Policy Configuration:" -InformationAction Continue
+    Write-Host "`n[SUMMARY] Backup Policy Configuration:" -InformationAction Continue
     $summary | Format-List
 
-    Write-Information "[COMPLETE] Backup policy configuration completed successfully" -InformationAction Continue
+    Write-Host "[COMPLETE] Backup policy configuration completed successfully" -InformationAction Continue
 
     # Return the policy object
     return $policy
@@ -463,4 +464,6 @@ finally {
     # Cleanup
     $ProgressPreference = 'Continue'
 }
+
 #endregion
+

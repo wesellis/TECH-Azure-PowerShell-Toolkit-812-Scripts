@@ -1,115 +1,67 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Autosnooze Createalert Parent
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Autosnooze Createalert Parent
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS  
  Runbook for shutdown the Azure VM based on CPU usage
-.DESCRIPTION  
  Runbook for shutdown the Azure VM based on CPU usage
-.EXAMPLE  
 .\AutoSnooze_CreateAlert_Parent.ps1 -WhatIf $false
-Version History  
-v1.0   - Initial Release  
-
-
+Version History
+v1.0   - Initial Release
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-[Parameter(Mandatory=$false,HelpMessage=" Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
+[Parameter(HelpMessage="Enter the value for WhatIf. Values can be either true or false" )][bool]$WhatIf = $false
 )
-
-#region Functions
-
-function WE-CheckExcludeVM ($WEFilterVMList)
+function CheckExcludeVM ($FilterVMList)
 {
-    
-    $WEAzureVM= Get-AzureRmVM -ErrorAction SilentlyContinue
-    [boolean] $WEISexists = $false
-            
+    $AzureVM= Get-AzureRmVM -ErrorAction SilentlyContinue
+    [boolean] $ISexists = $false
     [string[]] $invalidvm=@()
-    $WEExAzureVMList=@()
-
-    foreach($filtervm in $WEVMfilterList)
+    $ExAzureVMList=@()
+    foreach($filtervm in $VMfilterList)
     {
-        foreach($vmname in $WEAzureVM)
+        foreach($vmname in $AzureVM)
         {
-            if($WEVmname.Name.ToLower().Trim() -eq $filtervm.Tolower().Trim())
-            {                    
-                $WEISexists = $true
-                $WEExAzureVMList = $WEExAzureVMList + $vmname
-                break                    
+            if($Vmname.Name.ToLower().Trim() -eq $filtervm.Tolower().Trim())
+            {
+                $ISexists = $true
+                $ExAzureVMList = $ExAzureVMList + $vmname
+                break
             }
             else
             {
-                $WEISexists = $false
+                $ISexists = $false
             }
         }
-        if($WEISexists -eq $false)
+        if($ISexists -eq $false)
         {
             $invalidvm = $invalidvm+$filtervm
         }
     }
-
     if($null -ne $invalidvm)
     {
-        Write-Output " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
-        Write-Warning " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
+        Write-Output "Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
+        Write-Warning "Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         exit
     }
     else
     {
-        return $WEExAzureVMList
+        return $ExAzureVMList
     }
-    
 }
-
-
-$connectionName = " AzureRunAsConnection"
+$connectionName = "AzureRunAsConnection"
 try
 {
-    # Get the connection " AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
-
-    " Logging in to Azure..."
+    # Get the connection "AzureRunAsConnection "
+    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
+    "Logging in to Azure..."
     $params = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
@@ -117,140 +69,124 @@ try
     }
     Add-AzureRmAccount @params
 }
-catch 
+catch
 {
     if (!$servicePrincipalConnection)
     {
-        $WEErrorMessage = " Connection $connectionName not found."
-        throw $WEErrorMessage
+        $ErrorMessage = "Connection $connectionName not found."
+        throw $ErrorMessage
     } else{
         Write-Error -Message $_.Exception
         throw $_.Exception
     }
 }
-
-
-
-$WESubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
-$WEResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
-$WEExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
+$SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
+$ResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
+$ExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
 $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
 $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
-
-
 $webhookUri = Get-AutomationVariable -Name 'Internal_AutoSnooze_WebhookUri'
-
 try
-    {  
-        Write-Output " Runbook Execution Started..."
-        [string[]] $WEVMfilterList = $WEExcludeVMNames -split " ,"
-        [string[]] $WEVMRGList = $WEResourceGroupNames -split " ,"
-
+    {
+        Write-Output "Runbook Execution Started..."
+        [string[]] $VMfilterList = $ExcludeVMNames -split " ,"
+        [string[]] $VMRGList = $ResourceGroupNames -split " ,"
         #Validate the Exclude List VM's and stop the execution if the list contains any invalid VM
-        if([string]::IsNullOrEmpty($WEExcludeVMNames) -ne $true)
+        if([string]::IsNullOrEmpty($ExcludeVMNames) -ne $true)
         {
-            Write-Output " Exclude VM's added so validating the resource(s)..."            
-           ;  $WEExAzureVMList = CheckExcludeVM -FilterVMList $WEVMfilterList
-        } 
-
-        if ($null -ne $WEExAzureVMList -and $WEWhatIf -eq $false)
+            Write-Output "Exclude VM's added so validating the resource(s)..."
+$ExAzureVMList = CheckExcludeVM -FilterVMList $VMfilterList
+        }
+        if ($null -ne $ExAzureVMList -and $WhatIf -eq $false)
         {
-            foreach($WEVM in $WEExAzureVMList)
+            foreach($VM in $ExAzureVMList)
             {
                 try
                 {
-                        Write-Output " Disabling the alert rules for VM : $($WEVM.Name)" 
-                       ;  $params = @{" VMObject" =$WEVM;" AlertAction" =" Disable" ;" WebhookUri" =$webhookUri}                    
-                        $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
+                        Write-Output "Disabling the alert rules for VM : $($VM.Name)"
+$params = @{"VMObject" =$VM;"AlertAction" ="Disable" ;"WebhookUri" =$webhookUri}
+                        $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName Parameters $params
                 }
                 catch
                 {
                     $ex = $_.Exception
-                    Write-Output $_.Exception 
+                    Write-Output $_.Exception
                 }
             }
         }
-        elseif($null -ne $WEExAzureVMList -and $WEWhatIf -eq $true)
+        elseif($null -ne $ExAzureVMList -and $WhatIf -eq $true)
         {
-            Write-Output " WhatIf parameter is set to True..."
-            Write-Output " What if: Performing the alert rules disable for the Exclude VM's..."
-            Write-Output $WEExcludeVMNames
+            Write-Output "WhatIf parameter is set to True..."
+            Write-Output "What if: Performing the alert rules disable for the Exclude VM's..."
+            Write-Output $ExcludeVMNames
         }
-
-        $WEAzureVMListTemp = $null
-        $WEAzureVMList=@()
+        $AzureVMListTemp = $null
+        $AzureVMList=@()
         ##Getting VM Details based on RG List or Subscription
-        if($null -ne $WEVMRGList)
+        if($null -ne $VMRGList)
         {
-            foreach($WEResource in $WEVMRGList)
+            foreach($Resource in $VMRGList)
             {
-                Write-Output " Validating the resource group name ($($WEResource.Trim()))" 
-                $checkRGname = Get-AzureRmResourceGroup -ErrorAction Stop  $WEResource.Trim() -ev notPresent -ea 0  
+                Write-Output "Validating the resource group name ($($Resource.Trim()))"
+                $checkRGname = Get-AzureRmResourceGroup -ErrorAction Stop  $Resource.Trim() -ev notPresent -ea 0
                 if ($null -eq $checkRGname)
                 {
-                    Write-Output " $($WEResource) is not a valid Resource Group Name. Please Verify!"
-                    Write-Warning " $($WEResource) is not a valid Resource Group Name. Please Verify!"
+                    Write-Output " $($Resource) is not a valid Resource Group Name. Please Verify!"
+                    Write-Warning " $($Resource) is not a valid Resource Group Name. Please Verify!"
                 }
                 else
-                {                   
-                    $WEAzureVMListTemp = Get-AzureRmVM -ResourceGroupName $WEResource -ErrorAction SilentlyContinue
-                    if($null -ne $WEAzureVMListTemp)
+                {
+                    $AzureVMListTemp = Get-AzureRmVM -ResourceGroupName $Resource -ErrorAction SilentlyContinue
+                    if($null -ne $AzureVMListTemp)
                     {
-                        $WEAzureVMList = $WEAzureVMList + $WEAzureVMListTemp
+                        $AzureVMList = $AzureVMList + $AzureVMListTemp
                     }
                 }
             }
-        } 
+        }
         else
         {
-            Write-Output " Getting all the VM's from the subscription..."  
-            $WEAzureVMList=Get-AzureRmVM -ErrorAction SilentlyContinue
-        }        
-        
-        $WEActualAzureVMList=@()
-        if($null -ne $WEVMfilterList)
+            Write-Output "Getting all the VM's from the subscription..."
+            $AzureVMList=Get-AzureRmVM -ErrorAction SilentlyContinue
+        }
+        $ActualAzureVMList=@()
+        if($null -ne $VMfilterList)
         {
-            foreach($WEVM in $WEAzureVMList)
-            {  
-                ##Checking Vm in excluded list                         
-                if($WEVMfilterList -notcontains ($($WEVM.Name)))
+            foreach($VM in $AzureVMList)
+            {
+                ##Checking Vm in excluded list
+                if($VMfilterList -notcontains ($($VM.Name)))
                 {
-                    $WEActualAzureVMList = $WEActualAzureVMList + $WEVM
+                    $ActualAzureVMList = $ActualAzureVMList + $VM
                 }
             }
         }
         else
         {
-           ;  $WEActualAzureVMList = $WEAzureVMList
+$ActualAzureVMList = $AzureVMList
         }
-
-        if($WEWhatIf -eq $false)
-        {    
-            foreach($WEVM in $WEActualAzureVMList)
-            {  
-                    Write-Output " Creating alert rules for the VM : $($WEVM.Name)"
-                   ;  $params = @{" VMObject" =$WEVM;" AlertAction" =" Create" ;" WebhookUri" =$webhookUri}                    
-                    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
-            }
-            Write-Output " Note: All the alert rules creation are processed in parallel. Please check the child runbook (AutoSnooze_CreateAlert_Child) job status..."
-        }
-        elseif($WEWhatIf -eq $true)
+        if($WhatIf -eq $false)
         {
-            Write-Output " WhatIf parameter is set to True..."
-            Write-Output " When 'WhatIf' is set to TRUE, runbook provides a list of Azure Resources (e.g. VMs), that will be impacted if you choose to deploy this runbook."
-            Write-Output " No action will be taken at this time..."
-            Write-Output $($WEActualAzureVMList) | Select-Object Name, ResourceGroupName | Format-List
+            foreach($VM in $ActualAzureVMList)
+            {
+                    Write-Output "Creating alert rules for the VM : $($VM.Name)"
+$params = @{"VMObject" =$VM;"AlertAction" =Create" ;"WebhookUri" =$webhookUri}
+                    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName Parameters $params
+            }
+            Write-Output "Note: All the alert rules creation are processed in parallel. Please check the child runbook (AutoSnooze_CreateAlert_Child) job status..."
         }
-        Write-Output " Runbook Execution Completed..."
+        elseif($WhatIf -eq $true)
+        {
+            Write-Output "WhatIf parameter is set to True..."
+            Write-Output "When 'WhatIf' is set to TRUE, runbook provides a list of Azure Resources (e.g. VMs), that will be impacted if you choose to deploy this runbook."
+            Write-Output "No action will be taken at this time..."
+            Write-Output $($ActualAzureVMList) | Select-Object Name, ResourceGroupName | Format-List
+        }
+        Write-Output "Runbook Execution Completed..."
     }
     catch
     {
-       ;  $ex = $_.Exception
+$ex = $_.Exception
         Write-Output $_.Exception
     }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

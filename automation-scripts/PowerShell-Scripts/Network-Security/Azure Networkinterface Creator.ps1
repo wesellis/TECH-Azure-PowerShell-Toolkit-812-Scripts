@@ -1,148 +1,79 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Networkinterface Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Networkinterface Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$NicName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WENicName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubnetId,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEPublicIpId
+    [string]$SubnetId,
+    [Parameter()]
+    [string]$PublicIpId
 )
-
-#region Functions
-
-Write-WELog " Creating Network Interface: $WENicName" " INFO"
-
-if ($WEPublicIpId) {
+Write-Host "Creating Network Interface: $NicName"
+if ($PublicIpId) {
    $params = @{
-       ResourceGroupName = $WEResourceGroupName
-       Location = $WELocation
-       PublicIpAddressId = $WEPublicIpId
-       SubnetId = $WESubnetId
+       ResourceGroupName = $ResourceGroupName
+       Location = $Location
+       PublicIpAddressId = $PublicIpId
+       SubnetId = $SubnetId
        ErrorAction = "Stop"
-       Name = $WENicName
+       Name = $NicName
    }
    ; @params
 } else {
    $params = @{
        ErrorAction = "Stop"
-       SubnetId = $WESubnetId
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WENicName
-       Location = $WELocation
+       SubnetId = $SubnetId
+       ResourceGroupName = $ResourceGroupName
+       Name = $NicName
+       Location = $Location
    }
    ; @params
 }
-
-Write-WELog " Network Interface created successfully:" " INFO"
-Write-WELog "  Name: $($WENic.Name)" " INFO"
-Write-WELog "  Private IP: $($WENic.IpConfigurations[0].PrivateIpAddress)" " INFO"
-Write-WELog "  Location: $($WENic.Location)" " INFO"
-
-
-
-
+Write-Host "Network Interface created successfully:"
+Write-Host "Name: $($Nic.Name)"
+Write-Host "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+Write-Host "Location: $($Nic.Location)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

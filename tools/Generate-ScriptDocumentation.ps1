@@ -1,87 +1,11 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
-# Generate-ScriptDocumentation.ps1
-# Automatically generates comprehensive documentation for PowerShell scripts
-# Version: 2.0
-
-param(
-    [Parameter(Mandatory=$false)]
-    [string]$ScriptPath,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$OutputPath,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet("Markdown", "HTML", "DocFx", "All")]
-    [string]$Format = "Markdown",
-    
-    [switch]$IncludeExamples,
-    [switch]$GenerateReadme,
-    [switch]$UpdateExisting
-)
-
-#region Functions
-
-class DocumentationGenerator {
-    [string]$ScriptPath
-    [hashtable]$Metadata
-    [string]$Content
-    [System.Management.Automation.Language.ScriptBlockAst]$AST
-    
-    DocumentationGenerator([string]$Path) {
-        $this.ScriptPath = $Path
-        $this.Content = Get-Content $Path -Raw
-        $this.ParseScript()
-        $this.ExtractMetadata()
-    }
-    
-    [void] ParseScript() {
-        $tokens = $null
-        $errors = $null
-        $this.AST = [System.Management.Automation.Language.Parser]::ParseInput($this.Content, [ref]$tokens, [ref]$errors)
-    }
-    
-    [void] ExtractMetadata() {
-        $this.Metadata = @{
-            Name = [System.IO.Path]::GetFileNameWithoutExtension($this.ScriptPath)
-            Synopsis = ""
-            Description = ""
-            Parameters = @()
-            Examples = @()
-            Notes = ""
-            Author = ""
-            Version = ""
-            RequiredModules = @()
-            Links = @()
-            Outputs = @()
-            Inputs = @()
-        }
-        
-        # Extract comment-based help
-        if ($this.Content -match '(?s)<#(.*?)#>') {
-            $helpBlock = $Matches[1]
-            
-            if ($helpBlock -match '\.SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
+.SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
                 $this.Metadata.Synopsis = $Matches[1].Trim()
             }
             
             if ($helpBlock -match '\.DESCRIPTION\s*\n\s*(.+?)(?=\n\s*\.|$)') {
                 $this.Metadata.Description = $Matches[1].Trim()
+#>
             }
             
             if ($helpBlock -match '\.NOTES\s*\n\s*(.+?)(?=\n\s*\.|$)') {
@@ -155,6 +79,7 @@ $($this.Metadata.Synopsis)
 
 $($this.Metadata.Description)
 
+#>
 ## Parameters
 
 | Parameter | Type | Mandatory | Default | Description |
@@ -166,6 +91,7 @@ $($this.Metadata.Description)
             $default = if ($param.DefaultValue) { "``$($param.DefaultValue)``" } else { "-" }
             $md += "`n| ``-$($param.Name)`` | $($param.Type) | $mandatory | $default | $($param.Description) |"
             
+#>
             if ($param.ValidateSet.Count -gt 0) {
                 $md += "`n| | Valid values: $($param.ValidateSet -join ', ') | | | |"
             }
@@ -230,6 +156,7 @@ $($this.Metadata.Description)
     <h2>Description</h2>
     <p>$($this.Metadata.Description)</p>
     
+#>
     <h2>Parameters</h2>
     <table>
         <thead>
@@ -255,6 +182,7 @@ $($this.Metadata.Description)
                 <td>$default</td>
                 <td>$($param.Description)</td>
             </tr>
+#>
 "@
         }
         
@@ -392,3 +320,4 @@ if ($ScriptPath) {
 }
 
 #endregion
+

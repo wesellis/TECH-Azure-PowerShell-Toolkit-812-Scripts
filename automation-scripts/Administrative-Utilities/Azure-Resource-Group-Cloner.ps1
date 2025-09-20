@@ -1,76 +1,45 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage resource groups
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage resource groups
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Group Cloner
 # Clone entire resource groups with all resources
-# Version: 1.0
-
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SourceResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$TargetResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$TargetLocation,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$ExportOnly,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ExportPath = ".\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName "Azure Resource Group Cloner" -Version "1.0" -Description "Clone resource groups and their contents"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection)) { throw "Azure connection validation failed" }
-
+    if (-not (Get-AzContext)) { Connect-AzAccount }
     $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
     if (-not $TargetLocation) { $TargetLocation = $sourceRG.Location }
-
-    Write-Log "📤 Exporting resource group template..." -Level INFO
+    
     $null = Export-AzResourceGroup -ResourceGroupName $SourceResourceGroupName -Path $ExportPath
-    Write-Log "[OK] Template exported to: $ExportPath" -Level SUCCESS
-
+    
     if (-not $ExportOnly) {
-        Write-Log " Creating target resource group..." -Level INFO
+        
         $null = New-AzResourceGroup -Name $TargetResourceGroupName -Location $TargetLocation -Tag $sourceRG.Tags
-        Write-Log "[OK] Target resource group created: $TargetResourceGroupName" -Level SUCCESS
         
-        Write-Log " Deploying resources to target..." -Level INFO
         $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath
-        
         if ($deployment.ProvisioningState -eq "Succeeded") {
-            Write-Log " Resource group cloned successfully!" -Level SUCCESS
+            Write-Host "Deployment completed successfully" -ForegroundColor Green
         } else {
-            Write-Log " Deployment failed: $($deployment.ProvisioningState)" -Level ERROR
+            Write-Host "Deployment failed" -ForegroundColor Red
         }
     }
-
 } catch {
-    Write-Log " Resource group cloning failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
 }
 
-
-#endregion

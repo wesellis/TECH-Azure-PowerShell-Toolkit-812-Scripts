@@ -1,65 +1,43 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Monitor service health
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Monitor service health
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName
 )
-
-#region Functions
-
-Write-Information "Monitoring App Service: $AppName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "============================================"
-
+Write-Host "Monitoring App Service: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "============================================"
 # Get App Service details
 $WebApp = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName
-
-Write-Information "App Service Information:"
-Write-Information "  Name: $($WebApp.Name)"
-Write-Information "  State: $($WebApp.State)"
-Write-Information "  Location: $($WebApp.Location)"
-Write-Information "  Default Hostname: $($WebApp.DefaultHostName)"
-Write-Information "  Repository Site Name: $($WebApp.RepositorySiteName)"
-Write-Information "  App Service Plan: $($WebApp.ServerFarmId.Split('/')[-1])"
-Write-Information "  .NET Framework Version: $($WebApp.SiteConfig.NetFrameworkVersion)"
-Write-Information "  PHP Version: $($WebApp.SiteConfig.PhpVersion)"
-Write-Information "  Platform Architecture: $($WebApp.SiteConfig.Use32BitWorkerProcess)"
-
+Write-Host "App Service Information:"
+Write-Host "Name: $($WebApp.Name)"
+Write-Host "State: $($WebApp.State)"
+Write-Host "Location: $($WebApp.Location)"
+Write-Host "Default Hostname: $($WebApp.DefaultHostName)"
+Write-Host "Repository Site Name: $($WebApp.RepositorySiteName)"
+Write-Host "App Service Plan: $($WebApp.ServerFarmId.Split('/')[-1])"
+Write-Host "  .NET Framework Version: $($WebApp.SiteConfig.NetFrameworkVersion)"
+Write-Host "PHP Version: $($WebApp.SiteConfig.PhpVersion)"
+Write-Host "Platform Architecture: $($WebApp.SiteConfig.Use32BitWorkerProcess)"
 # Get app settings count
 $AppSettingsCount = if ($WebApp.SiteConfig.AppSettings) { $WebApp.SiteConfig.AppSettings.Count } else { 0 }
-Write-Information "  App Settings Count: $AppSettingsCount"
-
+Write-Host "App Settings Count: $AppSettingsCount"
 # Check if HTTPS only is enabled
-Write-Information "  HTTPS Only: $($WebApp.HttpsOnly)"
-
+Write-Host "HTTPS Only: $($WebApp.HttpsOnly)"
 # Get deployment slots
 $Slots = Get-AzWebAppSlot -ResourceGroupName $ResourceGroupName -Name $AppName -ErrorAction SilentlyContinue
 if ($Slots) {
-    Write-Information "  Deployment Slots: $($Slots.Count)"
+    Write-Host "Deployment Slots: $($Slots.Count)"
     foreach ($Slot in $Slots) {
-        Write-Information "    - $($Slot.Name) [$($Slot.State)]"
+        Write-Host "    - $($Slot.Name) [$($Slot.State)]"
     }
 } else {
-    Write-Information "  Deployment Slots: 0"
+    Write-Host "Deployment Slots: 0"
 }
+Write-Host "`nApp Service monitoring completed at $(Get-Date)"
 
-Write-Information "`nApp Service monitoring completed at $(Get-Date)"
-
-
-#endregion

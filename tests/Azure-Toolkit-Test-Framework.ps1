@@ -1,14 +1,9 @@
-#Requires -Version 7.0
-#Requires -Modules Pester, Az.Accounts, Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Comprehensive Azure Enterprise Toolkit Testing Framework
+    
+
 .DESCRIPTION
-    Advanced testing framework for validating Azure infrastructure, security, compliance,
+    testing framework for validating Azure infrastructure, security, compliance,
     and automation scripts across the enterprise toolkit.
 .PARAMETER TestScope
     Scope of tests to run (All, Unit, Integration, Security, Performance, Compliance)
@@ -28,9 +23,7 @@
     Run tests in parallel for faster execution
 .PARAMETER Tags
     Specific test tags to run
-.EXAMPLE
     .\Azure-Toolkit-Test-Framework.ps1 -TestScope "All" -ResourceGroupName "test-rg" -Location "East US" -OutputFormat "JUnit"
-.EXAMPLE
     .\Azure-Toolkit-Test-Framework.ps1 -TestScope "Security" -Tags @("RBAC", "Encryption") -OutputPath "C:\TestResults"
 .NOTES
     Author: Wesley Ellis
@@ -74,11 +67,10 @@ param(
 
 # Initialize test environment
 $ErrorActionPreference = "Stop"
-$script:TestStartTime = Get-Date -ErrorAction Stop
+$script:TestStartTime = Get-Date
 $script:TestResults = @()
 
 # Enhanced logging function
-[CmdletBinding()]
 function Write-TestLog {
     param(
         [string]$Message,
@@ -95,11 +87,10 @@ function Write-TestLog {
         Test = "Cyan"
     }
     
-    Write-Information "[$timestamp] [$Level] $Message" -ForegroundColor $colors[$Level]
+    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Install and import required modules
-[CmdletBinding()]
 function Initialize-TestEnvironment {
     try {
         Write-TestLog "Initializing test environment..." "Info"
@@ -129,7 +120,6 @@ function Initialize-TestEnvironment {
 }
 
 # Azure authentication and setup
-[CmdletBinding()]
 function Initialize-AzureTestEnvironment {
     try {
         Write-TestLog "Setting up Azure test environment..." "Info"
@@ -163,7 +153,6 @@ function Initialize-AzureTestEnvironment {
 }
 
 # Unit Tests for PowerShell Scripts
-[CmdletBinding()]
 function Invoke-UnitTests {
     Write-TestLog "Running unit tests..." "Test"
     
@@ -191,7 +180,6 @@ function Invoke-UnitTests {
 }
 
 # Integration Tests for Azure Resources
-[CmdletBinding()]
 function Invoke-IntegrationTests {
     Write-TestLog "Running integration tests..." "Test"
     
@@ -219,7 +207,6 @@ function Invoke-IntegrationTests {
 }
 
 # Security Tests for Azure Resources
-[CmdletBinding()]
 function Invoke-SecurityTests {
     Write-TestLog "Running security tests..." "Test"
     
@@ -248,7 +235,6 @@ function Invoke-SecurityTests {
 }
 
 # Performance Tests
-[CmdletBinding()]
 function Invoke-PerformanceTests {
     Write-TestLog "Running performance tests..." "Test"
     
@@ -277,7 +263,6 @@ function Invoke-PerformanceTests {
 }
 
 # Compliance Tests
-[CmdletBinding()]
 function Invoke-ComplianceTests {
     Write-TestLog "Running compliance tests..." "Test"
     
@@ -306,7 +291,6 @@ function Invoke-ComplianceTests {
 }
 
 # Create sample unit tests
-[CmdletBinding()]
 function New-SampleUnitTests {
     $unitTestContent = @'
 BeforeAll {
@@ -331,8 +315,10 @@ Describe "PowerShell Script Validation" -Tag "Unit", "Validation" {
         @{ Script = $scripts }
     ) -ForEach $scripts {
         $content = Get-Content -ErrorAction Stop $Script.FullName -Raw
-        $content | Should -Match "\.SYNOPSIS"
-        $content | Should -Match "\.DESCRIPTION"
+        $content | Should -Match "\.SYNOPSIS
+    "
+        $content | Should -Match "\
+.DESCRIPTION"
         $content | Should -Match "\.EXAMPLE"
     }
     
@@ -359,7 +345,6 @@ Describe "Module Dependencies" -Tag "Unit", "Dependencies" {
 }
 
 # Create sample integration tests
-[CmdletBinding()]
 function New-SampleIntegrationTests {
     $integrationTestContent = @'
 BeforeAll {
@@ -425,7 +410,6 @@ Describe "Network Resources" -Tag "Integration", "Network" {
 }
 
 # Create sample security tests
-[CmdletBinding()]
 function New-SampleSecurityTests {
     $securityTestContent = @'
 BeforeAll {
@@ -496,7 +480,6 @@ Describe "Key Vault Security" -Tag "Security", "KeyVault" {
 }
 
 # Create sample performance tests
-[CmdletBinding()]
 function New-SamplePerformanceTests {
     $performanceTestContent = @'
 BeforeAll {
@@ -556,7 +539,6 @@ Describe "Performance Tests" -Tag "Performance" {
 }
 
 # Create sample compliance tests
-[CmdletBinding()]
 function New-SampleComplianceTests {
     $complianceTestContent = @'
 BeforeAll {
@@ -631,7 +613,6 @@ Describe "Compliance Tests" -Tag "Compliance", "Governance" {
 }
 
 # Generate test report
-[CmdletBinding()]
 function New-TestReport -ErrorAction Stop {
     try {
         Write-TestLog "Generating test report..." "Info"
@@ -681,7 +662,6 @@ function New-TestReport -ErrorAction Stop {
 }
 
 # Cleanup test resources
-[CmdletBinding()]
 function Remove-TestResources -ErrorAction Stop {
     if ($IncludeDestructive) {
         try {
@@ -740,12 +720,13 @@ try {
     $totalFailed = ($script:TestResults | ForEach-Object { $_.FailedCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
     if ($totalFailed -gt 0) {
         Write-TestLog "Tests failed - exiting with error code" "Error"
-        exit 1
+        throw
     }
     
 } catch {
     Write-TestLog "Test framework execution failed: $($_.Exception.Message)" "Error"
-    exit 1
+    throw
 }
 
 #endregion
+

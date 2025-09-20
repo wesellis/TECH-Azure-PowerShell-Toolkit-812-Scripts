@@ -1,26 +1,12 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    github downloadcom)#>
 # GitHub Repository Downloader
 # Downloads/updates all Wesley's repositories from GitHub
 # Usage: Run this script to get the latest versions of all repositories
 
-Write-Information "=== GitHub Repository Downloader ==="
-Write-Information "Downloading/updating all repositories from github.com/wesellis"
+Write-Host "=== GitHub Repository Downloader ==="
+Write-Host "Downloading/updating all repositories from github.com/wesellis"
 
 $githubUsername = "wesellis"
 $baseDir = "A:\GITHUB"
@@ -59,43 +45,43 @@ foreach ($repo in $repositories) {
     $localPath = Join-Path $baseDir $repo
     
     if (Test-Path $localPath) {
-        Write-Information "Updating $repo..."
+        Write-Host "Updating $repo..."
         try {
             Set-Location -ErrorAction Stop $localPath
             git pull --quiet
             Set-Location -ErrorAction Stop $baseDir
-            Write-Information "  Updated successfully"
+            Write-Host "Updated successfully"
             $updated++
         } catch {
-            Write-Information "  Update failed"
+            Write-Host "Update failed"
             Set-Location -ErrorAction Stop $baseDir
             $failed++
         }
     } else {
-        Write-Information "Downloading $repo..."
+        Write-Host "Downloading $repo..."
         try {
             git clone $repoUrl --quiet
             if (Test-Path $localPath) {
-                Write-Information "  Downloaded successfully"
+                Write-Host "Downloaded successfully"
                 $downloaded++
             } else {
-                Write-Information "  Download failed"
+                Write-Host "Download failed"
                 $failed++
             }
         } catch {
-            Write-Information "  Download failed"
+            Write-Host "Download failed"
             $failed++
         }
     }
 }
 
-Write-Information "`n=== RESULTS ==="
-Write-Information "Updated: $updated repositories"
-Write-Information "Downloaded: $downloaded repositories"
-Write-Information "Failed: $failed repositories"
-Write-Information "Total: $($repositories.Count) repositories"
+Write-Host "`n=== RESULTS ==="
+Write-Host "Updated: $updated repositories"
+Write-Host "Downloaded: $downloaded repositories"
+Write-Host "Failed: $failed repositories"
+Write-Host "Total: $($repositories.Count) repositories"
 
-Write-Information "`nAll repositories are now up to date!"
-
+Write-Host "`nAll repositories are now up to date!"
 
 #endregion
+

@@ -1,197 +1,122 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    3 Backup Azure Vm Script
+    Backup Azure VM Script
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Create and monitor Azure VM backup using Recovery Services
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
+    LastModified: 2025-09-19
     Requires appropriate permissions and modules
 #>
 
-<#
-.SYNOPSIS
-    We Enhanced 3 Backup Azure Vm Script
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-New-AzureVMBackup -ErrorAction Stop {
-    
-
-[CmdletBinding()]
-function Write-WELog {
+function New-AzureVMBackup {
+function Write-Host {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $true)]
-        [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVMName,
-        
+    [string]$VMName,
         [Parameter(Mandatory = $true)]
-        [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-        
+    [string]$ResourceGroupName,
         [Parameter(Mandatory = $true)]
-        [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVaultName,
-        
+    [string]$VaultName,
         [Parameter(Mandatory = $true)]
-        [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVaultResourceGroup,
-        
+    [string]$VaultResourceGroup,
         [Parameter(Mandatory = $false)]
-        [int]$WERetentionDays = 30
+        [int]$RetentionDays = 30
     )
-    
     try {
         # Ensure Az.RecoveryServices module is imported
         if (-not (Get-Module -Name Az.RecoveryServices -ListAvailable)) {
-            Write-WELog " Installing Az.RecoveryServices module..." " INFO" -ForegroundColor Yellow
+            Write-Host "Installing Az.RecoveryServices module..." -ForegroundColor Yellow
             Install-Module -Name Az.RecoveryServices -Force -AllowClobber
         }
-        Import-Module -Name Az.RecoveryServices -ErrorAction Stop
-
+        Import-Module -Name Az.RecoveryServices
         # Get VM details
-        Write-WELog " Verifying VM existence..." " INFO" -ForegroundColor Yellow
-        $vm = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName -ErrorAction Stop
-
+        Write-Host "Verifying VM existence..." -ForegroundColor Yellow
+        $vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
         # Get Recovery Services Vault
-        Write-WELog " Accessing Recovery Services Vault..." " INFO" -ForegroundColor Yellow
-        $vault = Get-AzRecoveryServicesVault -ResourceGroupName $WEVaultResourceGroup -Name $WEVaultName -ErrorAction Stop
-        
+        Write-Host "Accessing Recovery Services Vault..." -ForegroundColor Yellow
+        $vault = Get-AzRecoveryServicesVault -ResourceGroupName $VaultResourceGroup -Name $VaultName
         # Set vault context
-        Set-AzRecoveryServicesVaultContext -Vault $vault -ErrorAction Stop
-
+        Set-AzRecoveryServicesVaultContext -Vault $vault
         # Start backup job
-        Write-WELog " Initiating backup job..." " INFO" -ForegroundColor Yellow
-        $backupJob = Start-AzRecoveryServicesAsrBackupNow -Name $WEVMName -ErrorAction Stop
-
+        Write-Host "Initiating backup job..." -ForegroundColor Yellow
+        $backupJob = Start-AzRecoveryServicesAsrBackupNow -Name $VMName
         # Create backup details object
         $backupDetails = [PSCustomObject]@{
-            VMName = $WEVMName
-            ResourceGroup = $WEResourceGroupName
-            VaultName = $WEVaultName
+            VMName = $VMName
+            ResourceGroup = $ResourceGroupName
+            VaultName = $VaultName
             BackupJobId = $backupJob.JobId
-            StartTime = Get-Date -ErrorAction Stop
+            StartTime = Get-Date
             Status = $backupJob.Status
-            RetentionDays = $WERetentionDays
+            RetentionDays = $RetentionDays
         }
-
         # Generate HTML report
         New-HTML -FilePath " .\VMBackupReport.html" -ShowHTML {
-            New-HTMLTable -DataTable @($backupDetails) -Title " VM Backup Operation Report" {
-                New-HTMLTableHeader -Title " VM Backup - $(Get-Date -Format 'yyyy-MM-dd HH:mm')" -BackgroundColor '#007bff' -Color '#ffffff'
+            New-HTMLTable -DataTable @($backupDetails) -Title "VM Backup Operation Report" {
+                New-HTMLTableHeader -Title "VM Backup - $(Get-Date -Format 'yyyy-MM-dd HH:mm')" -BackgroundColor '#007bff' -Color '#ffffff'
             }
         }
-
         # Export CSV report
         $backupDetails | Export-Csv -Path " .\VMBackupReport.csv" -NoTypeInformation
-
         # Monitor backup progress
-        Write-WELog " Monitoring backup progress..." " INFO" -ForegroundColor Yellow
-        while ($backupJob.Status -eq " InProgress" ) {
+        Write-Host "Monitoring backup progress..." -ForegroundColor Yellow
+        while ($backupJob.Status -eq "InProgress") {
             $backupJob = Get-AzRecoveryServicesBackupJob -Job $backupJob
-            Write-WELog " Backup Status: $($backupJob.Status) - $(Get-Date)" " INFO" -ForegroundColor Cyan
+            Write-Host "Backup Status: $($backupJob.Status) - $(Get-Date)" -ForegroundColor Cyan
             Start-Sleep -Seconds 30
         }
-
         return $backupDetails
     }
     catch {
-        Write-Error " Failed to create VM backup: $_"
+        Write-Error "Failed to create VM backup: $_"
         throw
     }
 }
-
-
 try {
-    Write-WELog " Starting Azure VM backup process..." " INFO" -ForegroundColor Cyan
-    
+    Write-Host "Starting Azure VM backup process..." -ForegroundColor Cyan
     # Backup parameters for ArcGisS1
-   ;  $backupParams = @{
+$backupParams = @{
         VMName = 'ArcGisS1'
         ResourceGroupName = 'anteausa'
         VaultName = '' # Need vault name
         VaultResourceGroup = '' # Need vault resource group
         RetentionDays = 30
     }
-    
-    Write-WELog " `nInitiating backup with following parameters:" " INFO" -ForegroundColor Yellow
+    Write-Host " `nInitiating backup with following parameters:" -ForegroundColor Yellow
     $backupParams | Format-Table -AutoSize
-    
     # Create backup
-    Write-WELog " `nCreating backup..." " INFO" -ForegroundColor Yellow
-   ;  $backup = New-AzureVMBackup -ErrorAction Stop @backupParams
-    
-    Write-WELog " `nBackup operation completed!" " INFO" -ForegroundColor Green
-    Write-WELog " Backup Job ID: $($backup.BackupJobId)" " INFO" -ForegroundColor Green
-    Write-WELog " Final Status: $($backup.Status)" " INFO" -ForegroundColor Green
+    Write-Host " `nCreating backup..." -ForegroundColor Yellow
+$backup = New-AzureVMBackup @backupParams
+    Write-Host " `nBackup operation completed!" -ForegroundColor Green
+    Write-Host "Backup Job ID: $($backup.BackupJobId)" -ForegroundColor Green
+    Write-Host "Final Status: $($backup.Status)" -ForegroundColor Green
 }
 catch {
-    Write-WELog " Error during backup process: $_" " INFO" -ForegroundColor Red
+    Write-Host "Error during backup process: $_" -ForegroundColor Red
     throw
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

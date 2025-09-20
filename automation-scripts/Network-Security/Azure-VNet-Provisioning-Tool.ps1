@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage VNets
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage VNets
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$VnetName,
@@ -24,43 +13,33 @@ param (
     [string]$SubnetName = "default",
     [string]$SubnetPrefix
 )
-
-#region Functions
-
-Write-Information "Provisioning Virtual Network: $VnetName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "Location: $Location"
-Write-Information "Address Prefix: $AddressPrefix"
-
+Write-Host "Provisioning Virtual Network: $VnetName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Address Prefix: $AddressPrefix"
 # Create subnet configuration if specified
 if ($SubnetPrefix) {
     $SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix $SubnetPrefix
-    Write-Information "Subnet: $SubnetName ($SubnetPrefix)"
-    
+    Write-Host "Subnet: $SubnetName ($SubnetPrefix)"
     # Create virtual network with subnet
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
         AddressPrefix = $AddressPrefix
         Subnet = $SubnetConfig
-        ErrorAction = "Stop"
         Name = $VnetName
     }
-    $VNet @params
+    $VNet = New-AzVirtualNetwork @params
 } else {
     # Create virtual network without subnet
     $params = @{
-        ErrorAction = "Stop"
         AddressPrefix = $AddressPrefix
         ResourceGroupName = $ResourceGroupName
         Name = $VnetName
         Location = $Location
     }
-    $VNet @params
+    $VNet = New-AzVirtualNetwork @params
 }
+Write-Host "Virtual Network $VnetName provisioned successfully"
+Write-Host "VNet ID: $($VNet.Id)"
 
-Write-Information "Virtual Network $VnetName provisioned successfully"
-Write-Information "VNet ID: $($VNet.Id)"
-
-
-#endregion

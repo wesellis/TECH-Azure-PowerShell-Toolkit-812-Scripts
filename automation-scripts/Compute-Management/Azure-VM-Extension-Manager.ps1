@@ -1,44 +1,24 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage VM extensions
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+    Manage VM extensions
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VmName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ExtensionName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ExtensionType = "CustomScriptExtension",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Publisher = "Microsoft.Compute"
 )
-
-#region Functions
-
-Write-Information "Managing VM extension: $ExtensionName"
-
+Write-Host "Managing VM extension: $ExtensionName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-
 # Install extension
 $params = @{
     ResourceGroupName = $ResourceGroupName
@@ -51,11 +31,8 @@ $params = @{
     VMName = $VmName
 }
 Set-AzVMExtension @params
+Write-Host "Extension '$ExtensionName' installed successfully"
+Write-Host "VM: $VmName"
+Write-Host "Publisher: $Publisher"
+Write-Host "Type: $ExtensionType"
 
-Write-Information " Extension '$ExtensionName' installed successfully"
-Write-Information "VM: $VmName"
-Write-Information "Publisher: $Publisher"
-Write-Information "Type: $ExtensionType"
-
-
-#endregion

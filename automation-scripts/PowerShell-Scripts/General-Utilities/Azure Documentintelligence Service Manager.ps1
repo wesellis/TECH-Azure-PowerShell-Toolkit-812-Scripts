@@ -1,321 +1,220 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Documentintelligence Service Manager
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Documentintelligence Service Manager
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ServiceName,
+    [Parameter()]
+    [string]$Location = "East US" ,
+    [Parameter()]
+    [ValidateSet("F0" , "S0" )]
+    [string]$SkuName = "S0",
+    [Parameter()]
+    [ValidateSet("Create" , "Delete" , "GetKeys" , "ListModels" , "TestService" )]
+    [string]$Action = "Create",
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEServiceName,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US" ,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" F0" , " S0" )]
-    [string]$WESkuName = " S0" ,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" Create" , " Delete" , " GetKeys" , " ListModels" , " TestService" )]
-    [string]$WEAction = " Create" ,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDocumentUrl,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEModelId = " prebuilt-document" ,
-    
-    [Parameter(Mandatory=$false)]
-    [hashtable]$WENetworkRules = @{},
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEEnableMonitoring,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WERestrictPublicAccess,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEEnableCustomerManagedKeys
+    [string]$DocumentUrl,
+    [Parameter()]
+    [string]$ModelId = " prebuilt-document" ,
+    [Parameter()]
+    [hashtable]$NetworkRules = @{},
+    [Parameter()]
+    [switch]$EnableMonitoring,
+    [Parameter()]
+    [switch]$RestrictPublicAccess,
+    [Parameter()]
+    [switch]$EnableCustomerManagedKeys
 )
-
-#region Functions
-
-
-# Module import removed - use #Requires instead
-
-
-Show-Banner -ScriptName " Azure AI Document Intelligence Manager" -Version " 1.0" -Description " Enterprise document AI processing automation"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
     # Test Azure connection
-    Write-ProgressStep -StepNumber 1 -TotalSteps 8 -StepName " Azure Connection" -Status " Validating connection and AI services"
-    if (-not (Test-AzureConnection -RequiredModules @('Az.Accounts', 'Az.Resources', 'Az.CognitiveServices'))) {
-        throw " Azure connection validation failed"
+    # Progress stepNumber 1 -TotalSteps 8 -StepName "Azure Connection" -Status "Validating connection and AI services"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
+    }
     # Validate resource group
-    Write-ProgressStep -StepNumber 2 -TotalSteps 8 -StepName " Resource Group Validation" -Status " Checking resource group existence"
+    # Progress stepNumber 2 -TotalSteps 8 -StepName "Resource Group Validation" -Status "Checking resource group existence"
     $resourceGroup = Invoke-AzureOperation -Operation {
-        Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
-    } -OperationName " Get Resource Group"
-    
-    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+        Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
+    } -OperationName "Get Resource Group"
 
-    switch ($WEAction.ToLower()) {
-        " create" {
+    switch ($Action.ToLower()) {
+        "create" {
             # Create Document Intelligence service
-            Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Service Creation" -Status " Creating Azure AI Document Intelligence service"
-            
+            # Progress stepNumber 3 -TotalSteps 8 -StepName "Service Creation" -Status "Creating Azure AI Document Intelligence service"
             $serviceParams = @{
-                ResourceGroupName = $WEResourceGroupName
-                Name = $WEServiceName
-                Location = $WELocation
-                SkuName = $WESkuName
-                Kind = " FormRecognizer"
-                CustomSubdomainName = $WEServiceName.ToLower()
+                ResourceGroupName = $ResourceGroupName
+                Name = $ServiceName
+                Location = $Location
+                SkuName = $SkuName
+                Kind = "FormRecognizer"
+                CustomSubdomainName = $ServiceName.ToLower()
                 NetworkRuleSet = @{
-                    DefaultAction = if ($WERestrictPublicAccess) { " Deny" } else { " Allow" }
+                    DefaultAction = if ($RestrictPublicAccess) { "Deny" } else { "Allow" }
                     IpRules = @()
                     VirtualNetworkRules = @()
                 }
             }
-            
-            if ($WENetworkRules.Count -gt 0) {
-                if ($WENetworkRules.ContainsKey(" AllowedIPs" )) {
-                    $serviceParams.NetworkRuleSet.IpRules = $WENetworkRules.AllowedIPs | ForEach-Object {
+            if ($NetworkRules.Count -gt 0) {
+                if ($NetworkRules.ContainsKey("AllowedIPs" )) {
+                    $serviceParams.NetworkRuleSet.IpRules = $NetworkRules.AllowedIPs | ForEach-Object {
                         @{ IpAddress = $_ }
                     }
                 }
-                if ($WENetworkRules.ContainsKey(" VNetRules" )) {
-                    $serviceParams.NetworkRuleSet.VirtualNetworkRules = $WENetworkRules.VNetRules
+                if ($NetworkRules.ContainsKey("VNetRules" )) {
+                    $serviceParams.NetworkRuleSet.VirtualNetworkRules = $NetworkRules.VNetRules
                 }
             }
-            
             # Add customer-managed keys if enabled
-            if ($WEEnableCustomerManagedKeys) {
+            if ($EnableCustomerManagedKeys) {
                 $serviceParams.Encryption = @{
                     KeyVaultProperties = @{
-                        KeyName = " DocumentIntelligenceKey"
+                        KeyName = "DocumentIntelligenceKey"
                         KeyVersion = ""
                         KeyVaultUri = ""
                     }
-                    KeySource = " Microsoft.KeyVault"
+                    KeySource = "Microsoft.KeyVault"
                 }
             }
-            
             $docIntelligenceService = Invoke-AzureOperation -Operation {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @serviceParams
-            } -OperationName " Create Document Intelligence Service"
-            
-            Write-Log " [OK] Document Intelligence service created: $WEServiceName" -Level SUCCESS
-            Write-Log " [OK] Endpoint: $($docIntelligenceService.Endpoint)" -Level INFO
+            } -OperationName "Create Document Intelligence Service"
+
         }
-        
         " listmodels" {
-            Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Model Discovery" -Status " Retrieving available models"
-            
-            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName).Endpoint
-            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEServiceName
-            
+            # Progress stepNumber 3 -TotalSteps 8 -StepName "Model Discovery" -Status "Retrieving available models"
+            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
+            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName
             Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Ocp-Apim-Subscription-Key' = $keys.Key1
                     'Content-Type' = 'application/json'
                 }
-                
                 $uri = " $endpoint/formrecognizer/info?api-version=2023-07-31"
                 Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
-            } -OperationName " List Available Models" | Out-Null
-            
-            Write-WELog "" " INFO"
-            Write-WELog " 📋 Available Document Intelligence Models" " INFO" -ForegroundColor Cyan
-            Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
-            
+            } -OperationName "List Available Models" | Out-Null
+            Write-Host ""
+            Write-Host "Available Document Intelligence Models" -ForegroundColor Cyan
             $prebuiltModels = @(
-                " prebuilt-document" , " prebuilt-layout" , " prebuilt-receipt" , 
-                " prebuilt-invoice" , " prebuilt-businessCard" , " prebuilt-idDocument" ,
-                " prebuilt-tax.us.w2" , " prebuilt-tax.us.1098" , " prebuilt-tax.us.1099"
+                " prebuilt-document" , "prebuilt-layout" , "prebuilt-receipt" ,
+                " prebuilt-invoice" , "prebuilt-businessCard" , "prebuilt-idDocument" ,
+                " prebuilt-tax.us.w2" , "prebuilt-tax.us.1098" , "prebuilt-tax.us.1099"
             )
-            
             foreach ($model in $prebuiltModels) {
-                Write-WELog " • $model" " INFO" -ForegroundColor White
+                Write-Host "  $model" -ForegroundColor White
             }
         }
-        
         " testservice" {
-            if (-not $WEDocumentUrl) {
-                throw " DocumentUrl parameter is required for testing service"
+            if (-not $DocumentUrl) {
+                throw "DocumentUrl parameter is required for testing service"
             }
-            
-            Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Service Testing" -Status " Testing document analysis"
-            
-            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName).Endpoint
-            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEServiceName
-            
+            # Progress stepNumber 3 -TotalSteps 8 -StepName "Service Testing" -Status "Testing document analysis"
+            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
+            $keys = Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName
             $analysisResult = Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Ocp-Apim-Subscription-Key' = $keys.Key1
                     'Content-Type' = 'application/json'
                 }
-                
                 $body = @{
-                    urlSource = $WEDocumentUrl
+                    urlSource = $DocumentUrl
                 } | ConvertTo-Json
-                
                 # Start analysis
-                $analyzeUri = " $endpoint/formrecognizer/documentModels/$WEModelId`:analyze?api-version=2023-07-31"
+                $analyzeUri = " $endpoint/formrecognizer/documentModels/$ModelId`:analyze?api-version=2023-07-31"
                 $response = Invoke-RestMethod -Uri $analyzeUri -Method POST -Headers $headers -Body $body
-                
                 # Get operation location for polling
                 $operationLocation = $response.Headers['Operation-Location']
-                
                 # Poll for results
                 do {
                     Start-Sleep -Seconds 2
                     $result = Invoke-RestMethod -Uri $operationLocation -Method GET -Headers $headers
                 } while ($result.status -eq " running" )
-                
                 return $result
-            } -OperationName " Analyze Document"
-            
-            Write-WELog "" " INFO"
-            Write-WELog " [FILE] Document Analysis Results" " INFO" -ForegroundColor Cyan
-            Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
-            Write-WELog " Status: $($analysisResult.status)" " INFO" -ForegroundColor Green
-            Write-WELog " Model ID: $WEModelId" " INFO" -ForegroundColor White
-            Write-WELog " Pages: $($analysisResult.analyzeResult.pages.Count)" " INFO" -ForegroundColor White
-            
+            } -OperationName "Analyze Document"
+            Write-Host ""
+            Write-Host " [FILE] Document Analysis Results" -ForegroundColor Cyan
+            Write-Host "Status: $($analysisResult.status)" -ForegroundColor Green
+            Write-Host "Model ID: $ModelId" -ForegroundColor White
+            Write-Host "Pages: $($analysisResult.analyzeResult.pages.Count)" -ForegroundColor White
             if ($analysisResult.analyzeResult.keyValuePairs) {
-                Write-WELog " Key-Value Pairs: $($analysisResult.analyzeResult.keyValuePairs.Count)" " INFO" -ForegroundColor White
+                Write-Host "Key-Value Pairs: $($analysisResult.analyzeResult.keyValuePairs.Count)" -ForegroundColor White
             }
         }
-        
         " getkeys" {
-            Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Key Retrieval" -Status " Retrieving API keys"
-            
+            # Progress stepNumber 3 -TotalSteps 8 -StepName "Key Retrieval" -Status "Retrieving API keys"
             $keys = Invoke-AzureOperation -Operation {
-                Get-AzCognitiveServicesAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEServiceName
-            } -OperationName " Get API Keys"
-            
-            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName).Endpoint
-            
-            Write-WELog "" " INFO"
-            Write-WELog " 🔑 Document Intelligence Service Details" " INFO" -ForegroundColor Cyan
-            Write-WELog " ════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Cyan
-            Write-WELog " Endpoint: $endpoint" " INFO" -ForegroundColor White
-            Write-WELog " Key 1: $($keys.Key1)" " INFO" -ForegroundColor Yellow
-            Write-WELog " Key 2: $($keys.Key2)" " INFO" -ForegroundColor Yellow
-            Write-WELog "" " INFO"
-            Write-WELog " [WARN]️  Store these keys securely! Consider using Azure Key Vault." " INFO" -ForegroundColor Red
+                Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $ServiceName
+            } -OperationName "Get API Keys"
+            $endpoint = (Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName).Endpoint
+            Write-Host ""
+            Write-Host "Document Intelligence Service Details" -ForegroundColor Cyan
+            Write-Host "Endpoint: $endpoint" -ForegroundColor White
+            Write-Host "Key 1: $($keys.Key1)" -ForegroundColor Yellow
+            Write-Host "Key 2: $($keys.Key2)" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "[WARN]  Store these keys securely! Consider using Azure Key Vault." -ForegroundColor Red
         }
-        
-        " delete" {
-            Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Service Deletion" -Status " Removing Document Intelligence service"
-            
-            $confirmation = Read-Host " Are you sure you want to delete the Document Intelligence service '$WEServiceName'? (yes/no)"
-            if ($confirmation.ToLower() -ne " yes" ) {
-                Write-Log " Deletion cancelled by user" -Level WARN
+        "delete" {
+            # Progress stepNumber 3 -TotalSteps 8 -StepName "Service Deletion" -Status "Removing Document Intelligence service"
+            $confirmation = Read-Host "Are you sure you want to delete the Document Intelligence service '$ServiceName'? (yes/no)"
+            if ($confirmation.ToLower() -ne "yes" ) {
+
                 return
             }
-            
             Invoke-AzureOperation -Operation {
-                Remove-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName -Force
-            } -OperationName " Delete Document Intelligence Service"
-            
-            Write-Log " [OK] Document Intelligence service deleted: $WEServiceName" -Level SUCCESS
+                Remove-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName -Force
+            } -OperationName "Delete Document Intelligence Service"
+
         }
     }
-
     # Configure monitoring if enabled and creating service
-    if ($WEEnableMonitoring -and $WEAction.ToLower() -eq " create" ) {
-        Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Monitoring Setup" -Status " Configuring diagnostic settings"
-        
+    if ($EnableMonitoring -and $Action.ToLower() -eq "create" ) {
+        # Progress stepNumber 4 -TotalSteps 8 -StepName "Monitoring Setup" -Status "Configuring diagnostic settings"
         $diagnosticSettings = Invoke-AzureOperation -Operation {
-            $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $WEResourceGroupName | Select-Object -First 1
-            
+            $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
             if ($logAnalyticsWorkspace) {
-                $resourceId = " /subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$WEResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$WEServiceName"
-                
+                $resourceId = " /subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$ServiceName"
                 $diagnosticParams = @{
                     ResourceId = $resourceId
-                    Name = " $WEServiceName-diagnostics"
+                    Name = " $ServiceName-diagnostics"
                     WorkspaceId = $logAnalyticsWorkspace.ResourceId
                     Enabled = $true
-                    Category = @(" Audit" , " RequestResponse" , " Trace" )
-                    MetricCategory = @(" AllMetrics" )
+                    Category = @("Audit" , "RequestResponse" , "Trace" )
+                    MetricCategory = @("AllMetrics" )
                 }
-                
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                Write-Log " [WARN]️  No Log Analytics workspace found for monitoring setup" -Level WARN
+
                 return $null
             }
-        } -OperationName " Configure Monitoring"
-        
+        } -OperationName "Configure Monitoring"
         if ($diagnosticSettings) {
-            Write-Log " [OK] Monitoring configured with diagnostic settings" -Level SUCCESS
+
         }
     }
-
     # Apply enterprise tags if creating service
-    if ($WEAction.ToLower() -eq " create" ) {
-        Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Tagging" -Status " Applying enterprise tags"
+    if ($Action.ToLower() -eq "create" ) {
+        # Progress stepNumber 5 -TotalSteps 8 -StepName "Tagging" -Status "Applying enterprise tags"
         $tags = @{
             'Environment' = 'Production'
             'Service' = 'DocumentIntelligence'
@@ -326,132 +225,99 @@ try {
             'Compliance' = 'Document-Processing'
             'DataClassification' = 'Confidential'
         }
-        
         Invoke-AzureOperation -Operation {
-            $resource = Get-AzResource -ResourceGroupName $WEResourceGroupName -Name $WEServiceName -ResourceType " Microsoft.CognitiveServices/accounts"
+            $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ServiceName -ResourceType "Microsoft.CognitiveServices/accounts"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-        } -OperationName " Apply Enterprise Tags" | Out-Null
+        } -OperationName "Apply Enterprise Tags" | Out-Null
     }
-
     # Security assessment
-    Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName " Security Assessment" -Status " Evaluating security configuration"
-    
+    # Progress stepNumber 6 -TotalSteps 8 -StepName "Security Assessment" -Status "Evaluating security configuration"
     $securityScore = 0
     $maxScore = 6
     $securityFindings = @()
-    
-    if ($WEAction.ToLower() -eq " create" ) {
+    if ($Action.ToLower() -eq "create" ) {
         # Check network access
-        if ($WERestrictPublicAccess) {
+        if ($RestrictPublicAccess) {
             $securityScore++
-            $securityFindings = $securityFindings + " [OK] Public access restricted"
+            $securityFindings = $securityFindings + "[OK] Public access restricted"
         } else {
-            $securityFindings = $securityFindings + " [WARN]️  Public access allowed - consider restricting"
+            $securityFindings = $securityFindings + "[WARN]  Public access allowed - consider restricting"
         }
-        
         # Check monitoring
-        if ($WEEnableMonitoring) {
+        if ($EnableMonitoring) {
             $securityScore++
-            $securityFindings = $securityFindings + " [OK] Monitoring enabled"
+            $securityFindings = $securityFindings + "[OK] Monitoring enabled"
         } else {
-            $securityFindings = $securityFindings + " [WARN]️  Monitoring not configured"
+            $securityFindings = $securityFindings + "[WARN]  Monitoring not configured"
         }
-        
         # Check customer-managed keys
-        if ($WEEnableCustomerManagedKeys) {
+        if ($EnableCustomerManagedKeys) {
             $securityScore++
-            $securityFindings = $securityFindings + " [OK] Customer-managed encryption enabled"
+            $securityFindings = $securityFindings + "[OK] Customer-managed encryption enabled"
         } else {
-            $securityFindings = $securityFindings + " [WARN]️  Using Microsoft-managed keys"
+            $securityFindings = $securityFindings + "[WARN]  Using Microsoft-managed keys"
         }
-        
         # Check region compliance
-        if ($WELocation -in @(" East US" , " West Europe" , " Southeast Asia" )) {
+        if ($Location -in @("East US" , "West Europe" , "Southeast Asia" )) {
             $securityScore++
-            $securityFindings = $securityFindings + " [OK] Deployed in compliant region"
+            $securityFindings = $securityFindings + "[OK] Deployed in compliant region"
         }
-        
         # Check SKU for production readiness
-        if ($WESkuName -ne " F0" ) {
+        if ($SkuName -ne "F0" ) {
             $securityScore++
-            $securityFindings = $securityFindings + " [OK] Production-ready SKU selected"
+            $securityFindings = $securityFindings + "[OK] Production-ready SKU selected"
         }
-        
         # Check custom subdomain (required for VNet integration)
         $securityScore++
-       ;  $securityFindings = $securityFindings + " [OK] Custom subdomain configured"
+$securityFindings = $securityFindings + "[OK] Custom subdomain configured"
     }
-
     # Final validation
-    Write-ProgressStep -StepNumber 7 -TotalSteps 8 -StepName " Validation" -Status " Verifying service health"
-    
-    if ($WEAction.ToLower() -ne " delete" ) {
-       ;  $serviceStatus = Invoke-AzureOperation -Operation {
-            Get-AzCognitiveServicesAccount -ResourceGroupName $WEResourceGroupName -Name $WEServiceName
-        } -OperationName " Validate Service Status"
+    # Progress stepNumber 7 -TotalSteps 8 -StepName "Validation" -Status "Verifying service health"
+    if ($Action.ToLower() -ne "delete" ) {
+$serviceStatus = Invoke-AzureOperation -Operation {
+            Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $ServiceName
+        } -OperationName "Validate Service Status"
     }
-
     # Success summary
-    Write-ProgressStep -StepNumber 8 -TotalSteps 8 -StepName " Completion" -Status " Finalizing operation"
-    
-    Write-WELog "" " INFO"
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "                    AZURE AI DOCUMENT INTELLIGENCE SERVICE READY" " INFO" -ForegroundColor Green  
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "" " INFO"
-    
-    if ($WEAction.ToLower() -eq " create" ) {
-        Write-WELog " 🤖 Document Intelligence Service Details:" " INFO" -ForegroundColor Cyan
-        Write-WELog "   • Service Name: $WEServiceName" " INFO" -ForegroundColor White
-        Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White
-        Write-WELog "   • Location: $WELocation" " INFO" -ForegroundColor White
-        Write-WELog "   • SKU: $WESkuName" " INFO" -ForegroundColor White
-        Write-WELog "   • Endpoint: $($serviceStatus.Endpoint)" " INFO" -ForegroundColor White
-        Write-WELog "   • Status: $($serviceStatus.ProvisioningState)" " INFO" -ForegroundColor Green
-        
-        Write-WELog "" " INFO"
-        Write-WELog " [LOCK] Security Assessment: $securityScore/$maxScore" " INFO" -ForegroundColor Cyan
+    # Progress stepNumber 8 -TotalSteps 8 -StepName "Completion" -Status "Finalizing operation"
+    Write-Host ""
+    Write-Host "                    AZURE AI DOCUMENT INTELLIGENCE SERVICE READY" -ForegroundColor Green
+    Write-Host ""
+    if ($Action.ToLower() -eq "create" ) {
+        Write-Host "    Service Name: $ServiceName" -ForegroundColor White
+        Write-Host "    Resource Group: $ResourceGroupName" -ForegroundColor White
+        Write-Host "    Location: $Location" -ForegroundColor White
+        Write-Host "    SKU: $SkuName" -ForegroundColor White
+        Write-Host "    Endpoint: $($serviceStatus.Endpoint)" -ForegroundColor White
+        Write-Host "    Status: $($serviceStatus.ProvisioningState)" -ForegroundColor Green
+        Write-Host ""
+        Write-Host " [LOCK] Security Assessment: $securityScore/$maxScore" -ForegroundColor Cyan
         foreach ($finding in $securityFindings) {
-            Write-WELog "   $finding" " INFO" -ForegroundColor White
+            Write-Host "   $finding" -ForegroundColor White
         }
-        
-        Write-WELog "" " INFO"
-        Write-WELog " 💡 Next Steps:" " INFO" -ForegroundColor Cyan
-        Write-WELog "   • Test with sample documents using TestService action" " INFO" -ForegroundColor White
-        Write-WELog "   • Configure custom models for specific document types" " INFO" -ForegroundColor White
-        Write-WELog "   • Set up cost alerts for API usage monitoring" " INFO" -ForegroundColor White
-        Write-WELog "   • Integrate with your applications using the endpoint and keys" " INFO" -ForegroundColor White
+        Write-Host ""
+        Write-Host "Next Steps:" -ForegroundColor Cyan
+        Write-Host "    Test with sample documents using TestService action" -ForegroundColor White
+        Write-Host "    Configure custom models for specific document types" -ForegroundColor White
+        Write-Host "    Set up cost alerts for API usage monitoring" -ForegroundColor White
+        Write-Host "    Integrate with your applications using the endpoint and keys" -ForegroundColor White
     }
-    
-    Write-WELog "" " INFO"
-    Write-WELog " 📚 Supported Document Types:" " INFO" -ForegroundColor Cyan
-    Write-WELog "   • General documents, invoices, receipts, business cards" " INFO" -ForegroundColor White
-    Write-WELog "   • Identity documents, tax forms (W-2, 1098, 1099)" " INFO" -ForegroundColor White
-    Write-WELog "   • Custom models for specific document types" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-
-    Write-Log "  Azure AI Document Intelligence service '$WEServiceName' operation completed successfully!" -Level SUCCESS
+    Write-Host ""
+    Write-Host "Supported Document Types:" -ForegroundColor Cyan
+    Write-Host "    General documents, invoices, receipts, business cards" -ForegroundColor White
+    Write-Host "    Identity documents, tax forms (W-2, 1098, 1099)" -ForegroundColor White
+    Write-Host "    Custom models for specific document types" -ForegroundColor White
+    Write-Host ""
 
 } catch {
-    Write-Log "  Document Intelligence service operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    
-    Write-WELog "" " INFO"
-    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
-    Write-WELog "   • Verify Document Intelligence service availability in your region" " INFO" -ForegroundColor White
-    Write-WELog "   • Check subscription quotas for Cognitive Services" " INFO" -ForegroundColor White
-    Write-WELog "   • Ensure proper permissions for AI service creation" " INFO" -ForegroundColor White
-    Write-WELog "   • Validate document URL accessibility for testing" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-    
-    exit 1
+
+    Write-Host ""
+    Write-Host "Troubleshooting Tips:" -ForegroundColor Yellow
+    Write-Host "    Verify Document Intelligence service availability in your region" -ForegroundColor White
+    Write-Host "    Check subscription quotas for Cognitive Services" -ForegroundColor White
+    Write-Host "    Ensure proper permissions for AI service creation" -ForegroundColor White
+    Write-Host "    Validate document URL accessibility for testing" -ForegroundColor White
+    Write-Host ""
+    throw
 }
 
-Write-Progress -Activity " Document Intelligence Service Management" -Completed
-Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

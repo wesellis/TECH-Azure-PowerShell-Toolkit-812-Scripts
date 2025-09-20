@@ -1,166 +1,95 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Pim Role Activator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Pim Role Activator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
     }
-    
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$RoleName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WERoleName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceScope,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDurationHours = 1,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEJustification = " Administrative task requiring elevated access"
+    [string]$ResourceScope,
+    [Parameter()]
+    [int]$DurationHours = 1,
+    [Parameter()]
+    [string]$Justification = "Administrative task requiring elevated access"
 )
-
-#region Functions
-
-Write-WELog " Activating PIM role: $WERoleName" " INFO"
-Write-WELog " Scope: $WEResourceScope" " INFO"
-Write-WELog " Duration: $WEDurationHours hours" " INFO"
-Write-WELog " Justification: $WEJustification" " INFO"
-
+Write-Host "Activating PIM role: $RoleName"
+Write-Host "Scope: $ResourceScope"
+Write-Host "Duration: $DurationHours hours"
+Write-Host "Justification: $Justification"
 try {
     # Check if Microsoft.Graph.Authentication module is available
     if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Authentication)) {
-        Write-Error " Microsoft.Graph.Authentication module is required. Install with: Install-Module Microsoft.Graph.Authentication"
+        Write-Error "Microsoft.Graph.Authentication module is required. Install with: Install-Module Microsoft.Graph.Authentication"
         return
     }
-    
     # Connect to Microsoft Graph
-    Connect-MgGraph -Scopes " RoleManagement.ReadWrite.Directory"
-    
+    Connect-MgGraph -Scopes "RoleManagement.ReadWrite.Directory"
     # Get current user
-    $WECurrentUser = Get-MgUser -UserId (Get-MgContext).Account
-    Write-WELog " Current user: $($WECurrentUser.DisplayName)" " INFO"
-    
+    $CurrentUser = Get-MgUser -UserId (Get-MgContext).Account
+    Write-Host "Current user: $($CurrentUser.DisplayName)"
     # Calculate activation end time
-   ;  $WEActivationStart = Get-Date -ErrorAction Stop
-   ;  $WEActivationEnd = $WEActivationStart.AddHours($WEDurationHours)
-    
-    Write-WELog " `nPIM Activation Request:" " INFO"
-    Write-WELog "  Role: $WERoleName" " INFO"
-    Write-WELog "  Start Time: $($WEActivationStart.ToString('yyyy-MM-dd HH:mm:ss'))" " INFO"
-    Write-WELog "  End Time: $($WEActivationEnd.ToString('yyyy-MM-dd HH:mm:ss'))" " INFO"
-    Write-WELog "  Duration: $WEDurationHours hours" " INFO"
-    
+$ActivationStart = Get-Date -ErrorAction Stop
+$ActivationEnd = $ActivationStart.AddHours($DurationHours)
+    Write-Host " `nPIM Activation Request:"
+    Write-Host "Role: $RoleName"
+    Write-Host "Start Time: $($ActivationStart.ToString('yyyy-MM-dd HH:mm:ss'))"
+    Write-Host "End Time: $($ActivationEnd.ToString('yyyy-MM-dd HH:mm:ss'))"
+    Write-Host "Duration: $DurationHours hours"
     # Note: Actual PIM activation requires Azure AD Premium P2 and specific Graph API calls
     # This is a template showing the structure - actual implementation depends on environment
-    
-    Write-WELog " `n[WARN]️ PIM Activation Process:" " INFO"
-    Write-WELog " 1. This script provides the framework for PIM activation" " INFO"
-    Write-WELog " 2. Actual activation requires Azure AD Premium P2 license" " INFO"
-    Write-WELog " 3. Use Azure Portal or Microsoft Graph API for activation" " INFO"
-    Write-WELog " 4. Approval may be required based on role settings" " INFO"
-    
-    Write-WELog " `nPIM Benefits:" " INFO"
-    Write-WELog " • Just-in-time privileged access" " INFO"
-    Write-WELog " • Time-limited role assignments" " INFO"
-    Write-WELog " • Approval workflows" " INFO"
-    Write-WELog " • Activity monitoring and alerts" " INFO"
-    Write-WELog " • Reduced standing privileges" " INFO"
-    
-    Write-WELog " `nManual PIM Activation Steps:" " INFO"
-    Write-WELog " 1. Go to Azure Portal > Azure AD Privileged Identity Management" " INFO"
-    Write-WELog " 2. Select 'My roles' > 'Azure resources'" " INFO"
-    Write-WELog " 3. Find eligible role: $WERoleName" " INFO"
-    Write-WELog " 4. Click 'Activate' and provide justification" " INFO"
-    Write-WELog " 5. Set duration: $WEDurationHours hours" " INFO"
-    Write-WELog " 6. Submit activation request" " INFO"
-    
-    Write-WELog " `nPowerShell Alternative:" " INFO"
-    Write-WELog " # Using Microsoft.Graph.Identity.Governance module" " INFO"
-    Write-WELog " Import-Module Microsoft.Graph.Identity.Governance" " INFO"
-    Write-WELog " # Create activation request using New-MgIdentityGovernancePrivilegedAccessRoleAssignmentRequest" " INFO"
-    
-    Write-WELog " `n PIM activation guidance provided" " INFO"
-    Write-WELog " ⏰ Remember to deactivate when no longer needed" " INFO"
-    
+    Write-Host " `n[WARN] PIM Activation Process:"
+    Write-Host " 1. This script provides the framework for PIM activation"
+    Write-Host " 2. Actual activation requires Azure AD Premium P2 license"
+    Write-Host " 3. Use Azure Portal or Microsoft Graph API for activation"
+    Write-Host " 4. Approval may be required based on role settings"
+    Write-Host " `nPIM Benefits:"
+    Write-Host "Just-in-time privileged access"
+    Write-Host "Time-limited role assignments"
+    Write-Host "Approval workflows"
+    Write-Host "Activity monitoring and alerts"
+    Write-Host "Reduced standing privileges"
+    Write-Host " `nManual PIM Activation Steps:"
+    Write-Host " 1. Go to Azure Portal > Azure AD Privileged Identity Management"
+    Write-Host " 2. Select 'My roles' > 'Azure resources'"
+    Write-Host " 3. Find eligible role: $RoleName"
+    Write-Host " 4. Click 'Activate' and provide justification"
+    Write-Host " 5. Set duration: $DurationHours hours"
+    Write-Host " 6. Submit activation request"
+    Write-Host " `nPowerShell Alternative:"
+    Write-Host " # Using Microsoft.Graph.Identity.Governance module"
+    Write-Host "Import-Module Microsoft.Graph.Identity.Governance"
+    Write-Host " # Create activation request using New-MgIdentityGovernancePrivilegedAccessRoleAssignmentRequest"
+    Write-Host " `n PIM activation guidance provided"
+    Write-Host "Remember to deactivate when no longer needed"
 } catch {
-    Write-Error " PIM activation failed: $($_.Exception.Message)"
+    Write-Error "PIM activation failed: $($_.Exception.Message)"
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

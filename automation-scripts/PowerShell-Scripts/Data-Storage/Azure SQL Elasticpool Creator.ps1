@@ -1,156 +1,94 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Sql Elasticpool Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Sql Elasticpool Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEServerName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ServerName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEElasticPoolName,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEEdition = " Standard" ,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEPoolDtu = 100,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDatabaseDtuMin = 0,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDatabaseDtuMax = 100
+    [string]$ElasticPoolName,
+    [Parameter()]
+    [string]$Edition = "Standard" ,
+    [Parameter()]
+    [int]$PoolDtu = 100,
+    [Parameter()]
+    [int]$DatabaseDtuMin = 0,
+    [Parameter()]
+    [int]$DatabaseDtuMax = 100
 )
+Write-Host "Creating SQL Elastic Pool: $ElasticPoolName" "INFO"
 
-#region Functions
-
-Write-WELog " Creating SQL Elastic Pool: $WEElasticPoolName" " INFO"
-; 
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Dtu = $WEPoolDtu
-    Edition = $WEEdition
-    DatabaseDtuMax = $WEDatabaseDtuMax
-    ServerName = $WEServerName
-    ElasticPoolName = $WEElasticPoolName
+    ResourceGroupName = $ResourceGroupName
+    Dtu = $PoolDtu
+    Edition = $Edition
+    DatabaseDtuMax = $DatabaseDtuMax
+    ServerName = $ServerName
+    ElasticPoolName = $ElasticPoolName
     ErrorAction = "Stop"
-    DatabaseDtuMin = $WEDatabaseDtuMin
+    DatabaseDtuMin = $DatabaseDtuMin
 }
-$WEElasticPool @params
-
-Write-WELog "  SQL Elastic Pool created successfully:" " INFO"
-Write-WELog "  Name: $($WEElasticPool.ElasticPoolName)" " INFO"
-Write-WELog "  Server: $($WEElasticPool.ServerName)" " INFO"
-Write-WELog "  Edition: $($WEElasticPool.Edition)" " INFO"
-Write-WELog "  Pool DTU: $($WEElasticPool.Dtu)" " INFO"
-Write-WELog "  Database DTU Min: $($WEElasticPool.DatabaseDtuMin)" " INFO"
-Write-WELog "  Database DTU Max: $($WEElasticPool.DatabaseDtuMax)" " INFO"
-Write-WELog "  State: $($WEElasticPool.State)" " INFO"
-
-Write-WELog " `nElastic Pool Benefits:" " INFO"
-Write-WELog " • Cost optimization for multiple databases" " INFO"
-Write-WELog " • Automatic resource balancing" " INFO"
-Write-WELog " • Simplified management" " INFO"
-Write-WELog " • Predictable pricing model" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Move existing databases to the pool" " INFO"
-Write-WELog " 2. Create new databases in the pool" " INFO"
-Write-WELog " 3. Monitor resource utilization" " INFO"
-
-
-
-
+$ElasticPool @params
+Write-Host "SQL Elastic Pool created successfully:" "INFO"
+Write-Host "Name: $($ElasticPool.ElasticPoolName)" "INFO"
+Write-Host "Server: $($ElasticPool.ServerName)" "INFO"
+Write-Host "Edition: $($ElasticPool.Edition)" "INFO"
+Write-Host "Pool DTU: $($ElasticPool.Dtu)" "INFO"
+Write-Host "Database DTU Min: $($ElasticPool.DatabaseDtuMin)" "INFO"
+Write-Host "Database DTU Max: $($ElasticPool.DatabaseDtuMax)" "INFO"
+Write-Host "State: $($ElasticPool.State)" "INFO"
+Write-Host " `nElastic Pool Benefits:" "INFO"
+Write-Host "Cost optimization for multiple databases" "INFO"
+Write-Host "Automatic resource balancing" "INFO"
+Write-Host "Simplified management" "INFO"
+Write-Host "Predictable pricing model" "INFO"
+Write-Host " `nNext Steps:" "INFO"
+Write-Host " 1. Move existing databases to the pool" "INFO"
+Write-Host " 2. Create new databases in the pool" "INFO"
+Write-Host " 3. Monitor resource utilization" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,50 +1,27 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Map resource dependencies
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Map resource dependencies
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Dependency Mapper
 # Map dependencies between Azure resources
-# Version: 1.0
-
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$ExportDiagram,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$OutputPath = ".\resource-dependencies.json"
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName "Azure Resource Dependency Mapper" -Version "1.0" -Description "Map resource dependencies"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection)) { throw "Azure connection validation failed" }
-
+    if (-not (Get-AzContext)) { Connect-AzAccount }
     $resources = Get-AzResource -ResourceGroupName $ResourceGroupName
     $dependencies = @()
-
     foreach ($resource in $resources) {
         $dependsOn = @()
-        
         # Check for common dependency patterns
         switch ($resource.ResourceType) {
             "Microsoft.Compute/virtualMachines" {
@@ -60,7 +37,6 @@ try {
                 }
             }
         }
-        
         if ($dependsOn.Count -gt 0) {
             $dependencies += [PSCustomObject]@{
                 ResourceName = $resource.Name
@@ -69,19 +45,11 @@ try {
             }
         }
     }
-
-    Write-Information "Resource Dependencies Found: $($dependencies.Count)"
+    Write-Host "Resource Dependencies Found: $($dependencies.Count)"
     $dependencies | Format-Table ResourceName, ResourceType
-
     if ($ExportDiagram) {
         $dependencies | ConvertTo-Json -Depth 3 | Out-File -FilePath $OutputPath
-        Write-Log "[OK] Dependencies exported to: $OutputPath" -Level SUCCESS
+        
     }
+} catch { throw }
 
-} catch {
-    Write-Log " Dependency mapping failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-#endregion

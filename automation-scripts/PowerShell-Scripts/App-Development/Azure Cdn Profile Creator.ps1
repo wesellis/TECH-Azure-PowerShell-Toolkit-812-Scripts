@@ -1,176 +1,96 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Cdn Profile Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Cdn Profile Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ProfileName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEProfileName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$EndpointName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEEndpointName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOriginHostName,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WESku = " Standard_Microsoft"
+    [string]$OriginHostName,
+    [Parameter()]
+    [string]$Sku = "Standard_Microsoft"
 )
-
-#region Functions
-
-Write-WELog " Creating CDN Profile: $WEProfileName" " INFO"
-
-; 
+Write-Host "Creating CDN Profile: $ProfileName"
 $params = @{
-    Sku = $WESku
+    Sku = $Sku
     ErrorAction = "Stop"
-    ProfileName = $WEProfileName
-    ResourceGroupName = $WEResourceGroupName
-    Location = $WELocation
+    ProfileName = $ProfileName
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
 }
-$WECdnProfile @params
-
-Write-WELog " CDN Profile created: $($WECdnProfile.Name)" " INFO"
-
-
-Write-WELog " Creating CDN Endpoint: $WEEndpointName" " INFO"
-; 
+$CdnProfile @params
+Write-Host "CDN Profile created: $($CdnProfile.Name)"
+Write-Host "Creating CDN Endpoint: $EndpointName"
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    ProfileName = $WEProfileName
-    Location = $WELocation
-    EndpointName = $WEEndpointName
-    OriginHostName = $WEOriginHostName
+    ResourceGroupName = $ResourceGroupName
+    ProfileName = $ProfileName
+    Location = $Location
+    EndpointName = $EndpointName
+    OriginHostName = $OriginHostName
     ErrorAction = "Stop"
     OriginName = " origin1"
 }
-$WECdnEndpoint @params
-
-Write-WELog "  CDN Profile and Endpoint created successfully:" " INFO"
-Write-WELog "  Profile Name: $($WECdnProfile.Name)" " INFO"
-Write-WELog "  SKU: $($WECdnProfile.Sku.Name)" " INFO"
-Write-WELog "  Endpoint Name: $($WECdnEndpoint.Name)" " INFO"
-Write-WELog "  Endpoint URL: https://$($WECdnEndpoint.HostName)" " INFO"
-Write-WELog "  Origin: $WEOriginHostName" " INFO"
-
-Write-WELog " `nCDN Benefits:" " INFO"
-Write-WELog " • Global content delivery" " INFO"
-Write-WELog " • Reduced latency" " INFO"
-Write-WELog " • Improved performance" " INFO"
-Write-WELog " • Bandwidth cost optimization" " INFO"
-Write-WELog " • Origin server protection" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Configure caching rules" " INFO"
-Write-WELog " 2. Set up custom domains" " INFO"
-Write-WELog " 3. Enable HTTPS" " INFO"
-Write-WELog " 4. Configure compression" " INFO"
-Write-WELog " 5. Test global distribution" " INFO"
-
-
-
-
+$CdnEndpoint @params
+Write-Host "CDN Profile and Endpoint created successfully:"
+Write-Host "Profile Name: $($CdnProfile.Name)"
+Write-Host "SKU: $($CdnProfile.Sku.Name)"
+Write-Host "Endpoint Name: $($CdnEndpoint.Name)"
+Write-Host "Endpoint URL: https://$($CdnEndpoint.HostName)"
+Write-Host "Origin: $OriginHostName"
+Write-Host " `nCDN Benefits:"
+Write-Host "Global content delivery"
+Write-Host "Reduced latency"
+Write-Host "Improved performance"
+Write-Host "Bandwidth cost optimization"
+Write-Host "Origin server protection"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Configure caching rules"
+Write-Host " 2. Set up custom domains"
+Write-Host " 3. Enable HTTPS"
+Write-Host " 4. Configure compression"
+Write-Host " 5. Test global distribution"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

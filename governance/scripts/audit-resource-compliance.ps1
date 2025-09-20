@@ -2,41 +2,28 @@
 #Requires -Module Az.PolicyInsights
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Audits Azure resource compliance against policies
 
-.DESCRIPTION
     Evaluates resources against Azure Policy assignments and generates compliance reports.
     Supports multiple output formats and remediation tracking.
-
 .PARAMETER SubscriptionId
     Target subscription ID (optional, uses current context if not specified)
-
 .PARAMETER ResourceGroup
     Limit audit to specific resource group
-
 .PARAMETER OutputFormat
     Report format: JSON, CSV, HTML (default: JSON)
-
 .PARAMETER ExportPath
     Path for report file (optional, auto-generates if not specified)
 
-.EXAMPLE
     .\audit-resource-compliance.ps1 -OutputFormat CSV
 
     Audits current subscription and exports to CSV
 
-.EXAMPLE
     .\audit-resource-compliance.ps1 -ResourceGroup "RG-Production" -OutputFormat HTML
 
     Audits specific resource group with HTML report
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 3.0.0
-    Created: 2024-11-15
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding()]
 param(
@@ -68,7 +55,7 @@ param(
 $ErrorActionPreference = 'Stop'
 trap {
     Write-Error "Script failed: $_"
-    exit 1
+    throw
 }
 
 #region Functions
@@ -272,9 +259,8 @@ function Get-RemediationTasks {
                 PolicyAssignment = $resource.PolicyAssignment
                 RemediationExists = $null -ne $remediation
                 RemediationState = if ($remediation) { $remediation.ProvisioningState } else { 'Not Started' }
-            }
-        }
-        catch {
+            
+} catch {
             # Remediation not available for this policy
             [PSCustomObject]@{
                 ResourceId = $resource.ResourceId
@@ -322,10 +308,10 @@ $summary = Get-ComplianceSummary -ComplianceData $complianceData
 
 # Display summary
 Write-Host "`nCompliance Summary:" -ForegroundColor Cyan
-Write-Host "  Total Resources: $($summary.TotalResources)"
-Write-Host "  Compliant: $($summary.CompliantResources)" -ForegroundColor Green
-Write-Host "  Non-Compliant: $($summary.NonCompliantResources)" -ForegroundColor $(if ($summary.NonCompliantResources -gt 0) { 'Red' } else { 'Green' })
-Write-Host "  Compliance Rate: $($summary.CompliancePercentage)%`n"
+Write-Host "Total Resources: $($summary.TotalResources)"
+Write-Host "Compliant: $($summary.CompliantResources)" -ForegroundColor Green
+Write-Host "Non-Compliant: $($summary.NonCompliantResources)" -ForegroundColor $(if ($summary.NonCompliantResources -gt 0) { 'Red' } else { 'Green' })
+Write-Host "Compliance Rate: $($summary.CompliancePercentage)%`n"
 
 # Show detailed breakdown if requested
 if ($DetailedReport) {
@@ -361,3 +347,4 @@ else {
 }
 
 #endregion
+

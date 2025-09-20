@@ -1,185 +1,115 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Batchaccount Performance Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Batchaccount Performance Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEAccountName
+    [string]$ResourceGroupName,
+    [string]$AccountName
 )
-
-#region Functions
-
-Write-WELog " Monitoring Batch Account: $WEAccountName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEBatchAccount = Get-AzBatchAccount -ResourceGroupName $WEResourceGroupName -Name $WEAccountName
-
-Write-WELog " Batch Account Information:" " INFO"
-Write-WELog "  Name: $($WEBatchAccount.AccountName)" " INFO"
-Write-WELog "  Location: $($WEBatchAccount.Location)" " INFO"
-Write-WELog "  Provisioning State: $($WEBatchAccount.ProvisioningState)" " INFO"
-Write-WELog "  Account Endpoint: $($WEBatchAccount.AccountEndpoint)" " INFO"
-Write-WELog "  Pool Allocation Mode: $($WEBatchAccount.PoolAllocationMode)" " INFO"
-Write-WELog "  Dedicated Core Quota: $($WEBatchAccount.DedicatedCoreQuota)" " INFO"
-Write-WELog "  Low Priority Core Quota: $($WEBatchAccount.LowPriorityCoreQuota)" " INFO"
-
-if ($WEBatchAccount.AutoStorageAccountId) {
-    $WEStorageAccountName = $WEBatchAccount.AutoStorageAccountId.Split('/')[-1]
-    Write-WELog "  Auto Storage Account: $WEStorageAccountName" " INFO"
+Write-Host "Monitoring Batch Account: $AccountName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host " ============================================"
+$BatchAccount = Get-AzBatchAccount -ResourceGroupName $ResourceGroupName -Name $AccountName
+Write-Host "Batch Account Information:"
+Write-Host "Name: $($BatchAccount.AccountName)"
+Write-Host "Location: $($BatchAccount.Location)"
+Write-Host "Provisioning State: $($BatchAccount.ProvisioningState)"
+Write-Host "Account Endpoint: $($BatchAccount.AccountEndpoint)"
+Write-Host "Pool Allocation Mode: $($BatchAccount.PoolAllocationMode)"
+Write-Host "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
+Write-Host "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
+if ($BatchAccount.AutoStorageAccountId) {
+    $StorageAccountName = $BatchAccount.AutoStorageAccountId.Split('/')[-1]
+    Write-Host "Auto Storage Account: $StorageAccountName"
 }
-
-
 try {
-    $WEBatchContext = Get-AzBatchAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEAccountName
-    
+    $BatchContext = Get-AzBatchAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName
     # Get pools information
-    Write-WELog " `nBatch Pools:" " INFO"
-    $WEPools = Get-AzBatchPool -BatchContext $WEBatchContext
-    
-    if ($WEPools.Count -eq 0) {
-        Write-WELog "  No pools configured" " INFO"
+    Write-Host " `nBatch Pools:"
+    $Pools = Get-AzBatchPool -BatchContext $BatchContext
+    if ($Pools.Count -eq 0) {
+        Write-Host "No pools configured"
     } else {
-        foreach ($WEPool in $WEPools) {
-            Write-WELog "  - Pool: $($WEPool.Id)" " INFO"
-            Write-WELog "    State: $($WEPool.State)" " INFO"
-            Write-WELog "    VM Size: $($WEPool.VmSize)" " INFO"
-            Write-WELog "    Target Dedicated Nodes: $($WEPool.TargetDedicatedComputeNodes)" " INFO"
-            Write-WELog "    Current Dedicated Nodes: $($WEPool.CurrentDedicatedComputeNodes)" " INFO"
-            Write-WELog "    Target Low Priority Nodes: $($WEPool.TargetLowPriorityComputeNodes)" " INFO"
-            Write-WELog "    Current Low Priority Nodes: $($WEPool.CurrentLowPriorityComputeNodes)" " INFO"
-            Write-WELog "    Auto Scale Enabled: $($WEPool.EnableAutoScale)" " INFO"
-            Write-WELog "    ---" " INFO"
+        foreach ($Pool in $Pools) {
+            Write-Host "  - Pool: $($Pool.Id)"
+            Write-Host "    State: $($Pool.State)"
+            Write-Host "    VM Size: $($Pool.VmSize)"
+            Write-Host "    Target Dedicated Nodes: $($Pool.TargetDedicatedComputeNodes)"
+            Write-Host "    Current Dedicated Nodes: $($Pool.CurrentDedicatedComputeNodes)"
+            Write-Host "    Target Low Priority Nodes: $($Pool.TargetLowPriorityComputeNodes)"
+            Write-Host "    Current Low Priority Nodes: $($Pool.CurrentLowPriorityComputeNodes)"
+            Write-Host "    Auto Scale Enabled: $($Pool.EnableAutoScale)"
+            Write-Host "    ---"
         }
     }
-    
     # Get jobs information
-    Write-WELog " `nBatch Jobs:" " INFO"
-   ;  $WEJobs = Get-AzBatchJob -BatchContext $WEBatchContext
-    
-    if ($WEJobs.Count -eq 0) {
-        Write-WELog "  No active jobs" " INFO"
+    Write-Host " `nBatch Jobs:"
+$Jobs = Get-AzBatchJob -BatchContext $BatchContext
+    if ($Jobs.Count -eq 0) {
+        Write-Host "No active jobs"
     } else {
-        foreach ($WEJob in $WEJobs) {
-            Write-WELog "  - Job: $($WEJob.Id)" " INFO"
-            Write-WELog "    State: $($WEJob.State)" " INFO"
-            Write-WELog "    Pool: $($WEJob.PoolInformation.PoolId)" " INFO"
-            Write-WELog "    Priority: $($WEJob.Priority)" " INFO"
-            Write-WELog "    Creation Time: $($WEJob.CreationTime)" " INFO"
-            
+        foreach ($Job in $Jobs) {
+            Write-Host "  - Job: $($Job.Id)"
+            Write-Host "    State: $($Job.State)"
+            Write-Host "    Pool: $($Job.PoolInformation.PoolId)"
+            Write-Host "    Priority: $($Job.Priority)"
+            Write-Host "    Creation Time: $($Job.CreationTime)"
             # Get task count for this job
-           ;  $WETaskCounts = Get-AzBatchTaskCount -JobId $WEJob.Id -BatchContext $WEBatchContext -ErrorAction SilentlyContinue
-            if ($WETaskCounts) {
-                Write-WELog "    Active Tasks: $($WETaskCounts.Active)" " INFO"
-                Write-WELog "    Running Tasks: $($WETaskCounts.Running)" " INFO"
-                Write-WELog "    Completed Tasks: $($WETaskCounts.Completed)" " INFO"
-                Write-WELog "    Failed Tasks: $($WETaskCounts.Failed)" " INFO"
+$TaskCounts = Get-AzBatchTaskCount -JobId $Job.Id -BatchContext $BatchContext -ErrorAction SilentlyContinue
+            if ($TaskCounts) {
+                Write-Host "    Active Tasks: $($TaskCounts.Active)"
+                Write-Host "    Running Tasks: $($TaskCounts.Running)"
+                Write-Host "    Completed Tasks: $($TaskCounts.Completed)"
+                Write-Host "    Failed Tasks: $($TaskCounts.Failed)"
             }
-            Write-WELog "    ---" " INFO"
+            Write-Host "    ---"
         }
     }
-    
 } catch {
-    Write-WELog " `nDetailed pool and job information: Unable to retrieve (check permissions)" " INFO"
-    Write-WELog " Error: $($_.Exception.Message)" " INFO"
+    Write-Host " `n pool and job information: Unable to retrieve (check permissions)"
+    Write-Host "Error: $($_.Exception.Message)"
 }
+Write-Host " `nQuota Information:"
+Write-Host "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
+Write-Host "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
+Write-Host "Pool Quota: $($BatchAccount.PoolQuota)"
+Write-Host "Active Job and Job Schedule Quota: $($BatchAccount.ActiveJobAndJobScheduleQuota)"
+Write-Host " `nBatch Account URLs:"
+Write-Host "Portal: https://portal.azure.com/#@/resource$($BatchAccount.Id)"
+Write-Host "Batch Explorer: https://azure.github.io/BatchExplorer/"
+Write-Host " `nNext Steps for Optimization:"
+Write-Host " 1. Review pool utilization and scale settings"
+Write-Host " 2. Monitor job completion times and failure rates"
+Write-Host " 3. Optimize task distribution across nodes"
+Write-Host " 4. Consider using low-priority VMs for cost savings"
+Write-Host " 5. Implement auto-scaling for dynamic workloads"
+Write-Host " `nBatch Account monitoring completed at $(Get-Date)"
 
-
-Write-WELog " `nQuota Information:" " INFO"
-Write-WELog "  Dedicated Core Quota: $($WEBatchAccount.DedicatedCoreQuota)" " INFO"
-Write-WELog "  Low Priority Core Quota: $($WEBatchAccount.LowPriorityCoreQuota)" " INFO"
-Write-WELog "  Pool Quota: $($WEBatchAccount.PoolQuota)" " INFO"
-Write-WELog "  Active Job and Job Schedule Quota: $($WEBatchAccount.ActiveJobAndJobScheduleQuota)" " INFO"
-
-Write-WELog " `nBatch Account URLs:" " INFO"
-Write-WELog "  Portal: https://portal.azure.com/#@/resource$($WEBatchAccount.Id)" " INFO"
-Write-WELog "  Batch Explorer: https://azure.github.io/BatchExplorer/" " INFO"
-
-Write-WELog " `nNext Steps for Optimization:" " INFO"
-Write-WELog " 1. Review pool utilization and scale settings" " INFO"
-Write-WELog " 2. Monitor job completion times and failure rates" " INFO"
-Write-WELog " 3. Optimize task distribution across nodes" " INFO"
-Write-WELog " 4. Consider using low-priority VMs for cost savings" " INFO"
-Write-WELog " 5. Implement auto-scaling for dynamic workloads" " INFO"
-
-Write-WELog " `nBatch Account monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

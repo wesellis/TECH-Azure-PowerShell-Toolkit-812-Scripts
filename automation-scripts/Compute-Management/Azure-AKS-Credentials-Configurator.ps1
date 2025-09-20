@@ -1,46 +1,27 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage AKS clusters
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+    Manage AKS clusters
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ClusterName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$Admin
 )
-
-#region Functions
-
-Write-Information "Configuring kubectl credentials for AKS cluster: $ClusterName"
-
+Write-Host "Configuring kubectl credentials for AKS cluster: $ClusterName"
 if ($Admin) {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Admin -Force
-    Write-Information "Admin credentials configured for cluster: $ClusterName"
+    Write-Host "Admin credentials configured for cluster: $ClusterName"
 } else {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Force
-    Write-Information "User credentials configured for cluster: $ClusterName"
+    Write-Host "User credentials configured for cluster: $ClusterName"
 }
-
-Write-Information "`nTesting connection..."
+Write-Host "`nTesting connection..."
 kubectl get nodes
-Write-Information "`nKubectl is now configured for cluster: $ClusterName"
+Write-Host "`nKubectl is now configured for cluster: $ClusterName"
 
-
-#endregion

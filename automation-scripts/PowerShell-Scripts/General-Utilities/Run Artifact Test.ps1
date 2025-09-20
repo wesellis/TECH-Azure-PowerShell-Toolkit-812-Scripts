@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Run Artifact Test
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Run Artifact Test
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -46,38 +16,27 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    [String] $WEStrParam,
-    [Int] $WEIntParam,
-    [Boolean] $WEBoolParam
+    [String] $StrParam,
+    [Int] $IntParam,
+    [Boolean] $BoolParam
 )
-
 #region Functions
-; 
-$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
-
-Write-WELog " -- Received params: StrParam=$WEStrParam, IntParam=$WEIntParam, BoolParam=$WEBoolParam" " INFO"
+Write-Host " -- Received params: StrParam=$StrParam, IntParam=$IntParam, BoolParam=$BoolParam"
 $script:TestResults = @{
-    StrParam  = $WEStrParam
-    IntParam  = $WEIntParam
-    BoolParam = $WEBoolParam
-    PSScriptRoot = $WEPSScriptRoot
+    StrParam  = $StrParam
+    IntParam  = $IntParam
+    BoolParam = $BoolParam
+    PSScriptRoot = $PSScriptRoot
 }
-
 if ((Test-Path variable:global:TestShouldThrow) -and $global:TestShouldThrow) {
-    throw " Test should throw"
+    throw "Test should throw"
 }
-
 if ((Test-Path variable:global:TestShouldExitWithNonZeroExitCode) -and ($global:TestShouldExitWithNonZeroExitCode -ne 0)) {
     cmd.exe /c dir 'Y:\path\does\not\exist'
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

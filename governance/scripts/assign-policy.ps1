@@ -1,91 +1,61 @@
-#Requires -Version 7.0
+#Requires -Version 5.1
 #Requires -Module Az.Resources
 
-<#
-#endregion
+    Assigns Azure policies to subscriptions, resource groups, or management groups with
 
-#region Main-Execution
-.SYNOPSIS
-    Assigns Azure policies to subscriptions, resource groups, or management groups with comprehensive configuration options.
-
-.DESCRIPTION
-    This script provides comprehensive Azure Policy assignment capabilities with support for various scopes,
+    This script provides
     parameter handling, identity configuration, and detailed monitoring. It supports both built-in and
-    custom policies with flexible parameter management and comprehensive logging.
-
+    custom policies with flexible parameter management and
 .PARAMETER PolicyDefinitionId
     The resource ID of the policy definition to assign.
-
 .PARAMETER PolicyName
     The name of a built-in policy definition to assign (alternative to PolicyDefinitionId).
-
 .PARAMETER AssignmentName
     Name for the policy assignment. If not provided, generates one based on policy name.
-
 .PARAMETER DisplayName
     Display name for the policy assignment.
-
 .PARAMETER Description
     Description for the policy assignment.
-
 .PARAMETER Scope
     The scope for the policy assignment. Can be subscription, resource group, or management group.
     Format: /subscriptions/{id}, /subscriptions/{id}/resourceGroups/{name}, or /providers/Microsoft.Management/managementGroups/{id}
-
 .PARAMETER SubscriptionId
     Azure subscription ID for the assignment scope.
-
 .PARAMETER ResourceGroupName
     Resource group name for resource group-scoped assignments.
-
 .PARAMETER ManagementGroupId
     Management group ID for management group-scoped assignments.
-
 .PARAMETER Parameters
     Policy parameters as hashtable or path to JSON file.
-
 .PARAMETER NotScopes
     Array of scopes to exclude from the policy assignment.
-
 .PARAMETER Location
     Azure region for the policy assignment identity. Required when using managed identity.
-
 .PARAMETER SystemAssignedIdentity
     Use system-assigned managed identity for policy enforcement.
-
 .PARAMETER UserAssignedIdentityId
     Resource ID of user-assigned managed identity for policy enforcement.
-
 .PARAMETER PolicySetDefinitionId
     Resource ID of policy set definition (initiative) to assign instead of individual policy.
-
 .PARAMETER EnforcementMode
     Policy enforcement mode: Default, DoNotEnforce.
-
 .PARAMETER NonComplianceMessages
     Array of non-compliance messages for the policy assignment.
-
 .PARAMETER WhatIf
     Show what would be assigned without actually creating the assignment.
-
 .PARAMETER Force
     Force the assignment even if there are validation warnings.
-
 .PARAMETER LogPath
     Path to store detailed logs. If not provided, logs to default location.
 
-.EXAMPLE
     .\assign-policy.ps1 -PolicyName "Audit VMs without managed disks" -SubscriptionId "12345678-1234-1234-1234-123456789012"
 
-.EXAMPLE
     .\assign-policy.ps1 -PolicyDefinitionId "/providers/Microsoft.Authorization/policyDefinitions/06a78e20-9358-41c9-923c-fb736d382a4d" -ResourceGroupName "MyRG" -SubscriptionId "12345678-1234-1234-1234-123456789012"
 
-.EXAMPLE
     .\assign-policy.ps1 -PolicyName "Require tag and its value" -Parameters @{tagName="Environment"; tagValue="Production"} -SystemAssignedIdentity -Location "East US"
 
-.NOTES
     File Name      : assign-policy.ps1
-    Author         : Wes Ellis (wes@wesellis.com)
+    Author         : Azure PowerShell Toolkit
     Created        : 2024-11-15
     Prerequisites  : Azure PowerShell module, appropriate Azure permissions
     Version        : 1.0.0
@@ -169,9 +139,6 @@ param (
 )
 
 #region Functions
-
-#Requires -Version 5.1
-#Requires -Modules Az.Resources, Az.Accounts, Az.Profile
 
 # Initialize logging
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -530,5 +497,5 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-
 #endregion
+

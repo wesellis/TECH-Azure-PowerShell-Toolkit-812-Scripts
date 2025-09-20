@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Adddatabasetosqlserver
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Adddatabasetosqlserver
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -48,13 +18,9 @@ $ErrorActionPreference = "Stop"
 param(
     [string]
     $userName,
-	
 	[string]
 	$password
 )
-
-#region Functions
-
 if ((Get-Command -ErrorAction Stop Install-PackageProvider -ErrorAction Ignore) -eq $null)
 {
 	# Load the latest SQL PowerShell Provider
@@ -64,18 +30,15 @@ else
 {
 	# Conflicts with SqlServer module
 	Remove-Module -Name SQLPS -ErrorAction Ignore;
-
 	if ((Get-Module -ListAvailable SqlServer) -eq $null)
 	{
-		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; 
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 		Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null;
 		Install-Module -Name SqlServer -Force -AllowClobber | Out-Null;
 	}
-
 	# Load the latest SQL PowerShell Provider
 	Import-Module -Name SqlServer;
 }
-
 $params = @{
     QueryTimeout = "0"
     ServerInstance = "."
@@ -84,34 +47,25 @@ $params = @{
     UserName = $username
 }
 $fileList @params
-
-
 $relocateFiles = @();
-
 foreach ($nextBackupFile in $fileList)
 {
     # Move the file to the default data directory of the default instance
     $nextBackupFileName = Split-Path -Path ($nextBackupFile.PhysicalName) -Leaf;
-    $relocateFiles -ErrorAction "Stop Microsoft.SqlServer.Management.Smo.RelocateFile( $nextBackupFile.LogicalName, " $env:temp\$($nextBackupFileName)" );"
+    $relocateFiles -ErrorAction "Stop Microsoft.SqlServer.Management.Smo.RelocateFile( $nextBackupFile.LogicalName, "$env:temp\$($nextBackupFileName)" );"
 }
-
-$securePassword = ConvertTo-SecureString $password -AsPlainText -Force; 
+$securePassword = ConvertTo-SecureString $password -AsPlainText -Force;
 $credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username, $securePassword)
 $params = @{
     RelocateFile = $relocateFiles
-    Database = " SampleDatabase"
+    Database = "SampleDatabase"
     ServerInstance = "."
     Credential = $credentials;
     BackupFile = " $pwd\AdventureWorks2016.bak"
 }
 Restore-SqlDatabase @params
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

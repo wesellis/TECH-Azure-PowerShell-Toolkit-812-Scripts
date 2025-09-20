@@ -1,105 +1,49 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Deployscaleset
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Deployscaleset
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$location,
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$resourceGroupName,
     [string]$customImageStorageAccountName='sdaviesarmne',
     [string]$customImageContainer='images',
     [string]$customImageBlobName='IISBase-osDisk.vhd',
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$newStorageAccountName,
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$newStorageAccountType,
     [string]$newImageContainer='images',
     [string]$newImageBlobName='IISBase-osDisk.vhd',
     [string]$repoUri='https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vmss-windows-customimage/',
     [string]$storageAccountTemplate='templates/storageaccount.json',
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$scaleSetName,
     [int]$scaleSetInstanceCount=2,
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$scaleSetVMSize,
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$scaleSetDNSPrefix,
     [PSCredential]$scaleSetVMCredentials=(Get-Credential -Message 'Enter Credentials for new scale set VMs'),
     [string]$scaleSetTemplate='azuredeploy.json'
 )
-
-#region Functions
-
-[CmdletBinding()]
 function WE-Switch-AzureResourceManagement
 {
     if ($switchMode)
@@ -107,8 +51,6 @@ function WE-Switch-AzureResourceManagement
         Switch-AzureMode AzureResourceManager -WarningAction SilentlyContinue
     }
 }
-
-[CmdletBinding()]
 function WE-Switch-AzureServiceManagement
 {
     if ($switchMode)
@@ -116,18 +58,14 @@ function WE-Switch-AzureServiceManagement
         Switch-AzureMode AzureServiceManagement -WarningAction SilentlyContinue
     }
 }
-
-
-
 Import-Module -Name Azure
 $azureModule=Get-Module -Name Azure
-
 if ($azureModule)
 {
     if ($azureModule.Version.Major -eq 0)
-    {  
+    {
         $switchMode=$true
-        Switch-AzureResourceManagement        
+        Switch-AzureResourceManagement
     }
     else
     {
@@ -143,63 +81,43 @@ else
 try
 {
      # Create a new Resource Group
-
     New-AzureResourceGroup -ResourceGroupName $resourceGroupName -Location $location -Force
-
     # Test names for validity
-
     $newStorageAccountName=$newStorageAccountName.ToLowerInvariant()
     if (-not (Get-AzureStorageAccount -ResourceGroupName $resourceGroupName -Name $newStorageAccountName -ErrorAction SilentlyContinue))
     {
         if (Test-AzureName -Storage -Name $newStorageAccountName -ErrorAction Stop)
         {
-            throw " Storage Account Name in use "
+            throw "Storage Account Name in use "
         }
     }
-
-   ;  $scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
-
+$scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
     if (-not (Get-AzurePublicIpAddress -ErrorAction Stop  -ResourceGroupName $resourceGroupName|where Location -eq $location).DnsSettings.DomainNameLabel -eq  $scaleSetDNSPrefix)
     {
         if (-not (Test-AzureDnsAvailability -DomainQualifiedName $scaleSetDNSPrefix -Location $location -ErrorAction Stop))
         {
-            throw " Scale Set DNS Name in use "
+            throw "Scale Set DNS Name in use "
         }
     }
-
     # Create a new Storage Account for the image
-    
-   ;  $parameters=@{" location" =" $location" ;" newStorageAccountName" =" $newStorageAccountName" ;" storageAccountType" =" $newStorageAccountType" }
+$parameters=@{" location" =" $location" ;" newStorageAccountName" =" $newStorageAccountName" ;" storageAccountType" =" $newStorageAccountType" }
     $templateUri=" $repoUri$storageAccountTemplate"
-
     New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createstorageaccount'
-
     # Copy the blob from the source to the new storage account
-
     $destkey=(Get-AzureStorageAccountKey -Name $newStorageAccountName -ResourceGroupName $resourceGroupName).Key1
-    
     Switch-AzureServiceManagement
-
     $destcontext= New-AzureStorageContext -StorageAccountName $newStorageAccountName -StorageAccountKey $destkey -Protocol Https
     $srccontext= New-AzureStorageContext -StorageAccountName $customImageStorageAccountName -Anonymous -Protocol Https
-
     $destcontainer=Get-AzureStorageContainer -Context $destcontext -Name $newImageContainer -ErrorAction SilentlyContinue
-
     if ($null -eq $destcontainer){
 	    New-AzureStorageContainer -Context $destcontext -Name $newImageContainer
     }
-    
     Get-AzureStorageBlob -Container $customImageContainer -Context $srccontext -Blob $customImageBlobName|Start-CopyAzureStorageBlob -DestContext $destContext -DestContainer $newImageContainer -DestBlob $newImageBlobName -ErrorVariable $copyerror -ErrorAction Continue|Get-AzureStorageBlobCopyState -WaitForComplete
-
     # Deploy the scale set using the new custom image as the target
-
-   ;  $sourceImageVhdUri=(Get-AzureStorageBlob -Container $newImageContainer -Context $destContext -Blob $newImageBlobName).ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
-
+$sourceImageVhdUri=(Get-AzureStorageBlob -Container $newImageContainer -Context $destContext -Blob $newImageBlobName).ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
     Switch-AzureResourceManagement
-
-   ;  $parameters=@{" vmSSName" =" $scaleSetName" ;" instanceCount" =$scaleSetInstanceCount;" vmSize" =" $scaleSetVMSize" ;" dnsNamePrefix" =" $scaleSetDNSPrefix" ;" adminUsername" =$scaleSetVMCredentials.UserName;" adminPassword" =$scaleSetVMCredentials.GetNetworkCredential().Password;" location" =" $location" ;" sourceImageVhdUri" =" $sourceImageVhdUri" }
+$parameters=@{" vmSSName" =" $scaleSetName" ;" instanceCount" =$scaleSetInstanceCount;" vmSize" =" $scaleSetVMSize" ;" dnsNamePrefix" =" $scaleSetDNSPrefix" ;" adminUsername" =$scaleSetVMCredentials.UserName;" adminPassword" =$scaleSetVMCredentials.GetNetworkCredential().Password;" location" =" $location" ;" sourceImageVhdUri" =" $sourceImageVhdUri" }
     $templateUri=" $repoUri$scaleSetTemplate"
-
     New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createscaleset'
 }
 catch
@@ -207,8 +125,3 @@ catch
     Write-Error $_
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

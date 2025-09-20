@@ -1,187 +1,120 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Subscription Security Auditor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Subscription Security Auditor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
     }
-    
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEOutputPath = " SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+    [string]$SubscriptionId,
+    [Parameter()]
+    [string]$OutputPath = "SecurityAudit_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
 )
-
-#region Functions
-
-Write-WELog " Starting Azure Security Audit..." " INFO"
-
-if ($WESubscriptionId) {
-    Set-AzContext -SubscriptionId $WESubscriptionId
-    Write-WELog " Auditing subscription: $WESubscriptionId" " INFO"
+Write-Host "Starting Azure Security Audit..."
+if ($SubscriptionId) {
+    Set-AzContext -SubscriptionId $SubscriptionId
+    Write-Host "Auditing subscription: $SubscriptionId"
 } else {
-    $WESubscriptionId = (Get-AzContext).Subscription.Id
-    Write-WELog " Auditing current subscription: $WESubscriptionId" " INFO"
+    $SubscriptionId = (Get-AzContext).Subscription.Id
+    Write-Host "Auditing current subscription: $SubscriptionId"
 }
-
-$WEAuditResults = @{
+$AuditResults = @{
     SubscriptionInfo = @{}
     RoleAssignments = @()
     PolicyAssignments = @()
     SecurityFindings = @()
     Recommendations = @()
 }
-
 try {
     # Get subscription information
-    $WESubscription = Get-AzSubscription -SubscriptionId $WESubscriptionId
-    $WEAuditResults.SubscriptionInfo = @{
-        Name = $WESubscription.Name
-        Id = $WESubscription.Id
-        TenantId = $WESubscription.TenantId
-        State = $WESubscription.State
+    $Subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
+    $AuditResults.SubscriptionInfo = @{
+        Name = $Subscription.Name
+        Id = $Subscription.Id
+        TenantId = $Subscription.TenantId
+        State = $Subscription.State
     }
-    
-    Write-WELog "  Subscription info collected" " INFO"
-    
+    Write-Host "Subscription info collected"
     # Audit role assignments
-    Write-WELog "  Auditing role assignments..." " INFO"
-    $WERoleAssignments = Get-AzRoleAssignment -Scope " /subscriptions/$WESubscriptionId"
-    
-    foreach ($WEAssignment in $WERoleAssignments) {
-        $WEAuditResults.RoleAssignments += @{
-            PrincipalName = $WEAssignment.DisplayName
-            PrincipalType = $WEAssignment.ObjectType
-            Role = $WEAssignment.RoleDefinitionName
-            Scope = $WEAssignment.Scope
-            PrincipalId = $WEAssignment.ObjectId
+    Write-Host "Auditing role assignments..."
+    $RoleAssignments = Get-AzRoleAssignment -Scope " /subscriptions/$SubscriptionId"
+    foreach ($Assignment in $RoleAssignments) {
+        $AuditResults.RoleAssignments += @{
+            PrincipalName = $Assignment.DisplayName
+            PrincipalType = $Assignment.ObjectType
+            Role = $Assignment.RoleDefinitionName
+            Scope = $Assignment.Scope
+            PrincipalId = $Assignment.ObjectId
         }
     }
-    
     # Check for privileged roles
-    $WEPrivilegedRoles = @(" Owner" , " User Access Administrator" , " Security Administrator" )
-    $WEPrivilegedAssignments = $WERoleAssignments | Where-Object { $_.RoleDefinitionName -in $WEPrivilegedRoles }
-    
-    if ($WEPrivilegedAssignments.Count -gt 10) {
-        $WEAuditResults.SecurityFindings += " [WARN]️ High number of privileged role assignments: $($WEPrivilegedAssignments.Count)"
-        $WEAuditResults.Recommendations += " Review and minimize privileged access assignments"
+    $PrivilegedRoles = @("Owner" , "User Access Administrator" , "Security Administrator" )
+    $PrivilegedAssignments = $RoleAssignments | Where-Object { $_.RoleDefinitionName -in $PrivilegedRoles }
+    if ($PrivilegedAssignments.Count -gt 10) {
+        $AuditResults.SecurityFindings += "[WARN] High number of privileged role assignments: $($PrivilegedAssignments.Count)"
+        $AuditResults.Recommendations += "Review and minimize privileged access assignments"
     }
-    
-    Write-WELog "  Role assignments audited: $($WERoleAssignments.Count) found" " INFO"
-    
+    Write-Host "Role assignments audited: $($RoleAssignments.Count) found"
     # Audit policy assignments
-    Write-WELog "  Auditing policy assignments..." " INFO"
-    $WEPolicyAssignments = Get-AzPolicyAssignment -Scope " /subscriptions/$WESubscriptionId"
-    
-    foreach ($WEPolicy in $WEPolicyAssignments) {
-        $WEAuditResults.PolicyAssignments += @{
-            Name = $WEPolicy.Name
-            PolicyDefinitionId = $WEPolicy.Properties.PolicyDefinitionId
-            Scope = $WEPolicy.Properties.Scope
-            EnforcementMode = $WEPolicy.Properties.EnforcementMode
+    Write-Host "Auditing policy assignments..."
+    $PolicyAssignments = Get-AzPolicyAssignment -Scope " /subscriptions/$SubscriptionId"
+    foreach ($Policy in $PolicyAssignments) {
+        $AuditResults.PolicyAssignments += @{
+            Name = $Policy.Name
+            PolicyDefinitionId = $Policy.Properties.PolicyDefinitionId
+            Scope = $Policy.Properties.Scope
+            EnforcementMode = $Policy.Properties.EnforcementMode
         }
     }
-    
-    Write-WELog "  Policy assignments audited: $($WEPolicyAssignments.Count) found" " INFO"
-    
+    Write-Host "Policy assignments audited: $($PolicyAssignments.Count) found"
     # Security checks
-    Write-WELog "  Performing security checks..." " INFO"
-    
+    Write-Host "Performing security checks..."
     # Check for guest users with privileged access
-    $WEGuestUsers = $WERoleAssignments | Where-Object { $_.DisplayName -like " *#EXT#*" -and $_.RoleDefinitionName -in $WEPrivilegedRoles }
-    if ($WEGuestUsers.Count -gt 0) {
-        $WEAuditResults.SecurityFindings += " [WARN]️ Guest users with privileged access: $($WEGuestUsers.Count)"
-        $WEAuditResults.Recommendations += " Review guest user access and implement time-limited assignments"
+    $GuestUsers = $RoleAssignments | Where-Object { $_.DisplayName -like " *#EXT#*" -and $_.RoleDefinitionName -in $PrivilegedRoles }
+    if ($GuestUsers.Count -gt 0) {
+        $AuditResults.SecurityFindings += "[WARN] Guest users with privileged access: $($GuestUsers.Count)"
+        $AuditResults.Recommendations += "Review guest user access and implement time-limited assignments"
     }
-    
     # Check for service principals with Owner role
-    $WEServicePrincipalOwners = $WERoleAssignments | Where-Object { $_.ObjectType -eq " ServicePrincipal" -and $_.RoleDefinitionName -eq " Owner" }
-    if ($WEServicePrincipalOwners.Count -gt 0) {
-        $WEAuditResults.SecurityFindings += " [WARN]️ Service principals with Owner role: $($WEServicePrincipalOwners.Count)"
-        $WEAuditResults.Recommendations += " Consider using more restrictive roles for service principals"
+    $ServicePrincipalOwners = $RoleAssignments | Where-Object { $_.ObjectType -eq "ServicePrincipal" -and $_.RoleDefinitionName -eq "Owner" }
+    if ($ServicePrincipalOwners.Count -gt 0) {
+        $AuditResults.SecurityFindings += "[WARN] Service principals with Owner role: $($ServicePrincipalOwners.Count)"
+        $AuditResults.Recommendations += "Consider using more restrictive roles for service principals"
     }
-    
     # Check for users with subscription-level Owner access
-   ;  $WESubscriptionOwners = $WERoleAssignments | Where-Object { $_.Scope -eq " /subscriptions/$WESubscriptionId" -and $_.RoleDefinitionName -eq " Owner" }
-    if ($WESubscriptionOwners.Count -gt 5) {
-        $WEAuditResults.SecurityFindings += " [WARN]️ Many subscription owners: $($WESubscriptionOwners.Count)"
-        $WEAuditResults.Recommendations += " Limit subscription-level Owner assignments"
+$SubscriptionOwners = $RoleAssignments | Where-Object { $_.Scope -eq " /subscriptions/$SubscriptionId" -and $_.RoleDefinitionName -eq "Owner" }
+    if ($SubscriptionOwners.Count -gt 5) {
+        $AuditResults.SecurityFindings += "[WARN] Many subscription owners: $($SubscriptionOwners.Count)"
+        $AuditResults.Recommendations += "Limit subscription-level Owner assignments"
     }
-    
-    Write-WELog "  Security checks completed" " INFO"
-    
+    Write-Host "Security checks completed"
     # Generate HTML report
-   ;  $WEHTML = @"
+$HTML = @"
 <!DOCTYPE html>
 <html>
 <head>
@@ -202,59 +135,43 @@ try {
 <body>
     <div class=" header" >
         <h1>Azure Security Audit Report</h1>
-        <div>Subscription: $($WEAuditResults.SubscriptionInfo.Name)</div>
-        <div>Generated by Wesley Ellis | $(Get-Date -Format " MMMM dd, yyyy 'at' HH:mm" )</div>
+        <div>Subscription: $($AuditResults.SubscriptionInfo.Name)</div>
+        <div>Generated by Wesley Ellis | $(Get-Date -Format "MMMM dd, yyyy 'at' HH:mm" )</div>
     </div>
-    
     <div class=" summary" >
         <h2>Executive Summary</h2>
-        <p><strong>Subscription:</strong> $($WEAuditResults.SubscriptionInfo.Name)</p>
-        <p><strong>Subscription ID:</strong> $($WEAuditResults.SubscriptionInfo.Id)</p>
-        <p><strong>Role Assignments:</strong> $($WEAuditResults.RoleAssignments.Count)</p>
-        <p><strong>Policy Assignments:</strong> $($WEAuditResults.PolicyAssignments.Count)</p>
-        <p><strong>Security Findings:</strong> $($WEAuditResults.SecurityFindings.Count)</p>
+        <p><strong>Subscription:</strong> $($AuditResults.SubscriptionInfo.Name)</p>
+        <p><strong>Subscription ID:</strong> $($AuditResults.SubscriptionInfo.Id)</p>
+        <p><strong>Role Assignments:</strong> $($AuditResults.RoleAssignments.Count)</p>
+        <p><strong>Policy Assignments:</strong> $($AuditResults.PolicyAssignments.Count)</p>
+        <p><strong>Security Findings:</strong> $($AuditResults.SecurityFindings.Count)</p>
     </div>
-    
     <h2>Security Findings</h2>
 " @
-    
-    foreach ($WEFinding in $WEAuditResults.SecurityFindings) {
-        $WEHTML = $WEHTML + " <div class='finding'>$WEFinding</div>"
+    foreach ($Finding in $AuditResults.SecurityFindings) {
+        $HTML = $HTML + " <div class='finding'>$Finding</div>"
     }
-    
-    $WEHTML = $WEHTML + " <h2>Recommendations</h2>"
-    
-    foreach ($WERecommendation in $WEAuditResults.Recommendations) {
-        $WEHTML = $WEHTML + " <div class='recommendation'> $WERecommendation</div>"
+    $HTML = $HTML + " <h2>Recommendations</h2>"
+    foreach ($Recommendation in $AuditResults.Recommendations) {
+        $HTML = $HTML + " <div class='recommendation'> $Recommendation</div>"
     }
-    
-   ;  $WEHTML = $WEHTML + @"
-    
+$HTML = $HTML + @"
     <div class=" footer" >
-        <p>Report generated by Wesley Ellis | CompuCom Systems Inc. | $(Get-Date -Format " MMMM dd, yyyy" )</p>
+        <p>Report generated by Wesley Ellis | CompuCom Systems Inc. | $(Get-Date -Format "MMMM dd, yyyy" )</p>
         <p>Azure Automation Scripts | Security Audit Tool</p>
     </div>
 </body>
 </html>
 " @
-    
     # Save report
-    $WEHTML | Out-File -FilePath $WEOutputPath -Encoding UTF8
-    
-    Write-WELog "  Security audit completed successfully!" " INFO"
-    Write-WELog "  Audit Results:" " INFO"
-    Write-WELog "  Role Assignments: $($WEAuditResults.RoleAssignments.Count)" " INFO"
-    Write-WELog "  Policy Assignments: $($WEAuditResults.PolicyAssignments.Count)" " INFO"
-    Write-WELog "  Security Findings: $($WEAuditResults.SecurityFindings.Count)" " INFO"
-    Write-WELog "  Report saved to: $WEOutputPath" " INFO"
-    
+    $HTML | Out-File -FilePath $OutputPath -Encoding UTF8
+    Write-Host "Security audit completed successfully!"
+    Write-Host "Audit Results:"
+    Write-Host "Role Assignments: $($AuditResults.RoleAssignments.Count)"
+    Write-Host "Policy Assignments: $($AuditResults.PolicyAssignments.Count)"
+    Write-Host "Security Findings: $($AuditResults.SecurityFindings.Count)"
+    Write-Host "Report saved to: $OutputPath"
 } catch {
-    Write-Error " Security audit failed: $($_.Exception.Message)"
+    Write-Error "Security audit failed: $($_.Exception.Message)"
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

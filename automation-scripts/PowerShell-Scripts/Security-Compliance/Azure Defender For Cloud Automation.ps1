@@ -1,197 +1,120 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Defender For Cloud Automation
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Defender For Cloud Automation
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet(" EnableDefender" , " ConfigureDefender" , " GetSecurityScore" , " GetRecommendations" , " GetAlerts" , " EnableAutoProvisioning" , " ConfigurePricing" )]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
+    [ValidateSet("EnableDefender", "ConfigureDefender", "GetSecurityScore", "GetRecommendations", "GetAlerts", "EnableAutoProvisioning", "ConfigurePricing")]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Action,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAction,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [string]$SubscriptionId,
+    [Parameter()]
+    [string[]]$DefenderPlans = @("VirtualMachines", "AppService", "SqlServers", "StorageAccounts", "KeyVaults", "ContainerRegistry", "KubernetesService"),
+    [Parameter()]
+    [ValidateSet("Free", "Standard")]
+    [string]$PricingTier = "Standard",
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$WorkspaceResourceId,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId,
-    
-    [Parameter(Mandatory=$false)]
-    [string[]]$WEDefenderPlans = @(" VirtualMachines" , " AppService" , " SqlServers" , " StorageAccounts" , " KeyVaults" , " ContainerRegistry" , " KubernetesService" ),
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" Free" , " Standard" )]
-    [string]$WEPricingTier = " Standard" ,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEWorkspaceResourceId,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEEmailContact,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" Off" , " On" )]
-    [string]$WEEmailNotifications = " On" ,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" All" , " High" , " Medium" , " Low" )]
-    [string]$WEMinimumAlertSeverity = " Medium" ,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEEnableMonitoring,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEOutputPath = " .\defender-report.json"
+    [string]$EmailContact,
+    [Parameter()]
+    [ValidateSet("Off", "On")]
+    [string]$EmailNotifications = "On",
+    [Parameter()]
+    [ValidateSet("All", "High", "Medium", "Low")]
+    [string]$MinimumAlertSeverity = "Medium",
+    [Parameter()]
+    [switch]$EnableMonitoring,
+    [Parameter()]
+    [string]$OutputPath = ".\defender-report.json"
 )
-
-#region Functions
-
-
-# Module import removed - use #Requires instead
-
-
-Show-Banner -ScriptName " Azure Defender for Cloud Automation Tool" -Version " 1.0" -Description " Comprehensive cloud security automation with advanced threat protection"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
     # Test Azure connection
-    Write-ProgressStep -StepNumber 1 -TotalSteps 6 -StepName " Security Connection" -Status " Validating Azure connection and security modules"
-    if (-not (Test-AzureConnection -RequiredModules @('Az.Accounts', 'Az.Security', 'Az.Resources'))) {
-        throw " Azure connection validation failed"
+    # Progress stepNumber 1 -TotalSteps 6 -StepName "Security Connection" -Status "Validating Azure connection and security modules"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
     # Set subscription context if provided
-    if ($WESubscriptionId) {
-        Write-ProgressStep -StepNumber 2 -TotalSteps 6 -StepName " Subscription Context" -Status " Setting subscription context"
+    if ($SubscriptionId) {
+        # Progress stepNumber 2 -TotalSteps 6 -StepName "Subscription Context" -Status "Setting subscription context"
         Invoke-AzureOperation -Operation {
-            Set-AzContext -SubscriptionId $WESubscriptionId -ErrorAction Stop
-        } -OperationName " Set Subscription Context"
-        Write-Log " [OK] Subscription context set to: $WESubscriptionId" -Level SUCCESS
-    }
+            Set-AzContext -SubscriptionId $SubscriptionId -ErrorAction Stop
+        } -OperationName "Set Subscription Context"
 
+    }
     # Execute the requested action
-    Write-ProgressStep -StepNumber 3 -TotalSteps 6 -StepName " Security Operation" -Status " Executing $WEAction operation"
-    
-    switch ($WEAction) {
-        " EnableDefender" {
-            Write-Log "  Enabling Azure Defender for Cloud..." -Level INFO
-            
-            foreach ($plan in $WEDefenderPlans) {
+    # Progress stepNumber 3 -TotalSteps 6 -StepName "Security Operation" -Status "Executing $Action operation"
+    switch ($Action) {
+        "EnableDefender" {
+
+            foreach ($plan in $DefenderPlans) {
                 try {
                     Invoke-AzureOperation -Operation {
-                        Set-AzSecurityPricing -Name $plan -PricingTier $WEPricingTier
-                    } -OperationName " Enable Defender for $plan" | Out-Null
-                    
-                    Write-Log " [OK] Defender enabled for $plan ($WEPricingTier tier)" -Level SUCCESS
+                        Set-AzSecurityPricing -Name $plan -PricingTier $PricingTier
+                    } -OperationName "Enable Defender for $plan" | Out-Null
+
                 } catch {
-                    Write-Log " [WARN]️ Failed to enable Defender for $plan : $($_.Exception.Message)" -Level WARNING
+
                 }
             }
         }
-        
-        " ConfigureDefender" {
-            Write-Log "  Configuring Azure Defender settings..." -Level INFO
-            
+        "ConfigureDefender" {
+
             # Configure security contacts
-            if ($WEEmailContact) {
+            if ($EmailContact) {
                 $contactParams = @{
-                    Email = $WEEmailContact
-                    AlertNotifications = $WEEmailNotifications
-                    AlertsToAdmins = $WEEmailNotifications
+                    Email = $EmailContact
+                    AlertNotifications = $EmailNotifications
+                    AlertsToAdmins = $EmailNotifications
                 }
-                
                 Invoke-AzureOperation -Operation {
                     Set-AzSecurityContact -ErrorAction Stop @contactParams
-                } -OperationName " Configure Security Contacts"
-                
-                Write-Log " [OK] Security contact configured: $WEEmailContact" -Level SUCCESS
+                } -OperationName "Configure Security Contacts"
+
             }
-            
             # Configure workspace settings
-            if ($WEWorkspaceResourceId) {
+            if ($WorkspaceResourceId) {
                 Invoke-AzureOperation -Operation {
-                    Set-AzSecurityWorkspaceSetting -Name " default" -WorkspaceId $WEWorkspaceResourceId
-                } -OperationName " Configure Log Analytics Workspace"
-                
-                Write-Log " [OK] Log Analytics workspace configured" -Level SUCCESS
+                    Set-AzSecurityWorkspaceSetting -Name " default" -WorkspaceId $WorkspaceResourceId
+                } -OperationName "Configure Log Analytics Workspace"
+
             }
         }
-        
-        " GetSecurityScore" {
-            Write-Log "  Retrieving security score and posture..." -Level INFO
-            
+        "GetSecurityScore" {
+
             $secureScore = Invoke-AzureOperation -Operation {
                 Get-AzSecurityScore -ErrorAction Stop
-            } -OperationName " Get Security Score"
-            
+            } -OperationName "Get Security Score"
             $results = @{
                 SecurityScore = $secureScore
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
                 Subscription = (Get-AzContext).Subscription.Name
             }
         }
-        
-        " GetRecommendations" {
-            Write-Log " 📋 Retrieving security recommendations..." -Level INFO
-            
+        "GetRecommendations" {
+
             $recommendations = Invoke-AzureOperation -Operation {
                 Get-AzSecurityTask -ErrorAction Stop
-            } -OperationName " Get Security Recommendations"
-            
-            $highPriorityRecs = $recommendations | Where-Object { $_.SecurityTaskParameters.severityLevel -eq " High" }
-            
+            } -OperationName "Get Security Recommendations"
+            $highPriorityRecs = $recommendations | Where-Object { $_.SecurityTaskParameters.severityLevel -eq "High" }
             $results = @{
                 TotalRecommendations = $recommendations.Count
                 HighPriorityRecommendations = $highPriorityRecs.Count
@@ -199,147 +122,110 @@ try {
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
             }
         }
-        
-        " GetAlerts" {
-            Write-Log " 🚨 Retrieving security alerts..." -Level INFO
-            
-           ;  $alerts = Invoke-AzureOperation -Operation {
+        "GetAlerts" {
+
+$alerts = Invoke-AzureOperation -Operation {
                 Get-AzSecurityAlert -ErrorAction Stop
-            } -OperationName " Get Security Alerts"
-            
+            } -OperationName "Get Security Alerts"
             # Filter by severity if specified
-            if ($WEMinimumAlertSeverity -ne " All" ) {
-               ;  $severityOrder = @{" Low" = 1; " Medium" = 2; " High" = 3}
-                $minSeverityValue = $severityOrder[$WEMinimumAlertSeverity]
+            if ($MinimumAlertSeverity -ne "All" ) {
+$severityOrder = @{"Low" = 1; "Medium" = 2; "High" = 3}
+                $minSeverityValue = $severityOrder[$MinimumAlertSeverity]
                 $alerts = $alerts | Where-Object { $severityOrder[$_.AlertSeverity] -ge $minSeverityValue }
             }
-            
             $results = @{
                 TotalAlerts = $alerts.Count
                 Alerts = $alerts | Select-Object AlertDisplayName, AlertSeverity, State, TimeGeneratedUtc
                 Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
             }
         }
-        
-        " EnableAutoProvisioning" {
-            Write-Log " 🔄 Enabling auto-provisioning agents..." -Level INFO
-            
-            $agents = @(" MicrosoftMonitoringAgent" , " MicrosoftDependencyAgent" , " LogAnalyticsForLinux" )
-            
+        "EnableAutoProvisioning" {
+
+            $agents = @("MicrosoftMonitoringAgent" , "MicrosoftDependencyAgent" , "LogAnalyticsForLinux" )
             foreach ($agent in $agents) {
                 try {
                     Invoke-AzureOperation -Operation {
                         Set-AzSecurityAutoProvisioningSetting -Name $agent -EnableAutoProvisioning $true
-                    } -OperationName " Enable Auto-Provisioning for $agent"
-                    
-                    Write-Log " [OK] Auto-provisioning enabled for $agent" -Level SUCCESS
+                    } -OperationName "Enable Auto-Provisioning for $agent"
+
                 } catch {
-                    Write-Log " [WARN]️ Failed to enable auto-provisioning for $agent" -Level WARNING
+
                 }
             }
         }
-        
-        " ConfigurePricing" {
-            Write-Log "  Configuring pricing tiers..." -Level INFO
-            
-            foreach ($plan in $WEDefenderPlans) {
+        "ConfigurePricing" {
+
+            foreach ($plan in $DefenderPlans) {
                 $currentPricing = Invoke-AzureOperation -Operation {
                     Get-AzSecurityPricing -Name $plan
-                } -OperationName " Get Current Pricing for $plan"
-                
-                Write-Log " Current pricing for $plan : $($currentPricing.PricingTier)" -Level INFO
-                
-                if ($currentPricing.PricingTier -ne $WEPricingTier) {
+                } -OperationName "Get Current Pricing for $plan"
+
+                if ($currentPricing.PricingTier -ne $PricingTier) {
                     Invoke-AzureOperation -Operation {
-                        Set-AzSecurityPricing -Name $plan -PricingTier $WEPricingTier
-                    } -OperationName " Update Pricing for $plan"
-                    
-                    Write-Log " [OK] Updated $plan pricing to $WEPricingTier" -Level SUCCESS
+                        Set-AzSecurityPricing -Name $plan -PricingTier $PricingTier
+                    } -OperationName "Update Pricing for $plan"
+
                 }
             }
         }
     }
-
     # Generate summary report
-    Write-ProgressStep -StepNumber 4 -TotalSteps 6 -StepName " Report Generation" -Status " Generating security report"
-    
+    # Progress stepNumber 4 -TotalSteps 6 -StepName "Report Generation" -Status "Generating security report"
     if ($results) {
-        $results | ConvertTo-Json -Depth 10 | Out-File -FilePath $WEOutputPath -Encoding UTF8
-        Write-Log " [OK] Security report saved to: $WEOutputPath" -Level SUCCESS
-    }
+        $results | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
 
+    }
     # Display monitoring information
-    Write-ProgressStep -StepNumber 5 -TotalSteps 6 -StepName " Monitoring Setup" -Status " Configuring monitoring"
-    
-    if ($WEEnableMonitoring) {
-        Write-Log "  Setting up continuous monitoring..." -Level INFO
-        
-        # Get current security state
-       ;  $currentPricings = Invoke-AzureOperation -Operation {
-            Get-AzSecurityPricing -ErrorAction Stop
-        } -OperationName " Get All Security Pricings"
-        
-       ;  $enabledPlans = $currentPricings | Where-Object { $_.PricingTier -eq " Standard" }
-        Write-Log " [OK] Defender enabled for $($enabledPlans.Count) service types" -Level SUCCESS
-    }
+    # Progress stepNumber 5 -TotalSteps 6 -StepName "Monitoring Setup" -Status "Configuring monitoring"
+    if ($EnableMonitoring) {
 
+        # Get current security state
+$currentPricings = Invoke-AzureOperation -Operation {
+            Get-AzSecurityPricing -ErrorAction Stop
+        } -OperationName "Get All Security Pricings"
+$enabledPlans = $currentPricings | Where-Object { $_.PricingTier -eq "Standard" }
+
+    }
     # Final validation and summary
-    Write-ProgressStep -StepNumber 6 -TotalSteps 6 -StepName " Validation" -Status " Validating security configuration"
-    
+    # Progress stepNumber 6 -TotalSteps 6 -StepName "Validation" -Status "Validating security configuration"
     # Success summary
-    Write-WELog "" " INFO"
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "                              AZURE DEFENDER CONFIGURATION SUCCESSFUL" " INFO" -ForegroundColor Green  
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "" " INFO"
-    Write-WELog "  Security Operation: $WEAction" " INFO" -ForegroundColor Cyan
-    Write-WELog "   • Subscription: $(if($WESubscriptionId){$WESubscriptionId}else{'Current'})" " INFO" -ForegroundColor White
-    Write-WELog "   • Pricing Tier: $WEPricingTier" " INFO" -ForegroundColor White
-    Write-WELog "   • Protected Services: $($WEDefenderPlans.Count)" " INFO" -ForegroundColor White
-    
+    Write-Host ""
+    Write-Host "                              AZURE DEFENDER CONFIGURATION SUCCESSFUL" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Security Operation: $Action" -ForegroundColor Cyan
+    Write-Host "    Subscription: $(if($SubscriptionId){$SubscriptionId}else{'Current'})" -ForegroundColor White
+    Write-Host "    Pricing Tier: $PricingTier" -ForegroundColor White
+    Write-Host "    Protected Services: $($DefenderPlans.Count)" -ForegroundColor White
     if ($results) {
-        Write-WELog "" " INFO"
-        Write-WELog "  Results Summary:" " INFO" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "Results Summary:" -ForegroundColor Cyan
         if ($results.SecurityScore) {
-            Write-WELog "   • Security Score: $($results.SecurityScore.SecureScorePercentage)%" " INFO" -ForegroundColor Green
+            Write-Host "    Security Score: $($results.SecurityScore.SecureScorePercentage)%" -ForegroundColor Green
         }
         if ($results.TotalRecommendations) {
-            Write-WELog "   • Total Recommendations: $($results.TotalRecommendations)" " INFO" -ForegroundColor White
-            Write-WELog "   • High Priority: $($results.HighPriorityRecommendations)" " INFO" -ForegroundColor Yellow
+            Write-Host "    Total Recommendations: $($results.TotalRecommendations)" -ForegroundColor White
+            Write-Host "    High Priority: $($results.HighPriorityRecommendations)" -ForegroundColor Yellow
         }
         if ($results.TotalAlerts) {
-            Write-WELog "   • Security Alerts: $($results.TotalAlerts)" " INFO" -ForegroundColor White
+            Write-Host "    Security Alerts: $($results.TotalAlerts)" -ForegroundColor White
         }
     }
-    
-    Write-WELog "" " INFO"
-    Write-WELog " 💡 Next Steps:" " INFO" -ForegroundColor Cyan
-    Write-WELog "   • Review recommendations: Get-AzSecurityTask" " INFO" -ForegroundColor White
-    Write-WELog "   • Monitor alerts: Get-AzSecurityAlert" " INFO" -ForegroundColor White
-    Write-WELog "   • Check compliance: Get-AzSecurityCompliance" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-
-    Write-Log "  Azure Defender configuration completed successfully!" -Level SUCCESS
+    Write-Host ""
+    Write-Host "Next Steps:" -ForegroundColor Cyan
+    Write-Host "    Review recommendations: Get-AzSecurityTask" -ForegroundColor White
+    Write-Host "    Monitor alerts: Get-AzSecurityAlert" -ForegroundColor White
+    Write-Host "    Check compliance: Get-AzSecurityCompliance" -ForegroundColor White
+    Write-Host ""
 
 } catch {
-    Write-Log "  Azure Defender configuration failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    
-    Write-WELog "" " INFO"
-    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
-    Write-WELog "   • Verify Security Center permissions" " INFO" -ForegroundColor White
-    Write-WELog "   • Check subscription access" " INFO" -ForegroundColor White
-    Write-WELog "   • Ensure Az.Security module is installed" " INFO" -ForegroundColor White
-    Write-WELog "   • Validate pricing tier permissions" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-    
-    exit 1
+
+    Write-Host ""
+    Write-Host "Troubleshooting Tips:" -ForegroundColor Yellow
+    Write-Host "    Verify Security Center permissions" -ForegroundColor White
+    Write-Host "    Check subscription access" -ForegroundColor White
+    Write-Host "    Ensure Az.Security module is installed" -ForegroundColor White
+    Write-Host "    Validate pricing tier permissions" -ForegroundColor White
+    Write-Host ""
+    throw
 }
 
-Write-Progress -Activity " Azure Defender Configuration" -Completed
-Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

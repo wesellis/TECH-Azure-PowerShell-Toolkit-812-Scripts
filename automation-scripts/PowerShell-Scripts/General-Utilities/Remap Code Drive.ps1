@@ -1,48 +1,15 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Remap Code Drive
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Remap Code Drive
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS
     Remaps the CloudPC-designated D: ReFS/Dev Drive code drive to the original Q: drive used during image gen.
-.DESCRIPTION
     Image prep creates the ReFS volume as Q: to avoid low letters like D: that can be mapped
     to a temp drive or virtual CD-ROM, and the N: drive reserved by the image builder.
     Image prep can update global environment variables to contain Q:, and build outputs and
@@ -50,64 +17,46 @@
     by a drive letter change.
 .PARAMETER ToDriveLetter
     Final ReFS partition drive letter, defaults to 'Q'.
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true)][PSObject] $WETaskParams
+    [Parameter(Mandatory = $true)][PSObject] $TaskParams
 )
-
-#region Functions
-
-$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
-
-function WE-RemapCodeDrive($WETaskParams) {
-    $WEToDriveLetter = $WETaskParams.ToDriveLetter
-    if (!$WEToDriveLetter) {
-       ;  $WEToDriveLetter = 'Q'
+function RemapCodeDrive($TaskParams) {
+    $ToDriveLetter = $TaskParams.ToDriveLetter
+    if (!$ToDriveLetter) {
+$ToDriveLetter = 'Q'
     }
-
-    # FileSystemType ReFS applies to Dev Drive as well, which is a special " Trusted" mode of ReFS.
-    Write-WELog " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
-   ;  $WEFirstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq " ReFS" } | Select-Object -First 1)
-    if (!$WEFirstReFSVolume) {
-        throw " No ReFS drive found" ;
+    # FileSystemType ReFS applies to Dev Drive as well, which is a special "Trusted" mode of ReFS.
+    Write-Host " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
+$FirstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq "ReFS" } | Select-Object -First 1)
+    if (!$FirstReFSVolume) {
+        throw "No ReFS drive found" ;
     }
-
-    $WEFromDriveLetter = $WEFirstReFSVolume.DriveLetter
-    if (!$WEFromDriveLetter) {
-        throw " No ReFS drive letter found" ;
+    $FromDriveLetter = $FirstReFSVolume.DriveLetter
+    if (!$FromDriveLetter) {
+        throw "No ReFS drive letter found" ;
     }
-
-    if ($WEToDriveLetter -eq $WEFromDriveLetter) {
-        Write-WELog " Code drive letter ${ToDriveLetter} already matches the first ReFS/Dev Drive volume." " INFO"
+    if ($ToDriveLetter -eq $FromDriveLetter) {
+        Write-Host "Code drive letter ${ToDriveLetter} already matches the first ReFS/Dev Drive volume."
     }
     else {
-        Write-WELog " Reassigning code drive letter $WEFromDriveLetter to $WEToDriveLetter" " INFO"
-        Set-Partition -DriveLetter $WEFromDriveLetter -NewDriveLetter $WEToDriveLetter
+        Write-Host "Reassigning code drive letter $FromDriveLetter to $ToDriveLetter"
+        Set-Partition -DriveLetter $FromDriveLetter -NewDriveLetter $ToDriveLetter
     }
-
-    Write-WELog " `nEnded with volumes:$(Get-Volume -ErrorAction Stop | Out-String)" " INFO"
-
+    Write-Host " `nEnded with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
     # This will mount the drive and open a handle to it.
-    Write-WELog " Checking dir contents of ${ToDriveLetter}: drive" " INFO"
+    Write-Host "Checking dir contents of ${ToDriveLetter}: drive"
     Get-ChildItem -ErrorAction Stop ${ToDriveLetter}:
 }
-
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
         # Unit-testable function - place all real logic there.
-        RemapCodeDrive($WETaskParams)
+        RemapCodeDrive($TaskParams)
     }
     catch {
-        Write-WELog " !!! [WARN] Unhandled exception (will be ignored):`n$_`n$($_.ScriptStackTrace)" " INFO"
+        Write-Host " !!! [WARN] Unhandled exception (will be ignored):`n$_`n$($_.ScriptStackTrace)"
     }
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

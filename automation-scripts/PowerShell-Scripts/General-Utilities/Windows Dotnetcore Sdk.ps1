@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Dotnetcore Sdk
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Dotnetcore Sdk
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -46,87 +16,57 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-[string]$WEDotNetCoreVersion = " latest" ,
-
-
-[Parameter(Mandatory=$false)]
+[string]$DotNetCoreVersion = " latest" ,
+[Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Runtime,
+[Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WERuntime,
-
-
-[Parameter(Mandatory=$false)]
+    [string]$Channel,
+[Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEChannel,
-
-
-[Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGlobalJsonFilePath,
-
-
-[string]$WEOverrideDotnet
-
+    [string]$GlobalJsonFilePath,
+[string]$OverrideDotnet
 )
-
-#region Functions
-
-
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-if (![string]::IsNullOrEmpty($WEGlobalJsonFilePath)) {
-    Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-json-utils.psm1')
-    if([System.IO.File]::Exists($WEGlobalJsonFilePath)) {
-        $WEDotNetCoreVersion = (Get-JsonFromFile -ErrorAction Stop $WEGlobalJsonFilePath).sdk.version
+if (![string]::IsNullOrEmpty($GlobalJsonFilePath)) {
+    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-json-utils.psm1')
+    if([System.IO.File]::Exists($GlobalJsonFilePath)) {
+        $DotNetCoreVersion = (Get-JsonFromFile -ErrorAction Stop $GlobalJsonFilePath).sdk.version
     }
-
-    Write-WELog " Installing NetCore SDK version: $WEDotNetCoreVersion" " INFO"
-    & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -InstallDir " C:\Program Files\dotnet" 
+    Write-Host "Installing NetCore SDK version: $DotNetCoreVersion"
+    & .\dotnet-install.ps1 -Version $DotNetCoreVersion -InstallDir "C:\Program Files\dotnet"
     exit 0
 }
-; 
-$WEOverride = $false
-if ((![string]::IsNullOrEmpty($WEOverrideDotnet)) -and ($WEOverrideDotnet -eq " OverrideDotnet" )) {
-    ;  $WEOverride = $true
+$Override = $false
+if ((![string]::IsNullOrEmpty($OverrideDotnet)) -and ($OverrideDotnet -eq "OverrideDotnet" )) {
+$Override = $true
 }
-
-Write-WELog " Installing NetCore SDK version: $WEDotNetCoreVersion  channel: $WEChannel  runtime: $WERuntime  OverrideDotnet: $WEOverrideDotnet  Override:$WEOverride" " INFO"
+Write-Host "Installing NetCore SDK version: $DotNetCoreVersion  channel: $Channel  runtime: $Runtime  OverrideDotnet: $OverrideDotnet  Override:$Override"
 Unblock-File -Path .\dotnet-install.ps1
-
-if ([string]::IsNullOrEmpty($WEChannel)) {
-    if ([string]::IsNullOrEmpty($WERuntime)) {
-	    & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -InstallDir " C:\Program Files\dotnet" -OverrideVersion $WEOverride
+if ([string]::IsNullOrEmpty($Channel)) {
+    if ([string]::IsNullOrEmpty($Runtime)) {
+	    & .\dotnet-install.ps1 -Version $DotNetCoreVersion -InstallDir "C:\Program Files\dotnet" -OverrideVersion $Override
     }
     else {
-	    & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -InstallDir " C:\Program Files\dotnet" -RunTime $WERuntime -OverrideVersion $WEOverride
+	    & .\dotnet-install.ps1 -Version $DotNetCoreVersion -InstallDir "C:\Program Files\dotnet" -RunTime $Runtime -OverrideVersion $Override
     }
 }
-elseif([string]::IsNullOrEmpty($WERuntime) -and [string]::IsNullOrEmpty($WEDotNetCoreVersion))
+elseif([string]::IsNullOrEmpty($Runtime) -and [string]::IsNullOrEmpty($DotNetCoreVersion))
 {
-    & .\dotnet-install.ps1 -Channel $WEChannel -InstallDir " C:\Program Files\dotnet"
+    & .\dotnet-install.ps1 -Channel $Channel -InstallDir "C:\Program Files\dotnet"
 }
 else
 {
-    if ([string]::IsNullOrEmpty($WERuntime)) {
-	    & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -Channel $WEChannel -InstallDir " C:\Program Files\dotnet" -OverrideVersion $WEOverride
+    if ([string]::IsNullOrEmpty($Runtime)) {
+	    & .\dotnet-install.ps1 -Version $DotNetCoreVersion -Channel $Channel -InstallDir "C:\Program Files\dotnet" -OverrideVersion $Override
     }
     else {
-	    & .\dotnet-install.ps1 -Version $WEDotNetCoreVersion -Channel $WEChannel -InstallDir " C:\Program Files\dotnet" -RunTime $WERuntime -OverrideVersion $WEOverride
+	    & .\dotnet-install.ps1 -Version $DotNetCoreVersion -Channel $Channel -InstallDir "C:\Program Files\dotnet" -RunTime $Runtime -OverrideVersion $Override
     }
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

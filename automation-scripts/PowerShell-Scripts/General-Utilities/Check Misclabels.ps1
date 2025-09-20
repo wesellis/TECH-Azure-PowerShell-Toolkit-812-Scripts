@@ -1,66 +1,27 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Check Misclabels
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Check Misclabels
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
     This script will check a few misc things on the PR to see if labels need to be added (by a subsequent task)
 try {
     # Main script execution
 - is the sample being changed one of the 4 samples linked to by the custom deployment blade in the portal
     - is the sample in the root of the repo
     - does the sample name (i.e. path from root) contain any uppercase chars (affects sorting in GH)
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string]$sampleName = $WEENV:SAMPLE_NAME
+    [string]$sampleName = $ENV:SAMPLE_NAME
 )
-
-#region Functions
-
-Write-WELog " Sample name: $sampleName" " INFO"
-
-; 
-$WEPortalSamples = @(
+Write-Host "Sample name: $sampleName"
+$PortalSamples = @(
     " 101-vm-simple-linux" ,
     " quickstarts\microsoft.compute\vm-simple-linux" ,
     " 101-vm-simple-windows" ,
@@ -70,36 +31,25 @@ $WEPortalSamples = @(
     " 201-sql-database-transparent-encryption-create" ,
     " quickstarts\microsoft.sql\sql-database-transparent-encryption-create"
 )
-$WEPortalSamples | out-string
-
-if($WEPortalSamples -contains " $sampleName" ){
-    Write-WELog " Portal Sample match..." " INFO"
-    Write-WELog " ##vso[task.setvariable variable=IsPortalSample]true" " INFO"
+$PortalSamples | out-string
+if($PortalSamples -contains " $sampleName" ){
+    Write-Host "Portal Sample match..."
+    Write-Host " ##vso[task.setvariable variable=IsPortalSample]true"
 }
-
-
 if(($sampleName.indexOf(" \" ) -eq -1) -and ($sampleName.IndexOf(" /" ) -eq -1)){
-    Write-WELog " Sample is in the root of the repo..." " INFO"
-    Write-WELog " ##vso[task.setvariable variable=IsRootSample]true" " INFO"
+    Write-Host "Sample is in the root of the repo..."
+    Write-Host " ##vso[task.setvariable variable=IsRootSample]true"
 } else {
-    Write-WELog " ##vso[task.setvariable variable=IsRootSample]false" " INFO"
+    Write-Host " ##vso[task.setvariable variable=IsRootSample]false"
 }
-
-
 if($sampleName -cmatch " [A-Z]" ){
-    Write-WELog " Sample name has UPPERCASE chars..." " INFO"
-    Write-WELog " ##vso[task.setvariable variable=SampleHasUpperCase]true" " INFO"
+    Write-Host "Sample name has UPPERCASE chars..."
+    Write-Host " ##vso[task.setvariable variable=SampleHasUpperCase]true"
 } else {
-    Write-WELog " ##vso[task.setvariable variable=SampleHasUpperCase]false" " INFO"    
+    Write-Host " ##vso[task.setvariable variable=SampleHasUpperCase]false"
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ShareName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$QuotaInGB = 1024
 )
-
-#region Functions
-
-Write-Information "Creating File Share: $ShareName"
-
+Write-Host "Creating File Share: $ShareName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
-
 $params = @{
     ErrorAction = "Stop"
     Context = $Context
@@ -44,22 +25,17 @@ $params = @{
     Name = $ShareName
 }
 $FileShare @params
-
-Write-Information " File Share created successfully:"
-Write-Information "  Name: $($FileShare.Name)"
-Write-Information "  Quota: $QuotaInGB GB"
-Write-Information "  Storage Account: $StorageAccountName"
-
+Write-Host "File Share created successfully:"
+Write-Host "Name: $($FileShare.Name)"
+Write-Host "Quota: $QuotaInGB GB"
+Write-Host "Storage Account: $StorageAccountName"
 # Get connection info
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Key = $Keys[0].Value
+Write-Host "`nConnection Information:"
+Write-Host "UNC Path: \\$StorageAccountName.file.core.windows.net\$ShareName"
+Write-Host "Mount Command (Windows):"
+Write-Host "    net use Z: \\$StorageAccountName.file.core.windows.net\$ShareName /u:AZURE\$StorageAccountName $Key"
+Write-Host "Mount Command (Linux):"
+Write-Host "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$ShareName /mnt/myfileshare -o vers=3.0,username=$StorageAccountName,password=$Key,dir_mode=0777,file_mode=0777"
 
-Write-Information "`nConnection Information:"
-Write-Information "  UNC Path: \\$StorageAccountName.file.core.windows.net\$ShareName"
-Write-Information "  Mount Command (Windows):"
-Write-Information "    net use Z: \\$StorageAccountName.file.core.windows.net\$ShareName /u:AZURE\$StorageAccountName $Key"
-Write-Information "  Mount Command (Linux):"
-Write-Information "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$ShareName /mnt/myfileshare -o vers=3.0,username=$StorageAccountName,password=$Key,dir_mode=0777,file_mode=0777"
-
-
-#endregion

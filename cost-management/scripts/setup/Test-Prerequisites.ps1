@@ -1,48 +1,33 @@
 #Requires -Version 5.1
 #Requires -Module Az.Resources
 
-<#
-.SYNOPSIS
     Validates all Azure Cost Management Dashboard prerequisites and configuration
 
-.DESCRIPTION
     This script performs a complete validation of the Azure Cost Management Dashboard installation,
     including Azure connectivity, permissions, module dependencies, configuration files, and
     functionality testing. Provides detailed reporting and troubleshooting guidance.
-
 .PARAMETER ConfigPath
     Path to the configuration file. Defaults to config\config.json.
-
 .PARAMETER TestData
     Run tests with sample data instead of live Azure data.
-
 .PARAMETER Detailed
     Show detailed test results for each component.
-
 .PARAMETER ExportResults
     Export test results to a file.
 
-.EXAMPLE
     .\Test-Prerequisites.ps1
 
     Runs basic prerequisite validation tests
 
-.EXAMPLE
     .\Test-Prerequisites.ps1 -Detailed -ExportResults
 
     Runs detailed tests and exports results to a file
 
-.EXAMPLE
     .\Test-Prerequisites.ps1 -ConfigPath "config\prod-config.json" -TestData
 
     Tests with production config using sample data
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-    LastModified: 2025-09-19
-#>
+    Author: Wes Ellis (wes@wesellis.com)#>
 
 [CmdletBinding()]
 param(
@@ -68,6 +53,7 @@ $ProgressPreference = 'SilentlyContinue'
 if (-not $ConfigPath) {
     $ConfigPath = "config\config.json"
 }
+
 #endregion
 
 #region Functions
@@ -148,7 +134,9 @@ function Test-PowerShellEnvironment {
         $script:testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "PASS" "Version $($psVersion.Major).$($psVersion.Minor).$($psVersion.Build)"
     }
     else {
-        $script:testResults.PowerShell.Version = Write-TestResult "PowerShell Version" "FAIL" "Version $($psVersion.Major).$($psVersion.Minor) (Requires 5.1+)"
+        $script:testResults.PowerShell.Version: 1.0
+    LastModified: 2025-09-19
+    Requires 5.1+)"
     }
     
     # Execution Policy
@@ -268,9 +256,8 @@ function Test-AzureConnectivity {
             }
             else {
                 $script:testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API returned status: $($costData.StatusCode)"
-            }
-        }
-        catch {
+            
+} catch {
             $script:testResults.Azure.CostManagementAPI = Write-TestResult "Cost Management API" "FAIL" "API access failed: $($_.Exception.Message)"
         }
         
@@ -282,9 +269,8 @@ function Test-AzureConnectivity {
         }
         catch {
             $script:testResults.Azure.ResourceGraph = Write-TestResult "Resource Graph API" "WARN" "Limited access: $($_.Exception.Message)"
-        }
-    }
-    catch {
+        
+} catch {
         $script:testResults.Azure.Connection = Write-TestResult "Azure Connection" "FAIL" "Connection test failed: $($_.Exception.Message)"
     }
 }
@@ -326,9 +312,8 @@ function Test-Configuration {
             }
             else {
                 $script:testResults.Configuration.SubscriptionId = Write-TestResult "Subscription ID" "WARN" "Not specified in configuration"
-            }
-        }
-        catch {
+            
+} catch {
             $script:testResults.Configuration.Parse = Write-TestResult "Configuration Parsing" "FAIL" "Invalid JSON: $($_.Exception.Message)"
         }
     }
@@ -396,9 +381,8 @@ function Test-Functionality {
             }
             else {
                 $script:testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script file missing"
-            }
-        }
-        catch {
+            
+} catch {
             $script:testResults.Functionality.CostScript = Write-TestResult "Cost Data Script" "FAIL" "Script test failed: $($_.Exception.Message)"
         }
     }
@@ -415,9 +399,8 @@ function Test-Functionality {
         }
         else {
             $script:testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "ImportExcel module not available"
-        }
-    }
-    catch {
+        
+} catch {
         $script:testResults.Functionality.ExcelExport = Write-TestResult "Excel Export" "FAIL" "Export test failed: $($_.Exception.Message)"
     }
     
@@ -496,7 +479,7 @@ function Show-Summary {
     Write-Host "`nRecommendations:" -ForegroundColor White
     
     if ($overall.FailedTests -gt 0) {
-        Write-Host " Critical Issues Found:" -ForegroundColor Red
+        Write-Host "Critical Issues Found:" -ForegroundColor Red
         foreach ($category in $script:testResults.Keys) {
             if ($category -ne "Overall") {
                 foreach ($test in $script:testResults[$category].Values) {
@@ -523,7 +506,7 @@ function Show-Summary {
     }
     
     if ($overall.Status -eq "PASS") {
-        Write-Host " System Ready!" -ForegroundColor Green
+        Write-Host "System Ready!" -ForegroundColor Green
         Write-Host "   Your Azure Cost Management Dashboard is properly configured." -ForegroundColor Green
         Write-Host "   Next steps:" -ForegroundColor Green
         Write-Host "   - Generate your first cost report" -ForegroundColor Green
@@ -543,6 +526,7 @@ function Export-TestResults {
         Write-Host "`n[FILE] Test results exported to: $exportPath" -ForegroundColor Green
     }
 }
+
 #endregion
 
 #region Main-Execution
@@ -591,4 +575,6 @@ finally {
     # Cleanup if needed
     Write-Verbose "Test execution completed"
 }
+
 #endregion
+

@@ -1,145 +1,79 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Dns Record Update Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Dns Record Update Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$ZoneName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$RecordSetName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEZoneName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERecordSetName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERecordType,
-    [int]$WETTL,
-    [string]$WERecordValue
+    [string]$RecordType,
+    [int]$TTL,
+    [string]$RecordValue
 )
 
-#region Functions
-
-; 
-$WERecordSet = Get-AzDnsRecordSet -ResourceGroupName $WEResourceGroupName -ZoneName $WEZoneName -Name $WERecordSetName -RecordType $WERecordType
-
-Write-WELog " Updating DNS Record: $WERecordSetName.$WEZoneName" " INFO"
-Write-WELog " Record Type: $WERecordType" " INFO"
-Write-WELog " Current TTL: $($WERecordSet.Ttl)" " INFO"
-Write-WELog " New TTL: $WETTL" " INFO"
-Write-WELog " New Value: $WERecordValue" " INFO"
-
-
-$WERecordSet.Ttl = $WETTL
-
-
-switch ($WERecordType) {
-    " A" { 
-        $WERecordSet.Records.Clear()
-        $WERecordSet.Records.Add((New-AzDnsRecordConfig -IPv4Address $WERecordValue))
+$RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
+Write-Host "Updating DNS Record: $RecordSetName.$ZoneName" "INFO"
+Write-Host "Record Type: $RecordType" "INFO"
+Write-Host "Current TTL: $($RecordSet.Ttl)" "INFO"
+Write-Host "New TTL: $TTL" "INFO"
+Write-Host "New Value: $RecordValue" "INFO"
+$RecordSet.Ttl = $TTL
+switch ($RecordType) {
+    "A" {
+        $RecordSet.Records.Clear()
+        $RecordSet.Records.Add((New-AzDnsRecordConfig -IPv4Address $RecordValue))
     }
-    " CNAME" { 
-        $WERecordSet.Records.Clear()
-        $WERecordSet.Records.Add((New-AzDnsRecordConfig -Cname $WERecordValue))
+    "CNAME" {
+        $RecordSet.Records.Clear()
+        $RecordSet.Records.Add((New-AzDnsRecordConfig -Cname $RecordValue))
     }
-    " TXT" { 
-        $WERecordSet.Records.Clear()
-        $WERecordSet.Records.Add((New-AzDnsRecordConfig -Value $WERecordValue))
+    "TXT" {
+        $RecordSet.Records.Clear()
+        $RecordSet.Records.Add((New-AzDnsRecordConfig -Value $RecordValue))
     }
 }
-
-
-Set-AzDnsRecordSet -RecordSet $WERecordSet
-
-Write-WELog " DNS record updated successfully" " INFO"
-
-
-
-
+Set-AzDnsRecordSet -RecordSet $RecordSet
+Write-Host "DNS record updated successfully" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

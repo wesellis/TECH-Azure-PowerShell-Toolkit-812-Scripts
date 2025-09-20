@@ -1,68 +1,28 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Winrm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Winrm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 $params = @{
     CertStoreLocation = "cert:\LocalMachine\My"
-    FriendlyName = " Test WinRM Cert"
-    DnsName = $WERemoteHostName, $WEComputerName
+    FriendlyName = "Test WinRM Cert"
+    DnsName = $RemoteHostName, $ComputerName
 }
-$WECert @params
+$Cert @params
+$Cert | Out-String
+$Thumbprint = $Cert.Thumbprint
+Write-Host "Enable HTTPS in WinRM" ;
+$WinRmHttps = " @{Hostname=`" $RemoteHostName`" ; CertificateThumbprint=`" $Thumbprint`" }"
+winrm create winrm/config/Listener?Address=*+Transport=HTTPS $WinRmHttps
+Write-Host "Set Basic Auth in WinRM"
+$WinRmBasic = " @{Basic=`" true`" }"
+winrm set winrm/config/service/Auth $WinRmBasic
+Write-Host "Open Firewall Port"
+netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
 
-$WECert | Out-String
-; 
-$WEThumbprint = $WECert.Thumbprint
-
-Write-WELog " Enable HTTPS in WinRM" " INFO" ; 
-$WEWinRmHttps = " @{Hostname=`" $WERemoteHostName`" ; CertificateThumbprint=`" $WEThumbprint`" }"
-winrm create winrm/config/Listener?Address=*+Transport=HTTPS $WEWinRmHttps
-
-Write-WELog " Set Basic Auth in WinRM" " INFO"
-$WEWinRmBasic = " @{Basic=`" true`" }"
-winrm set winrm/config/service/Auth $WEWinRmBasic
-
-Write-WELog " Open Firewall Port" " INFO"
-netsh advfirewall firewall add rule name=" Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=5985
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

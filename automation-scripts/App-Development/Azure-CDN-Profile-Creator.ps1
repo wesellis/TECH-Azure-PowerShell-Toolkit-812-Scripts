@@ -1,45 +1,25 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage CDN
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage CDN
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ProfileName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$EndpointName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$OriginHostName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Sku = "Standard_Microsoft"
 )
-
-#region Functions
-
-Write-Information "Creating CDN Profile: $ProfileName"
-
+Write-Host "Creating CDN Profile: $ProfileName"
 # Create CDN Profile
 $params = @{
     Sku = $Sku
@@ -49,12 +29,9 @@ $params = @{
     Location = $Location
 }
 $CdnProfile @params
-
-Write-Information "CDN Profile created: $($CdnProfile.Name)"
-
+Write-Host "CDN Profile created: $($CdnProfile.Name)"
 # Create CDN Endpoint
-Write-Information "Creating CDN Endpoint: $EndpointName"
-
+Write-Host "Creating CDN Endpoint: $EndpointName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     ProfileName = $ProfileName
@@ -65,27 +42,22 @@ $params = @{
     OriginName = "origin1"
 }
 $CdnEndpoint @params
+Write-Host "CDN Profile and Endpoint created successfully:"
+Write-Host "Profile Name: $($CdnProfile.Name)"
+Write-Host "SKU: $($CdnProfile.Sku.Name)"
+Write-Host "Endpoint Name: $($CdnEndpoint.Name)"
+Write-Host "Endpoint URL: https://$($CdnEndpoint.HostName)"
+Write-Host "Origin: $OriginHostName"
+Write-Host "`nCDN Benefits:"
+Write-Host "Global content delivery"
+Write-Host "Reduced latency"
+Write-Host "Improved performance"
+Write-Host "Bandwidth cost optimization"
+Write-Host "Origin server protection"
+Write-Host "`nNext Steps:"
+Write-Host "1. Configure caching rules"
+Write-Host "2. Set up custom domains"
+Write-Host "3. Enable HTTPS"
+Write-Host "4. Configure compression"
+Write-Host "5. Test global distribution"
 
-Write-Information " CDN Profile and Endpoint created successfully:"
-Write-Information "  Profile Name: $($CdnProfile.Name)"
-Write-Information "  SKU: $($CdnProfile.Sku.Name)"
-Write-Information "  Endpoint Name: $($CdnEndpoint.Name)"
-Write-Information "  Endpoint URL: https://$($CdnEndpoint.HostName)"
-Write-Information "  Origin: $OriginHostName"
-
-Write-Information "`nCDN Benefits:"
-Write-Information "• Global content delivery"
-Write-Information "• Reduced latency"
-Write-Information "• Improved performance"
-Write-Information "• Bandwidth cost optimization"
-Write-Information "• Origin server protection"
-
-Write-Information "`nNext Steps:"
-Write-Information "1. Configure caching rules"
-Write-Information "2. Set up custom domains"
-Write-Information "3. Enable HTTPS"
-Write-Information "4. Configure compression"
-Write-Information "5. Test global distribution"
-
-
-#endregion

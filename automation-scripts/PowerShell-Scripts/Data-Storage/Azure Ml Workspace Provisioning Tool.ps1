@@ -1,252 +1,168 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Ml Workspace Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Ml Workspace Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$WorkspaceName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEWorkspaceName,
-    [Parameter(Mandatory=$false)]
+    [string]$StorageAccountName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$KeyVaultName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [Parameter(Mandatory=$false)]
+    [string]$ApplicationInsightsName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEKeyVaultName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEApplicationInsightsName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEContainerRegistryName,
-    [string]$WESku = " Basic"
+    [string]$ContainerRegistryName,
+    [string]$Sku = "Basic"
 )
-
-#region Functions
-
-Write-WELog " Provisioning ML Workspace: $WEWorkspaceName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " SKU: $WESku" " INFO"
-
-
-Write-WELog " `nSetting up dependent resources..." " INFO"
-
-
-if ($WEStorageAccountName) {
-    $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName -ErrorAction SilentlyContinue
-    if (-not $WEStorageAccount) {
-        Write-WELog " Creating Storage Account: $WEStorageAccountName" " INFO"
+Write-Host "Provisioning ML Workspace: $WorkspaceName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host "Location: $Location" "INFO"
+Write-Host "SKU: $Sku" "INFO"
+Write-Host " `nSetting up dependent resources..." "INFO"
+if ($StorageAccountName) {
+    $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
+    if (-not $StorageAccount) {
+        Write-Host "Creating Storage Account: $StorageAccountName" "INFO"
         $params = @{
-            ResourceGroupName = $WEResourceGroupName
-            SkuName = " Standard_LRS"
-            Location = $WELocation
-            Kind = " StorageV2" } Write-WELog " Storage Account: $($WEStorageAccount.StorageAccountName)" " INFO"
+            ResourceGroupName = $ResourceGroupName
+            SkuName = "Standard_LRS"
+            Location = $Location
+            Kind = "StorageV2" } Write-Host "Storage Account: $($StorageAccount.StorageAccountName)" "INFO"
             ErrorAction = "Stop"
-            Name = $WEStorageAccountName
+            Name = $StorageAccountName
         }
-        $WEStorageAccount @params
+        $StorageAccount @params
 }
-
-
-if ($WEKeyVaultName) {
-    $WEKeyVault = Get-AzKeyVault -ResourceGroupName $WEResourceGroupName -VaultName $WEKeyVaultName -ErrorAction SilentlyContinue
-    if (-not $WEKeyVault) {
-        Write-WELog " Creating Key Vault: $WEKeyVaultName" " INFO"
+if ($KeyVaultName) {
+    $KeyVault = Get-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $KeyVaultName -ErrorAction SilentlyContinue
+    if (-not $KeyVault) {
+        Write-Host "Creating Key Vault: $KeyVaultName" "INFO"
         $params = @{
-            Sku = " Standard" } Write-WELog " Key Vault: $($WEKeyVault.VaultName)" " INFO"
+            Sku = "Standard" } Write-Host "Key Vault: $($KeyVault.VaultName)" "INFO"
             ErrorAction = "Stop"
-            VaultName = $WEKeyVaultName
-            ResourceGroupName = $WEResourceGroupName
-            Location = $WELocation
+            VaultName = $KeyVaultName
+            ResourceGroupName = $ResourceGroupName
+            Location = $Location
         }
-        $WEKeyVault @params
+        $KeyVault @params
 }
-
-
-if ($WEApplicationInsightsName) {
-    $WEAppInsights = Get-AzApplicationInsights -ResourceGroupName $WEResourceGroupName -Name $WEApplicationInsightsName -ErrorAction SilentlyContinue
-    if (-not $WEAppInsights) {
-        Write-WELog " Creating Application Insights: $WEApplicationInsightsName" " INFO"
+if ($ApplicationInsightsName) {
+    $AppInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $ApplicationInsightsName -ErrorAction SilentlyContinue
+    if (-not $AppInsights) {
+        Write-Host "Creating Application Insights: $ApplicationInsightsName" "INFO"
         $params = @{
             ErrorAction = "Stop"
-            Kind = " web" } Write-WELog " Application Insights: $($WEAppInsights.Name)" " INFO"
-            ResourceGroupName = $WEResourceGroupName
-            Name = $WEApplicationInsightsName
-            Location = $WELocation
+            Kind = " web" } Write-Host "Application Insights: $($AppInsights.Name)" "INFO"
+            ResourceGroupName = $ResourceGroupName
+            Name = $ApplicationInsightsName
+            Location = $Location
         }
-        $WEAppInsights @params
+        $AppInsights @params
 }
-
-
-if ($WEContainerRegistryName) {
-    $WEContainerRegistry = Get-AzContainerRegistry -ResourceGroupName $WEResourceGroupName -Name $WEContainerRegistryName -ErrorAction SilentlyContinue
-    if (-not $WEContainerRegistry) {
-        Write-WELog " Creating Container Registry: $WEContainerRegistryName" " INFO"
+if ($ContainerRegistryName) {
+    $ContainerRegistry = Get-AzContainerRegistry -ResourceGroupName $ResourceGroupName -Name $ContainerRegistryName -ErrorAction SilentlyContinue
+    if (-not $ContainerRegistry) {
+        Write-Host "Creating Container Registry: $ContainerRegistryName" "INFO"
         $params = @{
-            ResourceGroupName = $WEResourceGroupName
-            Sku = " Basic"
-            Location = $WELocation
+            ResourceGroupName = $ResourceGroupName
+            Sku = "Basic"
+            Location = $Location
             ErrorAction = "Stop"
-            EnableAdminUser = "} Write-WELog " Container Registry: $($WEContainerRegistry.Name)" " INFO"
-            Name = $WEContainerRegistryName
+            EnableAdminUser = "} Write-Host "Container Registry: $($ContainerRegistry.Name)" "INFO"
+            Name = $ContainerRegistryName
         }
-        $WEContainerRegistry @params
+        $ContainerRegistry @params
+}
+Write-Host " `nCreating ML Workspace..." "INFO";
+$MLWorkspaceParams = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $WorkspaceName
+    Location = $Location
+    Sku = $Sku
+}
+if ($StorageAccount) {
+    $MLWorkspaceParams.StorageAccount = $StorageAccount.Id
+}
+if ($KeyVault) {
+    $MLWorkspaceParams.KeyVault = $KeyVault.ResourceId
+}
+if ($AppInsights) {
+    $MLWorkspaceParams.ApplicationInsights = $AppInsights.Id
+}
+if ($ContainerRegistry) {
+    $MLWorkspaceParams.ContainerRegistry = $ContainerRegistry.Id
 }
 
-
-Write-WELog " `nCreating ML Workspace..." " INFO"; 
-$WEMLWorkspaceParams = @{
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEWorkspaceName
-    Location = $WELocation
-    Sku = $WESku
+$MLWorkspace = New-AzMLWorkspace -ErrorAction Stop @MLWorkspaceParams
+Write-Host " `nML Workspace $WorkspaceName provisioned successfully" "INFO"
+Write-Host "Workspace ID: $($MLWorkspace.Id)" "INFO"
+Write-Host "Discovery URL: $($MLWorkspace.DiscoveryUrl)" "INFO"
+Write-Host " `nWorkspace Components:" "INFO"
+Write-Host "Storage Account: $($StorageAccount.StorageAccountName)" "INFO"
+Write-Host "Key Vault: $($KeyVault.VaultName)" "INFO"
+Write-Host "Application Insights: $($AppInsights.Name)" "INFO"
+if ($ContainerRegistry) {
+    Write-Host "Container Registry: $($ContainerRegistry.Name)" "INFO"
 }
-
-if ($WEStorageAccount) {
-    $WEMLWorkspaceParams.StorageAccount = $WEStorageAccount.Id
-}
-if ($WEKeyVault) {
-    $WEMLWorkspaceParams.KeyVault = $WEKeyVault.ResourceId
-}
-if ($WEAppInsights) {
-    $WEMLWorkspaceParams.ApplicationInsights = $WEAppInsights.Id
-}
-if ($WEContainerRegistry) {
-    $WEMLWorkspaceParams.ContainerRegistry = $WEContainerRegistry.Id
-}
-; 
-$WEMLWorkspace = New-AzMLWorkspace -ErrorAction Stop @MLWorkspaceParams
-
-Write-WELog " `nML Workspace $WEWorkspaceName provisioned successfully" " INFO"
-Write-WELog " Workspace ID: $($WEMLWorkspace.Id)" " INFO"
-Write-WELog " Discovery URL: $($WEMLWorkspace.DiscoveryUrl)" " INFO"
-
-Write-WELog " `nWorkspace Components:" " INFO"
-Write-WELog "  Storage Account: $($WEStorageAccount.StorageAccountName)" " INFO"
-Write-WELog "  Key Vault: $($WEKeyVault.VaultName)" " INFO"
-Write-WELog "  Application Insights: $($WEAppInsights.Name)" " INFO"
-if ($WEContainerRegistry) {
-    Write-WELog "  Container Registry: $($WEContainerRegistry.Name)" " INFO"
-}
-
-Write-WELog " `nML Studio Access:" " INFO"
-Write-WELog " Portal URL: https://ml.azure.com/workspaces/$($WEMLWorkspace.WorkspaceId)/overview" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Open Azure ML Studio in the browser" " INFO"
-Write-WELog " 2. Create compute instances for development" " INFO"
-Write-WELog " 3. Upload or connect to your datasets" " INFO"
-Write-WELog " 4. Create and train ML models" " INFO"
-Write-WELog " 5. Deploy models as web services" " INFO"
-Write-WELog " 6. Set up MLOps pipelines for automation" " INFO"
-
-Write-WELog " `nML Workspace Features:" " INFO"
-Write-WELog "  • Jupyter notebooks and VS Code integration" " INFO"
-Write-WELog "  • AutoML for automated machine learning" " INFO"
-Write-WELog "  • Designer for drag-and-drop ML pipelines" " INFO"
-Write-WELog "  • Model management and versioning" " INFO"
-Write-WELog "  • Real-time and batch inference endpoints" " INFO"
-
-Write-WELog " `nML Workspace provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nML Studio Access:" "INFO"
+Write-Host "Portal URL: https://ml.azure.com/workspaces/$($MLWorkspace.WorkspaceId)/overview" "INFO"
+Write-Host " `nNext Steps:" "INFO"
+Write-Host " 1. Open Azure ML Studio in the browser" "INFO"
+Write-Host " 2. Create compute instances for development" "INFO"
+Write-Host " 3. Upload or connect to your datasets" "INFO"
+Write-Host " 4. Create and train ML models" "INFO"
+Write-Host " 5. Deploy models as web services" "INFO"
+Write-Host " 6. Set up MLOps pipelines for automation" "INFO"
+Write-Host " `nML Workspace Features:" "INFO"
+Write-Host "   Jupyter notebooks and VS Code integration" "INFO"
+Write-Host "   AutoML for automated machine learning" "INFO"
+Write-Host "   Designer for drag-and-drop ML pipelines" "INFO"
+Write-Host "   Model management and versioning" "INFO"
+Write-Host "   Real-time and batch inference endpoints" "INFO"
+Write-Host " `nML Workspace provisioning completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

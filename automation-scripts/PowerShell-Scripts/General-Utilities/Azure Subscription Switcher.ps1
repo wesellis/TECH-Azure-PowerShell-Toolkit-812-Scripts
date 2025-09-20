@@ -1,149 +1,88 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Subscription Switcher
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Subscription Switcher
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$SubscriptionName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId,
-    [switch]$WEList,
-    [switch]$WECurrent
+    [string]$SubscriptionId,
+    [switch]$List,
+    [switch]$Current
 )
-
-#region Functions
-
-Write-WELog " Azure Subscription Switcher" " INFO" -ForegroundColor Cyan
-Write-WELog " ===========================" " INFO" -ForegroundColor Cyan
-
-
-if ($WECurrent) {
+Write-Host "Azure Subscription Switcher" -ForegroundColor Cyan
+Write-Host " ===========================" -ForegroundColor Cyan
+if ($Current) {
     $context = Get-AzContext -ErrorAction Stop
     if ($context) {
-        Write-WELog " Current Subscription:" " INFO" -ForegroundColor Green
-        Write-WELog "  Name: $($context.Subscription.Name)" " INFO" -ForegroundColor White
-        Write-WELog "  ID: $($context.Subscription.Id)" " INFO" -ForegroundColor White
-        Write-WELog "  Tenant: $($context.Tenant.Id)" " INFO" -ForegroundColor White
+        Write-Host "Current Subscription:" -ForegroundColor Green
+        Write-Host "Name: $($context.Subscription.Name)" -ForegroundColor White
+        Write-Host "ID: $($context.Subscription.Id)" -ForegroundColor White
+        Write-Host "Tenant: $($context.Tenant.Id)" -ForegroundColor White
     } else {
-        Write-WELog " No active Azure context. Please run Connect-AzAccount first." " INFO" -ForegroundColor Red
+        Write-Host "No active Azure context. Please run Connect-AzAccount first." -ForegroundColor Red
     }
     return
 }
-
-
-if ($WEList) {
-    Write-WELog " Available Subscriptions:" " INFO" -ForegroundColor Green
+if ($List) {
+    Write-Host "Available Subscriptions:" -ForegroundColor Green
     $subscriptions = Get-AzSubscription -ErrorAction Stop
     foreach ($sub in $subscriptions) {
-        $status = if ($sub.State -eq " Enabled" ) { " [OK]" } else { " [FAIL]" }
-        Write-WELog "  $status $($sub.Name) ($($sub.Id))" " INFO" -ForegroundColor White
+        $status = if ($sub.State -eq "Enabled" ) { "[OK]" } else { " [FAIL]" }
+        Write-Host "  $status $($sub.Name) ($($sub.Id))" -ForegroundColor White
     }
     return
 }
-
-
-if ($WESubscriptionName) {
+if ($SubscriptionName) {
     try {
-       ;  $subscription = Get-AzSubscription -SubscriptionName $WESubscriptionName
+$subscription = Get-AzSubscription -SubscriptionName $SubscriptionName
         Set-AzContext -SubscriptionId $subscription.Id
-        Write-WELog " [OK] Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
+        Write-Host "[OK] Switched to subscription: $($subscription.Name)" -ForegroundColor Green
     } catch {
-        Write-Error " Failed to switch to subscription '$WESubscriptionName': $($_.Exception.Message)"
+        Write-Error "Failed to switch to subscription '$SubscriptionName': $($_.Exception.Message)"
     }
-} elseif ($WESubscriptionId) {
+} elseif ($SubscriptionId) {
     try {
-        Set-AzContext -SubscriptionId $WESubscriptionId
-       ;  $subscription = Get-AzSubscription -SubscriptionId $WESubscriptionId
-        Write-WELog " [OK] Switched to subscription: $($subscription.Name)" " INFO" -ForegroundColor Green
+        Set-AzContext -SubscriptionId $SubscriptionId
+$subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
+        Write-Host "[OK] Switched to subscription: $($subscription.Name)" -ForegroundColor Green
     } catch {
-        Write-Error " Failed to switch to subscription '$WESubscriptionId': $($_.Exception.Message)"
+        Write-Error "Failed to switch to subscription '$SubscriptionId': $($_.Exception.Message)"
     }
 } else {
-    Write-WELog " Usage Examples:" " INFO" -ForegroundColor Yellow
-    Write-WELog "  .\Azure-Subscription-Switcher.ps1 -List" " INFO" -ForegroundColor White
-    Write-WELog "  .\Azure-Subscription-Switcher.ps1 -Current" " INFO" -ForegroundColor White
-    Write-WELog "  .\Azure-Subscription-Switcher.ps1 -SubscriptionName 'Production'" " INFO" -ForegroundColor White
-    Write-WELog "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'" " INFO" -ForegroundColor White
+    Write-Host "Usage Examples:" -ForegroundColor Yellow
+    Write-Host "  .\Azure-Subscription-Switcher.ps1 -List" -ForegroundColor White
+    Write-Host "  .\Azure-Subscription-Switcher.ps1 -Current" -ForegroundColor White
+    Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionName 'Production'" -ForegroundColor White
+    Write-Host "  .\Azure-Subscription-Switcher.ps1 -SubscriptionId '12345678-1234-1234-1234-123456789012'" -ForegroundColor White
 }
+Write-Host " `nSubscription switching completed at $(Get-Date)" -ForegroundColor Cyan
 
-Write-WELog " `nSubscription switching completed at $(Get-Date)" " INFO" -ForegroundColor Cyan
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

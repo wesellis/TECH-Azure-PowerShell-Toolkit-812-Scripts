@@ -1,189 +1,125 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Eventgrid Performance Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Eventgrid Performance Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WETopicName
+    [string]$ResourceGroupName,
+    [string]$TopicName
 )
-
-#region Functions
-
-Write-WELog " Monitoring Event Grid Topic: $WETopicName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEEventGridTopic = Get-AzEventGridTopic -ResourceGroupName $WEResourceGroupName -Name $WETopicName
-
-Write-WELog " Event Grid Topic Information:" " INFO"
-Write-WELog "  Name: $($WEEventGridTopic.TopicName)" " INFO"
-Write-WELog "  Location: $($WEEventGridTopic.Location)" " INFO"
-Write-WELog "  Provisioning State: $($WEEventGridTopic.ProvisioningState)" " INFO"
-Write-WELog "  Endpoint: $($WEEventGridTopic.Endpoint)" " INFO"
-Write-WELog "  Input Schema: $($WEEventGridTopic.InputSchema)" " INFO"
-
-
+Write-Host "Monitoring Event Grid Topic: $TopicName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host " ============================================" "INFO"
+$EventGridTopic = Get-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName
+Write-Host "Event Grid Topic Information:" "INFO"
+Write-Host "Name: $($EventGridTopic.TopicName)" "INFO"
+Write-Host "Location: $($EventGridTopic.Location)" "INFO"
+Write-Host "Provisioning State: $($EventGridTopic.ProvisioningState)" "INFO"
+Write-Host "Endpoint: $($EventGridTopic.Endpoint)" "INFO"
+Write-Host "Input Schema: $($EventGridTopic.InputSchema)" "INFO"
 try {
-    $WETopicKeys = Get-AzEventGridTopicKey -ResourceGroupName $WEResourceGroupName -Name $WETopicName
-    Write-WELog "  Access Keys: Available (Key1: $($WETopicKeys.Key1.Substring(0,8))...)" " INFO"
+    $TopicKeys = Get-AzEventGridTopicKey -ResourceGroupName $ResourceGroupName -Name $TopicName
+    Write-Host "Access Keys: Available (Key1: $($TopicKeys.Key1.Substring(0,8))...)" "INFO"
 } catch {
-    Write-WELog "  Access Keys: Unable to retrieve" " INFO"
+    Write-Host "Access Keys: Unable to retrieve" "INFO"
 }
-
-
-Write-WELog " `nEvent Subscriptions:" " INFO"
+Write-Host " `nEvent Subscriptions:" "INFO"
 try {
-    $WESubscriptions = Get-AzEventGridSubscription -ResourceGroupName $WEResourceGroupName -TopicName $WETopicName
-    
-    if ($WESubscriptions.Count -eq 0) {
-        Write-WELog "  No event subscriptions found" " INFO"
+    $Subscriptions = Get-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName
+    if ($Subscriptions.Count -eq 0) {
+        Write-Host "No event subscriptions found" "INFO"
     } else {
-        foreach ($WESubscription in $WESubscriptions) {
-            Write-WELog "  - Subscription: $($WESubscription.EventSubscriptionName)" " INFO"
-            Write-WELog "    Provisioning State: $($WESubscription.ProvisioningState)" " INFO"
-            Write-WELog "    Endpoint Type: $($WESubscription.EndpointType)" " INFO"
-            
+        foreach ($Subscription in $Subscriptions) {
+            Write-Host "  - Subscription: $($Subscription.EventSubscriptionName)" "INFO"
+            Write-Host "    Provisioning State: $($Subscription.ProvisioningState)" "INFO"
+            Write-Host "    Endpoint Type: $($Subscription.EndpointType)" "INFO"
             # Display endpoint information (safely)
-            if ($WESubscription.Destination) {
-                switch ($WESubscription.EndpointType) {
+            if ($Subscription.Destination) {
+                switch ($Subscription.EndpointType) {
                     " webhook" {
-                       ;  $WEEndpointUrl = $WESubscription.Destination.EndpointUrl
-                        if ($WEEndpointUrl) {
-                           ;  $WESafeUrl = $WEEndpointUrl.Substring(0, [Math]::Min(50, $WEEndpointUrl.Length))
-                            Write-WELog "    Endpoint: $WESafeUrl..." " INFO"
+$EndpointUrl = $Subscription.Destination.EndpointUrl
+                        if ($EndpointUrl) {
+$SafeUrl = $EndpointUrl.Substring(0, [Math]::Min(50, $EndpointUrl.Length))
+                            Write-Host "    Endpoint: $SafeUrl..." "INFO"
                         }
                     }
                     " eventhub" {
-                        Write-WELog "    Event Hub: $($WESubscription.Destination.ResourceId.Split('/')[-1])" " INFO"
+                        Write-Host "    Event Hub: $($Subscription.Destination.ResourceId.Split('/')[-1])" "INFO"
                     }
                     " storagequeue" {
-                        Write-WELog "    Storage Queue: $($WESubscription.Destination.QueueName)" " INFO"
+                        Write-Host "    Storage Queue: $($Subscription.Destination.QueueName)" "INFO"
                     }
                     " servicebusqueue" {
-                        Write-WELog "    Service Bus Queue: $($WESubscription.Destination.ResourceId.Split('/')[-1])" " INFO"
+                        Write-Host "    Service Bus Queue: $($Subscription.Destination.ResourceId.Split('/')[-1])" "INFO"
                     }
                 }
             }
-            
             # Event types and filters
-            if ($WESubscription.Filter) {
-                if ($WESubscription.Filter.IncludedEventTypes) {
-                    Write-WELog "    Event Types: $($WESubscription.Filter.IncludedEventTypes -join ', ')" " INFO"
+            if ($Subscription.Filter) {
+                if ($Subscription.Filter.IncludedEventTypes) {
+                    Write-Host "    Event Types: $($Subscription.Filter.IncludedEventTypes -join ', ')" "INFO"
                 }
-                if ($WESubscription.Filter.SubjectBeginsWith) {
-                    Write-WELog "    Subject Filter (begins): $($WESubscription.Filter.SubjectBeginsWith)" " INFO"
+                if ($Subscription.Filter.SubjectBeginsWith) {
+                    Write-Host "    Subject Filter (begins): $($Subscription.Filter.SubjectBeginsWith)" "INFO"
                 }
-                if ($WESubscription.Filter.SubjectEndsWith) {
-                    Write-WELog "    Subject Filter (ends): $($WESubscription.Filter.SubjectEndsWith)" " INFO"
+                if ($Subscription.Filter.SubjectEndsWith) {
+                    Write-Host "    Subject Filter (ends): $($Subscription.Filter.SubjectEndsWith)" "INFO"
                 }
-                if ($WESubscription.Filter.IsSubjectCaseSensitive) {
-                    Write-WELog "    Case Sensitive: $($WESubscription.Filter.IsSubjectCaseSensitive)" " INFO"
+                if ($Subscription.Filter.IsSubjectCaseSensitive) {
+                    Write-Host "    Case Sensitive: $($Subscription.Filter.IsSubjectCaseSensitive)" "INFO"
                 }
             }
-            
             # Retry policy
-            if ($WESubscription.RetryPolicy) {
-                Write-WELog "    Max Delivery Attempts: $($WESubscription.RetryPolicy.MaxDeliveryAttempts)" " INFO"
-                Write-WELog "    Event TTL: $($WESubscription.RetryPolicy.EventTimeToLiveInMinutes) minutes" " INFO"
+            if ($Subscription.RetryPolicy) {
+                Write-Host "    Max Delivery Attempts: $($Subscription.RetryPolicy.MaxDeliveryAttempts)" "INFO"
+                Write-Host "    Event TTL: $($Subscription.RetryPolicy.EventTimeToLiveInMinutes) minutes" "INFO"
             }
-            
             # Dead letter destination
-            if ($WESubscription.DeadLetterDestination) {
-                Write-WELog "    Dead Letter: Configured" " INFO"
+            if ($Subscription.DeadLetterDestination) {
+                Write-Host "    Dead Letter: Configured" "INFO"
             }
-            
-            Write-WELog "    ---" " INFO"
+            Write-Host "    ---" "INFO"
         }
     }
 } catch {
-    Write-WELog "  Unable to retrieve event subscriptions: $($_.Exception.Message)" " INFO"
+    Write-Host "Unable to retrieve event subscriptions: $($_.Exception.Message)" "INFO"
 }
-
-
-Write-WELog " `nEvent Grid Configuration:" " INFO"
-Write-WELog "  Input Schema: $($WEEventGridTopic.InputSchema)" " INFO"
-Write-WELog "  Public Network Access: Enabled" " INFO"
-
-
-Write-WELog " `nSample Event Format ($($WEEventGridTopic.InputSchema)):" " INFO"
-if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
+Write-Host " `nEvent Grid Configuration:" "INFO"
+Write-Host "Input Schema: $($EventGridTopic.InputSchema)" "INFO"
+Write-Host "Public Network Access: Enabled" "INFO"
+Write-Host " `nSample Event Format ($($EventGridTopic.InputSchema)):" "INFO"
+if ($EventGridTopic.InputSchema -eq "EventGridSchema" ) {
     Write-Information @"
   {
     " id" : " unique-event-id" ,
-    " eventType" : " Custom.Event.Type" ,
+    " eventType" : "Custom.Event.Type" ,
     " subject" : " /myapp/resource/action" ,
     " eventTime" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
     " data" : {
@@ -193,11 +129,11 @@ if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
     " dataVersion" : " 1.0"
   }
 " @
-} elseif ($WEEventGridTopic.InputSchema -eq " CloudEventSchemaV1_0" ) {
+} elseif ($EventGridTopic.InputSchema -eq "CloudEventSchemaV1_0" ) {
     Write-Information @"
   {
     " specversion" : " 1.0" ,
-    " type" : " Custom.Event.Type" ,
+    " type" : "Custom.Event.Type" ,
     " source" : " /myapp/resource" ,
     " id" : " unique-event-id" ,
     " time" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
@@ -208,28 +144,18 @@ if ($WEEventGridTopic.InputSchema -eq " EventGridSchema" ) {
   }
 " @
 }
+Write-Host " `nPublishing Events:" "INFO"
+Write-Host "POST $($EventGridTopic.Endpoint)" "INFO"
+Write-Host "Headers:" "INFO"
+Write-Host "    aeg-sas-key: [access-key]" "INFO"
+Write-Host "    Content-Type: application/json" "INFO"
+Write-Host " `nMonitoring Recommendations:" "INFO"
+Write-Host " 1. Monitor event delivery success rates" "INFO"
+Write-Host " 2. Set up alerts for failed deliveries" "INFO"
+Write-Host " 3. Review dead letter queues regularly" "INFO"
+Write-Host " 4. Monitor event throughput and latency" "INFO"
+Write-Host " 5. Validate event schema compliance" "INFO"
+Write-Host " `nEvent Grid Portal Access:" "INFO"
+Write-Host "URL: https://portal.azure.com/#@/resource$($EventGridTopic.Id)" "INFO"
+Write-Host " `nEvent Grid Topic monitoring completed at $(Get-Date)" "INFO"
 
-Write-WELog " `nPublishing Events:" " INFO"
-Write-WELog "  POST $($WEEventGridTopic.Endpoint)" " INFO"
-Write-WELog "  Headers:" " INFO"
-Write-WELog "    aeg-sas-key: [access-key]" " INFO"
-Write-WELog "    Content-Type: application/json" " INFO"
-
-Write-WELog " `nMonitoring Recommendations:" " INFO"
-Write-WELog " 1. Monitor event delivery success rates" " INFO"
-Write-WELog " 2. Set up alerts for failed deliveries" " INFO"
-Write-WELog " 3. Review dead letter queues regularly" " INFO"
-Write-WELog " 4. Monitor event throughput and latency" " INFO"
-Write-WELog " 5. Validate event schema compliance" " INFO"
-
-Write-WELog " `nEvent Grid Portal Access:" " INFO"
-Write-WELog " URL: https://portal.azure.com/#@/resource$($WEEventGridTopic.Id)" " INFO"
-
-Write-WELog " `nEvent Grid Topic monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

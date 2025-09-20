@@ -1,50 +1,15 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Check Languagesupport
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Check Languagesupport
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
     Detect/validate which languages are supported by inspecting the files that are in the sample folder
-
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -52,18 +17,12 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    $sampleFolder = $WEENV:SAMPLE_FOLDER,
-    $mainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME
+    $sampleFolder = $ENV:SAMPLE_FOLDER,
+    $mainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME
 )
-
-#region Functions
-
-Write-WELog " Checking languages supported by sample: $sampleFolder" " INFO"
-
+Write-Host "Checking languages supported by sample: $sampleFolder"
 $bicepFullPath = " $sampleFolder\$mainTemplateFilenameBicep"
 $isBicepFileFound = Test-Path $bicepFullPath
-
-
 $jsonFilename1 = " azuredeploy.json"
 $jsonFilename2 = " mainTemplate.json"
 $isJsonFileFound = Test-Path " $($sampleFolder)\$jsonFilename1"
@@ -80,29 +39,18 @@ else {
         $mainTemplateFilenameJson = $jsonFilename1
     }
 }
-
-Write-WELog " Found ${mainTemplateFilenameBicep}: $isBicepFileFound" " INFO"
-Write-WELog " Found ${mainTemplateFilenameJson}: $isJsonFileFound" " INFO"
-
-
-
+Write-Host "Found ${mainTemplateFilenameBicep}: $isBicepFileFound"
+Write-Host "Found ${mainTemplateFilenameJson}: $isJsonFileFound"
 if($isBicepFileFound){
-   ;  $mainTemplateDeploymentFilename = $mainTemplateFilenameBicep
+$mainTemplateDeploymentFilename = $mainTemplateFilenameBicep
 }else{
-   ;  $mainTemplateDeploymentFilename = $mainTemplateFilenameJson
+$mainTemplateDeploymentFilename = $mainTemplateFilenameJson
 }
-
-Write-WELog " ##vso[task.setvariable variable=bicep.supported]$isBicepFileFound" " INFO"
-Write-WELog " ##vso[task.setvariable variable=mainTemplate.filename.json]$mainTemplateFilenameJson" " INFO"
-Write-WELog " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$mainTemplateDeploymentFilename" " INFO"
-
-
-
-
+Write-Host " ##vso[task.setvariable variable=bicep.supported]$isBicepFileFound"
+Write-Host " ##vso[task.setvariable variable=mainTemplate.filename.json]$mainTemplateFilenameJson"
+Write-Host " ##vso[task.setvariable variable=mainTemplate.deployment.filename]$mainTemplateDeploymentFilename"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

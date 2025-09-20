@@ -1,117 +1,51 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Resource Move Validator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Resource Move Validator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$SourceResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WESourceResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$TargetResourceGroupName,
+    [Parameter()]
+    [string[]]$ResourceNames,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETargetResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
-    [string[]]$WEResourceNames,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETargetSubscriptionId,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEValidateOnly
+    [string]$TargetSubscriptionId,
+    [Parameter()]
+    [switch]$ValidateOnly
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName " Azure Resource Move Validator" -Version " 1.0" -Description " Validate resource move operations"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection)) { throw " Azure connection validation failed" }
-
-    $sourceRG = Get-AzResourceGroup -Name $WESourceResourceGroupName
-    $resources = if ($WEResourceNames) { 
-        $WEResourceNames | ForEach-Object { Get-AzResource -ResourceGroupName $WESourceResourceGroupName -Name $_ }
-    } else { 
-        Get-AzResource -ResourceGroupName $WESourceResourceGroupName 
+    if (-not (Get-AzContext)) { Connect-AzAccount }
+    $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
+    $resources = if ($ResourceNames) {
+        $ResourceNames | ForEach-Object { Get-AzResource -ResourceGroupName $SourceResourceGroupName -Name $_ }
+    } else {
+        Get-AzResource -ResourceGroupName $SourceResourceGroupName
     }
-
-    Write-WELog " Validating move for $($resources.Count) resources..." " INFO" -ForegroundColor Cyan
-    
-   ;  $targetResourceId = " /subscriptions/$(if($WETargetSubscriptionId){$WETargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$WETargetResourceGroupName"
-    
-   ;  $validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action " validateMoveResources" -Parameters @{
+    Write-Host "Validating move for $($resources.Count) resources..." -ForegroundColor Cyan
+$targetResourceId = " /subscriptions/$(if($TargetSubscriptionId){$TargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$TargetResourceGroupName"
+$validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action " validateMoveResources" -Parameters @{
         resources = $resources.ResourceId
         targetResourceGroup = $targetResourceId
     } -Force
-
     if ($validation) {
-        Write-WELog "  All resources can be moved successfully!" " INFO" -ForegroundColor Green
+        Write-Host "All resources can be moved successfully!" -ForegroundColor Green
     } else {
-        Write-WELog "  Some resources cannot be moved. Check Azure portal for details." " INFO" -ForegroundColor Red
+        Write-Host "Some resources cannot be moved. Check Azure portal for details." -ForegroundColor Red
     }
+} catch { throw }
 
-} catch {
-    Write-Log "  Resource move validation failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

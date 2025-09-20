@@ -1,144 +1,84 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Cli Powershell Bridge
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Cli Powershell Bridge
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
     }
-    
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WECommand,
-    [string]$WEOutputFormat = " json" ,
-    [switch]$WEPassThru
+    [string]$Command,
+    [string]$OutputFormat = "json",
+    [switch]$PassThru
 )
-
-#region Functions
-
-Write-WELog " Azure CLI PowerShell Bridge" " INFO" -ForegroundColor Cyan
-Write-WELog " ===========================" " INFO" -ForegroundColor Cyan
-
-
+Write-Host "Azure CLI PowerShell Bridge" -ForegroundColor Cyan
+Write-Host "===========================" -ForegroundColor Cyan
 try {
     $azVersion = az version 2>$null | ConvertFrom-Json
-    Write-WELog " [OK] Azure CLI Version: $($azVersion.'azure-cli')" " INFO" -ForegroundColor Green
+    Write-Host "[OK] Azure CLI Version: $($azVersion.'azure-cli')" -ForegroundColor Green
 } catch {
-    Write-Error " Azure CLI is not installed or not in PATH. Please install Azure CLI first."
+    Write-Error "Azure CLI is not installed or not in PATH. Please install Azure CLI first."
     return
 }
-
-
 try {
     $account = az account show 2>$null | ConvertFrom-Json
-    Write-WELog " [OK] Logged in as: $($account.user.name)" " INFO" -ForegroundColor Green
-    Write-WELog " [OK] Subscription: $($account.name)" " INFO" -ForegroundColor Green
+    Write-Host "[OK] Logged in as: $($account.user.name)" -ForegroundColor Green
+    Write-Host "[OK] Subscription: $($account.name)" -ForegroundColor Green
 } catch {
-    Write-Warning " Not logged in to Azure CLI. Please run 'az login' first."
-    if (-not $WEForce) {
+    Write-Warning "Not logged in to Azure CLI. Please run 'az login' first."
+    if (-not $Force) {
         return
     }
 }
-
-if (-not $WECommand) {
-    Write-WELog " `nUsage Examples:" " INFO" -ForegroundColor Yellow
-    Write-WELog "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'" " INFO" -ForegroundColor White
-    Write-WELog "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'" " INFO" -ForegroundColor White
-    Write-WELog "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru" " INFO" -ForegroundColor White
+if (-not $Command) {
+    Write-Host "`nUsage Examples:" -ForegroundColor Yellow
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'" -ForegroundColor White
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'" -ForegroundColor White
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru" -ForegroundColor White
     return
 }
-
-Write-WELog " `nExecuting: $WECommand --output $WEOutputFormat" " INFO" -ForegroundColor Yellow
-
+Write-Host " `nExecuting: $Command --output $OutputFormat" -ForegroundColor Yellow
 try {
     # Execute Azure CLI command safely without Invoke-Expression
-    $commandParts = $WECommand.Split(' ') + @('--output', $WEOutputFormat)
-   ;  $result = & $commandParts[0] $commandParts[1..($commandParts.Length-1)]
-    
-    if ($WEOutputFormat -eq " json" -and -not $WEPassThru) {
+    $commandParts = $Command.Split(' ') + @('--output', $OutputFormat)
+$result = & $commandParts[0] $commandParts[1..($commandParts.Length-1)]
+    if ($OutputFormat -eq " json" -and -not $PassThru) {
         # Parse JSON and return as PowerShell objects
-       ;  $jsonResult = $result | ConvertFrom-Json
-        Write-WELog " `n[OK] Command executed successfully" " INFO" -ForegroundColor Green
+$jsonResult = $result | ConvertFrom-Json
+        Write-Host " `n[OK] Command executed successfully" -ForegroundColor Green
         return $jsonResult
     } else {
         # Return raw output
-        Write-WELog " `n[OK] Command executed successfully" " INFO" -ForegroundColor Green
+        Write-Host " `n[OK] Command executed successfully" -ForegroundColor Green
         return $result
     }
 } catch {
-    Write-Error " Failed to execute Azure CLI command: $($_.Exception.Message)"
+    Write-Error "Failed to execute Azure CLI command: $($_.Exception.Message)"
     return $null
 }
+Write-Host " `nAzure CLI bridge completed at $(Get-Date)" -ForegroundColor Cyan
 
-Write-WELog " `nAzure CLI bridge completed at $(Get-Date)" " INFO" -ForegroundColor Cyan
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

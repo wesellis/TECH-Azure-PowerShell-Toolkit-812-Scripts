@@ -1,38 +1,21 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Load Balancer
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Load Balancer
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$BalancerName
 )
-
-#region Functions
-
 # Get load balancer details
 $LoadBalancer = Get-AzLoadBalancer -ResourceGroupName $ResourceGroupName -Name $BalancerName
+Write-Host "Load Balancer: $($LoadBalancer.Name)"
+Write-Host "Resource Group: $($LoadBalancer.ResourceGroupName)"
+Write-Host "Location: $($LoadBalancer.Location)"
+Write-Host "Provisioning State: $($LoadBalancer.ProvisioningState)"
+Write-Host "Frontend IP Configurations: $($LoadBalancer.FrontendIpConfigurations.Count)"
+Write-Host "Backend Address Pools: $($LoadBalancer.BackendAddressPools.Count)"
+Write-Host "Load Balancing Rules: $($LoadBalancer.LoadBalancingRules.Count)"
 
-Write-Information "Load Balancer: $($LoadBalancer.Name)"
-Write-Information "Resource Group: $($LoadBalancer.ResourceGroupName)"
-Write-Information "Location: $($LoadBalancer.Location)"
-Write-Information "Provisioning State: $($LoadBalancer.ProvisioningState)"
-Write-Information "Frontend IP Configurations: $($LoadBalancer.FrontendIpConfigurations.Count)"
-Write-Information "Backend Address Pools: $($LoadBalancer.BackendAddressPools.Count)"
-Write-Information "Load Balancing Rules: $($LoadBalancer.LoadBalancingRules.Count)"
-
-
-#endregion

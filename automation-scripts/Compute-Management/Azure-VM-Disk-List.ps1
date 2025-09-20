@@ -1,48 +1,28 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    List VM disks
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+    List VM disks
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VmName
 )
-
-#region Functions
-
-Write-Information "Retrieving disk information for VM: $VmName"
-
+Write-Host "Retrieving disk information for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-
-Write-Information "`nOS Disk:"
-Write-Information "  Name: $($VM.StorageProfile.OsDisk.Name)"
-Write-Information "  Size: $($VM.StorageProfile.OsDisk.DiskSizeGB) GB"
-Write-Information "  Type: $($VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)"
-
+Write-Host "`nOS Disk:"
+Write-Host "Name: $($VM.StorageProfile.OsDisk.Name)"
+Write-Host "Size: $($VM.StorageProfile.OsDisk.DiskSizeGB) GB"
+Write-Host "Type: $($VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)"
 if ($VM.StorageProfile.DataDisks.Count -gt 0) {
-    Write-Information "`nData Disks:"
+    Write-Host "`nData Disks:"
     foreach ($Disk in $VM.StorageProfile.DataDisks) {
-        Write-Information "  Name: $($Disk.Name) | Size: $($Disk.DiskSizeGB) GB | LUN: $($Disk.Lun)"
+        Write-Host "Name: $($Disk.Name) | Size: $($Disk.DiskSizeGB) GB | LUN: $($Disk.Lun)"
     }
 } else {
-    Write-Information "`nNo data disks attached."
+    Write-Host "`nNo data disks attached."
 }
 
-
-#endregion

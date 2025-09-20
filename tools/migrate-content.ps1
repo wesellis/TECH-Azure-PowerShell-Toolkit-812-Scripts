@@ -1,131 +1,337 @@
 #Requires -Version 7.0
 
-<#
+    Migrates content from existing Azure repositories into consolidated structure
+
+    This script copies content from multiple Azure-related repositories into a unified
+    Azure Enterprise Toolkit structure, organizing scripts, modules, documentation,
+    and tools into a standardized hierarchy.
+.PARAMETER SourceBasePath
+    Base path where source repositories are located
+.PARAMETER TargetBasePath
+    Target path for the consolidated Azure Enterprise Toolkit
+.PARAMETER IncludeTests
+    Include test files in migration
+.PARAMETER WhatIf
+    Preview migration operations without executing them
+
+    .\Invoke-ContentMigration.ps1 -SourceBasePath "C:\GITHUB" -TargetBasePath "C:\GITHUB\Azure-Enterprise-Toolkit"
+
+    Migrates content from source repositories to target location
+
+    .\Invoke-ContentMigration.ps1 -WhatIf
+
+    Shows what would be migrated without performing the operations
+
+    Author: Wes Ellis (wes@wesellis.com)#>
+
+[CmdletBinding(SupportsShouldProcess = $true)]
+param(
+    [Parameter(Mandatory = $false)]
+    [ValidateScript({ Test-Path $_ -PathType Container })]
+    [string]$SourceBasePath = "A:\GITHUB",
+
+    [Parameter(Mandatory = $false)]
+    [string]$TargetBasePath = "A:\GITHUB\Azure-Enterprise-Toolkit",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$IncludeTests,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$WhatIf
+)
+
+#region Initialize-Configuration
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+
+# Migration statistics
+$migrationStats = @{
+    FilesProcessed = 0
+    DirectoriesCreated = 0
+    Errors = @()
+    Phases = @()
+}
+
+#endregion
+
+#region Functions
+function Write-MigrationHeader {
+    [CmdletBinding()]
+    param(
+        [string]$Title
+    )
+
+    $separator = '=' * 65
+    Write-Host $Title -InformationAction Continue
+    Write-Host $separator -InformationAction Continue
+}
+
+function Write-PhaseHeader {
+    [CmdletBinding()]
+    param(
+        [string]$PhaseTitle
+    )
+
+    Write-Host "`n$PhaseTitle" -InformationAction Continue
+    $migrationStats.Phases += $PhaseTitle
+}
+
+function Copy-RepositoryContent {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [string]$SourcePath,
+        [string]$DestinationPath,
+        [string]$Description,
+        [string[]]$IncludePatterns = @('*'),
+        [string[]]$ExcludePatterns = @('.git', 'node_modules', '*.log')
+    )
+
+    try {
+        if (-not (Test-Path $SourcePath)) {
+            Write-Warning "Source path not found: $SourcePath"
+            return $false
+        }
+
+        # Ensure destination directory exists
+        $destinationDir = Split-Path $DestinationPath -Parent
+        if (-not (Test-Path $destinationDir)) {
+            if ($PSCmdlet.ShouldProcess($destinationDir, "Create directory")) {
+                New-Item -Path $destinationDir -ItemType Directory -Force | Out-Null
+                $migrationStats.DirectoriesCreated++
+            }
+        }
+
+        # Copy content with filters
+        $copyParams = @{
+            Path = "$SourcePath\*"
+            Destination = $DestinationPath
+            Recurse = $true
+            Force = $true
+            ErrorAction = 'SilentlyContinue'
+        }
+
+        if ($PSCmdlet.ShouldProcess($SourcePath, "Copy to $DestinationPath")) {
+            $result = Copy-Item @copyParams -PassThru
+            $migrationStats.FilesProcessed += $result.Count
+            Write-Host "  [OK] $Description" -InformationAction Continue
+            return $true
+        }
+        else {
+            Write-Host "  [WHATIF] Would copy $Description" -InformationAction Continue
+            return $true
+        
+} catch {
+        $errorMsg = "Failed to copy $Description`: $_"
+        $migrationStats.Errors += $errorMsg
+        Write-Warning $errorMsg
+        return $false
+    }
+}
+
+function Copy-SingleFile {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param(
+        [string]$SourceFile,
+        [string]$DestinationFile,
+        [string]$Description
+    )
+
+    try {
+        if (-not (Test-Path $SourceFile)) {
+            Write-Warning "Source file not found: $SourceFile"
+            return $false
+        }
+
+        $destinationDir = Split-Path $DestinationFile -Parent
+        if (-not (Test-Path $destinationDir)) {
+            if ($PSCmdlet.ShouldProcess($destinationDir, "Create directory")) {
+                New-Item -Path $destinationDir -ItemType Directory -Force | Out-Null
+                $migrationStats.DirectoriesCreated++
+            }
+        }
+
+        if ($PSCmdlet.ShouldProcess($SourceFile, "Copy to $DestinationFile")) {
+            Copy-Item -Path $SourceFile -Destination $DestinationFile -Force
+            $migrationStats.FilesProcessed++
+            Write-Host "  [OK] $Description" -InformationAction Continue
+            return $true
+        }
+        else {
+            Write-Host "  [WHATIF] Would copy $Description" -InformationAction Continue
+            return $true
+        
+} catch {
+        $errorMsg = "Failed to copy $Description`: $_"
+        $migrationStats.Errors += $errorMsg
+        Write-Warning $errorMsg
+        return $false
+    }
+}
+
+function Get-MigrationPhases {
+    [CmdletBinding()]
+    param()
+
+    return @(
+        @{
+            Name = "Azure Automation Scripts (124+ scripts)"
+            SourceSubPath = "Azure-Automation-Scripts\scripts"
+            TargetSubPath = "automation-scripts"
+            Description = "PowerShell automation scripts"
+            IncludeModules = $true
+        },
+        @{
+            Name = "Cost Management Dashboard"
+            SourceSubPath = "Azure-Cost-Management-Dashboard"
+            TargetSubPath = "cost-management"
+            Description = "Cost management dashboards and tools"
+            IncludeModules = $false
+        },
+        @{
+            Name = "DevOps Pipeline Templates"
+            SourceSubPath = "Azure-DevOps-Pipeline-Templates"
+            TargetSubPath = "devops-templates"
+            Description = "Azure DevOps pipeline templates"
+            IncludeModules = $false
+        },
+        @{
+            Name = "Governance Toolkit"
+            SourceSubPath = "Azure-Governance-Toolkit"
+            TargetSubPath = "governance"
+            Description = "Governance policies and tools"
+            IncludeModules = $false
+        },
+        @{
+            Name = "Essential Bookmarks"
+            SourceSubPath = "Azure-Essentials-Bookmarks"
+            TargetSubPath = "bookmarks"
+            Description = "Azure essential bookmarks"
+            IncludeModules = $false
+        }
+    )
+}
+
 #endregion
 
 #region Main-Execution
-.SYNOPSIS
-    Azure automation script
+try {
+    Write-MigrationHeader "Azure Enterprise Toolkit Content Migration"
 
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
-# Azure Enterprise Toolkit - Content Migration Script
-# This script copies content from existing repositories into the consolidated structure
-
-Write-Information "Starting Azure Enterprise Toolkit Content Migration"
-Write-Information "================================================="
-
-$sourceBase = "A:\GITHUB"
-$targetBase = "A:\GITHUB\Azure-Enterprise-Toolkit"
-
-# Ensure we're in the target directory
-Set-Location -ErrorAction Stop $targetBase
-
-Write-Information "`nPHASE 1: Migrating Azure Automation Scripts (124+ scripts)"
-# Copy all scripts from Azure-Automation-Scripts
-$scriptsSource = "$sourceBase\Azure-Automation-Scripts\scripts"
-$scriptsTarget = "$targetBase\automation-scripts"
-
-if (Test-Path $scriptsSource) {
-    Copy-Item -Path "$scriptsSource\*" -Destination $scriptsTarget -Recurse -Force
-    Write-Information "Copied 124+ PowerShell scripts"
-    
-    # Copy modules as well
-    $modulesSource = "$sourceBase\Azure-Automation-Scripts\modules"
-    if (Test-Path $modulesSource) {
-        Copy-Item -Path $modulesSource -Destination "$targetBase\automation-scripts\modules" -Recurse -Force
-        Write-Information "Copied PowerShell modules"
+    # Validate paths
+    if (-not (Test-Path $SourceBasePath)) {
+        throw "Source base path does not exist: $SourceBasePath"
     }
-} else {
-    Write-Information "Azure-Automation-Scripts not found"
+
+    # Ensure target base exists
+    if (-not (Test-Path $TargetBasePath)) {
+        if ($PSCmdlet.ShouldProcess($TargetBasePath, "Create target directory")) {
+            New-Item -Path $TargetBasePath -ItemType Directory -Force | Out-Null
+            $migrationStats.DirectoriesCreated++
+        }
+    }
+
+    # Change to target directory
+    if ($PSCmdlet.ShouldProcess($TargetBasePath, "Set location")) {
+        Set-Location -Path $TargetBasePath -ErrorAction Stop
+    }
+
+    # Execute migration phases
+    $phases = Get-MigrationPhases
+    foreach ($phase in $phases) {
+        Write-PhaseHeader "PHASE $($phases.IndexOf($phase) + 1): $($phase.Name)"
+
+        $sourcePath = Join-Path $SourceBasePath $phase.SourceSubPath
+        $targetPath = Join-Path $TargetBasePath $phase.TargetSubPath
+
+        # Copy main content
+        if (Test-Path $sourcePath) {
+            # Copy scripts/main content
+            $scriptsSource = if (Test-Path "$sourcePath\scripts") { "$sourcePath\scripts" } else { $sourcePath }
+            Copy-RepositoryContent -SourcePath $scriptsSource -DestinationPath $targetPath -Description $phase.Description
+
+            # Copy modules if applicable
+            if ($phase.IncludeModules) {
+                $modulesSource = Join-Path $sourcePath "modules"
+                if (Test-Path $modulesSource) {
+                    Copy-RepositoryContent -SourcePath $modulesSource -DestinationPath "$targetPath\modules" -Description "PowerShell modules"
+                }
+            }
+
+            # Copy standard subdirectories
+            foreach ($subdir in @('dashboards', 'docs', 'examples', 'templates')) {
+                $subdirPath = Join-Path $sourcePath $subdir
+                if (Test-Path $subdirPath) {
+                    Copy-RepositoryContent -SourcePath $subdirPath -DestinationPath "$targetPath\$subdir" -Description "$subdir content"
+                }
+            }
+
+            # Copy README if exists
+            $readmePath = Join-Path $sourcePath "README.md"
+            if (Test-Path $readmePath) {
+                Copy-SingleFile -SourceFile $readmePath -DestinationFile "$targetPath\README.md" -Description "README documentation"
+            }
+        }
+        else {
+            Write-Warning "Source not found: $sourcePath"
+        }
+    }
+
+    # Unified Documentation Phase
+    Write-PhaseHeader "PHASE 6: Creating Unified Documentation"
+    $docFiles = @(
+        @{ Source = "Azure-Automation-Scripts\CONTRIBUTING.md"; Target = "docs\CONTRIBUTING.md" },
+        @{ Source = "Azure-Automation-Scripts\CHANGELOG.md"; Target = "docs\CHANGELOG.md" }
+    )
+
+    foreach ($docFile in $docFiles) {
+        $sourcePath = Join-Path $SourceBasePath $docFile.Source
+        $targetPath = Join-Path $TargetBasePath $docFile.Target
+        if (Test-Path $sourcePath) {
+            Copy-SingleFile -SourceFile $sourcePath -DestinationFile $targetPath -Description "Documentation file: $($docFile.Target)"
+        }
+    }
+
+    # Utility Tools Phase
+    Write-PhaseHeader "PHASE 7: Creating Utility Tools"
+    $utilityFiles = @(
+        @{ Source = "enhanced-github-upload.ps1"; Target = "tools\github-upload.ps1" },
+        @{ Source = "github-download.ps1"; Target = "tools\github-download.ps1" }
+    )
+
+    foreach ($utilityFile in $utilityFiles) {
+        $sourcePath = Join-Path $SourceBasePath $utilityFile.Source
+        $targetPath = Join-Path $TargetBasePath $utilityFile.Target
+        if (Test-Path $sourcePath) {
+            Copy-SingleFile -SourceFile $sourcePath -DestinationFile $targetPath -Description "Utility tool: $($utilityFile.Target)"
+        }
+    }
+
+    # Migration Summary
+    Write-PhaseHeader "MIGRATION SUMMARY"
+    Write-Host "Files processed: $($migrationStats.FilesProcessed)" -InformationAction Continue
+    Write-Host "Directories created: $($migrationStats.DirectoriesCreated)" -InformationAction Continue
+    Write-Host "Phases completed: $($migrationStats.Phases.Count)" -InformationAction Continue
+
+    if ($migrationStats.Errors.Count -gt 0) {
+        Write-Warning "Errors encountered: $($migrationStats.Errors.Count)"
+        $migrationStats.Errors | ForEach-Object { Write-Warning "  - $_" }
+    }
+
+    Write-Host "`nContent migration completed successfully!" -InformationAction Continue
+    Write-Host "Total consolidated components: $($phases.Count) major toolkits" -InformationAction Continue
+    Write-Host "Ready for git operations" -InformationAction Continue
 }
-
-Write-Information "`nPHASE 2: Migrating Cost Management Dashboard"
-$costSource = "$sourceBase\Azure-Cost-Management-Dashboard"
-if (Test-Path $costSource) {
-    # Copy dashboards, scripts, and documentation
-    Copy-Item -Path "$costSource\dashboards" -Destination "$targetBase\cost-management\dashboards" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$costSource\scripts" -Destination "$targetBase\cost-management\scripts" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$costSource\docs" -Destination "$targetBase\cost-management\docs" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$costSource\README.md" -Destination "$targetBase\cost-management\README.md" -Force -ErrorAction SilentlyContinue
-    Write-Information "Copied cost management dashboards and tools"
-} else {
-    Write-Information "Azure-Cost-Management-Dashboard not found"
+catch {
+    Write-Error "Migration failed: $_"
+    Write-Error "Migration statistics: $($migrationStats | ConvertTo-Json -Depth 2)"
+    throw
 }
-
-Write-Information "`nPHASE 3: Migrating DevOps Pipeline Templates"
-$devopsSource = "$sourceBase\Azure-DevOps-Pipeline-Templates"
-if (Test-Path $devopsSource) {
-    Copy-Item -Path "$devopsSource\templates" -Destination "$targetBase\devops-templates\templates" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$devopsSource\examples" -Destination "$targetBase\devops-templates\examples" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$devopsSource\docs" -Destination "$targetBase\devops-templates\docs" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$devopsSource\README.md" -Destination "$targetBase\devops-templates\README.md" -Force -ErrorAction SilentlyContinue
-    Write-Information "Copied DevOps pipeline templates"
-} else {
-    Write-Information "Azure-DevOps-Pipeline-Templates not found"
-}
-
-Write-Information "`nPHASE 4: Migrating Governance Toolkit"
-$govSource = "$sourceBase\Azure-Governance-Toolkit"
-if (Test-Path $govSource) {
-    Copy-Item -Path "$govSource\scripts" -Destination "$targetBase\governance\scripts" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$govSource\templates" -Destination "$targetBase\governance\templates" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$govSource\docs" -Destination "$targetBase\governance\docs" -Recurse -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path "$govSource\README.md" -Destination "$targetBase\governance\README.md" -Force -ErrorAction SilentlyContinue
-    Write-Information "Copied governance policies and tools"
-} else {
-    Write-Information "Azure-Governance-Toolkit not found"
-}
-
-Write-Information "`nPHASE 5: Migrating Essential Bookmarks"
-$bookmarksSource = "$sourceBase\Azure-Essentials-Bookmarks"
-if (Test-Path $bookmarksSource) {
-    Copy-Item -Path "$bookmarksSource\*" -Destination "$targetBase\bookmarks" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Information "Copied Azure essential bookmarks"
-} else {
-    Write-Information "Azure-Essentials-Bookmarks not found"
-}
-
-Write-Information "`nPHASE 6: Creating Unified Documentation"
-# Copy key documentation files to main docs folder
-$docFiles = @(
-    "$sourceBase\Azure-Automation-Scripts\CONTRIBUTING.md",
-    "$sourceBase\Azure-Automation-Scripts\CHANGELOG.md"
-)
-
-foreach ($docPath in $docFiles) {
-    if (Test-Path $docPath) {
-        $fileName = Split-Path $docPath -Leaf
-        Copy-Item -Path $docPath -Destination "$targetBase\docs\$fileName" -Force -ErrorAction SilentlyContinue
+finally {
+    # Restore original location if needed
+    if ($PWD.Path -ne $TargetBasePath) {
+        Pop-Location -ErrorAction SilentlyContinue
     }
 }
-Write-Information "Consolidated documentation"
-
-Write-Information "`nPHASE 7: Creating Utility Tools"
-# Copy useful utility scripts
-Copy-Item -Path "$sourceBase\enhanced-github-upload.ps1" -Destination "$targetBase\tools\github-upload.ps1" -Force -ErrorAction SilentlyContinue
-Copy-Item -Path "$sourceBase\github-download.ps1" -Destination "$targetBase\tools\github-download.ps1" -Force -ErrorAction SilentlyContinue
-Write-Information "Added utility tools"
-
-Write-Information "`nMIGRATION SUMMARY"
-Write-Information "================================================="
-Write-Information "Azure Automation Scripts (124+ scripts)"
-Write-Information "Cost Management Dashboards"  
-Write-Information "DevOps Pipeline Templates"
-Write-Information "Governance Policies and Tools"
-Write-Information "Essential Bookmarks Collection"
-Write-Information "Unified Documentation"
-Write-Information "Utility Tools"
-
-Write-Information "`nContent migration completed!"
-Write-Information "Total consolidated components: 7 major toolkits"
-Write-Information "Ready for git commands"
-
 
 #endregion
+

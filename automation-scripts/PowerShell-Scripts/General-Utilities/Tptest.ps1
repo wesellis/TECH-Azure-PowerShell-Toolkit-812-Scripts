@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Tptest
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Tptest
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -46,71 +16,46 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Mode,
+  [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEMode,
-  [Parameter(Mandatory=$false)]
+    [string]$DataTransferMode,
+  [int]$ThreadNumber,
+  [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$BufferSize,
+  [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEDataTransferMode,
-  [int]$WEThreadNumber,
-  [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEBufferSize,
-  [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEReceiverIP,
-  [int]$WEDuration,
-  [int]$WEOverlappedBuffers
+    [string]$ReceiverIP,
+  [int]$Duration,
+  [int]$OverlappedBuffers
 )
-
-#region Functions
-
-$WEAppFolder = " bandwidthmetermt"
-$WEAppPath = [Environment]::GetFolderPath(" CommonApplicationData" )+" \" +$WEAppFolder
-
-$WENTttcpSourceURL = " https://gallery.technet.microsoft.com/NTttcp-Version-528-Now-f8b12769/file/159655/1/NTttcp-v5.33.zip"
-$WENTttcpArchive = $WEAppPath+" \NTttcp-v5.33.zip"
-$WENTttcpPath = $WEAppPath+" \x86fre"; 
+$AppFolder = " bandwidthmetermt"
+$AppPath = [Environment]::GetFolderPath("CommonApplicationData" )+" \" +$AppFolder
+$NTttcpSourceURL = "https://gallery.technet.microsoft.com/NTttcp-Version-528-Now-f8b12769/file/159655/1/NTttcp-v5.33.zip"
+$NTttcpArchive = $AppPath+" \NTttcp-v5.33.zip"
+$NTttcpPath = $AppPath+" \x86fre";
 $output = " out.xml"
-
-if (!(Test-Path $WEAppPath)) {
-    mkdir $WEAppPath | Out-Null
-    Invoke-WebRequest $WENTttcpSourceURL -OutFile $WENTttcpArchive
-
+if (!(Test-Path $AppPath)) {
+    mkdir $AppPath | Out-Null
+    Invoke-WebRequest $NTttcpSourceURL -OutFile $NTttcpArchive
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($WENTttcpArchive, $WEAppPath)
-    rm $WENTttcpArchive 
-
-    New-NetFirewallRule -DisplayName " Allow NTttcp In" -Direction Inbound -Program " $WENTttcpPath\NTttcp.exe" -RemoteAddress LocalSubnet -Action Allow | Out-Null
-    New-NetFirewallRule -DisplayName " Allow NTttcp Out" -Direction Outbound -Program " $WENTttcpPath\NTttcp.exe" -RemoteAddress LocalSubnet -Action Allow | Out-Null
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($NTttcpArchive, $AppPath)
+    rm $NTttcpArchive
+    New-NetFirewallRule -DisplayName "Allow NTttcp In" -Direction Inbound -Program " $NTttcpPath\NTttcp.exe" -RemoteAddress LocalSubnet -Action Allow | Out-Null
+    New-NetFirewallRule -DisplayName "Allow NTttcp Out" -Direction Outbound -Program " $NTttcpPath\NTttcp.exe" -RemoteAddress LocalSubnet -Action Allow | Out-Null
 }
-
 if (Test-Path $output) {rm $output}
-
-if ($WEDataTransferMode -eq " Async" ) {$dtmode = " -a" }
-
-if ($WEMode -eq " Sender" ){$srmode = " -s" }
+if ($DataTransferMode -eq "Async" ) {$dtmode = " -a" }
+if ($Mode -eq "Sender" ){$srmode = " -s" }
 else {$srmode = " -r" }
-
-& " $WENTttcpPath\NTttcp.exe" $srmode $dtmode -l $WEBufferSize -m " $WEThreadNumber,*,$WEReceiverIP" -a $WEOverlappedBuffers -t $WEDuration -xml $output | Out-Null
-; 
+& " $NTttcpPath\NTttcp.exe" $srmode $dtmode -l $BufferSize -m " $ThreadNumber,*,$ReceiverIP" -a $OverlappedBuffers -t $Duration -xml $output | Out-Null
 $tp =([xml](Get-Content -ErrorAction Stop $output)).ntttcps.throughput
 Write-Information -NoNewline ($tp | ? { $_.metric -match 'MB/s'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'mbps'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'buffers/s'} | % {$_.'#text'})
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

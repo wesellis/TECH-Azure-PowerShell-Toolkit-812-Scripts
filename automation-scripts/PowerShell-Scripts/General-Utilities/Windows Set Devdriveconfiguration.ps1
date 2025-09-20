@@ -1,49 +1,16 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Set Devdriveconfiguration
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Set Devdriveconfiguration
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS
     Updates Dev Drive configuration. Requires that the Dev Drive feature be enabled, and if applicable
     a reboot performed, prior to calling this script.
-.DESCRIPTION
     Uses `fsutil devdrv` to set optional Windows filter drivers allowed to attach to Dev Drive.
     The default for Dev Drive is to allow a very small list, which is how it gains performance -
     the more filter drivers, the more kernel callbacks in the chain-of-responsibility for every single
@@ -55,8 +22,6 @@
 .PARAMETER EnableContainers
     When set, the wcifs and bindflt filesystem minifilter drivers are allowed on the Dev Drive.
     This supports mounting Windows containers on the Dev Drive at the cost of reduced Dev Drive performance.
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -64,40 +29,28 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)][bool] $WEEnableGVFS,
-    [Parameter(Mandatory = $true)][bool] $WEEnableContainers
+    [Parameter(Mandatory = $true)][bool] $EnableGVFS,
+    [Parameter(Mandatory = $true)][bool] $EnableContainers
 )
-
 #region Functions
-; 
-$WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-
-Write-WELog "" " INFO"
-Write-WELog " Check that /DrvDrv parameter is visible on format command." " INFO"
+Write-Host ""
+Write-Host "Check that /DrvDrv parameter is visible on format command."
 format /?
-
-Write-WELog " Setting Dev Drive group policies and settings." " INFO"
-
-; 
-$WEAllowedFilterList = " MsSecFlt,ProcMon24"
-if ($WEEnableGVFS) {
-    $WEAllowedFilterList = $WEAllowedFilterList + " ,PrjFlt"
+Write-Host "Setting Dev Drive group policies and settings."
+$AllowedFilterList = "MsSecFlt,ProcMon24"
+if ($EnableGVFS) {
+    $AllowedFilterList = $AllowedFilterList + " ,PrjFlt"
 }
-if ($WEEnableContainers) {
-   ;  $WEAllowedFilterList = $WEAllowedFilterList + " ,wcifs,bindFlt"
+if ($EnableContainers) {
+$AllowedFilterList = $AllowedFilterList + " ,wcifs,bindFlt"
 }
-Write-WELog "" " INFO"
-Write-WELog " Allowing the following filesystem filter drivers to mount to any Dev Drive:" " INFO"
-Write-WELog "  $WEAllowedFilterList" " INFO"
-fsutil devdrv setFiltersAllowed $WEAllowedFilterList
-
-
-
+Write-Host ""
+Write-Host "Allowing the following filesystem filter drivers to mount to any Dev Drive:"
+Write-Host "  $AllowedFilterList"
+fsutil devdrv setFiltersAllowed $AllowedFilterList
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

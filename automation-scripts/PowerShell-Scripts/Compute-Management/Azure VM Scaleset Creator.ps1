@@ -1,178 +1,100 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Scaleset Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Scaleset Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ScaleSetName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEScaleSetName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVmSize,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEInstanceCount = 2
+    [string]$VmSize,
+    [Parameter()]
+    [int]$InstanceCount = 2
 )
-
-#region Functions
-
-Write-WELog " Creating VM Scale Set: $WEScaleSetName" " INFO"
-
-
+Write-Host "Creating VM Scale Set: $ScaleSetName"
 $params = @{
     ErrorAction = "Stop"
-    SkuCapacity = $WEInstanceCount
-    SkuName = $WEVmSize
-    UpgradePolicyMode = " Manual"
-    Location = $WELocation
+    SkuCapacity = $InstanceCount
+    SkuName = $VmSize
+    UpgradePolicyMode = "Manual"
+    Location = $Location
 }
-$WEVmssConfig @params
-
-
+$VmssConfig @params
 $params = @{
     CreatePublicIPAddress = $false
     IPConfigurationName = " internal"
     Primary = $true
     Name = " network-config"
-    VirtualMachineScaleSet = $WEVmssConfig
+    VirtualMachineScaleSet = $VmssConfig
 }
-$WEVmssConfig @params
-
-
+$VmssConfig @params
 $params = @{
     ComputerNamePrefix = " vmss"
     ErrorAction = "Stop"
     AdminUsername = " azureuser"
-    VirtualMachineScaleSet = $WEVmssConfig
+    VirtualMachineScaleSet = $VmssConfig
 }
-$WEVmssConfig @params
-
-; 
+$VmssConfig @params
 $params = @{
-    ImageReferenceOffer = " WindowsServer"
+    ImageReferenceOffer = "WindowsServer"
     ImageReferenceSku = " 2022-Datacenter"
     ErrorAction = "Stop"
-    OsDiskCreateOption = " FromImage"
-    VirtualMachineScaleSet = $WEVmssConfig
+    OsDiskCreateOption = "FromImage"
+    VirtualMachineScaleSet = $VmssConfig
     ImageReferenceVersion = " latest"
-    ImageReferencePublisher = " MicrosoftWindowsServer"
+    ImageReferencePublisher = "MicrosoftWindowsServer"
 }
-$WEVmssConfig @params
-
-; 
+$VmssConfig @params
 $params = @{
     ErrorAction = "Stop"
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEScaleSetName
-    VirtualMachineScaleSet = $WEVmssConfig
+    ResourceGroupName = $ResourceGroupName
+    Name = $ScaleSetName
+    VirtualMachineScaleSet = $VmssConfig
 }
-$WEVmss @params
-
-Write-WELog "  VM Scale Set created successfully:" " INFO"
-Write-WELog "  Name: $($WEVmss.Name)" " INFO"
-Write-WELog "  Location: $($WEVmss.Location)" " INFO"
-Write-WELog "  VM Size: $WEVmSize" " INFO"
-Write-WELog "  Instance Count: $WEInstanceCount" " INFO"
-
-
-
-
+$Vmss @params
+Write-Host "VM Scale Set created successfully:"
+Write-Host "Name: $($Vmss.Name)"
+Write-Host "Location: $($Vmss.Location)"
+Write-Host "VM Size: $VmSize"
+Write-Host "Instance Count: $InstanceCount"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,138 +1,74 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Networkwatcher Enabler
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Networkwatcher Enabler
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WENetworkWatcherName = " NetworkWatcher_$WELocation"
+    [string]$Location,
+    [Parameter()]
+    [string]$NetworkWatcherName = "NetworkWatcher_$Location"
 )
-
-#region Functions
-
-Write-WELog " Enabling Network Watcher in: $WELocation" " INFO"
-
-; 
-$WENetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $WEResourceGroupName -Name $WENetworkWatcherName -ErrorAction SilentlyContinue
-
-if (-not $WENetworkWatcher) {
+Write-Host "Enabling Network Watcher in: $Location"
+$NetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $ResourceGroupName -Name $NetworkWatcherName -ErrorAction SilentlyContinue
+if (-not $NetworkWatcher) {
     # Create Network Watcher
    $params = @{
        ErrorAction = "Stop"
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WENetworkWatcherName
-       Location = $WELocation  Write-WELog "  Network Watcher created successfully:" " INFO
+       ResourceGroupName = $ResourceGroupName
+       Name = $NetworkWatcherName
+       Location = $Location  Write-Host "Network Watcher created successfully:" " INFO
    }
    ; @params
 } else {
-    Write-WELog "  Network Watcher already exists:" " INFO"
+    Write-Host "Network Watcher already exists:"
 }
-
-Write-WELog "  Name: $($WENetworkWatcher.Name)" " INFO"
-Write-WELog "  Location: $($WENetworkWatcher.Location)" " INFO"
-Write-WELog "  Provisioning State: $($WENetworkWatcher.ProvisioningState)" " INFO"
-
-Write-WELog " `nNetwork Watcher capabilities:" " INFO"
-Write-WELog "  • IP Flow Verify" " INFO"
-Write-WELog "  • Next Hop" " INFO"
-Write-WELog "  • Security Group View" " INFO"
-Write-WELog "  • VPN Diagnostics" " INFO"
-Write-WELog "  • NSG Flow Logs" " INFO"
-Write-WELog "  • Connection Monitor" " INFO"
-Write-WELog "  • Packet Capture" " INFO"
-Write-WELog "  • Connection Troubleshoot" " INFO"
-
-
-
-
+Write-Host "Name: $($NetworkWatcher.Name)"
+Write-Host "Location: $($NetworkWatcher.Location)"
+Write-Host "Provisioning State: $($NetworkWatcher.ProvisioningState)"
+Write-Host " `nNetwork Watcher capabilities:"
+Write-Host "   IP Flow Verify"
+Write-Host "   Next Hop"
+Write-Host "   Security Group View"
+Write-Host "   VPN Diagnostics"
+Write-Host "   NSG Flow Logs"
+Write-Host "   Connection Monitor"
+Write-Host "   Packet Capture"
+Write-Host "   Connection Troubleshoot"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

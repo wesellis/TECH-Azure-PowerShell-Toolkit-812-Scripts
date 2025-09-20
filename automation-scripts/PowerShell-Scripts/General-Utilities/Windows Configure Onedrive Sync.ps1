@@ -1,91 +1,45 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Configure Onedrive Sync
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Configure Onedrive Sync
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.DESCRIPTION
     Configures OneDrive sync settings for top level user folders.
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $false)][bool] $WEEnableDocumentsSync = $true,
-    [Parameter(Mandatory = $false)][bool] $WEEnablePicturesSync = $true,
+    [Parameter(Mandatory = $false)][bool] $EnableDocumentsSync = $true,
+    [Parameter(Mandatory = $false)][bool] $EnablePicturesSync = $true,
     # Desktop sync is disabled by default because when multiple Dev Box VMs are used, OneDrive synchronizes its content b/w all of them.
     # This can cause having multiple copies of a shortcut or a file on desktop when they are created by an app installer or build env init scripts.
-    [Parameter(Mandatory = $false)][bool] $WEEnableDesktopSync = $false
+    [Parameter(Mandatory = $false)][bool] $EnableDesktopSync = $false
 )
-
 #region Functions
-; 
-$WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-
-function WE-ConfigureOnedriveSync($enableDocumentsSync, $enablePicturesSync, $enableDesktopSync) {
+function ConfigureOnedriveSync($enableDocumentsSync, $enablePicturesSync, $enableDesktopSync) {
     try {
-       ;  $registryParams = @(
+$registryParams = @(
             @{ Key = 'Documents'; Value = if ($enableDocumentsSync) { 1 } else { 0 } },
             @{ Key = 'Desktop'; Value = if ($enableDesktopSync) { 1 } else { 0 } },
             @{ Key = 'Pictures'; Value = if ($enablePicturesSync) { 1 } else { 0 } }
         )
-
         # Set all keys explicitly because by default OneDrive will sync all three folders if KFMSilentOptIn is present, and it usually is.
         $registryParams | ForEach-Object {
             $registryKey = $_.Key
-           ;  $registryValue = $_.Value
-            Write-WELog " === Setting registry value: HKLM\SOFTWARE\Policies\Microsoft\OneDrive\KFMSilentOptIn$registryKey = $registryValue" " INFO"
-            reg.exe add " HKLM\SOFTWARE\Policies\Microsoft\OneDrive" /v " KFMSilentOptIn$registryKey" /t REG_DWORD /d $registryValue /f
-        }
-    }
-    catch {
+$registryValue = $_.Value
+            Write-Host " === Setting registry value: HKLM\SOFTWARE\Policies\Microsoft\OneDrive\KFMSilentOptIn$registryKey = $registryValue"
+            reg.exe add "HKLM\SOFTWARE\Policies\Microsoft\OneDrive" /v "KFMSilentOptIn$registryKey" /t REG_DWORD /d $registryValue /f
+
+} catch {
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
 }
-
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    ConfigureOnedriveSync -enableDocumentsSync $WEEnableDocumentsSync -enablePicturesSync $WEEnablePicturesSync -enableDesktopSync $WEEnableDesktopSync
+    ConfigureOnedriveSync -enableDocumentsSync $EnableDocumentsSync -enablePicturesSync $EnablePicturesSync -enableDesktopSync $EnableDesktopSync
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

@@ -1,49 +1,27 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage containers
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage containers
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ContainerName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$PublicAccess = "Off"
 )
-
-#region Functions
-
-Write-Information "Creating storage container: $ContainerName"
-
+Write-Host "Creating storage container: $ContainerName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
-
 $Container = New-AzStorageContainer -Name $ContainerName -Context $Context -Permission $PublicAccess
+Write-Host "Container created successfully:"
+Write-Host "Name: $($Container.Name)"
+Write-Host "Public Access: $PublicAccess"
+Write-Host "Storage Account: $StorageAccountName"
+Write-Host "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
 
-Write-Information "Container created successfully:"
-Write-Information "  Name: $($Container.Name)"
-Write-Information "  Public Access: $PublicAccess"
-Write-Information "  Storage Account: $StorageAccountName"
-Write-Information "  URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
-
-
-#endregion

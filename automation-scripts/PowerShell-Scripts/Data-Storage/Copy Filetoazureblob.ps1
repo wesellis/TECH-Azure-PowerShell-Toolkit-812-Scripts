@@ -1,73 +1,34 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Copy Filetoazureblob
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Copy Filetoazureblob
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
 Write-Output "Updating settings.json file..."
 Write-Output "  Storage account: $env:storageAccountName"
 Write-Output "  Container: $env:containerName"
-
 $validateScopes = { $_.Length -gt 45 }
-
-
 $fileName = 'settings.json'
 $filePath = Join-Path -Path . -ChildPath $fileName
 $newScopes = $env:scopes.Split('|') | Where-Object $validateScopes | ForEach-Object { @{ scope = $_ } }
-
-
 $storageContext = @{
     Context   = New-AzStorageContext -StorageAccountName $env:storageAccountName -UseConnectedAccount
     Container = $env:containerName
 }
-
-
-$blob = Get-AzStorageBlobContent -ErrorAction Stop @storageContext -Blob $fileName -Destination $filePath -Force
+$blob = Get-AzStorageBlobContent @storageContext -Blob $fileName -Destination $filePath -Force -ErrorAction Stop
 if ($blob)
 {
-    $text = Get-Content -ErrorAction Stop $filePath -Raw
+    $text = Get-Content $filePath -Raw -ErrorAction Stop
     Write-Output " ---------"
     Write-Output $text
     Write-Output " ---------"
     $json = $text | ConvertFrom-Json
-    Write-Output " Existing settings.json file found. Updating..."
-
+    Write-Output "Existing settings.json file found. Updating..."
     # Rename exportScopes to scopes + convert to object array
     if ($json.exportScopes)
     {
@@ -82,12 +43,10 @@ if ($blob)
                 $json.exportScopes = @($json.exportScopes)
             }
         }
-
         Write-Output "    Renaming to 'scopes'..."
         $json | Add-Member -MemberType NoteProperty -Name scopes -Value $json.exportScopes
         $json.PSObject.Properties.Remove('exportScopes')
     }
-
     # Force string array to object array with unique values
     if ($json.scopes)
     {
@@ -97,11 +56,9 @@ if ($blob)
         $json.scopes = @() + $scopeArray
     }
 }
-
-
 if (!$json)
 {
-    Write-Output " No existing settings.json file found. Creating new file..."
+    Write-Output "No existing settings.json file found. Creating new file..."
     $json = [ordered]@{
         '$schema' = 'https://aka.ms/finops/hubs/settings-schema'
         type      = 'HubInstance'
@@ -123,18 +80,15 @@ if (!$json)
             }
         }
     }
-
     $text = $json | ConvertTo-Json
     Write-Output " ---------"
     Write-Output $text
     Write-Output " ---------"
 }
-
-
 if (!($json.retention))
 {
     # In case the retention object is not present in the settings.json file (versions before 0.4), add it with default values
-   ;  $retention = @"
+$retention = @"
     {
         " msexports" : {
             " days" : 0
@@ -152,8 +106,6 @@ if (!($json.retention))
 " @
     $json | Add-Member -Name retention -Value (ConvertFrom-Json $retention) -MemberType NoteProperty
 }
-
-
 if (!($json.retention.msexports))
 {
     $json.retention | Add-Member -Name msexports -Value (ConvertFrom-Json " {"" days"" :$($env:msexportRetentionInDays)}" ) -MemberType NoteProperty
@@ -162,8 +114,6 @@ else
 {
     $json.retention.msexports.days = [Int32]::Parse($env:msexportRetentionInDays)
 }
-
-
 if (!($json.retention.ingestion))
 {
     $json.retention | Add-Member -Name ingestion -Value (ConvertFrom-Json " {"" months"" :$($env:ingestionRetentionInMonths)}" ) -MemberType NoteProperty
@@ -172,8 +122,6 @@ else
 {
     $json.retention.ingestion.months = [Int32]::Parse($env:ingestionRetentionInMonths)
 }
-
-
 if (!($json.retention.raw))
 {
     $json.retention | Add-Member -Name raw -Value (ConvertFrom-Json " {"" days"" :$($env:rawRetentionInDays)}" ) -MemberType NoteProperty
@@ -182,8 +130,6 @@ else
 {
     $json.retention.raw.days = [Int32]::Parse($env:rawRetentionInDays)
 }
-
-
 if (!($json.retention.final))
 {
     $json.retention | Add-Member -Name final -Value (ConvertFrom-Json " {"" months"" :$($env:finalRetentionInMonths)}" ) -MemberType NoteProperty
@@ -192,24 +138,15 @@ else
 {
     $json.retention.final.months = [Int32]::Parse($env:finalRetentionInMonths)
 }
-
-
-Write-Output " Updating version to $env:ftkVersion..."
+Write-Output "Updating version to $env:ftkVersion..."
 $json.version = $env:ftkVersion
 $json.scopes = (@() + $json.scopes + $newScopes) | Select-Object -Unique
-if ($null -eq $json.scopes) { $json.scopes = @() }; 
+if ($null -eq $json.scopes) { $json.scopes = @() };
 $text = $json | ConvertTo-Json
 Write-Output " ---------"
 Write-Output $text
 Write-Output " ---------"
 $text | Out-File $filePath
-
-
-Write-Output " Uploading settings.json file..."
+Write-Output "Uploading settings.json file..."
 Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $filePath -Force | Out-Null
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

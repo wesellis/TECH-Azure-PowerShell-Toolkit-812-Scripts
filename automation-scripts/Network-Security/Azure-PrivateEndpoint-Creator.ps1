@@ -1,45 +1,25 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Private Endpoints
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Private Endpoints
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$EndpointName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SubnetId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$TargetResourceId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$GroupId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location
 )
-
-#region Functions
-
-Write-Information "Creating Private Endpoint: $EndpointName"
-
+Write-Host "Creating Private Endpoint: $EndpointName"
 # Create private endpoint
 $params = @{
     GroupId = $GroupId
@@ -48,7 +28,6 @@ $params = @{
     Name = $EndpointName-connection
 }
 $PrivateLinkServiceConnection @params
-
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
@@ -58,18 +37,14 @@ $params = @{
     Name = $EndpointName
 }
 $PrivateEndpoint @params
+Write-Host "Private Endpoint created successfully:"
+Write-Host "Name: $($PrivateEndpoint.Name)"
+Write-Host "Location: $($PrivateEndpoint.Location)"
+Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])"
+Write-Host "Group ID: $GroupId"
+Write-Host "Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
+Write-Host "`nNext Steps:"
+Write-Host "1. Configure DNS records for the private endpoint"
+Write-Host "2. Update network security groups if needed"
+Write-Host "3. Test connectivity from the virtual network"
 
-Write-Information " Private Endpoint created successfully:"
-Write-Information "  Name: $($PrivateEndpoint.Name)"
-Write-Information "  Location: $($PrivateEndpoint.Location)"
-Write-Information "  Target Resource: $($TargetResourceId.Split('/')[-1])"
-Write-Information "  Group ID: $GroupId"
-Write-Information "  Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
-
-Write-Information "`nNext Steps:"
-Write-Information "1. Configure DNS records for the private endpoint"
-Write-Information "2. Update network security groups if needed"
-Write-Information "3. Test connectivity from the virtual network"
-
-
-#endregion

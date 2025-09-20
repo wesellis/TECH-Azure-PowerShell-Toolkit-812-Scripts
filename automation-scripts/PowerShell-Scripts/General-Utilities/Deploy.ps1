@@ -1,118 +1,76 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Deploy
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Deploy
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 $parameters = $args[0]
 $scriptUrlBase = $args[1]
-
 $subscriptionId = $parameters['subscriptionId']
 $resourceGroupName = $parameters['resourceGroupName']
 $certificateNamePrefix = $parameters['certificateNamePrefix']
 $location = $parameters['location']
-
 $parameters.Remove('subscriptionId')
 try {
     # Main script execution
 $parameters.Remove('resourceGroupName')
 $parameters.Remove('certificateNamePrefix')
-; 
 $managedInstanceName = $parameters['managedInstanceName']
-
-function WE-EnsureLogin() 
+function EnsureLogin()
 {
-   ;  $context = Get-AzureRmContext -ErrorAction Stop
+$context = Get-AzureRmContext -ErrorAction Stop
     If($null -eq $context.Subscription)
     {
         Login-AzureRmAccount | Out-null
     }
 }
-
 [CmdletBinding()]
-function WE-VerifyPSVersion
+function VerifyPSVersion
 {
-    Write-WELog "Verifying PowerShell version, must be 5.0 or higher." " INFO"
-    if($WEPSVersionTable.PSVersion.Major -ge 5)
+    Write-Host "Verifying PowerShell version, must be 5.0 or higher."
+    if($PSVersionTable.PSVersion.Major -ge 5)
     {
-        Write-WELog " PowerShell version verified." " INFO" -ForegroundColor Green
+        Write-Host "PowerShell version verified." -ForegroundColor Green
     }
     else
     {
-        Write-WELog " You need to install PowerShell version 5.0 or heigher." " INFO" -ForegroundColor Red
+        Write-Host "You need to install PowerShell version 5.0 or heigher." -ForegroundColor Red
         Break;
     }
 }
-
-[CmdletBinding()]
-function WE-VerifyManagedInstanceName
+function VerifyManagedInstanceName
 {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
+$ErrorActionPreference = "Stop"
 param($managedInstanceName)
-    Write-WELog " Verifying Managed Instance name, must be globally unique." " INFO"
+    Write-Host "Verifying Managed Instance name, must be globally unique."
     if([string]::IsNullOrEmpty($managedInstanceName))
     {
-        Write-WELog " Managed Instance name is required parameter." " INFO" -ForegroundColor Red
+        Write-Host "Managed Instance name is required parameter." -ForegroundColor Red
         break;
     }
     if($null -ne (Resolve-DnsName ($managedInstanceName+'.provisioning.database.windows.net') -ErrorAction SilentlyContinue))
     {
-        Write-WELog " Managed Instance name already in use." " INFO" -ForegroundColor Red
+        Write-Host "Managed Instance name already in use." -ForegroundColor Red
         break;
     }
-    Write-WELog " Managed Instance name verified." " INFO" -ForegroundColor Green
+    Write-Host "Managed Instance name verified." -ForegroundColor Green
 }
-
 VerifyPSVersion
 VerifyManagedInstanceName $managedInstanceName
-
 EnsureLogin
-
 $context = Get-AzureRmContext -ErrorAction Stop
 If($context.Subscription.Id -ne $subscriptionId)
 {
     # select subscription
-    Write-WELog " Selecting subscription '$subscriptionId'" " INFO" ;
+    Write-Host "Selecting subscription '$subscriptionId'" ;
     Select-AzureRmSubscription -SubscriptionId $subscriptionId  | Out-null
 }
-
 $params = @{
     KeyUsage = "CertSign"
     HashAlgorithm = "sha256"
@@ -120,14 +78,12 @@ $params = @{
     Type = "Custom"
     KeyLength = "2048"
     KeyExportPolicy = "Exportable"
-    Subject = "(" CN=$certificateNamePrefix" +" P2SRoot" )"
+    Subject = "("CN=$certificateNamePrefix" +"P2SRoot" )"
     KeyUsageProperty = "Sign"
-    CertStoreLocation = " Cert:\CurrentUser\My"
+    CertStoreLocation = "Cert:\CurrentUser\My"
 }
 $certificate @params
-
 $certificateThumbprint = $certificate.Thumbprint
-
 $params = @{
     Signer = $certificate
     TextExtension = "@(" 2.5.29.37={text}1.3.6.1.5.5.7.3.2" ) | Out-null"
@@ -136,41 +92,28 @@ $params = @{
     Type = "Custom"
     KeyLength = "2048"
     KeyExportPolicy = "Exportable"
-    Subject = "(" CN=$certificateNamePrefix" +" P2SChild" )"
-    CertStoreLocation = " Cert:\CurrentUser\My"
-    DnsName = "($certificateNamePrefix+" P2SChild" )"
+    Subject = "("CN=$certificateNamePrefix" +"P2SChild" )"
+    CertStoreLocation = "Cert:\CurrentUser\My"
+    DnsName = "($certificateNamePrefix+"P2SChild" )"
 }
 New-SelfSignedCertificate @params
-; 
 $publicRootCertData = [Convert]::ToBase64String((Get-Item -ErrorAction Stop cert:\currentuser\my\$certificateThumbprint).RawData)
-
 $parameters['publicRootCertData'] = $publicRootCertData
-
-; 
 $resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
 if(!$resourceGroup)
 {
-    Write-WELog " Resource group '$resourceGroupName' does not exist." " INFO" ;
-    Write-WELog " Creating resource group '$resourceGroupName' in location '$location'" " INFO" ;
+    Write-Host "Resource group '$resourceGroupName' does not exist." ;
+    Write-Host "Creating resource group '$resourceGroupName' in location '$location'" ;
     New-AzureRmResourceGroup -Name $resourceGroupName -Location $location | Out-null
 }
 else
 {
-    Write-WELog " Using existing resource group '$resourceGroupName'" " INFO" ;
+    Write-Host "Using existing resource group '$resourceGroupName'" ;
 }
-
-
-
-Write-WELog " Starting deployment..." " INFO" ;
-
+Write-Host "Starting deployment..." ;
 New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri ($scriptUrlBase+'/azuredeploy.json') -TemplateParameterObject $parameters
-
-
-
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

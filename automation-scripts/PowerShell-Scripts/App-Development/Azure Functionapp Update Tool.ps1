@@ -1,118 +1,60 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Functionapp Update Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Functionapp Update Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAppName,
-    [string]$WEPlanName
+    [string]$AppName,
+    [string]$PlanName
 )
-
-#region Functions
-
-; 
-$WEFunctionApp = Get-AzFunctionApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName
-
-Write-WELog " Function App: $($WEFunctionApp.Name)" " INFO"
-Write-WELog " Current Resource Group: $($WEFunctionApp.ResourceGroupName)" " INFO"
-Write-WELog " Current Location: $($WEFunctionApp.Location)" " INFO"
-Write-WELog " Current Runtime: $($WEFunctionApp.RuntimeVersion)" " INFO"
-
-
-if ($WEPlanName) {
-    Write-WELog " Updating App Service Plan to: $WEPlanName" " INFO"
-    Set-AzFunctionApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName -AppServicePlan $WEPlanName
-    Write-WELog " Function App $WEAppName updated with new plan: $WEPlanName" " INFO"
+$FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
+Write-Host "Function App: $($FunctionApp.Name)"
+Write-Host "Current Resource Group: $($FunctionApp.ResourceGroupName)"
+Write-Host "Current Location: $($FunctionApp.Location)"
+Write-Host "Current Runtime: $($FunctionApp.RuntimeVersion)"
+if ($PlanName) {
+    Write-Host "Updating App Service Plan to: $PlanName"
+    Set-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName -AppServicePlan $PlanName
+    Write-Host "Function App $AppName updated with new plan: $PlanName"
 } else {
-    Write-WELog " No plan specified - displaying current configuration only" " INFO"
+    Write-Host "No plan specified - displaying current configuration only"
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

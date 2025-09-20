@@ -1,12 +1,7 @@
-#Requires -Module Pester
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Tests for Az.Monitoring.Enterprise module
 .DESCRIPTION
-    Comprehensive test suite for enterprise monitoring management functions
 #>
 
 BeforeAll {
@@ -15,7 +10,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.Monitoring.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzOperationalInsightsWorkspace -ErrorAction Stop {
+    Mock Get-AzOperationalInsightsWorkspace {
         [PSCustomObject]@{
             Name = "TestWorkspace"
             ResourceGroupName = "TestRG"
@@ -27,7 +22,7 @@ BeforeAll {
         }
     }
     
-    Mock New-AzOperationalInsightsWorkspace -ErrorAction Stop {
+    Mock New-AzOperationalInsightsWorkspace {
         [PSCustomObject]@{
             Name = "TestWorkspace"
             ResourceGroupName = "TestRG"
@@ -36,7 +31,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzMetricDefinition -ErrorAction Stop {
+    Mock Get-AzMetricDefinition {
         @(
             [PSCustomObject]@{
                 Name = [PSCustomObject]@{Value = "TestMetric"; LocalizedValue = "Test Metric"}
@@ -75,16 +70,16 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         
         It "Should export expected functions" {
             $expectedFunctions = @(
-                'New-AzLogAnalyticsWorkspaceAdvanced',
+                'New-AzLogAnalyticsWorkspace',
                 'Set-AzLogAnalyticsDataSources',
                 'Enable-AzLogAnalyticsSolution',
                 'New-AzCustomMetric',
                 'Get-AzCustomMetricDefinition',
-                'New-AzMetricAlertRuleV2Advanced',
+                'New-AzMetricAlertRuleV2',
                 'New-AzLogQueryAlert',
                 'Deploy-AzMonitorDashboard',
                 'Deploy-AzMonitorWorkbook',
-                'New-AzActionGroupAdvanced',
+                'New-AzActionGroup',
                 'Test-AzActionGroup',
                 'Export-AzMonitoringConfiguration',
                 'Import-AzMonitoringConfiguration',
@@ -98,7 +93,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
     }
     
-    Context "New-AzLogAnalyticsWorkspaceAdvanced" {
+    Context "New-AzLogAnalyticsWorkspace" {
         
         BeforeEach {
             Mock Set-AzOperationalInsightsIntelligencePack -ErrorAction Stop { }
@@ -108,20 +103,20 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
         
         It "Should create workspace with default settings" {
-            $result = New-AzLogAnalyticsWorkspaceAdvanced -WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus"
+            $result = New-AzLogAnalyticsWorkspace-WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus"
             
             Should -Invoke New-AzOperationalInsightsWorkspace -Times 1
             $result | Should -Not -BeNullOrEmpty
         }
         
         It "Should create workspace with capacity reservation" {
-            New-AzLogAnalyticsWorkspaceAdvanced -WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus" -CapacityReservationLevel 500
+            New-AzLogAnalyticsWorkspace-WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus" -CapacityReservationLevel 500
             
             Should -Invoke New-AzOperationalInsightsWorkspace -Times 1 -ParameterFilter { $CapacityReservationLevel -eq 500 }
         }
         
         It "Should enable specified solutions" {
-            New-AzLogAnalyticsWorkspaceAdvanced -WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus" -Solutions @('Security', 'Updates')
+            New-AzLogAnalyticsWorkspace-WorkspaceName "TestWorkspace" -ResourceGroupName "TestRG" -Location "eastus" -Solutions @('Security', 'Updates')
             
             Should -Invoke Set-AzOperationalInsightsIntelligencePack -Times 2
         }
@@ -181,7 +176,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
     }
     
-    Context "New-AzMetricAlertRuleV2Advanced" {
+    Context "New-AzMetricAlertRuleV2" {
         
         BeforeEach {
             Mock New-AzMetricAlertRuleV2Criteria -ErrorAction Stop {
@@ -195,7 +190,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
         
         It "Should create alert with default CPU criteria" {
-            $alert = New-AzMetricAlertRuleV2Advanced -AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm"
+            $alert = New-AzMetricAlertRuleV2-AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm"
             
             Should -Invoke Add-AzMetricAlertRuleV2 -Times 1
             Should -Invoke New-AzMetricAlertRuleV2Criteria -Times 1
@@ -207,13 +202,13 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
                 @{MetricName="Memory"; Threshold=80; Operator="GreaterThan"}
             )
             
-            New-AzMetricAlertRuleV2Advanced -AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm" -Criteria $criteria
+            New-AzMetricAlertRuleV2-AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm" -Criteria $criteria
             
             Should -Invoke New-AzMetricAlertRuleV2Criteria -Times 2
         }
         
         It "Should set correct severity" {
-            New-AzMetricAlertRuleV2Advanced -AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm" -Severity 1
+            New-AzMetricAlertRuleV2-AlertName "TestAlert" -ResourceGroupName "TestRG" -TargetResourceId "/subscriptions/xxx/vm" -Severity 1
             
             Should -Invoke Add-AzMetricAlertRuleV2 -Times 1 -ParameterFilter { $Severity -eq 1 }
         }
@@ -249,7 +244,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
         }
     }
     
-    Context "New-AzActionGroupAdvanced" {
+    Context "New-AzActionGroup" {
         
         BeforeEach {
             Mock New-AzActionGroupReceiver -ErrorAction Stop {
@@ -273,7 +268,7 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
                 @{Name="Ops"; EmailAddress="ops@test.com"}
             )
             
-            New-AzActionGroupAdvanced -ActionGroupName "TestAG" -ResourceGroupName "TestRG" -EmailReceivers $emailReceivers
+            New-AzActionGroup-ActionGroupName "TestAG" -ResourceGroupName "TestRG" -EmailReceivers $emailReceivers
             
             Should -Invoke New-AzActionGroupReceiver -Times 2 -ParameterFilter { $EmailReceiver -eq $true }
             Should -Invoke Set-AzActionGroup -Times 1
@@ -284,13 +279,13 @@ Describe "Az.Monitoring.Enterprise Module Tests" {
                 @{Name="OnCall"; CountryCode="1"; PhoneNumber="5551234567"}
             )
             
-            New-AzActionGroupAdvanced -ActionGroupName "TestAG" -ResourceGroupName "TestRG" -SmsReceivers $smsReceivers
+            New-AzActionGroup-ActionGroupName "TestAG" -ResourceGroupName "TestRG" -SmsReceivers $smsReceivers
             
             Should -Invoke New-AzActionGroupReceiver -Times 1 -ParameterFilter { $SmsReceiver -eq $true }
         }
         
         It "Should generate short name if not provided" {
-            New-AzActionGroupAdvanced -ActionGroupName "VeryLongActionGroupName" -ResourceGroupName "TestRG"
+            New-AzActionGroup-ActionGroupName "VeryLongActionGroupName" -ResourceGroupName "TestRG"
             
             Should -Invoke Set-AzActionGroup -Times 1 -ParameterFilter { $ShortName.Length -le 12 }
         }
@@ -425,4 +420,6 @@ Describe "Helper Function Tests" {
         }
     }
 }
+
 #endregion
+

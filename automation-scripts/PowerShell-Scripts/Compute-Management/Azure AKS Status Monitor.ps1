@@ -1,125 +1,67 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Aks Status Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Aks Status Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEClusterName
+    [string]$ResourceGroupName,
+    [string]$ClusterName
 )
-
-#region Functions
-
-Write-WELog " Monitoring AKS Cluster: $WEClusterName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-; 
-$WEAksCluster = Get-AzAksCluster -ResourceGroupName $WEResourceGroupName -Name $WEClusterName
-
-Write-WELog " Cluster Information:" " INFO"
-Write-WELog "  Name: $($WEAksCluster.Name)" " INFO"
-Write-WELog "  Location: $($WEAksCluster.Location)" " INFO"
-Write-WELog "  Kubernetes Version: $($WEAksCluster.KubernetesVersion)" " INFO"
-Write-WELog "  Provisioning State: $($WEAksCluster.ProvisioningState)" " INFO"
-Write-WELog "  Power State: $($WEAksCluster.PowerState.Code)" " INFO"
-Write-WELog "  DNS Prefix: $($WEAksCluster.DnsPrefix)" " INFO"
-Write-WELog "  FQDN: $($WEAksCluster.Fqdn)" " INFO"
-
-
-Write-WELog " `nNode Pool Information:" " INFO"
-foreach ($WENodePool in $WEAksCluster.AgentPoolProfiles) {
-    Write-WELog "  Pool Name: $($WENodePool.Name)" " INFO"
-    Write-WELog "  VM Size: $($WENodePool.VmSize)" " INFO"
-    Write-WELog "  Node Count: $($WENodePool.Count)" " INFO"
-    Write-WELog "  OS Type: $($WENodePool.OsType)" " INFO"
-    Write-WELog "  Provisioning State: $($WENodePool.ProvisioningState)" " INFO"
-    Write-WELog "  ---" " INFO"
+Write-Host "Monitoring AKS Cluster: $ClusterName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host " ============================================"
+$AksCluster = Get-AzAksCluster -ResourceGroupName $ResourceGroupName -Name $ClusterName
+Write-Host "Cluster Information:"
+Write-Host "Name: $($AksCluster.Name)"
+Write-Host "Location: $($AksCluster.Location)"
+Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
+Write-Host "Provisioning State: $($AksCluster.ProvisioningState)"
+Write-Host "Power State: $($AksCluster.PowerState.Code)"
+Write-Host "DNS Prefix: $($AksCluster.DnsPrefix)"
+Write-Host "FQDN: $($AksCluster.Fqdn)"
+Write-Host " `nNode Pool Information:"
+foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
+    Write-Host "Pool Name: $($NodePool.Name)"
+    Write-Host "VM Size: $($NodePool.VmSize)"
+    Write-Host "Node Count: $($NodePool.Count)"
+    Write-Host "OS Type: $($NodePool.OsType)"
+    Write-Host "Provisioning State: $($NodePool.ProvisioningState)"
+    Write-Host "  ---"
 }
-
-Write-WELog " `nCluster monitoring completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nCluster monitoring completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

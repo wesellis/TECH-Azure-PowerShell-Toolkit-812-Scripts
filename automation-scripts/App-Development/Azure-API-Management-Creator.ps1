@@ -1,46 +1,26 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage API Management
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage API Management
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ServiceName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Organization,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$AdminEmail,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Sku = "Developer"
 )
-
-#region Functions
-
-Write-Information "Creating API Management service: $ServiceName"
-Write-Information "This process may take 30-45 minutes..."
-
+Write-Host "Creating API Management service: $ServiceName"
+Write-Host "This process may take 30-45 minutes..."
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
@@ -51,28 +31,23 @@ $params = @{
     Name = $ServiceName
 }
 $ApiManagement @params
+Write-Host "API Management service created successfully:"
+Write-Host "Name: $($ApiManagement.Name)"
+Write-Host "Location: $($ApiManagement.Location)"
+Write-Host "SKU: $($ApiManagement.Sku)"
+Write-Host "Gateway URL: $($ApiManagement.GatewayUrl)"
+Write-Host "Portal URL: $($ApiManagement.PortalUrl)"
+Write-Host "Management URL: $($ApiManagement.ManagementApiUrl)"
+Write-Host "`nAPI Management Features:"
+Write-Host "API Gateway functionality"
+Write-Host "Developer portal"
+Write-Host "API versioning and documentation"
+Write-Host "Rate limiting and quotas"
+Write-Host "Authentication and authorization"
+Write-Host "Analytics and monitoring"
+Write-Host "`nNext Steps:"
+Write-Host "1. Configure APIs and operations"
+Write-Host "2. Set up authentication policies"
+Write-Host "3. Configure rate limiting"
+Write-Host "4. Customize developer portal"
 
-Write-Information " API Management service created successfully:"
-Write-Information "  Name: $($ApiManagement.Name)"
-Write-Information "  Location: $($ApiManagement.Location)"
-Write-Information "  SKU: $($ApiManagement.Sku)"
-Write-Information "  Gateway URL: $($ApiManagement.GatewayUrl)"
-Write-Information "  Portal URL: $($ApiManagement.PortalUrl)"
-Write-Information "  Management URL: $($ApiManagement.ManagementApiUrl)"
-
-Write-Information "`nAPI Management Features:"
-Write-Information "• API Gateway functionality"
-Write-Information "• Developer portal"
-Write-Information "• API versioning and documentation"
-Write-Information "• Rate limiting and quotas"
-Write-Information "• Authentication and authorization"
-Write-Information "• Analytics and monitoring"
-
-Write-Information "`nNext Steps:"
-Write-Information "1. Configure APIs and operations"
-Write-Information "2. Set up authentication policies"
-Write-Information "3. Configure rate limiting"
-Write-Information "4. Customize developer portal"
-
-
-#endregion

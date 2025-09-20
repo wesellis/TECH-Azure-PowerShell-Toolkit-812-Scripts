@@ -1,61 +1,25 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azureautomationtutorial
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azureautomationtutorial
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
     .DESCRIPTION
         An example runbook which gets all the ARM resources using the Run As Account (Service Principal)
-
     .NOTES
         AUTHOR: Azure Automation Team
         LASTEDIT: Mar 14, 2016
-
-
 $connectionName = "AzureRunAsConnection"
 try
 {
-    # Get the connection " AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
-
-    " Logging in to Azure..."
+    # Get the connection "AzureRunAsConnection "
+    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
+    "Logging in to Azure..."
     $params = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
@@ -66,30 +30,22 @@ try
 catch {
     if (!$servicePrincipalConnection)
     {
-        $WEErrorMessage = " Connection $connectionName not found."
-        throw $WEErrorMessage
+        $ErrorMessage = "Connection $connectionName not found."
+        throw $ErrorMessage
     } else{
         Write-Error -Message $_.Exception
         throw $_.Exception
     }
 }
-
-; 
-$WEResourceGroups = Get-AzureRmResourceGroup -ErrorAction Stop 
-
-foreach ($WEResourceGroup in $WEResourceGroups)
-{    
-    Write-Output (" Showing resources in resource group " + $WEResourceGroup.ResourceGroupName)
-   ;  $WEResources = Find-AzureRmResource -ResourceGroupNameContains $WEResourceGroup.ResourceGroupName | Select ResourceName, ResourceType
-    ForEach ($WEResource in $WEResources)
+$ResourceGroups = Get-AzureRmResourceGroup -ErrorAction Stop
+foreach ($ResourceGroup in $ResourceGroups)
+{
+    Write-Output ("Showing resources in resource group " + $ResourceGroup.ResourceGroupName)
+$Resources = Find-AzureRmResource -ResourceGroupNameContains $ResourceGroup.ResourceGroupName | Select ResourceName, ResourceType
+    ForEach ($Resource in $Resources)
     {
-        Write-Output ($WEResource.ResourceName + " of type " +  $WEResource.ResourceType)
+        Write-Output ($Resource.ResourceName + " of type " +  $Resource.ResourceType)
     }
     Write-Output ("" )
-} 
+}
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

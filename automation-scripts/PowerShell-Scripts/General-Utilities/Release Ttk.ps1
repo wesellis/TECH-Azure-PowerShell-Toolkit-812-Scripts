@@ -1,45 +1,14 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Release Ttk
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Release Ttk
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -47,43 +16,31 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    [string]$WEStorageAccountResourceGroupName = " azure-quickstarts-service-storage" ,
-    [string]$WEStorageAccountName = " azurequickstartsservice" ,
+    [string]$StorageAccountResourceGroupName = " azure-quickstarts-service-storage" ,
+    [string]$StorageAccountName = " azurequickstartsservice" ,
     [string]$containerName = " ttk" ,
     [string]$folderName = " latest" ,
     [string]$ttkFileName = " arm-template-toolkit.zip" ,
-    [switch]$WEStaging,
-    [switch]$WEPublish
+    [switch]$Staging,
+    [switch]$Publish
 )
-
-#region Functions
-
-if ($WEStaging) {
+if ($Staging) {
     # Publish to staging folder instead of default (" latest" ) folder
     $folderName = 'staging'
 }
-
-
-
-$releaseFiles = " ..\..\arm-ttk\arm-ttk" , " .\ci-scripts" , " ..\Deploy-AzTemplate.ps1"
-
+$releaseFiles = " ..\..\arm-ttk\arm-ttk" , ".\ci-scripts" , "..\Deploy-AzTemplate.ps1"
 Compress-Archive -DestinationPath $ttkFileName -Path $releaseFiles -Force
-
-
 Copy-Item " ..\..\arm-ttk\arm-ttk" -Destination " .\template-tests" -Recurse
 $releaseFiles = $releaseFiles + " .\template-tests"
 $releaseFiles = $releaseFiles -ne " ..\..\arm-ttk/arm-ttk"
-Compress-Archive -DestinationPath " AzTemplateToolkit.zip" -Path $releaseFiles -Force
+Compress-Archive -DestinationPath "AzTemplateToolkit.zip" -Path $releaseFiles -Force
 Remove-Item -ErrorAction Stop " -Force .\template-tests" -Recurse -Force
-
-; 
-$WETarget = " Target: storage account $WEStorageAccountName, container $containerName, folder $folderName"
-
-if ($WEPublish) {
-    Write-WELog " Publishing to $WETarget" " INFO"
-   ;  $ctx = (Get-AzStorageAccount -Name $WEStorageAccountName -ResourceGroupName $WEStorageAccountResourceGroupName).Context
+$Target = "Target: storage account $StorageAccountName, container $containerName, folder $folderName"
+if ($Publish) {
+    Write-Host "Publishing to $Target"
+$ctx = (Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroupName).Context
     $params = @{
-        Properties = "@{" ContentType" = " application/x-zip-compressed" ; " CacheControl" = " no-cache" } Write-WELog " Published" " INFO"
+        Properties = "@{"ContentType" = " application/x-zip-compressed" ; "CacheControl" = " no-cache" } Write-Host "Published"
         File = $ttkFileName
         Context = $ctx
         Blob = " $folderName/$ttkFileName"
@@ -92,15 +49,10 @@ if ($WEPublish) {
     Set-AzStorageBlobContent @params
 }
 else {
-    Write-WELog " If -Publish flag had been set, this would have published to $WETarget" " INFO"
+    Write-Host "If -Publish flag had been set, this would have published to $Target"
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

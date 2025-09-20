@@ -1,193 +1,118 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Custom Role Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Custom Role Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$RoleName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WERoleName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDescription,
-    
-    [Parameter(Mandatory=$true)]
-    [array]$WEActions,
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WENotActions = @(),
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WEDataActions = @(),
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WENotDataActions = @(),
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WESubscriptionId
+    [string]$Description,
+    [Parameter(Mandatory)]
+    [array]$Actions,
+    [Parameter()]
+    [array]$NotActions = @(),
+    [Parameter()]
+    [array]$DataActions = @(),
+    [Parameter()]
+    [array]$NotDataActions = @(),
+    [Parameter()]
+    [string]$SubscriptionId
 )
-
-#region Functions
-
-Write-WELog " Creating custom Azure role: $WERoleName" " INFO"
-
-if (-not $WESubscriptionId) {
-    $WESubscriptionId = (Get-AzContext).Subscription.Id
+Write-Host "Creating custom Azure role: $RoleName"
+if (-not $SubscriptionId) {
+    $SubscriptionId = (Get-AzContext).Subscription.Id
 }
-
 try {
     # Create role definition object
-   ;  $WERoleDefinition = @{
-        Name = $WERoleName
-        Description = $WEDescription
-        Actions = $WEActions
-        NotActions = $WENotActions
-        DataActions = $WEDataActions
-        NotDataActions = $WENotDataActions
-        AssignableScopes = @(" /subscriptions/$WESubscriptionId" )
+$RoleDefinition = @{
+        Name = $RoleName
+        Description = $Description
+        Actions = $Actions
+        NotActions = $NotActions
+        DataActions = $DataActions
+        NotDataActions = $NotDataActions
+        AssignableScopes = @(" /subscriptions/$SubscriptionId" )
     }
-    
     # Create the custom role
-   ;  $WECustomRole = New-AzRoleDefinition -Role $WERoleDefinition
-    
-    Write-WELog "  Custom role created successfully:" " INFO"
-    Write-WELog "  Name: $($WECustomRole.Name)" " INFO"
-    Write-WELog "  ID: $($WECustomRole.Id)" " INFO"
-    Write-WELog "  Description: $($WECustomRole.Description)" " INFO"
-    Write-WELog "  Type: $($WECustomRole.RoleType)" " INFO"
-    
-    Write-WELog " `nPermissions:" " INFO"
-    Write-WELog "  Actions ($($WEActions.Count)):" " INFO"
-    foreach ($WEAction in $WEActions) {
-        Write-WELog "    • $WEAction" " INFO"
+$CustomRole = New-AzRoleDefinition -Role $RoleDefinition
+    Write-Host "Custom role created successfully:"
+    Write-Host "Name: $($CustomRole.Name)"
+    Write-Host "ID: $($CustomRole.Id)"
+    Write-Host "Description: $($CustomRole.Description)"
+    Write-Host "Type: $($CustomRole.RoleType)"
+#>
+    Write-Host " `nPermissions:"
+    Write-Host "Actions ($($Actions.Count)):"
+    foreach ($Action in $Actions) {
+        Write-Host "     $Action"
     }
-    
-    if ($WENotActions.Count -gt 0) {
-        Write-WELog "  NotActions ($($WENotActions.Count)):" " INFO"
-        foreach ($WENotAction in $WENotActions) {
-            Write-WELog "    • $WENotAction" " INFO"
+    if ($NotActions.Count -gt 0) {
+        Write-Host "NotActions ($($NotActions.Count)):"
+        foreach ($NotAction in $NotActions) {
+            Write-Host "     $NotAction"
         }
     }
-    
-    if ($WEDataActions.Count -gt 0) {
-        Write-WELog "  DataActions ($($WEDataActions.Count)):" " INFO"
-        foreach ($WEDataAction in $WEDataActions) {
-            Write-WELog "    • $WEDataAction" " INFO"
+    if ($DataActions.Count -gt 0) {
+        Write-Host "DataActions ($($DataActions.Count)):"
+        foreach ($DataAction in $DataActions) {
+            Write-Host "     $DataAction"
         }
     }
-    
-    if ($WENotDataActions.Count -gt 0) {
-        Write-WELog "  NotDataActions ($($WENotDataActions.Count)):" " INFO"
-        foreach ($WENotDataAction in $WENotDataActions) {
-            Write-WELog "    • $WENotDataAction" " INFO"
+    if ($NotDataActions.Count -gt 0) {
+        Write-Host "NotDataActions ($($NotDataActions.Count)):"
+        foreach ($NotDataAction in $NotDataActions) {
+            Write-Host "     $NotDataAction"
         }
     }
-    
-    Write-WELog " `nAssignable Scopes:" " INFO"
-    foreach ($WEScope in $WECustomRole.AssignableScopes) {
-        Write-WELog "  • $WEScope" " INFO"
+    Write-Host " `nAssignable Scopes:"
+    foreach ($Scope in $CustomRole.AssignableScopes) {
+        Write-Host "   $Scope"
     }
-    
-    Write-WELog " `nCustom Role Benefits:" " INFO"
-    Write-WELog " • Principle of least privilege" " INFO"
-    Write-WELog " • Fine-grained access control" " INFO"
-    Write-WELog " • Compliance and governance" " INFO"
-    Write-WELog " • Reduced security risk" " INFO"
-    
-    Write-WELog " `nNext Steps:" " INFO"
-    Write-WELog " 1. Test the role with a pilot user" " INFO"
-    Write-WELog " 2. Assign to users or groups as needed" " INFO"
-    Write-WELog " 3. Monitor usage and adjust permissions" " INFO"
-    Write-WELog " 4. Document role purpose and usage" " INFO"
-    
-    Write-WELog " `nCommon Action Patterns:" " INFO"
-    Write-WELog " • Read operations: */read" " INFO"
-    Write-WELog " • Write operations: */write" " INFO"
-    Write-WELog " • Delete operations: */delete" " INFO"
-    Write-WELog " • List operations: */list*" " INFO"
-    Write-WELog " • Specific resource types: Microsoft.Compute/virtualMachines/*" " INFO"
-    
+    Write-Host " `nCustom Role Benefits:"
+    Write-Host "Principle of least privilege"
+    Write-Host "Fine-grained access control"
+    Write-Host "Compliance and governance"
+    Write-Host "Reduced security risk"
+    Write-Host " `nNext Steps:"
+    Write-Host " 1. Test the role with a pilot user"
+    Write-Host " 2. Assign to users or groups as needed"
+    Write-Host " 3. Monitor usage and adjust permissions"
+    Write-Host " 4. Document role purpose and usage"
+    Write-Host " `nCommon Action Patterns:"
+    Write-Host "Read operations: */read"
+    Write-Host "Write operations: */write"
+    Write-Host "Delete operations: */delete"
+    Write-Host "List operations: */list*"
+    Write-Host "Specific resource types: Microsoft.Compute/virtualMachines/*"
 } catch {
-    Write-Error " Failed to create custom role: $($_.Exception.Message)"
+    Write-Error "Failed to create custom role: $($_.Exception.Message)"
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

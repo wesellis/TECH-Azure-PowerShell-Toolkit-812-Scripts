@@ -1,72 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Azpublicipaddress
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Azpublicipaddress
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzPublicIpAddress {
-
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzPublicIpAddress {
+function Invoke-AzPublicIpAddress {
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzPublicIpAddress {
  #Region func New-AzPublicIpAddress -ErrorAction Stop
-; 
 $newAzPublicIpAddressSplat = @{
-    Name              = $WEPublicIPAddressName
-    DomainNameLabel   = $WEDNSNameLabel
-    ResourceGroupName = $WEResourceGroupName
-    Location          = $WELocationName
+    Name              = $PublicIPAddressName
+    DomainNameLabel   = $DNSNameLabel
+    ResourceGroupName = $ResourceGroupName
+    Location          = $LocationName
     # AllocationMethod  = 'Dynamic'
     AllocationMethod  = 'Static'
     # IpTag             = $ipTag
-    Tag               = $WETags
-}; 
-$WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-
-    
+    Tag               = $Tags
+};
+$PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 }
-
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

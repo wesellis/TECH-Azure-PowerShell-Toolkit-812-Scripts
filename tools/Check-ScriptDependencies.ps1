@@ -1,29 +1,13 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Check ScriptDependenciescom)#>
 # Check-ScriptDependencies.ps1
 # Analyzes and validates script dependencies across the repository
-# Version: 2.0
-
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ScriptPath,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
     
     [switch]$InstallMissing,
@@ -260,7 +244,7 @@ if ($InstallMissing -and $installStatus.Missing.Count -gt 0) {
             Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser -ErrorAction Stop
             Write-Host " " -ForegroundColor Green
         } catch {
-            Write-Host "  Failed: $_" -ForegroundColor Red
+            Write-Host "Failed: $_" -ForegroundColor Red
         }
     }
 }
@@ -294,3 +278,4 @@ if ($ValidateAzureModules) {
 Write-Host "`nDependency analysis complete!" -ForegroundColor Cyan
 
 #endregion
+

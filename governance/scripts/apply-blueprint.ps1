@@ -1,73 +1,49 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
+#Requires -Version 5.1
+#Requires -Module Az.Blueprint
 
-<#
-#endregion
+    Applies an Azure Blueprint to a subscription with
 
-#region Main-Execution
-.SYNOPSIS
-    Applies an Azure Blueprint to a subscription with comprehensive configuration and validation.
-
-.DESCRIPTION
-    This script applies an Azure Blueprint to a specified subscription, providing comprehensive
+    This script applies an Azure Blueprint to a specified subscription, providing
     configuration options, validation, and monitoring capabilities. It supports both published
     and draft blueprints with flexible parameter handling and detailed logging.
-
 .PARAMETER BlueprintName
     The name of the Azure Blueprint to apply.
-
 .PARAMETER SubscriptionId
     The Azure subscription ID where the blueprint will be applied.
     If not provided, uses the current subscription context.
-
 .PARAMETER BlueprintVersion
     The version of the blueprint to apply. If not specified, uses the latest published version.
-
 .PARAMETER AssignmentName
     Name for the blueprint assignment. If not provided, generates one based on blueprint name and timestamp.
-
 .PARAMETER Location
     Azure region for the blueprint assignment. Defaults to 'East US'.
-
 .PARAMETER Parameters
     Hashtable of parameters to pass to the blueprint. Can also be a path to a JSON file.
-
 .PARAMETER ResourceGroupNames
     Hashtable mapping resource group placeholder names to actual resource group names.
-
 .PARAMETER SystemAssignedIdentity
     Use system-assigned managed identity for the blueprint assignment.
-
 .PARAMETER UserAssignedIdentityId
     Resource ID of a user-assigned managed identity to use for the blueprint assignment.
-
 .PARAMETER Wait
     Wait for the blueprint assignment to complete before returning.
-
 .PARAMETER TimeoutMinutes
     Maximum time to wait for blueprint assignment completion (default: 30 minutes).
-
 .PARAMETER WhatIf
     Show what would be deployed without actually applying the blueprint.
-
 .PARAMETER Force
     Force the blueprint application even if there are validation warnings.
-
 .PARAMETER LogPath
     Path to store detailed logs. If not provided, logs to default location.
 
-.EXAMPLE
     .\apply-blueprint.ps1 -BlueprintName "MyBlueprint" -SubscriptionId "12345678-1234-1234-1234-123456789012"
 
-.EXAMPLE
     .\apply-blueprint.ps1 -BlueprintName "MyBlueprint" -Parameters @{location="westus2"; environment="prod"} -Wait
 
-.EXAMPLE
     .\apply-blueprint.ps1 -BlueprintName "MyBlueprint" -Parameters "C:\params.json" -SystemAssignedIdentity -WhatIf
 
-.NOTES
     File Name      : apply-blueprint.ps1
-    Author         : Wes Ellis (wes@wesellis.com)
+    Author         : Azure PowerShell Toolkit
     Created        : 2024-11-15
     Prerequisites  : Azure PowerShell module, appropriate Azure permissions
     Version        : 1.0.0
@@ -127,9 +103,6 @@ param (
 )
 
 #region Functions
-
-#Requires -Version 5.1
-#Requires -Modules Az.Blueprint, Az.Accounts, Az.Resources
 
 # Initialize logging
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -427,5 +400,5 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-
 #endregion
+

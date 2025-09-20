@@ -1,73 +1,48 @@
 #Requires -Module Az.Network
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Manages Network Security Group (NSG) rules in Azure
 
-.DESCRIPTION
     Creates, modifies, and removes NSG security rules. Supports both inbound and outbound rules
-    with comprehensive validation and bulk operations.
-
+    with
 .PARAMETER NSGName
     Name of the Network Security Group
-
 .PARAMETER ResourceGroupName
     Resource group containing the NSG
-
 .PARAMETER Action
     Action to perform: Add, Remove, List, Update
-
 .PARAMETER RuleName
     Name of the security rule
-
 .PARAMETER Direction
     Rule direction: Inbound, Outbound
-
 .PARAMETER Priority
     Rule priority (100-4096)
-
 .PARAMETER Access
     Allow or Deny
-
 .PARAMETER Protocol
     Protocol: TCP, UDP, ICMP, *
-
 .PARAMETER SourceAddressPrefix
     Source address prefix or CIDR
-
 .PARAMETER SourcePortRange
     Source port range (e.g., 80, 80-90, *)
-
 .PARAMETER DestinationAddressPrefix
     Destination address prefix or CIDR
-
 .PARAMETER DestinationPortRange
     Destination port range
-
 .PARAMETER Description
     Rule description
-
 .PARAMETER CsvFile
     CSV file for bulk rule operations
-
 .PARAMETER Force
     Skip confirmation prompts
 
-.EXAMPLE
     .\manage-nsg-rules.ps1 -NSGName "NSG-Web" -ResourceGroupName "RG-Network" -Action "Add" -RuleName "Allow-HTTP" -Direction "Inbound" -Priority 1000 -Access "Allow" -Protocol "TCP" -SourceAddressPrefix "*" -SourcePortRange "*" -DestinationAddressPrefix "*" -DestinationPortRange "80"
 
     Adds HTTP inbound rule to NSG
 
-.EXAMPLE
     .\manage-nsg-rules.ps1 -NSGName "NSG-Web" -ResourceGroupName "RG-Network" -Action "List"
 
-    Lists all rules in the NSG
-
-.NOTES
-    Version: 1.0.0
-    Created: 2024-11-15
-#>
+    Lists all rules in the NSG#>
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -290,11 +265,11 @@ function Show-NSGRules {
     $rules | Format-Table -AutoSize
 
     Write-Host "`nSummary:" -ForegroundColor Cyan
-    Write-Host "  Total Rules: $($rules.Count)"
-    Write-Host "  Inbound: $(($rules | Where-Object Direction -eq 'Inbound').Count)"
-    Write-Host "  Outbound: $(($rules | Where-Object Direction -eq 'Outbound').Count)"
-    Write-Host "  Allow: $(($rules | Where-Object Access -eq 'Allow').Count)"
-    Write-Host "  Deny: $(($rules | Where-Object Access -eq 'Deny').Count)"
+    Write-Host "Total Rules: $($rules.Count)"
+    Write-Host "Inbound: $(($rules | Where-Object Direction -eq 'Inbound').Count)"
+    Write-Host "Outbound: $(($rules | Where-Object Direction -eq 'Outbound').Count)"
+    Write-Host "Allow: $(($rules | Where-Object Access -eq 'Allow').Count)"
+    Write-Host "Deny: $(($rules | Where-Object Access -eq 'Deny').Count)"
 }
 
 function Import-RulesFromCsv {
@@ -333,8 +308,8 @@ function Import-RulesFromCsv {
         }
 
         Write-Host "`nImport Summary:" -ForegroundColor Cyan
-        Write-Host "  Successful: $successCount"
-        Write-Host "  Failed: $errorCount"
+        Write-Host "Successful: $successCount"
+        Write-Host "Failed: $errorCount"
     }
     catch {
         Write-Error "Failed to import CSV file: $_"
@@ -406,3 +381,4 @@ switch ($Action) {
 }
 
 Write-Host "`nOperation completed!" -ForegroundColor Green
+

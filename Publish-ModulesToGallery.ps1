@@ -1,24 +1,16 @@
-#Requires -Module PowerShellGet
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Publishes Azure Enterprise Toolkit modules to PowerShell Gallery
-    
+
 .DESCRIPTION
     This script publishes all enterprise modules to the PowerShell Gallery
     Run this after obtaining your API key from https://www.powershellgallery.com/
-    
 .PARAMETER ApiKey
     Your PowerShell Gallery API key
-    
 .PARAMETER WhatIf
     Shows what would be published without actually publishing
-    
 .EXAMPLE
     .\Publish-ModulesToGallery.ps1 -ApiKey "your-api-key-here"
-    
 .EXAMPLE
     .\Publish-ModulesToGallery.ps1 -ApiKey $env:PSGALLERY_API_KEY -WhatIf
 #>
@@ -47,12 +39,12 @@ $Modules = @(
     'security\Az.Security.Enterprise'
 )
 
-Write-Information "Azure Enterprise Toolkit - PowerShell Gallery Publisher"
-Write-Information "======================================================"
-Write-Information ""
+Write-Host "Azure Enterprise Toolkit - PowerShell Gallery Publisher"
+Write-Host "======================================================"
+Write-Host ""
 
 # Verify modules exist
-Write-Information "Verifying modules..."
+Write-Host "Verifying modules..."
 $modulesToPublish = @()
 
 foreach ($module in $Modules) {
@@ -68,7 +60,7 @@ foreach ($module in $Modules) {
             Description = $manifest.Description
         }
         $modulesToPublish += $moduleInfo
-        Write-Information "  [OK] $($moduleInfo.Name) v$($moduleInfo.Version)"
+        Write-Host "  [OK] $($moduleInfo.Name) v$($moduleInfo.Version)"
     } else {
         Write-Warning "  [FAIL] Module not found: $module"
     }
@@ -79,22 +71,22 @@ if ($modulesToPublish.Count -eq 0) {
     return
 }
 
-Write-Information ""
-Write-Information "Found $($modulesToPublish.Count) modules to publish"
-Write-Information ""
+Write-Host ""
+Write-Host "Found $($modulesToPublish.Count) modules to publish"
+Write-Host ""
 
 # Confirm before publishing
 if (-not $Force -and -not $WhatIf) {
     $confirm = Read-Host "Do you want to publish these modules to $Repository? (Y/N)"
     if ($confirm -ne 'Y') {
-        Write-Information "Publishing cancelled"
+        Write-Host "Publishing cancelled"
         return
     }
 }
 
 # Publish each module
 foreach ($module in $modulesToPublish) {
-    Write-Information "Publishing $($module.Name) v$($module.Version)..."
+    Write-Host "Publishing $($module.Name) v$($module.Version)..."
     
     if ($PSCmdlet.ShouldProcess($module.Name, "Publish to $Repository")) {
         try {
@@ -107,31 +99,46 @@ foreach ($module in $modulesToPublish) {
                 NuGetApiKey = $ApiKey
                 Repository = $Repository
                 Path = $module.Path
-                ErrorAction = "Stop  Write-Information "  [OK] Successfully published $($module.Name)"  # Display module URL $moduleUrl = "https://www.powershellgallery.com/packages/$($module.Name)" Write-Information "   View at: $moduleUrl"  } catch { Write-Error "  [FAIL] Failed to publish $($module.Name): $_" } } else { Write-Information "  [WhatIf] Would publish $($module.Name) to $Repository" }  Write-Information "
+                ErrorAction = "Stop"
             }
             Publish-Module @params
+
+            Write-Host "  [OK] Successfully published $($module.Name)"
+
+            # Display module URL
+            $moduleUrl = "https://www.powershellgallery.com/packages/$($module.Name)"
+            Write-Host "      View at: $moduleUrl"
+
+        } catch {
+            Write-Error "  [FAIL] Failed to publish $($module.Name): $_"
+        }
+    } else {
+        Write-Host "  [WhatIf] Would publish $($module.Name) to $Repository"
+    }
+
+    Write-Host ""
 }
 
 # Summary
-Write-Information "Publishing Summary"
-Write-Information "=================="
-Write-Information ""
+Write-Host "Publishing Summary"
+Write-Host "=================="
+Write-Host ""
 
 if ($WhatIf) {
-    Write-Information "WhatIf mode - no modules were actually published"
+    Write-Host "WhatIf mode - no modules were actually published"
 } else {
-    Write-Information "Publishing complete!"
-    Write-Information ""
-    Write-Information "Next steps:"
-    Write-Information "1. Verify modules at https://www.powershellgallery.com/profiles/WesEllis"
-    Write-Information "2. Test installation: Install-Module -Name Az.Accounts.Enterprise"
-    Write-Information "3. Share on social media and PowerShell communities"
-    Write-Information "4. Monitor download statistics"
+    Write-Host "Publishing complete!"
+    Write-Host ""
+    Write-Host "Next steps:"
+    Write-Host "1. Verify modules at https://www.powershellgallery.com/profiles/WesEllis"
+    Write-Host "2. Test installation: Install-Module -Name Az.Accounts.Enterprise"
+    Write-Host "3. Share on social media and PowerShell communities"
+    Write-Host "4. Monitor download statistics"
 }
 
 # Create a simple tracking file
 $publishLog = @{
-    PublishDate = Get-Date -ErrorAction Stop
+    PublishDate = Get-Date
     ModulesPublished = $modulesToPublish
     Repository = $Repository
     Publisher = $env:USERNAME
@@ -140,7 +147,8 @@ $publishLog = @{
 $logPath = Join-Path $PSScriptRoot "last-publish.json"
 $publishLog | ConvertTo-Json -Depth 3 | Out-File $logPath -Force
 
-Write-Information ""
-Write-Information "Publish log saved to: $logPath"
+Write-Host ""
+Write-Host "Publish log saved to: $logPath"
 
 #endregion
+

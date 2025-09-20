@@ -2,65 +2,43 @@
 #Requires -Module Az.Profile
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Monitors Azure Activity Logs for specific events and security incidents
 
-.DESCRIPTION
     Queries Azure Activity Logs for administrative activities, security events,
     and resource changes. Supports filtering by time range, resource groups,
     and specific operations with alert capabilities.
-
 .PARAMETER StartTime
     Start time for log query (default: 24 hours ago)
-
 .PARAMETER EndTime
     End time for log query (default: now)
-
 .PARAMETER ResourceGroupName
     Filter by specific resource group
-
 .PARAMETER ResourceName
     Filter by specific resource name
-
 .PARAMETER OperationName
     Filter by specific operation (e.g., Microsoft.Compute/virtualMachines/write)
-
 .PARAMETER Level
     Log level filter: Critical, Error, Warning, Informational, Verbose
-
 .PARAMETER Status
     Operation status: Started, Succeeded, Failed
-
 .PARAMETER ExportPath
     Path to export results (CSV format)
-
 .PARAMETER AlertEmail
     Email address for critical event alerts
-
 .PARAMETER ShowSummary
     Display summary statistics
-
 .PARAMETER ContinuousMonitoring
     Enable continuous monitoring mode
-
 .PARAMETER MonitoringInterval
     Interval in seconds for continuous monitoring (default: 300)
 
-.EXAMPLE
     .\monitor-activity-logs.ps1 -StartTime (Get-Date).AddHours(-1) -Level "Error"
 
     Monitor last hour for error-level events
 
-.EXAMPLE
     .\monitor-activity-logs.ps1 -ResourceGroupName "RG-Production" -ShowSummary
 
-    Monitor production resource group with summary
-
-.NOTES
-    Version: 1.0.0
-    Created: 2024-11-15
-#>
+    Monitor production resource group with summary#>
 
 [CmdletBinding()]
 param(
@@ -301,9 +279,8 @@ function Send-AlertEmail {
 
         $CriticalEvents | Select-Object -First 5 | ForEach-Object {
             Write-Host "  - $($_.EventTimestamp): $($_.OperationName.Value)" -ForegroundColor Red
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to send alert email: $_"
     }
 }
@@ -443,3 +420,4 @@ else {
 
     Write-Host "`nMonitoring completed!" -ForegroundColor Green
 }
+

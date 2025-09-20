@@ -1,111 +1,60 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Compare Templates
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Compare Templates
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-﻿
-<# 
-
 Verifies that two JSON template files have the same hash (after removing generator metadata)
 try {
     # Main script execution
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string][Parameter(mandatory = $true)] $WETemplateFilePathExpected,
-    [string][Parameter(mandatory = $true)] $WETemplateFilePathActual,
-    [switch] $WERemoveGeneratorMetadata,
-    [switch] $WEWriteToHost
+    [string][Parameter(mandatory = $true)] $TemplateFilePathExpected,
+    [string][Parameter(mandatory = $true)] $TemplateFilePathActual,
+    [switch] $RemoveGeneratorMetadata,
+    [switch] $WriteToHost
 )
-
-#region Functions
-
-Import-Module " $WEPSScriptRoot/Local.psm1" -Force
-
-if ($WEWriteToHost) {
-    Write-WELog " Comparing $WETemplateFilePathExpected and $WETemplateFilePathActual" " INFO"
+Import-Module " $PSScriptRoot/Local.psm1" -Force
+if ($WriteToHost) {
+    Write-Host "Comparing $TemplateFilePathExpected and $TemplateFilePathActual"
 }
-
-$templateContentsExpectedRaw = Get-Content -ErrorAction Stop $WETemplateFilePathExpected -Raw
-$templateContentsActualRaw = Get-Content -ErrorAction Stop $WETemplateFilePathActual -Raw
-
-if ($WERemoveGeneratorMetadata) {
+$templateContentsExpectedRaw = Get-Content -ErrorAction Stop $TemplateFilePathExpected -Raw
+$templateContentsActualRaw = Get-Content -ErrorAction Stop $TemplateFilePathActual -Raw
+if ($RemoveGeneratorMetadata) {
     $templateContentsExpectedRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsExpectedRaw
     $templateContentsActualRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsActualRaw
 }
-
-$templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw; 
+$templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw;
 $templateContentsActual = Convert-StringToLines $templateContentsActualRaw
-
-
-; 
 $diffs = Compare-Object $templateContentsExpected $templateContentsActual
-
 if ($diffs) {
-    if ($WEWriteToHost) {
-        Write-Warning " The templates do not match"
+    if ($WriteToHost) {
+        Write-Warning "The templates do not match"
         Write-Verbose " `n`n************* ACTUAL CONTENTS ****************"
         Write-Verbose $templateContentsActualRaw
         Write-Verbose " ***************** END OF ACTUAL CONTENTS ***************"
-        Write-WELog " `n`n************* EXPECTED CONTENTS ****************" " INFO"
-        Write-Information $templateContentsExpectedRaw
-        Write-Information " ***************** END OF EXPECTED CONTENTS ***************"
-
-        Write-WELog " `n`n************* DIFFERENCES (IGNORING METADATA) ****************`n" " INFO"
-        $diffs | Out-String | Write-Information Write-WELog " `n***************** END OF DIFFERENCES ***************" " INFO"
+        Write-Host " `n`n************* EXPECTED CONTENTS ****************"
+        Write-Host $templateContentsExpectedRaw
+        Write-Host " ***************** END OF EXPECTED CONTENTS ***************"
+        Write-Host " `n`n************* DIFFERENCES (IGNORING METADATA) ****************`n"
+        $diffs | Out-String | Write-Information Write-Host " `n***************** END OF DIFFERENCES ***************"
     }
-    
     return $false
 }
 else {
-    if($WEWriteToHost) {
-        Write-WELog " Files are identical (not counting metadata)" " INFO"
+    if($WriteToHost) {
+        Write-Host "Files are identical (not counting metadata)"
     }
     return $true
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,45 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Configuredcvm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Configuredcvm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-﻿configuration ConfigureDCVM
+configuration ConfigureDCVM
 {
     [CmdletBinding()
 try {
@@ -47,16 +16,15 @@ try {
 ]
 $ErrorActionPreference = "Stop"
 param(
-        [Parameter(Mandatory)] [String]$WEDomainFQDN,
-        [Parameter(Mandatory)] [String]$WEPrivateIP,
-        [Parameter(Mandatory)] [String]$WESPServerName,
-        [Parameter(Mandatory)] [String]$WESharePointSitesAuthority,
-        [Parameter(Mandatory)] [String]$WESharePointCentralAdminPort,
-        [Parameter ()] [Boolean]$WEApplyBrowserPolicies = $true,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$WEAdmincreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$WEAdfsSvcCreds
+        [Parameter(Mandatory)] [String]$DomainFQDN,
+        [Parameter(Mandatory)] [String]$PrivateIP,
+        [Parameter(Mandatory)] [String]$SPServerName,
+        [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
+        [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
+        [Parameter ()] [Boolean]$ApplyBrowserPolicies = $true,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$Admincreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$AdfsSvcCreds
     )
-
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.6.2
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryCSDsc -ModuleVersion 5.0.0
@@ -64,293 +32,277 @@ param(
     Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
     Import-DscResource -ModuleName AdfsDsc -ModuleVersion 1.4.0
-
     # Init
-    [String] $WEInterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
-    [String] $WEComputerName = Get-Content -ErrorAction Stop env:computername
-    [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
-    [String] $WEAdditionalUsersPath = " OU=AdditionalUsers,DC={0},DC={1}" -f $WEDomainFQDN.Split('.')[0], $WEDomainFQDN.Split('.')[1]
-
+    [String] $InterfaceAlias = (Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1).Name
+    [String] $ComputerName = Get-Content -ErrorAction Stop env:computername
+    [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
+    [String] $AdditionalUsersPath = "OU=AdditionalUsers,DC={0},DC={1}" -f $DomainFQDN.Split('.')[0], $DomainFQDN.Split('.')[1]
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainCredsNetbios = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential] $WEAdfsSvcCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdfsSvcCreds.UserName)" , $WEAdfsSvcCreds.Password)
-
-    [String] $WESetupPath = " C:\DSC Data"
-
+    [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($Admincreds.UserName)" , $Admincreds.Password)
+    [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($AdfsSvcCreds.UserName)" , $AdfsSvcCreds.Password)
+    [String] $SetupPath = "C:\DSC Data"
     # ADFS settings
-    [String] $WEADFSSiteName = " adfs"
-    [String] $WEAdfsOidcAGName = " SPS-Subscription-OIDC"
-    [String] $WEAdfsOidcIdentifier = " fae5bd07-be63-4a64-a28c-7931a4ebf62b"
-    
+    [String] $ADFSSiteName = " adfs"
+    [String] $AdfsOidcAGName = "SPS-Subscription-OIDC"
+    [String] $AdfsOidcIdentifier = " fae5bd07-be63-4a64-a28c-7931a4ebf62b"
     # SharePoint settings
-    [String] $centralAdminUrl = " http://{0}:{1}/" -f $WESPServerName, $WESharePointCentralAdminPort
-    [String] $rootSiteDefaultZone = " http://{0}/" -f $WESharePointSitesAuthority
-    [String] $rootSiteIntranetZone = " https://{0}.{1}/" -f $WESharePointSitesAuthority, $WEDomainFQDN
-    [String] $WEAppDomainFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps" , $WEDomainFQDN.Split('.')[1]
-    [String];  $WEAppDomainIntranetFQDN = " {0}{1}.{2}" -f $WEDomainFQDN.Split('.')[0], " Apps-Intranet" , $WEDomainFQDN.Split('.')[1]
-
+    [String] $centralAdminUrl = " http://{0}:{1}/" -f $SPServerName, $SharePointCentralAdminPort
+    [String] $rootSiteDefaultZone = " http://{0}/" -f $SharePointSitesAuthority
+    [String] $rootSiteIntranetZone = "https://{0}.{1}/" -f $SharePointSitesAuthority, $DomainFQDN
+    [String] $AppDomainFQDN = " {0}{1}.{2}" -f $DomainFQDN.Split('.')[0], "Apps" , $DomainFQDN.Split('.')[1]
+    [String];  $AppDomainIntranetFQDN = " {0}{1}.{2}" -f $DomainFQDN.Split('.')[0], "Apps-Intranet" , $DomainFQDN.Split('.')[1]
     # Browser policies
     # Edge
-    [System.Object[]];  $WEEdgePolicies = @(
+    [System.Object[]];  $EdgePolicies = @(
         @{
-            policyValueName        = " HideFirstRunExperience" ;
+            policyValueName        = "HideFirstRunExperience" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " TrackingPrevention" ;
+            policyValueName        = "TrackingPrevention" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 3;
         },
         @{
-            policyValueName        = " AdsTransparencyEnabled" ;
+            policyValueName        = "AdsTransparencyEnabled" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " BingAdsSuppression" ;
+            policyValueName        = "BingAdsSuppression" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " AdsSettingForIntrusiveAdsSites" ;
+            policyValueName        = "AdsSettingForIntrusiveAdsSites" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 2;
         },
         @{
-            policyValueName        = " AskBeforeCloseEnabled" ;
+            policyValueName        = "AskBeforeCloseEnabled" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " BlockThirdPartyCookies" ;
+            policyValueName        = "BlockThirdPartyCookies" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " ConfigureDoNotTrack" ;
+            policyValueName        = "ConfigureDoNotTrack" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " DiagnosticData" ;
+            policyValueName        = "DiagnosticData" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " HubsSidebarEnabled" ;
+            policyValueName        = "HubsSidebarEnabled" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " HomepageIsNewTabPage" ;
+            policyValueName        = "HomepageIsNewTabPage" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " HomepageLocation" ;
+            policyValueName        = "HomepageLocation" ;
             policyCanBeRecommended = $true;
             policyValueValue       = " edge://newtab" ;
         },
         @{
-            policyValueName        = " ShowHomeButton" ;
+            policyValueName        = "ShowHomeButton" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " NewTabPageLocation" ;
+            policyValueName        = "NewTabPageLocation" ;
             policyCanBeRecommended = $true;
             policyValueValue       = " about://blank" ;
         },
         @{
-            policyValueName        = " NewTabPageQuickLinksEnabled" ;
+            policyValueName        = "NewTabPageQuickLinksEnabled" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " NewTabPageContentEnabled" ;
+            policyValueName        = "NewTabPageContentEnabled" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " NewTabPageAllowedBackgroundTypes" ;
+            policyValueName        = "NewTabPageAllowedBackgroundTypes" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 3;
         },
         @{
-            policyValueName        = " NewTabPageAppLauncherEnabled" ;
+            policyValueName        = "NewTabPageAppLauncherEnabled" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " ManagedFavorites" ;
+            policyValueName        = "ManagedFavorites" ;
             policyCanBeRecommended = $false;
-            policyValueValue       = " [{ "" toplevel_name"" : "" SharePoint"" }, { "" name"" : "" Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" name"" : "" Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" name"" : "" Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
+            policyValueValue       = " [{ "" toplevel_name"" : ""SharePoint"" }, { "" name"" : ""Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" name"" : ""Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" name"" : ""Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
         },
         @{
-            policyValueName        = " NewTabPageManagedQuickLinks" ;
+            policyValueName        = "NewTabPageManagedQuickLinks" ;
             policyCanBeRecommended = $true;
-            policyValueValue       = " [{"" pinned"" : true, "" title"" : "" Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" pinned"" : true, "" title"" : "" Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" pinned"" : true, "" title"" : "" Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
+            policyValueValue       = " [{"" pinned"" : true, "" title"" : ""Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" pinned"" : true, "" title"" : ""Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" pinned"" : true, "" title"" : ""Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
         }
     )
-
-    [System.Object[]] $WEChromePolicies = @(
+    [System.Object[]] $ChromePolicies = @(
         @{
-            policyValueName        = " MetricsReportingEnabled" ;
+            policyValueName        = "MetricsReportingEnabled" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " PromotionalTabsEnabled" ;
+            policyValueName        = "PromotionalTabsEnabled" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 0;
         },
         @{
-            policyValueName        = " AdsSettingForIntrusiveAdsSites" ;
+            policyValueName        = "AdsSettingForIntrusiveAdsSites" ;
             policyCanBeRecommended = $false;
             policyValueValue       = 2;
         },
         @{
-            policyValueName        = " BlockThirdPartyCookies" ;
+            policyValueName        = "BlockThirdPartyCookies" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " HomepageIsNewTabPage" ;
+            policyValueName        = "HomepageIsNewTabPage" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " HomepageLocation" ;
+            policyValueName        = "HomepageLocation" ;
             policyCanBeRecommended = $true;
             policyValueValue       = " edge://newtab" ;
         },
         @{
-            policyValueName        = " ShowHomeButton" ;
+            policyValueName        = "ShowHomeButton" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " NewTabPageLocation" ;
+            policyValueName        = "NewTabPageLocation" ;
             policyCanBeRecommended = $false;
             policyValueValue       = " about://blank" ;
         },
         @{
-            policyValueName        = " BookmarkBarEnabled" ;
+            policyValueName        = "BookmarkBarEnabled" ;
             policyCanBeRecommended = $true;
             policyValueValue       = 1;
         },
         @{
-            policyValueName        = " ManagedBookmarks" ;
+            policyValueName        = "ManagedBookmarks" ;
             policyCanBeRecommended = $false;
-            policyValueValue       = " [{ "" toplevel_name"" : "" SharePoint"" }, { "" name"" : "" Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" name"" : "" Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" name"" : "" Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
+            policyValueValue       = " [{ "" toplevel_name"" : ""SharePoint"" }, { "" name"" : ""Central administration"" , "" url"" : "" $centralAdminUrl"" }, { "" name"" : ""Root site - Default zone"" , "" url"" : "" $rootSiteDefaultZone"" }, { "" name"" : ""Root site - Intranet zone"" , "" url"" : "" $rootSiteIntranetZone"" }]" ;
         }
     )
-
-    [System.Object[]] $WEAdditionalUsers = @(
+    [System.Object[]] $AdditionalUsers = @(
         @{
-            DisplayName = " Marie Berthelette" ;
-            UserName    = " MarieB"
+            DisplayName = "Marie Berthelette" ;
+            UserName    = "MarieB"
         },
         @{
-            DisplayName = " Camille Cartier" ;
-            UserName    = " CamilleC"
+            DisplayName = "Camille Cartier" ;
+            UserName    = "CamilleC"
         },
         @{
-            DisplayName = " Elisabeth Arcouet" ;
-            UserName    = " ElisabethA"
+            DisplayName = "Elisabeth Arcouet" ;
+            UserName    = "ElisabethA"
         },
         @{
-            DisplayName = " Ana Bowman" ;
-            UserName    = " AnaB"
+            DisplayName = "Ana Bowman" ;
+            UserName    = "AnaB"
         },
         @{
-            DisplayName = " Olivia Wilson" ;
-            UserName    = " OliviaW"
+            DisplayName = "Olivia Wilson" ;
+            UserName    = "OliviaW"
         }
     )
-
     Node localhost
     {
         LocalConfigurationManager {
             ConfigurationMode  = 'ApplyOnly'
             RebootNodeIfNeeded = $true
         }
-
-        # Fix emerging issue " WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
+        # Fix emerging issue "WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
         Script SetWindowsAzureGuestAgentDepndencyOnDNS {
             GetScript  = { }
             TestScript = { return $false }
-            SetScript  = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name " DependOnService" -Type MultiString -Value " DNS" }
+            SetScript  = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name "DependOnService" -Type MultiString -Value "DNS" }
         }
-
         #**********************************************************
         # Create AD domain
         #**********************************************************
         # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
-        # " System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
+        # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
         WindowsFeature AddADFS {
-            Name = " ADFS-Federation" ; Ensure = " Present" ; 
+            Name = "ADFS-Federation" ; Ensure = "Present" ;
         }
         WindowsFeature AddADDS {
-            Name = " AD-Domain-Services" ; Ensure = " Present" 
+            Name = "AD-Domain-Services" ; Ensure = "Present"
         }
         WindowsFeature AddDNS {
-            Name = " DNS" ; Ensure = " Present" 
+            Name = "DNS" ; Ensure = "Present"
         }
         DnsServerAddress SetDNS {
-            Address = '127.0.0.1' ; InterfaceAlias = $WEInterfaceAlias; AddressFamily = 'IPv4' 
+            Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily = 'IPv4'
         }
         # IPAddress NewIPv4Address
         # {
-        #     IPAddress = '10.1.1.4'; InterfaceAlias = $WEInterfaceAlias; AddressFamily  = 'IPV4'
+        #     IPAddress = '10.1.1.4'; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPV4'
         # }
-
         ADDomain CreateADForest {
-            DomainName                    = $WEDomainFQDN
-            Credential                    = $WEDomainCredsNetbios
-            SafemodeAdministratorPassword = $WEDomainCredsNetbios
-            DatabasePath                  = " C:\NTDS"
-            LogPath                       = " C:\NTDS"
-            SysvolPath                    = " C:\SYSVOL"
-            DependsOn                     = " [DnsServerAddress]SetDNS" , " [WindowsFeature]AddADDS"
+            DomainName                    = $DomainFQDN
+            Credential                    = $DomainCredsNetbios
+            SafemodeAdministratorPassword = $DomainCredsNetbios
+            DatabasePath                  = "C:\NTDS"
+            LogPath                       = "C:\NTDS"
+            SysvolPath                    = "C:\SYSVOL"
+            DependsOn                     = " [DnsServerAddress]SetDNS" , "[WindowsFeature]AddADDS"
         }
-
         PendingReboot RebootOnSignalFromCreateADForest {
-            Name      = " RebootOnSignalFromCreateADForest"
+            Name      = "RebootOnSignalFromCreateADForest"
             DependsOn = " [ADDomain]CreateADForest"
         }
-
         WaitForADDomain WaitForDCReady {
-            DomainName              = $WEDomainFQDN
+            DomainName              = $DomainFQDN
             WaitTimeout             = 300
             RestartCount            = 3
-            Credential              = $WEDomainCredsNetbios
+            Credential              = $DomainCredsNetbios
             WaitForValidCredentials = $true
             DependsOn               = " [PendingReboot]RebootOnSignalFromCreateADForest"
         }
-
-        if ($true -eq $WEApplyBrowserPolicies) {
+        if ($true -eq $ApplyBrowserPolicies) {
             # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
             # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
             Script ConfigureEdgePolicies {
                 SetScript  = {
                     $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = " HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
                     $policies = $using:EdgePolicies
-                    $gpo = New-GPO -name " Edge_browser"
+                    $gpo = New-GPO -name "Edge_browser"
                     New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
                     foreach ($policy in $policies) {
                         $key = $registryKey
                         if ($true -eq $policy.policyCanBeRecommended) { $key = $key + " \Recommended" }
-                        $valueType = if ($policy.policyValueValue -is [int]) { " DWORD" } else { " STRING" }
+                        $valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
                         Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
                     }
                 }
-                GetScript  = { return @{ " Result" = " false" } }
+                GetScript  = { return @{ "Result" = " false" } }
                 TestScript = {
-                    $policy = Get-GPO -name " Edge_browser" -ErrorAction SilentlyContinue
+                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
                     if ($null -eq $policy) {
                         return $false
                     }
@@ -359,26 +311,24 @@ param(
                     }
                 }
             }
-
             # Chrome - https://chromeenterprise.google/intl/en_us/policies/
             Script ConfigureChromePolicies {
                 SetScript  = {
                     $domain = Get-ADDomain -Current LocalComputer
-                    $registryKey = " HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
                     $policies = $using:ChromePolicies
-                    $gpo = New-GPO -name " Chrome_browser"
+                    $gpo = New-GPO -name "Chrome_browser"
                     New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
-
                     foreach ($policy in $policies) {
                         $key = $registryKey
                         if ($true -eq $policy.policyCanBeRecommended) { $key = $key + " \Recommended" }
-                       ;  $valueType = if ($policy.policyValueValue -is [int]) { " DWORD" } else { " STRING" }
+$valueType = if ($policy.policyValueValue -is [int]) { "DWORD" } else { "STRING" }
                         Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
                     }
                 }
-                GetScript  = { return @{ " Result" = " false" } }
+                GetScript  = { return @{ "Result" = " false" } }
                 TestScript = {
-                   ;  $policy = Get-GPO -name " Chrome_browser" -ErrorAction SilentlyContinue
+$policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
                     if ($null -eq $policy) {
                         return $false
                     }
@@ -388,196 +338,180 @@ param(
                 }
             }
         }
-        
         #**********************************************************
         # Configuration needed by SharePoint farm
         #**********************************************************
         DnsServerPrimaryZone CreateAppsDnsZone {
-            Name      = $WEAppDomainFQDN
-            Ensure    = " Present"
+            Name      = $AppDomainFQDN
+            Ensure    = "Present"
             DependsOn = " [WaitForADDomain]WaitForDCReady"
         }
-
         DnsServerPrimaryZone CreateAppsIntranetDnsZone {
-            Name      = $WEAppDomainIntranetFQDN
-            Ensure    = " Present"
+            Name      = $AppDomainIntranetFQDN
+            Ensure    = "Present"
             DependsOn = " [WaitForADDomain]WaitForDCReady"
         }
-
         ADUser SetEmailOfDomainAdmin {
-            DomainName           = $WEDomainFQDN
-            UserName             = $WEAdmincreds.UserName
-            EmailAddress         = " $($WEAdmincreds.UserName)@$WEDomainFQDN"
-            UserPrincipalName    = " $($WEAdmincreds.UserName)@$WEDomainFQDN"
+            DomainName           = $DomainFQDN
+            UserName             = $Admincreds.UserName
+            EmailAddress         = " $($Admincreds.UserName)@WEDomainFQDN"
+            UserPrincipalName    = " $($Admincreds.UserName)@WEDomainFQDN"
             PasswordNeverExpires = $true
-            Ensure               = " Present"
+            Ensure               = "Present"
             DependsOn            = " [WaitForADDomain]WaitForDCReady"
         }
-
         #**********************************************************
         # Configure AD CS
         #**********************************************************
         WindowsFeature AddADCSFeature {
-            Name = " ADCS-Cert-Authority" ; Ensure = " Present" ; DependsOn = " [WaitForADDomain]WaitForDCReady" 
+            Name = "ADCS-Cert-Authority" ; Ensure = "Present" ; DependsOn = " [WaitForADDomain]WaitForDCReady"
         }
-        
         ADCSCertificationAuthority CreateADCSAuthority {
-            IsSingleInstance = " Yes"
-            CAType           = " EnterpriseRootCA"
-            Ensure           = " Present"
-            Credential       = $WEDomainCredsNetbios
+            IsSingleInstance = "Yes"
+            CAType           = "EnterpriseRootCA"
+            Ensure           = "Present"
+            Credential       = $DomainCredsNetbios
             DependsOn        = " [WindowsFeature]AddADCSFeature"
         }
-
         WaitForCertificateServices WaitAfterADCSProvisioning {
-            CAServerFQDN         = " $WEComputerName.$WEDomainFQDN"
-            CARootName           = " $WEDomainNetbiosName-$WEComputerName-CA"
+            CAServerFQDN         = " $ComputerName.$DomainFQDN"
+            CARootName           = " $DomainNetbiosName-$ComputerName-CA"
             DependsOn            = '[ADCSCertificationAuthority]CreateADCSAuthority'
-            PsDscRunAsCredential = $WEDomainCredsNetbios
+            PsDscRunAsCredential = $DomainCredsNetbios
         }
-
         CertReq GenerateLDAPSCertificate {
-            CARootName          = " $WEDomainNetbiosName-$WEComputerName-CA"
-            CAServerFQDN        = " $WEComputerName.$WEDomainFQDN"
-            Subject             = " CN=$WEComputerName.$WEDomainFQDN"
-            FriendlyName        = " LDAPS certificate for $WEComputerName.$WEDomainFQDN"
+            CARootName          = " $DomainNetbiosName-$ComputerName-CA"
+            CAServerFQDN        = " $ComputerName.$DomainFQDN"
+            Subject             = "CN=$ComputerName.$DomainFQDN"
+            FriendlyName        = "LDAPS certificate for $ComputerName.$DomainFQDN"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
+            ProviderName        = '"Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
             AutoRenew           = $true
-            Credential          = $WEDomainCredsNetbios
+            Credential          = $DomainCredsNetbios
             DependsOn           = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
-
         #**********************************************************
         # Configure AD FS
         #**********************************************************
         CertReq GenerateADFSSiteCertificate {
-            CARootName          = " $WEDomainNetbiosName-$WEComputerName-CA"
-            CAServerFQDN        = " $WEComputerName.$WEDomainFQDN"
-            Subject             = " $WEADFSSiteName.$WEDomainFQDN"
-            FriendlyName        = " $WEADFSSiteName.$WEDomainFQDN site certificate"
+            CARootName          = " $DomainNetbiosName-$ComputerName-CA"
+            CAServerFQDN        = " $ComputerName.$DomainFQDN"
+            Subject             = " $ADFSSiteName.$DomainFQDN"
+            FriendlyName        = " $ADFSSiteName.$DomainFQDN site certificate"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
+            ProviderName        = '"Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
             AutoRenew           = $true
-            SubjectAltName      = " dns=certauth.$WEADFSSiteName.$WEDomainFQDN&dns=$WEADFSSiteName.$WEDomainFQDN&dns=enterpriseregistration.$WEDomainFQDN"
-            Credential          = $WEDomainCredsNetbios
+            SubjectAltName      = " dns=certauth.$ADFSSiteName.$DomainFQDN&dns=$ADFSSiteName.$DomainFQDN&dns=enterpriseregistration.$DomainFQDN"
+            Credential          = $DomainCredsNetbios
             DependsOn           = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
-
         CertReq GenerateADFSSigningCertificate {
-            CARootName          = " $WEDomainNetbiosName-$WEComputerName-CA"
-            CAServerFQDN        = " $WEComputerName.$WEDomainFQDN"
-            Subject             = " $WEADFSSiteName.Signing"
-            FriendlyName        = " $WEADFSSiteName Signing"
+            CARootName          = " $DomainNetbiosName-$ComputerName-CA"
+            CAServerFQDN        = " $ComputerName.$DomainFQDN"
+            Subject             = " $ADFSSiteName.Signing"
+            FriendlyName        = " $ADFSSiteName Signing"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
+            ProviderName        = '"Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
             AutoRenew           = $true
-            Credential          = $WEDomainCredsNetbios
+            Credential          = $DomainCredsNetbios
             DependsOn           = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
-
         CertReq GenerateADFSDecryptionCertificate {
-            CARootName          = " $WEDomainNetbiosName-$WEComputerName-CA"
-            CAServerFQDN        = " $WEComputerName.$WEDomainFQDN"
-            Subject             = " $WEADFSSiteName.Decryption"
-            FriendlyName        = " $WEADFSSiteName Decryption"
+            CARootName          = " $DomainNetbiosName-$ComputerName-CA"
+            CAServerFQDN        = " $ComputerName.$DomainFQDN"
+            Subject             = " $ADFSSiteName.Decryption"
+            FriendlyName        = " $ADFSSiteName Decryption"
             KeyLength           = '2048'
             Exportable          = $true
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
+            ProviderName        = '"Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = '0xa0'
             CertificateTemplate = 'WebServer'
             AutoRenew           = $true
-            Credential          = $WEDomainCredsNetbios
+            Credential          = $DomainCredsNetbios
             DependsOn           = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
-
         Script ExportCertificates {
-            SetScript  = 
+            SetScript  =
             {
                 $destinationPath = $using:SetupPath
-                $adfsSigningCertName = " ADFS Signing.cer"
-               ;  $adfsSigningIssuerCertName = " ADFS Signing issuer.cer"
-                Write-Verbose -Verbose -Message " Exporting public key of ADFS signing / signing issuer certificates..."
+                $adfsSigningCertName = "ADFS Signing.cer"
+$adfsSigningIssuerCertName = "ADFS Signing issuer.cer"
+                Write-Verbose -Verbose -Message "Exporting public key of ADFS signing / signing issuer certificates..."
                 New-Item -ErrorAction Stop $destinationPath -Type directory -ErrorAction SilentlyContinue
-               ;  $signingCert = Get-ChildItem -Path " cert:\LocalMachine\My\" -DnsName " $using:ADFSSiteName.Signing"
+$signingCert = Get-ChildItem -Path " cert:\LocalMachine\My\" -DnsName " $using:ADFSSiteName.Signing"
                 $signingCert | Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertName))
                 Get-ChildItem -Path " cert:\LocalMachine\Root\" | Where-Object { $_.Subject -eq $signingCert.Issuer } | Select-Object -First 1 | Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertName))
-                Write-Verbose -Verbose -Message " Public key of ADFS signing / signing issuer certificates successfully exported"
+                Write-Verbose -Verbose -Message "Public key of ADFS signing / signing issuer certificates successfully exported"
             }
-            GetScript  =  
+            GetScript  =
             {
                 # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                return @{ " Result" = " false" }
+                return @{ "Result" = " false" }
             }
-            TestScript = 
+            TestScript =
             {
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 return $false
             }
-            DependsOn  = " [CertReq]GenerateADFSSiteCertificate" , " [CertReq]GenerateADFSSigningCertificate" , " [CertReq]GenerateADFSDecryptionCertificate"
+            DependsOn  = " [CertReq]GenerateADFSSiteCertificate" , "[CertReq]GenerateADFSSigningCertificate" , "[CertReq]GenerateADFSDecryptionCertificate"
         }
-
         ADUser CreateAdfsSvcAccount {
-            DomainName             = $WEDomainFQDN
-            UserName               = $WEAdfsSvcCreds.UserName
-            UserPrincipalName      = " $($WEAdfsSvcCreds.UserName)@$WEDomainFQDN"
-            Password               = $WEAdfsSvcCreds
+            DomainName             = $DomainFQDN
+            UserName               = $AdfsSvcCreds.UserName
+            UserPrincipalName      = " $($AdfsSvcCreds.UserName)@WEDomainFQDN"
+            Password               = $AdfsSvcCreds
             PasswordAuthentication = 'Negotiate'
             PasswordNeverExpires   = $true
-            Ensure                 = " Present"
-            DependsOn              = " [CertReq]GenerateADFSSiteCertificate" , " [CertReq]GenerateADFSSigningCertificate" , " [CertReq]GenerateADFSDecryptionCertificate"
+            Ensure                 = "Present"
+            DependsOn              = " [CertReq]GenerateADFSSiteCertificate" , "[CertReq]GenerateADFSSigningCertificate" , "[CertReq]GenerateADFSDecryptionCertificate"
         }
-
         # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
         DnsRecordCname AddADFSDevideRegistrationAlias {
             Name          = " enterpriseregistration"
-            ZoneName      = $WEDomainFQDN
-            HostNameAlias = " $WEComputerName.$WEDomainFQDN"
-            Ensure        = " Present"
+            ZoneName      = $DomainFQDN
+            HostNameAlias = " $ComputerName.$DomainFQDN"
+            Ensure        = "Present"
             DependsOn     = " [WaitForADDomain]WaitForDCReady"
         }
-
         AdfsFarm CreateADFSFarm {
-            FederationServiceName        = " $WEADFSSiteName.$WEDomainFQDN"
-            FederationServiceDisplayName = " $WEADFSSiteName.$WEDomainFQDN"
-            CertificateDnsName           = " $WEADFSSiteName.$WEDomainFQDN"
-            SigningCertificateDnsName    = " $WEADFSSiteName.Signing"
-            DecryptionCertificateDnsName = " $WEADFSSiteName.Decryption"
-            ServiceAccountCredential     = $WEAdfsSvcCredsQualified
-            Credential                   = $WEDomainCredsNetbios
+            FederationServiceName        = " $ADFSSiteName.$DomainFQDN"
+            FederationServiceDisplayName = " $ADFSSiteName.$DomainFQDN"
+            CertificateDnsName           = " $ADFSSiteName.$DomainFQDN"
+            SigningCertificateDnsName    = " $ADFSSiteName.Signing"
+            DecryptionCertificateDnsName = " $ADFSSiteName.Decryption"
+            ServiceAccountCredential     = $AdfsSvcCredsQualified
+            Credential                   = $DomainCredsNetbios
             DependsOn                    = " [WindowsFeature]AddADFS"
         }
-
         # This DNS record is tested by other VMs to join AD only after it was found
         # It is added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot of the DC
         DnsRecordA AddADFSHostDNS {
-            Name        = $WEADFSSiteName
-            ZoneName    = $WEDomainFQDN
-            IPv4Address = $WEPrivateIP
-            Ensure      = " Present"
+            Name        = $ADFSSiteName
+            ZoneName    = $DomainFQDN
+            IPv4Address = $PrivateIP
+            Ensure      = "Present"
             DependsOn   = " [AdfsFarm]CreateADFSFarm"
         }
-
         ADFSRelyingPartyTrust CreateADFSRelyingParty {
-            Name                       = $WESharePointSitesAuthority
-            Identifier                 = " urn:sharepoint:$($WESharePointSitesAuthority)"
-            ClaimsProviderName         = @(" Active Directory" )
-            WSFedEndpoint              = " https://$WESharePointSitesAuthority.$WEDomainFQDN/_trust/"
-            ProtocolProfile            = " WsFed-SAML"
-            AdditionalWSFedEndpoint    = @(" https://*.$WEDomainFQDN/" )
+            Name                       = $SharePointSitesAuthority
+            Identifier                 = " urn:sharepoint:$($SharePointSitesAuthority)"
+            ClaimsProviderName         = @("Active Directory" )
+            WSFedEndpoint              = "https://$SharePointSitesAuthority.$DomainFQDN/_trust/"
+            ProtocolProfile            = "WsFed-SAML"
+            AdditionalWSFedEndpoint    = @(" https://*.$DomainFQDN/" )
             IssuanceAuthorizationRules = ' => issue(Type = " http://schemas.microsoft.com/authorization/claims/permit" , value = " true" );'
             IssuanceTransformRules     = @(
                 MSFT_AdfsIssuanceTransformRule {
@@ -601,33 +535,30 @@ param(
                 }
             )
             Ensure                     = 'Present'
-            PsDscRunAsCredential       = $WEDomainCredsNetbios
+            PsDscRunAsCredential       = $DomainCredsNetbios
             DependsOn                  = " [AdfsFarm]CreateADFSFarm"
         }
-
         AdfsApplicationGroup OidcGroup {
-            Name                 = $WEAdfsOidcAGName
-            Description          = " OIDC for SharePoint Subscription"
-            PsDscRunAsCredential = $WEDomainCredsNetbios
+            Name                 = $AdfsOidcAGName
+            Description          = "OIDC for SharePoint Subscription"
+            PsDscRunAsCredential = $DomainCredsNetbios
             DependsOn            = " [AdfsFarm]CreateADFSFarm"
         }
-
         AdfsNativeClientApplication OidcNativeApp {
-            Name                       = " $WEAdfsOidcAGName - Native application"
-            ApplicationGroupIdentifier = $WEAdfsOidcAGName
-            Identifier                 = $WEAdfsOidcIdentifier
-            RedirectUri                = " https://*.$WEDomainFQDN/"
+            Name                       = " $AdfsOidcAGName - Native application"
+            ApplicationGroupIdentifier = $AdfsOidcAGName
+            Identifier                 = $AdfsOidcIdentifier
+            RedirectUri                = "https://*.$DomainFQDN/"
             DependsOn                  = " [AdfsApplicationGroup]OidcGroup"
         }
-
         AdfsWebApiApplication OidcWebApiApp {
-            Name                          = " $WEAdfsOidcAGName - Web API"
-            ApplicationGroupIdentifier    = $WEAdfsOidcAGName
-            Identifier                    = $WEAdfsOidcIdentifier
-            AccessControlPolicyName       = " Permit everyone"
+            Name                          = " $AdfsOidcAGName - Web API"
+            ApplicationGroupIdentifier    = $AdfsOidcAGName
+            Identifier                    = $AdfsOidcIdentifier
+            AccessControlPolicyName       = "Permit everyone"
             AlwaysRequireAuthentication   = $false
-            AllowedClientTypes            = " Public" , " Confidential"
-            IssueOAuthRefreshTokensTo     = " AllDevices"
+            AllowedClientTypes            = "Public" , "Confidential"
+            IssueOAuthRefreshTokensTo     = "AllDevices"
             NotBeforeSkew                 = 0
             RefreshTokenProtectionEnabled = $true
             RequestMFAFromClaimsProviders = $false
@@ -653,47 +584,42 @@ param(
                     )
                 }
                 MSFT_AdfsIssuanceTransformRule {
-                    TemplateName = " CustomClaims"
+                    TemplateName = "CustomClaims"
                     Name         = " nbf"
-                    CustomRule   = 'c:[Type == " http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname" ] 
+                    CustomRule   = 'c:[Type == " http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname" ]
 => issue(Type = " nbf" , Value = " 0" );'
                 }
             )
             DependsOn                     = " [AdfsApplicationGroup]OidcGroup"
         }
-
         AdfsApplicationPermission OidcWebApiAppPermission {
-            ClientRoleIdentifier = $WEAdfsOidcIdentifier
-            ServerRoleIdentifier = $WEAdfsOidcIdentifier
+            ClientRoleIdentifier = $AdfsOidcIdentifier
+            ServerRoleIdentifier = $AdfsOidcIdentifier
             ScopeNames           = " openid"
-            DependsOn            = " [AdfsNativeClientApplication]OidcNativeApp" , " [AdfsWebApiApplication]OidcWebApiApp"
+            DependsOn            = " [AdfsNativeClientApplication]OidcNativeApp" , "[AdfsWebApiApplication]OidcWebApiApp"
         }
-
         WindowsFeature AddADTools {
-            Name = " RSAT-AD-Tools" ; Ensure = " Present" ; 
-        }        
+            Name = "RSAT-AD-Tools" ; Ensure = "Present" ;
+        }
         WindowsFeature AddDnsTools {
-            Name = " RSAT-DNS-Server" ; Ensure = " Present" ; 
+            Name = "RSAT-DNS-Server" ; Ensure = "Present" ;
         }
         WindowsFeature AddADLDS {
-            Name = " RSAT-ADLDS" ; Ensure = " Present" ; 
+            Name = "RSAT-ADLDS" ; Ensure = "Present" ;
         }
         WindowsFeature AddADCSManagementTools {
-            Name = " RSAT-ADCS-Mgmt" ; Ensure = " Present" ; 
+            Name = "RSAT-ADCS-Mgmt" ; Ensure = "Present" ;
         }
-
         Script EnableFileSharing {
             GetScript  = { }
-            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup " File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq " Domain" }) }
-            SetScript  = { Set-NetFirewallRule -DisplayGroup " File And Printer Sharing" -Enabled True -Profile Domain }
+            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq "Domain" }) }
+            SetScript  = { Set-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -Profile Domain }
         }
-
         Script EnableRemoteEventViewerConnection {
             GetScript  = { }
-            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup " Remote Event Log Management" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq " Domain" }) }
-            SetScript  = { Set-NetFirewallRule -DisplayGroup " Remote Event Log Management" -Enabled True -Profile Any }
+            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup "Remote Event Log Management" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq "Domain" }) }
+            SetScript  = { Set-NetFirewallRule -DisplayGroup "Remote Event Log Management" -Enabled True -Profile Any }
         }
-
         #******************************************************************
         # Set insecure LDAP configurations from default 1 to 2 to avoid elevation of priviledge vulnerability on AD domain controller
         # Mitigate https://msrc.microsoft.com/update-guide/vulnerability/CVE-2017-8563 using https://support.microsoft.com/en-us/topic/use-the-ldapenforcechannelbinding-registry-entry-to-make-ldap-authentication-over-ssl-tls-more-secure-e9ecfa27-5e57-8519-6ba3-d2c06b21812e
@@ -701,15 +627,15 @@ param(
         Script EnforceLdapAuthOverTls {
             SetScript  = {
                 $domain = Get-ADDomain -Current LocalComputer
-                $key = " HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NTDS\Parameters"
-                $gpo = New-GPO -name " EnforceLdapAuthOverTls"
+                $key = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NTDS\Parameters"
+                $gpo = New-GPO -name "EnforceLdapAuthOverTls"
                 New-GPLink -Guid $gpo.Id -Target $domain.DomainControllersContainer -order 1
-                Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName " LdapEnforceChannelBinding" -Type DWORD -value 2
+                Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName "LdapEnforceChannelBinding" -Type DWORD -value 2
                 Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName " ldapserverintegrity" -Type DWORD -value 2
             }
-            GetScript  = { return @{ " Result" = " false" } }
+            GetScript  = { return @{ "Result" = " false" } }
             TestScript = {
-                $policy = Get-GPO -name " EnforceLdapAuthOverTls" -ErrorAction SilentlyContinue
+                $policy = Get-GPO -name "EnforceLdapAuthOverTls" -ErrorAction SilentlyContinue
                 if ($null -eq $policy) {
                     return $false
                 }
@@ -718,63 +644,55 @@ param(
                 }
             }
         }
-
         ADOrganizationalUnit AdditionalUsersOU {
-            Name                            = $WEAdditionalUsersPath.Split(',')[0].Substring(3)
-            Path                            = $WEAdditionalUsersPath.Substring($WEAdditionalUsersPath.IndexOf(',') + 1)
+            Name                            = $AdditionalUsersPath.Split(',')[0].Substring(3)
+            Path                            = $AdditionalUsersPath.Substring($AdditionalUsersPath.IndexOf(',') + 1)
             ProtectedFromAccidentalDeletion = $false
             Ensure                          = 'Present'
             DependsOn                       = " [WaitForADDomain]WaitForDCReady"
         }
-
-        foreach ($WEAdditionalUser in $WEAdditionalUsers) {
-            ADUser " ExtraUser_$($WEAdditionalUser.UserName)" {
-                DomainName           = $WEDomainFQDN
-                Path                 = $WEAdditionalUsersPath
-                UserName             = $WEAdditionalUser.UserName
-                EmailAddress         = " $($WEAdditionalUser.UserName)@$WEDomainFQDN"
-                UserPrincipalName    = " $($WEAdditionalUser.UserName)@$WEDomainFQDN"
-                DisplayName          = $WEAdditionalUser.DisplayName
-                GivenName            = $WEAdditionalUser.DisplayName.Split(' ')[0]
-                Surname              = $WEAdditionalUser.DisplayName.Split(' ')[1]
+        foreach ($AdditionalUser in $AdditionalUsers) {
+            ADUser "ExtraUser_$($AdditionalUser.UserName)" {
+                DomainName           = $DomainFQDN
+                Path                 = $AdditionalUsersPath
+                UserName             = $AdditionalUser.UserName
+                EmailAddress         = " $($AdditionalUser.UserName)@WEDomainFQDN"
+                UserPrincipalName    = " $($AdditionalUser.UserName)@WEDomainFQDN"
+                DisplayName          = $AdditionalUser.DisplayName
+                GivenName            = $AdditionalUser.DisplayName.Split(' ')[0]
+                Surname              = $AdditionalUser.DisplayName.Split(' ')[1]
                 PasswordNeverExpires = $true
-                Password             = $WEAdfsSvcCreds
-                Ensure               = " Present"
+                Password             = $AdfsSvcCreds
+                Ensure               = "Present"
                 DependsOn            = " [ADOrganizationalUnit]AdditionalUsersOU"
             }
         }
     }
 }
-
 [CmdletBinding()]
-function WE-Get-NetBIOSName -ErrorAction Stop {
+function Get-NetBIOSName -ErrorAction Stop {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [string]$WEDomainFQDN
+        [string]$DomainFQDN
     )
-
-    if ($WEDomainFQDN.Contains('.')) {
-        $length = $WEDomainFQDN.IndexOf('.')
+    if ($DomainFQDN.Contains('.')) {
+        $length = $DomainFQDN.IndexOf('.')
         if ( $length -ge 16) {
             $length = 15
         }
-        return $WEDomainFQDN.Substring(0, $length)
+        return $DomainFQDN.Substring(0, $length)
     }
     else {
-        if ($WEDomainFQDN.Length -gt 15) {
-            return $WEDomainFQDN.Substring(0, 15)
+        if ($DomainFQDN.Length -gt 15) {
+            return $DomainFQDN.Substring(0, 15)
         }
         else {
-            return $WEDomainFQDN
+            return $DomainFQDN
         }
     }
 }
-
-<#
-
-
+#>
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
 Install-Module -Name xAdcsDeployment
@@ -784,31 +702,22 @@ Install-Module -Name xCredSSP
 Install-Module -Name xWebAdministration
 Install-Module -Name xDisk
 Install-Module -Name xNetworking
-
 help ConfigureDCVM
-
 $password = ConvertTo-SecureString -String " mytopsecurepassword" -AsPlainText -Force
-$WEAdmincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
-$WEAdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " adfssvc" , $password
-$WEDomainFQDN = " contoso.local"
-$WEPrivateIP = " 10.1.1.4"
-$WESPServerName = " SP"
-$WESharePointSitesAuthority = " spsites"; 
-$WESharePointCentralAdminPort = 5000
-; 
-$outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
-ConfigureDCVM -Admincreds $WEAdmincreds -AdfsSvcCreds $WEAdfsSvcCreds -DomainFQDN $WEDomainFQDN -PrivateIP $WEPrivateIP -SPServerName $WESPServerName -SharePointSitesAuthority $WESharePointSitesAuthority -SharePointCentralAdminPort $WESharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
+$AdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " adfssvc" , $password
+$DomainFQDN = " contoso.local"
+$PrivateIP = " 10.1.1.4"
+$SPServerName = "SP"
+$SharePointSitesAuthority = " spsites";
+$SharePointCentralAdminPort = 5000
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
+ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SPServerName $SPServerName -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
-
 C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.5
-
-
-
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

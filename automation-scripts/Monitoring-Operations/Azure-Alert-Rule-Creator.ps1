@@ -1,63 +1,40 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$AlertRuleName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$TargetResourceId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$MetricName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [double]$Threshold,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Operator = "GreaterThan",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$NotificationEmail
 )
-
-#region Functions
-
-Write-Information "Creating Alert Rule: $AlertRuleName"
-
+Write-Host "Creating Alert Rule: $AlertRuleName"
 # Create action group if email is provided
 if ($NotificationEmail) {
     $ActionGroupName = "$AlertRuleName-actiongroup"
-    
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Name = $ActionGroupName
-        Receiver = $EmailReceiver  Write-Information "Action Group created: $ActionGroupName
+        Receiver = $EmailReceiver  Write-Host "Action Group created: $ActionGroupName
         ShortName = "AlertAG"
         ErrorAction = "Stop"
         EmailAddress = $NotificationEmail  $ActionGroup = Set-AzActionGroup
     }
     $EmailReceiver @params
 }
-
 # Create alert rule condition
 $params = @{
     Threshold = $Threshold
@@ -67,7 +44,6 @@ $params = @{
     Operator = $Operator
 }
 $Condition @params
-
 # Create alert rule
 $params = @{
     ResourceGroupName = $ResourceGroupName
@@ -79,9 +55,7 @@ $params = @{
     Condition = $Condition
 }
 $AlertRule @params
-
-Write-Information "Alert Rule ID: $($AlertRule.Id)"
-
+Write-Host "Alert Rule ID: $($AlertRule.Id)"
 if ($ActionGroup) {
     # Associate action group with alert rule
     $params = @{
@@ -96,21 +70,17 @@ if ($ActionGroup) {
     }
     Add-AzMetricAlertRuleV2 @params
 }
-
-Write-Information " Alert Rule created successfully:"
-Write-Information "  Name: $AlertRuleName"
-Write-Information "  Metric: $MetricName"
-Write-Information "  Threshold: $Operator $Threshold"
-Write-Information "  Target Resource: $($TargetResourceId.Split('/')[-1])"
+Write-Host "Alert Rule created successfully:"
+Write-Host "Name: $AlertRuleName"
+Write-Host "Metric: $MetricName"
+Write-Host "Threshold: $Operator $Threshold"
+Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])"
 if ($NotificationEmail) {
-    Write-Information "  Notification Email: $NotificationEmail"
+    Write-Host "Notification Email: $NotificationEmail"
 }
+Write-Host "`nAlert Rule Features:"
+Write-Host "Real-time monitoring"
+Write-Host "Configurable thresholds"
+Write-Host "Multiple notification channels"
+Write-Host "Auto-resolution"
 
-Write-Information "`nAlert Rule Features:"
-Write-Information "• Real-time monitoring"
-Write-Information "• Configurable thresholds"
-Write-Information "• Multiple notification channels"
-Write-Information "• Auto-resolution"
-
-
-#endregion

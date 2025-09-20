@@ -1,28 +1,14 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    final optimizationcom)#>
 # Final optimization push for Azure Enterprise Toolkit
-Write-Information "Adding final optimizations for perfect GitHub setup..."
+Write-Host "Adding final optimizations for perfect GitHub setup..."
 
 # Add all new files
 git add .
-Write-Information "Added all optimization files"
+Write-Host "Added all optimization files"
 
-# Commit with comprehensive message
+# Commit with
 $commitMessage = @"
  Perfect GitHub Optimization - Complete Setup
 
@@ -46,23 +32,23 @@ $commitMessage = @"
 - Professional website at GitHub Pages URL
 - Automated CI/CD workflows
 - Complete documentation coverage
-- Enterprise-grade presentation
+-
 - Community contribution ready
 
  Azure Enterprise Toolkit is now perfectly optimized for GitHub!
 "@
 
 git commit -m $commitMessage
-Write-Information "Committed optimization improvements"
+Write-Host "Committed optimization improvements"
 
 # Push to GitHub
 git push
-Write-Information "Pushed final optimizations to GitHub!"
+Write-Host "Pushed final optimizations to GitHub!"
 
-Write-Information "`n Azure Enterprise Toolkit is now PERFECTLY optimized!"
-Write-Information "� GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit"
-Write-Information "� GitHub Actions will automate testing and deployment"
-Write-Information "[*] Repository is now enterprise-grade and community-ready!"
-
+Write-Host "`n Azure Enterprise Toolkit is now PERFECTLY optimized!"
+Write-Host "�� GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit"
+Write-Host "�� GitHub Actions will automate testing and deployment"
+Write-Host "[*] Repository is now
 
 #endregion
+

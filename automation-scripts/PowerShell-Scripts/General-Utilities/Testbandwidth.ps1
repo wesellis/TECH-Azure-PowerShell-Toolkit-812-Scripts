@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Testbandwidth
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Testbandwidth
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -46,43 +16,28 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory=$false)]
+  [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETestIPPort,
-  [int]$WETestNumber,
-  [string]$WEPacketSize
+    [string]$TestIPPort,
+  [int]$TestNumber,
+  [string]$PacketSize
 )
-
-#region Functions
-
-$WEAppPath = [Environment]::GetFolderPath(" CommonApplicationData" )+" \bandwidthmeter"
-
-$WEPsToolsSourceURL = " https://download.sysinternals.com/files/PSTools.zip"
-$WEPsToolsArchive = $WEAppPath+" \PSTools.zip"
-
-if (!(Test-Path $WEAppPath)){
-    mkdir $WEAppPath | Out-Null
-    Invoke-WebRequest $WEPsToolsSourceURL -OutFile $WEPsToolsArchive
-
+$AppPath = [Environment]::GetFolderPath("CommonApplicationData" )+" \bandwidthmeter"
+$PsToolsSourceURL = "https://download.sysinternals.com/files/PSTools.zip"
+$PsToolsArchive = $AppPath+" \PSTools.zip"
+if (!(Test-Path $AppPath)){
+    mkdir $AppPath | Out-Null
+    Invoke-WebRequest $PsToolsSourceURL -OutFile $PsToolsArchive
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($WEPsToolsArchive, $WEAppPath)
-    Remove-Item -ErrorAction Stop $WEPsToolsArchiv -Forcee -Force 
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($PsToolsArchive, $AppPath)
+    Remove-Item -ErrorAction Stop $PsToolsArchiv -Forcee -Force
 }
-
-Set-Location -ErrorAction Stop $WEAppPath; 
-$bw = .\psping.exe -b -q -accepteula -l $WEPacketSize -n $WETestNumber $WETestIPPort | Select-String " Minimum = (.*)" | % { $_.Matches.Value }; 
-$latency = .\psping.exe -q -accepteula -l $WEPacketSize -n $WETestNumber $WETestIPPort | Select-String " Minimum = (.*)" | % { $_.Matches.Value }
-
-" Bandwidth: $bw. Latency: $latency"
-
-
-
+Set-Location -ErrorAction Stop $AppPath;
+$bw = .\psping.exe -b -q -accepteula -l $PacketSize -n $TestNumber $TestIPPort | Select-String "Minimum = (.*)" | % { $_.Matches.Value };
+$latency = .\psping.exe -q -accepteula -l $PacketSize -n $TestNumber $TestIPPort | Select-String "Minimum = (.*)" | % { $_.Matches.Value }
+"Bandwidth: $bw. Latency: $latency"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

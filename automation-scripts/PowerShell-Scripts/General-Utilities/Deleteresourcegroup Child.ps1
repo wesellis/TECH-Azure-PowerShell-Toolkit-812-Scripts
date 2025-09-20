@@ -1,70 +1,31 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Deleteresourcegroup Child
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Deleteresourcegroup Child
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS  
  Script for deleting the resource group
-.DESCRIPTION  
  Script for deleting the resource group
-.EXAMPLE  
-.\DeleteResourceGroup_Child.ps1 
-Version History  
-v1.0   -Initial Release  
-
-
+.\DeleteResourceGroup_Child.ps1
+Version History
+v1.0   -Initial Release
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [String]$WERGName
+    [String]$RGName
 )
-
 #region Functions
-$connectionName = " AzureRunAsConnection"
+$connectionName = "AzureRunAsConnection"
 try
 {
-    # Get the connection " AzureRunAsConnection "
-   ;  $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName         
-
-    " Logging in to Azure..."
+    # Get the connection "AzureRunAsConnection "
+$servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
+    "Logging in to Azure..."
     $params = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
@@ -72,39 +33,31 @@ try
     }
     Add-AzureRmAccount @params
 }
-catch 
+catch
 {
     if (!$servicePrincipalConnection)
     {
-       ;  $WEErrorMessage = " Connection $connectionName not found."
-        throw $WEErrorMessage
+$ErrorMessage = "Connection $connectionName not found."
+        throw $ErrorMessage
     } else{
         Write-Error -Message $_.Exception
         throw $_.Exception
     }
 }
-
 try
 {
-    if ($null -eq $WERGName)
+    if ($null -eq $RGName)
     {
-        Write-Warning " $($WERGName) is empty. Please Verify!"
+        Write-Warning " $($RGName) is empty. Please Verify!"
     }
     else
-    {  
-        Write-Output " Removing the resource group $($WERGName)..."
-        Remove-AzureRmResourceGroup -Name $WERGName.Trim() -Force
-    }
-    
-}
-catch
+    {
+        Write-Output "Removing the resource group $($RGName)..."
+        Remove-AzureRmResourceGroup -Name $RGName.Trim() -Force
+
+} catch
 {
-    Write-Output " Error Occurred..."
+    Write-Output "Error Occurred..."
     Write-Output $_.Exception
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

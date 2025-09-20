@@ -1,56 +1,38 @@
 #Requires -Module Az.Resources
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Manages resource locks to prevent accidental deletion or modification
 
-.DESCRIPTION
     Creates, removes, and audits resource locks at various scopes.
     Supports CanNotDelete and ReadOnly lock levels.
-
 .PARAMETER Action
     Action to perform: Apply, Remove, List
-
 .PARAMETER LockLevel
     Type of lock: CanNotDelete, ReadOnly
-
 .PARAMETER LockName
     Name for the lock (auto-generates if not specified)
-
 .PARAMETER Scope
     Resource scope for the lock (resource, resource group, or subscription)
-
 .PARAMETER ResourceGroupName
     Target resource group
-
 .PARAMETER ResourceName
     Specific resource to lock
-
 .PARAMETER ResourceType
     Type of the resource when locking specific resource
-
 .PARAMETER Notes
     Notes/reason for the lock
-
 .PARAMETER Force
     Skip confirmation prompts
 
-.EXAMPLE
     .\configure-resource-locks.ps1 -Action Apply -ResourceGroupName "RG-Production" -LockLevel CanNotDelete
 
     Applies delete lock to resource group
 
-.EXAMPLE
     .\configure-resource-locks.ps1 -Action List -ResourceGroupName "RG-Production"
 
     Lists all locks in resource group
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 3.0.0
-    Created: 2024-11-15
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
@@ -210,9 +192,9 @@ switch ($Action) {
 
         if ($result) {
             Write-Host "`nLock Details:" -ForegroundColor Cyan
-            Write-Host "  Name: $($result.Name)"
-            Write-Host "  Level: $($result.Properties.level)"
-            Write-Host "  Notes: $($result.Properties.notes)"
+            Write-Host "Name: $($result.Name)"
+            Write-Host "Level: $($result.Properties.level)"
+            Write-Host "Notes: $($result.Properties.notes)"
         }
     }
 
@@ -263,9 +245,10 @@ switch ($Action) {
             $locks | Format-Table -AutoSize
 
             Write-Host "`nSummary:" -ForegroundColor Cyan
-            Write-Host "  Total Locks: $($locks.Count)"
-            Write-Host "  CanNotDelete: $(($locks | Where-Object Level -eq 'CanNotDelete').Count)"
-            Write-Host "  ReadOnly: $(($locks | Where-Object Level -eq 'ReadOnly').Count)"
+            Write-Host "Total Locks: $($locks.Count)"
+            Write-Host "CanNotDelete: $(($locks | Where-Object Level -eq 'CanNotDelete').Count)"
+            Write-Host "ReadOnly: $(($locks | Where-Object Level -eq 'ReadOnly').Count)"
         }
     }
 }
+

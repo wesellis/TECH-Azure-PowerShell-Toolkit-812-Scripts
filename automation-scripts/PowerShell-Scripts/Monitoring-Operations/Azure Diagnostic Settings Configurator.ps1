@@ -1,140 +1,75 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Diagnostic Settings Configurator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Diagnostic Settings Configurator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceId,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceId,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEDiagnosticSettingName,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [string]$DiagnosticSettingName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$WorkspaceId,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEWorkspaceId,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountId,
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WELogCategories = @(" Administrative" , " Security" , " ServiceHealth" , " Alert" ),
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WEMetricCategories = @(" AllMetrics" )
+    [string]$StorageAccountId,
+    [Parameter()]
+    [array]$LogCategories = @("Administrative" , "Security" , "ServiceHealth" , "Alert" ),
+    [Parameter()]
+    [array]$MetricCategories = @("AllMetrics" )
 )
-
-#region Functions
-
-Write-WELog " Configuring diagnostic settings for resource: $($WEResourceId.Split('/')[-1])" " INFO"
-
-
-$WEDiagnosticParams = @{
-    ResourceId = $WEResourceId
-    Name = $WEDiagnosticSettingName
+Write-Host "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])" "INFO"
+$DiagnosticParams = @{
+    ResourceId = $ResourceId
+    Name = $DiagnosticSettingName
 }
-
-
-if ($WEWorkspaceId) {
-    $WEDiagnosticParams.WorkspaceId = $WEWorkspaceId
-    Write-WELog "  Log Analytics Workspace: $($WEWorkspaceId.Split('/')[-1])" " INFO"
+if ($WorkspaceId) {
+    $DiagnosticParams.WorkspaceId = $WorkspaceId
+    Write-Host "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])" "INFO"
 }
-
-if ($WEStorageAccountId) {
-    $WEDiagnosticParams.StorageAccountId = $WEStorageAccountId
-    Write-WELog "  Storage Account: $($WEStorageAccountId.Split('/')[-1])" " INFO"
+if ($StorageAccountId) {
+    $DiagnosticParams.StorageAccountId = $StorageAccountId
+    Write-Host "Storage Account: $($StorageAccountId.Split('/')[-1])" "INFO"
 }
-
-
-$WELogSettings = @()
-foreach ($WECategory in $WELogCategories) {
-    $WELogSettings = $WELogSettings + @{
-        Category = $WECategory
+$LogSettings = @()
+foreach ($Category in $LogCategories) {
+    $LogSettings = $LogSettings + @{
+        Category = $Category
         Enabled = $true
         RetentionPolicy = @{
             Enabled = $true
@@ -142,12 +77,10 @@ foreach ($WECategory in $WELogCategories) {
         }
     }
 }
-
-
-$WEMetricSettings = @()
-foreach ($WECategory in $WEMetricCategories) {
-   ;  $WEMetricSettings = $WEMetricSettings + @{
-        Category = $WECategory
+$MetricSettings = @()
+foreach ($Category in $MetricCategories) {
+$MetricSettings = $MetricSettings + @{
+        Category = $Category
         Enabled = $true
         RetentionPolicy = @{
             Enabled = $true
@@ -155,42 +88,31 @@ foreach ($WECategory in $WEMetricCategories) {
         }
     }
 }
+$DiagnosticParams.Log = $LogSettings
+$DiagnosticParams.Metric = $MetricSettings
 
-$WEDiagnosticParams.Log = $WELogSettings
-$WEDiagnosticParams.Metric = $WEMetricSettings
-
-; 
-$WEDiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
-
-Write-WELog "  Diagnostic settings configured successfully:" " INFO"
-Write-WELog "  Setting ID: $($WEDiagnosticSetting.Id)" " INFO"
-Write-WELog "  Name: $WEDiagnosticSettingName" " INFO"
-Write-WELog "  Resource: $($WEResourceId.Split('/')[-1])" " INFO"
-Write-WELog "  Log Categories: $($WELogCategories -join ', ')" " INFO"
-Write-WELog "  Metric Categories: $($WEMetricCategories -join ', ')" " INFO"
-
-Write-WELog " `nDiagnostic Data Destinations:" " INFO"
-if ($WEWorkspaceId) {
-    Write-WELog "  • Log Analytics Workspace (for queries and alerts)" " INFO"
+$DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
+Write-Host "Diagnostic settings configured successfully:" "INFO"
+Write-Host "Setting ID: $($DiagnosticSetting.Id)" "INFO"
+Write-Host "Name: $DiagnosticSettingName" "INFO"
+Write-Host "Resource: $($ResourceId.Split('/')[-1])" "INFO"
+Write-Host "Log Categories: $($LogCategories -join ', ')" "INFO"
+Write-Host "Metric Categories: $($MetricCategories -join ', ')" "INFO"
+Write-Host " `nDiagnostic Data Destinations:" "INFO"
+if ($WorkspaceId) {
+    Write-Host "   Log Analytics Workspace (for queries and alerts)" "INFO"
 }
-if ($WEStorageAccountId) {
-    Write-WELog "  • Storage Account (for long-term archival)" " INFO"
+if ($StorageAccountId) {
+    Write-Host "   Storage Account (for long-term archival)" "INFO"
 }
-
-Write-WELog " `nDiagnostic Benefits:" " INFO"
-Write-WELog " • Centralized logging and monitoring" " INFO"
-Write-WELog " • Compliance and audit trails" " INFO"
-Write-WELog " • Performance troubleshooting" " INFO"
-Write-WELog " • Security event tracking" " INFO"
-Write-WELog " • Cost optimization insights" " INFO"
-
-
-
-
+Write-Host " `nDiagnostic Benefits:" "INFO"
+Write-Host "Centralized logging and monitoring" "INFO"
+Write-Host "Compliance and audit trails" "INFO"
+Write-Host "Performance troubleshooting" "INFO"
+Write-Host "Security event tracking" "INFO"
+Write-Host "Cost optimization insights" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

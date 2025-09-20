@@ -1,123 +1,5 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Sets up automated Azure cost reporting with email notifications.
-
-.DESCRIPTION
-    This script configures scheduled Azure cost reports to be automatically generated
-    and emailed to specified recipients. Supports daily, weekly, and monthly schedules
-    with customizable report formats and content.
-
-.PARAMETER Type
-    Report frequency: Daily, Weekly, Monthly, or Custom.
-
-.PARAMETER Recipients
-    Array of email addresses to receive reports.
-
-.PARAMETER Format
-    Report format: Excel, CSV, PDF, or HTML. Default is Excel.
-
-.PARAMETER SubscriptionId
-    Azure subscription ID. Uses default subscription if not specified.
-
-.PARAMETER ResourceGroups
-    Optional array of resource group names to filter reports.
-
-.PARAMETER BudgetThreshold
-    Budget percentage threshold for alerts (default: 80%).
-
-.PARAMETER SMTPServer
-    SMTP server for sending emails. Uses Office 365 by default.
-
-.PARAMETER EmailCredential
-    PSCredential object for email authentication.
-
-.EXAMPLE
-    .\Schedule-CostReports.ps1 -Type "Daily" -Recipients @("finance@company.com", "manager@company.com")
-
-.EXAMPLE
-    .\Schedule-CostReports.ps1 -Type "Weekly" -Format "PDF" -Recipients @("executives@company.com") -BudgetThreshold 90
-
-.EXAMPLE
-    .\Schedule-CostReports.ps1 -Type "Monthly" -ResourceGroups @("Production-RG", "Development-RG") -Recipients @("team@company.com")
-
-.NOTES
-    Author: Wesley Ellis
-    Email: wes@wesellis.com
-    Created: May 23, 2025
-    Version: 1.0
-
-    Prerequisites:
-    - Azure PowerShell module (Az)
-    - Email server access (SMTP)
-    - Cost Management Reader permissions
-    - Windows Task Scheduler access (for automation)
-#>
-
-[CmdletBinding()]
-param(
-    [Parameter(Mandatory = $true)]
-    [ValidateSet("Daily", "Weekly", "Monthly", "Custom")]
-    [string]$Type,
-    
-    [Parameter(Mandatory = $true)]
-    [string[]]$Recipients,
-    
-    [Parameter(Mandatory = $false)]
-    [ValidateSet("Excel", "CSV", "PDF", "HTML")]
-    [string]$Format = "Excel",
-    
-    [Parameter(Mandatory = $false)]
-    [string]$SubscriptionId,
-    
-    [Parameter(Mandatory = $false)]
-    [string[]]$ResourceGroups,
-    
-    [Parameter(Mandatory = $false)]
-    [int]$BudgetThreshold = 80,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$SMTPServer = "smtp.office365.com",
-    
-    [Parameter(Mandatory = $false)]
-    [PSCredential]$EmailCredential
-)
-
-#region Functions
-
-# Script configuration
-$ErrorActionPreference = "Stop"
-$ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ConfigPath = Join-Path (Split-Path $ScriptRoot -Parent) "config"
-$LogPath = Join-Path (Split-Path $ScriptRoot -Parent) "logs"
-$ReportPath = Join-Path (Split-Path $ScriptRoot -Parent) "reports"
-
-# Ensure directories exist
-@($LogPath, $ReportPath) | ForEach-Object {
-    if (-not (Test-Path $_)) {
-        New-Item -ItemType Directory -Path $_ -Force | Out-Null
-    }
-}
-
-# Logging function
-[CmdletBinding()]
-function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
-    Write-Output $logEntry
-    Add-Content -Path (Join-Path $LogPath "cost-reports.log") -Value $logEntry
-}
-
-[CmdletBinding()]
-function Get-EmailCredential -ErrorAction Stop {
-    <#
-    .SYNOPSIS
         Gets email credentials from secure storage or prompts user
     #>
     if ($EmailCredential) {
@@ -144,8 +26,8 @@ function Get-EmailCredential -ErrorAction Stop {
     return $cred
 }
 
-[CmdletBinding()]
-function Get-CostReportData -ErrorAction Stop {
+function Get-CostReportData {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Retrieves cost data for the specified time period
@@ -184,8 +66,8 @@ function Get-CostReportData -ErrorAction Stop {
     }
 }
 
-[CmdletBinding()]
-function New-CostReport -ErrorAction Stop {
+function New-CostReport {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Generates a formatted cost report
@@ -294,8 +176,8 @@ function New-CostReport -ErrorAction Stop {
     }
 }
 
-[CmdletBinding()]
 function Send-CostReport {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Sends the cost report via email
@@ -349,8 +231,8 @@ Azure Cost Management System
     }
 }
 
-[CmdletBinding()]
-function New-ScheduledTask -ErrorAction Stop {
+function New-ScheduledTask {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Creates a Windows scheduled task for automated reports
@@ -397,7 +279,7 @@ function New-ScheduledTask -ErrorAction Stop {
     }
 }
 
-# Main execution
+#region Main-Execution
 try {
     Write-Log "Starting automated cost report setup - Type: $Type"
     
@@ -462,22 +344,25 @@ try {
     
     Write-Log "Automated cost reporting setup completed successfully" -Level "SUCCESS"
     
-    Write-Information "`n SETUP COMPLETE!"
-    Write-Information "� Test report sent to: $($Recipients -join ', ')"
-    Write-Information "⏰ Scheduled task created: $taskName"
-    Write-Information " Report format: $Format"
-    Write-Information " Total cost in test period: $($totalCost.ToString('C'))"
-    Write-Information "`nNext steps:"
-    Write-Information "• Check your email for the test report"
-    Write-Information "• Verify the scheduled task in Task Scheduler"
-    Write-Information "• Monitor the logs in: $LogPath"
-    Write-Information "• Reports will be saved in: $ReportPath"
+    Write-Host "`n[SETUP COMPLETE]" -ForegroundColor Green
+    Write-Host "[EMAIL] Test report sent to: $($Recipients -join ', ')" -ForegroundColor Green
+    Write-Host "[TASK] Scheduled task created: $taskName" -ForegroundColor Green
+    Write-Host "[FORMAT] Report format: $Format" -ForegroundColor White
+    Write-Host "[COST] Total cost in test period: $($totalCost.ToString('C'))" -ForegroundColor Yellow
+    Write-Host "`nNext steps:" -ForegroundColor White
+    Write-Host "- Check your email for the test report" -ForegroundColor Gray
+    Write-Host "- Verify the scheduled task in Task Scheduler" -ForegroundColor Gray
+    Write-Host "- Monitor the logs in: $LogPath" -ForegroundColor Gray
+    Write-Host "- Reports will be saved in: $ReportPath" -ForegroundColor Gray
 }
 catch {
     Write-Log "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    exit 1
+    throw
+}
+finally {
+    Write-Log "Cost report scheduling script completed"
 }
 
-
 #endregion
+

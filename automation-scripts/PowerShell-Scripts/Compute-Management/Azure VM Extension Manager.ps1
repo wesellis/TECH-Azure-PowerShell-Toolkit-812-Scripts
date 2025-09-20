@@ -1,138 +1,71 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Extension Manager
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Extension Manager
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$VmName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVmName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEExtensionName,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEExtensionType = " CustomScriptExtension" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEPublisher = " Microsoft.Compute"
+    [string]$ExtensionName,
+    [Parameter()]
+    [string]$ExtensionType = "CustomScriptExtension" ,
+    [Parameter()]
+    [string]$Publisher = "Microsoft.Compute"
 )
-
-#region Functions
-
-Write-WELog " Managing VM extension: $WEExtensionName" " INFO"
-; 
-$WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
-
-
+Write-Host "Managing VM extension: $ExtensionName"
+$VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Publisher = $WEPublisher
-    Name = $WEExtensionName
-    ExtensionType = $WEExtensionType
-    Location = $WEVM.Location
+    ResourceGroupName = $ResourceGroupName
+    Publisher = $Publisher
+    Name = $ExtensionName
+    ExtensionType = $ExtensionType
+    Location = $VM.Location
     TypeHandlerVersion = " 1.10"
     ErrorAction = "Stop"
-    VMName = $WEVmName
+    VMName = $VmName
 }
 Set-AzVMExtension @params
-
-Write-WELog "  Extension '$WEExtensionName' installed successfully" " INFO"
-Write-WELog " VM: $WEVmName" " INFO"
-Write-WELog " Publisher: $WEPublisher" " INFO"
-Write-WELog " Type: $WEExtensionType" " INFO"
-
-
-
-
+Write-Host "Extension '$ExtensionName' installed successfully"
+Write-Host "VM: $VmName"
+Write-Host "Publisher: $Publisher"
+Write-Host "Type: $ExtensionType"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

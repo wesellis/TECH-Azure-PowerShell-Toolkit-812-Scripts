@@ -1,165 +1,87 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Routetable Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Routetable Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$RouteTableName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WERouteTableName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$RouteName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERouteName,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAddressPrefix,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WENextHopType = " VirtualAppliance" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WENextHopIpAddress
+    [string]$AddressPrefix,
+    [Parameter()]
+    [string]$NextHopType = "VirtualAppliance" ,
+    [Parameter()]
+    [string]$NextHopIpAddress
 )
-
-#region Functions
-
-Write-WELog " Creating Route Table: $WERouteTableName" " INFO"
-
-; 
+Write-Host "Creating Route Table: $RouteTableName"
 $params = @{
     ErrorAction = "Stop"
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WERouteTableName
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    Name = $RouteTableName
+    Location = $Location
 }
-$WERouteTable @params
-
-Write-WELog "  Route Table created successfully:" " INFO"
-Write-WELog "  Name: $($WERouteTable.Name)" " INFO"
-Write-WELog "  Location: $($WERouteTable.Location)" " INFO"
-
-
-if ($WERouteName -and $WEAddressPrefix) {
-    Write-WELog " `nAdding custom route: $WERouteName" " INFO"
-    
-    if ($WENextHopIpAddress -and $WENextHopType -eq " VirtualAppliance" ) {
+$RouteTable @params
+Write-Host "Route Table created successfully:"
+Write-Host "Name: $($RouteTable.Name)"
+Write-Host "Location: $($RouteTable.Location)"
+if ($RouteName -and $AddressPrefix) {
+    Write-Host " `nAdding custom route: $RouteName"
+    if ($NextHopIpAddress -and $NextHopType -eq "VirtualAppliance" ) {
         $params = @{
-            NextHopIpAddress = $WENextHopIpAddress } else { Add-AzRouteConfig
-            RouteTable = $WERouteTable  Write-WELog "  Custom route added:" " INFO" Write-WELog "  Route Name: $WERouteName" " INFO" Write-WELog "  Address Prefix: $WEAddressPrefix" " INFO" Write-WELog "  Next Hop Type: $WENextHopType" " INFO" if ($WENextHopIpAddress) { Write-WELog "  Next Hop IP: $WENextHopIpAddress" " INFO" }
-            Name = $WERouteName
-            NextHopType = $WENextHopType }  Set-AzRouteTable
-            AddressPrefix = $WEAddressPrefix
+            NextHopIpAddress = $NextHopIpAddress } else { Add-AzRouteConfig
+            RouteTable = $RouteTable  Write-Host "Custom route added:" "INFO"Write-Host "Route Name: $RouteName" "INFO"Write-Host "Address Prefix: $AddressPrefix" "INFO"Write-Host "Next Hop Type: $NextHopType" "INFO" if ($NextHopIpAddress) { Write-Host "Next Hop IP: $NextHopIpAddress" }
+            Name = $RouteName
+            NextHopType = $NextHopType }  Set-AzRouteTable
+            AddressPrefix = $AddressPrefix
         }
         Add-AzRouteConfig @params
 }
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Associate route table with subnet(s)" " INFO"
-Write-WELog " 2. Add additional routes as needed" " INFO"
-Write-WELog " 3. Test routing behavior" " INFO"
-
-
-
-
+Write-Host " `nNext Steps:"
+Write-Host " 1. Associate route table with subnet(s)"
+Write-Host " 2. Add additional routes as needed"
+Write-Host " 3. Test routing behavior"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

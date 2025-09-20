@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage DNS
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage DNS
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$ZoneName,
@@ -24,41 +13,31 @@ param (
     [int]$TTL,
     [string]$RecordValue
 )
-
-#region Functions
-
 # Get the existing record set
 $RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
-
-Write-Information "Updating DNS Record: $RecordSetName.$ZoneName"
-Write-Information "Record Type: $RecordType"
-Write-Information "Current TTL: $($RecordSet.Ttl)"
-Write-Information "New TTL: $TTL"
-Write-Information "New Value: $RecordValue"
-
+Write-Host "Updating DNS Record: $RecordSetName.$ZoneName"
+Write-Host "Record Type: $RecordType"
+Write-Host "Current TTL: $($RecordSet.Ttl)"
+Write-Host "New TTL: $TTL"
+Write-Host "New Value: $RecordValue"
 # Update TTL
 $RecordSet.Ttl = $TTL
-
 # Update record value based on type
 switch ($RecordType) {
-    "A" { 
+    "A" {
         $RecordSet.Records.Clear()
         $RecordSet.Records.Add((New-AzDnsRecordConfig -IPv4Address $RecordValue))
     }
-    "CNAME" { 
+    "CNAME" {
         $RecordSet.Records.Clear()
         $RecordSet.Records.Add((New-AzDnsRecordConfig -Cname $RecordValue))
     }
-    "TXT" { 
+    "TXT" {
         $RecordSet.Records.Clear()
         $RecordSet.Records.Add((New-AzDnsRecordConfig -Value $RecordValue))
     }
 }
-
 # Apply the changes
 Set-AzDnsRecordSet -RecordSet $RecordSet
+Write-Host "DNS record updated successfully"
 
-Write-Information "DNS record updated successfully"
-
-
-#endregion

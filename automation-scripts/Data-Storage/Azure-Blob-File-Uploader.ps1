@@ -1,51 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ContainerName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$LocalFilePath,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$BlobName
 )
-
-#region Functions
-
 if (-not $BlobName) {
     $BlobName = Split-Path $LocalFilePath -Leaf
 }
-
-Write-Information "Uploading file to blob storage:"
-Write-Information "  Local file: $LocalFilePath"
-Write-Information "  Blob name: $BlobName"
-
+Write-Host "Uploading file to blob storage:"
+Write-Host "Local file: $LocalFilePath"
+Write-Host "Blob name: $BlobName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
-
 $params = @{
     File = $LocalFilePath
     ErrorAction = "Stop"
@@ -54,9 +33,6 @@ $params = @{
     Container = $ContainerName
 }
 $Blob @params
+Write-Host "File uploaded successfully!"
+Write-Host "URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
 
-Write-Information " File uploaded successfully!"
-Write-Information "  URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
-
-
-#endregion

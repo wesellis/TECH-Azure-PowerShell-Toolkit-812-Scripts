@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Installazurerm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Installazurerm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -48,29 +18,16 @@ $ErrorActionPreference = "Stop"
 param(
 	[switch];  $linux=$false
 )
-
-#region Functions
-
 if ( $linux ) {
-
 Install-Module AzureRM.NetCore -SkipPublisherCheck -Force
 Import-Module AzureRM.Netcore
-
 }else{
-
 Install-PackageProvider -name Nuget -MinimumVersion 2.8.5.201 -Force
 Install-Module AzureRM -SkipPublisherCheck -Force
-
 Import-Module AzureRM
-
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

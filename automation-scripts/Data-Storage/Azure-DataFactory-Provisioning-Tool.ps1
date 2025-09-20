@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$FactoryName,
@@ -27,20 +16,15 @@ param (
     [string]$GitRepositoryName,
     [string]$GitCollaborationBranch = "main"
 )
-
-#region Functions
-
-Write-Information "Provisioning Data Factory: $FactoryName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "Location: $Location"
-Write-Information "Git Integration: $EnableGitIntegration"
-
+Write-Host "Provisioning Data Factory: $FactoryName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Git Integration: $EnableGitIntegration"
 # Create the Data Factory
 if ($EnableGitIntegration -and $GitAccountName -and $GitRepositoryName) {
-    Write-Information "Git Account: $GitAccountName"
-    Write-Information "Git Repository: $GitRepositoryName"
-    Write-Information "Collaboration Branch: $GitCollaborationBranch"
-    
+    Write-Host "Git Account: $GitAccountName"
+    Write-Host "Git Repository: $GitRepositoryName"
+    Write-Host "Collaboration Branch: $GitCollaborationBranch"
     # Create Data Factory with Git integration
     $params = @{
         ResourceGroupName = $ResourceGroupName
@@ -64,31 +48,24 @@ if ($EnableGitIntegration -and $GitAccountName -and $GitRepositoryName) {
     }
     $DataFactory @params
 }
-
-Write-Information "`nData Factory $FactoryName provisioned successfully"
-Write-Information "Data Factory ID: $($DataFactory.DataFactoryId)"
-Write-Information "Provisioning State: $($DataFactory.ProvisioningState)"
-Write-Information "Created Time: $($DataFactory.CreateTime)"
-
+Write-Host "`nData Factory $FactoryName provisioned successfully"
+Write-Host "Data Factory ID: $($DataFactory.DataFactoryId)"
+Write-Host "Provisioning State: $($DataFactory.ProvisioningState)"
+Write-Host "Created Time: $($DataFactory.CreateTime)"
 if ($DataFactory.RepoConfiguration) {
-    Write-Information "`nGit Configuration:"
-    Write-Information "  Type: $($DataFactory.RepoConfiguration.Type)"
-    Write-Information "  Account Name: $($DataFactory.RepoConfiguration.AccountName)"
-    Write-Information "  Repository Name: $($DataFactory.RepoConfiguration.RepositoryName)"
-    Write-Information "  Collaboration Branch: $($DataFactory.RepoConfiguration.CollaborationBranch)"
+    Write-Host "`nGit Configuration:"
+    Write-Host "Type: $($DataFactory.RepoConfiguration.Type)"
+    Write-Host "Account Name: $($DataFactory.RepoConfiguration.AccountName)"
+    Write-Host "Repository Name: $($DataFactory.RepoConfiguration.RepositoryName)"
+    Write-Host "Collaboration Branch: $($DataFactory.RepoConfiguration.CollaborationBranch)"
 }
+Write-Host "`nNext Steps:"
+Write-Host "1. Create linked services for data sources"
+Write-Host "2. Define datasets for input/output data"
+Write-Host "3. Create pipelines for data workflows"
+Write-Host "4. Set up triggers for pipeline execution"
+Write-Host "5. Monitor pipeline runs in Azure Portal"
+Write-Host "`nData Factory Access:"
+Write-Host "Portal URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName"
+Write-Host "`nData Factory provisioning completed at $(Get-Date)"
 
-Write-Information "`nNext Steps:"
-Write-Information "1. Create linked services for data sources"
-Write-Information "2. Define datasets for input/output data"
-Write-Information "3. Create pipelines for data workflows"
-Write-Information "4. Set up triggers for pipeline execution"
-Write-Information "5. Monitor pipeline runs in Azure Portal"
-
-Write-Information "`nData Factory Access:"
-Write-Information "Portal URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName"
-
-Write-Information "`nData Factory provisioning completed at $(Get-Date)"
-
-
-#endregion

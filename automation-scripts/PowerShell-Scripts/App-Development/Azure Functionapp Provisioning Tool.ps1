@@ -1,139 +1,77 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Functionapp Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Functionapp Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AppName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PlanName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAppName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPlanName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WERuntime = " PowerShell" ,
-    [string]$WERuntimeVersion = " 7.2" ,
-    [string]$WEStorageAccountName
+    [string]$Location,
+    [string]$Runtime = "PowerShell" ,
+    [string]$RuntimeVersion = " 7.2" ,
+    [string]$StorageAccountName
 )
-
-#region Functions
-
-Write-WELog " Provisioning Function App: $WEAppName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " App Service Plan: $WEPlanName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
-
-; 
+Write-Host "Provisioning Function App: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "App Service Plan: $PlanName"
+Write-Host "Location: $Location"
+Write-Host "Runtime: $Runtime $RuntimeVersion"
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEAppName
-    RuntimeVersion = $WERuntimeVersion
-    AppServicePlan = $WEPlanName
-    Runtime = $WERuntime
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    Name = $AppName
+    RuntimeVersion = $RuntimeVersion
+    AppServicePlan = $PlanName
+    Runtime = $Runtime
+    Location = $Location
     ErrorAction = "Stop"
 }
-$WEFunctionApp @params
-
-if ($WEStorageAccountName) {
-    Write-WELog " Storage Account: $WEStorageAccountName" " INFO"
+$FunctionApp @params
+if ($StorageAccountName) {
+    Write-Host "Storage Account: $StorageAccountName"
 }
-
-Write-WELog " Function App $WEAppName provisioned successfully" " INFO"
-Write-WELog " Default Hostname: $($WEFunctionApp.DefaultHostName)" " INFO"
-Write-WELog " State: $($WEFunctionApp.State)" " INFO"
-
-
-
-
+Write-Host "Function App $AppName provisioned successfully"
+Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Host "State: $($FunctionApp.State)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

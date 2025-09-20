@@ -1,71 +1,26 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    21 Store Job Details
+    Store Job Details
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Store Job Details operation
 #>
+    Author: Wes Ellis (wes@wesellis.com)
 
-<#
-.SYNOPSIS
-    We Enhanced 21  Store Job Details
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 $properties = $details.properties
-
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 $properties = $details.properties
 $properties
-
-$storageAccountName = $properties[" Target Storage Account Name" ]
+$storageAccountName = $properties["Target Storage Account Name" ]
 $storageAccountName
-
-$containerName = $properties[" Config Blob Container Name" ]
+$containerName = $properties["Config Blob Container Name" ]
 $containerName
-
-$templateBlobURI = $properties[" Template Blob Uri" ]
+$templateBlobURI = $properties["Template Blob Uri" ]
 $templateBlobURI
+$Templatename = $templateBlobURI -split (" /" );
+$Templatename = $Templatename[4]
+$Templatename
 
-; 
-$WETemplatename = $templateBlobURI -split (" /" ); 
-$WETemplatename = $WETemplatename[4]
-$WETemplatename
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

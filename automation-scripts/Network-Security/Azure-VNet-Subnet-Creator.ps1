@@ -1,54 +1,31 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage VNets
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage VNets
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VNetName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SubnetName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$AddressPrefix
 )
-
-#region Functions
-
-Write-Information "Adding subnet to VNet: $VNetName"
-
+Write-Host "Adding subnet to VNet: $VNetName"
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-
 $params = @{
     AddressPrefix = $AddressPrefix
     VirtualNetwork = $VNet
     Name = $SubnetName
 }
 Add-AzVirtualNetworkSubnetConfig @params
-
 Set-AzVirtualNetwork -VirtualNetwork $VNet
+Write-Host "Subnet added successfully:"
+Write-Host "Subnet: $SubnetName"
+Write-Host "Address: $AddressPrefix"
+Write-Host "VNet: $VNetName"
 
-Write-Information "Subnet added successfully:"
-Write-Information "  Subnet: $SubnetName"
-Write-Information "  Address: $AddressPrefix"
-Write-Information "  VNet: $VNetName"
-
-
-#endregion

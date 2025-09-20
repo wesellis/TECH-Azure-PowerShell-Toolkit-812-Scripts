@@ -1,167 +1,96 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Applicationgateway Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Applicationgateway Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$GatewayName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEGatewayName,
-    [Parameter(Mandatory=$false)]
+    [string]$VNetName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVNetName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubnetName,
-    [string]$WESkuName = " Standard_v2" ,
-    [string]$WETier = " Standard_v2" ,
-    [int]$WECapacity = 2
+    [string]$SubnetName,
+    [string]$SkuName = "Standard_v2" ,
+    [string]$Tier = "Standard_v2" ,
+    [int]$Capacity = 2
 )
-
-#region Functions
-
-Write-WELog " Provisioning Application Gateway: $WEGatewayName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " SKU: $WESkuName" " INFO"
-Write-WELog " Tier: $WETier" " INFO"
-Write-WELog " Capacity: $WECapacity" " INFO"
-
-
-$WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
-$WESubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $WEVNet -Name $WESubnetName
-
-Write-WELog " Using VNet: $WEVNetName" " INFO"
-Write-WELog " Using Subnet: $WESubnetName" " INFO"
-
-
-$WEPublicIpName = " $WEGatewayName-pip"
+Write-Host "Provisioning Application Gateway: $GatewayName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "SKU: $SkuName"
+Write-Host "Tier: $Tier"
+Write-Host "Capacity: $Capacity"
+$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+$Subnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name $SubnetName
+Write-Host "Using VNet: $VNetName"
+Write-Host "Using Subnet: $SubnetName"
+$PublicIpName = " $GatewayName-pip"
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
+    ResourceGroupName = $ResourceGroupName
     Sku = "Standard"
-    Location = $WELocation
+    Location = $Location
     AllocationMethod = "Static"
     ErrorAction = "Stop"
-    Name = $WEPublicIpName
+    Name = $PublicIpName
 }
-$WEPublicIp @params
-
-Write-WELog " Public IP created: $WEPublicIpName" " INFO"
-
-
+$PublicIp @params
+Write-Host "Public IP created: $PublicIpName"
 $params = @{
     ErrorAction = "Stop"
-    Subnet = $WESubnet
+    Subnet = $Subnet
     Name = " gatewayIP01"
 }
-$WEGatewayIpConfig @params
-
-
+$GatewayIpConfig @params
 $params = @{
     ErrorAction = "Stop"
-    PublicIPAddress = $WEPublicIp
+    PublicIPAddress = $PublicIp
     Name = " frontendIP01"
 }
-$WEFrontendIpConfig @params
-
-
+$FrontendIpConfig @params
 $params = @{
     ErrorAction = "Stop"
     Port = "80"
     Name = " frontendPort01"
 }
-$WEFrontendPort @params
-
-
-$WEBackendPool -Name " backendPool01" -ErrorAction "Stop"
-
-
+$FrontendPort @params
+$BackendPool -Name " backendPool01" -ErrorAction "Stop"
 $params = @{
     ErrorAction = "Stop"
     Port = "80"
@@ -169,69 +98,53 @@ $params = @{
     Name = " backendHttpSettings01"
     Protocol = "Http"
 }
-$WEBackendHttpSettings @params
-
-
+$BackendHttpSettings @params
 $params = @{
-    FrontendIPConfiguration = $WEFrontendIpConfig
+    FrontendIPConfiguration = $FrontendIpConfig
     ErrorAction = "Stop"
-    FrontendPort = $WEFrontendPort
+    FrontendPort = $FrontendPort
     Name = " httpListener01"
     Protocol = "Http"
 }
-$WEHttpListener @params
-
-
+$HttpListener @params
 $params = @{
     RuleType = "Basic"
     Name = " routingRule01"
-    HttpListener = $WEHttpListener
-    BackendAddressPool = $WEBackendPool
+    HttpListener = $HttpListener
+    BackendAddressPool = $BackendPool
     ErrorAction = "Stop"
-    BackendHttpSettings = $WEBackendHttpSettings
+    BackendHttpSettings = $BackendHttpSettings
 }
-$WERoutingRule @params
-
-; 
+$RoutingRule @params
 $params = @{
-    Tier = $WETier
+    Tier = $Tier
     ErrorAction = "Stop"
-    Capacity = $WECapacity
-    Name = $WESkuName
+    Capacity = $Capacity
+    Name = $SkuName
 }
-$WESku @params
-
-
-Write-WELog " `nCreating Application Gateway (this may take 10-15 minutes)..." " INFO" ; 
+$Sku @params
+Write-Host " `nCreating Application Gateway (this may take 10-15 minutes)..." ;
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Sku = $WESku
-    GatewayIpConfiguration = $WEGatewayIpConfig
-    FrontendPort = $WEFrontendPort
-    Location = $WELocation
-    BackendHttpSetting = $WEBackendHttpSettings
-    HttpListener = $WEHttpListener
-    RequestRoutingRule = $WERoutingRule
-    BackendAddressPool = $WEBackendPool
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    GatewayIpConfiguration = $GatewayIpConfig
+    FrontendPort = $FrontendPort
+    Location = $Location
+    BackendHttpSetting = $BackendHttpSettings
+    HttpListener = $HttpListener
+    RequestRoutingRule = $RoutingRule
+    BackendAddressPool = $BackendPool
     ErrorAction = "Stop"
-    FrontendIpConfiguration = $WEFrontendIpConfig
-    Name = $WEGatewayName
+    FrontendIpConfiguration = $FrontendIpConfig
+    Name = $GatewayName
 }
-$WEAppGateway @params
-
-Write-WELog " `nApplication Gateway $WEGatewayName provisioned successfully" " INFO"
-Write-WELog " Public IP: $($WEPublicIp.IpAddress)" " INFO"
-Write-WELog " Provisioning State: $($WEAppGateway.ProvisioningState)" " INFO"
-
-Write-WELog " `nApplication Gateway provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+$AppGateway @params
+Write-Host " `nApplication Gateway $GatewayName provisioned successfully"
+Write-Host "Public IP: $($PublicIp.IpAddress)"
+Write-Host "Provisioning State: $($AppGateway.ProvisioningState)"
+Write-Host " `nApplication Gateway provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

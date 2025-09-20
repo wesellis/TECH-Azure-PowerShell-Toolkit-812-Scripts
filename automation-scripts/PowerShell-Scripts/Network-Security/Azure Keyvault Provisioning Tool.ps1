@@ -1,130 +1,71 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Keyvault Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Keyvault Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$VaultName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVaultName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WESkuName = " Standard" ,
-    [bool]$WEEnabledForDeployment = $true,
-    [bool]$WEEnabledForTemplateDeployment = $true,
-    [bool]$WEEnabledForDiskEncryption = $true
+    [string]$Location,
+    [string]$SkuName = "Standard" ,
+    [bool]$EnabledForDeployment = $true,
+    [bool]$EnabledForTemplateDeployment = $true,
+    [bool]$EnabledForDiskEncryption = $true
 )
-
-#region Functions
-
-Write-WELog " Provisioning Key Vault: $WEVaultName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " SKU: $WESkuName" " INFO"
-
-; 
+Write-Host "Provisioning Key Vault: $VaultName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "SKU: $SkuName"
 $params = @{
-    Sku = $WESkuName
+    Sku = $SkuName
     ErrorAction = "Stop"
-    VaultName = $WEVaultName
-    ResourceGroupName = $WEResourceGroupName
-    Location = $WELocation
+    VaultName = $VaultName
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
 }
-$WEKeyVault @params
-
-Write-WELog " Key Vault $WEVaultName provisioned successfully" " INFO"
-Write-WELog " Vault URI: $($WEKeyVault.VaultUri)" " INFO"
-Write-WELog " Enabled for Deployment: $WEEnabledForDeployment" " INFO"
-Write-WELog " Enabled for Template Deployment: $WEEnabledForTemplateDeployment" " INFO"
-Write-WELog " Enabled for Disk Encryption: $WEEnabledForDiskEncryption" " INFO"
-
-
-
-
+$KeyVault @params
+Write-Host "Key Vault $VaultName provisioned successfully"
+Write-Host "Vault URI: $($KeyVault.VaultUri)"
+Write-Host "Enabled for Deployment: $EnabledForDeployment"
+Write-Host "Enabled for Template Deployment: $EnabledForTemplateDeployment"
+Write-Host "Enabled for Disk Encryption: $EnabledForDiskEncryption"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage App Gateway
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage App Gateway
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$GatewayName,
@@ -26,23 +15,17 @@ param (
     [string]$Tier = "Standard_v2",
     [int]$Capacity = 2
 )
-
-#region Functions
-
-Write-Information "Provisioning Application Gateway: $GatewayName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "Location: $Location"
-Write-Information "SKU: $SkuName"
-Write-Information "Tier: $Tier"
-Write-Information "Capacity: $Capacity"
-
+Write-Host "Provisioning Application Gateway: $GatewayName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "SKU: $SkuName"
+Write-Host "Tier: $Tier"
+Write-Host "Capacity: $Capacity"
 # Get the virtual network and subnet
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
 $Subnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name $SubnetName
-
-Write-Information "Using VNet: $VNetName"
-Write-Information "Using Subnet: $SubnetName"
-
+Write-Host "Using VNet: $VNetName"
+Write-Host "Using Subnet: $SubnetName"
 # Create public IP for the Application Gateway
 $PublicIpName = "$GatewayName-pip"
 $params = @{
@@ -54,9 +37,7 @@ $params = @{
     Name = $PublicIpName
 }
 $PublicIp @params
-
-Write-Information "Public IP created: $PublicIpName"
-
+Write-Host "Public IP created: $PublicIpName"
 # Create Application Gateway IP configuration
 $params = @{
     ErrorAction = "Stop"
@@ -64,7 +45,6 @@ $params = @{
     Name = "gatewayIP01"
 }
 $GatewayIpConfig @params
-
 # Create frontend IP configuration
 $params = @{
     ErrorAction = "Stop"
@@ -72,7 +52,6 @@ $params = @{
     Name = "frontendIP01"
 }
 $FrontendIpConfig @params
-
 # Create frontend port
 $params = @{
     ErrorAction = "Stop"
@@ -80,10 +59,8 @@ $params = @{
     Name = "frontendPort01"
 }
 $FrontendPort @params
-
 # Create backend address pool
 $BackendPool -Name "backendPool01" -ErrorAction "Stop"
-
 # Create backend HTTP settings
 $params = @{
     ErrorAction = "Stop"
@@ -93,7 +70,6 @@ $params = @{
     Protocol = "Http"
 }
 $BackendHttpSettings @params
-
 # Create HTTP listener
 $params = @{
     FrontendIPConfiguration = $FrontendIpConfig
@@ -103,7 +79,6 @@ $params = @{
     Protocol = "Http"
 }
 $HttpListener @params
-
 # Create request routing rule
 $params = @{
     RuleType = "Basic"
@@ -114,7 +89,6 @@ $params = @{
     BackendHttpSettings = $BackendHttpSettings
 }
 $RoutingRule @params
-
 # Create SKU
 $params = @{
     Tier = $Tier
@@ -123,9 +97,8 @@ $params = @{
     Name = $SkuName
 }
 $Sku @params
-
 # Create the Application Gateway
-Write-Information "`nCreating Application Gateway (this may take 10-15 minutes)..."
+Write-Host "`nCreating Application Gateway (this may take 10-15 minutes)..."
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
@@ -141,12 +114,8 @@ $params = @{
     Name = $GatewayName
 }
 $AppGateway @params
+Write-Host "`nApplication Gateway $GatewayName provisioned successfully"
+Write-Host "Public IP: $($PublicIp.IpAddress)"
+Write-Host "Provisioning State: $($AppGateway.ProvisioningState)"
+Write-Host "`nApplication Gateway provisioning completed at $(Get-Date)"
 
-Write-Information "`nApplication Gateway $GatewayName provisioned successfully"
-Write-Information "Public IP: $($PublicIp.IpAddress)"
-Write-Information "Provisioning State: $($AppGateway.ProvisioningState)"
-
-Write-Information "`nApplication Gateway provisioning completed at $(Get-Date)"
-
-
-#endregion

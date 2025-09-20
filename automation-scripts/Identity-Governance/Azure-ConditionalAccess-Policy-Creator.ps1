@@ -1,112 +1,77 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$PolicyName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Description,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$IncludeUsers = @("All"),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$ExcludeUsers = @(),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$IncludeApplications = @("All"),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$RequireMFA = @("require"),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$State = "enabledForReportingButNotEnforced"
 )
-
-#region Functions
-
-Write-Information "Creating Conditional Access Policy: $PolicyName"
-
+Write-Host "Creating Conditional Access Policy: $PolicyName"
 try {
     # Check if Microsoft.Graph.Identity.SignIns module is available
     if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Identity.SignIns)) {
         Write-Warning "Microsoft.Graph.Identity.SignIns module is required for full functionality"
-        Write-Information "Install with: Install-Module Microsoft.Graph.Identity.SignIns"
+        Write-Host "Install with: Install-Module Microsoft.Graph.Identity.SignIns"
     }
-    
     # Connect to Microsoft Graph
     Connect-MgGraph -Scopes "Policy.ReadWrite.ConditionalAccess"
-    
-    Write-Information " Connected to Microsoft Graph"
-    
-    Write-Information "� Conditional Access Policy Configuration:"
-    Write-Information "  Name: $PolicyName"
-    Write-Information "  Description: $Description"
-    Write-Information "  State: $State"
-    Write-Information "  Include Users: $($IncludeUsers -join ', ')"
+    Write-Host "Connected to Microsoft Graph"
+    Write-Host "Name: $PolicyName"
+    Write-Host "Description: $Description"
+    Write-Host "State: $State"
+    Write-Host "Include Users: $($IncludeUsers -join ', ')"
     if ($ExcludeUsers.Count -gt 0) {
-        Write-Information "  Exclude Users: $($ExcludeUsers -join ', ')"
+        Write-Host "Exclude Users: $($ExcludeUsers -join ', ')"
     }
-    Write-Information "  Applications: $($IncludeApplications -join ', ')"
-    Write-Information "  Grant Controls: $($RequireMFA -join ', ')"
-    
-    Write-Information "`n[WARN] IMPORTANT NOTES:"
-    Write-Information "• Policy created in report-only mode by default"
-    Write-Information "• Test thoroughly before enabling enforcement"
-    Write-Information "• Ensure emergency access accounts are excluded"
-    Write-Information "• Monitor sign-in logs for impact analysis"
-    
-    Write-Information "`nConditional Access Policy Benefits:"
-    Write-Information "• Zero Trust security model"
-    Write-Information "• Risk-based access control"
-    Write-Information "• Multi-factor authentication enforcement"
-    Write-Information "• Device compliance requirements"
-    Write-Information "• Location-based restrictions"
-    
-    Write-Information "`nCommon Policy Types:"
-    Write-Information "1. Require MFA for all users"
-    Write-Information "2. Block access from untrusted locations"
-    Write-Information "3. Require compliant devices"
-    Write-Information "4. Require approved client apps"
-    Write-Information "5. Block legacy authentication"
-    
-    Write-Information "`nNext Steps:"
-    Write-Information "1. Create policy via Azure Portal (recommended)"
-    Write-Information "2. Configure conditions and controls"
-    Write-Information "3. Test with pilot users"
-    Write-Information "4. Enable policy after validation"
-    Write-Information "5. Monitor compliance and adjust as needed"
-    
-    Write-Information "`nManual Creation Steps:"
-    Write-Information "1. Azure Portal > Azure Active Directory"
-    Write-Information "2. Security > Conditional Access"
-    Write-Information "3. New Policy"
-    Write-Information "4. Configure users, apps, and conditions"
-    Write-Information "5. Set access controls and session controls"
-    Write-Information "6. Enable policy"
-    
-    Write-Information "`n Conditional Access policy template prepared"
-    Write-Information "� Use Azure Portal to create the actual policy for safety"
-    
+    Write-Host "Applications: $($IncludeApplications -join ', ')"
+    Write-Host "Grant Controls: $($RequireMFA -join ', ')"
+    Write-Host "`n[WARN] IMPORTANT NOTES:"
+    Write-Host "Policy created in report-only mode by default"
+    Write-Host "Test thoroughly before enabling enforcement"
+    Write-Host "Ensure emergency access accounts are excluded"
+    Write-Host "Monitor sign-in logs for impact analysis"
+    Write-Host "`nConditional Access Policy Benefits:"
+    Write-Host "Zero Trust security model"
+    Write-Host "Risk-based access control"
+    Write-Host "Multi-factor authentication enforcement"
+    Write-Host "Device compliance requirements"
+    Write-Host "Location-based restrictions"
+    Write-Host "`nCommon Policy Types:"
+    Write-Host "1. Require MFA for all users"
+    Write-Host "2. Block access from untrusted locations"
+    Write-Host "3. Require compliant devices"
+    Write-Host "4. Require approved client apps"
+    Write-Host "5. Block legacy authentication"
+    Write-Host "`nNext Steps:"
+    Write-Host "1. Create policy via Azure Portal (recommended)"
+    Write-Host "2. Configure conditions and controls"
+    Write-Host "3. Test with pilot users"
+    Write-Host "4. Enable policy after validation"
+    Write-Host "5. Monitor compliance and adjust as needed"
+    Write-Host "`nManual Creation Steps:"
+    Write-Host "1. Azure Portal > Azure Active Directory"
+    Write-Host "2. Security > Conditional Access"
+    Write-Host "3. New Policy"
+    Write-Host "4. Configure users, apps, and conditions"
+    Write-Host "5. Set access controls and session controls"
+    Write-Host "6. Enable policy"
+    Write-Host "`n Conditional Access policy template prepared"
 } catch {
     Write-Error "Conditional Access policy creation failed: $($_.Exception.Message)"
-    Write-Information "� Tip: Use Azure Portal for creating Conditional Access policies"
 }
 
-
-#endregion

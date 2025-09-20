@@ -1,175 +1,74 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Temp
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Temp
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-$WEHelpers = " $WEPsScriptRoot\Helpers\"
-
-Get-ChildItem -Path $WEHelpers -Recurse -Filter '*.ps1' | ForEach-Object { . $_.FullName }
-
-
-
-$WELocationName = 'CanadaCentral'
-
-$WECustomerName = 'CCI'
-$WEVMName = 'TeamViewer'
-$WECustomerName = 'CanadaComputing'
-$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
-
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+$Helpers = " $PsScriptRoot\Helpers\"
+Get-ChildItem -Path $Helpers -Recurse -Filter '*.ps1' | ForEach-Object { . $_.FullName }
+$LocationName = 'CanadaCentral'
+$CustomerName = 'CCI'
+$VMName = 'TeamViewer'
+$CustomerName = 'CanadaComputing'
+$ResourceGroupName = -join (" $CustomerName" , "_$VMName" , "_RG" )
 $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
-[hashtable]$WETags = @{
-
-    " Autoshutown"     = 'ON'
-    " Createdby"       = 'Abdullah Ollivierre'
-    " CustomerName"    = " $WECustomerName"
-    " DateTimeCreated" = " $datetime"
-    " Environment"     = 'Production'
-    " Application"     = 'TeamViewer'  
-    " Purpose"         = 'TeamViewer'
-    " Uptime"          = '24/7'
-    " Workload"        = 'WinSCP'
-    " RebootCaution"   = 'Schedule a window first before rebooting'
-    " VMSize"          = 'B2MS'
-    " Location"        = " $WELocationName"
-    " Approved By"     = " Abdullah Ollivierre"
-    " Approved On"     = ""
-
+[hashtable]$Tags = @{
+    "Autoshutown"     = 'ON'
+    "Createdby"       = 'Abdullah Ollivierre'
+    "CustomerName"    = " $CustomerName"
+    "DateTimeCreated" = " $datetime"
+    "Environment"     = 'Production'
+    "Application"     = 'TeamViewer'
+    "Purpose"         = 'TeamViewer'
+    "Uptime"          = '24/7'
+    "Workload"        = 'WinSCP'
+    "RebootCaution"   = 'Schedule a window first before rebooting'
+    "VMSize"          = 'B2MS'
+    "Location"        = " $LocationName"
+    "Approved By"     = "Abdullah Ollivierre"
+    "Approved On"     = ""
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-$WEComputerName = $WEVMName
-
-
-
-$WEVMSize = " Standard_B2MS"
-$WEOSDiskCaching = " ReadWrite"
-$WEOSCreateOption = " FromImage"
-
-
-$WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
-
-
-$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
-
-
-$WENetworkName = -join (" $WEVMName" , " _group-vnet" )
-
-
-$WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
-$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
-
-
-$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
-
-
-$WESubnetName = -join (" $WEVMName" , " -subnet" )
-$WESubnetAddressPrefix = " 10.0.0.0/24"
-$WEVnetAddressPrefix = " 10.0.0.0/16"
-
-
-$WENSGName = -join (" $WEVMName" , " -nsg" )
-
-
-
-    # IpTagType = " FirstPartyUsage"
+$ComputerName = $VMName
+$VMSize = "Standard_B2MS"
+$OSDiskCaching = "ReadWrite"
+$OSCreateOption = "FromImage"
+$GUID = [guid]::NewGuid()
+$OSDiskName = -join (" $VMName" , "_OSDisk" , "_1" , "_$GUID" )
+$DNSNameLabel = -join (" $VMName" , "DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
+$NetworkName = -join (" $VMName" , "_group-vnet" )
+$NICPrefix = 'NIC1'
+$NICName = -join (" $VMName" , "_$NICPrefix" ).ToLower()
+$IPConfigName = -join (" $VMName" , "$NICName" , "_IPConfig1" ).ToLower()
+$PublicIPAddressName = -join (" $VMName" , "-ip" )
+$SubnetName = -join (" $VMName" , "-subnet" )
+$SubnetAddressPrefix = " 10.0.0.0/24"
+$VnetAddressPrefix = " 10.0.0.0/16"
+$NSGName = -join (" $VMName" , "-nsg" )
+    # IpTagType = "FirstPartyUsage"
     # Tag       = " /Sql"
-
-
-
-
-
-
-
-$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine; 
-$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix" , " /32" )
-
-
-
-
-; 
+$SourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine;
+$SourceAddressPrefixCIDR = -join (" $SourceAddressPrefix" , "/32" )
 $setAzVMAutoShutdownSplat = @{
     # ResourceGroupName = 'RG-WE-001'
-    ResourceGroupName = $WEResourceGroupName
+    ResourceGroupName = $ResourceGroupName
     # Name              = 'MYVM001'
-    Name              = $WEVMName
+    Name              = $VMName
     Enable            = $true
     Time              = '23:59'
-    # TimeZone = " W. Europe Standard Time"
-    TimeZone          = " Central Standard Time"
+    # TimeZone = "W. Europe Standard Time"
+    TimeZone          = "Central Standard Time"
     Email             = " abdullah@canadacomputing.ca"
 }
-
 Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
-
-
-
-
-
 Write-Information \'The VM is now ready.... here is your login details\'
-Write-Information \'username:\' $WEVMLocalAdminUser
-Write-Information \'Password:\' $WEVMLocalAdminPassword
-Write-Information \'DNSName:\' $WEDNSNameLabel
+Write-Information \'username:\' $VMLocalAdminUser
+Write-Information \'Password:\' $VMLocalAdminPassword
+Write-Information \'DNSName:\' $DNSNameLabel
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

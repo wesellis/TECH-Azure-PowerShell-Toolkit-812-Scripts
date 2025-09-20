@@ -1,134 +1,69 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Publicip Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Publicip Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$PublicIpName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPublicIpName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEAllocationMethod = " Static" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WESku = " Standard"
+    [string]$Location,
+    [Parameter()]
+    [string]$AllocationMethod = "Static" ,
+    [Parameter()]
+    [string]$Sku = "Standard"
 )
-
-#region Functions
-
-Write-WELog " Creating Public IP: $WEPublicIpName" " INFO"
-; 
+Write-Host "Creating Public IP: $PublicIpName"
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Sku = $WESku
-    Location = $WELocation
-    AllocationMethod = $WEAllocationMethod
+    ResourceGroupName = $ResourceGroupName
+    Sku = $Sku
+    Location = $Location
+    AllocationMethod = $AllocationMethod
     ErrorAction = "Stop"
-    Name = $WEPublicIpName
+    Name = $PublicIpName
 }
-$WEPublicIp @params
-
-Write-WELog " Public IP created successfully:" " INFO"
-Write-WELog "  Name: $($WEPublicIp.Name)" " INFO"
-Write-WELog "  IP Address: $($WEPublicIp.IpAddress)" " INFO"
-Write-WELog "  Allocation: $($WEPublicIp.PublicIpAllocationMethod)" " INFO"
-Write-WELog "  SKU: $($WEPublicIp.Sku.Name)" " INFO"
-
-
-
-
+$PublicIp @params
+Write-Host "Public IP created successfully:"
+Write-Host "Name: $($PublicIp.Name)"
+Write-Host "IP Address: $($PublicIp.IpAddress)"
+Write-Host "Allocation: $($PublicIp.PublicIpAllocationMethod)"
+Write-Host "SKU: $($PublicIp.Sku.Name)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

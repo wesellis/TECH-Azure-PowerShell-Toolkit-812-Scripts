@@ -1,58 +1,26 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Deployment Script Utils
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Deployment Script Utils
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-$WEProgressPreference = 'SilentlyContinue'
-
-function WE-RunWithRetries(
-    [ScriptBlock] $runBlock, 
-    [ScriptBlock] $onFailureBlock = {}, 
-    [int] $retryAttempts = 5, 
+$ProgressPreference = 'SilentlyContinue'
+function RunWithRetries(
+    [ScriptBlock] $runBlock,
+    [ScriptBlock] $onFailureBlock = {},
+    [int] $retryAttempts = 5,
     [int] $waitBeforeRetrySeconds = 5,
     [bool] $ignoreFailure = $false,
     [bool] $exponentialBackoff = $true
 ) {
     [int] $retriesLeft = $retryAttempts
-
     while ($retriesLeft -ge 0) {
         try {
             & $runBlock
@@ -64,7 +32,7 @@ function WE-RunWithRetries(
                     & $onFailureBlock
                 }
                 if ($ignoreFailure) {
-                    Write-WELog " [WARN] Ignoring the failure:`n$_`n$($_.ScriptStackTrace)" " INFO"
+                    Write-Host "[WARN] Ignoring the failure:`n$_`n$($_.ScriptStackTrace)"
                     break
                 }
                 else {
@@ -73,12 +41,12 @@ function WE-RunWithRetries(
             }
             else {
                 if ($exponentialBackoff) {
-                   ;  $totalDelay = [Math]::Pow(2, $retryAttempts - $retriesLeft) * $waitBeforeRetrySeconds
+$totalDelay = [Math]::Pow(2, $retryAttempts - $retriesLeft) * $waitBeforeRetrySeconds
                 }
                 else {
-                   ;  $totalDelay = $waitBeforeRetrySeconds
+$totalDelay = $waitBeforeRetrySeconds
                 }
-                Write-WELog " [WARN] Attempt failed: $_. Retrying in $totalDelay seconds. Retries left: $retriesLeft" " INFO"
+                Write-Host "[WARN] Attempt failed: $_. Retrying in $totalDelay seconds. Retries left: $retriesLeft"
                 $retriesLeft--
                 Start-Sleep -Seconds $totalDelay
             }
@@ -86,8 +54,3 @@ function WE-RunWithRetries(
     }
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

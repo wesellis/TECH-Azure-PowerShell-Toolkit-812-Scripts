@@ -1,93 +1,55 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage resource locks
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
-# Azure Resource Lock Manager
-# Professional utility for managing resource locks across Azure resources
-# Version: 1.0 | Resource protection and governance
-
+    Create, list, remove, or audit Azure resource locks
+    Author: Wes Ellis (wes@wesellis.com)#>
+#
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [ValidateSet("Create", "List", "Remove", "Audit")]
     [string]$Action,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$LockName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateSet("ReadOnly", "Delete")]
     [string]$LockLevel = "Delete",
-    
-    [Parameter(Mandatory=$false)]
-    [string]$LockNotes = "Created by Azure Automation",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
+    [string]$LockNotes = "Lock created via script",
+    [Parameter()]
     [switch]$Force
 )
-
-#region Functions
-
-# Import common functions
-# Module import removed - use #Requires instead
-
-Show-Banner -ScriptName "Azure Resource Lock Manager" -Version "1.0" -Description "Manage resource locks for protection and governance"
-
 try {
-    Write-ProgressStep -StepNumber 1 -TotalSteps 3 -StepName "Connection" -Status "Validating Azure connection"
-    if (-not (Test-AzureConnection)) {
-        throw "Azure connection validation failed"
-    }
-
-    Write-ProgressStep -StepNumber 2 -TotalSteps 3 -StepName "Lock Operation" -Status "Executing $Action"
-    
-    switch ($Action) {
+        if (-not (Get-AzContext)) { Connect-AzAccount }
+        switch ($Action) {
         "Create" {
             if (-not $LockName) { $LockName = "AutoLock-$(Get-Date -Format 'yyyyMMdd')" }
-            
             if ($ResourceName) {
                 $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceId $resource.ResourceId -LockNotes $LockNotes
-                Write-Log "[OK] Created $LockLevel lock on resource: $ResourceName" -Level SUCCESS
+                Write-Host "Lock created on resource: $ResourceName" -ForegroundColor Green
             } elseif ($ResourceGroupName) {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceGroupName $ResourceGroupName -LockNotes $LockNotes
-                Write-Log "[OK] Created $LockLevel lock on resource group: $ResourceGroupName" -Level SUCCESS
+                Write-Host "Lock created on resource group: $ResourceGroupName" -ForegroundColor Green
             } else {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -LockNotes $LockNotes
-                Write-Log "[OK] Created $LockLevel lock on subscription" -Level SUCCESS
+                Write-Host "Subscription-level lock created" -ForegroundColor Green
             }
         }
-        
         "List" {
             if ($ResourceGroupName) {
                 $locks = Get-AzResourceLock -ResourceGroupName $ResourceGroupName
             } else {
-                $locks = Get-AzResourceLock -ErrorAction Stop
+                $locks = Get-AzResourceLock
             }
-            
-            Write-Information "Found $($locks.Count) resource locks:"
+            Write-Host "Found $($locks.Count) resource locks:"
             $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
         }
-        
         "Remove" {
             if ($LockName) {
                 if ($ResourceGroupName) {
@@ -95,10 +57,9 @@ try {
                 } else {
                     Remove-AzResourceLock -LockName $LockName -Force:$Force
                 }
-                Write-Log "[OK] Removed lock: $LockName" -Level SUCCESS
+                
             }
         }
-        
         "Audit" {
             $allLocks = Get-AzResourceLock -ErrorAction Stop
             $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
@@ -108,23 +69,12 @@ try {
                     Resources = $_.Group | Select-Object Name, ResourceGroupName, ResourceName
                 }
             }
-            
-            Write-Information "Lock Audit Summary:"
-            Write-Information "Total Locks: $($allLocks.Count)"
+            Write-Host "Lock Audit Summary:"
+            Write-Host "Total Locks: $($allLocks.Count)"
             $lockReport | ForEach-Object {
-                Write-Information "$($_.LockLevel) Locks: $($_.Count)"
+                Write-Host "$($_.LockLevel) Locks: $($_.Count)"
             }
         }
     }
+    } catch { throw }
 
-    Write-ProgressStep -StepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
-    Write-Log " Resource lock operation completed successfully!" -Level SUCCESS
-
-} catch {
-    Write-Log " Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    exit 1
-}
-
-Write-Progress -Activity "Resource Lock Management" -Completed
-
-#endregion

@@ -1,69 +1,46 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage SQL resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage SQL resources
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$ServerName,
     [string]$DatabaseName
 )
-
-#region Functions
-
-Write-Information "Monitoring SQL Database: $DatabaseName"
-Write-Information "Server: $ServerName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "============================================"
-
+Write-Host "Monitoring SQL Database: $DatabaseName"
+Write-Host "Server: $ServerName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "============================================"
 # Get SQL Server details
 $SqlServer = Get-AzSqlServer -ResourceGroupName $ResourceGroupName -ServerName $ServerName
-
-Write-Information "SQL Server Information:"
-Write-Information "  Server Name: $($SqlServer.ServerName)"
-Write-Information "  Location: $($SqlServer.Location)"
-Write-Information "  Server Version: $($SqlServer.ServerVersion)"
-Write-Information "  Fully Qualified Domain Name: $($SqlServer.FullyQualifiedDomainName)"
-
+Write-Host "SQL Server Information:"
+Write-Host "Server Name: $($SqlServer.ServerName)"
+Write-Host "Location: $($SqlServer.Location)"
+Write-Host "Server Version: $($SqlServer.ServerVersion)"
+Write-Host "Fully Qualified Domain Name: $($SqlServer.FullyQualifiedDomainName)"
 # Get SQL Database details
 $SqlDatabase = Get-AzSqlDatabase -ResourceGroupName $ResourceGroupName -ServerName $ServerName -DatabaseName $DatabaseName
-
-Write-Information "`nSQL Database Information:"
-Write-Information "  Database Name: $($SqlDatabase.DatabaseName)"
-Write-Information "  Status: $($SqlDatabase.Status)"
-Write-Information "  Edition: $($SqlDatabase.Edition)"
-Write-Information "  Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)"
-Write-Information "  Max Size (GB): $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2))"
-Write-Information "  Collation: $($SqlDatabase.CollationName)"
-Write-Information "  Creation Date: $($SqlDatabase.CreationDate)"
-Write-Information "  Earliest Restore Date: $($SqlDatabase.EarliestRestoreDate)"
-
+Write-Host "`nSQL Database Information:"
+Write-Host "Database Name: $($SqlDatabase.DatabaseName)"
+Write-Host "Status: $($SqlDatabase.Status)"
+Write-Host "Edition: $($SqlDatabase.Edition)"
+Write-Host "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)"
+Write-Host "Max Size (GB): $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2))"
+Write-Host "Collation: $($SqlDatabase.CollationName)"
+Write-Host "Creation Date: $($SqlDatabase.CreationDate)"
+Write-Host "Earliest Restore Date: $($SqlDatabase.EarliestRestoreDate)"
 # Check firewall rules
 $FirewallRules = Get-AzSqlServerFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $ServerName
-Write-Information "`nFirewall Rules: $($FirewallRules.Count)"
+Write-Host "`nFirewall Rules: $($FirewallRules.Count)"
 foreach ($Rule in $FirewallRules) {
-    Write-Information "  - $($Rule.FirewallRuleName): $($Rule.StartIpAddress) - $($Rule.EndIpAddress)"
+    Write-Host "  - $($Rule.FirewallRuleName): $($Rule.StartIpAddress) - $($Rule.EndIpAddress)"
 }
-
 # Get database usage metrics (simplified)
-Write-Information "`nDatabase Metrics:"
-Write-Information "  Note: Use Azure Monitor or Azure Portal for detailed performance metrics"
-Write-Information "  Current Service Level: $($SqlDatabase.CurrentServiceObjectiveName)"
+Write-Host "`nDatabase Metrics:"
+Write-Host "Note: Use Azure Monitor or Azure Portal for  performance metrics"
+Write-Host "Current Service Level: $($SqlDatabase.CurrentServiceObjectiveName)"
+Write-Host "`nSQL Database monitoring completed at $(Get-Date)"
 
-Write-Information "`nSQL Database monitoring completed at $(Get-Date)"
-
-
-#endregion

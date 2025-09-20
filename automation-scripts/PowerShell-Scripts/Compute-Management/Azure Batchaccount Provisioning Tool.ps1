@@ -1,172 +1,103 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Batchaccount Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Batchaccount Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AccountName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAccountName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountName,
-    [string]$WEPoolAllocationMode = " BatchService"
+    [string]$StorageAccountName,
+    [string]$PoolAllocationMode = "BatchService"
 )
-
-#region Functions
-
-Write-WELog " Provisioning Batch Account: $WEAccountName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Pool Allocation Mode: $WEPoolAllocationMode" " INFO"
-
-
-if ($WEStorageAccountName) {
-    Write-WELog " Storage Account: $WEStorageAccountName" " INFO"
-    
+Write-Host "Provisioning Batch Account: $AccountName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Pool Allocation Mode: $PoolAllocationMode"
+if ($StorageAccountName) {
+    Write-Host "Storage Account: $StorageAccountName"
     # Check if storage account exists
-    $WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName -ErrorAction SilentlyContinue
-    
-    if (-not $WEStorageAccount) {
-        Write-WELog " Creating storage account for Batch..." " INFO"
+    $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
+    if (-not $StorageAccount) {
+        Write-Host "Creating storage account for Batch..."
         $params = @{
-            ResourceGroupName = $WEResourceGroupName
-            SkuName = " Standard_LRS"
-            Location = $WELocation
-            Kind = " StorageV2"  Write-WELog " Storage account created: $($WEStorageAccount.StorageAccountName)" " INFO" } else { Write-WELog " Using existing storage account: $($WEStorageAccount.StorageAccountName)" " INFO" }"
+            ResourceGroupName = $ResourceGroupName
+            SkuName = "Standard_LRS"
+            Location = $Location
+            Kind = "StorageV2"  Write-Host "Storage account created: $($StorageAccount.StorageAccountName)" "INFO" } else { Write-Host "Using existing storage account: $($StorageAccount.StorageAccountName)" }"
             ErrorAction = "Stop"
-            Name = $WEStorageAccountName
+            Name = $StorageAccountName
         }
-        $WEStorageAccount @params
+        $StorageAccount @params
 }
-
-
-if ($WEStorageAccountName) {
+if ($StorageAccountName) {
    $params = @{
        ErrorAction = "Stop"
-       AutoStorageAccountId = $WEStorageAccount.Id
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WEAccountName
-       Location = $WELocation
+       AutoStorageAccountId = $StorageAccount.Id
+       ResourceGroupName = $ResourceGroupName
+       Name = $AccountName
+       Location = $Location
    }
    ; @params
 } else {
    $params = @{
        ErrorAction = "Stop"
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WEAccountName
-       Location = $WELocation
+       ResourceGroupName = $ResourceGroupName
+       Name = $AccountName
+       Location = $Location
    }
    ; @params
 }
-
-Write-WELog " `nBatch Account $WEAccountName provisioned successfully" " INFO"
-Write-WELog " Account Endpoint: $($WEBatchAccount.AccountEndpoint)" " INFO"
-Write-WELog " Provisioning State: $($WEBatchAccount.ProvisioningState)" " INFO"
-Write-WELog " Pool Allocation Mode: $($WEBatchAccount.PoolAllocationMode)" " INFO"
-
-if ($WEStorageAccountName) {
-    Write-WELog " Auto Storage Account: $($WEBatchAccount.AutoStorageAccountId.Split('/')[-1])" " INFO"
+Write-Host " `nBatch Account $AccountName provisioned successfully"
+Write-Host "Account Endpoint: $($BatchAccount.AccountEndpoint)"
+Write-Host "Provisioning State: $($BatchAccount.ProvisioningState)"
+Write-Host "Pool Allocation Mode: $($BatchAccount.PoolAllocationMode)"
+if ($StorageAccountName) {
+    Write-Host "Auto Storage Account: $($BatchAccount.AutoStorageAccountId.Split('/')[-1])"
 }
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Create pools for compute nodes" " INFO"
-Write-WELog " 2. Submit jobs and tasks" " INFO"
-Write-WELog " 3. Monitor job execution through Azure Portal" " INFO"
-
-Write-WELog " `nBatch Account provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nNext Steps:"
+Write-Host " 1. Create pools for compute nodes"
+Write-Host " 2. Submit jobs and tasks"
+Write-Host " 3. Monitor job execution through Azure Portal"
+Write-Host " `nBatch Account provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

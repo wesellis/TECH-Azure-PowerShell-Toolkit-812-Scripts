@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+.DESCRIPTION`n    Automate Azure operations
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$AvailabilitySetName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$PlatformFaultDomainCount = 2,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$PlatformUpdateDomainCount = 5
 )
-
-#region Functions
-
-Write-Information "Creating Availability Set: $AvailabilitySetName"
-
+Write-Host "Creating Availability Set: $AvailabilitySetName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     PlatformUpdateDomainCount = $PlatformUpdateDomainCount
@@ -47,13 +28,10 @@ $params = @{
     Name = $AvailabilitySetName
 }
 $AvailabilitySet @params
+Write-Host "Availability Set created successfully:"
+Write-Host "Name: $($AvailabilitySet.Name)"
+Write-Host "Location: $($AvailabilitySet.Location)"
+Write-Host "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
+Write-Host "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
+Write-Host "SKU: $($AvailabilitySet.Sku)"
 
-Write-Information " Availability Set created successfully:"
-Write-Information "  Name: $($AvailabilitySet.Name)"
-Write-Information "  Location: $($AvailabilitySet.Location)"
-Write-Information "  Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
-Write-Information "  Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
-Write-Information "  SKU: $($AvailabilitySet.Sku)"
-
-
-#endregion

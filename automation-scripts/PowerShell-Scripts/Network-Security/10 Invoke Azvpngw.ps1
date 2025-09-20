@@ -1,160 +1,83 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
-    10 Invoke Azvpngw
+    Invoke Azvpngw
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
+    Invoke Azvpngw operation
+    Author: Wes Ellis (wes@wesellis.com)
 
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced 10 Invoke Azvpngw
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-.SYNOPSIS
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Short description
-.DESCRIPTION
     Long description
-.EXAMPLE
     PS C:\> <example usage>
     Explanation of what the example does
 .INPUTS
     Inputs (if any)
 .OUTPUTS
     Output (if any)
-.NOTES
     General notes
-
-
-
 [CmdletBinding()]
-function WE-Invoke-AzVPNGateway {
+function Invoke-AzVPNGateway {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-    
-
-function Write-WELog {
+function Write-Host {
     param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
 param(
         # [Parameter(ValueFromPipelineByPropertyName)]
         # $newAzResourceGroupSplat
         [Parameter(ValueFromPipeline)]
         $newAzVirtualNetworkGatewaysplat
-        
     )
-    
     begin {
-        
     }
-    
     process {
-    
         try {
-
-    
-           ;  $WEVPNGatewayConfig = New-AzVirtualNetworkGateway -ErrorAction Stop @newAzVirtualNetworkGatewaysplat
-         
+$VPNGatewayConfig = New-AzVirtualNetworkGateway -ErrorAction Stop @newAzVirtualNetworkGatewaysplat
         }
-     
         catch {
-                
             Write-Error 'An Error happened when .. script execution will be halted'
-         
             #Region CatchAll
-         
-            Write-WELog " A Terminating Error (Exception) happened" " INFO" -ForegroundColor Magenta
-            Write-WELog " Displaying the Catch Statement ErrorCode" " INFO" -ForegroundColor Yellow
-            $WEPSItem
-            Write-Information $WEPSItem.ScriptStackTrace -ForegroundColor Red
-            
-            
-           ;  $WEErrorMessage_1 = $_.Exception.Message
-            Write-Information $WEErrorMessage_1  -ForegroundColor Red
-            Write-Output " Ran into an issue: $WEPSItem"
-            Write-Information " Ran into an issue: $WEPSItem"
-            throw " Ran into an issue: $WEPSItem"
-            throw " I am the catch"
-            throw " Ran into an issue: $WEPSItem"
-            $WEPSItem | Write-Information -ForegroundColor
-            $WEPSItem | Select-Object *
-            $WEPSCmdlet.ThrowTerminatingError($WEPSitem)
+            Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
+            Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
+            $PSItem
+            Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red
+$ErrorMessage_1 = $_.Exception.Message
+            Write-Host $ErrorMessage_1  -ForegroundColor Red
+            Write-Output "Ran into an issue: $PSItem"
+            Write-Host "Ran into an issue: $PSItem"
+            throw "Ran into an issue: $PSItem"
+            throw "I am the catch"
+            throw "Ran into an issue: $PSItem"
+            $PSItem | Write-Information -ForegroundColor
+            $PSItem | Select-Object *
+            $PSCmdlet.ThrowTerminatingError($PSitem)
             throw
-            throw " Something went wrong"
-            Write-Log $WEPSItem.ToString()
-         
+            throw "Something went wrong"
+            Write-Log $PSItem.ToString()
             #EndRegion CatchAll
-         
             Exit
-         
-         
         }
-    
         finally {
-         
         }
-        
     }
-    
     end {
-
-        return $WEVPNGatewayConfig
-        
+        return $VPNGatewayConfig
     }
 }
-
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

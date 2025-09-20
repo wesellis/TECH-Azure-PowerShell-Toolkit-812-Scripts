@@ -1,75 +1,50 @@
-#Requires -Module Az.Resources
-#Requires -Version 7.0
-
 <#
 .SYNOPSIS
     Manages RBAC role assignments within subscriptions, management groups, or resource groups
 
 .DESCRIPTION
-    Comprehensive role assignment management tool that can add, remove, audit, and validate
     RBAC assignments at various scopes. Supports bulk operations, role definition management,
     and compliance reporting with full audit trail capabilities.
-
 .PARAMETER Action
     The action to perform: Add, Remove, Audit, Validate, Export, Import
-
 .PARAMETER PrincipalId
     Object ID of the user, group, service principal, or managed identity
-
 .PARAMETER PrincipalType
     Type of principal: User, Group, ServicePrincipal, ManagedIdentity
-
 .PARAMETER RoleDefinitionName
     Name of the built-in or custom role (e.g., 'Contributor', 'Reader', 'Owner')
-
 .PARAMETER RoleDefinitionId
     GUID of the role definition (alternative to RoleDefinitionName)
-
 .PARAMETER Scope
     Scope at which to apply the role assignment (subscription/resource group/resource)
-
 .PARAMETER ManagementGroupId
     Management group ID for cross-subscription operations
-
 .PARAMETER ResourceGroupName
     Target resource group name for scoped assignments
-
 .PARAMETER RemoveOrphaned
     Remove role assignments for deleted principals
-
 .PARAMETER ExportPath
     Path to export audit results or role assignments
-
 .PARAMETER ImportPath
     Path to import bulk role assignments from CSV/JSON
-
 .PARAMETER WhatIf
     Preview changes without applying them
-
 .PARAMETER Confirm
     Prompt for confirmation before making changes
-
 .EXAMPLE
     .\manage-role-assignments.ps1 -Action Add -PrincipalId "xxxx-xxxx" -RoleDefinitionName "Contributor" -ResourceGroupName "RG-Production"
 
     Adds Contributor role to specified principal on the resource group
-
 .EXAMPLE
     .\manage-role-assignments.ps1 -Action Audit -ExportPath ".\RoleAudit.csv"
 
     Audits all role assignments in current subscription and exports to CSV
-
 .EXAMPLE
     .\manage-role-assignments.ps1 -Action Import -ImportPath ".\BulkAssignments.json" -WhatIf
 
     Preview bulk role assignment import without applying changes
-
 .NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-    LastModified: 2025-09-19
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Direct')]
 param(
@@ -129,6 +104,7 @@ if ($Action -eq 'Export' -and -not $ExportPath) {
 # Initialize logging
 $script:LogPath = ".\RoleManagement_$(Get-Date -Format 'yyyyMMdd').log"
 $script:ChangeLog = @()
+
 #endregion
 
 #region Helper-Functions
@@ -225,13 +201,13 @@ function Test-PrincipalExists {
         $principal = Get-AzADServicePrincipal @params -ErrorAction SilentlyContinue
         if ($principal) { return @{Exists = $true; Type = 'ServicePrincipal'; Object = $principal} }
 
-        return @{Exists = $false; Type = $null; Object = $null}
-    }
-    catch {
+        return @{Exists = $false; Type = $null; Object = $null
+} catch {
         Write-LogEntry "Error checking principal $PrincipalId : $_" -Level Error
         return @{Exists = $false; Type = $null; Object = $null}
     }
 }
+
 #endregion
 
 #region Core-Functions
@@ -291,14 +267,13 @@ function Add-RoleAssignment {
 
             Write-LogEntry "Successfully added role assignment" -Level Success
             return $newAssignment
-        }
-    }
-    catch {
+        
+} catch {
         $script:ChangeLog += [PSCustomObject]@{
             Timestamp = Get-Date
             Action = 'Add'
             PrincipalId = $PrincipalId
-            Role = $RoleName ?? $RoleId
+            Role = if ($RoleName) { $RoleName } else { $RoleId }
             Scope = $Scope
             Status = 'Failed'
             Error = $_.Exception.Message
@@ -352,14 +327,13 @@ function Remove-RoleAssignment {
             }
 
             Write-LogEntry "Successfully removed role assignment" -Level Success
-        }
-    }
-    catch {
+        
+} catch {
         $script:ChangeLog += [PSCustomObject]@{
             Timestamp = Get-Date
             Action = 'Remove'
             PrincipalId = $PrincipalId
-            Role = $RoleName ?? $RoleId
+            Role = if ($RoleName) { $RoleName } else { $RoleId }
             Scope = $Scope
             Status = 'Failed'
             Error = $_.Exception.Message
@@ -603,9 +577,8 @@ function Import-RoleAssignments {
                 else {
                     Write-LogEntry "Validation passed for: $($assignment.PrincipalId)" -Level Info
                     $results.Success++
-                }
-            }
-            catch {
+                
+} catch {
                 $results.Failed++
                 $results.Details += [PSCustomObject]@{
                     PrincipalId = $assignment.PrincipalId
@@ -613,7 +586,6 @@ function Import-RoleAssignments {
                     Reason = $_.Exception.Message
                 }
             }
-
 
         Write-LogEntry "Import completed - Success: $($results.Success), Failed: $($results.Failed), Skipped: $($results.Skipped)" -Level Info
         return $results
@@ -655,13 +627,13 @@ function Remove-OrphanedAssignments {
                     Write-LogEntry "Failed to remove orphaned assignment: $_" -Level Error
                 }
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Orphaned assignment cleanup failed: $_" -Level Error
         throw
     }
 }
+
 #endregion
 
 #region Main-Execution
@@ -737,9 +709,9 @@ try {
             else {
                 # Display summary
                 Write-Host "`nAudit Summary:" -ForegroundColor Cyan
-                Write-Host "  Total Assignments: $($auditResults.Count)" -ForegroundColor White
-                Write-Host "  Orphaned: $(($auditResults | Where-Object IsOrphaned).Count)" -ForegroundColor Yellow
-                Write-Host "  Inherited: $(($auditResults | Where-Object IsInherited).Count)" -ForegroundColor Gray
+                Write-Host "Total Assignments: $($auditResults.Count)" -ForegroundColor White
+                Write-Host "Orphaned: $(($auditResults | Where-Object IsOrphaned).Count)" -ForegroundColor Yellow
+                Write-Host "Inherited: $(($auditResults | Where-Object IsInherited).Count)" -ForegroundColor Gray
 
                 if ($DetailedOutput) {
                     $auditResults | Format-Table -AutoSize
@@ -790,10 +762,10 @@ try {
             $importResults = Import-RoleAssignments -Path $ImportPath -ValidateOnly:$validateOnly
 
             Write-Host "`nImport Results:" -ForegroundColor Cyan
-            Write-Host "  Total: $($importResults.Total)" -ForegroundColor White
-            Write-Host "  Success: $($importResults.Success)" -ForegroundColor Green
-            Write-Host "  Failed: $($importResults.Failed)" -ForegroundColor Red
-            Write-Host "  Skipped: $($importResults.Skipped)" -ForegroundColor Yellow
+            Write-Host "Total: $($importResults.Total)" -ForegroundColor White
+            Write-Host "Success: $($importResults.Success)" -ForegroundColor Green
+            Write-Host "Failed: $($importResults.Failed)" -ForegroundColor Red
+            Write-Host "Skipped: $($importResults.Skipped)" -ForegroundColor Yellow
 
             if ($DetailedOutput -and $importResults.Details.Count -gt 0) {
                 Write-Host "`nDetails:" -ForegroundColor Cyan
@@ -820,5 +792,6 @@ finally {
     # Cleanup
     $ProgressPreference = 'Continue'
 }
+
 #endregion
 

@@ -1,32 +1,18 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    commit and pushcom)#>
 # Commit and push the consolidated Azure Enterprise Toolkit
-Write-Information "Committing Azure Enterprise Toolkit to GitHub..."
+Write-Host "Committing Azure Enterprise Toolkit to GitHub..."
 
 # Add all files
 git add .
-Write-Information "Added all files to staging"
+Write-Host "Added all files to staging"
 
-# Commit with comprehensive message
+# Commit with
 $commitMessage = @"
  Azure Enterprise Toolkit - Complete Consolidation
 
- Consolidated 5 repositories into enterprise-grade toolkit:
+ Consolidated 5 repositories into
 - Azure-Automation-Scripts (124+ PowerShell scripts)
 - Azure-Cost-Management-Dashboard (Dashboards & analytics)
 - Azure-DevOps-Pipeline-Templates (CI/CD templates)
@@ -43,9 +29,9 @@ $commitMessage = @"
 - tools/ - Utility scripts
 
  Features:
-- Enterprise-grade automation
+-
 - Cross-platform compatibility
-- Comprehensive documentation
+-
 - Production-proven reliability
 - Professional user experience
 
@@ -53,15 +39,15 @@ Ready for enterprise Azure administration!
 "@
 
 git commit -m $commitMessage
-Write-Information "Committed with comprehensive message"
+Write-Host "Committed with
 
 # Push to GitHub
 git push
-Write-Information "Pushed to GitHub successfully!"
+Write-Host "Pushed to GitHub successfully!"
 
-Write-Information "`n Azure Enterprise Toolkit is now live on GitHub!"
-Write-Information "� View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
-Write-Information "[*] Don't forget to star your own repository!"
-
+Write-Host "`n Azure Enterprise Toolkit is now live on GitHub!"
+Write-Host "�� View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
+Write-Host "[*] Don't forget to star your own repository!"
 
 #endregion
+

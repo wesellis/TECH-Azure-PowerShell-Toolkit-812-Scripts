@@ -1,51 +1,11 @@
-#Requires -Version 7.0
-
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Add Defender Exclusions
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-#>
-
 <#
 .SYNOPSIS
-    We Enhanced Add Defender Exclusions
+    Add Windows Defender exclusions
 
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
 .DESCRIPTION
     Add Windows Defender exclusion that can access user local environment variables.
     Related: https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-extension-file-exclusions-microsoft-defender-antivirus?view=o365-worldwide#system-environment-variables
-.EXAMPLE
     Sample Bicep snippet for adding the task via Dev Box Image Templates:
-
     {
         Task: 'add-defender-exclusions'
         Parameters: {
@@ -55,34 +15,22 @@
                 '%TEMP%\\MSBuildTemp%USERNAME%'
             ]
     }
-
-
+#>
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true)][PSObject] $WETaskParams
+    [Parameter(Mandatory = $true)][PSObject] $TaskParams
 )
-
-#region Functions
-; 
-$WEErrorActionPreference = " Stop"
 Set-StrictMode -Version Latest
-
 try {
-    foreach ($dir in $WETaskParams.DirsToExclude) {
-       ;  $expandedDir = [Environment]::ExpandEnvironmentVariables($dir)
+    foreach ($dir in $TaskParams.DirsToExclude) {
+        $expandedDir = [Environment]::ExpandEnvironmentVariables($dir)
         Add-MpPreference -ExclusionPath $expandedDir
-        Write-WELog " Added Windows Defender exlusion for $expandedDir" " INFO"
+        Write-Host "Added Windows Defender exclusion for $expandedDir"
     }
-}
-catch {
-    Write-WELog " !!! [WARN] Unhandled exception (will be ignored):" " INFO"
+} catch {
+    Write-Host "[WARN] Unhandled exception (will be ignored):" -ForegroundColor Yellow
     Write-Information -Object $_
     Write-Information -Object $_.ScriptStackTrace
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

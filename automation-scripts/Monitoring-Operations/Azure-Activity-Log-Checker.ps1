@@ -1,39 +1,21 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$HoursBack = 24,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$MaxEvents = 20
 )
-
-#region Functions
-
 Write-Information -Object "Retrieving Activity Log events (last $HoursBack hours)"
-
 $StartTime = (Get-Date).AddHours(-$HoursBack)
 $EndTime = Get-Date -ErrorAction Stop
-
 if ($ResourceGroupName) {
     $ActivityLogs = Get-AzActivityLog -ResourceGroupName $ResourceGroupName -StartTime $StartTime -EndTime $EndTime
     Write-Information -Object "Resource Group: $ResourceGroupName"
@@ -41,12 +23,9 @@ if ($ResourceGroupName) {
     $ActivityLogs = Get-AzActivityLog -StartTime $StartTime -EndTime $EndTime
     Write-Information -Object "Subscription-wide activity"
 }
-
 $RecentLogs = $ActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $MaxEvents
-
 Write-Information -Object "`nRecent Activity (Last $MaxEvents events):"
 Write-Information -Object ("=" * 60)
-
 foreach ($Log in $RecentLogs) {
     Write-Information -Object "Time: $($Log.EventTimestamp)"
     Write-Information -Object "Operation: $($Log.OperationName.Value)"
@@ -56,5 +35,3 @@ foreach ($Log in $RecentLogs) {
     Write-Information -Object ("-" * 40)
 }
 
-
-#endregion

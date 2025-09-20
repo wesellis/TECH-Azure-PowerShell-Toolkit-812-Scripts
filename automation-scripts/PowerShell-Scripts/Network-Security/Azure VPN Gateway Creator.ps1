@@ -1,175 +1,106 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vpn Gateway Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vpn Gateway Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEGatewayName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$GatewayName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEVNetName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$VNetName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEGatewaySku = " VpnGw1"
+    [string]$Location,
+    [Parameter()]
+    [string]$GatewaySku = "VpnGw1"
 )
-
-#region Functions
-
-Write-WELog " Creating VPN Gateway: $WEGatewayName" " INFO"
-
-
-$WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
-
-
-$WEGatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $WEVNet -Name " GatewaySubnet" -ErrorAction SilentlyContinue
-if (-not $WEGatewaySubnet) {
-    Write-WELog " Creating GatewaySubnet..." " INFO"
-    Add-AzVirtualNetworkSubnetConfig -Name " GatewaySubnet" -VirtualNetwork $WEVNet -AddressPrefix " 10.0.255.0/27"
-    Set-AzVirtualNetwork -VirtualNetwork $WEVNet
-    $WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
-    $WEGatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $WEVNet -Name " GatewaySubnet"
+Write-Host "Creating VPN Gateway: $GatewayName" "INFO"
+$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+$GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
+if (-not $GatewaySubnet) {
+    Write-Host "Creating GatewaySubnet..." "INFO"
+    Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $VNet -AddressPrefix " 10.0.255.0/27"
+    Set-AzVirtualNetwork -VirtualNetwork $VNet
+    $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet"
 }
-
-
-$WEGatewayIpName = " $WEGatewayName-pip"
+$GatewayIpName = " $GatewayName-pip"
 $params = @{
     ErrorAction = "Stop"
     AllocationMethod = "Dynamic"
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEGatewayIpName
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    Name = $GatewayIpName
+    Location = $Location
 }
-$WEGatewayIp @params
+$GatewayIp @params
 
-; 
 $params = @{
     ErrorAction = "Stop"
-    PublicIpAddressId = $WEGatewayIp.Id
-    SubnetId = $WEGatewaySubnet.Id
+    PublicIpAddressId = $GatewayIp.Id
+    SubnetId = $GatewaySubnet.Id
     Name = " gatewayConfig"
 }
-$WEGatewayIpConfig @params
-
-
-Write-WELog " Creating VPN Gateway (this may take 30-45 minutes)..." " INFO" ; 
+$GatewayIpConfig @params
+Write-Host "Creating VPN Gateway (this may take 30-45 minutes)..." "INFO" ;
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Location = $WELocation
-    GatewaySku = $WEGatewaySku
-    VpnType = " RouteBased"
-    IpConfigurations = $WEGatewayIpConfig
-    GatewayType = " Vpn"
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    GatewaySku = $GatewaySku
+    VpnType = "RouteBased"
+    IpConfigurations = $GatewayIpConfig
+    GatewayType = "Vpn"
     ErrorAction = "Stop"
-    Name = $WEGatewayName
+    Name = $GatewayName
 }
-$WEGateway @params
-
-Write-WELog "  VPN Gateway created successfully:" " INFO"
-Write-WELog "  Name: $($WEGateway.Name)" " INFO"
-Write-WELog "  Type: $($WEGateway.GatewayType)" " INFO"
-Write-WELog "  SKU: $($WEGateway.Sku.Name)" " INFO"
-Write-WELog "  Public IP: $($WEGatewayIp.IpAddress)" " INFO"
-
-
-
-
+$Gateway @params
+Write-Host "VPN Gateway created successfully:" "INFO"
+Write-Host "Name: $($Gateway.Name)" "INFO"
+Write-Host "Type: $($Gateway.GatewayType)" "INFO"
+Write-Host "SKU: $($Gateway.Sku.Name)" "INFO"
+Write-Host "Public IP: $($GatewayIp.IpAddress)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

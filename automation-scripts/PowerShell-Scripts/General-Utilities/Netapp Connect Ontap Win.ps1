@@ -1,367 +1,241 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Netapp Connect Ontap Win
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Netapp Connect Ontap Win
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [String]$email,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [String]$password,
-    [Parameter(Mandatory=$true)]
-    [String]$WEOTCpassword,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
+    [String]$OTCpassword,
+    [Parameter(Mandatory)]
     [String]$ocmip,
-    [Parameter(Mandatory=$true)]
-    [decimal]$WECapacity
-) 
-
-#region Functions
-
-function WE-Get-ONTAPClusterDetails([String]$email, [String]$password, [String]$ocmip)
+    [Parameter(Mandatory)]
+    [decimal]$Capacity
+)
+function Get-ONTAPClusterDetails([String]$email, [String]$password, [String]$ocmip)
 {
-
 $authbody = @{
     email = " ${email}"
     password = " ${password}"
 }
 $authbodyjson = $authbody | ConvertTo-Json
-
-
 $uriauth = " http://$ocmip/occm/api/auth/login"
 $urigetpublicid = " http://$ocmip/occm/api/azure/vsa/working-environments"
 $urigetproperties = " http://$ocmip/occm/api/azure/vsa/working-environments/${publicid?fields}?fields=ontapClusterProperties"
-$headers = @{" Referer" = " AzureQS1" }
-
-
+$headers = @{"Referer" = "AzureQS1" }
 Invoke-RestMethod -Method Post -Headers $headers -UseBasicParsing -Uri ${uriauth} -ContentType 'application/json' -Body $authbodyjson  -SessionVariable session
-
-
 $publicidjson = Invoke-WebRequest -Method Get -UseBasicParsing -Uri ${urigetpublicid} -ContentType 'application/json' -WebSession $session | ConvertFrom-Json
 $publicid = $publicidjson.publicId
-
-
 Invoke-WebRequest -Method Get -UseBasicParsing -Uri ${urigetproperties} -ContentType 'application/json' -WebSession $session -OutFile C:\WindowsAzure\logs\netappotc.json
-
-
-$ontapclusterproperties = Invoke-WebRequest -Method Get -UseBasicParsing -Uri ${urigetproperties} -ContentType 'application/json' -WebSession $session | convertfrom-json 
- 
-
-$WEGlobal:AdminLIF = $ontapclusterproperties.ontapclusterproperties.nodes.lifs.ip | Select-Object -index 0
-$WEGlobal:iScSILIF = $ontapclusterproperties.ontapclusterproperties.nodes.lifs.ip | Select-Object -index 3
-$WEGlobal:SVMName = $ontapclusterproperties.svmname
-
-
-echo " Admin Lif IP is $WEAdminLIF"
+$ontapclusterproperties = Invoke-WebRequest -Method Get -UseBasicParsing -Uri ${urigetproperties} -ContentType 'application/json' -WebSession $session | convertfrom-json
+$Global:AdminLIF = $ontapclusterproperties.ontapclusterproperties.nodes.lifs.ip | Select-Object -index 0
+$Global:iScSILIF = $ontapclusterproperties.ontapclusterproperties.nodes.lifs.ip | Select-Object -index 3
+$Global:SVMName = $ontapclusterproperties.svmname
+echo "Admin Lif IP is $AdminLIF"
 echo " iSCSI Lif IP is $iScSILIF"
-echo " svm Name is is $WESVMName"
-
-
-
+echo " svm Name is is $SVMName"
 }
-
-function WE-Connect-ONTAP([String]$WEAdminLIF, [String]$iScSILIF, [String]$WESVMName,[String]$WESVMPwd, [decimal]$WECapacity)
+function Connect-ONTAP([String]$AdminLIF, [String]$iScSILIF, [String]$SVMName,[String]$SVMPwd, [decimal]$Capacity)
 {
-    $WEErrorActionPreference = 'Stop'
-
+    $ErrorActionPreference = 'Stop'
     try {
-    
         Start-Transcript -Path C:\WindowsAzure\Logs\SQLNetApp_Connect_Storage.ps1.txt -Append
-    
-        Write-Output " Started @ $(Get-Date)"
-        Write-Output " Admin Lif: $WEAdminLIF"
+        Write-Output "Started @ $(Get-Date)"
+        Write-Output "Admin Lif: $AdminLIF"
         Write-Output " iScSI Lif: $iScSiLIF"
-        Write-Output " SVM Name : $WESVMName"
-        Write-Output " SVM Password: $WESVMPwd"
-        Write-Output " Capacity: $WECapacity"
-
-        $WEAdminLIF= $WEAdminLIF.Substring($WEAdminLIF.IndexOf(':')+1)
+        Write-Output "SVM Name : $SVMName"
+        Write-Output "SVM Password: $SVMPwd"
+        Write-Output "Capacity: $Capacity"
+        $AdminLIF= $AdminLIF.Substring($AdminLIF.IndexOf(':')+1)
         $iScSiLIF= $iScSiLIF.Substring($iScSiLIF.IndexOf(':')+1)
-        $WESVMName = $WESVMName.Trim().Replace(" -" ," _" )
-
+        $SVMName = $SVMName.Trim().Replace(" -" ," _" )
         Setup-VM
-
-        $WEIqnName = " azureqsiqn"
-        $WESecPasswd = ConvertTo-SecureString $WESVMPwd -AsPlainText -Force
-        $WESvmCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" admin" , $WESecPasswd)
-        $WEVMIqn = (get-initiatorPort).nodeaddress
+        $IqnName = " azureqsiqn"
+        $SecPasswd = ConvertTo-SecureString $SVMPwd -AsPlainText -Force
+        $SvmCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" admin" , $SecPasswd)
+        $VMIqn = (get-initiatorPort).nodeaddress
         #Pad the data Volume size by 10 percent
-        $WEDataVolSize = [System.Math]::Floor($WECapacity * 1.1)
+        $DataVolSize = [System.Math]::Floor($Capacity * 1.1)
         #Log Volume will be one third of data with 10 percent padding
-        $WELogVolSize = [System.Math]::Floor($WECapacity *.37 ) 
-
-		$WEDataLunSize = $WECapacity
-		$WELogLunSize =  $WECapacity *.33
-        
+        $LogVolSize = [System.Math]::Floor($Capacity *.37 )
+		$DataLunSize = $Capacity
+		$LogLunSize =  $Capacity *.33
         Import-module '${env:ProgramFiles} (x86)\NetApp\NetApp PowerShell Toolkit\Modules\DataONTAP\DataONTAP.psd1'
-        
-        Connect-NcController $WEAdminLIF -Credential $WESvmCreds -Vserver $WESVMName
-        Create-NcGroup $WEIqnName $WEVMIqn $WESVMName
+        Connect-NcController $AdminLIF -Credential $SvmCreds -Vserver $SVMName
+        Create-NcGroup $IqnName $VMIqn $SVMName
         New-IscsiTargetPortal -TargetPortalAddress $iScSiLIF
-        Connect-Iscsitarget -NodeAddress (Get-IscsiTarget).NodeAddress -IsMultipathEnabled $WETrue -TargetPortalAddress $iScSiLIF
-    
+        Connect-Iscsitarget -NodeAddress (Get-IscsiTarget).NodeAddress -IsMultipathEnabled $True -TargetPortalAddress $iScSiLIF
         Get-IscsiSession -ErrorAction Stop | Register-IscsiSession
-
-        New-Ncvol -name sql_data_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WEDataVolSize)+" g" ) -SpaceReserve none
-        New-Ncvol -name sql_log_root -Aggregate aggr1 -JunctionPath $null -size ([string]($WELogVolSize)+" g" ) -SpaceReserve none
-
-        New-Nclun -ErrorAction Stop /vol/sql_data_root/sql_data_lun ([string]$WEDataLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
-        New-Nclun -ErrorAction Stop /vol/sql_log_root/sql_log_lun ([string]$WELogLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008" 
-
-        Add-Nclunmap /vol/sql_data_root/sql_data_lun $WEIqnName
-        Add-Nclunmap /vol/sql_log_root/sql_log_lun $WEIqnName
-
-        
+        New-Ncvol -name sql_data_root -Aggregate aggr1 -JunctionPath $null -size ([string]($DataVolSize)+" g" ) -SpaceReserve none
+        New-Ncvol -name sql_log_root -Aggregate aggr1 -JunctionPath $null -size ([string]($LogVolSize)+" g" ) -SpaceReserve none
+        New-Nclun -ErrorAction Stop /vol/sql_data_root/sql_data_lun ([string]$DataLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
+        New-Nclun -ErrorAction Stop /vol/sql_log_root/sql_log_lun ([string]$LogLunSize+" gb" ) -ThinProvisioningSupportEnabled -OsType " windows_2008"
+        Add-Nclunmap /vol/sql_data_root/sql_data_lun $IqnName
+        Add-Nclunmap /vol/sql_log_root/sql_log_lun $IqnName
         Start-NcHostDiskRescan
-        Wait-NcHostDisk -ControllerLunPath /vol/sql_data_root/sql_data_lun -ControllerName $WESVMName
-        Wait-NcHostDisk -ControllerLunPath /vol/sql_log_root/sql_log_lun -ControllerName $WESVMName
-
-
-       ;  $WEDataDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_data_lun*" }).Disk
-       ;  $WELogDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_log_lun*" }).Disk
-
+        Wait-NcHostDisk -ControllerLunPath /vol/sql_data_root/sql_data_lun -ControllerName $SVMName
+        Wait-NcHostDisk -ControllerLunPath /vol/sql_log_root/sql_log_lun -ControllerName $SVMName
+$DataDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_data_lun*" }).Disk
+$LogDisk = (Get-Nchostdisk -ErrorAction Stop | Where-Object {$_.ControllerPath -like " *sql_log_lun*" }).Disk
         Stop-Service -Name ShellHWDetection
-        Set-Disk -Number $WEDataDisk -IsOffline $WEFalse
-        Initialize-Disk -Number $WEDataDisk
-        New-Partition -DiskNumber $WEDataDisk -UseMaximumSize -AssignDriveLetter  | ForEach-Object { Start-Sleep -s 5; $_| Format-Volume -NewFileSystemLabel " NetApp Disk 1" -Confirm:$WEFalse -Force }
-    
-        Set-Disk -number $WELogDisk -IsOffline $WEFalse
-        Initialize-disk -Number $WELogDisk
-        New-Partition -DiskNumber $WELogDisk -UseMaximumSize -AssignDriveLetter | ForEach-Object { Start-Sleep -s 5; $_| Format-Volume -NewFileSystemLabel " NetApp Disk 2" -Confirm:$WEFalse -Force}
+        Set-Disk -Number $DataDisk -IsOffline $False
+        Initialize-Disk -Number $DataDisk
+        New-Partition -DiskNumber $DataDisk -UseMaximumSize -AssignDriveLetter  | ForEach-Object { Start-Sleep -s 5; $_| Format-Volume -NewFileSystemLabel "NetApp Disk 1" -Confirm:$False -Force }
+        Set-Disk -number $LogDisk -IsOffline $False
+        Initialize-disk -Number $LogDisk
+        New-Partition -DiskNumber $LogDisk -UseMaximumSize -AssignDriveLetter | ForEach-Object { Start-Sleep -s 5; $_| Format-Volume -NewFileSystemLabel "NetApp Disk 2" -Confirm:$False -Force}
         Start-Service -Name ShellHWDetection
-
-        Write-Output " Completed @ $(Get-Date)"
+        Write-Output "Completed @ $(Get-Date)"
         Stop-Transcript
-
-    } 
+    }
     catch {
         Write-Output " $($_.exception.message)@ $(Get-Date)"
-		exit 1
+		throw
     }
  }
-
- 
-
-function WE-Create-NcGroup( [String] $WEVserverIqn, [String] $WEInisitatorIqn, [String] $WEVserver)
+function Create-NcGroup( [String] $VserverIqn, [String] $InisitatorIqn, [String] $Vserver)
 {
     $iGroupList = Get-ncigroup -ErrorAction Stop
-    $iGroupSetup = $WEFalse
-    $iGroupInitiatorSetup = $WEFalse
-
-    #Find if iGroup is already setup, add if not 
+    $iGroupSetup = $False
+    $iGroupInitiatorSetup = $False
+    #Find if iGroup is already setup, add if not
     foreach($igroup in $iGroupList)
     {
-        if ($igroup.Name -eq $WEVserverIqn)   
+        if ($igroup.Name -eq $VserverIqn)
         {
-            $iGroupSetup = $WETrue
+            $iGroupSetup = $True
             foreach($initiator in $igroup.Initiators)
             {
-                if($initiator.InitiatorName.Equals($WEInisitatorIqn))
+                if($initiator.InitiatorName.Equals($InisitatorIqn))
                 {
-                    $iGroupInitiatorSetup = $WETrue
-                    Write-Output " Found $WEVserverIqn Iqn is alerady setup on SvM $WEVserver with Initiator $WEInisitatorIqn" 
+                    $iGroupInitiatorSetup = $True
+                    Write-Output "Found $VserverIqn Iqn is alerady setup on SvM $Vserver with Initiator $InisitatorIqn"
                     break
                 }
             }
-
             break
         }
     }
-    if($iGroupInitiatorSetup -eq $WEFalse)
+    if($iGroupInitiatorSetup -eq $False)
     {
-        if ((get-nciscsiservice).IsAvailable -ne " True" ) { 
-                Add-NcIscsiService 
+        if ((get-nciscsiservice).IsAvailable -ne "True" ) {
+                Add-NcIscsiService
         }
-        if ($iGroupSetup -eq $WEFalse) {
-            new-ncigroup -name $WEVserverIqn -Protocol iScSi -Type Windows    
+        if ($iGroupSetup -eq $False) {
+            new-ncigroup -name $VserverIqn -Protocol iScSi -Type Windows
         }
-        Add-NcIgroupInitiator -name $WEVserverIqn -Initiator $WEInisitatorIqn
-        Write-Output " Set up $WEVserverIqn Iqn on SvM $WEVserver"
+        Add-NcIgroupInitiator -name $VserverIqn -Initiator $InisitatorIqn
+        Write-Output "Set up $VserverIqn Iqn on SvM $Vserver"
     }
-
 }
-
-function WE-Set-MultiPathIO()
+function Set-MultiPathIO()
 {
-    $WEIsEnabled = (Get-WindowsOptionalFeature -FeatureName MultiPathIO -Online).State
-
-    if ($WEIsEnabled -ne " Enabled" ) {
-
-        Enable-WindowsOptionalFeature –Online –FeatureName MultiPathIO
+    $IsEnabled = (Get-WindowsOptionalFeature -FeatureName MultiPathIO -Online).State
+    if ($IsEnabled -ne "Enabled" ) {
+        Enable-WindowsOptionalFeature Online FeatureName MultiPathIO
      }
-        
 }
-
-function WE-Start-ThisService([String]$WEServiceName)
+function Start-ThisService([String]$ServiceName)
 {
-    
-    $WEService = Get-Service -Name $WEServiceName
-    if ($WEService.Status -ne " Running" ){
-        Start-Service $WEServiceName
-        Write-Output " Starting $WEServiceName"
+    $Service = Get-Service -Name $ServiceName
+    if ($Service.Status -ne "Running" ){
+        Start-Service $ServiceName
+        Write-Output "Starting $ServiceName"
     }
-    if ($WEService.StartType -ne " Automatic" ) {
-        Set-Service -ErrorAction Stop $WEServiceName -startuptype " Automatic"
-        Write-Output " Setting $WEServiceName Service Startup to Automatic"
+    if ($Service.StartType -ne "Automatic" ) {
+        Set-Service -ErrorAction Stop $ServiceName -startuptype "Automatic"
+        Write-Output "Setting $ServiceName Service Startup to Automatic"
     }
-   
 }
-
- function WE-Setup-VM ()
+ function Setup-VM ()
  {
     Set-MultiPathIO -ErrorAction Stop
-    Start-ThisService " MSiSCSI"
+    Start-ThisService "MSiSCSI"
  }
-
-
-
-
-[CmdletBinding()]
-function WE-Load-SampleDatabase
+function Load-SampleDatabase
 {
-
-$WEDataDirectory = " F:\SQL\DATA"
-$WELogDirectory = " G:\SQL\Logs"
-$WEBackupDirectory = " F:\SQL\BACKUPS"
-
-[CmdletBinding()]
-function WE-Create-DirectoryStructure
+$DataDirectory = "F:\SQL\DATA"
+$LogDirectory = "G:\SQL\Logs"
+$BackupDirectory = "F:\SQL\BACKUPS"
+function Create-DirectoryStructure
 {
-New-Item -ItemType directory -Path $WEDataDirectory
-New-Item -ItemType directory -Path $WELogDirectory
-New-Item -ItemType directory -Path $WEBackupDirectory
-
+New-Item -ItemType directory -Path $DataDirectory
+New-Item -ItemType directory -Path $LogDirectory
+New-Item -ItemType directory -Path $BackupDirectory
 }
-
-
-[CmdletBinding()]
-function WE-Set-SQLDataLocation -ErrorAction Stop
+function Set-SQLDataLocation -ErrorAction Stop
 {
-$WEDataRegKeyPath = " HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
-$WEDataRegKeyName = " DefaultData"
-If ((Get-ItemProperty -Path $WEDataRegKeyPath -Name $WEDataRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
-  New-ItemProperty -Path $WEDataRegKeyPath -Name $WEDataRegKeyName -PropertyType String -Value $WEDataDirectory
+$DataRegKeyPath = "HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
+$DataRegKeyName = "DefaultData"
+If ((Get-ItemProperty -Path $DataRegKeyPath -Name $DataRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
+  New-ItemProperty -Path $DataRegKeyPath -Name $DataRegKeyName -PropertyType String -Value $DataDirectory
 } Else {
-  Set-ItemProperty -Path $WEDataRegKeyPath -Name $WEDataRegKeyName -Value $WEDataDirectory
+  Set-ItemProperty -Path $DataRegKeyPath -Name $DataRegKeyName -Value $DataDirectory
 }
- 
-$WELogRegKeyPath = " HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
-$WELogRegKeyName = " DefaultLog"
-If ((Get-ItemProperty -Path $WELogRegKeyPath -Name $WELogRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
-  New-ItemProperty -Path $WELogRegKeyPath -Name $WELogRegKeyName -PropertyType String -Value $WELogDirectory
+$LogRegKeyPath = "HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
+$LogRegKeyName = "DefaultLog"
+If ((Get-ItemProperty -Path $LogRegKeyPath -Name $LogRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
+  New-ItemProperty -Path $LogRegKeyPath -Name $LogRegKeyName -PropertyType String -Value $LogDirectory
 } Else {
-  Set-ItemProperty -Path $WELogRegKeyPath -Name $WELogRegKeyName -Value $WELogDirectory
+  Set-ItemProperty -Path $LogRegKeyPath -Name $LogRegKeyName -Value $LogDirectory
 }
- 
-$WEBackupRegKeyPath = " HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
-$WEBackupRegKeyName = " BackupDirectory"
-
-If ((Get-ItemProperty -Path $WEBackupRegKeyPath -Name $WEBackupRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
-  New-ItemProperty -Path $WEBackupRegKeyPath -Name $WEBackupRegKeyName -PropertyType String -Value $WEBackupDirectory
+$BackupRegKeyPath = "HKLM:\Software\Microsoft\Microsoft SQL Server\MSSQL12.MSSQLSERVER\MSSQLServer"
+$BackupRegKeyName = "BackupDirectory"
+If ((Get-ItemProperty -Path $BackupRegKeyPath -Name $BackupRegKeyName -ErrorAction SilentlyContinue) -eq $null) {
+  New-ItemProperty -Path $BackupRegKeyPath -Name $BackupRegKeyName -PropertyType String -Value $BackupDirectory
 } Else {
-  Set-ItemProperty -Path $WEBackupRegKeyPath -Name $WEBackupRegKeyName -Value $WEBackupDirectory
+  Set-ItemProperty -Path $BackupRegKeyPath -Name $BackupRegKeyName -Value $BackupDirectory
 }
 }
-
-
-[CmdletBinding()]
-function WE-Download-SampleDatabase
+function Download-SampleDatabase
 {
-wget https://msftdbprodsamples.codeplex.com/downloads/get/880661 -OutFile $WEBackupDirectory\AdventureWorks2014bakzip.zip
-
+wget https://msftdbprodsamples.codeplex.com/downloads/get/880661 -OutFile $BackupDirectory\AdventureWorks2014bakzip.zip
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-[CmdletBinding()]
-function WE-Unzip
+function Unzip
 {
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$zipfile, [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$zipfile, [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$outpath)
-
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
 }
-
-Unzip $WEBackupDirectory\AdventureWorks2014bakzip.zip $WEBackupDirectory
-
+Unzip $BackupDirectory\AdventureWorks2014bakzip.zip $BackupDirectory
 }
-
 Create-DirectoryStructure
 Set-SQLDataLocation -ErrorAction Stop
 Restart-Service -Force MSSQLSERVER
 Download-SampleDatabase
-
 }
-function WE-Remove-Password([String]$password)
+function Remove-Password([String]$password)
 {
 $azurelogfilepath = 'C:\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\1.8\CustomScriptHandler.log'
 $scriptlogfilepath = 'C:\WindowsAzure\Logs\SQLNetApp_Connect_Storage.ps1.txt'
 (get-content -ErrorAction Stop $azurelogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content -ErrorAction Stop $azurelogfilepath
 (get-content -ErrorAction Stop $scriptlogfilepath) | % { $_ -replace $password, 'passwordremoved' } | set-content -ErrorAction Stop $scriptlogfilepath
 }
-
-[CmdletBinding()]
-function WE-Install-NetAppPSToolkit
+function Install-NetAppPSToolkit
 {
-New-Item -ErrorAction Stop C:\NetApp -Type Directory; 
-$WEWebClient = New-Object -ErrorAction Stop System.Net.WebClient
-$WEWebClient.DownloadFile(" https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi" ," C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" )
+New-Item -ErrorAction Stop C:\NetApp -Type Directory;
+$WebClient = New-Object -ErrorAction Stop System.Net.WebClient
+$WebClient.DownloadFile(" https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/application-workloads/netapp/netapp-ontap-sql/scripts/NetApp_PowerShell_Toolkit_4.3.0.msi" ,"C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" )
 Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i C:\NetApp\NetApp_PowerShell_Toolkit_4.3.0.msi" /qn ADDLOCAL=F.PSTKDOT}
 }
-
-; 
-$WESVMPwd = $WEOTCpassword
+$SVMPwd = $OTCpassword
 Install-NetAppPSToolkit
 Get-ONTAPClusterDetails -ErrorAction Stop $email $password $ocmip
-Connect-ONTAP $WEAdminLIF $iScSILIF $WESVMName $WESVMPwd $WECapacity
+Connect-ONTAP $AdminLIF $iScSILIF $SVMName $SVMPwd $Capacity
 Load-SampleDatabase
 Remove-Password -ErrorAction Stop $password
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

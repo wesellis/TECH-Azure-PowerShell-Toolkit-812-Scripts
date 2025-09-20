@@ -1,39 +1,21 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$NatGatewayName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$IdleTimeoutInMinutes = 10
 )
-
-#region Functions
-
-Write-Information "Creating NAT Gateway: $NatGatewayName"
-
+Write-Host "Creating NAT Gateway: $NatGatewayName"
 # Create public IP for NAT Gateway
 $NatIpName = "$NatGatewayName-pip"
 $params = @{
@@ -45,7 +27,6 @@ $params = @{
     Name = $NatIpName
 }
 $NatIp @params
-
 # Create NAT Gateway
 $params = @{
     ResourceGroupName = $ResourceGroupName
@@ -57,21 +38,16 @@ $params = @{
     Name = $NatGatewayName
 }
 $NatGateway @params
+Write-Host "NAT Gateway created successfully:"
+Write-Host "Name: $($NatGateway.Name)"
+Write-Host "Location: $($NatGateway.Location)"
+Write-Host "SKU: $($NatGateway.Sku.Name)"
+Write-Host "Idle Timeout: $($NatGateway.IdleTimeoutInMinutes) minutes"
+Write-Host "Public IP: $($NatIp.IpAddress)"
+Write-Host "`nNext Steps:"
+Write-Host "1. Associate NAT Gateway with subnet(s)"
+Write-Host "2. Configure route tables if needed"
+Write-Host "3. Test outbound connectivity"
+Write-Host "`nUsage Command:"
+Write-Host "Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'subnet-name' -AddressPrefix '10.0.1.0/24' -NatGateway `$natGateway"
 
-Write-Information " NAT Gateway created successfully:"
-Write-Information "  Name: $($NatGateway.Name)"
-Write-Information "  Location: $($NatGateway.Location)"
-Write-Information "  SKU: $($NatGateway.Sku.Name)"
-Write-Information "  Idle Timeout: $($NatGateway.IdleTimeoutInMinutes) minutes"
-Write-Information "  Public IP: $($NatIp.IpAddress)"
-
-Write-Information "`nNext Steps:"
-Write-Information "1. Associate NAT Gateway with subnet(s)"
-Write-Information "2. Configure route tables if needed"
-Write-Information "3. Test outbound connectivity"
-
-Write-Information "`nUsage Command:"
-Write-Information "Set-AzVirtualNetworkSubnetConfig -VirtualNetwork `$vnet -Name 'subnet-name' -AddressPrefix '10.0.1.0/24' -NatGateway `$natGateway"
-
-
-#endregion

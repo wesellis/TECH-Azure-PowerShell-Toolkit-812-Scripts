@@ -1,45 +1,15 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Dpmpconfiguration
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Dpmpconfiguration
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-﻿configuration Configuration
+configuration Configuration
 {
    [CmdletBinding()
 try {
@@ -49,36 +19,32 @@ $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
         [Parameter(Mandatory)]
-        [String]$WEDomainName,
+        [String]$DomainName,
         [Parameter(Mandatory)]
-        [String]$WEDCName,
+        [String]$DCName,
         [Parameter(Mandatory)]
-        [String]$WEDPMPName,
+        [String]$DPMPName,
         [Parameter(Mandatory)]
-        [String]$WECSName,
+        [String]$CSName,
         [Parameter(Mandatory)]
-        [String]$WEPSName,
+        [String]$PSName,
         [Parameter(Mandatory)]
-        [System.Array]$WEClientName,
+        [System.Array]$ClientName,
         [Parameter(Mandatory)]
-        [String]$WEConfiguration,
+        [String]$Configuration,
         [Parameter(Mandatory)]
-        [String]$WEDNSIPAddress,
+        [String]$DNSIPAddress,
         [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$WEAdmincreds
+        [System.Management.Automation.PSCredential]$Admincreds
     )
-
     Import-DscResource -ModuleName TemplateHelpDSC
-
-    $WELogFolder = " TempLog"
-    $WELogPath = " c:\$WELogFolder"
-    $WEDName = $WEDomainName.Split(" ." )[0]
-    $WEDCComputerAccount = " $WEDName\$WEDCName$"
-   ;  $WEPSComputerAccount = " $WEDName\$WEPSName$"
-
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-   ;  $WEPrimarySiteName = $WEPSName.split(" ." )[0] + " $"
-
+    $LogFolder = "TempLog"
+    $LogPath = " c:\$LogFolder"
+    $DName = $DomainName.Split(" ." )[0]
+    $DCComputerAccount = " $DName\$DCName$"
+$PSComputerAccount = " $DName\$PSName$"
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
+$PrimarySiteName = $PSName.split(" ." )[0] + " $"
     Node localhost
     {
         LocalConfigurationManager
@@ -86,104 +52,88 @@ param(
             ConfigurationMode = 'ApplyOnly'
             RebootNodeIfNeeded = $true
         }
-
         SetCustomPagingFile PagingSettings
         {
             Drive       = 'C:'
             InitialSize = '8192'
             MaximumSize = '8192'
         }
-
         SetDNS DnsServerAddress
         {
-            DNSIPAddress = $WEDNSIPAddress
-            Ensure = " Present"
+            DNSIPAddress = $DNSIPAddress
+            Ensure = "Present"
             DependsOn = " [SetCustomPagingFile]PagingSettings"
         }
-
         InstallFeatureForSCCM InstallFeature
         {
-            Name = " DPMP"
-            Role = " Distribution Point" ," Management Point"
+            Name = "DPMP"
+            Role = "Distribution Point" ,"Management Point"
             DependsOn = " [SetCustomPagingFile]PagingSettings"
         }
-
         WaitForDomainReady WaitForDomain
         {
-            Ensure = " Present"
-            DCName = $WEDCName
+            Ensure = "Present"
+            DCName = $DCName
             DependsOn = " [SetDNS]DnsServerAddress"
         }
-
         JoinDomain JoinDomain
         {
-            DomainName = $WEDomainName
-            Credential = $WEDomainCreds
+            DomainName = $DomainName
+            Credential = $DomainCreds
             DependsOn = " [WaitForDomainReady]WaitForDomain"
         }
-
         WaitForConfigurationFile WaitForPSJoinDomain
         {
-            Role = " DC"
-            MachineName = $WEDCName
-            LogFolder = $WELogFolder
-            ReadNode = " PSJoinDomain"
-            Ensure = " Present"
+            Role = "DC"
+            MachineName = $DCName
+            LogFolder = $LogFolder
+            ReadNode = "PSJoinDomain"
+            Ensure = "Present"
             DependsOn = " [JoinDomain]JoinDomain"
         }
-
         File ShareFolder
-        {            
-            DestinationPath = $WELogPath     
-            Type = 'Directory'            
+        {
+            DestinationPath = $LogPath
+            Type = 'Directory'
             Ensure = 'Present'
             DependsOn = " [WaitForConfigurationFile]WaitForPSJoinDomain"
         }
-
         FileReadAccessShare DomainSMBShare
         {
-            Name = $WELogFolder
-            Path = $WELogPath
-            Account = $WEDCComputerAccount,$WEPSComputerAccount
+            Name = $LogFolder
+            Path = $LogPath
+            Account = $DCComputerAccount,$PSComputerAccount
             DependsOn = " [File]ShareFolder"
         }
-
         OpenFirewallPortForSCCM OpenFirewall
         {
-            Name = " DPMP"
-            Role = " Distribution Point" ," Management Point"
+            Name = "DPMP"
+            Role = "Distribution Point" ,"Management Point"
             DependsOn = " [JoinDomain]JoinDomain"
         }
-
         AddUserToLocalAdminGroup AddADUserToLocalAdminGroup {
-            Name = $($WEAdmincreds.UserName)
-            DomainName = $WEDomainName
+            Name = $($Admincreds.UserName)
+            DomainName = $DomainName
             DependsOn = " [FileReadAccessShare]DomainSMBShare"
         }
-
         AddUserToLocalAdminGroup AddADComputerToLocalAdminGroup {
-            Name = " $WEPrimarySiteName"
-            DomainName = $WEDomainName
+            Name = " $PrimarySiteName"
+            DomainName = $DomainName
             DependsOn = " [FileReadAccessShare]DomainSMBShare"
         }
-
         WriteConfigurationFile WriteDPMPFinished
         {
-            Role = " DPMP"
-            LogPath = $WELogPath
-            WriteNode = " DPMPFinished"
-            Status = " Passed"
-            Ensure = " Present"
+            Role = "DPMP"
+            LogPath = $LogPath
+            WriteNode = "DPMPFinished"
+            Status = "Passed"
+            Ensure = "Present"
             DependsOn = " [AddUserToLocalAdminGroup]AddADUserToLocalAdminGroup" ," [AddUserToLocalAdminGroup]AddADComputerToLocalAdminGroup"
         }
     }
 }
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

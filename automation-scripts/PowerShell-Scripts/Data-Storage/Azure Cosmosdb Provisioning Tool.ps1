@@ -1,142 +1,81 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Cosmosdb Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Cosmosdb Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AccountName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAccountName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WEDefaultConsistencyLevel = " Session" ,
-    [string]$WEKind = " GlobalDocumentDB" ,
-    [array]$WELocationsToAdd = @(),
-    [bool]$WEEnableMultipleWriteLocations = $false
+    [string]$Location,
+    [string]$DefaultConsistencyLevel = "Session" ,
+    [string]$Kind = "GlobalDocumentDB" ,
+    [array]$LocationsToAdd = @(),
+    [bool]$EnableMultipleWriteLocations = $false
 )
+Write-Host "Provisioning Cosmos DB Account: $AccountName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host "Primary Location: $Location" "INFO"
+Write-Host "Consistency Level: $DefaultConsistencyLevel" "INFO"
+Write-Host "Account Kind: $Kind" "INFO"
 
-#region Functions
-
-Write-WELog " Provisioning Cosmos DB Account: $WEAccountName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Primary Location: $WELocation" " INFO"
-Write-WELog " Consistency Level: $WEDefaultConsistencyLevel" " INFO"
-Write-WELog " Account Kind: $WEKind" " INFO"
-
-; 
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Location = $WELocation
-    Kind = $WEKind
+    ResourceGroupName = $ResourceGroupName
+    Location = $Location
+    Kind = $Kind
     ErrorAction = "Stop"
-    DefaultConsistencyLevel = $WEDefaultConsistencyLevel
-    Name = $WEAccountName
+    DefaultConsistencyLevel = $DefaultConsistencyLevel
+    Name = $AccountName
 }
-$WECosmosDB @params
-
-Write-WELog " Cosmos DB Account $WEAccountName provisioned successfully" " INFO"
-Write-WELog " Document Endpoint: $($WECosmosDB.DocumentEndpoint)" " INFO"
-Write-WELog " Write Locations: $($WECosmosDB.WriteLocations.Count)" " INFO"
-Write-WELog " Read Locations: $($WECosmosDB.ReadLocations.Count)" " INFO"
-
-
-if ($WELocationsToAdd.Count -gt 0) {
-    Write-WELog " `nAdding additional locations:" " INFO"
-    foreach ($WEAddLocation in $WELocationsToAdd) {
-        Write-WELog "  Adding location: $WEAddLocation" " INFO"
+$CosmosDB @params
+Write-Host "Cosmos DB Account $AccountName provisioned successfully" "INFO"
+Write-Host "Document Endpoint: $($CosmosDB.DocumentEndpoint)" "INFO"
+Write-Host "Write Locations: $($CosmosDB.WriteLocations.Count)" "INFO"
+Write-Host "Read Locations: $($CosmosDB.ReadLocations.Count)" "INFO"
+if ($LocationsToAdd.Count -gt 0) {
+    Write-Host " `nAdding additional locations:" "INFO"
+    foreach ($AddLocation in $LocationsToAdd) {
+        Write-Host "Adding location: $AddLocation" "INFO"
         # Additional location configuration would go here
     }
 }
-
-Write-WELog " `nCosmos DB provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nCosmos DB provisioning completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

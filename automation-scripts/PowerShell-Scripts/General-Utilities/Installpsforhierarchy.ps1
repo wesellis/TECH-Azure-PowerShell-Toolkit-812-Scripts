@@ -1,89 +1,48 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Installpsforhierarchy
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Installpsforhierarchy
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-Param($WEDomainFullName,$WECM,$WECMUser,$WERole,$WEProvisionToolPath,$WECSName,$WECSRole,$WELogFolder)
-
-$WESMSInstallDir="${env:ProgramFiles}\Microsoft Configuration Manager"
-
-$logpath = $WEProvisionToolPath+" \InstallSCCMlog.txt"
-$WEConfigurationFile = Join-Path -Path $WEProvisionToolPath -ChildPath " $WERole.json"
-$WEConfiguration = Get-Content -Path $WEConfigurationFile | ConvertFrom-Json
-
-$WEConfiguration.WaitingForCASFinsihedInstall.Status = 'Running'
-$WEConfiguration.WaitingForCASFinsihedInstall.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-
-$_Role = $WECSRole
-$_FilePath = " \\$WECSName\$WELogFolder"
-$WECSConfigurationFile = Join-Path -Path $_FilePath -ChildPath " $_Role.json"
-
-while(!(Test-Path $WECSConfigurationFile))
+Param($DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath,$CSName,$CSRole,$LogFolder)
+$SMSInstallDir="${env:ProgramFiles}\Microsoft Configuration Manager"
+$logpath = $ProvisionToolPath+" \InstallSCCMlog.txt"
+$ConfigurationFile = Join-Path -Path $ProvisionToolPath -ChildPath " $Role.json"
+$Configuration = Get-Content -Path $ConfigurationFile | ConvertFrom-Json
+$Configuration.WaitingForCASFinsihedInstall.Status = 'Running'
+$Configuration.WaitingForCASFinsihedInstall.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
+$_Role = $CSRole
+$_FilePath = " \\$CSName\$LogFolder"
+$CSConfigurationFile = Join-Path -Path $_FilePath -ChildPath " $_Role.json"
+while(!(Test-Path $CSConfigurationFile))
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Wait for configuration file exist on $WECSName, will try 60 seconds later..." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Wait for configuration file exist on $CSName, will try 60 seconds later..." | Out-File -Append $logpath
     Start-Sleep -Seconds 60
-    $WECSConfigurationFile = Join-Path -Path $_FilePath -ChildPath " $_Role.json"
+    $CSConfigurationFile = Join-Path -Path $_FilePath -ChildPath " $_Role.json"
 }
-$WECSConfiguration = Get-Content -Path $WECSConfigurationFile -ErrorAction Ignore | ConvertFrom-Json
-while($WECSConfiguration.$(" UpgradeSCCM" ).Status -ne " Completed" )
+$CSConfiguration = Get-Content -Path $CSConfigurationFile -ErrorAction Ignore | ConvertFrom-Json
+while($CSConfiguration.$("UpgradeSCCM" ).Status -ne "Completed" )
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Wait for step : [UpgradeSCCM] finished running on $WECSName, will try 60 seconds later..." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Wait for step : [UpgradeSCCM] finished running on $CSName, will try 60 seconds later..." | Out-File -Append $logpath
     Start-Sleep -Seconds 60
-    $WECSConfiguration = Get-Content -Path $WECSConfigurationFile | ConvertFrom-Json
+    $CSConfiguration = Get-Content -Path $CSConfigurationFile | ConvertFrom-Json
 }
-
-$WEConfiguration.WaitingForCASFinsihedInstall.Status = 'Completed'
-$WEConfiguration.WaitingForCASFinsihedInstall.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-$cmsourcepath = " \\$WECSName\SMS_$WECSRole\cd.latest"
-
-$WECMINIPath = " c:\HierarchyPS.ini"
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Check ini file." | Out-File -Append $logpath
-
+$Configuration.WaitingForCASFinsihedInstall.Status = 'Completed'
+$Configuration.WaitingForCASFinsihedInstall.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
+$cmsourcepath = " \\$CSName\SMS_$CSRole\cd.latest"
+$CMINIPath = " c:\HierarchyPS.ini"
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Check ini file." | Out-File -Append $logpath
 $cmini = @'
 [Identification]
 Action=InstallPrimarySite
 CDLatest=1
-
 [Options]
 ProductID=EVAL
 SiteCode=%Role%
@@ -97,50 +56,41 @@ PrerequisitePath=%REdistPath%
 MobileDeviceLanguage=0
 AdminConsole=1
 JoinCEIP=0
-
 [SQLConfigOptions]
 SQLServerName=%SQLMachineFQDN%
 DatabaseName=%SQLInstance%CM_%Role%
 SQLSSBPort=4022
 SQLDataFilePath=%SQLDataFilePath%
 SQLLogFilePath=%SQLLogFilePath%
-
 [CloudConnectorOptions]
 CloudConnector=0
 CloudConnectorServer=
 UseProxy=0
 ProxyName=
 ProxyPort=
-
 [SystemCenterOptions]
 SysCenterId=
-
 [HierarchyExpansionOption]
 CCARSiteServer=%CASMachineFQDN%
-
 '@
 $inst = (get-itemproperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
 $p = (Get-ItemProperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
-
-$sqlinfo = Get-ItemProperty -ErrorAction Stop " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
-$cmini = $cmini.Replace('%InstallDir%',$WESMSInstallDir)
-$cmini = $cmini.Replace('%MachineFQDN%'," $env:computername.$WEDomainFullName" )
-$cmini = $cmini.Replace('%SQLMachineFQDN%'," $env:computername.$WEDomainFullName" )
-$cmini = $cmini.Replace('%Role%',$WERole)
+$sqlinfo = Get-ItemProperty -ErrorAction Stop "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
+$cmini = $cmini.Replace('%InstallDir%',$SMSInstallDir)
+$cmini = $cmini.Replace('%MachineFQDN%'," $env:computername.$DomainFullName" )
+$cmini = $cmini.Replace('%SQLMachineFQDN%'," $env:computername.$DomainFullName" )
+$cmini = $cmini.Replace('%Role%',$Role)
 $cmini = $cmini.Replace('%SQLDataFilePath%',$sqlinfo.DefaultData)
 $cmini = $cmini.Replace('%SQLLogFilePath%',$sqlinfo.DefaultLog)
-$cmini = $cmini.Replace('%CM%',$WECM)
-$cmini = $cmini.Replace('%CASMachineFQDN%'," $WECSName.$WEDomainFullName" )
+$cmini = $cmini.Replace('%CM%',$CM)
+$cmini = $cmini.Replace('%CASMachineFQDN%'," $CSName.$DomainFullName" )
 $cmini = $cmini.Replace('%REdistPath%'," $cmsourcepath\REdist" )
-
-if(!(Test-Path C:\$WECM\Redist))
+if(!(Test-Path C:\$CM\Redist))
 {
-    New-Item -ErrorAction Stop C:\$WECM\Redist -ItemType directory | Out-Null
+    New-Item -ErrorAction Stop C:\$CM\Redist -ItemType directory | Out-Null
 }
-    
-if($inst.ToUpper() -eq " MSSQLSERVER" )
+if($inst.ToUpper() -eq "MSSQLSERVER" )
 {
     $cmini = $cmini.Replace('%SQLInstance%',"" )
 }
@@ -149,35 +99,23 @@ else
     $tinstance = $inst.ToUpper() + " \"
     $cmini = $cmini.Replace('%SQLInstance%',$tinstance)
 }
-$WECMInstallationFile = " $cmsourcepath\SMSSETUP\BIN\X64\Setup.exe"
-$cmini > $WECMINIPath 
-
-$WEConfiguration.InstallSCCM.Status = 'Running'
-$WEConfiguration.InstallSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Installing.." | Out-File -Append $logpath
-Start-Process -Filepath ($WECMInstallationFile) -ArgumentList ('/NOUSERINPUT /script " ' + $WECMINIPath + '" ') -wait
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
-
-Remove-Item -ErrorAction Stop $WECMINIPat -Forceh -Force
-
-; 
-$WECSConfiguration = Get-Content -Path $WECSConfigurationFile -ErrorAction Ignore | ConvertFrom-Json
-while($WECSConfiguration.$(" PSReadytoUse" ).Status -ne " Completed" )
+$CMInstallationFile = " $cmsourcepath\SMSSETUP\BIN\X64\Setup.exe"
+$cmini > $CMINIPath
+$Configuration.InstallSCCM.Status = 'Running'
+$Configuration.InstallSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Installing.." | Out-File -Append $logpath
+Start-Process -Filepath ($CMInstallationFile) -ArgumentList ('/NOUSERINPUT /script " ' + $CMINIPath + '" ') -wait
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
+Remove-Item -ErrorAction Stop $CMINIPat -Forceh -Force
+$CSConfiguration = Get-Content -Path $CSConfigurationFile -ErrorAction Ignore | ConvertFrom-Json
+while($CSConfiguration.$("PSReadytoUse" ).Status -ne "Completed" )
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Wait for step : [PSReadytoUse] finished running on $WECSName, will try 60 seconds later..." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Wait for step : [PSReadytoUse] finished running on $CSName, will try 60 seconds later..." | Out-File -Append $logpath
     Start-Sleep -Seconds 60
-   ;  $WECSConfiguration = Get-Content -Path $WECSConfigurationFile | ConvertFrom-Json
+$CSConfiguration = Get-Content -Path $CSConfigurationFile | ConvertFrom-Json
 }
+$Configuration.InstallSCCM.Status = 'Completed'
+$Configuration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
 
-$WEConfiguration.InstallSCCM.Status = 'Completed'
-$WEConfiguration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

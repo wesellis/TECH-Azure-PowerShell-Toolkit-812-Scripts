@@ -1,183 +1,112 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Datafactory Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Datafactory Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$FactoryName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [bool]$EnableGitIntegration = $false,
+    [string]$GitRepoType = "FactoryGitHubConfiguration" ,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEFactoryName,
-    [Parameter(Mandatory=$false)]
+    [string]$GitAccountName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$GitProjectName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [bool]$WEEnableGitIntegration = $false,
-    [string]$WEGitRepoType = " FactoryGitHubConfiguration" ,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGitAccountName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGitProjectName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGitRepositoryName,
-    [string]$WEGitCollaborationBranch = " main"
+    [string]$GitRepositoryName,
+    [string]$GitCollaborationBranch = " main"
 )
-
-#region Functions
-
-Write-WELog " Provisioning Data Factory: $WEFactoryName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Git Integration: $WEEnableGitIntegration" " INFO"
-
-
-if ($WEEnableGitIntegration -and $WEGitAccountName -and $WEGitRepositoryName) {
-    Write-WELog " Git Account: $WEGitAccountName" " INFO"
-    Write-WELog " Git Repository: $WEGitRepositoryName" " INFO"
-    Write-WELog " Collaboration Branch: $WEGitCollaborationBranch" " INFO"
-    
+Write-Host "Provisioning Data Factory: $FactoryName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host "Location: $Location" "INFO"
+Write-Host "Git Integration: $EnableGitIntegration" "INFO"
+if ($EnableGitIntegration -and $GitAccountName -and $GitRepositoryName) {
+    Write-Host "Git Account: $GitAccountName" "INFO"
+    Write-Host "Git Repository: $GitRepositoryName" "INFO"
+    Write-Host "Collaboration Branch: $GitCollaborationBranch" "INFO"
     # Create Data Factory with Git integration
    $params = @{
-       ResourceGroupName = $WEResourceGroupName
-       GitRepoType = $WEGitRepoType
-       GitProjectName = $WEGitProjectName
-       Location = $WELocation
-       GitCollaborationBranch = $WEGitCollaborationBranch
-       GitAccountName = $WEGitAccountName
-       GitRepositoryName = $WEGitRepositoryName
+       ResourceGroupName = $ResourceGroupName
+       GitRepoType = $GitRepoType
+       GitProjectName = $GitProjectName
+       Location = $Location
+       GitCollaborationBranch = $GitCollaborationBranch
+       GitAccountName = $GitAccountName
+       GitRepositoryName = $GitRepositoryName
        ErrorAction = "Stop"
-       Name = $WEFactoryName
+       Name = $FactoryName
    }
    ; @params
 } else {
     # Create Data Factory without Git integration
    $params = @{
        ErrorAction = "Stop"
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WEFactoryName
-       Location = $WELocation
+       ResourceGroupName = $ResourceGroupName
+       Name = $FactoryName
+       Location = $Location
    }
    ; @params
 }
-
-Write-WELog " `nData Factory $WEFactoryName provisioned successfully" " INFO"
-Write-WELog " Data Factory ID: $($WEDataFactory.DataFactoryId)" " INFO"
-Write-WELog " Provisioning State: $($WEDataFactory.ProvisioningState)" " INFO"
-Write-WELog " Created Time: $($WEDataFactory.CreateTime)" " INFO"
-
-if ($WEDataFactory.RepoConfiguration) {
-    Write-WELog " `nGit Configuration:" " INFO"
-    Write-WELog "  Type: $($WEDataFactory.RepoConfiguration.Type)" " INFO"
-    Write-WELog "  Account Name: $($WEDataFactory.RepoConfiguration.AccountName)" " INFO"
-    Write-WELog "  Repository Name: $($WEDataFactory.RepoConfiguration.RepositoryName)" " INFO"
-    Write-WELog "  Collaboration Branch: $($WEDataFactory.RepoConfiguration.CollaborationBranch)" " INFO"
+Write-Host " `nData Factory $FactoryName provisioned successfully" "INFO"
+Write-Host "Data Factory ID: $($DataFactory.DataFactoryId)" "INFO"
+Write-Host "Provisioning State: $($DataFactory.ProvisioningState)" "INFO"
+Write-Host "Created Time: $($DataFactory.CreateTime)" "INFO"
+if ($DataFactory.RepoConfiguration) {
+    Write-Host " `nGit Configuration:" "INFO"
+    Write-Host "Type: $($DataFactory.RepoConfiguration.Type)" "INFO"
+    Write-Host "Account Name: $($DataFactory.RepoConfiguration.AccountName)" "INFO"
+    Write-Host "Repository Name: $($DataFactory.RepoConfiguration.RepositoryName)" "INFO"
+    Write-Host "Collaboration Branch: $($DataFactory.RepoConfiguration.CollaborationBranch)" "INFO"
 }
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Create linked services for data sources" " INFO"
-Write-WELog " 2. Define datasets for input/output data" " INFO"
-Write-WELog " 3. Create pipelines for data workflows" " INFO"
-Write-WELog " 4. Set up triggers for pipeline execution" " INFO"
-Write-WELog " 5. Monitor pipeline runs in Azure Portal" " INFO"
-
-Write-WELog " `nData Factory Access:" " INFO"
-Write-WELog " Portal URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$WEResourceGroupName/providers/Microsoft.DataFactory/factories/$WEFactoryName" " INFO"
-
-Write-WELog " `nData Factory provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nNext Steps:" "INFO"
+Write-Host " 1. Create linked services for data sources" "INFO"
+Write-Host " 2. Define datasets for input/output data" "INFO"
+Write-Host " 3. Create pipelines for data workflows" "INFO"
+Write-Host " 4. Set up triggers for pipeline execution" "INFO"
+Write-Host " 5. Monitor pipeline runs in Azure Portal" "INFO"
+Write-Host " `nData Factory Access:" "INFO"
+Write-Host "Portal URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName" "INFO"
+Write-Host " `nData Factory provisioning completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

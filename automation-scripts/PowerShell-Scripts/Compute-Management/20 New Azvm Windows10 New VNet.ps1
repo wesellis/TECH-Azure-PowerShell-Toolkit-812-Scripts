@@ -1,452 +1,251 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    20 New Azvm Windows10 New Vnet
+    Create VM Windows10 New VNet
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Create VM Windows10 New VNet operation
 #>
+    Author: Wes Ellis (wes@wesellis.com)
 
-<#
-.SYNOPSIS
-    We Enhanced 20 New Azvm Windows10 New Vnet
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = 'stop'
-
-
-$WEHelpers = "$WEPsScriptRoot\Helpers\"
-
-Get-ChildItem -Path $WEHelpers -Recurse -Filter '*.ps1' | ForEach-Object { . $_.FullName }
-
-
-
-$WELocationName = 'CanadaCentral'
-
-$WECustomerName = 'CCI'
-$WEVMName = 'Render02'
-$WECustomerName = 'CanadaComputing'
-$WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
-
-
-
+$ErrorActionPreference = 'stop'
+$Helpers = "$PsScriptRoot\Helpers\"
+Get-ChildItem -Path $Helpers -Recurse -Filter '*.ps1' | ForEach-Object { . $_.FullName }
+$LocationName = 'CanadaCentral'
+$CustomerName = 'CCI'
+$VMName = 'Render02'
+$CustomerName = 'CanadaComputing'
+$ResourceGroupName = -join (" $CustomerName" , "_$VMName" , "_RG" )
 $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
-[hashtable]$WETags = @{
-
-    " Autoshutown"     = 'ON'
-    " Createdby"       = 'Abdullah Ollivierre'
-    " CustomerName"    = " $WECustomerName"
-    " DateTimeCreated" = " $datetime"
-    " Environment"     = 'Dev'
-    " Application"     = 'Windows Movie Maker'  
-    " Purpose"         = 'Rendering with Movie Maker'
-    " Uptime"          = 'Rendering with Movie Maker'
-    " Workload"        = 'Rendering with Movie Maker'
-    " RebootCaution"   = 'Reboot any time'
-    " VMSize"          = 'B2Ms'
-    " Location"        = " $WELocationName"
-    " Approved By"     = " Abdullah Ollivierre"
-    " Approved On"     = " $datetime"
-
+[hashtable]$Tags = @{
+    "Autoshutown"     = 'ON'
+    "Createdby"       = 'Abdullah Ollivierre'
+    "CustomerName"    = " $CustomerName"
+    "DateTimeCreated" = " $datetime"
+    "Environment"     = 'Dev'
+    "Application"     = 'Windows Movie Maker'
+    "Purpose"         = 'Rendering with Movie Maker'
+    "Uptime"          = 'Rendering with Movie Maker'
+    "Workload"        = 'Rendering with Movie Maker'
+    "RebootCaution"   = 'Reboot any time'
+    "VMSize"          = 'B2Ms'
+    "Location"        = " $LocationName"
+    "Approved By"     = "Abdullah Ollivierre"
+    "Approved On"     = " $datetime"
 }
-
-
-
-
 $newAzResourceGroupSplat = @{
-    Name     = $WEResourceGroupName
-    Location = $WELocationName
-    Tag      = $WETags
+    Name     = $ResourceGroupName
+    Location = $LocationName
+    Tag      = $Tags
 }
-
-
 New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-$WEComputerName = $WEVMName
-
-
-
-$WEVMSize = " Standard_D4as_v4"
-
-
-
-$WEOSDiskCaching = " ReadWrite"
-$WEOSCreateOption = " FromImage"
-
-
-$WEGUID = [guid]::NewGuid()
-$WEOSDiskName = -join (" $WEVMName" , " _OSDisk" , " _1" , " _$WEGUID" )
-
-
-
-$WEDNSNameLabel = -join (" $WEVMName" , " DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
-
-
-$WENetworkName = -join (" $WEVMName" , " _group-vnet" )
-
-
-$WENICPrefix = 'NIC1'
-$WENICName = -join (" $WEVMName" , " _$WENICPrefix" ).ToLower()
-$WEIPConfigName = -join (" $WEVMName" , " $WENICName" , " _IPConfig1" ).ToLower()
-
-
-$WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
-
-
-$WESubnetName = -join (" $WEVMName" , " -subnet" )
-$WESubnetAddressPrefix = " 10.0.0.0/24"
-$WEVnetAddressPrefix = " 10.0.0.0/16"
-
-
-$WENSGName = -join (" $WEVMName" , " -nsg" )
-
-
-
+$ComputerName = $VMName
+$VMSize = "Standard_D4as_v4"
+$OSDiskCaching = "ReadWrite"
+$OSCreateOption = "FromImage"
+$GUID = [guid]::NewGuid()
+$OSDiskName = -join (" $VMName" , "_OSDisk" , "_1" , "_$GUID" )
+$DNSNameLabel = -join (" $VMName" , "DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
+$NetworkName = -join (" $VMName" , "_group-vnet" )
+$NICPrefix = 'NIC1'
+$NICName = -join (" $VMName" , "_$NICPrefix" ).ToLower()
+$IPConfigName = -join (" $VMName" , "$NICName" , "_IPConfig1" ).ToLower()
+$PublicIPAddressName = -join (" $VMName" , "-ip" )
+$SubnetName = -join (" $VMName" , "-subnet" )
+$SubnetAddressPrefix = " 10.0.0.0/24"
+$VnetAddressPrefix = " 10.0.0.0/16"
+$NSGName = -join (" $VMName" , "-nsg" )
 $newAzVirtualNetworkSubnetConfigSplat = @{
-    Name          = $WESubnetName
-    AddressPrefix = $WESubnetAddressPrefix
+    Name          = $SubnetName
+    AddressPrefix = $SubnetAddressPrefix
 }
-$WESingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
-
-
-
-
+$SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
 $newAzVirtualNetworkSplat = @{
-    Name              = $WENetworkName
-    ResourceGroupName = $WEResourceGroupName
-    Location          = $WELocationName
-    AddressPrefix     = $WEVnetAddressPrefix
-    Subnet            = $WESingleSubnet
-    Tag               = $WETags
+    Name              = $NetworkName
+    ResourceGroupName = $ResourceGroupName
+    Location          = $LocationName
+    AddressPrefix     = $VnetAddressPrefix
+    Subnet            = $SingleSubnet
+    Tag               = $Tags
 }
-$WEVnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
-
-
-
-
-
-
-
-
+$Vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
 $newAzPublicIpAddressSplat = @{
-    Name              = $WEPublicIPAddressName
-    DomainNameLabel   = $WEDNSNameLabel
-    ResourceGroupName = $WEResourceGroupName
-    Location          = $WELocationName
+    Name              = $PublicIPAddressName
+    DomainNameLabel   = $DNSNameLabel
+    ResourceGroupName = $ResourceGroupName
+    Location          = $LocationName
     # AllocationMethod  = 'Dynamic'
     AllocationMethod  = 'Static'
     # IpTag             = $ipTag
-    Tag               = $WETags
+    Tag               = $Tags
 }
-$WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-
-
-
-
-
-
-$WESourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine
-$WESourceAddressPrefixCIDR = -join (" $WESourceAddressPrefix" , " /32" )
-
-
-
-
-
-$WEASGName = -join (" $WEVMName" , " _ASG1" )
+$PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
+$SourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine
+$SourceAddressPrefixCIDR = -join (" $SourceAddressPrefix" , "/32" )
+$ASGName = -join (" $VMName" , "_ASG1" )
 $newAzApplicationSecurityGroupSplat = @{
-    ResourceGroupName = " $WEResourceGroupName"
-    Name              = " $WEASGName"
-    Location          = " $WELocationName"
-    Tag               = $WETags
+    ResourceGroupName = " $ResourceGroupName"
+    Name              = " $ASGName"
+    Location          = " $LocationName"
+    Tag               = $Tags
 }
-$WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-
-
-
+$ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
 $getAzVirtualNetworkSubnetConfigSplat = @{
-    Name           = $WESubnetName
+    Name           = $SubnetName
     VirtualNetwork = $vnet
 }
-
-$WESubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
-
-
-
-
+$Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
 $newAzNetworkInterfaceIpConfigSplat = @{
-    Name                     = $WEIPConfigName
-    Subnet                   = $WESubnet
-    # Subnet                   = $WEVnet.Subnets[0].Id
-    # PublicIpAddress          = $WEPIP.ID
-    PublicIpAddress          = $WEPIP
-    ApplicationSecurityGroup = $WEASG
+    Name                     = $IPConfigName
+    Subnet                   = $Subnet
+    # Subnet                   = $Vnet.Subnets[0].Id
+    # PublicIpAddress          = $PIP.ID
+    PublicIpAddress          = $PIP
+    ApplicationSecurityGroup = $ASG
     Primary                  = $true
 }
-
-$WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-
-
-
+$IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 $newAzNetworkSecurityRuleConfigSplat = @{
     # Name = 'rdp-rule'
     Name                                = 'RDP-rule'
-    # Description = " Allow RDP"
+    # Description = "Allow RDP"
     Description                         = 'Allow RDP'
     Access                              = 'Allow'
     Protocol                            = 'Tcp'
     Direction                           = 'Inbound'
     Priority                            = 100
-    SourceAddressPrefix                 = $WESourceAddressPrefixCIDR
+    SourceAddressPrefix                 = $SourceAddressPrefixCIDR
     SourcePortRange                     = '*'
     # DestinationAddressPrefix = '*'
-    # DestinationAddressPrefix = $WEDestinationAddressPrefixCIDR #this will throw an error due to {Microsoft.Azure.Commands.Network.Models.PSPublicIpAddress/32} work on it some time to fix 
+    # DestinationAddressPrefix = $DestinationAddressPrefixCIDR #this will throw an error due to {Microsoft.Azure.Commands.Network.Models.PSPublicIpAddress/32} work on it some time to fix
     # DestinationAddressPrefix = '*'
     # DestinationPortRange = 3389
     DestinationPortRange                = '3389'
-    DestinationApplicationSecurityGroup = $WEASG
+    DestinationApplicationSecurityGroup = $ASG
 }
 $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
-
-
-
-
 $newAzNetworkSecurityGroupSplat = @{
-    ResourceGroupName = $WEResourceGroupName
-    Location          = $WELocationName
-    Name              = $WENSGName
+    ResourceGroupName = $ResourceGroupName
+    Location          = $LocationName
+    Name              = $NSGName
     # SecurityRules     = $rule1, $rule2
     SecurityRules     = $rule1
-    Tag               = $WETags
+    Tag               = $Tags
 }
-$WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-
-
-
-
+$NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
 $newAzNetworkInterfaceSplat = @{
-    Name                   = $WENICName
-    ResourceGroupName      = $WEResourceGroupName
-    Location               = $WELocationName
-    # SubnetId                 = $WEVnet.Subnets[0].Id
-    # PublicIpAddressId        = $WEPIP.Id
-    NetworkSecurityGroupId = $WENSG.Id
-    # ApplicationSecurityGroup = $WEASG
-    IpConfiguration        = $WEIPConfig1
-    Tag                    = $WETags
-    
+    Name                   = $NICName
+    ResourceGroupName      = $ResourceGroupName
+    Location               = $LocationName
+    # SubnetId                 = $Vnet.Subnets[0].Id
+    # PublicIpAddressId        = $PIP.Id
+    NetworkSecurityGroupId = $NSG.Id
+    # ApplicationSecurityGroup = $ASG
+    IpConfiguration        = $IPConfig1
+    Tag                    = $Tags
 }
-$WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
-
-
-
-
-$WEVMLocalAdminUser = Read-Host -Prompt 'Please enter a username to be created'
-$WEVMLocalAdminPassword = Generate-Password -length 16; 
-$WEVMLocalAdminSecurePassword = $WEVMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
-; 
-$WECredential = New-Object -ErrorAction Stop PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
-
-
-
-
-
+$NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
+$VMLocalAdminUser = Read-Host -Prompt 'Please enter a username to be created'
+$VMLocalAdminPassword = Generate-Password -length 16;
+$VMLocalAdminSecurePassword = $VMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
+$Credential = New-Object -ErrorAction Stop PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
 $newAzVMConfigSplat = @{
-    VMName       = $WEVMName
-    VMSize       = $WEVMSize
-    Tags         = $WETags
+    VMName       = $VMName
+    VMSize       = $VMSize
+    Tags         = $Tags
     IdentityType = 'SystemAssigned'
 }
-$WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-
-
-
-
+$VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 $setAzVMOperatingSystemSplat = @{
-    VM               = $WEVirtualMachine
+    VM               = $VirtualMachine
     Windows          = $true
     # Linux        = $true
-    ComputerName     = $WEComputerName
-    Credential       = $WECredential
+    ComputerName     = $ComputerName
+    Credential       = $Credential
     ProvisionVMAgent = $true
     # EnableAutoUpdate = $true
-    
 }
-$WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-
-
-
-
+$VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 $addAzVMNetworkInterfaceSplat = @{
-    VM = $WEVirtualMachine
-    Id = $WENIC.Id
+    VM = $VirtualMachine
+    Id = $NIC.Id
 }
-$WEVirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-
-
-
+$VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
 $setAzVMSourceImageSplat = @{
-    VM             = $WEVirtualMachine
-    # PublisherName = " Canonical"
+    VM             = $VirtualMachine
+    # PublisherName = "Canonical"
     # Offer         = " 0001-com-ubuntu-server-focal"
     # Skus          = " 20_04-lts-gen2"
     # Version       = " latest"
-    # publisherName = " MicrosoftWindowsDesktop"
+    # publisherName = "MicrosoftWindowsDesktop"
     # offer         = " office-365"
     # Skus          = " 20h2-evd-o365pp"
     # version       = " latest"
-
-
-    # publisherName = " MicrosoftWindowsServer"
-    # offer         = " WindowsServer"
+    # publisherName = "MicrosoftWindowsServer"
+    # offer         = "WindowsServer"
     # Skus          = " 2019-datacenter-gensecond"
     # version       = " latest"
-
-
-
     ##Operating System
-    publisherName = " MicrosoftWindowsDesktop"
+    publisherName = "MicrosoftWindowsDesktop"
     offer = " office-365"
     Skus = " 20h2-evd-o365pp"
     version = " latest"
     # Caching = 'ReadWrite'
 }
-
-
-$WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
-
-
-
-
+$VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 $setAzVMOSDiskSplat = @{
-    VM           = $WEVirtualMachine
-    Name         = $WEOSDiskName
-    # VhdUri = $WEOSDiskUri
-    # SourceImageUri = $WESourceImageUri
-    Caching      = $WEOSDiskCaching
-    CreateOption = $WEOSCreateOption
+    VM           = $VirtualMachine
+    Name         = $OSDiskName
+    # VhdUri = $OSDiskUri
+    # SourceImageUri = $SourceImageUri
+    Caching      = $OSDiskCaching
+    CreateOption = $OSCreateOption
     # Windows = $true
     DiskSizeInGB = '128'
 }
-$WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-
-
-
-
+$VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
 $newAzVMSplat = @{
-    ResourceGroupName = $WEResourceGroupName
-    Location          = $WELocationName
-    VM                = $WEVirtualMachine
+    ResourceGroupName = $ResourceGroupName
+    Location          = $LocationName
+    VM                = $VirtualMachine
     Verbose           = $true
-    Tag               = $WETags
+    Tag               = $Tags
 }
 New-AzVM -ErrorAction Stop @newAzVMSplat
-
-
-
 $setAzVMExtensionSplat = @{
-    ResourceGroupName  = $WEResourceGroupName
-    Location           = $WELocationName
-    VMName             = $WEVMName
-    Name               = " AADLoginForWindows"
-    Publisher          = " Microsoft.Azure.ActiveDirectory"
-    ExtensionType      = " AADLoginForWindows"
+    ResourceGroupName  = $ResourceGroupName
+    Location           = $LocationName
+    VMName             = $VMName
+    Name               = "AADLoginForWindows"
+    Publisher          = "Microsoft.Azure.ActiveDirectory"
+    ExtensionType      = "AADLoginForWindows"
     TypeHandlerVersion = " 1.0"
-    # SettingString = $WESettingsString
+    # SettingString = $SettingsString
 }
 Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
-
-
-
-
-$WEUsersGroupName = " Azure VM - Standard User"
-
-$WEObjectID = (Get-AzADGroup -SearchString $WEUsersGroupName).ID
-
-$vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
-
-New-AzRoleAssignment -ObjectId $WEObjectID -RoleDefinitionName 'Virtual Machine User Login' -ResourceGroupName $WEResourceGroupName -ResourceName $WEVMName -ResourceType $vmtype
-
-
-
-
-$WEAdminsGroupName = " Azure VM - Admins"
-
-$WEObjectID = (Get-AzADGroup -SearchString $WEAdminsGroupName).ID
-; 
-$vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
-
-New-AzRoleAssignment -ObjectId $WEObjectID -RoleDefinitionName 'Virtual Machine Administrator Login' -ResourceGroupName $WEResourceGroupName -ResourceName $WEVMName -ResourceType $vmtype
-
-
-
-; 
+$UsersGroupName = "Azure VM - Standard User"
+$ObjectID = (Get-AzADGroup -SearchString $UsersGroupName).ID
+$vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
+New-AzRoleAssignment -ObjectId $ObjectID -RoleDefinitionName 'Virtual Machine User Login' -ResourceGroupName $ResourceGroupName -ResourceName $VMName -ResourceType $vmtype
+$AdminsGroupName = "Azure VM - Admins"
+$ObjectID = (Get-AzADGroup -SearchString $AdminsGroupName).ID
+$vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
+New-AzRoleAssignment -ObjectId $ObjectID -RoleDefinitionName 'Virtual Machine Administrator Login' -ResourceGroupName $ResourceGroupName -ResourceName $VMName -ResourceType $vmtype
 $setAzVMAutoShutdownSplat = @{
     # ResourceGroupName = 'RG-WE-001'
-    ResourceGroupName = $WEResourceGroupName
+    ResourceGroupName = $ResourceGroupName
     # Name              = 'MYVM001'
-    Name              = $WEVMName
+    Name              = $VMName
     Enable            = $true
     Time              = '23:59'
-    # TimeZone = " W. Europe Standard Time"
-    TimeZone          = " Central Standard Time"
+    # TimeZone = "W. Europe Standard Time"
+    TimeZone          = "Central Standard Time"
     Email             = " abdullah@canadacomputing.ca"
 }
-
 Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
-
-
-
-
-
 Write-Information \'The VM is now ready.... here is your login details\'
-Write-Information \'username:\' $WEVMLocalAdminUser
-Write-Information \'Password:\' $WEVMLocalAdminPassword
-Write-Information \'DNSName:\' $WEDNSNameLabel'.canadacentral.cloudapp.azure.com'
+Write-Information \'username:\' $VMLocalAdminUser
+Write-Information \'Password:\' $VMLocalAdminPassword
+Write-Information \'DNSName:\' $DNSNameLabel'.canadacentral.cloudapp.azure.com'
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

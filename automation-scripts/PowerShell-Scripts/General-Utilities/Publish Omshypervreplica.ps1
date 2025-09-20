@@ -1,78 +1,43 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Publish Omshypervreplica
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Publish Omshypervreplica
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 workflow Publish-omsHyperVReplica
 {
 	[CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-		[Parameter(Mandatory=$true)]
+		[Parameter(Mandatory)]
 		[string]
 		$computerName
 	)
-
-	$WEOMSConnection = Get-AutomationConnection -Name 'omsHypervReplicaOMSConnection'
+	$OMSConnection = Get-AutomationConnection -Name 'omsHypervReplicaOMSConnection'
 	$credential    = Get-AutomationPSCredential -Name 'omsHypervReplicaRunAsAccount'
-; 	$omsRunNumber  = Get-AutomationVariable -Name 'omsHypervReplicaRunNumber'
-
+$omsRunNumber  = Get-AutomationVariable -Name 'omsHypervReplicaRunNumber'
 	Write-Verbose 'Getting Run Number'
-; 	$omsRunNumberIncrease = $omsRunNumber + 1
+$omsRunNumberIncrease = $omsRunNumber + 1
 	Set-AutomationVariable -Name 'omsHypervReplicaRunNumber' -Value $omsRunNumberIncrease
-
 	Write-Verbose 'Getting Replication Statistics From Hosts'
-
 	ForEach -Parallel -throttlelimit 5 ($computer in ($computerName -split ';'))
 	{
 		$vms = InlineScript {
 			Invoke-Command  -ScriptBlock {
 				Measure-VMReplication -ReplicationMode Primary
-			} -ComputerName $WEUSING:computer -Credential $WEUSING:credential
+			} -ComputerName $USING:computer -Credential $USING:credential
 		}
-
 		if($vms)
 		{
 			ForEach -Parallel ($vm in $vms)
 			{
-			; 	$WEOMSDataInjection = @{
-					OMSConnection     = $WEOMSConnection
+$OMSDataInjection = @{
+					OMSConnection     = $OMSConnection
 					LogType           = 'hyperVReplica'
 					UTCTimeStampField = 'LogTime'
 					OMSDataObject     = [psCustomObject]@{
@@ -87,10 +52,9 @@ param(
 															runNumber                 = $omsRunNumber
 														}
 				}
-
 				try
 				{
-					Write-Verbose " Uploading Data To OMS For VM $($vm.name)"
+					Write-Verbose "Uploading Data To OMS For VM $($vm.name)"
 					New-OMSDataInjection -ErrorAction Stop @OMSDataInjection
 				}
 				catch
@@ -106,8 +70,3 @@ param(
 	}
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

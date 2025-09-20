@@ -1,161 +1,104 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Sqlazureingestion
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Sqlazureingestion
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-
-
-$WEStartTime = [dateTime]::Now.Subtract([TimeSpan]::FromMinutes(5))
-
-
-$WETimestampfield = " Timestamp" 
-
-
+$ErrorActionPreference = "Stop"
+$StartTime = [dateTime]::Now.Subtract([TimeSpan]::FromMinutes(5))
+$Timestampfield = "Timestamp"
 $customerID = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_ID'
-
-
 $sharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
-
-
-
-" Logging in to Azure..."
-$WEConn = Get-AutomationConnection -Name AzureRunAsConnection 
+"Logging in to Azure..."
+$Conn = Get-AutomationConnection -Name AzureRunAsConnection
  $params = @{
-     ApplicationId = $WEConn.ApplicationID
-     CertificateThumbprint = $WEConn.CertificateThumbprint
-     Tenant = $WEConn.TenantID
+     ApplicationId = $Conn.ApplicationID
+     CertificateThumbprint = $Conn.CertificateThumbprint
+     Tenant = $Conn.TenantID
  }
  Add-AzureRMAccount @params
-
-" Selecting Azure subscription..."
-$WESelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $WEConn.SubscriptionID -TenantId $WEConn.tenantid 
-
-
-
-
+"Selecting Azure subscription..."
+$SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
 $logType  = " sqlazure"
-" Logtype Name for SQL DB(s) is $logType"
-
-
-$WESQLServers = Find-AzureRmResource -ResourceType Microsoft.Sql/servers
-
-$WEDBCount = 0
-$WEFailedConnections = @()
-if($WESQLServers -ne $WENull)
+"Logtype Name for SQL DB(s) is $logType"
+$SQLServers = Find-AzureRmResource -ResourceType Microsoft.Sql/servers
+$DBCount = 0
+$FailedConnections = @()
+if($SQLServers -ne $Null)
 {
-	foreach($WESQLServer in $WESQLServers)
+	foreach($SQLServer in $SQLServers)
     	{
 		# Get resource usage metrics for a database in an elastic database for the specified time interval.
-		# This example will run every 10 minutes on a schedule and gather two data points for 15 metrics leveraging the ARM API 
-		$WEDBList = Get-AzureRmSqlDatabase -ServerName $WESQLServer.Name -ResourceGroupName $WESQLServer.ResourceGroupName
-        
-		# If the listing of databases is not $null 
-		if($dbList -ne $WENull)
+		# This example will run every 10 minutes on a schedule and gather two data points for 15 metrics leveraging the ARM API
+		$DBList = Get-AzureRmSqlDatabase -ServerName $SQLServer.Name -ResourceGroupName $SQLServer.ResourceGroupName
+		# If the listing of databases is not $null
+		if($dbList -ne $Null)
 		{
 			foreach ($db in $dbList)
 			{
-                		if($db.Edition -ne " None" )
+                		if($db.Edition -ne "None" )
                 		{
-		                    	$WEDBCount++
-		                    	$WEMetrics = @()
-		                    	if($db.ElasticPoolName -ne $WENull)
+		                    	$DBCount++
+		                    	$Metrics = @()
+		                    	if($db.ElasticPoolName -ne $Null)
 		    			{
 						$elasticPool = $db.ElasticPoolName
 		    			}
 		    			else
 		    			{
 						$elasticPool = " none"
-		    			}                    
+		    			}
 					try
 	                    		{
-	                        		$WEMetrics = $WEMetrics + (Get-AzureRmMetric -ResourceId $db.ResourceId -TimeGrain ([TimeSpan]::FromMinutes(5)) -StartTime $WEStartTime)
+	                        		$Metrics = $Metrics + (Get-AzureRmMetric -ResourceId $db.ResourceId -TimeGrain ([TimeSpan]::FromMinutes(5)) -StartTime $StartTime)
 					}
 	                    		catch
 	            			{
 						# Add up failed connections due to offline or access denied
-						$WEFailedConnections = $WEFailedConnections + " Failed to connect to $($db.DatabaseName) on SQL Server $($db.ServerName)"
-					}		
+						$FailedConnections = $FailedConnections + "Failed to connect to $($db.DatabaseName) on SQL Server $($db.ServerName)"
+					}
 					# Format metrics into a table.
-                    		; 	$table = @()
-                    			foreach($metric in $WEMetrics)
-                    			{ 
+$table = @()
+                    			foreach($metric in $Metrics)
+                    			{
                 				foreach($metricValue in $metric.MetricValues)
 	                        		{
-        	                		; 	$sx = New-Object -ErrorAction Stop PSObject -Property @{
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
                 	                		Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
-                        	        		MetricName = $metric.Name; 
+                        	        		MetricName = $metric.Name;
                                 			Average = $metricValue.Average;
-                                			SubscriptionID = $WEConn.SubscriptionID;
+                                			SubscriptionID = $Conn.SubscriptionID;
                                 			ResourceGroup = $db.ResourceGroupName;
-                                			ServerName = $WESQLServer.Name;
+                                			ServerName = $SQLServer.Name;
                                 			DatabaseName = $db.DatabaseName;
 		                        		ElasticPoolName = $elasticPool;
-		                        		AzureSubscription = $WESelectedAzureSub.subscription.subscriptionName;
-		                        		ResourceLink = " https://portal.azure.com/#resource/subscriptions/$($WEConn.SubscriptionID)/resourceGroups/$($db.ResourceGroupName)/providers/Microsoft.Sql/Servers/$($WESQLServer.Name)/databases/$($db.DatabaseName)"
+		                        		AzureSubscription = $SelectedAzureSub.subscription.subscriptionName;
+		                        		ResourceLink = "https://portal.azure.com/#resource/subscriptions/$($Conn.SubscriptionID)/resourceGroups/$($db.ResourceGroupName)/providers/Microsoft.Sql/Servers/$($SQLServer.Name)/databases/$($db.DatabaseName)"
                             				}
                             				$table = $table = $table + $sx
                         			}
-                	 			# Convert table to a JSON document for ingestion 
-		    			; 	$jsonTable = ConvertTo-Json -InputObject $table
+                	 			# Convert table to a JSON document for ingestion
+$jsonTable = ConvertTo-Json -InputObject $table
                     			}
 		    			#Post the data to the endpoint - looking for an " accepted" response code
-                			Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonTable -logType $logType -TimeStampField $WETimestampfield
+                			Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonTable -logType $logType -TimeStampField $Timestampfield
 					# Uncomment below to troubleshoot
 					#$jsonTable
-        			}	
+        			}
             		}
 		}
-	}		
+	}
 }
-" Total DBs processed $WEDBCount"
-if($WEFailedConnections -ne $WENull)
+"Total DBs processed $DBCount"
+if($FailedConnections -ne $Null)
 {
     ""
-    " Failed to connect to $($WEFailedConnections.Count) databases"
-    $WEFailedConnections
+    "Failed to connect to $($FailedConnections.Count) databases"
+    $FailedConnections
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

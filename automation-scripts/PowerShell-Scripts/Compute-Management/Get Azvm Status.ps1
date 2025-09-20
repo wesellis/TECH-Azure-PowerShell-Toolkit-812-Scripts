@@ -1,109 +1,53 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Get Azvm Status
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Get Azvm Status
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function WE-Get-ARMVM -ErrorAction Stop {
-
+function Get-ARMVM -ErrorAction Stop {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
     param(
         [Parameter()]
-        [String]$WERGNAME,
-        [String]$WEVMNAME
-
+        [String]$RGNAME,
+        [String]$VMNAME
     )
-    
     begin {
-        
     }
-    
     process {
-
-
         try {
-        
-            $WERGs = Get-AzResourceGroup -ErrorAction Stop
-            foreach ($WERG in $WERGs) {
-
-                if ($WERG.ResourceGroupName -eq $WERGNAME) {
-
-                    $WEVMs = Get-AzVM -ResourceGroupName $WERG.ResourceGroupName
-                    foreach ($WEVM in $WEVMs) {
-
-                        if ($WEVM.name -eq $WEVMNAME ) {
-                            $WEVMDetail = Get-AzVM -ResourceGroupName $WERG.ResourceGroupName -Name $WEVM.Name -Status
-                           ;  $WERGN = $WEVMDetail.ResourceGroupName  
-                            foreach ($WEVMStatus in $WEVMDetail.Statuses) { 
-                               ;  $WEVMStatusDetail = $WEVMStatus.DisplayStatus
+            $RGs = Get-AzResourceGroup -ErrorAction Stop
+            foreach ($RG in $RGs) {
+                if ($RG.ResourceGroupName -eq $RGNAME) {
+                    $VMs = Get-AzVM -ResourceGroupName $RG.ResourceGroupName
+                    foreach ($VM in $VMs) {
+                        if ($VM.name -eq $VMNAME ) {
+                            $VMDetail = Get-AzVM -ResourceGroupName $RG.ResourceGroupName -Name $VM.Name -Status
+$RGN = $VMDetail.ResourceGroupName
+                            foreach ($VMStatus in $VMDetail.Statuses) {
+$VMStatusDetail = $VMStatus.DisplayStatus
                             }
-                            Write-Output " Resource Group: $WERGN" , (" VM Name: " + $WEVM.Name), " Status: $WEVMStatusDetail" `n
+                            Write-Output "Resource Group: $RGN" , ("VM Name: " + $VM.Name), "Status: $VMStatusDetail" `n
                         }
                     }
                 }
-        
-            }
-        }
-        catch {
+
+} catch {
     Write-Error "An error occurred: $($_.Exception.Message)"
     throw
 }
         finally {
-            
         }
-        
     }
-    
     end {
-        
     }
 }
+Get-ARMVM -RGNAME "CCI_PS_AUTOMATION_RG" -VMName "PSAutomation1"
 
-Get-ARMVM -RGNAME " CCI_PS_AUTOMATION_RG" -VMName " PSAutomation1"
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

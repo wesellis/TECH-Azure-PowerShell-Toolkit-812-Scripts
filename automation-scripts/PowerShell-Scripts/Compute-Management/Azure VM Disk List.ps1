@@ -1,117 +1,60 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Disk List
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Disk List
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$WEVmName
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
+    [string]$VmName
 )
-
-#region Functions
-
-Write-WELog " Retrieving disk information for VM: $WEVmName" " INFO"
-; 
-$WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
-
-Write-WELog " `nOS Disk:" " INFO"
-Write-WELog "  Name: $($WEVM.StorageProfile.OsDisk.Name)" " INFO"
-Write-WELog "  Size: $($WEVM.StorageProfile.OsDisk.DiskSizeGB) GB" " INFO"
-Write-WELog "  Type: $($WEVM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)" " INFO"
-
-if ($WEVM.StorageProfile.DataDisks.Count -gt 0) {
-    Write-WELog " `nData Disks:" " INFO"
-    foreach ($WEDisk in $WEVM.StorageProfile.DataDisks) {
-        Write-WELog "  Name: $($WEDisk.Name) | Size: $($WEDisk.DiskSizeGB) GB | LUN: $($WEDisk.Lun)" " INFO"
+Write-Host "Retrieving disk information for VM: $VmName"
+$VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
+Write-Host " `nOS Disk:"
+Write-Host "Name: $($VM.StorageProfile.OsDisk.Name)"
+Write-Host "Size: $($VM.StorageProfile.OsDisk.DiskSizeGB) GB"
+Write-Host "Type: $($VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)"
+if ($VM.StorageProfile.DataDisks.Count -gt 0) {
+    Write-Host " `nData Disks:"
+    foreach ($Disk in $VM.StorageProfile.DataDisks) {
+        Write-Host "Name: $($Disk.Name) | Size: $($Disk.DiskSizeGB) GB | LUN: $($Disk.Lun)"
     }
 } else {
-    Write-WELog " `nNo data disks attached." " INFO"
+    Write-Host " `nNo data disks attached."
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

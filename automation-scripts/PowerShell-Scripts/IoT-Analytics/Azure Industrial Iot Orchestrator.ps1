@@ -1,279 +1,199 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Industrial Iot Orchestrator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Industrial Iot Orchestrator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-.SYNOPSIS
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Enterprise Industrial IoT orchestration platform for Azure Digital Twins and IoT Hub management.
-
-.DESCRIPTION
-    This comprehensive tool orchestrates complex Industrial IoT scenarios using Azure Digital Twins,
+    This  tool orchestrates complex Industrial IoT scenarios using Azure Digital Twins,
     IoT Hub, Time Series Insights, and Event Grid. It creates digital representations of industrial
     equipment, manages telemetry data, and provides predictive maintenance capabilities.
-
 .PARAMETER OperationMode
     Mode of operation: Deploy, Monitor, Analyze, or Predict
-
 .PARAMETER IndustryType
     Type of industry: Manufacturing, Energy, Automotive, or Aerospace
-
 .PARAMETER DigitalTwinInstanceName
     Name of the Azure Digital Twins instance
-
 .PARAMETER IoTHubName
     Name of the IoT Hub to connect devices
-
 .PARAMETER EnablePredictiveMaintenance
     Enable AI-powered predictive maintenance algorithms
-
 .PARAMETER TimeSeriesRetentionDays
     Number of days to retain time series data
-
-.EXAMPLE
-    .\Azure-Industrial-IoT-Orchestrator.ps1 -OperationMode " Deploy" -IndustryType " Manufacturing" -EnablePredictiveMaintenance
-
-.NOTES
+    .\Azure-Industrial-IoT-Orchestrator.ps1 -OperationMode "Deploy" -IndustryType "Manufacturing" -EnablePredictiveMaintenance
     Author: Wesley Ellis
-    Date: June 2024
-    Version: 1.0.0
-    Requires: Az.DigitalTwins, Az.IotHub, Az.TimeSeriesInsights modules
-
-
+    Date: June 2024    Requires: Az.DigitalTwins, Az.IotHub, Az.TimeSeriesInsights modules
 [CmdletBinding(SupportsShouldProcess=$true)]
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet(" Deploy" , " Monitor" , " Analyze" , " Predict" )]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
+    [ValidateSet("Deploy" , "Monitor" , "Analyze" , "Predict" )]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOperationMode,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" Manufacturing" , " Energy" , " Automotive" , " Aerospace" , " SmartBuilding" )]
-    [string]$WEIndustryType = " Manufacturing" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEDigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEIoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEResourceGroupName = " rg-industrial-iot" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US" ,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEEnablePredictiveMaintenance,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WETimeSeriesRetentionDays = 90
+    [string]$OperationMode,
+    [Parameter()]
+    [ValidateSet("Manufacturing" , "Energy" , "Automotive" , "Aerospace" , "SmartBuilding" )]
+    [string]$IndustryType = "Manufacturing" ,
+    [Parameter()]
+    [string]$DigitalTwinInstanceName = " industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
+    [Parameter()]
+    [string]$IoTHubName = " industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)" ,
+    [Parameter()]
+    [string]$ResourceGroupName = " rg-industrial-iot" ,
+    [Parameter()]
+    [string]$Location = "East US" ,
+    [Parameter()]
+    [switch]$EnablePredictiveMaintenance,
+    [Parameter()]
+    [int]$TimeSeriesRetentionDays = 90
 )
-
-#region Functions
-
-; 
 $requiredModules = @('Az.Resources', 'Az.IotHub', 'Az.Storage', 'Az.EventGrid')
 foreach ($module in $requiredModules) {
     if (!(Get-Module -ListAvailable -Name $module)) {
-        Write-Warning " Module $module is not installed. Some features may not work."
+        Write-Warning "Module $module is not installed. Some features may not work."
     } else {
         Import-Module $module -ErrorAction SilentlyContinue
     }
 }
-
-
 class IndustrialIoTOrchestrator {
-    [string]$WEIndustryType
-    [string]$WEResourceGroupName
-    [string]$WELocation
-    [hashtable]$WEDeviceModels
-    [hashtable]$WEDigitalTwinModels
-    [array]$WEDevices
-    [hashtable]$WETelemetryData
-    [array]$WEAlerts
-    
-    IndustrialIoTOrchestrator([Parameter(Mandatory=$false)]
+    [string]$IndustryType
+    [string]$ResourceGroupName
+    [string]$Location
+    [hashtable]$DeviceModels
+    [hashtable]$DigitalTwinModels
+    [array]$Devices
+    [hashtable]$TelemetryData
+    [array]$Alerts
+    IndustrialIoTOrchestrator([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Industry, [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEIndustry, [Parameter(Mandatory=$false)]
+    [string]$RG, [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERG, [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELoc) {
-        $this.IndustryType = $WEIndustry
-        $this.ResourceGroupName = $WERG
-        $this.Location = $WELoc
+    [string]$Loc) {
+        $this.IndustryType = $Industry
+        $this.ResourceGroupName = $RG
+        $this.Location = $Loc
         $this.DeviceModels = @{}
         $this.DigitalTwinModels = @{}
         $this.Devices = @()
         $this.TelemetryData = @{}
         $this.Alerts = @()
-        
         $this.InitializeIndustryModels()
     }
-    
     [void]InitializeIndustryModels() {
-        Write-WELog " Initializing $($this.IndustryType) industry models..." " INFO" -ForegroundColor Yellow
-        
+        Write-Host "Initializing $($this.IndustryType) industry models..." -ForegroundColor Yellow
         switch ($this.IndustryType) {
-            " Manufacturing" {
+            "Manufacturing" {
                 $this.DigitalTwinModels = @{
-                    " ProductionLine" = $this.GetProductionLineModel()
-                    " CNCMachine" = $this.GetCNCMachineModel()
-                    " ConveyorBelt" = $this.GetConveyorBeltModel()
-                    " QualityStation" = $this.GetQualityStationModel()
-                    " RoboticArm" = $this.GetRoboticArmModel()
+                    "ProductionLine" = $this.GetProductionLineModel()
+                    "CNCMachine" = $this.GetCNCMachineModel()
+                    "ConveyorBelt" = $this.GetConveyorBeltModel()
+                    "QualityStation" = $this.GetQualityStationModel()
+                    "RoboticArm" = $this.GetRoboticArmModel()
                 }
             }
-            " Energy" {
+            "Energy" {
                 $this.DigitalTwinModels = @{
-                    " PowerPlant" = $this.GetPowerPlantModel()
-                    " WindTurbine" = $this.GetWindTurbineModel()
-                    " SolarPanel" = $this.GetSolarPanelModel()
-                    " Transformer" = $this.GetTransformerModel()
-                    " EnergyStorage" = $this.GetEnergyStorageModel()
+                    "PowerPlant" = $this.GetPowerPlantModel()
+                    "WindTurbine" = $this.GetWindTurbineModel()
+                    "SolarPanel" = $this.GetSolarPanelModel()
+                    "Transformer" = $this.GetTransformerModel()
+                    "EnergyStorage" = $this.GetEnergyStorageModel()
                 }
             }
-            " Automotive" {
+            "Automotive" {
                 $this.DigitalTwinModels = @{
-                    " AssemblyLine" = $this.GetAssemblyLineModel()
-                    " PaintBooth" = $this.GetPaintBoothModel()
-                    " WeldingStation" = $this.GetWeldingStationModel()
-                    " TestingBay" = $this.GetTestingBayModel()
+                    "AssemblyLine" = $this.GetAssemblyLineModel()
+                    "PaintBooth" = $this.GetPaintBoothModel()
+                    "WeldingStation" = $this.GetWeldingStationModel()
+                    "TestingBay" = $this.GetTestingBayModel()
                 }
             }
-            " SmartBuilding" {
+            "SmartBuilding" {
                 $this.DigitalTwinModels = @{
-                    " HVAC" = $this.GetHVACModel()
-                    " ElevatorSystem" = $this.GetElevatorModel()
-                    " SecuritySystem" = $this.GetSecurityModel()
-                    " LightingSystem" = $this.GetLightingModel()
+                    "HVAC" = $this.GetHVACModel()
+                    "ElevatorSystem" = $this.GetElevatorModel()
+                    "SecuritySystem" = $this.GetSecurityModel()
+                    "LightingSystem" = $this.GetLightingModel()
                 }
             }
         }
     }
-    
     [hashtable]GetProductionLineModel() {
         return @{
             " @id" = " dtmi:industrialiot:manufacturing:ProductionLine;1"
-            " @type" = " Interface"
-            " displayName" = " Production Line"
+            " @type" = "Interface"
+            " displayName" = "Production Line"
             " contents" = @(
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " throughput"
                     " schema" = " double"
                     " unit" = " unitsPerHour"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " efficiency"
                     " schema" = " double"
                     " unit" = " percent"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " temperature"
                     " schema" = " double"
                     " unit" = " degreeCelsius"
                 },
                 @{
-                    " @type" = " Property"
+                    " @type" = "Property"
                     " name" = " isOperational"
                     " schema" = " boolean"
                 },
                 @{
-                    " @type" = " Property"
+                    " @type" = "Property"
                     " name" = " lastMaintenanceDate"
                     " schema" = " date"
                 }
             )
         }
     }
-    
     [hashtable]GetCNCMachineModel() {
         return @{
             " @id" = " dtmi:industrialiot:manufacturing:CNCMachine;1"
-            " @type" = " Interface"
-            " displayName" = " CNC Machine"
+            " @type" = "Interface"
+            " displayName" = "CNC Machine"
             " contents" = @(
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " spindleSpeed"
                     " schema" = " double"
                     " unit" = " rpm"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " vibration"
                     " schema" = " double"
                     " unit" = " gForce"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " toolWear"
                     " schema" = " double"
                     " unit" = " percent"
                 },
                 @{
-                    " @type" = " Command"
+                    " @type" = "Command"
                     " name" = " emergencyStop"
                 },
                 @{
-                    " @type" = " Command"
+                    " @type" = "Command"
                     " name" = " changeTool"
                     " request" = @{
                         " name" = " toolNumber"
@@ -283,78 +203,76 @@ class IndustrialIoTOrchestrator {
             )
         }
     }
-    
     [hashtable]GetWindTurbineModel() {
         return @{
             " @id" = " dtmi:industrialiot:energy:WindTurbine;1"
-            " @type" = " Interface"
-            " displayName" = " Wind Turbine"
+            " @type" = "Interface"
+            " displayName" = "Wind Turbine"
             " contents" = @(
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " windSpeed"
                     " schema" = " double"
                     " unit" = " meterPerSecond"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " powerOutput"
                     " schema" = " double"
                     " unit" = " kilowatt"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " rotorSpeed"
                     " schema" = " double"
                     " unit" = " rpm"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " nacellteDirection"
                     " schema" = " double"
                     " unit" = " degree"
                 },
                 @{
-                    " @type" = " Property"
+                    " @type" = "Property"
                     " name" = " turbineStatus"
                     " schema" = " string"
                 }
             )
         }
     }
-    
     [hashtable]GetHVACModel() {
         return @{
             " @id" = " dtmi:industrialiot:smartbuilding:HVAC;1"
-            " @type" = " Interface"
-            " displayName" = " HVAC System"
+            " @type" = "Interface"
+            " displayName" = "HVAC System"
             " contents" = @(
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " temperature"
                     " schema" = " double"
                     " unit" = " degreeCelsius"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " humidity"
                     " schema" = " double"
                     " unit" = " percent"
                 },
                 @{
-                    " @type" = " Telemetry"
+                    " @type" = "Telemetry"
                     " name" = " airQuality"
                     " schema" = " double"
                     " unit" = " aqi"
                 },
                 @{
-                    " @type" = " Property"
+                    " @type" = "Property"
                     " name" = " setPointTemperature"
                     " schema" = " double"
                     " writable" = $true
                 },
                 @{
-                    " @type" = " Command"
+                    " @type" = "Command"
                     " name" = " setTemperature"
                     " request" = @{
                         " name" = " targetTemperature"
@@ -364,99 +282,73 @@ class IndustrialIoTOrchestrator {
             )
         }
     }
-    
-    [void]DeployInfrastructure([Parameter(Mandatory=$false)]
+    [void]DeployInfrastructure([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$DigitalTwinName, [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEDigitalTwinName, [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEIoTHubName) {
-        Write-WELog " Deploying Industrial IoT infrastructure..." " INFO" -ForegroundColor Green
-        
+    [string]$IoTHubName) {
+        Write-Host "Deploying Industrial IoT infrastructure..." -ForegroundColor Green
         # Create Resource Group
         $rg = Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
         if (!$rg) {
-            Write-WELog " Creating resource group: $($this.ResourceGroupName)" " INFO" -ForegroundColor Yellow
+            Write-Host "Creating resource group: $($this.ResourceGroupName)" -ForegroundColor Yellow
             New-AzResourceGroup -Name $this.ResourceGroupName -Location $this.Location
         }
-        
         # Deploy IoT Hub
-        $this.DeployIoTHub($WEIoTHubName)
-        
+        $this.DeployIoTHub($IoTHubName)
         # Deploy Digital Twins (using ARM template since Az.DigitalTwins might not be available)
-        $this.DeployDigitalTwins($WEDigitalTwinName)
-        
+        $this.DeployDigitalTwins($DigitalTwinName)
         # Deploy Time Series Insights
         $this.DeployTimeSeriesInsights()
-        
         # Deploy Event Grid
         $this.DeployEventGrid()
-        
         # Deploy Storage Account for data lake
         $this.DeployDataLake()
-        
-        Write-WELog " Infrastructure deployment completed!" " INFO" -ForegroundColor Green
+        Write-Host "Infrastructure deployment completed!" -ForegroundColor Green
     }
-    
-    [void]DeployIoTHub([Parameter(Mandatory=$false)]
+    [void]DeployIoTHub([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEIoTHubName) {
-        Write-WELog " Deploying IoT Hub: $WEIoTHubName" " INFO" -ForegroundColor Yellow
-        
+    [string]$IoTHubName) {
+        Write-Host "Deploying IoT Hub: $IoTHubName" -ForegroundColor Yellow
         # Check if IoT Hub exists
-        $iotHub = Get-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $WEIoTHubName -ErrorAction SilentlyContinue
-        
+        $iotHub = Get-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -ErrorAction SilentlyContinue
         if (!$iotHub) {
             # Create IoT Hub
-            New-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $WEIoTHubName -SkuName " S1" -Units 1 -Location $this.Location
-            
+            New-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -SkuName "S1" -Units 1 -Location $this.Location
             # Configure message routing
-            $this.ConfigureIoTHubRouting($WEIoTHubName)
+            $this.ConfigureIoTHubRouting($IoTHubName)
         }
     }
-    
-    [void]DeployDigitalTwins([Parameter(Mandatory=$false)]
+    [void]DeployDigitalTwins([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDigitalTwinName) {
-        Write-WELog " Deploying Digital Twins instance: $WEDigitalTwinName" " INFO" -ForegroundColor Yellow
-        
+    [string]$DigitalTwinName) {
+        Write-Host "Deploying Digital Twins instance: $DigitalTwinName" -ForegroundColor Yellow
         # Use ARM template deployment since Az.DigitalTwins may not be available
-        $templateContent = $this.GetDigitalTwinsARMTemplate($WEDigitalTwinName)
+        $templateContent = $this.GetDigitalTwinsARMTemplate($DigitalTwinName)
         $templatePath = " .\dt-template.json"
         $templateContent | ConvertTo-Json -Depth 10 | Out-File -FilePath $templatePath
-        
         try {
             New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $templatePath -Verbose
             Remove-Item -ErrorAction Stop $templatePat -Forceh -Force -ErrorAction SilentlyContinue
         } catch {
-            Write-Warning " Digital Twins deployment failed: $_"
+            Write-Warning "Digital Twins deployment failed: $_"
         }
     }
-    
-    [hashtable]GetDigitalTwinsARMTemplate([Parameter(Mandatory=$false)]
+    [hashtable]GetDigitalTwinsARMTemplate([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEInstanceName) {
+    [string]$InstanceName) {
         return @{
-            " `$schema" = " https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
+            " `$schema" = "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
             " contentVersion" = " 1.0.0.0"
             " parameters" = @{
                 " digitalTwinsName" = @{
                     " type" = " string"
-                    " defaultValue" = $WEInstanceName
+                    " defaultValue" = $InstanceName
                 }
             }
             " resources" = @(
                 @{
-                    " type" = " Microsoft.DigitalTwins/digitalTwinsInstances"
+                    " type" = "Microsoft.DigitalTwins/digitalTwinsInstances"
                     " apiVersion" = " 2020-12-01"
                     " name" = " [parameters('digitalTwinsName')]"
                     " location" = $this.Location
@@ -465,75 +357,61 @@ class IndustrialIoTOrchestrator {
             )
         }
     }
-    
-    [void]ConfigureIoTHubRouting([Parameter(Mandatory=$false)]
+    [void]ConfigureIoTHubRouting([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEIoTHubName) {
-        Write-WELog " Configuring IoT Hub message routing..." " INFO" -ForegroundColor Yellow
-        
+    [string]$IoTHubName) {
+        Write-Host "Configuring IoT Hub message routing..." -ForegroundColor Yellow
         # Create custom endpoints for different message types
         $endpoints = @{
             " telemetry" = " telemetry-storage"
             " alerts" = " alerts-eventgrid"
             " maintenance" = " maintenance-queue"
         }
-        
         foreach ($endpoint in $endpoints.GetEnumerator()) {
-            Write-WELog " Creating endpoint: $($endpoint.Value)" " INFO" -ForegroundColor Cyan
+            Write-Host "Creating endpoint: $($endpoint.Value)" -ForegroundColor Cyan
             # Implementation would create actual endpoints
         }
     }
-    
     [void]DeployTimeSeriesInsights() {
-        Write-WELog " Deploying Time Series Insights environment..." " INFO" -ForegroundColor Yellow
-        
+        Write-Host "Deploying Time Series Insights environment..." -ForegroundColor Yellow
         $tsiName = " tsi-$($this.ResourceGroupName)"
-        
         # TSI deployment would go here
-        Write-WELog " Time Series Insights: $tsiName configured" " INFO" -ForegroundColor Cyan
+        Write-Host "Time Series Insights: $tsiName configured" -ForegroundColor Cyan
     }
-    
     [void]DeployEventGrid() {
-        Write-WELog " Deploying Event Grid for real-time events..." " INFO" -ForegroundColor Yellow
-        
+        Write-Host "Deploying Event Grid for real-time events..." -ForegroundColor Yellow
         $eventGridName = " eg-industrial-iot"
-        
         # Event Grid deployment would go here
-        Write-WELog " Event Grid: $eventGridName configured" " INFO" -ForegroundColor Cyan
+        Write-Host "Event Grid: $eventGridName configured" -ForegroundColor Cyan
     }
-    
     [void]DeployDataLake() {
-        Write-WELog " Deploying Data Lake for analytics..." " INFO" -ForegroundColor Yellow
-        
+        Write-Host "Deploying Data Lake for analytics..." -ForegroundColor Yellow
         $storageAccountName = " sa$($this.ResourceGroupName -replace '-', '')"
-        
         try {
             $params = @{
-                Encoding = "UTF8  Write-WELog " Dashboard saved to: $dashboardPath" " INFO"
-                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-WELog " Generating IoT Dashboard..." " INFO"
+                Encoding = "UTF8  Write-Host "Dashboard saved to: $dashboardPath"
+                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-Host "Generating IoT Dashboard..."
                 gt = "70) { $score = $score + 20 }  # Add random variation $score = $score + Get-Random"
                 ErrorAction = "Stop }  ;  $html = $this.GenerateDashboardHTML($dashboardData) ;  $dashboardPath = " .\IoT-Dashboard-$(Get-Date"
                 Location = $this.Location
-                eq = " High" }).Count LastUpdated = Get-Date"
-                Depth = "10 Write-WELog " Model JSON created for: $modelName" " INFO"
+                eq = "High" }).Count LastUpdated = Get-Date"
+                Depth = "10 Write-Host "Model JSON created for: $modelName"
                 Name = $storageAccountName
                 Format = "yyyyMMdd-HHmmss').html" $html | Out-File"
-                SkuName = " Standard_LRS"
-                EnableHierarchicalNamespace = $true  Write-WELog " Data Lake storage account created: $storageAccountName" " INFO
-                le = $WEDeviceCount; $i++) { $deviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = " $deviceType-$i" DeviceType = $deviceType Location = " Floor-$([math]::Ceiling($i / 3))" Status = " Online" LastTelemetry = Get-Date
-                Kind = " StorageV2"
+                SkuName = "Standard_LRS"
+                EnableHierarchicalNamespace = $true  Write-Host "Data Lake storage account created: $storageAccountName" " INFO
+                le = $DeviceCount; $i++) { $deviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = " $deviceType-$i"DeviceType = $deviceType Location = " Floor-$([math]::Ceiling($i / 3))"Status = " Online" LastTelemetry = Get-Date
+                Kind = "StorageV2"
                 Minimum = "0"
                 FilePath = $dashboardPath
                 ResourceGroupName = $this.ResourceGroupName
-                ForegroundColor = "Green }  [string]GenerateDashboardHTML([hashtable]$WEData) { return @"
+                ForegroundColor = "Green }  [string]GenerateDashboardHTML([hashtable]$Data) { return @"
             }
             $storage @params
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Industrial IoT Dashboard - $($WEData.IndustryType)</title>
+    <title>Industrial IoT Dashboard - $($Data.IndustryType)</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1e1e1e; color: white; }
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
@@ -554,26 +432,23 @@ class IndustrialIoTOrchestrator {
 <body>
     <div class=" header" >
         <h1>Industrial IoT Dashboard</h1>
-        <p>Industry: $($WEData.IndustryType) | Last Updated: $($WEData.LastUpdated)</p>
+        <p>Industry: $($Data.IndustryType) | Last Updated: $($Data.LastUpdated)</p>
     </div>
-    
     <div class=" dashboard" >
         <div class=" widget" >
             <h3>Device Overview</h3>
-            <div class=" metric" >$($WEData.TotalDevices)</div>
+            <div class=" metric" >$($Data.TotalDevices)</div>
             <p>Total Devices</p>
-            <div class=" metric" style=" color: #00ff00;" >$($WEData.OnlineDevices)</div>
+            <div class=" metric" style=" color: #00ff00;" >$($Data.OnlineDevices)</div>
             <p>Online Devices</p>
         </div>
-        
         <div class=" widget" >
             <h3>Alert Status</h3>
-            <div class=" metric alert-high" >$($WEData.HighPriorityAlerts)</div>
+            <div class=" metric alert-high" >$($Data.HighPriorityAlerts)</div>
             <p>High Priority Alerts</p>
-            <div class=" metric" >$($WEData.ActiveAlerts)</div>
+            <div class=" metric" >$($Data.ActiveAlerts)</div>
             <p>Total Active Alerts</p>
         </div>
-        
         <div class=" widget" >
             <h3>System Health</h3>
             <div class=" chart-placeholder" >
@@ -582,7 +457,6 @@ class IndustrialIoTOrchestrator {
                 (Real-time telemetry visualization)
             </div>
         </div>
-        
         <div class=" widget" >
             <h3>Predictive Maintenance</h3>
             <div class=" chart-placeholder" >
@@ -597,71 +471,53 @@ class IndustrialIoTOrchestrator {
 " @
     }
 }
-
-
 try {
-    Write-WELog " Azure Industrial IoT Orchestrator v1.0" " INFO" -ForegroundColor Cyan
-    Write-WELog " ======================================" " INFO" -ForegroundColor Cyan
-    
+    Write-Host "Azure Industrial IoT Orchestrator v1.0" -ForegroundColor Cyan
+    Write-Host " ======================================" -ForegroundColor Cyan
     # Connect to Azure if needed
     $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-WELog " Connecting to Azure..." " INFO" -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
         Connect-AzAccount
     }
-    
     # Initialize orchestrator
-   ;  $orchestrator = [IndustrialIoTOrchestrator]::new($WEIndustryType, $WEResourceGroupName, $WELocation)
-    
-    switch ($WEOperationMode) {
-        " Deploy" {
-            Write-WELog " `n=== Deployment Mode ===" " INFO" -ForegroundColor Green
-            $orchestrator.DeployInfrastructure($WEDigitalTwinInstanceName, $WEIoTHubName)
+$orchestrator = [IndustrialIoTOrchestrator]::new($IndustryType, $ResourceGroupName, $Location)
+    switch ($OperationMode) {
+        "Deploy" {
+            Write-Host " `n=== Deployment Mode ===" -ForegroundColor Green
+            $orchestrator.DeployInfrastructure($DigitalTwinInstanceName, $IoTHubName)
             $orchestrator.CreateDigitalTwinModels()
-            Write-WELog " Deployment completed successfully!" " INFO" -ForegroundColor Green
+            Write-Host "Deployment completed successfully!" -ForegroundColor Green
         }
-        
-        " Monitor" {
-            Write-WELog " `n=== Monitoring Mode ===" " INFO" -ForegroundColor Green
+        "Monitor" {
+            Write-Host " `n=== Monitoring Mode ===" -ForegroundColor Green
             $orchestrator.SimulateDevices(15)
             $orchestrator.GenerateIoTDashboard()
-            Write-WELog " Monitoring dashboard generated!" " INFO" -ForegroundColor Green
+            Write-Host "Monitoring dashboard generated!" -ForegroundColor Green
         }
-        
-        " Analyze" {
-            Write-WELog " `n=== Analysis Mode ===" " INFO" -ForegroundColor Green
+        "Analyze" {
+            Write-Host " `n=== Analysis Mode ===" -ForegroundColor Green
             $orchestrator.SimulateDevices(20)
-            
-            if ($WEEnablePredictiveMaintenance) {
+            if ($EnablePredictiveMaintenance) {
                 $orchestrator.AnalyzePredictiveMaintenance()
-                Write-WELog " Predictive maintenance analysis completed!" " INFO" -ForegroundColor Green
-                Write-WELog " Alerts generated: $($orchestrator.Alerts.Count)" " INFO" -ForegroundColor Yellow
+                Write-Host "Predictive maintenance analysis completed!" -ForegroundColor Green
+                Write-Host "Alerts generated: $($orchestrator.Alerts.Count)" -ForegroundColor Yellow
             }
         }
-        
-        " Predict" {
-            Write-WELog " `n=== Prediction Mode ===" " INFO" -ForegroundColor Green
+        "Predict" {
+            Write-Host " `n=== Prediction Mode ===" -ForegroundColor Green
             $orchestrator.SimulateDevices(25)
             $orchestrator.AnalyzePredictiveMaintenance()
-            
-            Write-WELog " `nPredictive Maintenance Results:" " INFO" -ForegroundColor Yellow
+            Write-Host " `nPredictive Maintenance Results:" -ForegroundColor Yellow
             foreach ($alert in $orchestrator.Alerts) {
-                Write-WELog " Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)" " INFO" -ForegroundColor Red
+                Write-Host "Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)" -ForegroundColor Red
             }
-            
             $orchestrator.GenerateIoTDashboard()
         }
     }
-    
-    Write-WELog " `nIndustrial IoT orchestration completed for $WEIndustryType industry!" " INFO" -ForegroundColor Green
-    
+    Write-Host " `nIndustrial IoT orchestration completed for $IndustryType industry!" -ForegroundColor Green
 } catch {
-    Write-Error " An error occurred: $_"
-    exit 1
+    Write-Error "An error occurred: $_"
+    throw
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

@@ -1,19 +1,9 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Restore VM from backup
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+    Restore VM from backup
 #>
 param (
     [string]$ResourceGroupName,
@@ -21,10 +11,5 @@ param (
     [string]$VmName,
     [string]$RestorePoint
 )
-
-#region Functions
-
 Restore-AzVM -ResourceGroupName $ResourceGroupName -VaultName $VaultName -Name $VmName -RestorePoint $RestorePoint
 
-
-#endregion

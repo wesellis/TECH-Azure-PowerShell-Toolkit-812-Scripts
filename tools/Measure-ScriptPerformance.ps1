@@ -1,26 +1,10 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Measure ScriptPerformancecom)#>
 # Measure-ScriptPerformance.ps1
 # Performance benchmarking framework for PowerShell scripts
-# Version: 2.0
-
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ScriptPath,
     
     [int]$Iterations = 3,
@@ -310,7 +294,7 @@ class PerformanceOptimizer {
         }
         
         if ($content -notmatch '\[CmdletBinding\(\)\]') {
-            $suggestions.BestPractices += "Add [CmdletBinding()] for advanced function features"
+            $suggestions.BestPractices += "Add [CmdletBinding()] for function features"
         }
         
         if ($content -match 'catch\s*{[^}]*}' -and $content -notmatch 'Write-Error') {
@@ -323,9 +307,9 @@ class PerformanceOptimizer {
 
 # Main execution
 Write-Host @"
-╔══════════════════════════════════════════════════════════════╗
-║           PowerShell Script Performance Analyzer            ║
-╚══════════════════════════════════════════════════════════════╝
+
+�           PowerShell Script Performance Analyzer            �
+
 "@ -ForegroundColor Cyan
 
 if (-not (Test-Path $ScriptPath)) {
@@ -337,9 +321,9 @@ $benchmark = [PerformanceBenchmark]::new($ScriptPath)
 $results = $benchmark.RunBenchmark($Iterations)
 
 Write-Host "`n Performance Results:" -ForegroundColor Green
-Write-Host "═══════════════════════════════════════════" -ForegroundColor Gray
+Write-Host "���" -ForegroundColor Gray
 
-Write-Host "`n⏱  Execution Time:" -ForegroundColor Yellow
+Write-Host "`n  Execution Time:" -ForegroundColor Yellow
 Write-Host "   Average: $([Math]::Round($results.Statistics.ExecutionTime.Average, 2)) ms" -ForegroundColor White
 Write-Host "   Min: $([Math]::Round($results.Statistics.ExecutionTime.Min, 2)) ms | Max: $([Math]::Round($results.Statistics.ExecutionTime.Max, 2)) ms" -ForegroundColor Gray
 Write-Host "   Std Dev: $([Math]::Round($results.Statistics.ExecutionTime.StdDev, 2)) ms" -ForegroundColor Gray
@@ -371,7 +355,7 @@ if ($DetailedMetrics) {
 
 if ($CompareVersions -and $BaselineScript) {
     if (Test-Path $BaselineScript) {
-        Write-Host "`n� Comparing with baseline..." -ForegroundColor Cyan
+        Write-Host "`n�� Comparing with baseline..." -ForegroundColor Cyan
         $baselineBenchmark = [PerformanceBenchmark]::new($BaselineScript)
         $baselineResults = $baselineBenchmark.RunBenchmark($Iterations)
         
@@ -386,7 +370,7 @@ if ($CompareVersions -and $BaselineScript) {
 }
 
 # Performance optimization suggestions
-Write-Host "`n� Optimization Suggestions:" -ForegroundColor Cyan
+Write-Host "`n�� Optimization Suggestions:" -ForegroundColor Cyan
 $optimizer = [PerformanceOptimizer]::new()
 $suggestions = $optimizer.AnalyzeScript($ScriptPath)
 
@@ -394,7 +378,7 @@ foreach ($category in $suggestions.Keys) {
     if ($suggestions[$category].Count -gt 0) {
         Write-Host "`n$category:" -ForegroundColor Yellow
         foreach ($suggestion in $suggestions[$category]) {
-            Write-Host "  • $suggestion" -ForegroundColor Gray
+            Write-Host "   $suggestion" -ForegroundColor Gray
         }
     }
 }
@@ -405,6 +389,7 @@ if ($ExportReport) {
     Write-Host "`n[FILE] Report exported to: $ReportPath" -ForegroundColor Green
 }
 
-Write-Host "`n═══════════════════════════════════════════" -ForegroundColor Gray
+Write-Host "`n���" -ForegroundColor Gray
 
 #endregion
+

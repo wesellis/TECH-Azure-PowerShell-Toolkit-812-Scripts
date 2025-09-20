@@ -1,66 +1,29 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Azvmconfig
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Azvmconfig
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzVMConfig {
+function Invoke-AzVMConfig {
 }
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzVMConfig {
- 
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzVMConfig {
     #Region func New-AzVMConfig -ErrorAction Stop
     #Creating the VM Config Object for the VM
-   ;  $newAzVMConfigSplat = @{
-        VMName       = $WEVMName
-        VMSize       = $WEVMSize
-        Tags         = $WETags
+$newAzVMConfigSplat = @{
+        VMName       = $VMName
+        VMSize       = $VMSize
+        Tags         = $Tags
         IdentityType = 'SystemAssigned'
     }
-   ;  $WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
+$VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
     #endRegion func New-AzVMConfig -ErrorAction Stop
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

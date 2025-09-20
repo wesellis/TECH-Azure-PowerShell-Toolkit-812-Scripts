@@ -1,56 +1,15 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    14.1 New Azresourcegroup
+    Create resource group
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Create Azure resource group
+    Author: Wes Ellis (wes@wesellis.com)
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced 14.1 New Azresourcegroup
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop" ; 
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-.SYNOPSIS
+$ErrorActionPreference = "Stop" ;
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Short description
-.DESCRIPTION
     Long description
-.EXAMPLE
     PS C:\> <example usage>
     Explanation of what the example does
 .INPUTS
@@ -60,17 +19,8 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 ResourceGroupName : InspireAV_UniFi_RG
 Location          : canadacentral
 ProvisioningState : Succeeded
-Tags              : 
+Tags              :
 ResourceId        : /subscriptions/408a6c03-bd25-471b-ae84-cf82b3dff420/resourceGroups/InspireAV_UniFi_RG
-
-.NOTES
     General notes
+New-AzResourceGroup -Name 'FGC_Prod_Bastion_RG' -Location "CanadaCentral"
 
-
-New-AzResourceGroup -Name 'FGC_Prod_Bastion_RG' -Location " CanadaCentral"
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

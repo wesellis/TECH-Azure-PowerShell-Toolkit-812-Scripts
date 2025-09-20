@@ -1,91 +1,44 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Defender Exclusions
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Defender Exclusions
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-[CmdletBinding()
-try {
-    # Main script execution
-]
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)] [string] $WEExclusionPaths = "" ,
-    [Parameter(Mandatory = $false)] [string] $WEExclusionExtensions = "" ,
-    [Parameter(Mandatory = $false)] [string] $WEExclusionProcesses = ""
+    [Parameter(Mandatory = $false)] [string] $ExclusionPaths = "",
+    [Parameter(Mandatory = $false)] [string] $ExclusionExtensions = "",
+    [Parameter(Mandatory = $false)] [string] $ExclusionProcesses = ""
 )
-
-#region Functions
-
 Set-StrictMode -Version Latest
-; 
-$WEErrorActionPreference = " Stop"
-; 
+try {
 $parameters = @{}
-if ($WEExclusionPaths.Trim() -ne "" ) {
+if ($ExclusionPaths.Trim() -ne "") {
     $parameters = $parameters + @{
-        ExclusionPath = $WEExclusionPaths -split " ,"
+        ExclusionPath = $ExclusionPaths -split ","
     }
 }
-
-if ($WEExclusionExtensions.Trim() -ne "" ) {
+if ($ExclusionExtensions.Trim() -ne "") {
     $parameters = $parameters + @{
-        ExclusionExtension = $WEExclusionExtensions -split " ,"
+        ExclusionExtension = $ExclusionExtensions -split ","
     }
 }
-
-if ($WEExclusionProcesses.Trim() -ne "" ) {
-   ;  $parameters = $parameters + @{
-        ExclusionProcess = $WEExclusionProcesses -split " ,"
+if ($ExclusionProcesses.Trim() -ne "") {
+$parameters = $parameters + @{
+        ExclusionProcess = $ExclusionProcesses -split ","
     }
 }
-
 if ($parameters.Count -ne 0) {
     Add-MpPreference @parameters
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

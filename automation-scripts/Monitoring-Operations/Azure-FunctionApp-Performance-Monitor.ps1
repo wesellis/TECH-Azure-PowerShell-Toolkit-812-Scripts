@@ -1,78 +1,55 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Function Apps
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Function Apps
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$AppName
 )
-
-#region Functions
-
-Write-Information "Monitoring Function App: $AppName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "============================================"
-
+Write-Host "Monitoring Function App: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "============================================"
 # Get Function App details
 $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
-
-Write-Information "Function App Information:"
-Write-Information "  Name: $($FunctionApp.Name)"
-Write-Information "  State: $($FunctionApp.State)"
-Write-Information "  Location: $($FunctionApp.Location)"
-Write-Information "  Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Information "  Kind: $($FunctionApp.Kind)"
-Write-Information "  App Service Plan: $($FunctionApp.AppServicePlan)"
-
+Write-Host "Function App Information:"
+Write-Host "Name: $($FunctionApp.Name)"
+Write-Host "State: $($FunctionApp.State)"
+Write-Host "Location: $($FunctionApp.Location)"
+Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Host "Kind: $($FunctionApp.Kind)"
+Write-Host "App Service Plan: $($FunctionApp.AppServicePlan)"
 # Runtime information
-Write-Information "`nRuntime Configuration:"
-Write-Information "  Runtime: $($FunctionApp.Runtime)"
-Write-Information "  Runtime Version: $($FunctionApp.RuntimeVersion)"
-Write-Information "  OS Type: $($FunctionApp.OSType)"
-
+Write-Host "`nRuntime Configuration:"
+Write-Host "Runtime: $($FunctionApp.Runtime)"
+Write-Host "Runtime Version: $($FunctionApp.RuntimeVersion)"
+Write-Host "OS Type: $($FunctionApp.OSType)"
 # Get app settings (without revealing sensitive values)
 $AppSettings = $FunctionApp.ApplicationSettings
 if ($AppSettings) {
-    Write-Information "`nApplication Settings: $($AppSettings.Count) configured"
+    Write-Host "`nApplication Settings: $($AppSettings.Count) configured"
     # List non-sensitive setting keys
-    $SafeSettings = $AppSettings.Keys | Where-Object { 
-        $_ -notlike "*KEY*" -and 
-        $_ -notlike "*SECRET*" -and 
+    $SafeSettings = $AppSettings.Keys | Where-Object {
+        $_ -notlike "*KEY*" -and
+        $_ -notlike "*SECRET*" -and
         $_ -notlike "*PASSWORD*" -and
         $_ -notlike "*CONNECTION*"
     }
     if ($SafeSettings) {
-        Write-Information "  Non-sensitive settings: $($SafeSettings -join ', ')"
+        Write-Host "Non-sensitive settings: $($SafeSettings -join ', ')"
     }
 }
-
 # Check if HTTPS only is enabled
-Write-Information "`nSecurity:"
-Write-Information "  HTTPS Only: $($FunctionApp.HttpsOnly)"
-
+Write-Host "`nSecurity:"
+Write-Host "HTTPS Only: $($FunctionApp.HttpsOnly)"
 # Get function count (if accessible)
 try {
     # Note: This would require additional permissions and might not always be accessible
-    Write-Information "`nFunctions: Use Azure Portal or Azure CLI for detailed function metrics"
+    Write-Host "`nFunctions: Use Azure Portal or Azure CLI for  function metrics"
 } catch {
-    Write-Information "`nFunctions: Unable to enumerate (check permissions)"
+    Write-Host "`nFunctions: Unable to enumerate (check permissions)"
 }
+Write-Host "`nFunction App monitoring completed at $(Get-Date)"
 
-Write-Information "`nFunction App monitoring completed at $(Get-Date)"
-
-
-#endregion

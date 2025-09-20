@@ -1,128 +1,66 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Bootdiagnostics Enabler
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Bootdiagnostics Enabler
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVmName,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEStorageAccountName
+    [string]$VmName,
+    [Parameter()]
+    [string]$StorageAccountName
 )
-
-#region Functions
-
-Write-WELog " Enabling boot diagnostics for VM: $WEVmName" " INFO"
-; 
-$WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
-
-if ($WEStorageAccountName) {
-    Set-AzVMBootDiagnostic -VM $WEVM -Enable -ResourceGroupName $WEResourceGroupName -StorageAccountName $WEStorageAccountName
-    Write-WELog " Using storage account: $WEStorageAccountName" " INFO"
+Write-Host "Enabling boot diagnostics for VM: $VmName"
+$VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
+if ($StorageAccountName) {
+    Set-AzVMBootDiagnostic -VM $VM -Enable -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
+    Write-Host "Using storage account: $StorageAccountName"
 } else {
-    Set-AzVMBootDiagnostic -VM $WEVM -Enable
-    Write-WELog " Using managed storage" " INFO"
+    Set-AzVMBootDiagnostic -VM $VM -Enable
+    Write-Host "Using managed storage"
 }
-
-Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $WEVM
-
-Write-WELog "  Boot diagnostics enabled successfully:" " INFO"
-Write-WELog "  VM: $WEVmName" " INFO"
-Write-WELog "  Resource Group: $WEResourceGroupName" " INFO"
-if ($WEStorageAccountName) {
-    Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
+Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
+Write-Host "Boot diagnostics enabled successfully:"
+Write-Host "VM: $VmName"
+Write-Host "Resource Group: $ResourceGroupName"
+if ($StorageAccountName) {
+    Write-Host "Storage Account: $StorageAccountName"
 }
-Write-WELog "  Status: Enabled" " INFO"
-
-
-
-
+Write-Host "Status: Enabled"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

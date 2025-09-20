@@ -1,177 +1,106 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Sql Database Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Sql Database Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$ServerName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$DatabaseName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEServerName,
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDatabaseName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAdminUser,
-    [securestring]$WEAdminPassword,
-    [string]$WEEdition = " Standard" ,
-    [string]$WEServiceObjective = " S0" ,
-    [bool]$WEAllowAzureIps = $true
+    [string]$AdminUser,
+    [securestring]$AdminPassword,
+    [string]$Edition = "Standard" ,
+    [string]$ServiceObjective = "S0" ,
+    [bool]$AllowAzureIps = $true
 )
-
-#region Functions
-
-Write-WELog " Provisioning SQL Database: $WEDatabaseName" " INFO"
-Write-WELog " SQL Server: $WEServerName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Edition: $WEEdition" " INFO"
-Write-WELog " Service Objective: $WEServiceObjective" " INFO"
-
-
-Write-WELog " `nCreating SQL Server..." " INFO"; 
+Write-Host "Provisioning SQL Database: $DatabaseName" "INFO"
+Write-Host "SQL Server: $ServerName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host "Location: $Location" "INFO"
+Write-Host "Edition: $Edition" "INFO"
+Write-Host "Service Objective: $ServiceObjective" "INFO"
+Write-Host " `nCreating SQL Server..." "INFO";
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    ServerName = $WEServerName
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    ServerName = $ServerName
+    Location = $Location
     SqlAdministratorCredentials = "(New-Object"
-    ErrorAction = "Stop PSCredential($WEAdminUser, $WEAdminPassword))"
+    ErrorAction = "Stop PSCredential($AdminUser, $AdminPassword))"
 }
-$WESqlServer @params
-
-Write-WELog " SQL Server created: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
-
-
-if ($WEAllowAzureIps) {
-    Write-WELog " Configuring firewall to allow Azure services..." " INFO"
+$SqlServer @params
+Write-Host "SQL Server created: $($SqlServer.FullyQualifiedDomainName)" "INFO"
+if ($AllowAzureIps) {
+    Write-Host "Configuring firewall to allow Azure services..." "INFO"
     $params = @{
-        ResourceGroupName = $WEResourceGroupName
+        ResourceGroupName = $ResourceGroupName
         StartIpAddress = " 0.0.0.0"
-        ServerName = $WEServerName
+        ServerName = $ServerName
         EndIpAddress = " 0.0.0.0"
         ErrorAction = "Stop"
-        FirewallRuleName = " AllowAzureServices"
+        FirewallRuleName = "AllowAzureServices"
     }
     New-AzSqlServerFirewallRule @params
 }
-
-
-Write-WELog " `nCreating SQL Database..." " INFO" ; 
+Write-Host " `nCreating SQL Database..." "INFO" ;
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    Edition = $WEEdition
-    ServerName = $WEServerName
-    RequestedServiceObjectiveName = $WEServiceObjective
-    DatabaseName = $WEDatabaseName
+    ResourceGroupName = $ResourceGroupName
+    Edition = $Edition
+    ServerName = $ServerName
+    RequestedServiceObjectiveName = $ServiceObjective
+    DatabaseName = $DatabaseName
     ErrorAction = "Stop"
 }
-$WESqlDatabase @params
-
-Write-WELog " `nSQL Database $WEDatabaseName provisioned successfully" " INFO"
-Write-WELog " Server: $($WESqlServer.FullyQualifiedDomainName)" " INFO"
-Write-WELog " Database: $($WESqlDatabase.DatabaseName)" " INFO"
-Write-WELog " Edition: $($WESqlDatabase.Edition)" " INFO"
-Write-WELog " Service Objective: $($WESqlDatabase.CurrentServiceObjectiveName)" " INFO"
-Write-WELog " Max Size: $([math]::Round($WESqlDatabase.MaxSizeBytes / 1GB, 2)) GB" " INFO"
-
-Write-WELog " `nConnection String (template):" " INFO"
-Write-WELog " Server=tcp:$($WESqlServer.FullyQualifiedDomainName),1433;Initial Catalog=$WEDatabaseName;Persist Security Info=False;User ID=$WEAdminUser;Password=***;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" " INFO"
-
-Write-WELog " `nSQL Database provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+$SqlDatabase @params
+Write-Host " `nSQL Database $DatabaseName provisioned successfully" "INFO"
+Write-Host "Server: $($SqlServer.FullyQualifiedDomainName)" "INFO"
+Write-Host "Database: $($SqlDatabase.DatabaseName)" "INFO"
+Write-Host "Edition: $($SqlDatabase.Edition)" "INFO"
+Write-Host "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)" "INFO"
+Write-Host "Max Size: $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2)) GB" "INFO"
+Write-Host " `nConnection String (template):" "INFO"
+Write-Host "Server=tcp:$($SqlServer.FullyQualifiedDomainName),1433;Initial Catalog=$DatabaseName;Persist Security Info=False;User ID=$AdminUser;Password=***;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" "INFO"
+Write-Host " `nSQL Database provisioning completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

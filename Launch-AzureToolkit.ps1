@@ -1,24 +1,11 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
-
+    Launch AzureToolkit
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    NOTES
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Launch-AzureToolkit.ps1
 # Interactive CLI launcher for Azure Enterprise Toolkit scripts
-# Version: 2.0
-
 param(
     [switch]$GUI,
     [switch]$ListOnly,
@@ -81,7 +68,8 @@ class ScriptLauncher {
         if ($content -match '(?s)\.SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
             return $Matches[1].Trim()
         }
-        if ($content -match '            return $Matches[1].Trim()
+        if ($content -match '# Description: (.+)') {
+            return $Matches[1].Trim()
         }
         return "No description available"
     }
@@ -123,10 +111,10 @@ class ScriptLauncher {
     [void] ShowInteractiveMenu() {
         Clear-Host
         Write-Host @"
-╔══════════════════════════════════════════════════════════════╗
-║         Azure Enterprise Toolkit - Script Launcher          ║
-║                    Version 2.0 Enhanced                     ║
-╚══════════════════════════════════════════════════════════════╝
+
+�         Azure Enterprise Toolkit - Script Launcher          �
+�                    Version 2.0 Enhanced                     �
+
 "@ -ForegroundColor Cyan
         
         $continue = $true
@@ -477,3 +465,4 @@ if ($ListOnly) {
 Write-Host "`nThank you for using Azure Enterprise Toolkit!" -ForegroundColor Cyan
 
 #endregion
+

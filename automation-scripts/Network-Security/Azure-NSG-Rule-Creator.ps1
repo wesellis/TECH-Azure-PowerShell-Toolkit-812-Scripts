@@ -1,53 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage NSGs
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage NSGs
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$NsgName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$RuleName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Protocol,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SourcePortRange,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$DestinationPortRange,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Access,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [int]$Priority
 )
-
-#region Functions
-
-Write-Information "Adding security rule to NSG: $NsgName"
-
+Write-Host "Adding security rule to NSG: $NsgName"
 $Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
-
 $params = @{
     DestinationAddressPrefix = "*"
     Direction = "Inbound"
@@ -61,9 +38,6 @@ $params = @{
     SourceAddressPrefix = "*"
 }
 Add-AzNetworkSecurityRuleConfig @params
-
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
-Write-Information "Security rule '$RuleName' added successfully to NSG: $NsgName"
+Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName"
 
-
-#endregion

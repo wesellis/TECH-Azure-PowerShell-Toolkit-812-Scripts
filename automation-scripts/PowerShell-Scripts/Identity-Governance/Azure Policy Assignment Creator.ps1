@@ -1,180 +1,101 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Policy Assignment Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Policy Assignment Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PolicyDefinitionId,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEPolicyDefinitionId,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$AssignmentName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Scope,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAssignmentName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEScope,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDescription,
-    
-    [Parameter(Mandatory=$false)]
-    [hashtable]$WEParameters = @{},
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEEnforcementMode = " Default"
+    [string]$Description,
+    [Parameter()]
+    [hashtable]$Parameters = @{},
+    [Parameter()]
+    [string]$EnforcementMode = "Default"
 )
-
-#region Functions
-
-Write-WELog " Creating Policy Assignment: $WEAssignmentName" " INFO"
-
-; 
-$WEAssignmentParams = @{
-    Name = $WEAssignmentName
-    PolicyDefinition = Get-AzPolicyDefinition -Id $WEPolicyDefinitionId
-    Scope = $WEScope
-    EnforcementMode = $WEEnforcementMode
+Write-Host "Creating Policy Assignment: $AssignmentName"
+$AssignmentParams = @{
+    Name = $AssignmentName
+    PolicyDefinition = Get-AzPolicyDefinition -Id $PolicyDefinitionId
+    Scope = $Scope
+    EnforcementMode = $EnforcementMode
 }
-
-if ($WEDescription) {
-    $WEAssignmentParams.Description = $WEDescription
+if ($Description) {
+    $AssignmentParams.Description = $Description
 }
-
-if ($WEParameters.Count -gt 0) {
-    $WEAssignmentParams.PolicyParameterObject = $WEParameters
+#>
+if ($Parameters.Count -gt 0) {
+    $AssignmentParams.PolicyParameterObject = $Parameters
 }
-
-; 
-$WEAssignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
-
-Write-WELog "  Policy Assignment created successfully:" " INFO"
-Write-WELog "  Name: $($WEAssignment.Name)" " INFO"
-Write-WELog "  Policy: $($WEAssignment.Properties.PolicyDefinitionId.Split('/')[-1])" " INFO"
-Write-WELog "  Scope: $WEScope" " INFO"
-Write-WELog "  Enforcement Mode: $($WEAssignment.Properties.EnforcementMode)" " INFO"
-
-if ($WEDescription) {
-    Write-WELog "  Description: $WEDescription" " INFO"
+$Assignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
+Write-Host "Policy Assignment created successfully:"
+Write-Host "Name: $($Assignment.Name)"
+Write-Host "Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
+Write-Host "Scope: $Scope"
+Write-Host "Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
+if ($Description) {
+    Write-Host "Description: $Description"
 }
-
-if ($WEParameters.Count -gt 0) {
-    Write-WELog " `nPolicy Parameters:" " INFO"
-    foreach ($WEParam in $WEParameters.GetEnumerator()) {
-        Write-WELog "  $($WEParam.Key): $($WEParam.Value)" " INFO"
+if ($Parameters.Count -gt 0) {
+    Write-Host " `nPolicy Parameters:"
+    foreach ($Param in $Parameters.GetEnumerator()) {
+        Write-Host "  $($Param.Key): $($Param.Value)"
     }
 }
-
-Write-WELog " `nPolicy Assignment Benefits:" " INFO"
-Write-WELog " • Automated compliance enforcement" " INFO"
-Write-WELog " • Consistent governance across resources" " INFO"
-Write-WELog " • Audit and reporting capabilities" " INFO"
-Write-WELog " • Cost and security optimization" " INFO"
-
-Write-WELog " `nCommon Policy Types:" " INFO"
-Write-WELog " • Resource tagging requirements" " INFO"
-Write-WELog " • Location restrictions" " INFO"
-Write-WELog " • SKU limitations" " INFO"
-Write-WELog " • Security configurations" " INFO"
-Write-WELog " • Naming conventions" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Monitor compliance status" " INFO"
-Write-WELog " 2. Review policy effects" " INFO"
-Write-WELog " 3. Adjust parameters if needed" " INFO"
-Write-WELog " 4. Create exemptions if required" " INFO"
-
-
-
-
+Write-Host " `nPolicy Assignment Benefits:"
+Write-Host "Automated compliance enforcement"
+Write-Host "Consistent governance across resources"
+Write-Host "Audit and reporting capabilities"
+Write-Host "Cost and security optimization"
+Write-Host " `nCommon Policy Types:"
+Write-Host "Resource tagging requirements"
+Write-Host "Location restrictions"
+Write-Host "SKU limitations"
+Write-Host "Security configurations"
+Write-Host "Naming conventions"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Monitor compliance status"
+Write-Host " 2. Review policy effects"
+Write-Host " 3. Adjust parameters if needed"
+Write-Host " 4. Create exemptions if required"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,63 +1,40 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+.DESCRIPTION`n    Automate Azure operations
 #>
-# Wesley Ellis Advanced Azure VM Maintenance & Update Manager
+# Wesley Ellis  Azure VM Maintenance & Update Manager
 # Contact: wesellis.com
 # Version: 2.5 Enterprise Edition
 #              with patching, health monitoring, and enterprise reporting
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true, HelpMessage="Azure Resource Group containing the VM")]
+    [Parameter(Mandatory, HelpMessage="Azure Resource Group containing the VM")]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroup,
-    
-    [Parameter(Mandatory=$false, HelpMessage="Specific VM name (leave empty for all VMs in RG)")]
-    [string]$WEVirtualMachineName,
-    
-    [Parameter(Mandatory=$false, HelpMessage="Maintenance operation type")]
+    [string]$ResourceGroup,
+    [Parameter(HelpMessage="Specific VM name (leave empty for all VMs in RG)")]
+    [string]$VirtualMachineName,
+    [Parameter(HelpMessage="Maintenance operation type")]
     [ValidateSet("HealthCheck", "SecurityUpdates", "SystemUpdates", "FullMaintenance", "CustomScript")]
-    [string]$WEMaintenanceType = "HealthCheck",
-    
-    [Parameter(Mandatory=$false, HelpMessage="Schedule maintenance window")]
+    [string]$MaintenanceType = "HealthCheck",
+    [Parameter(HelpMessage="Schedule maintenance window")]
     [ValidateSet("Immediate", "MaintenanceWindow", "NextReboot")]
-    [string]$WEScheduling = "MaintenanceWindow",
-    
-    [Parameter(Mandatory=$false, HelpMessage="Custom PowerShell script to run on VMs")]
-    [string]$WECustomScriptPath,
-    
-    [Parameter(Mandatory=$false, HelpMessage="Create detailed maintenance report")]
-    [switch]$WEGenerateReport,
-    
-    [Parameter(Mandatory=$false, HelpMessage="Send email notification on completion")]
-    [switch]$WEEmailNotification,
-    
-    [Parameter(Mandatory=$false, HelpMessage="Test mode - no actual changes")]
-    [switch]$WETestMode
+    [string]$Scheduling = "MaintenanceWindow",
+    [Parameter(HelpMessage="Custom PowerShell script to run on VMs")]
+    [string]$CustomScriptPath,
+    [Parameter(HelpMessage="Create  maintenance report")]
+    [switch]$GenerateReport,
+    [Parameter(HelpMessage="Send email notification on completion")]
+    [switch]$EmailNotification,
+    [Parameter(HelpMessage="Test mode - no actual changes")]
+    [switch]$TestMode
 )
-
-#region Functions
-
 # Wesley Ellis Enhanced Framework
-$WELogPrefix = "[WE-VM-MaintenanceManager]"
-$WEStartTime = Get-Date -ErrorAction Stop
-
+$LogPrefix = "[WE-VM-MaintenanceManager]"
+$StartTime = Get-Date -ErrorAction Stop
 # Enhanced logging and reporting
-[CmdletBinding()]
 function Write-WEMaintenanceLog {
     param(
         [string]$Message,
@@ -65,34 +42,26 @@ function Write-WEMaintenanceLog {
         [string]$Level = "INFO",
         [string]$VMName = "GLOBAL"
     )
-    
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $colorMap = @{
         "INFO" = "Cyan"
-        "WARN" = "Yellow" 
+        "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
         "ACTION" = "Magenta"
     }
-    
-    $logEntry = "$timestamp $WELogPrefix [$VMName] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
-    
+    $logEntry = "$timestamp $LogPrefix [$VMName] [$Level] $Message"
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
     # Always log to file for audit trail
     Add-Content -Path "WE-VM-Maintenance-$(Get-Date -Format 'yyyyMMdd').log" -Value $logEntry
 }
-
 # Wesley Ellis VM Health Assessment Function
-[CmdletBinding()]
 function Get-WEVMHealthStatus -ErrorAction Stop {
     param([string]$ResourceGroup, [string]$VMName)
-    
-    Write-WEMaintenanceLog "Performing comprehensive health assessment" "ACTION" $VMName
-    
+    Write-WEMaintenanceLog "Performing  health assessment" "ACTION" $VMName
     try {
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $VMName
         $vmStatus = Get-AzVM -ResourceGroupName $ResourceGroup -Name $VMName -Status
-        
         # Enhanced health metrics
         $healthMetrics = @{
             VMName = $VMName
@@ -107,7 +76,6 @@ function Get-WEVMHealthStatus -ErrorAction Stop {
             ExtensionStatus = @()
             Recommendations = @()
         }
-        
         # Check disk health
         foreach ($disk in $vm.StorageProfile.DataDisks) {
             $diskInfo = @{
@@ -118,7 +86,6 @@ function Get-WEVMHealthStatus -ErrorAction Stop {
             }
             $healthMetrics.DiskHealth += $diskInfo
         }
-        
         # Check extensions
         if ($vm.Extensions) {
             foreach ($ext in $vm.Extensions) {
@@ -130,41 +97,32 @@ function Get-WEVMHealthStatus -ErrorAction Stop {
                 $healthMetrics.ExtensionStatus += $extStatus
             }
         }
-        
         # Generate recommendations
         if ($vm.HardwareProfile.VmSize -like "*_A*") {
             $healthMetrics.Recommendations += "Consider upgrading from Basic tier VM size"
         }
-        
         if ($vm.StorageProfile.OsDisk.ManagedDisk.StorageAccountType -eq "Standard_LRS") {
             $healthMetrics.Recommendations += "Consider Premium SSD for better performance"
         }
-        
         Write-WEMaintenanceLog "Health assessment complete - $(($healthMetrics.Recommendations).Count) recommendations" "SUCCESS" $VMName
         return $healthMetrics
-        
     } catch {
         Write-WEMaintenanceLog "Health assessment failed: $($_.Exception.Message)" "ERROR" $VMName
         return $null
     }
 }
-
 # Enhanced Update Management Function
-[CmdletBinding()]
 function Invoke-WEVMUpdateProcess {
     param(
         [string]$ResourceGroup,
         [string]$VMName,
         [string]$UpdateType
     )
-    
     Write-WEMaintenanceLog "Starting $UpdateType process" "ACTION" $VMName
-    
-    if ($WETestMode) {
+    if ($TestMode) {
         Write-WEMaintenanceLog "TEST MODE: Would perform $UpdateType on $VMName" "WARN" $VMName
         return @{ Status = "TestMode"; Message = "No changes made in test mode" }
     }
-    
     try {
         switch ($UpdateType) {
             "SecurityUpdates" {
@@ -182,12 +140,11 @@ Write-Output "Security updates completed"
 "@
                 break
             }
-            
             "SystemUpdates" {
                 # Full system updates
                 $scriptBlock = @"
 # Wesley Ellis System Update Script
-Write-Output "Starting comprehensive system updates..."
+Write-Output "Starting  system updates..."
 if (`$env:OS -like "*Windows*") {
     Install-Module PSWindowsUpdate -Force -AllowClobber
     Get-WUInstall -AcceptAll -AutoReboot
@@ -198,13 +155,11 @@ Write-Output "System updates completed"
 "@
                 break
             }
-            
             "FullMaintenance" {
-                # Comprehensive maintenance
+                #  maintenance
                 $scriptBlock = @"
 # Wesley Ellis Full Maintenance Script - wesellis.com
 Write-Output "Starting full maintenance cycle..."
-
 # Disk cleanup
 if (`$env:OS -like "*Windows*") {
     cleanmgr /sagerun:1
@@ -214,31 +169,22 @@ if (`$env:OS -like "*Windows*") {
     sudo apt autoclean
     sudo journalctl --vacuum-time=7d
 }
-
 # Service health check
 Write-Output "Performing service health checks..."
-
 # Log rotation and cleanup
 Write-Output "Performing log cleanup..."
-
 Write-Output "Full maintenance completed by Wesley Ellis toolkit"
 "@
                 break
             }
         }
-        
         # Execute maintenance script
         if ($scriptBlock) {
-            $runCommandParams = @{
-                ResourceGroupName = $ResourceGroup
-                VMName = $VMName
-                CommandId = if ($vm.StorageProfile.OsDisk.OsType -eq "Windows") { "RunPowerShellScript" } else { "RunShellScript" }
+             else { "RunShellScript" }
                 ScriptString = $scriptBlock
             }
-            
             Write-WEMaintenanceLog "Executing maintenance commands..." "ACTION" $VMName
             $result = Invoke-AzVMRunCommand @runCommandParams
-            
             if ($result.Status -eq "Succeeded") {
                 Write-WEMaintenanceLog "Maintenance completed successfully" "SUCCESS" $VMName
                 return @{ Status = "Success"; Output = $result.Value[0].Message }
@@ -247,53 +193,44 @@ Write-Output "Full maintenance completed by Wesley Ellis toolkit"
                 return @{ Status = "Failed"; Error = $result.Error }
             }
         }
-        
     } catch {
         Write-WEMaintenanceLog "Update process failed: $($_.Exception.Message)" "ERROR" $VMName
         return @{ Status = "Failed"; Error = $_.Exception.Message }
     }
 }
-
 # Wesley Ellis Main Execution Block
 Write-WEMaintenanceLog "Wesley Ellis VM Maintenance Manager Starting" "INFO"
-Write-WEMaintenanceLog "Resource Group: $WEResourceGroup" "INFO"
-Write-WEMaintenanceLog "Maintenance Type: $WEMaintenanceType" "INFO"
+Write-WEMaintenanceLog "Resource Group: $ResourceGroup" "INFO"
+Write-WEMaintenanceLog "Maintenance Type: $MaintenanceType" "INFO"
 Write-WEMaintenanceLog "Contact: wesellis.com" "INFO"
-
 try {
     # Get target VMs
-    $targetVMs = if ($WEVirtualMachineName) {
-        @(Get-AzVM -ResourceGroupName $WEResourceGroup -Name $WEVirtualMachineName)
+    $targetVMs = if ($VirtualMachineName) {
+        @(Get-AzVM -ResourceGroupName $ResourceGroup -Name $VirtualMachineName)
     } else {
-        Get-AzVM -ResourceGroupName $WEResourceGroup
+        Get-AzVM -ResourceGroupName $ResourceGroup
     }
-    
     Write-WEMaintenanceLog "Found $($targetVMs.Count) VMs for maintenance" "INFO"
-    
-    $WEMaintenanceResults = @()
-    
+    $MaintenanceResults = @()
     foreach ($vm in $targetVMs) {
         Write-WEMaintenanceLog "Processing VM: $($vm.Name)" "ACTION" $vm.Name
-        
         # Get health status
-        $healthStatus = Get-WEVMHealthStatus -ResourceGroup $WEResourceGroup -VMName $vm.Name
-        
+        $healthStatus = Get-WEVMHealthStatus -ResourceGroup $ResourceGroup -VMName $vm.Name
         # Perform maintenance based on type
-        $maintenanceResult = switch ($WEMaintenanceType) {
+        $maintenanceResult = switch ($MaintenanceType) {
             "HealthCheck" {
                 Write-WEMaintenanceLog "Health check completed" "SUCCESS" $vm.Name
                 @{ Status = "HealthCheckComplete"; Details = $healthStatus }
             }
             default {
-                Invoke-WEVMUpdateProcess -ResourceGroup $WEResourceGroup -VMName $vm.Name -UpdateType $WEMaintenanceType
+                Invoke-WEVMUpdateProcess -ResourceGroup $ResourceGroup -VMName $vm.Name -UpdateType $MaintenanceType
             }
         }
-        
         # Compile results
-        $WEMaintenanceResults += [PSCustomObject]@{
+        $MaintenanceResults += [PSCustomObject]@{
             VMName = $vm.Name
-            MaintenanceType = $WEMaintenanceType
-            StartTime = $WEStartTime
+            MaintenanceType = $MaintenanceType
+            StartTime = $StartTime
             CompletionTime = Get-Date -ErrorAction Stop
             Status = $maintenanceResult.Status
             HealthMetrics = $healthStatus
@@ -301,33 +238,26 @@ try {
             ProcessedBy = "Wesley Ellis Enterprise Toolkit"
         }
     }
-    
-    # Generate comprehensive report
-    if ($WEGenerateReport) {
+    # Generate  report
+    if ($GenerateReport) {
         $reportPath = "WE-VM-Maintenance-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
-        $WEMaintenanceResults | Export-Csv -Path $reportPath -NoTypeInformation
-        Write-WEMaintenanceLog "Detailed report exported: $reportPath" "SUCCESS"
+        $MaintenanceResults | Export-Csv -Path $reportPath -NoTypeInformation
+        Write-WEMaintenanceLog " report exported: $reportPath" "SUCCESS"
     }
-    
     # Summary statistics
-    $successCount = ($WEMaintenanceResults | Where-Object {$_.Status -like "*Success*"}).Count
-    $totalTime = (Get-Date) - $WEStartTime
-    
-    Write-WEMaintenanceLog " Maintenance Operation Complete!" "SUCCESS"
-    Write-WEMaintenanceLog "   VMs Processed: $($WEMaintenanceResults.Count)" "SUCCESS"
+    $successCount = ($MaintenanceResults | Where-Object {$_.Status -like "*Success*"}).Count
+    $totalTime = (Get-Date) - $StartTime
+    Write-WEMaintenanceLog "Maintenance Operation Complete!" "SUCCESS"
+    Write-WEMaintenanceLog "   VMs Processed: $($MaintenanceResults.Count)" "SUCCESS"
     Write-WEMaintenanceLog "   Successful: $successCount" "SUCCESS"
     Write-WEMaintenanceLog "   Total Time: $($totalTime.TotalMinutes.ToString('F1')) minutes" "SUCCESS"
     Write-WEMaintenanceLog "   By: Wesley Ellis | wesellis.com" "SUCCESS"
-    
-    return $WEMaintenanceResults
-    
+    return $MaintenanceResults
 } catch {
-    Write-WEMaintenanceLog " Maintenance operation failed: $($_.Exception.Message)" "ERROR"
+    Write-WEMaintenanceLog "Maintenance operation failed: $($_.Exception.Message)" "ERROR"
     Write-WEMaintenanceLog "Contact wesellis.com for enterprise support" "ERROR"
     throw
 }
-
 # Wesley Ellis Enterprise VM Management Toolkit
-# Advanced automation solutions: wesellis.com
+#  automation solutions: wesellis.com
 
-#endregion

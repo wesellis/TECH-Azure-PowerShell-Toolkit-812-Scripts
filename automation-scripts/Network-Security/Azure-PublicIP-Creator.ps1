@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Public IPs
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Public IPs
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$PublicIpName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$AllocationMethod = "Static",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Sku = "Standard"
 )
-
-#region Functions
-
-Write-Information "Creating Public IP: $PublicIpName"
-
+Write-Host "Creating Public IP: $PublicIpName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
@@ -46,12 +27,9 @@ $params = @{
     Name = $PublicIpName
 }
 $PublicIp @params
+Write-Host "Public IP created successfully:"
+Write-Host "Name: $($PublicIp.Name)"
+Write-Host "IP Address: $($PublicIp.IpAddress)"
+Write-Host "Allocation: $($PublicIp.PublicIpAllocationMethod)"
+Write-Host "SKU: $($PublicIp.Sku.Name)"
 
-Write-Information "Public IP created successfully:"
-Write-Information "  Name: $($PublicIp.Name)"
-Write-Information "  IP Address: $($PublicIp.IpAddress)"
-Write-Information "  Allocation: $($PublicIp.PublicIpAllocationMethod)"
-Write-Information "  SKU: $($PublicIp.Sku.Name)"
-
-
-#endregion

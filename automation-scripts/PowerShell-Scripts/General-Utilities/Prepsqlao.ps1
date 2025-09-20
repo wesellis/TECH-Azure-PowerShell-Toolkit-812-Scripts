@@ -1,299 +1,232 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Prepsqlao
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Prepsqlao
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 configuration PrepSQLAO
 {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
         [Parameter(Mandatory)]
-        [String]$WEDomainName,
-
+        [String]$DomainName,
         [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$WEAdmincreds,
-
+        [System.Management.Automation.PSCredential]$Admincreds,
         [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$WESQLServicecreds,
-
-        [UInt32]$WEDatabaseEnginePort = 1433,
-        
-        [UInt32]$WEDatabaseMirrorPort = 5022,
-
-        [UInt32]$WEProbePortNumber = 59999,
-
+        [System.Management.Automation.PSCredential]$SQLServicecreds,
+        [UInt32]$DatabaseEnginePort = 1433,
+        [UInt32]$DatabaseMirrorPort = 5022,
+        [UInt32]$ProbePortNumber = 59999,
         [Parameter(Mandatory)]
-        [UInt32]$WENumberOfDisks,
-
+        [UInt32]$NumberOfDisks,
         [Parameter(Mandatory)]
-        [String]$WEWorkloadType,
-
-        [String]$WEDomainNetbiosName=(Get-NetBIOSName -DomainName $WEDomainName),
-
-        [Int]$WERetryCount=20,
-        [Int]$WERetryIntervalSec=30
+        [String]$WorkloadType,
+        [String]$DomainNetbiosName=(Get-NetBIOSName -DomainName $DomainName),
+        [Int]$RetryCount=20,
+        [Int]$RetryIntervalSec=30
     )
-
     Import-DscResource -ModuleName xComputerManagement,CDisk,xActiveDirectory,XDisk,xSql,xNetworking
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WEDomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-    [System.Management.Automation.PSCredential]$WESQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($WESQLServicecreds.UserName)" , $WESQLServicecreds.Password)
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($Admincreds.UserName)" , $Admincreds.Password)
+    [System.Management.Automation.PSCredential]$DomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
+    [System.Management.Automation.PSCredential]$SQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($SQLServicecreds.UserName)" , $SQLServicecreds.Password)
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-
-    $WERebootVirtualMachine = $false
-
-    if ($WEDomainName)
+    $RebootVirtualMachine = $false
+    if ($DomainName)
     {
-        $WERebootVirtualMachine = $true
+        $RebootVirtualMachine = $true
     }
-
     #Finding the next avaiable disk letter for Add disk
-   ;  $WENewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1 
-
-   ;  $WENextAvailableDiskLetter = $WENewDiskLetter[0]
-    
+$NewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1
+$NextAvailableDiskLetter = $NewDiskLetter[0]
     WaitForSqlSetup
-
     Node localhost
     {
         xSqlCreateVirtualDataDisk NewVirtualDisk
         {
-            NumberOfDisks = $WENumberOfDisks
-            NumberOfColumns = $WENumberOfDisks
-            DiskLetter = $WENextAvailableDiskLetter
-            OptimizationType = $WEWorkloadType
+            NumberOfDisks = $NumberOfDisks
+            NumberOfColumns = $NumberOfDisks
+            DiskLetter = $NextAvailableDiskLetter
+            OptimizationType = $WorkloadType
             StartingDeviceID = 2
-            RebootVirtualMachine = $WERebootVirtualMachine
+            RebootVirtualMachine = $RebootVirtualMachine
         }
-
         WindowsFeature FC
         {
-            Name = " Failover-Clustering"
-            Ensure = " Present"
+            Name = "Failover-Clustering"
+            Ensure = "Present"
         }
-
-        WindowsFeature FailoverClusterTools 
-        { 
-            Ensure = " Present" 
-            Name = " RSAT-Clustering-Mgmt"
+        WindowsFeature FailoverClusterTools
+        {
+            Ensure = "Present"
+            Name = "RSAT-Clustering-Mgmt"
             DependsOn = " [WindowsFeature]FC"
-        } 
-
+        }
         WindowsFeature FCPS
         {
-            Name = " RSAT-Clustering-PowerShell"
-            Ensure = " Present"
+            Name = "RSAT-Clustering-PowerShell"
+            Ensure = "Present"
         }
-
         WindowsFeature ADPS
         {
-            Name = " RSAT-AD-PowerShell"
-            Ensure = " Present"
+            Name = "RSAT-AD-PowerShell"
+            Ensure = "Present"
         }
-
         Script SqlServerPowerShell
         {
             SetScript = '[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; Install-PackageProvider -Name NuGet -Force; Install-Module -Name SqlServer -AllowClobber -Force; Import-Module -Name SqlServer -ErrorAction SilentlyContinue'
-            TestScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; if (Get-Module -Name SqlServer) { $WETrue } else { $WEFalse }'
-            GetScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; @{Ensure = if (Get-Module -Name SqlServer) {" Present" } else {" Absent" }}'
+            TestScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; if (Get-Module -Name SqlServer) { $True } else { $False }'
+            GetScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; @{Ensure = if (Get-Module -Name SqlServer) {"Present" } else {"Absent" }}'
         }
-
-        xWaitForADDomain DscForestWait 
-        { 
-            DomainName = $WEDomainName 
-            DomainUserCredential= $WEDomainCreds
-            RetryCount = $WERetryCount 
-            RetryIntervalSec = $WERetryIntervalSec 
+        xWaitForADDomain DscForestWait
+        {
+            DomainName = $DomainName
+            DomainUserCredential= $DomainCreds
+            RetryCount = $RetryCount
+            RetryIntervalSec = $RetryIntervalSec
 	        DependsOn = " [WindowsFeature]ADPS"
         }
-        
         xComputer DomainJoin
         {
             Name = $env:COMPUTERNAME
-            DomainName = $WEDomainName
-            Credential = $WEDomainCreds
+            DomainName = $DomainName
+            Credential = $DomainCreds
 	        DependsOn = " [xWaitForADDomain]DscForestWait"
         }
-
         xFirewall DatabaseEngineFirewallRule
         {
-            Direction = " Inbound"
-            Name = " SQL-Server-Database-Engine-TCP-In"
-            DisplayName = " SQL Server Database Engine (TCP-In)"
-            Description = " Inbound rule for SQL Server to allow TCP traffic for the Database Engine."
-            DisplayGroup = " SQL Server"
-            State = " Enabled"
-            Access = " Allow"
-            Protocol = " TCP"
-            LocalPort = $WEDatabaseEnginePort -as [String]
-            Ensure = " Present"
+            Direction = "Inbound"
+            Name = "SQL-Server-Database-Engine-TCP-In"
+            DisplayName = "SQL Server Database Engine (TCP-In)"
+            Description = "Inbound rule for SQL Server to allow TCP traffic for the Database Engine."
+            DisplayGroup = "SQL Server"
+            State = "Enabled"
+            Access = "Allow"
+            Protocol = "TCP"
+            LocalPort = $DatabaseEnginePort -as [String]
+            Ensure = "Present"
             DependsOn = " [xComputer]DomainJoin"
         }
-
         xFirewall DatabaseMirroringFirewallRule
         {
-            Direction = " Inbound"
-            Name = " SQL-Server-Database-Mirroring-TCP-In"
-            DisplayName = " SQL Server Database Mirroring (TCP-In)"
-            Description = " Inbound rule for SQL Server to allow TCP traffic for the Database Mirroring."
-            DisplayGroup = " SQL Server"
-            State = " Enabled"
-            Access = " Allow"
-            Protocol = " TCP"
-            LocalPort = $WEDatabaseMirrorPort -as [String]
-            Ensure = " Present"
+            Direction = "Inbound"
+            Name = "SQL-Server-Database-Mirroring-TCP-In"
+            DisplayName = "SQL Server Database Mirroring (TCP-In)"
+            Description = "Inbound rule for SQL Server to allow TCP traffic for the Database Mirroring."
+            DisplayGroup = "SQL Server"
+            State = "Enabled"
+            Access = "Allow"
+            Protocol = "TCP"
+            LocalPort = $DatabaseMirrorPort -as [String]
+            Ensure = "Present"
             DependsOn = " [xComputer]DomainJoin"
         }
-
         xFirewall LoadBalancerProbePortFirewallRule
         {
-            Direction = " Inbound"
-            Name = " SQL-Server-Probe-Port-TCP-In"
-            DisplayName = " SQL Server Probe Port (TCP-In)"
-            Description = " Inbound rule to allow TCP traffic for the Load Balancer Probe Port."
-            DisplayGroup = " SQL Server"
-            State = " Enabled"
-            Access = " Allow"
-            Protocol = " TCP"
-            LocalPort = $WEProbePortNumber -as [String]
-            Ensure = " Present"
+            Direction = "Inbound"
+            Name = "SQL-Server-Probe-Port-TCP-In"
+            DisplayName = "SQL Server Probe Port (TCP-In)"
+            Description = "Inbound rule to allow TCP traffic for the Load Balancer Probe Port."
+            DisplayGroup = "SQL Server"
+            State = "Enabled"
+            Access = "Allow"
+            Protocol = "TCP"
+            LocalPort = $ProbePortNumber -as [String]
+            Ensure = "Present"
             DependsOn = " [xComputer]DomainJoin"
         }
-
         xSqlLogin AddDomainAdminAccountToSysadminServerRole
         {
-            Name = $WEDomainCreds.UserName
-            LoginType = " WindowsUser"
+            Name = $DomainCreds.UserName
+            LoginType = "WindowsUser"
             ServerRoles = " sysadmin"
             Enabled = $true
-            Credential = $WEAdmincreds
-            PsDscRunAsCredential = $WEAdmincreds
+            Credential = $Admincreds
+            PsDscRunAsCredential = $Admincreds
             DependsOn = " [xComputer]DomainJoin"
         }
-
         xADUser CreateSqlServerServiceAccount
         {
-            DomainAdministratorCredential = $WEDomainCreds
-            DomainName = $WEDomainName
-            UserName = $WESQLServicecreds.UserName
-            Password = $WESQLServicecreds
-            Ensure = " Present"
+            DomainAdministratorCredential = $DomainCreds
+            DomainName = $DomainName
+            UserName = $SQLServicecreds.UserName
+            Password = $SQLServicecreds
+            Ensure = "Present"
             DependsOn = " [xSqlLogin]AddDomainAdminAccountToSysadminServerRole"
         }
-
         xSqlLogin AddSqlServerServiceAccountToSysadminServerRole
         {
-            Name = $WESQLCreds.UserName
-            LoginType = " WindowsUser"
+            Name = $SQLCreds.UserName
+            LoginType = "WindowsUser"
             ServerRoles = " sysadmin"
             Enabled = $true
-            Credential = $WEAdmincreds
-            PsDscRunAsCredential = $WEAdmincreds
+            Credential = $Admincreds
+            PsDscRunAsCredential = $Admincreds
             DependsOn = " [xADUser]CreateSqlServerServiceAccount"
         }
-        
         xSqlTsqlEndpoint AddSqlServerEndpoint
         {
-            InstanceName = " MSSQLSERVER"
-            PortNumber = $WEDatabaseEnginePort
-            SqlAdministratorCredential = $WEAdmincreds
-            PsDscRunAsCredential = $WEAdmincreds
+            InstanceName = "MSSQLSERVER"
+            PortNumber = $DatabaseEnginePort
+            SqlAdministratorCredential = $Admincreds
+            PsDscRunAsCredential = $Admincreds
             DependsOn = " [xSqlLogin]AddSqlServerServiceAccountToSysadminServerRole"
         }
-
         xSQLServerStorageSettings AddSQLServerStorageSettings
         {
-            InstanceName = " MSSQLSERVER"
-            OptimizationType = $WEWorkloadType
+            InstanceName = "MSSQLSERVER"
+            OptimizationType = $WorkloadType
             DependsOn = " [xSqlTsqlEndpoint]AddSqlServerEndpoint"
         }
-
         xSqlServer ConfigureSqlServerWithAlwaysOn
         {
             InstanceName = $env:COMPUTERNAME
-            SqlAdministratorCredential = $WEAdmincreds
-            ServiceCredential = $WESQLCreds
+            SqlAdministratorCredential = $Admincreds
+            ServiceCredential = $SQLCreds
             MaxDegreeOfParallelism = 1
-            FilePath = " F:\DATA"
-            LogPath = " F:\LOG"
-            DomainAdministratorCredential = $WEDomainFQDNCreds
+            FilePath = "F:\DATA"
+            LogPath = "F:\LOG"
+            DomainAdministratorCredential = $DomainFQDNCreds
             EnableTcpIp = $true
-            PsDscRunAsCredential = $WEAdmincreds
+            PsDscRunAsCredential = $Admincreds
             DependsOn = " [xSqlLogin]AddSqlServerServiceAccountToSysadminServerRole"
         }
-
-        LocalConfigurationManager 
+        LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
         }
-
     }
 }
 [CmdletBinding()]
-function WE-Get-NetBIOSName -ErrorAction Stop
-{ 
+function Get-NetBIOSName -ErrorAction Stop
+{
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [string]$WEDomainName
+        [string]$DomainName
     )
-
-    if ($WEDomainName.Contains('.')) {
-       ;  $length=$WEDomainName.IndexOf('.')
+    if ($DomainName.Contains('.')) {
+$length=$DomainName.IndexOf('.')
         if ( $length -ge 16) {
-           ;  $length=15
+$length=15
         }
-        return $WEDomainName.Substring(0,$length)
+        return $DomainName.Substring(0,$length)
     }
     else {
-        if ($WEDomainName.Length -gt 15) {
-            return $WEDomainName.Substring(0,15)
+        if ($DomainName.Length -gt 15) {
+            return $DomainName.Substring(0,15)
         }
         else {
-            return $WEDomainName
+            return $DomainName
         }
     }
 }
-[CmdletBinding()]
-function WE-WaitForSqlSetup
+function WaitForSqlSetup
 {
     # Wait for SQL Server Setup to finish before proceeding.
     while ($true)
@@ -310,8 +243,3 @@ function WE-WaitForSqlSetup
     }
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

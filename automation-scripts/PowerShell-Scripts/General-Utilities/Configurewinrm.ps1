@@ -1,169 +1,97 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Configurewinrm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Configurewinrm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)]
-    [string] $WEHostName
+    [string] $HostName
 )
-
-#region Functions
-
-
-
-function WE-Delete-WinRMListener
+function Delete-WinRMListener
 {
     try
     {
         $config = Winrm enumerate winrm/config/listener
         foreach($conf in $config)
         {
-            if($conf.Contains(" HTTPS" ))
+            if($conf.Contains("HTTPS" ))
             {
-                Write-Verbose " HTTPS is already configured. Deleting the exisiting configuration."
-    
+                Write-Verbose "HTTPS is already configured. Deleting the exisiting configuration."
                 winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
                 break
             }
-        }
-    }
-    catch
+
+} catch
     {
-        Write-Verbose -Verbose " Exception while deleting the listener: " + $_.Exception.Message
+        Write-Verbose -Verbose "Exception while deleting the listener: " + $_.Exception.Message
     }
 }
-
-[CmdletBinding()]
-function WE-Create-Certificate
+function Create-Certificate
 {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
         [string]$hostname
     )
-
     # makecert ocassionally produces negative serial numbers
 	# which golang tls/crypto <1.6.1 cannot handle
 	# https://github.com/golang/go/issues/8265
     $serial = Get-Random -ErrorAction Stop
-    # Dynamically generate the end date for the certificate 
+    # Dynamically generate the end date for the certificate
     	# validity period to be a year from the date the
 	# script is run
-    $endDate = (Get-Date).AddYears(1).ToString(" MM/dd/yyyy" )
-    .\makecert -r -pe -n CN=$hostname -b 01/01/2012 -e $endDate -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp " Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
-
-    $thumbprint=(Get-ChildItem -ErrorAction Stop cert:\Localmachine\my | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1).Thumbprint
-
+    $endDate = (Get-Date).AddYears(1).ToString("MM/dd/yyyy" )
+    .\makecert -r -pe -n CN=$hostname -b 01/01/2012 -e $endDate -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
+    $thumbprint=(Get-ChildItem -ErrorAction Stop cert:\Localmachine\my | Where-Object { $_.Subject -eq "CN=" + $hostname } | Select-Object -Last 1).Thumbprint
     if(-not $thumbprint)
     {
-        throw " Failed to create the test certificate."
+        throw "Failed to create the test certificate."
     }
-
     return $thumbprint
 }
-
-[CmdletBinding()]
-function WE-Configure-WinRMHttpsListener
+function Configure-WinRMHttpsListener
 {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param([string] $WEHostName,
+param([string] $HostName,
           [string] $port)
-
     # Delete the WinRM Https listener if it is already configured
     Delete-WinRMListener
-
     # Create a test certificate
-    $cert = (Get-ChildItem -ErrorAction Stop cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=" + $hostname } | Select-Object -Last 1)
+    $cert = (Get-ChildItem -ErrorAction Stop cert:\LocalMachine\My | Where-Object { $_.Subject -eq "CN=" + $hostname } | Select-Object -Last 1)
     $thumbprint = $cert.Thumbprint
     if(-not $thumbprint)
     {
-	    $thumbprint = Create-Certificate -hostname $WEHostName
+	    $thumbprint = Create-Certificate -hostname $HostName
     }
     elseif (-not $cert.PrivateKey)
     {
         # The private key is missing - could have been sysprepped
         # Delete the certificate
         Remove-Item -ErrorAction Stop Cert:\LocalMachine\My\$thumbpri -Forcen -Forcet -Force
-       ;  $thumbprint = Create-Certificate -hostname $WEHostName
+$thumbprint = Create-Certificate -hostname $HostName
     }
-
-   ;  $WEWinrmCreate= " winrm create --% winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`" $hostName`" ;CertificateThumbprint=`" $thumbPrint`" }"
-    invoke-expression $WEWinrmCreate
+$WinrmCreate= " winrm create --% winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`" $hostName`" ;CertificateThumbprint=`" $thumbPrint`" }"
+    invoke-expression $WinrmCreate
     winrm set winrm/config/service/auth '@{Basic=" true" }'
 }
-
-[CmdletBinding()]
-function WE-Add-FirewallException
+function Add-FirewallException
 {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param([string] $port)
-
     # Delete an exisitng rule
-    netsh advfirewall firewall delete rule name=" Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$port
-
+    netsh advfirewall firewall delete rule name="Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$port
     # Add a new firewall rule
-    netsh advfirewall firewall add rule name=" Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$port
+    netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$port
 }
-
-
-
-; 
 $winrmHttpsPort=5986
-
-
 winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192" }'
-
-
-Configure-WinRMHttpsListener $WEHostName $port
-
-
+Configure-WinRMHttpsListener $HostName $port
 Add-FirewallException -port $winrmHttpsPort
 
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

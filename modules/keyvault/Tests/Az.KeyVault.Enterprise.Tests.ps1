@@ -1,12 +1,7 @@
-#Requires -Module Pester
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Tests for Az.KeyVault.Enterprise module
 .DESCRIPTION
-    Comprehensive test suite for enterprise Key Vault management functions
 #>
 
 BeforeAll {
@@ -15,7 +10,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.KeyVault.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzKeyVault -ErrorAction Stop {
+    Mock Get-AzKeyVault {
         [PSCustomObject]@{
             VaultName = "TestVault"
             ResourceGroupName = "TestRG"
@@ -28,7 +23,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzKeyVaultSecret -ErrorAction Stop {
+    Mock Get-AzKeyVaultSecret {
         [PSCustomObject]@{
             Name = "TestSecret"
             Version = "1234567890"
@@ -39,7 +34,7 @@ BeforeAll {
         }
     }
     
-    Mock Set-AzKeyVaultSecret -ErrorAction Stop {
+    Mock Set-AzKeyVaultSecret {
         [PSCustomObject]@{
             Name = "TestSecret"
             Version = "0987654321"
@@ -91,7 +86,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
         }
         
         It "Should not rotate secrets newer than threshold" {
-            Mock Get-AzKeyVaultSecret -ErrorAction Stop {
+            Mock Get-AzKeyVaultSecret {
                 [PSCustomObject]@{
                     Name = "TestSecret"
                     Updated = (Get-Date).AddDays(-10)
@@ -231,7 +226,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
                 )
             }
             
-            Mock Get-AzKeyVaultSecret -ErrorAction Stop {
+            Mock Get-AzKeyVaultSecret {
                 @(
                     [PSCustomObject]@{
                         Name = "Secret1"
@@ -252,7 +247,7 @@ Describe "Az.KeyVault.Enterprise Module Tests" {
         }
         
         It "Should identify compliance issues" {
-            Mock Get-AzKeyVault -ErrorAction Stop {
+            Mock Get-AzKeyVault {
                 [PSCustomObject]@{
                     VaultName = "TestVault"
                     EnableSoftDelete = $false
@@ -318,4 +313,6 @@ Describe "Helper Function Tests" {
         }
     }
 }
+
 #endregion
+

@@ -1,70 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Azvm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Azvm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzVM {
+function Invoke-AzVM {
 }
-
-
-$WEErrorActionPreference = "Stop"; 
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzVM {
-    
-    
-
+$ErrorActionPreference = "Stop";
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzVM {
     #Region func New-AzVM -ErrorAction Stop
     #Creating the VM
-   ;  $newAzVMSplat = @{
-        ResourceGroupName = $WEResourceGroupName
-        Location          = $WELocationName
-        VM                = $WEVirtualMachine
+$newAzVMSplat = @{
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        VM                = $VirtualMachine
         Verbose           = $true
-        Tag               = $WETags
+        Tag               = $Tags
     }
     New-AzVM -ErrorAction Stop @newAzVMSplat
     #endRegion func New-AzVM -ErrorAction Stop
-    
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

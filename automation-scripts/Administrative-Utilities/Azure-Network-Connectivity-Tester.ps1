@@ -1,52 +1,32 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Test network connectivity
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Test network connectivity
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Network Connectivity Tester
 # Test network connectivity between Azure resources
-# Version: 1.0
-
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SourceVMName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$TargetAddress,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$Port = 80,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceGroupName
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName "Azure Network Connectivity Tester" -Version "1.0" -Description "Test network connectivity"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection -RequiredModules @('Az.Network'))) {
-        throw "Azure connection validation failed"
+    if (-not (Get-AzContext)) { 
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
     $vm = Get-AzVM -Name $SourceVMName -ResourceGroupName $ResourceGroupName
     $networkWatcher = Get-AzNetworkWatcher -Location $vm.Location
-
     $connectivityTest = @{
         Source = @{
             ResourceId = $vm.Id
@@ -56,23 +36,14 @@ try {
             Port = $Port
         }
     }
-
-    Write-Log " Testing connectivity from $SourceVMName to $TargetAddress`:$Port..." -Level INFO
     
     $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
-    
-    Write-Information "Connectivity Test Results:"
-    Write-Information "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
-    Write-Information "Average Latency: $($result.AvgLatencyInMs) ms"
-    Write-Information "Min Latency: $($result.MinLatencyInMs) ms"
-    Write-Information "Max Latency: $($result.MaxLatencyInMs) ms"
-    Write-Information "Probes Sent: $($result.ProbesSent)"
-    Write-Information "Probes Failed: $($result.ProbesFailed)"
+    Write-Host "Connectivity Test Results:"
+    Write-Host "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
+    Write-Host "Average Latency: $($result.AvgLatencyInMs) ms"
+    Write-Host "Min Latency: $($result.MinLatencyInMs) ms"
+    Write-Host "Max Latency: $($result.MaxLatencyInMs) ms"
+    Write-Host "Probes Sent: $($result.ProbesSent)"
+    Write-Host "Probes Failed: $($result.ProbesFailed)"
+} catch { throw }
 
-} catch {
-    Write-Log " Network connectivity test failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-#endregion

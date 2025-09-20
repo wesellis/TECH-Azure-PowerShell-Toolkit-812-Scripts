@@ -1,73 +1,31 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Azvmoperatingsystem
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Azvmoperatingsystem
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzVMOperatingSystem {
-
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzVMOperatingSystem {
-
+function Invoke-AzVMOperatingSystem {
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzVMOperatingSystem {
     #Region func Set-AzVMOperatingSystem -ErrorAction Stop
     #Creating the OS Object for the VM
-   ;  $setAzVMOperatingSystemSplat = @{
-        VM               = $WEVirtualMachine
+$setAzVMOperatingSystemSplat = @{
+        VM               = $VirtualMachine
         Windows          = $true
         # Linux        = $true
-        ComputerName     = $WEComputerName
-        Credential       = $WECredential
+        ComputerName     = $ComputerName
+        Credential       = $Credential
         ProvisionVMAgent = $true
         # EnableAutoUpdate = $true
-    
     }
-   ;  $WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-    #endRegion func Set-AzVMOperatingSystem -ErrorAction Stop 
-
-    
+$VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
+    #endRegion func Set-AzVMOperatingSystem -ErrorAction Stop
 }
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

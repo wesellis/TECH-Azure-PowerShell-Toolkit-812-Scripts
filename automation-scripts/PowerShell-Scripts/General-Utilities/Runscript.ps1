@@ -1,95 +1,45 @@
 #Requires -Version 7.0
-
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
     Runscript
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Runscript
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-Write-WELog "Starting script to apply Azure baseline to Windows" " INFO"
-
-
+Write-Host "Starting script to apply Azure baseline to Windows"
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-
-
 $gcFolder = New-Item -Path 'c:\ProgramData\' -Name 'GuestConfig' -ItemType 'Directory'
-
-
 $pwshLatestAssets = Invoke-RestMethod (Invoke-RestMethod https://api.github.com/repos/PowerShell/PowerShell/releases/latest).assets_url
 $pwshDownloadUrl = ($pwshLatestAssets | Where-Object { $_.browser_download_url -like " *win-x64.zip" }).browser_download_url
 $pwshZipFileName = $pwshDownloadUrl.split('/')[-1]
-
-
-Write-WELog " Downloading PowerShell stand-alone binaries" " INFO"
+Write-Host "Downloading PowerShell stand-alone binaries"
 $pwshZipDownloadPath = Join-Path -Path $gcFolder -ChildPath $pwshZipFileName
 $invokeWebParams = @{
     Uri     = $pwshDownloadUrl
     OutFile = $pwshZipDownloadPath
 }
 Invoke-WebRequest @invokeWebParams
-
-
-Write-WELog " Extracting PowerShell package" " INFO"
-$WEZipDestinationPath = Join-Path -Path $gcFolder -ChildPath $pwshZipFileName.replace('.zip', '')
-Expand-Archive -Path $pwshZipDownloadPath -DestinationPath $WEZipDestinationPath
+Write-Host "Extracting PowerShell package"
+$ZipDestinationPath = Join-Path -Path $gcFolder -ChildPath $pwshZipFileName.replace('.zip', '')
+Expand-Archive -Path $pwshZipDownloadPath -DestinationPath $ZipDestinationPath
 $pwshExePath = Join-Path -Path (Join-Path -Path $gcFolder -ChildPath $pwshZipFileName.replace('.zip', '')) -ChildPath 'pwsh.exe'
-
-
-Write-WELog " Saving GuestConfiguration module" " INFO"; 
+Write-Host "Saving GuestConfiguration module";
 $modulesFolder = New-Item -Path 'c:\ProgramData\GuestConfig' -Name 'modules' -ItemType 'Directory'
-Install-PackageProvider -Name " NuGet" -Scope CurrentUser -Force
+Install-PackageProvider -Name "NuGet" -Scope CurrentUser -Force
 Save-Module -Name GuestConfiguration -path $modulesFolder
-
-
 [scriptblock];  $gcModuleDetails = {
     $env:PSModulePath += ';c:\ProgramData\GuestConfig\modules'
     Import-Module 'GuestConfiguration'
     Get-Module -ErrorAction Stop 'GuestConfiguration'
 }
-$gcModule = & $pwshExePath -Command $gcModuleDetails; 
+$gcModule = & $pwshExePath -Command $gcModuleDetails;
 $gcModulePath = Join-Path -Path $gcModule.ModuleBase -ChildPath $gcModule.RootModule
 (Get-Content -Path $gcModulePath).replace('metaConfig.Type', 'true') | Set-Content -Path $gcModulePath
-
-
-Write-WELog " Applying Azure baseline" " INFO"
+Write-Host "Applying Azure baseline"
 [scriptblock];  $remediation = {
     $env:PSModulePath += ';c:\ProgramData\GuestConfig\modules'
     Import-Module 'GuestConfiguration'
     <# Future
-    $WEParameter = @(
+    $Parameter = @(
         @{
             ResourceType          = ''
             ResourceId            = 'User Account Control: Admin Approval Mode for the Built-in Administrator account'
@@ -103,17 +53,14 @@ Write-WELog " Applying Azure baseline" " INFO"
             ResourcePropertyValue = '0'
         }
     ) #>
-    Start-GuestConfigurationPackageRemediation -Path 'https://oaasguestconfigwcuss1.blob.core.windows.net/builtinconfig/AzureWindowsBaseline/AzureWindowsBaseline_1.2.0.0.zip' # -Parameter $WEParameter
-
+    Start-GuestConfigurationPackageRemediation -Path 'https://oaasguestconfigwcuss1.blob.core.windows.net/builtinconfig/AzureWindowsBaseline/AzureWindowsBaseline_1.2.0.0.zip' # -Parameter $Parameter
     # Workaround: until GC module supports parameters for native code resources
     Start-GuestConfigurationPackageRemediation -Path 'https://oaasguestconfigeaps1.blob.core.windows.net/builtinconfig/FilterAdministratorToken/FilterAdministratorToken_1.10.0.0.zip'
 }
 & $pwshExePath -Command $remediation
-
-; 
 $command = @'
 Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -Name FilterAdministratorToken -Value 1 -Type DWord;
-$schedServiceCom = New-Object -ComObject " Schedule.Service" ;
+$schedServiceCom = New-Object -ComObject "Schedule.Service" ;
 $schedServiceCom.Connect();
 $rootTaskFolder = $schedServiceCom.GetFolder('\');
 $rootTaskFolder.DeleteTask('FilterAdministratorTokenEnablement', 0)
@@ -130,7 +77,7 @@ $taskDefinition = @'
     </BootTrigger>
   </Triggers>
   <Principals>
-    <Principal id=" Author" >
+    <Principal id="Author" >
       <RunLevel>HighestAvailable</RunLevel>
     </Principal>
   </Principals>
@@ -155,7 +102,7 @@ $taskDefinition = @'
     <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
     <Priority>7</Priority>
   </Settings>
-  <Actions Context=" Author" >
+  <Actions Context="Author" >
     <Exec>
       <Command>C:\Windows\System32\cmd.exe</Command>
       <Arguments>/c PowerShell -ExecutionPolicy Bypass -OutputFormat Text -EncodedCommand #REPLACE</Arguments>
@@ -163,20 +110,12 @@ $taskDefinition = @'
   </Actions>
 </Task>
 '@ -replace '#REPLACE',$encodedCommand
-
-$schedServiceCom = New-Object -ComObject " Schedule.Service"
-$schedServiceCom.Connect(); 
+$schedServiceCom = New-Object -ComObject "Schedule.Service"
+$schedServiceCom.Connect();
 $filterAdminTokenTask = $schedServiceCom.NewTask($null)
-$filterAdminTokenTask.XmlText = $taskDefinition; 
+$filterAdminTokenTask.XmlText = $taskDefinition;
 $rootTaskFolder = $schedServiceCom.GetFolder('\')
 [void] $rootTaskFolder.RegisterTaskDefinition('FilterAdministratorTokenEnablement', $filterAdminTokenTask, 6, 'SYSTEM', $null, 1, $null)
-
-
 Remove-Item -Path 'c:\ProgramData\GuestConfig' -Recurse -Force
 Remove-Item -Path $env:LOCALAPPDATA\PackageManagement\ProviderAssemblies\NuGet -Recurse -Force
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

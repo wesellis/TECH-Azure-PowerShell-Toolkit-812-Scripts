@@ -1,129 +1,68 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Activity Log Checker
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Activity Log Checker
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEHoursBack = 24,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEMaxEvents = 20
+    [string]$ResourceGroupName,
+    [Parameter()]
+    [int]$HoursBack = 24,
+    [Parameter()]
+    [int]$MaxEvents = 20
 )
-
-#region Functions
-
-Write-Information -Object " Retrieving Activity Log events (last $WEHoursBack hours)"
-
-$WEStartTime = (Get-Date).AddHours(-$WEHoursBack)
-$WEEndTime = Get-Date -ErrorAction Stop
-
-if ($WEResourceGroupName) {
-    $WEActivityLogs = Get-AzActivityLog -ResourceGroupName $WEResourceGroupName -StartTime $WEStartTime -EndTime $WEEndTime
-    Write-Information -Object " Resource Group: $WEResourceGroupName"
+Write-Information -Object "Retrieving Activity Log events (last $HoursBack hours)"
+$StartTime = (Get-Date).AddHours(-$HoursBack)
+$EndTime = Get-Date -ErrorAction Stop
+if ($ResourceGroupName) {
+    $ActivityLogs = Get-AzActivityLog -ResourceGroupName $ResourceGroupName -StartTime $StartTime -EndTime $EndTime
+    Write-Information -Object "Resource Group: $ResourceGroupName"
 } else {
-   ;  $WEActivityLogs = Get-AzActivityLog -StartTime $WEStartTime -EndTime $WEEndTime
-    Write-Information -Object " Subscription-wide activity"
+$ActivityLogs = Get-AzActivityLog -StartTime $StartTime -EndTime $EndTime
+    Write-Information -Object "Subscription-wide activity"
 }
-; 
-$WERecentLogs = $WEActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $WEMaxEvents
-
-Write-Information -Object " `nRecent Activity (Last $WEMaxEvents events):"
+$RecentLogs = $ActivityLogs | Sort-Object EventTimestamp -Descending | Select-Object -First $MaxEvents
+Write-Information -Object " `nRecent Activity (Last $MaxEvents events):"
 Write-Information -Object (" =" * 60)
-
-foreach ($WELog in $WERecentLogs) {
-    Write-Information -Object " Time: $($WELog.EventTimestamp)"
-    Write-Information -Object " Operation: $($WELog.OperationName.Value)"
-    Write-Information -Object " Status: $($WELog.Status.Value)"
-    Write-Information -Object " Resource: $($WELog.ResourceId.Split('/')[-1])"
-    Write-Information -Object " Caller: $($WELog.Caller)"
+foreach ($Log in $RecentLogs) {
+    Write-Information -Object "Time: $($Log.EventTimestamp)"
+    Write-Information -Object "Operation: $($Log.OperationName.Value)"
+    Write-Information -Object "Status: $($Log.Status.Value)"
+    Write-Information -Object "Resource: $($Log.ResourceId.Split('/')[-1])"
+    Write-Information -Object "Caller: $($Log.Caller)"
     Write-Information -Object (" -" * 40)
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,75 +1,34 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Aznetworkinterface
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Aznetworkinterface
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzNetworkInterface {
+function Invoke-AzNetworkInterface {
 }
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzNetworkInterface {
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzNetworkInterface {
     #Region func New-AzNetworkInterface -ErrorAction Stop
     #Creating the NIC for the VM
-   ;  $newAzNetworkInterfaceSplat = @{
-        Name                   = $WENICName
-        ResourceGroupName      = $WEResourceGroupName
-        Location               = $WELocationName
-        # SubnetId                 = $WEVnet.Subnets[0].Id
-        # PublicIpAddressId        = $WEPIP.Id
-        NetworkSecurityGroupId = $WENSG.Id
-        # ApplicationSecurityGroup = $WEASG
-        IpConfiguration        = $WEIPConfig1
-        Tag                    = $WETags
-    
+$newAzNetworkInterfaceSplat = @{
+        Name                   = $NICName
+        ResourceGroupName      = $ResourceGroupName
+        Location               = $LocationName
+        # SubnetId                 = $Vnet.Subnets[0].Id
+        # PublicIpAddressId        = $PIP.Id
+        NetworkSecurityGroupId = $NSG.Id
+        # ApplicationSecurityGroup = $ASG
+        IpConfiguration        = $IPConfig1
+        Tag                    = $Tags
     }
-   ;  $WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
+$NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
     #endRegion func New-AzNetworkInterface -ErrorAction Stop
-    
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

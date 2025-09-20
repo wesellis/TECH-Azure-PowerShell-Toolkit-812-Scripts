@@ -1,596 +1,485 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
-
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
     Write Testresults
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
 <#
-.SYNOPSIS
-    We Enhanced Write Testresults
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-﻿<#
-
 This script is used to update the table where the test results for each sample are stored.
-Typical scenario is that results will be passed in for only one cloud Public or Fairfax - so the 
-
-
-
+Typical scenario is that results will be passed in for only one cloud Public or Fairfax - so the
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string]$WESampleFolder = $WEENV:SAMPLE_FOLDER, # this is the full absolute path to the sample
-    [string]$WESampleName = $WEENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo (i.e. relative path) e.g. " sample-type/sample-name"
-    [string]$WEStorageAccountName = $WEENV:STORAGE_ACCOUNT_NAME,
-    [string]$WETableName = " QuickStartsMetadataService" ,
-    [string]$WETableNamePRs = " QuickStartsMetadataServicePRs" ,
-    [string]$WEBadgesContainerName = " badges" ,
-    [string]$WEPRsContainerName = " prs" ,
-    [string]$WERegressionsTableName = " Regressions" ,
-    [Parameter(mandatory = $true)][Parameter(Mandatory=$false)]
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER, # this is the full absolute path to the sample
+    [string]$SampleName = $ENV:SAMPLE_NAME, # the name of the sample or folder path from the root of the repo (i.e. relative path) e.g. " sample-type/sample-name"
+    [string]$StorageAccountName = $ENV:STORAGE_ACCOUNT_NAME,
+    [string]$TableName = "QuickStartsMetadataService" ,
+    [string]$TableNamePRs = "QuickStartsMetadataServicePRs" ,
+    [string]$BadgesContainerName = " badges" ,
+    [string]$PRsContainerName = " prs" ,
+    [string]$RegressionsTableName = "Regressions" ,
+    [Parameter(mandatory = $true)][Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountKey, 
-    [string]$WEBestPracticeResult = " $WEENV:RESULT_BEST_PRACTICE" ,
-    [string]$WECredScanResult = " $WEENV:RESULT_CREDSCAN" ,
-    [string]$WEBuildReason = " $WEENV:BUILD_REASON" ,
-    [string]$WEAgentJobStatus = " $WEENV:AGENT_JOBSTATUS" ,
-    [string]$WEValidationType = " $WEENV:VALIDATION_TYPE" ,
-    [string]$supportedEnvironmentsJson = " $WEENV:SUPPORTED_ENVIRONMENTS" , # the minified json array from metadata.json
-    [string]$WEResultDeploymentParameter = " $WEENV:RESULT_DEPLOYMENT_PARAMETER" , #also cloud specific
-    [string]$WEFairfaxDeployment = "" ,
-    [string]$WEFairfaxLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
-    [string]$WEPublicDeployment = "" ,
-    [string]$WEPublicLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
-    [string]$WEBicepVersion = $WEENV:BICEP_VERSION, # empty if bicep not supported by the sample
-    [string]$WETemplateAnalyzerResult = " $WEENV:TEMPLATE_ANALYZER_RESULT" ,
-    [string]$WETemplateAnalyzerOutputFilePath = " $WEENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
-    [string]$WETemplateAnalyzerLogsContainerName = " $WEENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
+    [string]$StorageAccountKey,
+    [string]$BestPracticeResult = " $ENV:RESULT_BEST_PRACTICE" ,
+    [string]$CredScanResult = " $ENV:RESULT_CREDSCAN" ,
+    [string]$BuildReason = " $ENV:BUILD_REASON" ,
+    [string]$AgentJobStatus = " $ENV:AGENT_JOBSTATUS" ,
+    [string]$ValidationType = " $ENV:VALIDATION_TYPE" ,
+    [string]$supportedEnvironmentsJson = " $ENV:SUPPORTED_ENVIRONMENTS" , # the minified json array from metadata.json
+    [string]$ResultDeploymentParameter = " $ENV:RESULT_DEPLOYMENT_PARAMETER" , #also cloud specific
+    [string]$FairfaxDeployment = "" ,
+    [string]$FairfaxLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
+    [string]$PublicDeployment = "" ,
+    [string]$PublicLastTestDate = (Get-Date -Format " yyyy-MM-dd" ).ToString(),
+    [string]$BicepVersion = $ENV:BICEP_VERSION, # empty if bicep not supported by the sample
+    [string]$TemplateAnalyzerResult = " $ENV:TEMPLATE_ANALYZER_RESULT" ,
+    [string]$TemplateAnalyzerOutputFilePath = " $ENV:TEMPLATE_ANALYZER_OUTPUT_FILEPATH" ,
+    [string]$TemplateAnalyzerLogsContainerName = " $ENV:TEMPLATE_ANALYZER_LOGS_CONTAINER_NAME"
 )
-
-#region Functions
-
-function WE-Get-Regression(
+function Get-Regression(
     [object] $oldRow,
     [object] $newRow,
     [string] $propertyName
 ) {
     $oldValue = $oldRow.$propertyName
     $newValue = $newRow.$propertyName
-
-    Write-WELog " Comparison results for ${propertyName}: '$oldValue' -> '$newValue'" " INFO"
-
-    if (![string]::IsNullOrWhiteSpace($newValue)) { 
-        $oldResultPassed = $oldValue -eq " PASS"
-        $newResultPassed = $newValue -eq " PASS"
-
+    Write-Host "Comparison results for ${propertyName}: '$oldValue' -> '$newValue'"
+    if (![string]::IsNullOrWhiteSpace($newValue)) {
+        $oldResultPassed = $oldValue -eq "PASS"
+        $newResultPassed = $newValue -eq "PASS"
         if ($oldResultPassed -and !$newResultPassed) {
-            Write-Warning " REGRESSION: $propertyName changed from '$oldValue' to '$newValue'"
+            Write-Warning "REGRESSION: $propertyName changed from '$oldValue' to '$newValue'"
             return $true
         }
     }
-
     return $false
 }
-
-function WE-Convert-EntityToHashtable([PSCustomObject] $entity) {
+function Convert-EntityToHashtable([PSCustomObject] $entity) {
     $hashtable = New-Object -Type Hashtable
     $entity | Get-Member -MemberType NoteProperty | ForEach-Object {
         $name = $_.Name
-        if ($name -ne " PartitionKey" -and $name -ne " RowKey" -and $name -ne " Etag" -and $name -ne " TableTimestamp" ) {
-            $hashtable[$name] = $entity.$WEName
+        if ($name -ne "PartitionKey" -and $name -ne "RowKey" -and $name -ne "Etag" -and $name -ne "TableTimestamp" ) {
+            $hashtable[$name] = $entity.$Name
         }
     }
-        
     return $hashtable
 }
-
-
-Write-WELog " Storage account name: $WEStorageAccountName" " INFO"
-$ctx = New-AzStorageContext -StorageAccountName $WEStorageAccountName -StorageAccountKey $WEStorageAccountKey -Environment AzureCloud
-
+Write-Host "Storage account name: $StorageAccountName"
+$ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
 $isPullRequest = $false
-if ($WEBuildReason -eq " PullRequest" ) {
+if ($BuildReason -eq "PullRequest" ) {
     $isPullRequest = $true
-    $t = $WETableNamePRs
+    $t = $TableNamePRs
 }
 else {
-    $t = $WETableName
+    $t = $TableName
 }
-Write-WELog " Writing to table $t" " INFO"
-
-if (($WEBicepVersion -ne "" ) -and !($WEBicepVersion -match " ^[0-9]+\.[-0-9a-z.]+$" )) {
-    Write-Error " Unexpected bicep version format: $WEBicepVersion.  This may be caused by a previous error in the pipeline"
+Write-Host "Writing to table $t"
+if (($BicepVersion -ne "" ) -and !($BicepVersion -match " ^[0-9]+\.[-0-9a-z.]+$" )) {
+    Write-Error "Unexpected bicep version format: $BicepVersion.  This may be caused by a previous error in the pipeline"
 }
-
 $cloudTable = (Get-AzStorageTable -Name $t -Context $ctx).CloudTable
-
-
-$WEPathToMetadata = " $WESampleFolder\metadata.json"
-Write-WELog " PathToMetadata: $WEPathToMetadata" " INFO"
-
-$WERowKey = $WESampleName.Replace(" \" , " @" ).Replace(" /" , " @" )
-Write-WELog " RowKey: $WERowKey" " INFO"
-
-$WEMetadata = Get-Content -ErrorAction Stop $WEPathToMetadata -Raw | ConvertFrom-Json
-$WEPartitionKey = $WEMetadata.Type # if the type changes we'll have an orphaned row, this is removed in Get-OldestSampleFolder.ps1
-
-
-$r = Get-AzTableRow -table $cloudTable -PartitionKey $WEPartitionKey -RowKey $WERowKey
-
-
-$comparisonCloudTable = (Get-AzStorageTable -Name $WETableName -Context $ctx).CloudTable
-$comparisonResults = Get-AzTableRow -table $comparisonCloudTable -PartitionKey $WEPartitionKey -RowKey $WERowKey
-Write-WELog " Comparison table for previous results: $WETableName" " INFO"
-Write-WELog " Comparison table current results: $comparisonResults" " INFO"
-
+$PathToMetadata = " $SampleFolder\metadata.json"
+Write-Host "PathToMetadata: $PathToMetadata"
+$RowKey = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
+Write-Host "RowKey: $RowKey"
+$Metadata = Get-Content -ErrorAction Stop $PathToMetadata -Raw | ConvertFrom-Json
+$PartitionKey = $Metadata.Type # if the type changes we'll have an orphaned row, this is removed in Get-OldestSampleFolder.ps1
+$r = Get-AzTableRow -table $cloudTable -PartitionKey $PartitionKey -RowKey $RowKey
+$comparisonCloudTable = (Get-AzStorageTable -Name $TableName -Context $ctx).CloudTable
+$comparisonResults = Get-AzTableRow -table $comparisonCloudTable -PartitionKey $PartitionKey -RowKey $RowKey
+Write-Host "Comparison table for previous results: $TableName"
+Write-Host "Comparison table current results: $comparisonResults"
 if ($isPullRequest) {
     # Check for a duplicate itemDisplayName in metadata
     # we need to check both tables - merged and PRs in case a dupe is in a PR
-    $t1 = (Get-AzStorageTable -Name $WETableName -Context $ctx).CloudTable
-    $t2 = (Get-AzStorageTable -Name $WETableNamePRs -Context $ctx).CloudTable
-    $itemDisplayName = $WEMetadata.itemDisplayName
+    $t1 = (Get-AzStorageTable -Name $TableName -Context $ctx).CloudTable
+    $t2 = (Get-AzStorageTable -Name $TableNamePRs -Context $ctx).CloudTable
+    $itemDisplayName = $Metadata.itemDisplayName
     $r1 = Get-AzTableRow -Table $t1 -ColumnName itemDisplayName -Value $itemDisplayName -Operator Equal
     $r2 = Get-AzTableRow -Table $t2 -ColumnName itemDisplayName -Value $itemDisplayName -Operator Equal
     if ($r1.Count -gt 0) {
         # make sure rowkey and partition key don't match - or there's more than one row returned flag it
-        $sameRow = ($r1.PartitionKey -eq $WEPartitionKey -and $r1.RowKey -eq $WERowKey)
+        $sameRow = ($r1.PartitionKey -eq $PartitionKey -and $r1.RowKey -eq $RowKey)
         if ($r1.count -ge 2 -or !$sameRow) {
-            Write-WELog " Duplicate sample name found in $WETableName for: $itemDisplayName" " INFO"
-            Write-WELog " ##vso[task.setvariable variable=duplicate.metadata]$true" " INFO"
+            Write-Host "Duplicate sample name found in $TableName for: $itemDisplayName"
+            Write-Host " ##vso[task.setvariable variable=duplicate.metadata]$true"
             foreach ($_ in $r1) {
-                Write-WELog " RowKey: $($_.RowKey)" " INFO"
+                Write-Host "RowKey: $($_.RowKey)"
             }
         }
     }
     if ($r2.Count -gt 0) {
-        $sameRow = ($r2.PartitionKey -eq $WEPartitionKey -and $r2.RowKey -eq $WERowKey)
+        $sameRow = ($r2.PartitionKey -eq $PartitionKey -and $r2.RowKey -eq $RowKey)
         if ($r2.count -ge 2 -or !$sameRow) {
-            Write-WELog " Duplicate sample name found in $WETableNamePRs for: $itemDisplayName" " INFO"
-            Write-WELog " ##vso[task.setvariable variable=duplicate.metadata]$true" " INFO"
+            Write-Host "Duplicate sample name found in $TableNamePRs for: $itemDisplayName"
+            Write-Host " ##vso[task.setvariable variable=duplicate.metadata]$true"
             foreach ($_ in $r2) {
-                Write-WELog " RowKey: $($_.RowKey)" " INFO"
+                Write-Host "RowKey: $($_.RowKey)"
             }
         }
     }
 }
-
-
-if ($null -ne $r -and $WEAgentJobStatus -eq " Canceled" -and $WEBuildReason -ne " PullRequest" ) {
+if ($null -ne $r -and $AgentJobStatus -eq "Canceled" -and $BuildReason -ne "PullRequest" ) {
     if ($null -eq $r.status) {
-        Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue " Live"
+        Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue "Live"
     }
     else {
-        $r.status = " Live"
+        $r.status = "Live"
     }
-    Write-WELog " Build Canceled, setting status back to Live" " INFO"
+    Write-Host "Build Canceled, setting status back to Live"
     $r | Update-AzTableRow -table $cloudTable
     exit
 }
-
-$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" true" ), " PASS"
-$WEBestPracticeResult = $WEBestPracticeResult -ireplace [regex]::Escape(" false" ), " FAIL"
-$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" true" ), " PASS"
-$WECredScanResult = $WECredScanResult -ireplace [regex]::Escape(" false" ), " FAIL"
-$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" true" ), " PASS"
-$WEFairfaxDeployment = $WEFairfaxDeployment -ireplace [regex]::Escape(" false" ), " FAIL"
-$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" true" ), " PASS"
-$WEPublicDeployment = $WEPublicDeployment -ireplace [regex]::Escape(" false" ), " FAIL"
-$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" true" ), " PASS"
-$WETemplateAnalyzerResult = $WETemplateAnalyzerResult -ireplace [regex]::Escape(" false" ), " FAIL"
-
-Write-WELog " Supported Environments Found: $supportedEnvironmentsJson" " INFO"
+$BestPracticeResult = $BestPracticeResult -ireplace [regex]::Escape(" true" ), "PASS"
+$BestPracticeResult = $BestPracticeResult -ireplace [regex]::Escape(" false" ), "FAIL"
+$CredScanResult = $CredScanResult -ireplace [regex]::Escape(" true" ), "PASS"
+$CredScanResult = $CredScanResult -ireplace [regex]::Escape(" false" ), "FAIL"
+$FairfaxDeployment = $FairfaxDeployment -ireplace [regex]::Escape(" true" ), "PASS"
+$FairfaxDeployment = $FairfaxDeployment -ireplace [regex]::Escape(" false" ), "FAIL"
+$PublicDeployment = $PublicDeployment -ireplace [regex]::Escape(" true" ), "PASS"
+$PublicDeployment = $PublicDeployment -ireplace [regex]::Escape(" false" ), "FAIL"
+$TemplateAnalyzerResult = $TemplateAnalyzerResult -ireplace [regex]::Escape(" true" ), "PASS"
+$TemplateAnalyzerResult = $TemplateAnalyzerResult -ireplace [regex]::Escape(" false" ), "FAIL"
+Write-Host "Supported Environments Found: $supportedEnvironmentsJson"
 $supportedEnvironments = ($supportedEnvironmentsJson | ConvertFrom-JSON -AsHashTable)
-
-
-if ($WEValidationType -eq " Manual" ) {
-    if ($supportedEnvironments.Contains(" AzureUSGovernment" )) {
-        $WEFairfaxDeployment = " Manual Test" 
+if ($ValidationType -eq "Manual" ) {
+    if ($supportedEnvironments.Contains("AzureUSGovernment" )) {
+        $FairfaxDeployment = "Manual Test"
     }
-    if ($supportedEnvironments.Contains(" AzureCloud" )) {
-        $WEPublicDeployment = " Manual Test"
+    if ($supportedEnvironments.Contains("AzureCloud" )) {
+        $PublicDeployment = "Manual Test"
     }
 }
-
-
 if ($null -eq $r) {
-
-    Write-WELog " No record found, adding a new one..." " INFO"
+    Write-Host "No record found, adding a new one..."
     $results = New-Object -TypeName hashtable
-    Write-WELog " BP Result: $WEBestPracticeResult" " INFO"
-    if (![string]::IsNullOrWhiteSpace($WEBestPracticeResult)) {
-        Write-WELog " Adding BP results to hashtable..." " INFO"
-        $results.Add(" BestPracticeResult" , $WEBestPracticeResult)
+    Write-Host "BP Result: $BestPracticeResult"
+    if (![string]::IsNullOrWhiteSpace($BestPracticeResult)) {
+        Write-Host "Adding BP results to hashtable..."
+        $results.Add("BestPracticeResult" , $BestPracticeResult)
     }
-    Write-WELog " Adding Bicep version to hashtable..." " INFO"
-    $results.Add(" BicepVersion" , $WEBicepVersion)
-    Write-WELog " CredScan Result: $WECredScanResult" " INFO"
-    if (![string]::IsNullOrWhiteSpace($WECredScanResult)) {
-        $results.Add(" CredScanResult" , $WECredScanResult)
+    Write-Host "Adding Bicep version to hashtable..."
+    $results.Add("BicepVersion" , $BicepVersion)
+    Write-Host "CredScan Result: $CredScanResult"
+    if (![string]::IsNullOrWhiteSpace($CredScanResult)) {
+        $results.Add("CredScanResult" , $CredScanResult)
     }
-    Write-WELog " TemplateAnalyzer result: $WETemplateAnalyzerResult" " INFO"
-    if (![string]::IsNullOrWhiteSpace($WETemplateAnalyzerResult)) {
-        $results.Add(" TemplateAnalyzerResult" , $WETemplateAnalyzerResult)
+    Write-Host "TemplateAnalyzer result: $TemplateAnalyzerResult"
+    if (![string]::IsNullOrWhiteSpace($TemplateAnalyzerResult)) {
+        $results.Add("TemplateAnalyzerResult" , $TemplateAnalyzerResult)
     }
     # set the values for Fairfax only if a result was passed
-    Write-WELog " FF Result" " INFO"
-    if (![string]::IsNullOrWhiteSpace($WEFairfaxDeployment)) { 
-        $results.Add(" FairfaxDeployment" , $WEFairfaxDeployment) 
-        $results.Add(" FairfaxLastTestDate" , $WEFairfaxLastTestDate) 
+    Write-Host "FF Result"
+    if (![string]::IsNullOrWhiteSpace($FairfaxDeployment)) {
+        $results.Add("FairfaxDeployment" , $FairfaxDeployment)
+        $results.Add("FairfaxLastTestDate" , $FairfaxLastTestDate)
     }
     # set the values for MAC only if a result was passed
-    Write-WELog " Mac Result" " INFO"
-    if (![string]::IsNullOrWhiteSpace($WEPublicDeployment)) {
-        $results.Add(" PublicDeployment" , $WEPublicDeployment) 
-        $results.Add(" PublicLastTestDate" , $WEPublicLastTestDate) 
+    Write-Host "Mac Result"
+    if (![string]::IsNullOrWhiteSpace($PublicDeployment)) {
+        $results.Add("PublicDeployment" , $PublicDeployment)
+        $results.Add("PublicLastTestDate" , $PublicLastTestDate)
     }
     # add metadata columns
-    Write-WELog " New Record: adding metadata" " INFO"
-    $results.Add(" itemDisplayName" , $WEMetadata.itemDisplayName)
-    $results.Add(" description" , $WEMetadata.description)
-    $results.Add(" summary" , $WEMetadata.summary)
-    $results.Add(" githubUsername" , $WEMetadata.githubUsername)
-    $results.Add(" dateUpdated" , $WEMetadata.dateUpdated)
-
-    if ($WEBuildReason -eq " PullRequest" ) {
-        $results.Add(" status" , $WEBuildReason)
-        $results.Add($($WEResultDeploymentParameter + " BuildNumber" ), $WEENV:BUILD_BUILDNUMBER)
-        $results.Add(" pr" , $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)
+    Write-Host "New Record: adding metadata"
+    $results.Add(" itemDisplayName" , $Metadata.itemDisplayName)
+    $results.Add(" description" , $Metadata.description)
+    $results.Add(" summary" , $Metadata.summary)
+    $results.Add(" githubUsername" , $Metadata.githubUsername)
+    $results.Add(" dateUpdated" , $Metadata.dateUpdated)
+    if ($BuildReason -eq "PullRequest" ) {
+        $results.Add(" status" , $BuildReason)
+        $results.Add($($ResultDeploymentParameter + "BuildNumber" ), $ENV:BUILD_BUILDNUMBER)
+        $results.Add(" pr" , $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)
     }
-
-    Write-WELog " New Record: Dump results variable" " INFO"
-
+    Write-Host "New Record: Dump results variable"
     $results | Format-List *
     $newResults = $results.PSObject.copy()
-    Write-WELog " New Record: Add-AzTableRow" " INFO"
-
+    Write-Host "New Record: Add-AzTableRow"
     $params = @{
         table = $cloudTable
         property = $results
-        partitionKey = $WEPartitionKey
-        rowKey = $WERowKey
+        partitionKey = $PartitionKey
+        rowKey = $RowKey
     }
     Add-AzTableRow @params
 }
 else {
     # Update the existing row - need to check to make sure the columns exist
-    Write-WELog " Updating the existing record from:" " INFO"
+    Write-Host "Updating the existing record from:"
     $r | Format-List *
-
-    if (![string]::IsNullOrWhiteSpace($WEBestPracticeResult)) {
+    if (![string]::IsNullOrWhiteSpace($BestPracticeResult)) {
         if ($null -eq $r.BestPracticeResult) {
-            Add-Member -InputObject $r -NotePropertyName 'BestPracticeResult' -NotePropertyValue $WEBestPracticeResult
+            Add-Member -InputObject $r -NotePropertyName 'BestPracticeResult' -NotePropertyValue $BestPracticeResult
         }
         else {
-            $r.BestPracticeResult = $WEBestPracticeResult
+            $r.BestPracticeResult = $BestPracticeResult
         }
     }
-    if (![string]::IsNullOrWhiteSpace($WETemplateAnalyzerResult)) {
+    if (![string]::IsNullOrWhiteSpace($TemplateAnalyzerResult)) {
         if ($null -eq $r.TemplateAnalyzerResult) {
-            Add-Member -InputObject $r -NotePropertyName 'TemplateAnalyzerResult' -NotePropertyValue $WETemplateAnalyzerResult
+            Add-Member -InputObject $r -NotePropertyName 'TemplateAnalyzerResult' -NotePropertyValue $TemplateAnalyzerResult
         }
         else {
-            $r.TemplateAnalyzerResult = $WETemplateAnalyzerResult
+            $r.TemplateAnalyzerResult = $TemplateAnalyzerResult
         }
     }
-    if (![string]::IsNullOrWhiteSpace($WEBicepVersion)) {
+    if (![string]::IsNullOrWhiteSpace($BicepVersion)) {
         if ($null -eq $r.BicepVersion) {
-            Add-Member -InputObject $r -NotePropertyName 'BicepVersion' -NotePropertyValue $WEBicepVersion
+            Add-Member -InputObject $r -NotePropertyName 'BicepVersion' -NotePropertyValue $BicepVersion
         }
         else {
-            $r.BicepVersion = $WEBicepVersion
+            $r.BicepVersion = $BicepVersion
         }
     }
-    if (![string]::IsNullOrWhiteSpace($WECredScanResult)) {
+    if (![string]::IsNullOrWhiteSpace($CredScanResult)) {
         if ($null -eq $r.CredScanResult) {
-            Add-Member -InputObject $r -NotePropertyName " CredScanResult" -NotePropertyValue $WECredScanResult
+            Add-Member -InputObject $r -NotePropertyName "CredScanResult" -NotePropertyValue $CredScanResult
         }
         else {
-            $r.CredScanResult = $WECredScanResult 
+            $r.CredScanResult = $CredScanResult
         }
     }
     # set the values for FF only if a result was passed
-    if (![string]::IsNullOrWhiteSpace($WEFairfaxDeployment)) { 
+    if (![string]::IsNullOrWhiteSpace($FairfaxDeployment)) {
         if ($null -eq $r.FairfaxDeployment) {
-            Add-Member -InputObject $r -NotePropertyName " FairfaxDeployment" -NotePropertyValue $WEFairfaxDeployment
-            Add-Member -InputObject $r -NotePropertyName " FairfaxLastTestDate" -NotePropertyValue $WEFairfaxLastTestDate -Force
+            Add-Member -InputObject $r -NotePropertyName "FairfaxDeployment" -NotePropertyValue $FairfaxDeployment
+            Add-Member -InputObject $r -NotePropertyName "FairfaxLastTestDate" -NotePropertyValue $FairfaxLastTestDate -Force
         }
         else {
-            $r.FairfaxDeployment = $WEFairfaxDeployment
-            $r.FairfaxLastTestDate = $WEFairfaxLastTestDate 
+            $r.FairfaxDeployment = $FairfaxDeployment
+            $r.FairfaxLastTestDate = $FairfaxLastTestDate
         }
     }
     # set the values for MAC only if a result was passed
-    if (![string]::IsNullOrWhiteSpace($WEPublicDeployment)) {
+    if (![string]::IsNullOrWhiteSpace($PublicDeployment)) {
         if ($null -eq $r.PublicDeployment) {
-            Add-Member -InputObject $r -NotePropertyName " PublicDeployment" -NotePropertyValue $WEPublicDeployment
-            Add-Member -InputObject $r -NotePropertyName " PublicLastTestDate" -NotePropertyValue $WEPublicLastTestDate -Force
+            Add-Member -InputObject $r -NotePropertyName "PublicDeployment" -NotePropertyValue $PublicDeployment
+            Add-Member -InputObject $r -NotePropertyName "PublicLastTestDate" -NotePropertyValue $PublicLastTestDate -Force
         }
         else {
-            $r.PublicDeployment = $WEPublicDeployment 
-            $r.PublicLastTestDate = $WEPublicLastTestDate 
+            $r.PublicDeployment = $PublicDeployment
+            $r.PublicLastTestDate = $PublicLastTestDate
         }
     }
-
-    if ($WEBuildReason -eq " PullRequest" ) {
+    if ($BuildReason -eq "PullRequest" ) {
         if ($null -eq $r.status) {
-            Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue $WEBuildReason            
+            Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue $BuildReason
         }
         else {
-            $r.status = $WEBuildReason
+            $r.status = $BuildReason
         }
         # set the pr number only if the column isn't present (should be true only for older prs before this column was added)
         if ($null -eq $r.pr) {
-            Add-Member -InputObject $r -NotePropertyName " pr" -NotePropertyValue $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER            
+            Add-Member -InputObject $r -NotePropertyName " pr" -NotePropertyValue $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
         }
-        
         # if it's a PR, set the build number, since it's not set before this outside of a scheduled build
-        if ($null -eq $r.($WEResultDeploymentParameter + " BuildNumber" )) {
-            Add-Member -InputObject $r -NotePropertyName ($WEResultDeploymentParameter + " BuildNumber" ) -NotePropertyValue $WEENV:BUILD_BUILDNUMBER           
+        if ($null -eq $r.($ResultDeploymentParameter + "BuildNumber" )) {
+            Add-Member -InputObject $r -NotePropertyName ($ResultDeploymentParameter + "BuildNumber" ) -NotePropertyValue $ENV:BUILD_BUILDNUMBER
         }
         else {
-            $r.($WEResultDeploymentParameter + " BuildNumber" ) = $WEENV:BUILD_BUILDNUMBER
+            $r.($ResultDeploymentParameter + "BuildNumber" ) = $ENV:BUILD_BUILDNUMBER
         }
         if ($null -eq $r.pr) {
-            Add-Member -InputObject $r -NotePropertyName " pr" -NotePropertyValue $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+            Add-Member -InputObject $r -NotePropertyName " pr" -NotePropertyValue $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
         }
         else {
-            $r.pr = $WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-        }   
-    
+            $r.pr = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+        }
     }
     else {
         # if this isn't a PR, then it's a scheduled build so set the status back to " live" as the test is complete
         if ($null -eq $r.status) {
-            Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue " Live"
+            Add-Member -InputObject $r -NotePropertyName " status" -NotePropertyValue "Live"
         }
         else {
-            $r.status = " Live"
+            $r.status = "Live"
         }
     }
-
     # update metadata columns
-    if ($null -eq $r.itemDisplayName) { 
-        Add-Member -InputObject $r -NotePropertyName " itemDisplayName" -NotePropertyValue $WEMetadata.itemDisplayName
+    if ($null -eq $r.itemDisplayName) {
+        Add-Member -InputObject $r -NotePropertyName " itemDisplayName" -NotePropertyValue $Metadata.itemDisplayName
     }
     else {
-        $r.itemDisplayName = $WEMetadata.itemDisplayName
+        $r.itemDisplayName = $Metadata.itemDisplayName
     }
-
     if ($null -eq $r.description) {
-        Add-Member -InputObject $r -NotePropertyName " description" -NotePropertyValue $WEMetadata.description
+        Add-Member -InputObject $r -NotePropertyName " description" -NotePropertyValue $Metadata.description
     }
     else {
-        $r.description = $WEMetadata.description
+        $r.description = $Metadata.description
     }
-
     if ($null -eq $r.summary) {
-        Add-Member -InputObject $r -NotePropertyName " summary" -NotePropertyValue $WEMetadata.summary
+        Add-Member -InputObject $r -NotePropertyName " summary" -NotePropertyValue $Metadata.summary
     }
     else {
-        $r.summary = $WEMetadata.summary
+        $r.summary = $Metadata.summary
     }
-
     if ($null -eq $r.githubUsername) {
-        Add-Member -InputObject $r -NotePropertyName " githubUsername" -NotePropertyValue $WEMetadata.githubUsername
+        Add-Member -InputObject $r -NotePropertyName " githubUsername" -NotePropertyValue $Metadata.githubUsername
     }
     else {
-        $r.githubUsername = $WEMetadata.githubUsername
-    }   
-    
+        $r.githubUsername = $Metadata.githubUsername
+    }
     if ($null -eq $r.dateUpdated) {
-        Add-Member -InputObject $r -NotePropertyName " dateUpdated" -NotePropertyValue $WEMetadata.dateUpdated
+        Add-Member -InputObject $r -NotePropertyName " dateUpdated" -NotePropertyValue $Metadata.dateUpdated
     }
     else {
-        $r.dateUpdated = $WEMetadata.dateUpdated
+        $r.dateUpdated = $Metadata.dateUpdated
     }
-
-    Write-WELog " Updating to new results:" " INFO"
+    Write-Host "Updating to new results:"
     $r | Format-List *
     $r | Update-AzTableRow -table $cloudTable
-
     $newResults = $r.PSObject.copy()
 }
-
-
-$WEBPRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " BestPracticeResult"
-$WEFairfaxRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " FairfaxDeployment"
-$WEPublicRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " PublicDeployment"
-$WETemplateAnalyzerRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults " TemplateAnalyzerResult"
-
-$WEAnyRegressed = $WEBPRegressed -or $WEFairfaxRegressed -or $WEPublicRegresse
-
+$BPRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults "BestPracticeResult"
+$FairfaxRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults "FairfaxDeployment"
+$PublicRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults "PublicDeployment"
+$TemplateAnalyzerRegressed = Get-Regression -ErrorAction Stop $comparisonResults $newResults "TemplateAnalyzerResult"
+$AnyRegressed = $BPRegressed -or $FairfaxRegressed -or $PublicRegresse
 if (!$isPullRequest) {
-    Write-WELog " Writing regression info to table '$WERegressionsTableName'" " INFO"
-    $regressionsTable = (Get-AzStorageTable -Name $WERegressionsTableName -Context $ctx).CloudTable
+    Write-Host "Writing regression info to table '$RegressionsTableName'"
+    $regressionsTable = (Get-AzStorageTable -Name $RegressionsTableName -Context $ctx).CloudTable
     $regressionsKey = Get-Date -Format " o"
     $regressionsRow = $newResults.PSObject.copy()
-    $regressionsRow | Add-Member " Sample" $WERowKey
-    $regressionsRow | Add-Member " AnyRegressed" $WEAnyRegressed
-    $regressionsRow | Add-Member " BPRegressed" $WEBPRegressed
-    $regressionsRow | Add-Member " FairfaxRegressed" $WEFairfaxRegressed
-    $regressionsRow | Add-Member " PublicRegressed" $WEPublicRegressed
-    $regressionsRow | Add-Member " TemplateAnalyzerRegressed" $WETemplateAnalyzerRegressed
-    $regressionsRow | Add-Member " BuildNumber" $WEENV:BUILD_BUILDNUMBER
-    $regressionsRow | Add-Member " BuildId" $WEENV:BUILD_BUILDID
-    $regressionsRow | Add-Member " Build" " https://dev.azure.com/azurequickstarts/azure-quickstart-templates/_build/results?buildId=$($WEENV:BUILD_BUILDID)"
+    $regressionsRow | Add-Member "Sample" $RowKey
+    $regressionsRow | Add-Member "AnyRegressed" $AnyRegressed
+    $regressionsRow | Add-Member "BPRegressed" $BPRegressed
+    $regressionsRow | Add-Member "FairfaxRegressed" $FairfaxRegressed
+    $regressionsRow | Add-Member "PublicRegressed" $PublicRegressed
+    $regressionsRow | Add-Member "TemplateAnalyzerRegressed" $TemplateAnalyzerRegressed
+    $regressionsRow | Add-Member "BuildNumber" $ENV:BUILD_BUILDNUMBER
+    $regressionsRow | Add-Member "BuildId" $ENV:BUILD_BUILDID
+    $regressionsRow | Add-Member "Build" " https://dev.azure.com/azurequickstarts/azure-quickstart-templates/_build/results?buildId=$($ENV:BUILD_BUILDID)"
     $params = @{
         table = $regressionsTable
         property = "(Convert-EntityToHashtable $regressionsRow)"
-        partitionKey = $WEPartitionKey
+        partitionKey = $PartitionKey
         rowKey = $regressionsKey
     }
     Add-AzTableRow @params
 }
-
-<#
-
 Now write the badges to storage for the README.md files
-
-
-
-$r = Get-AzTableRow -table $cloudTable -PartitionKey $WEPartitionKey -RowKey $WERowKey
-
-$WEBadges = @{ }
-
-$na = " Not%20Tested"
-
-
+$r = Get-AzTableRow -table $cloudTable -PartitionKey $PartitionKey -RowKey $RowKey
+$Badges = @{ }
+$na = "Not%20Tested"
 if ($null -ne $r.PublicLastTestDate) {
-    $WEPublicLastTestDate = $r.PublicLastTestDate.Replace(" -" , " ." )
-    $WEPublicLastTestDateColor = " black"
+    $PublicLastTestDate = $r.PublicLastTestDate.Replace(" -" , "." )
+    $PublicLastTestDateColor = " black"
 }
 else {
-    $WEPublicLastTestDate = $na
-    $WEPublicLastTestDateColor = " inactive"
+    $PublicLastTestDate = $na
+    $PublicLastTestDateColor = " inactive"
 }
-
 if ($null -ne $r.FairfaxLastTestDate) {
-    $WEFairfaxLastTestDate = $r.FairfaxLastTestDate.Replace(" -" , " ." )
-    $WEFairfaxLastTestDateColor = " black"
+    $FairfaxLastTestDate = $r.FairfaxLastTestDate.Replace(" -" , "." )
+    $FairfaxLastTestDateColor = " black"
 }
 else {
-    $WEFairfaxLastTestDate = $na
-    $WEFairfaxLastTestDateColor = " inactive"
+    $FairfaxLastTestDate = $na
+    $FairfaxLastTestDateColor = " inactive"
 }
-
 if ($null -ne $r.FairfaxDeployment) {
     # TODO can be removed when table is updated to string
-    $WEFairfaxDeployment = ($r.FairfaxDeployment).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
+    $FairfaxDeployment = ($r.FairfaxDeployment).ToString().ToLower().Replace(" true" , "PASS" ).Replace(" false" , "FAIL" )
 }
-switch ($WEFairfaxDeployment) {
-    " PASS" { $WEFairfaxDeploymentColor = " brightgreen" }
-    " FAIL" { $WEFairfaxDeploymentColor = " red" }
-    " Not Supported" { $WEFairfaxDeploymentColor = " yellow" }
-    " Manual Test" { $WEFairfaxDeploymentColor = " blue" }
+switch ($FairfaxDeployment) {
+    "PASS" { $FairfaxDeploymentColor = " brightgreen" }
+    "FAIL" { $FairfaxDeploymentColor = " red" }
+    "Not Supported" { $FairfaxDeploymentColor = " yellow" }
+    "Manual Test" { $FairfaxDeploymentColor = " blue" }
     default {
-        $WEFairfaxDeployment = $na
-        $WEFairfaxDeploymentColor = " inactive"    
+        $FairfaxDeployment = $na
+        $FairfaxDeploymentColor = " inactive"
     }
 }
-
 if ($null -ne $r.PublicDeployment) {
     # TODO can be removed when table is updated to string
-    $WEPublicDeployment = ($r.PublicDeployment).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
+    $PublicDeployment = ($r.PublicDeployment).ToString().ToLower().Replace(" true" , "PASS" ).Replace(" false" , "FAIL" )
 }
-switch ($WEPublicDeployment) {
-    " PASS" { $WEPublicDeploymentColor = " brightgreen" }
-    " FAIL" { $WEPublicDeploymentColor = " red" }
-    " Not Supported" { $WEPublicDeploymentColor = " yellow" }
-    " Manual Test" { $WEPublicDeploymentColor = " blue" }
+switch ($PublicDeployment) {
+    "PASS" { $PublicDeploymentColor = " brightgreen" }
+    "FAIL" { $PublicDeploymentColor = " red" }
+    "Not Supported" { $PublicDeploymentColor = " yellow" }
+    "Manual Test" { $PublicDeploymentColor = " blue" }
     default {
-        $WEPublicDeployment = $na
-        $WEPublicDeploymentColor = " inactive"    
+        $PublicDeployment = $na
+        $PublicDeploymentColor = " inactive"
     }
 }
-
 if ($null -ne $r.BestPracticeResult) {
     # TODO can be removed when table is updated to string
-    $WEBestPracticeResult = ($r.BestPracticeResult).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
+    $BestPracticeResult = ($r.BestPracticeResult).ToString().ToLower().Replace(" true" , "PASS" ).Replace(" false" , "FAIL" )
 }
-switch ($WEBestPracticeResult) {
-    " PASS" { $WEBestPracticeResultColor = " brightgreen" }
-    " FAIL" { $WEBestPracticeResultColor = " red" }
+switch ($BestPracticeResult) {
+    "PASS" { $BestPracticeResultColor = " brightgreen" }
+    "FAIL" { $BestPracticeResultColor = " red" }
     default {
-        $WEBestPracticeResult = $na
-        $WEBestPracticeResultColor = " inactive"    
+        $BestPracticeResult = $na
+        $BestPracticeResultColor = " inactive"
     }
 }
-
 if ($null -ne $r.CredScanResult) {
     # TODO can be removed when table is updated to string
-    $WECredScanResult = ($r.CredScanResult).ToString().ToLower().Replace(" true" , " PASS" ).Replace(" false" , " FAIL" )
+    $CredScanResult = ($r.CredScanResult).ToString().ToLower().Replace(" true" , "PASS" ).Replace(" false" , "FAIL" )
 }
-switch ($WECredScanResult) {
-    " PASS" { $WECredScanResultColor = " brightgreen" }
-    " FAIL" { $WECredScanResultColor = " red" }
+switch ($CredScanResult) {
+    "PASS" { $CredScanResultColor = " brightgreen" }
+    "FAIL" { $CredScanResultColor = " red" }
     default {
-        $WECredScanResult = $na
-        $WECredScanResultColor = " inactive"    
+        $CredScanResult = $na
+        $CredScanResultColor = " inactive"
     }
 }
-
-switch ($WETemplateAnalyzerResult) {
-    " PASS" { $WETemplateAnalyzerResultColor = " brightgreen" }
-    " FAIL" { $WETemplateAnalyzerResultColor = " red" }
+switch ($TemplateAnalyzerResult) {
+    "PASS" { $TemplateAnalyzerResultColor = " brightgreen" }
+    "FAIL" { $TemplateAnalyzerResultColor = " red" }
     default {
-        $WETemplateAnalyzerResult = $na
-       ;  $WETemplateAnalyzerResultColor = " inactive"    
+        $TemplateAnalyzerResult = $na
+$TemplateAnalyzerResultColor = " inactive"
     }
 }
-; 
-$WEBicepVersionColor = " brightgreen" ;
-if ($WEBicepVersion -eq "" ) { $WEBicepVersion = " n/a" } # make sure the badge value is not empty
-; 
+$BicepVersionColor = " brightgreen" ;
+if ($BicepVersion -eq "" ) { $BicepVersion = " n/a" } # make sure the badge value is not empty
 $badges = @(
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Date-$WEPublicLastTestDate-/?color=$WEPublicLastTestDateColor" ;
-        " filename" = " PublicLastTestDate.svg" ;
+        " url"      = "https://img.shields.io/badge/Azure%20Public%20Test%20Date-$PublicLastTestDate-/?color=$PublicLastTestDateColor" ;
+        " filename" = "PublicLastTestDate.svg" ;
     },
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20Public%20Test%20Result-$WEPublicDeployment-/?color=$WEPublicDeploymentColor" ;
-        " filename" = " PublicDeployment.svg"
-
-    },
-    @{ 
-        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Date-$WEFairfaxLastTestDate-/?color=$WEFairfaxLastTestDateColor" ;
-        " filename" = " FairfaxLastTestDate.svg"
+        " url"      = "https://img.shields.io/badge/Azure%20Public%20Test%20Result-$PublicDeployment-/?color=$PublicDeploymentColor" ;
+        " filename" = "PublicDeployment.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Result-$WEFairfaxDeployment-/?color=$WEFairfaxDeploymentColor" ;
-        " filename" = " FairfaxDeployment.svg"
+        " url"      = "https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Date-$FairfaxLastTestDate-/?color=$FairfaxLastTestDateColor" ;
+        " filename" = "FairfaxLastTestDate.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Best%20Practice%20Check-$WEBestPracticeResult-/?color=$WEBestPracticeResultColor" ;
-        " filename" = " BestPracticeResult.svg"
+        " url"      = "https://img.shields.io/badge/Azure%20US%20Gov%20Test%20Result-$FairfaxDeployment-/?color=$FairfaxDeploymentColor" ;
+        " filename" = "FairfaxDeployment.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/CredScan%20Check-$WECredScanResult-/?color=$WECredScanResultColor" ;
-        " filename" = " CredScanResult.svg"
+        " url"      = "https://img.shields.io/badge/Best%20Practice%20Check-$BestPracticeResult-/?color=$BestPracticeResultColor" ;
+        " filename" = "BestPracticeResult.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Bicep%20Version-$WEBicepVersion-/?color=$WEBicepVersionColor" ;
-        " filename" = " BicepVersion.svg"
+        " url"      = "https://img.shields.io/badge/CredScan%20Check-$CredScanResult-/?color=$CredScanResultColor" ;
+        " filename" = "CredScanResult.svg"
     },
     @{
-        " url"      = " https://img.shields.io/badge/Template%20Analyzer%20Check-$WETemplateAnalyzerResult-/?color=$WETemplateAnalyzerResultColor" ;
-        " filename" = " TemplateAnalyzerResult.svg"
+        " url"      = "https://img.shields.io/badge/Bicep%20Version-$BicepVersion-/?color=$BicepVersionColor" ;
+        " filename" = "BicepVersion.svg"
+    },
+    @{
+        " url"      = "https://img.shields.io/badge/Template%20Analyzer%20Check-$TemplateAnalyzerResult-/?color=$TemplateAnalyzerResultColor" ;
+        " filename" = "TemplateAnalyzerResult.svg"
     }
 )
-
-Write-WELog " Uploading Badges..." " INFO"
+Write-Host "Uploading Badges..."
 $tempFolder = [System.IO.Path]::GetTempPath();
 foreach ($badge in $badges) {
     $badgeTempPath = Join-Path $tempFolder $badge.filename
@@ -600,20 +489,18 @@ foreach ($badge in $badges) {
         just create the badges in the " pr" folder and they will be copied over by a CI build when merged
         scheduled builds should be put into the " live" container (i.e. badges)
     #>
-    if ($WEBuildReason -eq " PullRequest" ) {
-        $containerName = $WEPRsContainerName
+    if ($BuildReason -eq "PullRequest" ) {
+        $containerName = $PRsContainerName
     }
     else {
-        $containerName = $WEBadgesContainerName
+        $containerName = $BadgesContainerName
     }
-
-   ;  $badgePath = $WERowKey.Replace(" @" , " /" )
-
-   ;  $blobName = " $badgePath/$($badge.filename)"
-    Write-Output " Uploading badge to storage account '$($WEStorageAccountName)', container '$($containerName)', name '$($blobName)':"
+$badgePath = $RowKey.Replace(" @" , "/" )
+$blobName = " $badgePath/$($badge.filename)"
+    Write-Output "Uploading badge to storage account '$($StorageAccountName)', container '$($containerName)', name '$($blobName)':"
     $badge | Format-List | Write-Output
     $params = @{
-        Properties = "@{" ContentType" = " image/svg+xml" ; " CacheControl" = " no-cache" }"
+        Properties = "@{"ContentType" = " image/svg+xml" ; "CacheControl" = " no-cache" }"
         File = $badgeTempPath
         Context = $ctx
         Blob = $blobName
@@ -621,51 +508,36 @@ foreach ($badge in $badges) {
     }
     Set-AzStorageBlobContent @params
 }
-
-
-$templateAnalyzerLogFileName = " $($WEENV:BUILD_BUILDNUMBER)_$WERowKey.txt"
-Write-WELog " Uploading TemplateAnalyzer log file: $templateAnalyzerLogFileName" " INFO"
+$templateAnalyzerLogFileName = " $($ENV:BUILD_BUILDNUMBER)_$RowKey.txt"
+Write-Host "Uploading TemplateAnalyzer log file: $templateAnalyzerLogFileName"
 try {
     $params = @{
-        Properties = "@{ " ContentType" = " text/plain" }"
-        File = $WETemplateAnalyzerOutputFilePath
+        Properties = "@{ "ContentType" = " text/plain" }"
+        File = $TemplateAnalyzerOutputFilePath
         Context = $ctx
         Blob = $templateAnalyzerLogFileName
-        Container = $WETemplateAnalyzerLogsContainerName
+        Container = $TemplateAnalyzerLogsContainerName
     }
     Set-AzStorageBlobContent @params
 }
 catch {
-    Write-WELog " ====================================================" " INFO"
-    Write-WELog " Failed to upload $WETemplateAnalyzerOutputFilePath   " " INFO"
-    Write-WELog " ====================================================" " INFO"
+    Write-Host " ===================================================="
+    Write-Host "Failed to upload $TemplateAnalyzerOutputFilePath   "
+    Write-Host " ===================================================="
 }
-
 <#Debugging only
-; 
-$WEHTML = " <HTML>"
+$HTML = " <HTML>"
 foreach ($badge in $badges) {
-   ;  $WEHTML = $WEHTML + " <IMG SRC=`" $($badge.url)`" />&nbsp;"
+$HTML = $HTML + " <IMG SRC=`" $($badge.url)`" />&nbsp;"
 }
-$WEHTML = $WEHTML + " </HTML>"
-$WEHTML | Set-Content -path " test.html"
-
-<#
-
+$HTML = $HTML + " </HTML>"
+$HTML | Set-Content -path " test.html"
+#>
 Snippet that will be placed in the README.md files
-
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/PublicLastTestDate.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/PublicDeployment.svg" />&nbsp;
-
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/FairfaxLastTestDate.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/FairfaxDeployment.svg" />&nbsp;
-
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/BestPracticeResult.svg" />&nbsp;
 <IMG SRC=" https://azurequickstartsservice.blob.core.windows.net/badges/100-blank-template/CredScanResult.svg" />&nbsp;
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

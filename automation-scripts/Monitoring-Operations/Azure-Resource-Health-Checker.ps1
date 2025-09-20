@@ -1,37 +1,20 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName
 )
-
-#region Functions
-
 Write-Information -Object "Checking health status for resources in: $ResourceGroupName"
-
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
 $HealthStatus = @()
-
 foreach ($Resource in $Resources) {
     $Status = "Unknown"
     $Details = "Unable to determine"
-    
     try {
         switch ($Resource.ResourceType) {
             "Microsoft.Compute/virtualMachines" {
@@ -54,7 +37,6 @@ foreach ($Resource in $Resources) {
         $Status = "Error"
         $Details = $_.Exception.Message
     }
-    
     $HealthStatus += [PSCustomObject]@{
         ResourceName = $Resource.Name
         ResourceType = $Resource.ResourceType.Split('/')[-1]
@@ -62,20 +44,15 @@ foreach ($Resource in $Resources) {
         Details = $Details
     }
 }
-
 Write-Information -Object "`nResource Health Status:"
 Write-Information -Object ("=" * 60)
-
 foreach ($Health in $HealthStatus) {
     $StatusColor = switch ($Health.Status) {
         { $_ -in @("VM running", "Running", "Succeeded", "Active") } { "" }
-        { $_ -in @("VM stopped", "Stopped") } { "⏹️" }
+        { $_ -in @("VM stopped", "Stopped") } { "" }
         "Error" { "" }
-        default { "[WARN]️" }
+        default { "[WARN]" }
     }
-    
     Write-Information -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
 }
 
-
-#endregion

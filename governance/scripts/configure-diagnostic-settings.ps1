@@ -1,40 +1,26 @@
 #Requires -Module Az.Monitor
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Configures diagnostic settings for Azure resources
 
-.DESCRIPTION
     Manages diagnostic settings across resources, enabling logging and metrics
     collection to Log Analytics, Storage Accounts, or Event Hubs
-
 .PARAMETER ResourceId
     Resource ID to configure diagnostics for
-
 .PARAMETER WorkspaceId
     Log Analytics workspace resource ID
-
 .PARAMETER StorageAccountId
     Storage account resource ID for archival
-
 .PARAMETER EventHubAuthorizationRuleId
     Event Hub authorization rule ID for streaming
-
 .PARAMETER EnableAllLogs
     Enable all available log categories
-
 .PARAMETER EnableAllMetrics
     Enable all available metrics
 
-.EXAMPLE
     .\configure-diagnostic-settings.ps1 -ResourceId "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.Web/sites/app" -WorkspaceId "/subscriptions/xxx/.../workspace"
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -87,9 +73,8 @@ function Get-ResourceDiagnosticCategories {
         return @{
             Logs = $categories | Where-Object { $_.CategoryType -eq 'Logs' }
             Metrics = $categories | Where-Object { $_.CategoryType -eq 'Metrics' }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Error "Failed to get diagnostic categories: $_"
         return $null
     }
@@ -141,6 +126,7 @@ function New-DiagnosticSetting {
         New-AzDiagnosticSetting @params
     }
 }
+
 #endregion
 
 #region Main
@@ -192,5 +178,6 @@ catch {
     Write-Error "Failed to configure diagnostic settings: $_"
     throw
 }
+
 #endregion
 

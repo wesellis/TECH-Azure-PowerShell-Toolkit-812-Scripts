@@ -1,12 +1,7 @@
-#Requires -Module Pester
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Tests for Az.Security.Enterprise module
 .DESCRIPTION
-    Comprehensive test suite for enterprise security management functions
 #>
 
 BeforeAll {
@@ -15,7 +10,7 @@ BeforeAll {
     Import-Module "$ModulePath\Az.Security.Enterprise.psd1" -Force
     
     # Mock Azure cmdlets
-    Mock Get-AzContext -ErrorAction Stop {
+    Mock Get-AzContext {
         [PSCustomObject]@{
             Subscription = [PSCustomObject]@{
                 Id = "12345678-1234-1234-1234-123456789012"
@@ -24,9 +19,9 @@ BeforeAll {
         }
     }
     
-    Mock Set-AzContext -ErrorAction Stop { }
+    Mock Set-AzContext { }
     
-    Mock Set-AzSecurityPricing -ErrorAction Stop {
+    Mock Set-AzSecurityPricing {
         [PSCustomObject]@{
             Name = $Name
             PricingTier = $PricingTier
@@ -34,7 +29,7 @@ BeforeAll {
         }
     }
     
-    Mock Get-AzSecurityPricing -ErrorAction Stop {
+    Mock Get-AzSecurityPricing {
         @(
             [PSCustomObject]@{
                 Name = "VirtualMachines"
@@ -99,7 +94,7 @@ Describe "Az.Security.Enterprise Module Tests" {
         
         It "Should export expected functions" {
             $expectedFunctions = @(
-                'Enable-AzSecurityCenterAdvanced',
+                'Enable-AzSecurityCenter',
                 'Set-AzDefenderPlan',
                 'Get-AzDefenderCoverage',
                 'New-AzSecurityPolicySet',
@@ -119,16 +114,16 @@ Describe "Az.Security.Enterprise Module Tests" {
         }
     }
     
-    Context "Enable-AzSecurityCenterAdvanced" {
+    Context "Enable-AzSecurityCenter" {
         
         It "Should configure Security Center with standard tier" {
-            Enable-AzSecurityCenterAdvanced -SubscriptionId "12345678-1234-1234-1234-123456789012" -Tier "Standard"
+            Enable-AzSecurityCenter-SubscriptionId "12345678-1234-1234-1234-123456789012" -Tier "Standard"
             
             Should -Invoke Set-AzSecurityPricing -Times 12 # Number of resource types
         }
         
         It "Should enable auto-provisioning when specified" {
-            Enable-AzSecurityCenterAdvanced -SubscriptionId "12345678-1234-1234-1234-123456789012" -EnableAutoProvisioning
+            Enable-AzSecurityCenter-SubscriptionId "12345678-1234-1234-1234-123456789012" -EnableAutoProvisioning
             
             Should -Invoke Set-AzSecurityAutoProvisioningSetting -Times 1 -ParameterFilter { $EnableAutoProvision -eq $true }
         }
@@ -169,7 +164,7 @@ Describe "Az.Security.Enterprise Module Tests" {
                 TargetDate = $targetDate  $target.Milestones | Should
                 BeNullOrEmpty = "Should"
             }
-            Enable-AzSecurityCenterAdvanced @params
+            Enable-AzSecurityCenter@params
 }
 
 Describe "Helper Function Tests" {
@@ -222,4 +217,6 @@ Describe "Helper Function Tests" {
         }
     }
 }
+
 #endregion
+

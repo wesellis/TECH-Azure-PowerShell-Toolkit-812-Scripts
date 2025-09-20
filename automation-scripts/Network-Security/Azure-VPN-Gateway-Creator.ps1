@@ -1,55 +1,34 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage VPN
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage VPN
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$GatewayName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VNetName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$GatewaySku = "VpnGw1"
 )
-
-#region Functions
-
-Write-Information "Creating VPN Gateway: $GatewayName"
-
+Write-Host "Creating VPN Gateway: $GatewayName"
 # Get VNet
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-
 # Create gateway subnet if it doesn't exist
 $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
 if (-not $GatewaySubnet) {
-    Write-Information "Creating GatewaySubnet..."
+    Write-Host "Creating GatewaySubnet..."
     Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $VNet -AddressPrefix "10.0.255.0/27"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
     $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
     $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet"
 }
-
 # Create public IP for gateway
 $GatewayIpName = "$GatewayName-pip"
 $params = @{
@@ -60,7 +39,6 @@ $params = @{
     Location = $Location
 }
 $GatewayIp @params
-
 # Create gateway IP configuration
 $params = @{
     ErrorAction = "Stop"
@@ -69,9 +47,8 @@ $params = @{
     Name = "gatewayConfig"
 }
 $GatewayIpConfig @params
-
 # Create VPN gateway
-Write-Information "Creating VPN Gateway (this may take 30-45 minutes)..."
+Write-Host "Creating VPN Gateway (this may take 30-45 minutes)..."
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
@@ -83,12 +60,9 @@ $params = @{
     Name = $GatewayName
 }
 $Gateway @params
+Write-Host "VPN Gateway created successfully:"
+Write-Host "Name: $($Gateway.Name)"
+Write-Host "Type: $($Gateway.GatewayType)"
+Write-Host "SKU: $($Gateway.Sku.Name)"
+Write-Host "Public IP: $($GatewayIp.IpAddress)"
 
-Write-Information " VPN Gateway created successfully:"
-Write-Information "  Name: $($Gateway.Name)"
-Write-Information "  Type: $($Gateway.GatewayType)"
-Write-Information "  SKU: $($Gateway.Sku.Name)"
-Write-Information "  Public IP: $($GatewayIp.IpAddress)"
-
-
-#endregion

@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage storage
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage storage
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$DaysToTierCool = 30,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$DaysToTierArchive = 90,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$DaysToDelete = 365
 )
-
-#region Functions
-
-Write-Information "Configuring lifecycle management for: $StorageAccountName"
-
+Write-Host "Configuring lifecycle management for: $StorageAccountName"
 # Create lifecycle policy rule
 $LifecycleRule = @{
     enabled = $true
@@ -61,10 +42,8 @@ $LifecycleRule = @{
         }
     }
 }
-
 # Convert to JSON
 $PolicyJson = $LifecycleRule | ConvertTo-Json -Depth 10
-
 # Apply lifecycle policy
 $params = @{
     ErrorAction = "Stop"
@@ -73,18 +52,14 @@ $params = @{
     StorageAccountName = $StorageAccountName
 }
 Set-AzStorageAccountManagementPolicy @params
+Write-Host "Lifecycle management configured successfully:"
+Write-Host "Storage Account: $StorageAccountName"
+Write-Host "Tier to Cool: After $DaysToTierCool days"
+Write-Host "Tier to Archive: After $DaysToTierArchive days"
+Write-Host "Delete: After $DaysToDelete days"
+Write-Host "`nLifecycle Benefits:"
+Write-Host "Automatic cost optimization"
+Write-Host "Compliance with retention policies"
+Write-Host "Reduced management overhead"
+Write-Host "Environmental efficiency"
 
-Write-Information " Lifecycle management configured successfully:"
-Write-Information "  Storage Account: $StorageAccountName"
-Write-Information "  Tier to Cool: After $DaysToTierCool days"
-Write-Information "  Tier to Archive: After $DaysToTierArchive days"
-Write-Information "  Delete: After $DaysToDelete days"
-
-Write-Information "`nLifecycle Benefits:"
-Write-Information "• Automatic cost optimization"
-Write-Information "• Compliance with retention policies"
-Write-Information "• Reduced management overhead"
-Write-Information "• Environmental efficiency"
-
-
-#endregion

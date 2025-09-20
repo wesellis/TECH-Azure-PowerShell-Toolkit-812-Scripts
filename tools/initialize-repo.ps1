@@ -1,38 +1,22 @@
 #Requires -Version 7.0
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    initialize repocom)#>
 # Initialize Azure Enterprise Toolkit Repository
-Write-Information " Initializing Azure Enterprise Toolkit Git Repository"
+Write-Host "Initializing Azure Enterprise Toolkit Git Repository"
 
 Set-Location -ErrorAction Stop "A:\GITHUB\Azure-Enterprise-Toolkit"
 
 # Initialize Git repository
 git init
-Write-Information " Git repository initialized"
+Write-Host "Git repository initialized"
 
 # Add remote origin
 git remote add origin https://github.com/wesellis/Azure-Enterprise-Toolkit.git
-Write-Information " Remote origin added"
+Write-Host "Remote origin added"
 
 # Create initial README
 $readmeContent = @"
 # Azure Enterprise Toolkit
-
-Enterprise-grade Azure automation toolkit with 124+ PowerShell scripts, cost management dashboards, DevOps templates, governance policies, and essential bookmarks for comprehensive Azure administration.
 
 ## Repository Structure
 
@@ -41,7 +25,7 @@ Enterprise-grade Azure automation toolkit with 124+ PowerShell scripts, cost man
 - **devops-templates/** - CI/CD pipeline templates
 - **governance/** - Policy and compliance tools
 - **bookmarks/** - Essential Azure resource links
-- **docs/** - Comprehensive documentation
+- **docs/** -
 - **tools/** - Utility scripts and helpers
 
 ## Quick Start
@@ -50,24 +34,24 @@ Coming soon! Content is being migrated from existing repositories.
 
 ## Status
 
-🚧 **Under Construction** - Content being consolidated from multiple repositories
+ **Under Construction** - Content being consolidated from multiple repositories
 "@
 
 $readmeContent | Out-File -FilePath "README.md" -Encoding UTF8
-Write-Information " Initial README created"
+Write-Host "Initial README created"
 
 # Add and commit initial structure
 git add .
 git commit -m "Initial repository structure and README"
-Write-Information " Initial commit created"
+Write-Host "Initial commit created"
 
 # Set default branch and push
 git branch -M main
 git push -u origin main
-Write-Information " Repository pushed to GitHub"
+Write-Host "Repository pushed to GitHub"
 
-Write-Information "`n Repository is now initialized and connected to GitHub!"
-Write-Information "Ready for content migration from existing repositories."
-
+Write-Host "`n Repository is now initialized and connected to GitHub!"
+Write-Host "Ready for content migration from existing repositories."
 
 #endregion
+

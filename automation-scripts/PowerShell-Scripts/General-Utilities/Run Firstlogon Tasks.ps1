@@ -1,94 +1,49 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Run Firstlogon Tasks
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Run Firstlogon Tasks
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.DESCRIPTION
     Executes user first logon tasks configured for the image in C:\.tools\Setup\FirstLogonTasks.json
-
-
-$WEErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-
-$setupScriptsDir = $WEPSScriptRoot
-$setupDir = Split-Path -Parent $WEPSScriptRoot
+$setupScriptsDir = $PSScriptRoot
+$setupDir = Split-Path -Parent $PSScriptRoot
 $firstLogonTasksDir = " $setupScriptsDir\FirstLogonTasks"
 $firstLogonTasksFile = " $setupDir\FirstLogonTasks.json"
-
 if (!(Test-Path -Path $firstLogonTasksFile -PathType Leaf)) {
-    Write-WELog " === Nothing to do because $firstLogonTasksFile doesn't exist" " INFO"
+    Write-Host " === Nothing to do because $firstLogonTasksFile doesn't exist"
     return  # Do not call `exit` to allow the caller script to continue
 }
-
-Write-WELog " === Executing tasks from $firstLogonTasksFile" " INFO"
+Write-Host " === Executing tasks from $firstLogonTasksFile"
 $firstLogonTasks = Get-Content -ErrorAction Stop $firstLogonTasksFile -Raw | ConvertFrom-Json
 foreach ($firstLogonTask in $firstLogonTasks) {
     $taskName = $firstLogonTask.Task
-   ;  $taskScript = " $firstLogonTasksDir\$taskName.ps1"
+$taskScript = " $firstLogonTasksDir\$taskName.ps1"
     if (!(Test-Path -Path $taskScript -PathType Leaf)) {
-        Write-WELog " [WARN] Skipped task $taskName : couldn't find $taskScript" " INFO"
+        Write-Host "[WARN] Skipped task $taskName : couldn't find $taskScript"
         continue
     }
-
     try {
         if ($firstLogonTask.PSobject.Properties.Name -contains 'Parameters') {
-           ;  $taskParams = $firstLogonTask.Parameters
-            Write-WELog " === Executing task $taskName with arguments $($taskParams | ConvertTo-Json -Depth 10)" " INFO"
+$taskParams = $firstLogonTask.Parameters
+            Write-Host " === Executing task $taskName with arguments $($taskParams | ConvertTo-Json -Depth 10)"
             & $taskScript -TaskParams $taskParams
         } else {
-            Write-WELog " === Executing task $taskName" " INFO"
+            Write-Host " === Executing task $taskName"
             & $taskScript
-        }
-    }
-    catch {
+
+} catch {
         # Log but keep running other tasks
-        Write-WELog " === [WARN] Task $taskName failed" " INFO"
+        Write-Host " === [WARN] Task $taskName failed"
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
     }
 }
+Write-Host " === Done executing tasks from $firstLogonTasksFile"
 
-Write-WELog " === Done executing tasks from $firstLogonTasksFile" " INFO"
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

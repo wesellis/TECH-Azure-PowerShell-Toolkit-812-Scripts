@@ -1,52 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$RoleName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Description,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [array]$Actions,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$NotActions = @(),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$DataActions = @(),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$NotDataActions = @(),
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$SubscriptionId
 )
-
-#region Functions
-
-Write-Information "Creating custom Azure role: $RoleName"
-
+Write-Host "Creating custom Azure role: $RoleName"
 if (-not $SubscriptionId) {
     $SubscriptionId = (Get-AzContext).Subscription.Id
 }
-
 try {
     # Create role definition object
     $RoleDefinition = @{
@@ -58,70 +36,57 @@ try {
         NotDataActions = $NotDataActions
         AssignableScopes = @("/subscriptions/$SubscriptionId")
     }
-    
     # Create the custom role
     $CustomRole = New-AzRoleDefinition -Role $RoleDefinition
-    
-    Write-Information " Custom role created successfully:"
-    Write-Information "  Name: $($CustomRole.Name)"
-    Write-Information "  ID: $($CustomRole.Id)"
-    Write-Information "  Description: $($CustomRole.Description)"
-    Write-Information "  Type: $($CustomRole.RoleType)"
-    
-    Write-Information "`nPermissions:"
-    Write-Information "  Actions ($($Actions.Count)):"
+    Write-Host "Custom role created successfully:"
+    Write-Host "Name: $($CustomRole.Name)"
+    Write-Host "ID: $($CustomRole.Id)"
+    Write-Host "Description: $($CustomRole.Description)"
+    Write-Host "Type: $($CustomRole.RoleType)"
+    Write-Host "`nPermissions:"
+    Write-Host "Actions ($($Actions.Count)):"
     foreach ($Action in $Actions) {
-        Write-Information "    • $Action"
+        Write-Host "     $Action"
     }
-    
     if ($NotActions.Count -gt 0) {
-        Write-Information "  NotActions ($($NotActions.Count)):"
+        Write-Host "NotActions ($($NotActions.Count)):"
         foreach ($NotAction in $NotActions) {
-            Write-Information "    • $NotAction"
+            Write-Host "     $NotAction"
         }
     }
-    
     if ($DataActions.Count -gt 0) {
-        Write-Information "  DataActions ($($DataActions.Count)):"
+        Write-Host "DataActions ($($DataActions.Count)):"
         foreach ($DataAction in $DataActions) {
-            Write-Information "    • $DataAction"
+            Write-Host "     $DataAction"
         }
     }
-    
     if ($NotDataActions.Count -gt 0) {
-        Write-Information "  NotDataActions ($($NotDataActions.Count)):"
+        Write-Host "NotDataActions ($($NotDataActions.Count)):"
         foreach ($NotDataAction in $NotDataActions) {
-            Write-Information "    • $NotDataAction"
+            Write-Host "     $NotDataAction"
         }
     }
-    
-    Write-Information "`nAssignable Scopes:"
+    Write-Host "`nAssignable Scopes:"
     foreach ($Scope in $CustomRole.AssignableScopes) {
-        Write-Information "  • $Scope"
+        Write-Host "   $Scope"
     }
-    
-    Write-Information "`nCustom Role Benefits:"
-    Write-Information "• Principle of least privilege"
-    Write-Information "• Fine-grained access control"
-    Write-Information "• Compliance and governance"
-    Write-Information "• Reduced security risk"
-    
-    Write-Information "`nNext Steps:"
-    Write-Information "1. Test the role with a pilot user"
-    Write-Information "2. Assign to users or groups as needed"
-    Write-Information "3. Monitor usage and adjust permissions"
-    Write-Information "4. Document role purpose and usage"
-    
-    Write-Information "`nCommon Action Patterns:"
-    Write-Information "• Read operations: */read"
-    Write-Information "• Write operations: */write"
-    Write-Information "• Delete operations: */delete"
-    Write-Information "• List operations: */list*"
-    Write-Information "• Specific resource types: Microsoft.Compute/virtualMachines/*"
-    
+    Write-Host "`nCustom Role Benefits:"
+    Write-Host "Principle of least privilege"
+    Write-Host "Fine-grained access control"
+    Write-Host "Compliance and governance"
+    Write-Host "Reduced security risk"
+    Write-Host "`nNext Steps:"
+    Write-Host "1. Test the role with a pilot user"
+    Write-Host "2. Assign to users or groups as needed"
+    Write-Host "3. Monitor usage and adjust permissions"
+    Write-Host "4. Document role purpose and usage"
+    Write-Host "`nCommon Action Patterns:"
+    Write-Host "Read operations: */read"
+    Write-Host "Write operations: */write"
+    Write-Host "Delete operations: */delete"
+    Write-Host "List operations: */list*"
+    Write-Host "Specific resource types: Microsoft.Compute/virtualMachines/*"
 } catch {
     Write-Error "Failed to create custom role: $($_.Exception.Message)"
 }
 
-
-#endregion

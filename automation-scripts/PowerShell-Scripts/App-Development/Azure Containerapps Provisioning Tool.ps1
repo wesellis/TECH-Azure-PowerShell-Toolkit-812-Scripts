@@ -1,284 +1,187 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Containerapps Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Containerapps Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ContainerAppName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEContainerAppName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEContainerImage,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WELocation = " East US" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEEnvironmentName = " $WEContainerAppName-env" ,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEMinReplicas = 0,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEMaxReplicas = 10,
-    
-    [Parameter(Mandatory=$false)]
-    [hashtable]$WEEnvironmentVariables = @{},
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEPort = 80,
-    
-    [Parameter(Mandatory=$false)]
-    [decimal]$WECpuCores = 0.25,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEMemory = " 0.5Gi" ,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEEnableExternalIngress,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WELogAnalyticsWorkspace
+    [string]$ContainerImage,
+    [Parameter()]
+    [string]$Location = "East US" ,
+    [Parameter()]
+    [string]$EnvironmentName = " $ContainerAppName-env" ,
+    [Parameter()]
+    [int]$MinReplicas = 0,
+    [Parameter()]
+    [int]$MaxReplicas = 10,
+    [Parameter()]
+    [hashtable]$EnvironmentVariables = @{},
+    [Parameter()]
+    [int]$Port = 80,
+    [Parameter()]
+    [decimal]$CpuCores = 0.25,
+    [Parameter()]
+    [string]$Memory = " 0.5Gi" ,
+    [Parameter()]
+    [switch]$EnableExternalIngress,
+    [Parameter()]
+    [string]$LogAnalyticsWorkspace
 )
-
-#region Functions
-
-
-# Module import removed - use #Requires instead
-
-
-Show-Banner -ScriptName " Azure Container Apps Provisioning Tool" -Version " 2.0" -Description " Deploy modern serverless containers with enterprise features"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
     # Test Azure connection
-    Write-ProgressStep -StepNumber 1 -TotalSteps 8 -StepName " Azure Connection" -Status " Validating connection and modules"
-    if (-not (Test-AzureConnection -RequiredModules @('Az.Accounts', 'Az.Resources', 'Az.ContainerInstance'))) {
-        throw " Azure connection validation failed"
+    # Progress stepNumber 1 -TotalSteps 8 -StepName "Azure Connection" -Status "Validating connection and modules"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
+    }
     # Validate resource group
-    Write-ProgressStep -StepNumber 2 -TotalSteps 8 -StepName " Resource Group Validation" -Status " Checking resource group existence"
+    # Progress stepNumber 2 -TotalSteps 8 -StepName "Resource Group Validation" -Status "Checking resource group existence"
     $resourceGroup = Invoke-AzureOperation -Operation {
-        Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction Stop
-    } -OperationName " Get Resource Group"
-    
-    Write-Log " [OK] Using resource group: $($resourceGroup.ResourceGroupName) in $($resourceGroup.Location)" -Level SUCCESS
+        Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
+    } -OperationName "Get Resource Group"
 
     # Create Container Apps Environment
-    Write-ProgressStep -StepNumber 3 -TotalSteps 8 -StepName " Container Environment" -Status " Creating Container Apps Environment"
-    
+    # Progress stepNumber 3 -TotalSteps 8 -StepName "Container Environment" -Status "Creating Container Apps Environment"
     $environmentParams = @{
-        ResourceGroupName = $WEResourceGroupName
-        Name = $WEEnvironmentName
-        Location = $WELocation
+        ResourceGroupName = $ResourceGroupName
+        Name = $EnvironmentName
+        Location = $Location
     }
-    
-    if ($WELogAnalyticsWorkspace) {
-        $environmentParams.LogAnalyticsWorkspace = $WELogAnalyticsWorkspace
+    if ($LogAnalyticsWorkspace) {
+        $environmentParams.LogAnalyticsWorkspace = $LogAnalyticsWorkspace
     }
-    
     Invoke-AzureOperation -Operation {
         # Note: Using Azure CLI as Az.ContainerApps module is still in preview
         $params = @{
             Level = "SUCCESS"
-            name = $WEEnvironmentName
-            location = $WELocation
-            ne = "0) { throw " Failed to create Container Apps Environment" }  return ($envJson | ConvertFrom-Json) }"
-            output = "json 2>$null  if ($WELASTEXITCODE"
-            group = $WEResourceGroupName
-            OperationName = " Create Container Apps Environment" | Out-Null  Write-Log " [OK] Container Apps Environment created: $WEEnvironmentName"
+            name = $EnvironmentName
+            location = $Location
+            ne = "0) { throw "Failed to create Container Apps Environment" }  return ($envJson | ConvertFrom-Json) }"
+            output = "json 2>$null  if ($LASTEXITCODE"
+            group = $ResourceGroupName
+            OperationName = "Create Container Apps Environment" | Out-Null  Write-Log "[OK] Container Apps Environment created: $EnvironmentName"
         }
         $envJson @params
-
     # Prepare environment variables
-    Write-ProgressStep -StepNumber 4 -TotalSteps 8 -StepName " Configuration" -Status " Preparing container configuration"
+    # Progress stepNumber 4 -TotalSteps 8 -StepName "Configuration" -Status "Preparing container configuration"
     $envVarsString = ""
-    if ($WEEnvironmentVariables.Count -gt 0) {
+    if ($EnvironmentVariables.Count -gt 0) {
         $envVarArray = @()
-        foreach ($key in $WEEnvironmentVariables.Keys) {
-            $envVarArray = $envVarArray + " $key=$($WEEnvironmentVariables[$key])"
+        foreach ($key in $EnvironmentVariables.Keys) {
+            $envVarArray = $envVarArray + " $key=$($EnvironmentVariables[$key])"
         }
         $envVarsString = $envVarArray -join " "
     }
-
     # Create Container App
-    Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName " Container App Creation" -Status " Deploying container application"
-    
+    # Progress stepNumber 5 -TotalSteps 8 -StepName "Container App Creation" -Status "Deploying container application"
     $containerAppArgs = @(
-        " containerapp" , " create"
-        " --name" , $WEContainerAppName
-        " --resource-group" , $WEResourceGroupName
-        " --environment" , $WEEnvironmentName
-        " --image" , $WEContainerImage
-        " --target-port" , $WEPort.ToString()
-        " --cpu" , $WECpuCores.ToString()
-        " --memory" , $WEMemory
-        " --min-replicas" , $WEMinReplicas.ToString()
-        " --max-replicas" , $WEMaxReplicas.ToString()
-        " --output" , " json"
+        " containerapp" , "create"
+        " --name" , $ContainerAppName
+        " --resource-group" , $ResourceGroupName
+        " --environment" , $EnvironmentName
+        " --image" , $ContainerImage
+        " --target-port" , $Port.ToString()
+        " --cpu" , $CpuCores.ToString()
+        " --memory" , $Memory
+        " --min-replicas" , $MinReplicas.ToString()
+        " --max-replicas" , $MaxReplicas.ToString()
+        " --output" , "json"
     )
-    
-    if ($WEEnableExternalIngress) {
-        $containerAppArgs = $containerAppArgs + @(" --ingress" , " external" )
+    if ($EnableExternalIngress) {
+        $containerAppArgs = $containerAppArgs + @(" --ingress" , "external" )
     }
-    
     if ($envVarsString) {
         $containerAppArgs = $containerAppArgs + @(" --env-vars" , $envVarsString)
     }
-    
     $containerApp = Invoke-AzureOperation -Operation {
         $appJson = & az @containerAppArgs 2>$null
-        
-        if ($WELASTEXITCODE -ne 0) {
-            throw " Failed to create Container App"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to create Container App"
         }
-        
         return ($appJson | ConvertFrom-Json)
-    } -OperationName " Create Container App"
-
+    } -OperationName "Create Container App"
     # Configure ingress and scaling
-    Write-ProgressStep -StepNumber 6 -TotalSteps 8 -StepName " Advanced Configuration" -Status " Configuring ingress and scaling"
-    
-    if ($WEEnableExternalIngress) {
-        Write-Log " [OK] External ingress enabled for $WEContainerAppName" -Level SUCCESS
-        Write-Log " 🌐 Application URL: https://$($containerApp.properties.configuration.ingress.fqdn)" -Level SUCCESS
-    }
+    # Progress stepNumber 6 -TotalSteps 8 -StepName "  Configuration" -Status "Configuring ingress and scaling"
+    if ($EnableExternalIngress) {
 
+    }
     # Add tags for enterprise governance
-    Write-ProgressStep -StepNumber 7 -TotalSteps 8 -StepName " Tagging" -Status " Applying enterprise tags"
+    # Progress stepNumber 7 -TotalSteps 8 -StepName "Tagging" -Status "Applying enterprise tags"
     $tags = @{
         'Environment' = 'Production'
         'ManagedBy' = 'Azure-Automation'
         'CreatedBy' = $env:USERNAME
         'CreatedDate' = (Get-Date -Format 'yyyy-MM-dd')
         'Service' = 'ContainerApps'
-        'Application' = $WEContainerAppName
+        'Application' = $ContainerAppName
     }
-    
     # Note: Container Apps tagging via CLI
     $tagString = ($tags.GetEnumerator() | ForEach-Object { " $($_.Key)=$($_.Value)" }) -join " "
-    az containerapp update --name $WEContainerAppName --resource-group $WEResourceGroupName --set-env-vars $tagString --output none 2>$null
-
+    az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --set-env-vars $tagString --output none 2>$null
     # Final validation and summary
-    Write-ProgressStep -StepNumber 8 -TotalSteps 8 -StepName " Validation" -Status " Verifying deployment"
-    
-   ;  $finalApp = Invoke-AzureOperation -Operation {
-       ;  $appJson = az containerapp show --name $WEContainerAppName --resource-group $WEResourceGroupName --output json 2>$null
-        if ($WELASTEXITCODE -ne 0) {
-            throw " Failed to retrieve Container App details"
+    # Progress stepNumber 8 -TotalSteps 8 -StepName "Validation" -Status "Verifying deployment"
+$finalApp = Invoke-AzureOperation -Operation {
+$appJson = az containerapp show --name $ContainerAppName --resource-group $ResourceGroupName --output json 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to retrieve Container App details"
         }
         return ($appJson | ConvertFrom-Json)
-    } -OperationName " Validate Container App"
-
+    } -OperationName "Validate Container App"
     # Success summary
-    Write-WELog "" " INFO"
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "                              CONTAINER APP DEPLOYMENT SUCCESSFUL" " INFO" -ForegroundColor Green  
-    Write-WELog " ════════════════════════════════════════════════════════════════════════════════════════════" " INFO" -ForegroundColor Green
-    Write-WELog "" " INFO"
-    Write-WELog "  Container App Details:" " INFO" -ForegroundColor Cyan
-    Write-WELog "   • Name: $WEContainerAppName" " INFO" -ForegroundColor White
-    Write-WELog "   • Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor White
-    Write-WELog "   • Environment: $WEEnvironmentName" " INFO" -ForegroundColor White
-    Write-WELog "   • Image: $WEContainerImage" " INFO" -ForegroundColor White
-    Write-WELog "   • CPU: $WECpuCores cores" " INFO" -ForegroundColor White
-    Write-WELog "   • Memory: $WEMemory" " INFO" -ForegroundColor White
-    Write-WELog "   • Replicas: $WEMinReplicas - $WEMaxReplicas" " INFO" -ForegroundColor White
-    Write-WELog "   • Status: $($finalApp.properties.provisioningState)" " INFO" -ForegroundColor Green
-    
-    if ($WEEnableExternalIngress -and $finalApp.properties.configuration.ingress.fqdn) {
-        Write-WELog "" " INFO"
-        Write-WELog " 🌐 Access Information:" " INFO" -ForegroundColor Cyan
-        Write-WELog "   • External URL: https://$($finalApp.properties.configuration.ingress.fqdn)" " INFO" -ForegroundColor Yellow
-        Write-WELog "   • Port: $WEPort" " INFO" -ForegroundColor White
+    Write-Host ""
+    Write-Host "                              CONTAINER APP DEPLOYMENT SUCCESSFUL" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Container App Details:" -ForegroundColor Cyan
+    Write-Host "    Name: $ContainerAppName" -ForegroundColor White
+    Write-Host "    Resource Group: $ResourceGroupName" -ForegroundColor White
+    Write-Host "    Environment: $EnvironmentName" -ForegroundColor White
+    Write-Host "    Image: $ContainerImage" -ForegroundColor White
+    Write-Host "    CPU: $CpuCores cores" -ForegroundColor White
+    Write-Host "    Memory: $Memory" -ForegroundColor White
+    Write-Host "    Replicas: $MinReplicas - $MaxReplicas" -ForegroundColor White
+    Write-Host "    Status: $($finalApp.properties.provisioningState)" -ForegroundColor Green
+    if ($EnableExternalIngress -and $finalApp.properties.configuration.ingress.fqdn) {
+        Write-Host ""
+        Write-Host "Access Information:" -ForegroundColor Cyan
+        Write-Host "    External URL: https://$($finalApp.properties.configuration.ingress.fqdn)" -ForegroundColor Yellow
+        Write-Host "    Port: $Port" -ForegroundColor White
     }
-    
-    Write-WELog "" " INFO"
-    Write-WELog " 💡 Management Commands:" " INFO" -ForegroundColor Cyan
-    Write-WELog "   • View logs: az containerapp logs show --name $WEContainerAppName --resource-group $WEResourceGroupName" " INFO" -ForegroundColor White
-    Write-WELog "   • Scale app: az containerapp update --name $WEContainerAppName --resource-group $WEResourceGroupName --min-replicas X --max-replicas Y" " INFO" -ForegroundColor White
-    Write-WELog "   • Update image: az containerapp update --name $WEContainerAppName --resource-group $WEResourceGroupName --image NEW_IMAGE" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-
-    Write-Log "  Container App '$WEContainerAppName' successfully deployed with modern serverless architecture!" -Level SUCCESS
+    Write-Host ""
+    Write-Host "Management Commands:" -ForegroundColor Cyan
+    Write-Host "    View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName" -ForegroundColor White
+    Write-Host "    Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y" -ForegroundColor White
+    Write-Host "    Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE" -ForegroundColor White
+    Write-Host ""
 
 } catch {
-    Write-Log "  Container App deployment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    
-    Write-WELog "" " INFO"
-    Write-WELog "  Troubleshooting Tips:" " INFO" -ForegroundColor Yellow
-    Write-WELog "   • Verify Azure CLI is installed: az --version" " INFO" -ForegroundColor White
-    Write-WELog "   • Check Container Apps extension: az extension add --name containerapp" " INFO" -ForegroundColor White
-    Write-WELog "   • Validate image accessibility: docker pull $WEContainerImage" " INFO" -ForegroundColor White
-    Write-WELog "   • Check resource group permissions" " INFO" -ForegroundColor White
-    Write-WELog "" " INFO"
-    
-    exit 1
+
+    Write-Host ""
+    Write-Host "Troubleshooting Tips:" -ForegroundColor Yellow
+    Write-Host "    Verify Azure CLI is installed: az --version" -ForegroundColor White
+    Write-Host "    Check Container Apps extension: az extension add --name containerapp" -ForegroundColor White
+    Write-Host "    Validate image accessibility: docker pull $ContainerImage" -ForegroundColor White
+    Write-Host "    Check resource group permissions" -ForegroundColor White
+    Write-Host ""
+    throw
 }
 
-Write-Progress -Activity " Container App Deployment" -Completed
-Write-Log " Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

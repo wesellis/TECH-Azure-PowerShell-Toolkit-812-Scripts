@@ -1,321 +1,195 @@
-#Requires -Version 7.0
-
 <#
 .SYNOPSIS
-    0 Define Param
+    Define Param
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Define Param operation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced 0 Define Param
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-.SYNOPSIS
-    Short description
-.DESCRIPTION
-    Long description
-.EXAMPLE
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-.NOTES
-    General notes
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+# Short description
+# Long description
+# PS C:\> <example usage>
+# Explanation of what the example does
+# Inputs (if any)
+# Output (if any)
+# General notes
 [CmdletBinding()]
-function WE-Invoke-DefineParam {
+function Invoke-DefineParam {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-    
-
-function Write-WELog {
+function Write-Host {
     param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
 param(
         [Parameter(ValueFromPipeline)]
-        $WESubnetConfig,
+        $SubnetConfig,
         [Parameter(ValueFromPipeline)]
-        $WEVnetCONFIG,
+        $VnetCONFIG,
         [Parameter(ValueFromPipeline)]
-        $WEGatewaySubnetConfig,
+        $GatewaySubnetConfig,
         [Parameter(ValueFromPipeline)]
-        $WEPublicIPConfig,
+        $PublicIPConfig,
         [Parameter(ValueFromPipeline)]
-        $WEGatewayPublicIPConfig
-        
+        $GatewayPublicIPConfig
     )
-    
     begin {
-        
     }
-    
     process {
-
-
         try {
-
             #Region Param Global
-            $WELocationName = 'CanadaCentral'
-            $WECustomerName = 'CCI'
-            $WEVMName = 'VPN505050'
-            $WECustomerName = 'CanadaComputing'
-            $WEResourceGroupName = -join (" $WECustomerName" , " _$WEVMName" , " _RG" )
+            $LocationName = 'CanadaCentral'
+            $CustomerName = 'CCI'
+            $VMName = 'VPN505050'
+            $CustomerName = 'CanadaComputing'
+            $ResourceGroupName = -join ("$CustomerName", "_$VMName", "_RG")
             #EndRegion Param Global
-    
-    
             #Region Param Date
             #Creating the Tag Hashtable for the VM
-            $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
-            [hashtable]$WETags = @{
-    
-                " Autoshutown"     = 'ON'
-                " Createdby"       = 'Abdullah Ollivierre'
-                " CustomerName"    = " $WECustomerName"
-                " DateTimeCreated" = " $datetime"
-                " Environment"     = 'Production'
-                " Application"     = 'VPN'  
-                " Purpose"         = 'VPN'
-                " Uptime"          = '24/7'
-                " Workload"        = 'VPN'
-                " RebootCaution"   = 'Schedule a window first before rebooting'
-                " VMSize"          = 'B2MS'
-                " Location"        = " $WELocationName"
-                " Approved By"     = " Abdullah Ollivierre"
-                " Approved On"     = ""
-    
+            $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
+            [hashtable]$Tags = @{
+                "Autoshutown"     = 'ON'
+                "Createdby"       = 'Abdullah Ollivierre'
+                "CustomerName"    = "$CustomerName"
+                "DateTimeCreated" = "$datetime"
+                "Environment"     = 'Production'
+                "Application"     = 'VPN'
+                "Purpose"         = 'VPN'
+                "Uptime"          = '24/7'
+                "Workload"        = 'VPN'
+                "RebootCaution"   = 'Schedule a window first before rebooting'
+                "VMSize"          = 'B2MS'
+                "Location"        = "$LocationName"
+                "Approved By"     = "Abdullah Ollivierre"
+                "Approved On"     = ""
             }
-    
-    
             $newAzResourceGroupSplat = @{
-                Name     = $WEResourceGroupName
-                Location = $WELocationName
-                Tag      = $WETags
+                Name     = $ResourceGroupName
+                Location = $LocationName
+                Tag      = $Tags
             }
-    
             #endRegion Param Date
-
-
-
             #Region Param VNETSubnet
-
-            $WESubnetName = -join (" $WEVMName" , " -subnet" )
-            $WESubnetAddressPrefix = " 10.0.0.0/24"
-       
+            $SubnetName = -join (" $VMName" , "-subnet" )
+            $SubnetAddressPrefix = " 10.0.0.0/24"
             $newAzVirtualNetworkSubnetConfigSplat = @{
-                Name          = $WESubnetName
-                AddressPrefix = $WESubnetAddressPrefix
-                # VirtualNetwork = $WEVNET
+                Name          = $SubnetName
+                AddressPrefix = $SubnetAddressPrefix
+                # VirtualNetwork = $VNET
             }
-            #EndRegion Param VNETSubnet     
-    
+            #EndRegion Param VNETSubnet
             #Region Param VNET
-            $WENetworkName = -join (" $WEVMName" , " _group-vnet" )
-            $WEVnetAddressPrefix = " 10.0.0.0/16"
-
-    
+            $NetworkName = -join (" $VMName" , "_group-vnet" )
+            $VnetAddressPrefix = " 10.0.0.0/16"
             $newAzVirtualNetworkSplat = @{
-                Name              = $WENetworkName
-                ResourceGroupName = $WEResourceGroupName
-                Location          = $WELocationName
-                AddressPrefix     = $WEVnetAddressPrefix
-                Subnet            = $WESubnetConfig
-                Tag               = $WETags
+                Name              = $NetworkName
+                ResourceGroupName = $ResourceGroupName
+                Location          = $LocationName
+                AddressPrefix     = $VnetAddressPrefix
+                Subnet            = $SubnetConfig
+                Tag               = $Tags
             }
             #EndRegion Param VNET
-
-
-
-
             $newAzVirtualNetworkConfigSplat = @{
-                Name              = $WENetworkName
-                ResourceGroupName = $WEResourceGroupName
+                Name              = $NetworkName
+                ResourceGroupName = $ResourceGroupName
             }
-
-
             #Region Param VNET Gateway Subnet
-
-            $WEGatewaySubnetName = 'GatewaySubnet'
-            $WESubnetAddressPrefix = " 10.0.255.0/27"
-                   
+            $GatewaySubnetName = 'GatewaySubnet'
+            $SubnetAddressPrefix = " 10.0.255.0/27"
             $newAzVirtualNetworkGatewaySubnetConfigSplat = @{
-                Name           = $WEGatewaySubnetName
-                AddressPrefix  = $WESubnetAddressPrefix
-                VirtualNetwork = $WEVnetCONFIG
+                Name           = $GatewaySubnetName
+                AddressPrefix  = $SubnetAddressPrefix
+                VirtualNetwork = $VnetCONFIG
             }
-            #EndRegion Param VNET Gateway Subnet 
-
-
-
-            $WEPublicIPAddressName = -join (" $WEVMName" , " -ip" )
-            $WEPublicIPAllocationMethod = 'Dynamic' 
-        
+            #EndRegion Param VNET Gateway Subnet
+            $PublicIPAddressName = -join (" $VMName" , "-ip" )
+            $PublicIPAllocationMethod = 'Dynamic'
             $newAzPublicIpAddressSplat = @{
-                Name              = $WEPublicIPAddressName
-                DomainNameLabel   = $WEDNSNameLabel
-                ResourceGroupName = $WEResourceGroupName
-                Location          = $WELocationName
-                AllocationMethod  = $WEPublicIPAllocationMethod
-                Tag               = $WETags
+                Name              = $PublicIPAddressName
+                DomainNameLabel   = $DNSNameLabel
+                ResourceGroupName = $ResourceGroupName
+                Location          = $LocationName
+                AllocationMethod  = $PublicIPAllocationMethod
+                Tag               = $Tags
             }
-
-
-
-            $WEGetAzVirtualNetworkSubnetConfigsplat = @{
-                Name              = $WEGatewaySubnetName
-                VirtualNetwork    = $WENetworkName
+            $GetAzVirtualNetworkSubnetConfigsplat = @{
+                Name              = $GatewaySubnetName
+                VirtualNetwork    = $NetworkName
             }
-
-
-            $gwipconfigname = -join (" $WEVMName" , " -gwipconfig" )
-            $WENewAzVirtualNetworkGatewayIpConfigSplat = @{
+            $gwipconfigname = -join (" $VMName" , "-gwipconfig" )
+            $NewAzVirtualNetworkGatewayIpConfigSplat = @{
                 Name              = $gwipconfigname
-                SubnetId          = $WEGatewaySubnetConfig.ID
-                PublicIpAddressId = $WEPublicIPConfig.ID
+                SubnetId          = $GatewaySubnetConfig.ID
+                PublicIpAddressId = $PublicIPConfig.ID
             }
-
-
-            $WEGatewayName = -join (" $WEVMName" , '-VNet1GW')
-            $WEGatewayType = 'Vpn'
-            $WEVpnType = 'RouteBased'
-            $WEGatewaySku = 'VpnGw1'
-
+            $GatewayName = -join (" $VMName" , '-VNet1GW')
+            $GatewayType = 'Vpn'
+            $VpnType = 'RouteBased'
+            $GatewaySku = 'VpnGw1'
             $newAzVirtualNetworkGatewaysplat = @{
-                Name              = $WEGatewayName
-                ResourceGroupName = $WEResourceGroupName
-                Location          = $WELocationName
-                IpConfigurations  = $WEGatewayPublicIPConfig
-                GatewayType       = $WEGatewayType
-                VpnType           = $WEVpnType
-                GatewaySku        = $WEGatewaySku
+                Name              = $GatewayName
+                ResourceGroupName = $ResourceGroupName
+                Location          = $LocationName
+                IpConfigurations  = $GatewayPublicIPConfig
+                GatewayType       = $GatewayType
+                VpnType           = $VpnType
+                GatewaySku        = $GatewaySku
             }
-
-           ;  $mypscustomobject = [PSCustomObject]@{
+$mypscustomobject = [PSCustomObject]@{
                 newAzResourceGroupSplat                     = $newAzResourceGroupSplat
                 newAzVirtualNetworkSubnetConfigSplat        = $newAzVirtualNetworkSubnetConfigSplat
                 newAzVirtualNetworkSplat                    = $newAzVirtualNetworkSplat
                 newAzVirtualNetworkConfigSplat              = $newAzVirtualNetworkConfigSplat
                 newAzVirtualNetworkGatewaySubnetConfigSplat = $newAzVirtualNetworkGatewaySubnetConfigSplat
                 newAzPublicIpAddressSplat                   = $newAzPublicIpAddressSplat
-                GetAzVirtualNetworkSubnetConfigsplat        = $WEGetAzVirtualNetworkSubnetConfigsplat
+                GetAzVirtualNetworkSubnetConfigsplat        = $GetAzVirtualNetworkSubnetConfigsplat
                 newAzVirtualNetworkGatewayIpConfigSplat     = $newAzVirtualNetworkGatewayIpConfigSplat
                 newAzVirtualNetworkGatewaysplat             = $newAzVirtualNetworkGatewaysplat
-            }
-             
-  
-        }
-         
 
-        catch {
-    
+} catch {
             Write-Error 'An Error happened when .. script execution will be halted'
-         
             #Region CatchAll
-         
-            Write-WELog " A Terminating Error (Exception) happened" " INFO" -ForegroundColor Magenta
-            Write-WELog " Displaying the Catch Statement ErrorCode" " INFO" -ForegroundColor Yellow
-            $WEPSItem
-            Write-Information $WEPSItem.ScriptStackTrace -ForegroundColor Red
-            
-            
-           ;  $WEErrorMessage_1 = $_.Exception.Message
-            Write-Information $WEErrorMessage_1  -ForegroundColor Red
-            Write-Output " Ran into an issue: $WEPSItem"
-            Write-Information " Ran into an issue: $WEPSItem"
-            throw " Ran into an issue: $WEPSItem"
-            throw " I am the catch"
-            throw " Ran into an issue: $WEPSItem"
-            $WEPSItem | Write-Information -ForegroundColor
-            $WEPSItem | Select-Object *
-            $WEPSCmdlet.ThrowTerminatingError($WEPSitem)
+            Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
+            Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
+            $PSItem
+            Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red
+$ErrorMessage_1 = $_.Exception.Message
+            Write-Host $ErrorMessage_1  -ForegroundColor Red
+            Write-Output "Ran into an issue: $PSItem"
+            Write-Host "Ran into an issue: $PSItem"
+            throw "Ran into an issue: $PSItem"
+            throw "I am the catch"
+            throw "Ran into an issue: $PSItem"
+            $PSItem | Write-Information -ForegroundColor
+            $PSItem | Select-Object *
+            $PSCmdlet.ThrowTerminatingError($PSitem)
             throw
-            throw " Something went wrong"
-            Write-Log $WEPSItem.ToString()
-         
+            throw "Something went wrong"
+            Write-Log $PSItem.ToString()
             #EndRegion CatchAll
-         
             Exit
-
-
-
-        
         }
         finally {
-         
         }
-
-
-
-        
     }
-    
     end {
-
-
         return $mypscustomobject
-        
     }
 }
-
-
-
-
-
-
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

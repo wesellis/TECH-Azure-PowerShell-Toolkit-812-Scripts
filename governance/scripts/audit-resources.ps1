@@ -1,84 +1,56 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Audits Azure resources against defined policies and compliance standards with comprehensive reporting.
+    Audits Azure resources against defined policies and compliance standards with
 
 .DESCRIPTION
-    This script performs comprehensive auditing of Azure resources against defined policies, compliance standards,
+    This script performs
     and governance requirements. It can audit single subscriptions, management groups, or across multiple
     subscriptions with detailed compliance reporting and remediation recommendations.
-
 .PARAMETER SubscriptionId
     Azure subscription ID to audit. If not provided, audits current subscription context.
-
 .PARAMETER ManagementGroupId
     Management group ID to audit (audits all subscriptions within the management group).
-
 .PARAMETER AllSubscriptions
     Audit all accessible subscriptions.
-
 .PARAMETER ResourceGroupName
     Specific resource group to audit within the subscription.
-
 .PARAMETER ResourceType
     Filter audit to specific resource types (e.g., 'Microsoft.Compute/virtualMachines').
-
 .PARAMETER PolicyDefinitionIds
     Array of specific policy definition IDs to audit against.
-
 .PARAMETER IncludeCompliant
     Include compliant resources in the audit results (default: false).
-
 .PARAMETER IncludeExemptions
     Include policy exemptions in the audit results.
-
 .PARAMETER ComplianceState
     Filter by compliance state: Compliant, NonCompliant, Unknown, NotStarted.
-
 .PARAMETER OutputFormat
     Output format: JSON, CSV, HTML, Excel.
-
 .PARAMETER OutputPath
     Path to save the audit report. If not provided, displays on console.
-
 .PARAMETER IncludePolicyDetails
     Include detailed policy information in the report.
-
 .PARAMETER IncludeRemediationGuidance
     Include remediation guidance for non-compliant resources.
-
 .PARAMETER DetailLevel
     Level of detail in the report: Summary, Standard, Detailed.
-
 .PARAMETER MaxResults
     Maximum number of results to return (default: 1000).
-
 .PARAMETER ExcludeResourceGroups
     Array of resource group names to exclude from the audit.
-
 .PARAMETER Tags
     Filter resources by specific tags (hashtable).
-
 .PARAMETER LogPath
     Path to store detailed logs. If not provided, logs to default location.
 
-.EXAMPLE
     .\audit-resources.ps1 -SubscriptionId "12345678-1234-1234-1234-123456789012" -OutputFormat CSV -OutputPath "C:\Reports\audit.csv"
 
-.EXAMPLE
     .\audit-resources.ps1 -ManagementGroupId "MyMgmtGroup" -ComplianceState NonCompliant -IncludeRemediationGuidance
 
-.EXAMPLE
     .\audit-resources.ps1 -ResourceType "Microsoft.Compute/virtualMachines" -DetailLevel Detailed -OutputFormat HTML
-
 .NOTES
     File Name      : audit-resources.ps1
-    Author         : Wes Ellis (wes@wesellis.com)
+    Author         : Azure PowerShell Toolkit
     Created        : 2024-11-15
     Prerequisites  : Azure PowerShell module, appropriate Azure permissions
     Version        : 1.0.0
@@ -150,9 +122,6 @@ param (
 )
 
 #region Functions
-
-#Requires -Version 5.1
-#Requires -Modules Az.Resources, Az.Accounts, Az.PolicyInsights
 
 # Initialize logging
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
@@ -336,8 +305,7 @@ function Get-PolicyDefinitionDetails {
                 Version = $policyDef.Properties.Metadata.version
             }
         }
-    }
-    catch {
+    } catch {
         Write-Log "Could not retrieve policy definition details for $PolicyDefinitionId" -Level Debug
     }
 
@@ -611,8 +579,7 @@ try {
         Results = $auditResults
         ReportPath = if ($reportPath) { $reportPath } else { $null }
     }
-}
-catch {
+} catch {
     $errorMessage = "Resource audit failed: $($_.Exception.Message)"
     Write-Log $errorMessage -Level Error
     throw $_
@@ -621,5 +588,5 @@ finally {
     Write-Log "Log file saved to: $LogPath"
 }
 
-
 #endregion
+

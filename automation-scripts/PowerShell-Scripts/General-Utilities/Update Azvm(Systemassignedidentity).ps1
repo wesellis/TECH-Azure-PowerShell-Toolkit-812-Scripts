@@ -1,59 +1,20 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Update Azvm(Systemassignedidentity)
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Update Azvm(Systemassignedidentity)
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
+$VMName = "TrueSky1"
+Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm -IdentityType SystemAssigned
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+$VMName = "TrueSky1";
+$ResourceGroupName = "CCI_TrueSky1_RG" ;
+$vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
+Update-AzVM -ResourceGroupName $ResourceGroupName -VM $vm -IdentityType SystemAssigned
 
-
-$WEVMName = "TrueSky1"
-Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $vm -IdentityType SystemAssigned
-
-
-$WEErrorActionPreference = " Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-$WEVMName = " TrueSky1"; 
-$WEResourceGroupName = " CCI_TrueSky1_RG" ; 
-$vm = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName
-Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $vm -IdentityType SystemAssigned
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

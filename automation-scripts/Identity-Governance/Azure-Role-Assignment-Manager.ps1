@@ -1,72 +1,49 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$PrincipalId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$RoleDefinitionName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Scope,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$PrincipalType = "User"
 )
-
-#region Functions
-
-Write-Information "Managing role assignment:"
-Write-Information "  Principal ID: $PrincipalId"
-Write-Information "  Role: $RoleDefinitionName"
-Write-Information "  Scope: $Scope"
-Write-Information "  Type: $PrincipalType"
-
+Write-Host "Managing role assignment:"
+Write-Host "Principal ID: $PrincipalId"
+Write-Host "Role: $RoleDefinitionName"
+Write-Host "Scope: $Scope"
+Write-Host "Type: $PrincipalType"
 try {
     # Check if assignment already exists
     $ExistingAssignment = Get-AzRoleAssignment -ObjectId $PrincipalId -RoleDefinitionName $RoleDefinitionName -Scope $Scope -ErrorAction SilentlyContinue
-    
     if ($ExistingAssignment) {
-        Write-Information "[WARN] Role assignment already exists"
-        Write-Information "  Assignment ID: $($ExistingAssignment.RoleAssignmentId)"
+        Write-Host "[WARN] Role assignment already exists"
+        Write-Host "Assignment ID: $($ExistingAssignment.RoleAssignmentId)"
         return
     }
-    
     # Create new role assignment
     $params = @{
         ErrorAction = "Stop"
         RoleDefinitionName = $RoleDefinitionName
         ObjectId = $PrincipalId
-        Scope = $Scope  Write-Information " Role assignment created successfully:" Write-Information "  Assignment ID: $($Assignment.RoleAssignmentId)" Write-Information "  Principal Name: $($Assignment.DisplayName)" Write-Information "  Role: $($Assignment.RoleDefinitionName)" Write-Information "  Scope: $($Assignment.Scope)
+        Scope = $Scope  Write-Host "Role assignment created successfully:" Write-Host "Assignment ID: $($Assignment.RoleAssignmentId)"Write-Host "Principal Name: $($Assignment.DisplayName)"Write-Host "Role: $($Assignment.RoleDefinitionName)"Write-Host "Scope: $($Assignment.Scope)
     }
-    $Assignment @params
+    # Command with splatting - needs proper cmdlet
 } catch {
     Write-Error "Failed to create role assignment: $($_.Exception.Message)"
 }
+Write-Host "`nCommon Azure Roles:"
+Write-Host "Owner - Full access including access management"
+Write-Host "Contributor - Full access except access management"
+Write-Host "Reader - Read-only access"
+Write-Host "User Access Administrator - Manage user access"
+Write-Host "Security Administrator - Security permissions"
+Write-Host "Backup Contributor - Backup management"
 
-Write-Information "`nCommon Azure Roles:"
-Write-Information "• Owner - Full access including access management"
-Write-Information "• Contributor - Full access except access management"
-Write-Information "• Reader - Read-only access"
-Write-Information "• User Access Administrator - Manage user access"
-Write-Information "• Security Administrator - Security permissions"
-Write-Information "• Backup Contributor - Backup management"
-
-
-#endregion

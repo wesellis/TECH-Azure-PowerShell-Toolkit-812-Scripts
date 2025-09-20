@@ -1,99 +1,62 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$PolicyDefinitionId,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$AssignmentName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Scope,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Description,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [hashtable]$Parameters = @{},
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$EnforcementMode = "Default"
 )
-
-#region Functions
-
-Write-Information "Creating Policy Assignment: $AssignmentName"
-
+Write-Host "Creating Policy Assignment: $AssignmentName"
 # Prepare assignment parameters
-$AssignmentParams = @{
-    Name = $AssignmentName
-    PolicyDefinition = Get-AzPolicyDefinition -Id $PolicyDefinitionId
-    Scope = $Scope
-    EnforcementMode = $EnforcementMode
-}
-
 if ($Description) {
     $AssignmentParams.Description = $Description
 }
-
 if ($Parameters.Count -gt 0) {
     $AssignmentParams.PolicyParameterObject = $Parameters
 }
-
 # Create policy assignment
 $Assignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
-
-Write-Information " Policy Assignment created successfully:"
-Write-Information "  Name: $($Assignment.Name)"
-Write-Information "  Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
-Write-Information "  Scope: $Scope"
-Write-Information "  Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
-
+Write-Host "Policy Assignment created successfully:"
+Write-Host "Name: $($Assignment.Name)"
+Write-Host "Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
+Write-Host "Scope: $Scope"
+Write-Host "Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
 if ($Description) {
-    Write-Information "  Description: $Description"
+    Write-Host "Description: $Description"
 }
-
 if ($Parameters.Count -gt 0) {
-    Write-Information "`nPolicy Parameters:"
+    Write-Host "`nPolicy Parameters:"
     foreach ($Param in $Parameters.GetEnumerator()) {
-        Write-Information "  $($Param.Key): $($Param.Value)"
+        Write-Host "  $($Param.Key): $($Param.Value)"
     }
 }
+Write-Host "`nPolicy Assignment Benefits:"
+Write-Host "Automated compliance enforcement"
+Write-Host "Consistent governance across resources"
+Write-Host "Audit and reporting capabilities"
+Write-Host "Cost and security optimization"
+Write-Host "`nCommon Policy Types:"
+Write-Host "Resource tagging requirements"
+Write-Host "Location restrictions"
+Write-Host "SKU limitations"
+Write-Host "Security configurations"
+Write-Host "Naming conventions"
+Write-Host "`nNext Steps:"
+Write-Host "1. Monitor compliance status"
+Write-Host "2. Review policy effects"
+Write-Host "3. Adjust parameters if needed"
+Write-Host "4. Create exemptions if required"
 
-Write-Information "`nPolicy Assignment Benefits:"
-Write-Information "• Automated compliance enforcement"
-Write-Information "• Consistent governance across resources"
-Write-Information "• Audit and reporting capabilities"
-Write-Information "• Cost and security optimization"
-
-Write-Information "`nCommon Policy Types:"
-Write-Information "• Resource tagging requirements"
-Write-Information "• Location restrictions"
-Write-Information "• SKU limitations"
-Write-Information "• Security configurations"
-Write-Information "• Naming conventions"
-
-Write-Information "`nNext Steps:"
-Write-Information "1. Monitor compliance status"
-Write-Information "2. Review policy effects"
-Write-Information "3. Adjust parameters if needed"
-Write-Information "4. Create exemptions if required"
-
-
-#endregion

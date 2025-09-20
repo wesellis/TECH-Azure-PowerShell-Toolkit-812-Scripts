@@ -1,98 +1,37 @@
 #Requires -Version 7.0
-
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
     Windowsiisserverconfig
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Windowsiisserverconfig
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
 <#PSScriptInfo
-
 .VERSION 0.2.0
-
 .GUID a38fa39f-f93d-4cf4-9e08-fa8f880e6187
-
 .AUTHOR Michael Greene
-
 .COMPANYNAME Microsoft
-
-.COPYRIGHT 
-
+.COPYRIGHT
 .TAGS DSCConfiguration
-
 .LICENSEURI https://github.com/Microsoft/WindowsIISServerConfig/blob/master/LICENSE
-
 .PROJECTURI https://github.com/Microsoft/WindowsIISServerConfig
-
-.ICONURI 
-
-.EXTERNALMODULEDEPENDENCIES 
-
-.REQUIREDSCRIPTS 
-
-.EXTERNALSCRIPTDEPENDENCIES 
-
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
 https://github.com/Microsoft/WindowsIISServerConfig/blob/master/README.md#releasenotes
-
 .PRIVATEDATA 2016-Datacenter-Server-Core
-
-
-
-
-
-<# 
-
-.DESCRIPTION 
- PowerShell Desired State Configuration for deploying and configuring IIS Servers 
-
-
-
+#>
+ PowerShell Desired State Configuration for deploying and configuring IIS Servers
 configuration WindowsIISServerConfig
 {
-
 Import-DscResource -ModuleName @{ModuleName = 'xWebAdministration';ModuleVersion = '2.4.0.0'}
 Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
-
     WindowsFeature WebServer
     {
         Ensure  = 'Present'
         Name    = 'Web-Server'
     }
-
     # IIS Site Default Values
     xWebSiteDefaults SiteDefaults
     {
@@ -104,7 +43,6 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
         AllowSubDirConfig       = 'true'
         DependsOn               = '[WindowsFeature]WebServer'
     }
-
     # IIS App Pool Default Values
     xWebAppPoolDefaults PoolDefaults
     {
@@ -114,9 +52,3 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
        DependsOn             = '[WindowsFeature]WebServer'
     }
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

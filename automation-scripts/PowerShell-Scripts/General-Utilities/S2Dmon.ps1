@@ -1,78 +1,39 @@
-#Requires -Version 7.0
-
 <#
 .SYNOPSIS
     S2Dmon
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced S2Dmon
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
   .SYNOPSIS
     A sample Windows service, in a standalone PowerShell script.
-
   .DESCRIPTION
     This script demonstrates how to write a Windows service in pure PowerShell.
     It dynamically generates a small PSService.exe wrapper, that in turn
     invokes this PowerShell script again for its start and stop events.
-
   .PARAMETER Start
     Start the service.
-
   .PARAMETER Stop
     Stop the service.
-
   .PARAMETER Restart
     Stop then restart the service.
-
   .PARAMETER Status
     Get the current service status: Not installed / Stopped / Running
-
   .PARAMETER Setup
     Install the service.
-
   .PARAMETER Remove
     Uninstall the service.
-
   .PARAMETER Service
     Run the service in the background. Used internally by the script.
     Do not use, except for test purposes.
-
   .PARAMETER Control
     Send a control message to the service thread.
-
   .PARAMETER Version
     Display this script version and exit.
-
   .EXAMPLE
     # Setup the service and run it for the first time
     C:\PS>.\PSService.ps1 -Status
@@ -86,7 +47,6 @@
     Running
     C:\PS># Load the log file in Notepad.exe for review
     C:\PS>notepad ${ENV:windir}\Logs\PSService.log
-
   .EXAMPLE
     # Stop the service and uninstall it.
     C:\PS>PSService -Stop
@@ -96,267 +56,222 @@
     C:\PS># At this stage, no copy of PSService.ps1 is present in the path anymore
     C:\PS>.\PSService.ps1 -Status
     Not installed
-
   .EXAMPLE
     # Send a control message to the service, and verify that it received it.
     C:\PS>PSService -Control Hello
     C:\PS>Notepad C:\Windows\Logs\PSService.log
     # The last lines should contain a trace of the reception of this Hello message
-
-
 [CmdletBinding(DefaultParameterSetName='Status')]
 param(
-  [Parameter(ParameterSetName='Start', Mandatory=$true)]
-  [Switch]$WEStart,               # Start the service
-
-  [Parameter(ParameterSetName='Stop', Mandatory=$true)]
-  [Switch]$WEStop,                # Stop the service
-
-  [Parameter(ParameterSetName='Restart', Mandatory=$true)]
-  [Switch]$WERestart,             # Restart the service
-
-  [Parameter(ParameterSetName='Status', Mandatory=$false)]
-  [Switch]$WEStatus = $($WEPSCmdlet.ParameterSetName -eq 'Status'), # Get the current service status
-
-  [Parameter(ParameterSetName='Setup', Mandatory=$true)]
-  [Switch]$WESetup,               # Install the service
-
-  [Parameter(ParameterSetName='Setup', Mandatory=$true)]
-  [System.Management.Automation.CredentialAttribute()]$WEOMSWorkspaceCreds,
-
-  [Parameter(ParameterSetName='Remove', Mandatory=$true)]
-  [Switch]$WERemove,              # Uninstall the service
-
-  [Parameter(ParameterSetName='Service', Mandatory=$true)]
-  [Switch]$WEService,             # Run the service
-
-  [Parameter(ParameterSetName='Control', Mandatory=$true)]
-  [String]$WEControl = $null,     # Control message to send to the service
-
-  [Parameter(ParameterSetName='Version', Mandatory=$true)]
-  [Switch]$WEVersion              # Get this script version
+  [Parameter(ParameterSetName='Start', Mandatory)]
+  [Switch]$Start,               # Start the service
+  [Parameter(ParameterSetName='Stop', Mandatory)]
+  [Switch]$Stop,                # Stop the service
+  [Parameter(ParameterSetName='Restart', Mandatory)]
+  [Switch]$Restart,             # Restart the service
+  [Parameter(ParameterSetName='Status')]
+  [Switch]$Status = $($PSCmdlet.ParameterSetName -eq 'Status'), # Get the current service status
+  [Parameter(ParameterSetName='Setup', Mandatory)]
+  [Switch]$Setup,               # Install the service
+  [Parameter(ParameterSetName='Setup', Mandatory)]
+  [System.Management.Automation.CredentialAttribute()]$OMSWorkspaceCreds,
+  [Parameter(ParameterSetName='Remove', Mandatory)]
+  [Switch]$Remove,              # Uninstall the service
+  [Parameter(ParameterSetName='Service', Mandatory)]
+  [Switch]$Service,             # Run the service
+  [Parameter(ParameterSetName='Control', Mandatory)]
+  [String]$Control = $null,     # Control message to send to the service
+  [Parameter(ParameterSetName='Version', Mandatory)]
+  [Switch]$Version              # Get this script version
 )
-
 $scriptVersion = "2016-11-17"
-
-
-$argv0 = Get-Item -ErrorAction Stop $WEMyInvocation.MyCommand.Definition
+$argv0 = Get-Item -ErrorAction Stop $MyInvocation.MyCommand.Definition
 $script = $argv0.basename               # Ex: PSService
 $scriptName = $argv0.name               # Ex: PSService.ps1
 $scriptFullName = $argv0.fullname       # Ex: C:\Temp\PSService.ps1
-
-
 $serviceName = $script                  # A one-word name used for net start commands
-$serviceDisplayName = " S2DMon"
-$WEServiceDescription = " Service for sending S2D data to OMS"
-$pipeName = " Service_$serviceName"      # Named pipe name. Used for sending messages to the service task
-
+$serviceDisplayName = "S2DMon"
+$ServiceDescription = "Service for sending S2D data to OMS"
+$pipeName = "Service_$serviceName"      # Named pipe name. Used for sending messages to the service task
 $installDir = " ${ENV:windir}\System32"  # Where to install the service files
 $scriptCopy = " $installDir\$scriptName"
 $exeName = " $serviceName.exe"
 $exeFullName = " $installDir\$exeName"
-
-$WEKeyFileName = " $serviceName.key"
-$WEKeyFileFullName = " $installDir\$WEKeyFileName"
-
+$KeyFileName = " $serviceName.key"
+$KeyFileFullName = " $installDir\$KeyFileName"
 $credFileName = " $serviceName.cred"
 $credFileFullName = " $installDir\$credFileName"
-
 $workspaceIdFileName = " $serviceName.id"
 $workspaceIdFileFullName = " $installDir\$workspaceIdFileName"
 $logDir = " ${ENV:windir}\Logs"          # Where to log the service messages
 $logFile = " $logDir\$serviceName.log"
-$logName = " Application"                # Event Log name (Unrelated to the logFile!)
-
-
-
-if ($WEVersion) {
+$logName = "Application"                # Event Log name (Unrelated to the logFile!)
+if ($Version) {
   Write-Output $scriptVersion
   return
 }
-
-
-
 [CmdletBinding()]
 Function Now {
   param(
     [Switch]$ms,        # Append milliseconds
     [Switch]$ns         # Append nanoseconds
   )
-  $WEDate = Get-Date -ErrorAction Stop
+  $Date = Get-Date -ErrorAction Stop
   $now = ""
-  $now = $now + " {0:0000}-{1:00}-{2:00} " -f $WEDate.Year, $WEDate.Month, $WEDate.Day
-  $now = $now + " {0:00}:{1:00}:{2:00}" -f $WEDate.Hour, $WEDate.Minute, $WEDate.Second
+  $now = $now + " {0:0000}-{1:00}-{2:00} " -f $Date.Year, $Date.Month, $Date.Day
+  $now = $now + " {0:00}:{1:00}:{2:00}" -f $Date.Hour, $Date.Minute, $Date.Second
   $nsSuffix = ""
   if ($ns) {
-    if (" $($WEDate.TimeOfDay)" -match " \.\d\d\d\d\d\d" ) {
+    if (" $($Date.TimeOfDay)" -match " \.\d\d\d\d\d\d" ) {
       $now = $now + $matches[0]
       $ms = $false
     } else {
       $ms = $true
       $nsSuffix = " 000"
     }
-  } 
+  }
   if ($ms) {
-    $now = $now + " .{0:000}$nsSuffix" -f $WEDate.MilliSecond
+    $now = $now + " .{0:000}$nsSuffix" -f $Date.MilliSecond
   }
   return $now
 }
-
-
-
 Function Log () {
   param(
-    [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
+    [Parameter(ValueFromPipeline=$true, Position=0)]
     [String]$string
   )
   if (!(Test-Path $logDir)) {
     New-Item -ItemType directory -Path $logDir | Out-Null
   }
-  if ($WEString.length) {
+  if ($String.length) {
     $string = " $(Now) $pid $userName $string"
   }
   $string | Out-File -Encoding ASCII -Append " $logFile"
 }
-
-
-
-$WEPSThreadCount = 0              # Counter of PSThread IDs generated so far
-$WEPSThreadList = @{}             # Existing PSThreads indexed by Id
-
+$PSThreadCount = 0              # Counter of PSThread IDs generated so far
+$PSThreadList = @{}             # Existing PSThreads indexed by Id
 Function Get-PSThread -ErrorAction Stop () {
   param(
-    [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
-    [int[]]$WEId = $WEPSThreadList.Keys     # List of thread IDs
+    [Parameter(ValueFromPipeline=$true, Position=0)]
+    [int[]]$Id = $PSThreadList.Keys     # List of thread IDs
   )
-  $WEId | % { $WEPSThreadList.$_ }
+  $Id | % { $PSThreadList.$_ }
 }
-
 Function Start-PSThread () {
   param(
-    [Parameter(Mandatory=$true, Position=0)]
-    [ScriptBlock]$WEScriptBlock,          # The script block to run in a new thread
-    [Parameter(Mandatory=$false)]
-    [String]$WEName = "" ,                 # Optional thread name. Default: " PSThread$WEId"
-    [Parameter(Mandatory=$false)]
-    [String]$WEEvent = "" ,                # Optional thread completion event name. Default: None
-    [Parameter(Mandatory=$false)]
-    [Hashtable]$WEVariables = @{},        # Optional variables to copy into the script context.
-    [Parameter(Mandatory=$false)]
-    [String[]]$WEFunctions = @(),         # Optional functions to copy into the script context.
-    [Parameter(Mandatory=$false)]
-    [Object[]]$WEArguments = @()          # Optional arguments to pass to the script.
+    [Parameter(Mandatory, Position=0)]
+    [ScriptBlock]$ScriptBlock,          # The script block to run in a new thread
+    [Parameter()]
+    [String]$Name = "" ,                 # Optional thread name. Default: "PSThread$Id"
+    [Parameter()]
+    [String]$Event = "" ,                # Optional thread completion event name. Default: None
+    [Parameter()]
+    [Hashtable]$Variables = @{},        # Optional variables to copy into the script context.
+    [Parameter()]
+    [String[]]$Functions = @(),         # Optional functions to copy into the script context.
+    [Parameter()]
+    [Object[]]$Arguments = @()          # Optional arguments to pass to the script.
   )
-
-  $WEId = $script:PSThreadCount
+  $Id = $script:PSThreadCount
   $script:PSThreadCount += 1
-  if (!$WEName.Length) {
-    $WEName = " PSThread$WEId"
+  if (!$Name.Length) {
+    $Name = "PSThread$Id"
   }
-  $WEInitialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
-  foreach ($WEVarName in $WEVariables.Keys) { # Copy the specified variables into the script initial context
-    $value = $WEVariables.$WEVarName
-    Write-Debug " Adding variable $WEVarName=[$($WEValue.GetType())]$WEValue"
-    $var = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateVariableEntry($WEVarName, $value, "" )
-    $WEInitialSessionState.Variables.Add($var)
+  $InitialSessionState = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+  foreach ($VarName in $Variables.Keys) { # Copy the specified variables into the script initial context
+    $value = $Variables.$VarName
+    Write-Debug "Adding variable $VarName=[$($Value.GetType())]$Value"
+    $var = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateVariableEntry($VarName, $value, "" )
+    $InitialSessionState.Variables.Add($var)
   }
-  foreach ($WEFuncName in $WEFunctions) { # Copy the specified functions into the script initial context
-    $WEBody = Get-Content -ErrorAction Stop function:$WEFuncName
-    Write-Debug " Adding function $WEFuncName () {$WEBody}"
-    $func = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateFunctionEntry($WEFuncName, $WEBody)
-    $WEInitialSessionState.Commands.Add($func)
+  foreach ($FuncName in $Functions) { # Copy the specified functions into the script initial context
+    $Body = Get-Content -ErrorAction Stop function:$FuncName
+    Write-Debug "Adding function $FuncName () {$Body}"
+    $func = New-Object -ErrorAction Stop System.Management.Automation.Runspaces.SessionStateFunctionEntry($FuncName, $Body)
+    $InitialSessionState.Commands.Add($func)
   }
-  $WERunSpace = [RunspaceFactory]::CreateRunspace($WEInitialSessionState)
-  $WERunSpace.Open()
-  $WEPSPipeline = [powershell]::Create()
-  $WEPSPipeline.Runspace = $WERunSpace
-  $WEPSPipeline.AddScript($WEScriptBlock) | Out-Null
-  $WEArguments | % {
-    Write-Debug " Adding argument [$($_.GetType())]'$_'"
-    $WEPSPipeline.AddArgument($_) | Out-Null
+  $RunSpace = [RunspaceFactory]::CreateRunspace($InitialSessionState)
+  $RunSpace.Open()
+  $PSPipeline = [powershell]::Create()
+  $PSPipeline.Runspace = $RunSpace
+  $PSPipeline.AddScript($ScriptBlock) | Out-Null
+  $Arguments | % {
+    Write-Debug "Adding argument [$($_.GetType())]'$_'"
+    $PSPipeline.AddArgument($_) | Out-Null
   }
-  $WEHandle = $WEPSPipeline.BeginInvoke() # Start executing the script
-  if ($WEEvent.Length) { # Do this after BeginInvoke(), to avoid getting the start event.
-    Register-ObjectEvent $WEPSPipeline -EventName InvocationStateChanged -SourceIdentifier $WEName -MessageData $WEEvent
+  $Handle = $PSPipeline.BeginInvoke() # Start executing the script
+  if ($Event.Length) { # Do this after BeginInvoke(), to avoid getting the start event.
+    Register-ObjectEvent $PSPipeline -EventName InvocationStateChanged -SourceIdentifier $Name -MessageData $Event
   }
-  $WEPSThread = New-Object -ErrorAction Stop PSObject -Property @{
-    Id = $WEId
-    Name = $WEName
-    Event = $WEEvent
-    RunSpace = $WERunSpace
-    PSPipeline = $WEPSPipeline
-    Handle = $WEHandle
+  $PSThread = New-Object -ErrorAction Stop PSObject -Property @{
+    Id = $Id
+    Name = $Name
+    Event = $Event
+    RunSpace = $RunSpace
+    PSPipeline = $PSPipeline
+    Handle = $Handle
   }     # Return the thread description variables
-  $script:PSThreadList[$WEId] = $WEPSThread
-  $WEPSThread
+  $script:PSThreadList[$Id] = $PSThread
+  $PSThread
 }
-
-
-
 Function Receive-PSThread () {
   [CmdletBinding()]
-$ErrorActionPreference = " Stop"
+$ErrorActionPreference = "Stop"
   param(
-    [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
-    [PSObject]$WEPSThread,                # Thread descriptor object
-    [Parameter(Mandatory=$false)]
-    [Switch]$WEAutoRemove                 # If $WETrue, remove the PSThread object
+    [Parameter(ValueFromPipeline=$true, Position=0)]
+    [PSObject]$PSThread,                # Thread descriptor object
+    [Parameter()]
+    [Switch]$AutoRemove                 # If $True, remove the PSThread object
   )
   Process {
-    if ($WEPSThread.Event -and $WEAutoRemove) {
-      Unregister-Event -SourceIdentifier $WEPSThread.Name
-      Get-Event -SourceIdentifier $WEPSThread.Name | Remove-Event -ErrorAction Stop # Flush remaining events
+    if ($PSThread.Event -and $AutoRemove) {
+      Unregister-Event -SourceIdentifier $PSThread.Name
+      Get-Event -SourceIdentifier $PSThread.Name | Remove-Event -ErrorAction Stop # Flush remaining events
     }
     try {
-      $WEPSThread.PSPipeline.EndInvoke($WEPSThread.Handle) # Output the thread pipeline output
+      $PSThread.PSPipeline.EndInvoke($PSThread.Handle) # Output the thread pipeline output
     } catch {
       $_ # Output the thread pipeline error
     }
-    if ($WEAutoRemove) {
-      $WEPSThread.RunSpace.Close()
-      $WEPSThread.PSPipeline.Dispose()
-      $WEPSThreadList.Remove($WEPSThread.Id)
+    if ($AutoRemove) {
+      $PSThread.RunSpace.Close()
+      $PSThread.PSPipeline.Dispose()
+      $PSThreadList.Remove($PSThread.Id)
     }
   }
 }
-
 Function Remove-PSThread -ErrorAction Stop () {
   [CmdletBinding()]
-$ErrorActionPreference = " Stop"
   param(
-    [Parameter(Mandatory=$false, ValueFromPipeline=$true, Position=0)]
-    [PSObject]$WEPSThread                 # Thread descriptor object
+    [Parameter(ValueFromPipeline=$true, Position=0)]
+    [PSObject]$PSThread                 # Thread descriptor object
   )
   Process {
     $_ | Receive-PSThread -AutoRemove | Out-Null
   }
 }
-
-
-
 Function Send-PipeMessage () {
   param(
-    [Parameter(Mandatory=$true)]
-    [String]$WEPipeName,          # Named pipe name
-    [Parameter(Mandatory=$true)]
-    [String]$WEMessage            # Message string
+    [Parameter(Mandatory)]
+    [String]$PipeName,          # Named pipe name
+    [Parameter(Mandatory)]
+    [String]$Message            # Message string
   )
-  $WEPipeDir  = [System.IO.Pipes.PipeDirection]::Out
-  $WEPipeOpt  = [System.IO.Pipes.PipeOptions]::Asynchronous
-
+  $PipeDir  = [System.IO.Pipes.PipeDirection]::Out
+  $PipeOpt  = [System.IO.Pipes.PipeOptions]::Asynchronous
   $pipe = $null # Named pipe stream
   $sw = $null   # Stream Writer
   try {
-    $pipe = new-object -ErrorAction Stop System.IO.Pipes.NamedPipeClientStream(" ." , $WEPipeName, $WEPipeDir, $WEPipeOpt)
+    $pipe = new-object -ErrorAction Stop System.IO.Pipes.NamedPipeClientStream(" ." , $PipeName, $PipeDir, $PipeOpt)
     $sw = new-object -ErrorAction Stop System.IO.StreamWriter($pipe)
     $pipe.Connect(1000)
     if (!$pipe.IsConnected) {
-      throw " Failed to connect client to pipe $pipeName"
+      throw "Failed to connect client to pipe $pipeName"
     }
     $sw.AutoFlush = $true
-    $sw.WriteLine($WEMessage)
+    $sw.WriteLine($Message)
   } catch {
-    Log " Error sending pipe $pipeName message: $_"
+    Log "Error sending pipe $pipeName message: $_"
   } finally {
     if ($sw) {
       $sw.Dispose() # Release resources
@@ -368,28 +283,24 @@ Function Send-PipeMessage () {
     }
   }
 }
-
-
-
 Function Receive-PipeMessage () {
   param(
-    [Parameter(Mandatory=$true)]
-    [String]$WEPipeName           # Named pipe name
+    [Parameter(Mandatory)]
+    [String]$PipeName           # Named pipe name
   )
-  $WEPipeDir  = [System.IO.Pipes.PipeDirection]::In
-  $WEPipeOpt  = [System.IO.Pipes.PipeOptions]::Asynchronous
-  $WEPipeMode = [System.IO.Pipes.PipeTransmissionMode]::Message
-
+  $PipeDir  = [System.IO.Pipes.PipeDirection]::In
+  $PipeOpt  = [System.IO.Pipes.PipeOptions]::Asynchronous
+  $PipeMode = [System.IO.Pipes.PipeTransmissionMode]::Message
   try {
     $pipe = $null       # Named pipe stream
-    $pipe = New-Object -ErrorAction Stop system.IO.Pipes.NamedPipeServerStream($WEPipeName, $WEPipeDir, 1, $WEPipeMode, $WEPipeOpt)
+    $pipe = New-Object -ErrorAction Stop system.IO.Pipes.NamedPipeServerStream($PipeName, $PipeDir, 1, $PipeMode, $PipeOpt)
     $sr = $null         # Stream Reader
     $sr = new-object -ErrorAction Stop System.IO.StreamReader($pipe)
     $pipe.WaitForConnection()
-    $WEMessage = $sr.Readline()
-    $WEMessage
+    $Message = $sr.Readline()
+    $Message
   } catch {
-    Log " Error receiving pipe message: $_"
+    Log "Error receiving pipe message: $_"
   } finally {
     if ($sr) {
       $sr.Dispose() # Release resources
@@ -401,19 +312,15 @@ Function Receive-PipeMessage () {
     }
   }
 }
-
-
-; 
-$pipeThreadName = " Control Pipe Handler"
-
+$pipeThreadName = "Control Pipe Handler"
 Function Start-PipeHandlerThread () {
   param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [String]$pipeName,                  # Named pipe name
-    [Parameter(Mandatory=$false)]
-    [String]$WEEvent = " ControlMessage"   # Event message
+    [Parameter()]
+    [String]$Event = "ControlMessage"   # Event message
   )
-  Start-PSThread -Variables @{  # Copy variables required by function WE-Log() into the thread context
+  Start-PSThread -Variables @{  # Copy variables required by function Log() into the thread context
     logDir = $logDir
     logFile = $logFile
     userName = $userName
@@ -425,34 +332,26 @@ Function Start-PipeHandlerThread () {
       Log " $pipeThreadName # Error: $_"
       throw $_ # Push the error back to the main thread
     }
-  } -Name $pipeThreadName -Event $WEEvent -Arguments $pipeName, $pipeThreadName
+  } -Name $pipeThreadName -Event $Event -Arguments $pipeName, $pipeThreadName
 }
-
-
-
 Function Receive-PipeHandlerThread () {
   param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [PSObject]$pipeThread               # Thread descriptor
   )
   Receive-PSThread -PSThread $pipeThread -AutoRemove
 }
-
-
-; 
-$scriptCopyCname = $scriptCopy -replace " \\" , " \\" # Double backslashes. (The first \\ is a regexp with \ escaped; The second is a plain string.)
+$scriptCopyCname = $scriptCopy -replace " \\" , "\\" # Double backslashes. (The first \\ is a regexp with \ escaped; The second is a plain string.)
 $source = @"
   using System;
   using System.ServiceProcess;
   using System.Diagnostics;
   using System.Runtime.InteropServices;                                 // SET STATUS
   using System.ComponentModel;                                          // SET STATUS
-
   public enum ServiceType : int {                                       // SET STATUS [
     SERVICE_WIN32_OWN_PROCESS = 0x00000010,
     SERVICE_WIN32_SHARE_PROCESS = 0x00000020,
   };                                                                    // SET STATUS ]
-
   public enum ServiceState : int {                                      // SET STATUS [
     SERVICE_STOPPED = 0x00000001,
     SERVICE_START_PENDING = 0x00000002,
@@ -462,7 +361,6 @@ $source = @"
     SERVICE_PAUSE_PENDING = 0x00000006,
     SERVICE_PAUSED = 0x00000007,
   };                                                                    // SET STATUS ]
-
   [StructLayout(LayoutKind.Sequential)]                                 // SET STATUS [
   public struct ServiceStatus {
     public ServiceType dwServiceType;
@@ -473,7 +371,6 @@ $source = @"
     public int dwCheckPoint;
     public int dwWaitHint;
   };                                                                    // SET STATUS ]
-
   public enum Win32Error : int { // WIN32 errors that we may need to use
     NO_ERROR = 0,
     ERROR_APP_INIT_FAILURE = 575,
@@ -483,31 +380,26 @@ $source = @"
     ERROR_SERVICE_SPECIFIC_ERROR = 1066,
     ERROR_PROCESS_ABORTED = 1067,
   };
-
   public class Service_$serviceName : ServiceBase { // $serviceName may begin with a digit; The class name must begin with a letter
     private System.Diagnostics.EventLog eventLog;                       // EVENT LOG
     private ServiceStatus serviceStatus;                                // SET STATUS
-
     public Service_$serviceName() {
       ServiceName = " $serviceName" ;
       CanStop = true;
       CanPauseAndContinue = false;
       AutoLog = true;
-
       eventLog = new System.Diagnostics.EventLog();                     // EVENT LOG [
-      if (!System.Diagnostics.EventLog.SourceExists(ServiceName)) {         
-        System.Diagnostics.EventLog.CreateEventSource(ServiceName, " $logName" );
+      if (!System.Diagnostics.EventLog.SourceExists(ServiceName)) {
+        System.Diagnostics.EventLog.CreateEventSource(ServiceName, "$logName" );
       }
       eventLog.Source = ServiceName;
       eventLog.Log = " $logName" ;                                        // EVENT LOG ]
-      EventLog.WriteEntry(ServiceName, " $exeName $serviceName()" );      // EVENT LOG
+      EventLog.WriteEntry(ServiceName, "$exeName $serviceName()" );      // EVENT LOG
     }
-
     [DllImport(" advapi32.dll" , SetLastError=true)]                      // SET STATUS
     private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
-
     protected override void OnStart(string [] args) {
-      EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Entry. Starting script '$scriptCopyCname' -Start" ); // EVENT LOG
+      EventLog.WriteEntry(ServiceName, "$exeName OnStart() // Entry. Starting script '$scriptCopyCname' -Start" ); // EVENT LOG
       // Set the service state to Start Pending.                        // SET STATUS [
       // Only useful if the startup time is long. Not really necessary here for a 2s startup time.
       serviceStatus.dwServiceType = ServiceType.SERVICE_WIN32_OWN_PROCESS;
@@ -521,7 +413,7 @@ $source = @"
         // Redirect the output stream of the child process.
         p.StartInfo.UseShellExecute = false;
         p.StartInfo.RedirectStandardOutput = true;
-        p.StartInfo.FileName = " PowerShell.exe" ;
+        p.StartInfo.FileName = "PowerShell.exe" ;
         p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Start" ; // Works if path has spaces, but not if it contains ' quotes.
         p.Start();
         // Read the output stream first and then wait. (To avoid deadlocks says Microsoft!)
@@ -532,13 +424,13 @@ $source = @"
         // Success. Set the service state to Running.                   // SET STATUS
         serviceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;    // SET STATUS
       } catch (Exception e) {
-        EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Failed to start $scriptCopyCname. " + e.Message, EventLogEntryType.Error); // EVENT LOG
+        EventLog.WriteEntry(ServiceName, "$exeName OnStart() // Failed to start $scriptCopyCname. " + e.Message, EventLogEntryType.Error); // EVENT LOG
         // Change the service state back to Stopped.                    // SET STATUS [
         serviceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
         Win32Exception w32ex = e as Win32Exception; // Try getting the WIN32 error code
         if (w32ex == null) { // Not a Win32 exception, but maybe the inner one is...
           w32ex = e.InnerException as Win32Exception;
-        }    
+        }
         if (w32ex != null) {    // Report the actual WIN32 error
           serviceStatus.dwWin32ExitCode = w32ex.NativeErrorCode;
         } else {                // Make up a reasonable reason
@@ -547,18 +439,17 @@ $source = @"
       } finally {
         serviceStatus.dwWaitHint = 0;                                   // SET STATUS
         SetServiceStatus(ServiceHandle, ref serviceStatus);             // SET STATUS
-        EventLog.WriteEntry(ServiceName, " $exeName OnStart() // Exit" ); // EVENT LOG
+        EventLog.WriteEntry(ServiceName, "$exeName OnStart() // Exit" ); // EVENT LOG
       }
     }
-
     protected override void OnStop() {
-      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Entry" );   // EVENT LOG
+      EventLog.WriteEntry(ServiceName, "$exeName OnStop() // Entry" );   // EVENT LOG
       // Start a child process with another copy of ourselves
       Process p = new Process();
       // Redirect the output stream of the child process.
       p.StartInfo.UseShellExecute = false;
       p.StartInfo.RedirectStandardOutput = true;
-      p.StartInfo.FileName = " PowerShell.exe" ;
+      p.StartInfo.FileName = "PowerShell.exe" ;
       p.StartInfo.Arguments = " -c & '$scriptCopyCname' -Stop" ; // Works if path has spaces, but not if it contains ' quotes.
       p.Start();
       // Read the output stream first and then wait.
@@ -568,200 +459,177 @@ $source = @"
       // Change the service state back to Stopped.                      // SET STATUS
       serviceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;      // SET STATUS
       SetServiceStatus(ServiceHandle, ref serviceStatus);               // SET STATUS
-      EventLog.WriteEntry(ServiceName, " $exeName OnStop() // Exit" );    // EVENT LOG
+      EventLog.WriteEntry(ServiceName, "$exeName OnStop() // Exit" );    // EVENT LOG
     }
-
     public static void Main() {
       System.ServiceProcess.ServiceBase.Run(new Service_$serviceName());
     }
   }
 " @
-
-
-
-
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$userName = $identity.Name      # Ex: " NT AUTHORITY\SYSTEM" or " Domain\Administrator"
+$userName = $identity.Name      # Ex: "NT AUTHORITY\SYSTEM" or "Domain\Administrator"
 $authority,$name = $username -split " \\"
-$isSystem = $identity.IsSystem	# Do not test ($userName -eq " NT AUTHORITY\SYSTEM" ), as this fails in non-English systems.
-
-
-if ($WESetup) {Log "" }    # Insert one blank line to separate test sessions logs
-Log $WEMyInvocation.Line # The exact command line that was used to start us
-
-
+$isSystem = $identity.IsSystem	# Do not test ($userName -eq "NT AUTHORITY\SYSTEM" ), as this fails in non-English systems.
+if ($Setup) {Log "" }    # Insert one blank line to separate test sessions logs
+Log $MyInvocation.Line # The exact command line that was used to start us
 New-EventLog -LogName $logName -Source $serviceName -ea SilentlyContinue
-
-
-$WEStatus = ($WEPSCmdlet.ParameterSetName -eq 'Status')
-
-if ($WEStart) {                   # Start the service
+$Status = ($PSCmdlet.ParameterSetName -eq 'Status')
+if ($Start) {                   # Start the service
   if ($isSystem) { # If running as SYSTEM, ie. invoked as a service
     # Do whatever is necessary to start the service script instance
     Log " $scriptName -Start: Starting script '$scriptFullName' -Service"
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1001 -EntryType Information -Message " $scriptName -Start: Starting script '$scriptFullName' -Service"
     Start-Process PowerShell.exe -ArgumentList (" -c & '$scriptFullName' -Service" )
   } else {
-    Write-Verbose " Starting service $serviceName"
+    Write-Verbose "Starting service $serviceName"
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1002 -EntryType Information -Message " $scriptName -Start: Starting service $serviceName"
     Start-Service $serviceName # Ask Service Control Manager to start it
   }
   return
 }
-
-if ($WEStop) {                    # Stop the service
+if ($Stop) {                    # Stop the service
   if ($isSystem) { # If running as SYSTEM, ie. invoked as a service
     # Do whatever is necessary to stop the service script instance
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1003 -EntryType Information -Message " $scriptName -Stop: Stopping script $scriptName -Service"
     Log " $scriptName -Stop: Stopping script $scriptName -Service"
     # Send an exit message to the service instance
-    Send-PipeMessage $pipeName " exit" 
+    Send-PipeMessage $pipeName " exit"
   } else {
-    Write-Verbose " Stopping service $serviceName"
+    Write-Verbose "Stopping service $serviceName"
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1004 -EntryType Information -Message " $scriptName -Stop: Stopping service $serviceName"
     Stop-Service $serviceName # Ask Service Control Manager to stop it
   }
   return
 }
-
-if ($WERestart) {                 # Restart the service
+if ($Restart) {                 # Restart the service
   & $scriptFullName -Stop
   & $scriptFullName -Start
   return
 }
-
-if ($WEStatus) {                  # Get the current service status
+if ($Status) {                  # Get the current service status
   $spid = $null
-  $processes = @(Get-CimInstance -ErrorAction Stop Win32_Process -filter " Name = 'powershell.exe'" | Where-Object {
+  $processes = @(Get-CimInstance -ErrorAction Stop Win32_Process -filter "Name = 'powershell.exe'" | Where-Object {
     $_.CommandLine -match " .*$scriptCopyCname.*-Service"
   })
   foreach ($process in $processes) { # There should be just one, but be prepared for surprises.
     $spid = $process.ProcessId
     Write-Verbose " $serviceName Process ID = $spid"
   }
-  # if (Test-Path " HKLM:\SYSTEM\CurrentControlSet\services\$serviceName" ) {}
+  # if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\services\$serviceName" ) {}
   try {
     $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
   } catch {
-    " Not Installed"
+    "Not Installed"
     return
   }
   $pss.Status
-  if (($pss.Status -eq " Running" ) -and (!$spid)) { # This happened during the debugging phase
-    Write-Error " The Service Control Manager thinks $serviceName is started, but $serviceName.ps1 -Service is not running."
-    exit 1
+  if (($pss.Status -eq "Running" ) -and (!$spid)) { # This happened during the debugging phase
+    Write-Error "The Service Control Manager thinks $serviceName is started, but $serviceName.ps1 -Service is not running."
+    throw
   }
   return
 }
-
-if ($WESetup) {                   # Install the service
+if ($Setup) {                   # Install the service
   # Check if it's necessary
   try {
     $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
     # Check if this script is newer than the installed copy.
     if ((Get-Item -ErrorAction Stop $scriptCopy -ea SilentlyContinue).LastWriteTime -lt (Get-Item -ErrorAction Stop $scriptFullName -ea SilentlyContinue).LastWriteTime) {
-      Write-Verbose " Service $serviceName is already Installed, but requires upgrade"
+      Write-Verbose "Service $serviceName is already Installed, but requires upgrade"
       & $scriptFullName -Remove
-      throw " continue"
+      throw "continue"
     } else {
-      Write-Verbose " Service $serviceName is already Installed, and up-to-date"
+      Write-Verbose "Service $serviceName is already Installed, and up-to-date"
     }
     exit 0
   } catch {
     # This is the normal case here. Do not throw or write any error!
-    Write-Debug " Installation is necessary" # Also avoids a ScriptAnalyzer warning
+    Write-Debug "Installation is necessary" # Also avoids a ScriptAnalyzer warning
     # And continue with the installation.
   }
   if (!(Test-Path $installDir)) {
     New-Item -ItemType directory -Path $installDir | Out-Null
   }
   # Copy the service script into the installation directory
-  if ($WEScriptFullName -ne $scriptCopy) {
-    Write-Verbose " Installing $scriptCopy"
-    Copy-Item $WEScriptFullName $scriptCopy
-
+  if ($ScriptFullName -ne $scriptCopy) {
+    Write-Verbose "Installing $scriptCopy"
+    Copy-Item $ScriptFullName $scriptCopy
     # Create and Save Key
-    $WEKey = New-Object -ErrorAction Stop Byte[] 32   # You can use 16, 24, or 32 for AES
-    [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($WEKey)
-    $WEKey | out-file $WEKeyFileFullName
-
+    $Key = New-Object -ErrorAction Stop Byte[] 32   # You can use 16, 24, or 32 for AES
+    [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
+    $Key | out-file $KeyFileFullName
     # Create and Save file with encrypted Workspace Key
-    $WEWSKey = $WEOMSWorkspaceCreds.GetNetworkCredential().password | ConvertTo-SecureString -AsPlainText -Force
-    $WEWSKey | ConvertFrom-SecureString -key $WEKey | Out-File $credFileFullName
-
+    $WSKey = $OMSWorkspaceCreds.GetNetworkCredential().password | ConvertTo-SecureString -AsPlainText -Force
+    $WSKey | ConvertFrom-SecureString -key $Key | Out-File $credFileFullName
     # Create File with Workspace ID
-    $WEOMSWorkspaceCreds.UserName | Out-File $workspaceIdFileFullName
+    $OMSWorkspaceCreds.UserName | Out-File $workspaceIdFileFullName
   }
   # Generate the service .EXE from the C# source embedded in this script
   try {
-    Write-Verbose " Compiling $exeFullName"
-    Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $exeFullName -OutputType ConsoleApplication -ReferencedAssemblies " System.ServiceProcess" -Debug:$false
+    Write-Verbose "Compiling $exeFullName"
+    Add-Type -TypeDefinition $source -Language CSharp -OutputAssembly $exeFullName -OutputType ConsoleApplication -ReferencedAssemblies "System.ServiceProcess" -Debug:$false
   } catch {
     $msg = $_.Exception.Message
-    Write-error " Failed to create the $exeFullName service stub. $msg"
-    exit 1
+    Write-error "Failed to create the $exeFullName service stub. $msg"
+    throw
   }
   # Register the service
-  Write-Verbose " Registering service $serviceName"
-  $pss = New-Service -ErrorAction Stop $serviceName $exeFullName -DisplayName $serviceDisplayName -Description $WEServiceDescription -StartupType Automatic
-
+  Write-Verbose "Registering service $serviceName"
+  $pss = New-Service -ErrorAction Stop $serviceName $exeFullName -DisplayName $serviceDisplayName -Description $ServiceDescription -StartupType Automatic
   return
 }
-
-if ($WERemove) {                  # Uninstall the service
+if ($Remove) {                  # Uninstall the service
   # Check if it's necessary
   try {
     $pss = Get-Service -ErrorAction Stop $serviceName -ea stop # Will error-out if not installed
   } catch {
-    Write-Verbose " Already uninstalled"
+    Write-Verbose "Already uninstalled"
     return
   }
   Stop-Service $serviceName # Make sure it's stopped
   # In the absence of a Remove-Service -ErrorAction Stop applet, use sc.exe instead.
-  Write-Verbose " Removing service $serviceName"
+  Write-Verbose "Removing service $serviceName"
   $msg = sc.exe delete $serviceName
-  if ($WELastExitCode) {
-    Write-Error " Failed to remove the service ${serviceName}: $msg"
-    exit 1
+  if ($LastExitCode) {
+    Write-Error "Failed to remove the service ${serviceName}: $msg"
+    throw
   } else {
     Write-Verbose $msg
   }
   # Remove the installed files
   if (Test-Path $installDir) {
-    foreach ($ext in (" exe" , " pdb" , " ps1" , " cred" , " id" , " key" )) {
+    foreach ($ext in (" exe" , "pdb" , "ps1" , "cred" , "id" , "key" )) {
       $file = " $installDir\$serviceName.$ext"
       if (Test-Path $file) {
-        Write-Verbose " Deleting file $file"
+        Write-Verbose "Deleting file $file"
         Remove-Item -ErrorAction Stop $fil -Forcee -Force
       }
     }
     if (!(@(Get-ChildItem -ErrorAction Stop $installDir -ea SilentlyContinue)).Count) {
-      Write-Verbose " Removing directory $installDir"
+      Write-Verbose "Removing directory $installDir"
       Remove-Item -ErrorAction Stop $installDi -Forcer -Force
     }
   }
   return
 }
-
-if ($WEControl) {                 # Send a control message to the service
+if ($Control) {                 # Send a control message to the service
   Send-PipeMessage $pipeName $control
 }
-
-if ($WEService) {                 # Run the service
+if ($Service) {                 # Run the service
   Write-EventLog -LogName $logName -Source $serviceName -EventId 1005 -EntryType Information -Message " $scriptName -Service # Beginning background job"
   # Do the service background job
   try {
     # Start the control pipe handler thread
-    $pipeThread = Start-PipeHandlerThread $pipeName -Event " ControlMessage"
+    $pipeThread = Start-PipeHandlerThread $pipeName -Event "ControlMessage"
     ######### TO DO: Implement your own service code here. ##########
     ###### Example that wakes up and logs a line every 10 sec: ######
     # Start a periodic timer
-    $timerName = " Sample service timer"
+    $timerName = "Sample service timer"
     $period = 60 # seconds
     $timer = new-object -ErrorAction Stop System.Timers.Timer
     $timer.Interval = ($period * 1000) # Milliseconds
     $timer.AutoReset = $true # Make it fire repeatedly
-    Register-ObjectEvent $timer -EventName Elapsed -SourceIdentifier $timerName -MessageData " TimerTick"
+    Register-ObjectEvent $timer -EventName Elapsed -SourceIdentifier $timerName -MessageData "TimerTick"
     $timer.start() # Must be stopped in the finally block
     # Now enter the main service event loop
     do { # Keep running until told to exit by the -Stop handler
@@ -769,155 +637,135 @@ if ($WEService) {                 # Run the service
       $source = $event.SourceIdentifier
       $message = $event.MessageData
       $eventTime = $event.TimeGenerated.TimeofDay
-      Write-Debug " Event at $eventTime from ${source}: $message"
+      Write-Debug "Event at $eventTime from ${source}: $message"
       $event | Remove-Event -ErrorAction Stop # Flush the event from the queue
       switch ($message) {
-        " ControlMessage" { # Required. Message received by the control pipe thread
+        "ControlMessage" { # Required. Message received by the control pipe thread
           $state = $event.SourceEventArgs.InvocationStateInfo.state
           Write-Debug " $script -Service # Thread $source state changed to $state"
           switch ($state) {
-            " Completed" {
+            "Completed" {
               $message = Receive-PipeHandlerThread $pipeThread
-              Log " $scriptName -Service # Received control message: $WEMessage"
+              Log " $scriptName -Service # Received control message: $Message"
               if ($message -ne " exit" ) { # Start another thread waiting for control messages
-                $pipeThread = Start-PipeHandlerThread $pipeName -Event " ControlMessage"
+                $pipeThread = Start-PipeHandlerThread $pipeName -Event "ControlMessage"
               }
             }
-            " Failed" {
+            "Failed" {
               $error = Receive-PipeHandlerThread $pipeThread
               Log " $scriptName -Service # $source thread failed: $error"
               Start-Sleep 1 # Avoid getting too many errors
-              $pipeThread = Start-PipeHandlerThread $pipeName -Event " ControlMessage" # Retry
+              $pipeThread = Start-PipeHandlerThread $pipeName -Event "ControlMessage" # Retry
             }
           }
         }
-        " TimerTick" { # Example. Periodic event generated for this example
+        "TimerTick" { # Example. Periodic event generated for this example
           # Check if this node is Cluster Name owner
-          $ownerNode = Get-ClusterResource -Name " Cluster Name" | select -ExpandProperty OwnerNode
-
+          $ownerNode = Get-ClusterResource -Name "Cluster Name" | select -ExpandProperty OwnerNode
           If ($ownerNode -eq $env:computername)
           {
             #region Initalization
             # Get the Key
             Try
             {
-                $key = Get-Content -ErrorAction Stop $WEKeyFileFullName
+                $key = Get-Content -ErrorAction Stop $KeyFileFullName
             }
             Catch
             {
-                Write-Error -Message " Failed to get conent from $($WEKeyFileFullName)."
+                Write-Error -Message "Failed to get conent from $($KeyFileFullName)."
             }
-            
-
             # Get Workspace ID
             Try
             {
-                $WEOMSWorkspaceIDFromFile = Get-Content -ErrorAction Stop $workspaceIdFileFullName
+                $OMSWorkspaceIDFromFile = Get-Content -ErrorAction Stop $workspaceIdFileFullName
             }
             Catch
             {
-                Write-Error -Message " Failed to get conent from $($workspaceIdFileFullName)."
+                Write-Error -Message "Failed to get conent from $($workspaceIdFileFullName)."
             }
-            
-
             # Get Workspace Key
             Try
             {
-                $WEOMSWorkspaceKeyFromFile  = Get-Content -ErrorAction Stop $credFileFullName | ConvertTo-SecureString -Key $key
+                $OMSWorkspaceKeyFromFile  = Get-Content -ErrorAction Stop $credFileFullName | ConvertTo-SecureString -Key $key
             }
             Catch
             {
-                Write-Error -Message " Failed to get conent from $($credFileFullName)."
+                Write-Error -Message "Failed to get conent from $($credFileFullName)."
             }
-            
-
             # Construct Workspace ID and Key into credentials
-            $WEOMSCredsFromFiles -ArgumentList $WEOMSWorkspaceIDFromFile , $WEOMSWorkspaceKeyFromFile  # Log Name $logType = " S2D -TypeName "System.Management.Automation.PSCredential"
-
+            $OMSCredsFromFiles -ArgumentList $OMSWorkspaceIDFromFile , $OMSWorkspaceKeyFromFile  # Log Name $logType = "S2D -TypeName "System.Management.Automation.PSCredential"
             # Time Generated Fields
-            $WETimestampfield = " Timestamp"
-
-
+            $Timestampfield = "Timestamp"
             # Get Server and Cluster names
             $domainfqdn = (Get-CimInstance -ErrorAction Stop Win32_ComputerSystem | Select-Object -ExpandProperty domain)
-            $WEServerName = ($env:computername + " ." + $domainfqdn).ToUpper()
+            $ServerName = ($env:computername + " ." + $domainfqdn).ToUpper()
             Try
             {
-                $WEClusterName = ((gwmi -class " MSCluster_Cluster" -namespace " root\mscluster" | select -ExpandProperty Name) + " ." + $domainfqdn).ToUpper()
+                $ClusterName = ((gwmi -class "MSCluster_Cluster" -namespace " root\mscluster" | select -ExpandProperty Name) + " ." + $domainfqdn).ToUpper()
             }
             Catch
             {
-                Write-Error -Message " Failed to get cluster name from WMI root\mscluster."
+                Write-Error -Message "Failed to get cluster name from WMI root\mscluster."
             }
-            
             #endregion
-            
-            if($WEClusterName)
+            if($ClusterName)
             {
                 #region Get and Send S2D cluster Data to OMS
                 $s2dreport = Get-StorageSubSystem -ErrorAction Stop Cluster*  | Get-StorageHealthReport -ErrorAction Stop
                 if($s2dreport)
                 {
-                    $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                    $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                     $table  = @()
                     foreach ($s2drecord in $s2dreport.itemValue.records)
                     {
-                      
                       if ($s2drecord.Units -eq 0)
                       {
-                          $WEUnitType = " Bytes"
+                          $UnitType = "Bytes"
                       }
                       if ($s2drecord.Units -eq 1)
                       {
-                          $WEUnitType = " BytesPerSecond"
+                          $UnitType = "BytesPerSecond"
                       }
                       if ($s2drecord.Units -eq 2)
                       {
-                          $WEUnitType = " CountPerSecond"
+                          $UnitType = "CountPerSecond"
                       }
                       if ($s2drecord.Units -eq 3)
                       {
-                          $WEUnitType = " Seconds"
+                          $UnitType = "Seconds"
                       }
                       if ($s2drecord.Units -eq 4)
                       {
-                         ;  $WEUnitType = " Percentage"
+$UnitType = "Percentage"
                       }
-                      
-                     ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                        
-                        Timestamp = $WENowTime
-                        MetricLevel = " Cluster" ;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                        Timestamp = $NowTime
+                        MetricLevel = "Cluster" ;
                         MetricName = $s2drecord.Name;
                         MetricValue = $s2drecord.Value;
-                        UnitType = $WEUnitType;
-                        ClusterName = $WEClusterName
-                      } 
-                      $table = $table + $sx 
+                        UnitType = $UnitType;
+                        ClusterName = $ClusterName
+                      }
+                      $table = $table + $sx
                     }
-                    
                     if($table)
                     {
                         # Convert to JSON
                         $jsonTable = $table | ConvertTo-Json -Depth 5
-
                         #Send to OMS
                         $params = @{
-                            TimeStampField = $WETimestampfield
-                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            TimeStampField = $Timestampfield
+                            sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                             logType = $logType
                             body = $jsonTable
-                            customerId = $WEOMSCredsFromFiles.UserName
+                            customerId = $OMSCredsFromFiles.UserName
                         }
                         Send-OMSAPIIngestionFile @params
-
                     }
                 }
-                
-                #endregion  
-
+                #endregion
                 #region Get and Send S2D Node Data to OMS
-                $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 $s2dNodes = Get-StorageNode -ErrorAction Stop
                 if($s2dNodes)
                 {
@@ -929,7 +777,6 @@ if ($WEService) {                 # Run the service
                     $table  = @()
                     foreach ($s2dNode in $s2dNodes)
                     {
-                        
                         $s2dreport = $s2dNode | Get-StorageHealthReport -Count 1
                         If($s2dreport)
                         {
@@ -937,191 +784,170 @@ if ($WEService) {                 # Run the service
                             {
                               if ($s2drecord.Units -eq 0)
                               {
-                                  $WEUnitType = " Bytes"
+                                  $UnitType = "Bytes"
                               }
                               if ($s2drecord.Units -eq 1)
                               {
-                                  $WEUnitType = " BytesPerSecond"
+                                  $UnitType = "BytesPerSecond"
                               }
                               if ($s2drecord.Units -eq 2)
                               {
-                                  $WEUnitType = " CountPerSecond"
+                                  $UnitType = "CountPerSecond"
                               }
                               if ($s2drecord.Units -eq 3)
                               {
-                                  $WEUnitType = " Seconds"
+                                  $UnitType = "Seconds"
                               }
                               if ($s2drecord.Units -eq 4)
                               {
-                                 ;  $WEUnitType = " Percentage"
+$UnitType = "Percentage"
                               }
-
-                             ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                                
-                                Timestamp = $WENowTime
-                                MetricLevel = " Node" ;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                                Timestamp = $NowTime
+                                MetricLevel = "Node" ;
                                 MetricName = $s2drecord.Name;
                                 MetricValue = $s2drecord.Value;
-                                UnitType = $WEUnitType;
+                                UnitType = $UnitType;
                                 ServerName = $s2dNode.Name.ToUpper();
-                                ClusterName = $WEClusterName
-                              } 
-                              $table = $table + $sx 
+                                ClusterName = $ClusterName
+                              }
+                              $table = $table + $sx
                             }
                         }
-                                   
                     }
-
                     if($table)
                     {
                         # Convert to JSON
                         $jsonTable = $table | ConvertTo-Json -Depth 5
-
                         #Send to OMS
                         $params = @{
-                            TimeStampField = $WETimestampfield
-                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            TimeStampField = $Timestampfield
+                            sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                             logType = $logType
                             body = $jsonTable
-                            customerId = $WEOMSCredsFromFiles.UserName
+                            customerId = $OMSCredsFromFiles.UserName
                         }
                         Send-OMSAPIIngestionFile @params
-
                     }
                 }
                 #endregion
-                      
                 #region Get and Send S2D Volume Data to OMS
-                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq " CSVFS" }
+                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq "CSVFS" }
                 $table  = @()
-                $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if($volumes)
                 {
                     foreach ($volume in $volumes)
                     {
-                      $WEVolumeLabel = $volume.FileSystemLabel
-                      $WEFileSystemType = $volume.FileSystemType
-                      $WEOperationalStatus = $volume.OperationalStatus
-                      $WEHealthStatus = $volume.HealthStatus
-
-                      $s2dreport = Get-Volume -FileSystemLabel $WEVolumeLabel | Get-StorageHealthReport -Count 1
+                      $VolumeLabel = $volume.FileSystemLabel
+                      $FileSystemType = $volume.FileSystemType
+                      $OperationalStatus = $volume.OperationalStatus
+                      $HealthStatus = $volume.HealthStatus
+                      $s2dreport = Get-Volume -FileSystemLabel $VolumeLabel | Get-StorageHealthReport -Count 1
                       if($s2dreport)
                       {
                         foreach ($s2drecord in $s2dreport.itemValue.records)
                         {
                             if ($s2drecord.Units -eq 0)
                             {
-                                $WEUnitType = " Bytes"
+                                $UnitType = "Bytes"
                             }
                             if ($s2drecord.Units -eq 1)
                             {
-                                $WEUnitType = " BytesPerSecond"
+                                $UnitType = "BytesPerSecond"
                             }
                             if ($s2drecord.Units -eq 2)
                             {
-                                $WEUnitType = " CountPerSecond"
+                                $UnitType = "CountPerSecond"
                             }
                             if ($s2drecord.Units -eq 3)
                             {
-                                $WEUnitType = " Seconds"
+                                $UnitType = "Seconds"
                             }
                             if ($s2drecord.Units -eq 4)
                             {
-                               ;  $WEUnitType = " Percentage"
+$UnitType = "Percentage"
                             }
-
-                           ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                          
-                             Timestamp = $WENowTime
-                             MetricLevel = " Volume" ;
-                             VolumeLabel = $WEVolumeLabel;
-                             FileSystemType = $WEFileSystemType;
-                             OperationalStatus = $WEOperationalStatus;
-                             HealthStatus = $WEHealthStatus;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                             Timestamp = $NowTime
+                             MetricLevel = "Volume" ;
+                             VolumeLabel = $VolumeLabel;
+                             FileSystemType = $FileSystemType;
+                             OperationalStatus = $OperationalStatus;
+                             HealthStatus = $HealthStatus;
                              MetricName = $s2drecord.Name;
                              MetricValue = $s2drecord.Value;
-                             UnitType = $WEUnitType;
-                             ClusterName = $WEClusterName
-                            } 
-                        $table = $table + $sx 
+                             UnitType = $UnitType;
+                             ClusterName = $ClusterName
+                            }
+                        $table = $table + $sx
                         }
                       }
-                      
-                    
                     }
-
                     if($table)
                     {
                         # Convert to JSON
                         $jsonTable = $table | ConvertTo-Json -Depth 5
-
                         #Send to OMS
                         $params = @{
-                            TimeStampField = $WETimestampfield
-                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            TimeStampField = $Timestampfield
+                            sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                             logType = $logType
                             body = $jsonTable
-                            customerId = $WEOMSCredsFromFiles.UserName
+                            customerId = $OMSCredsFromFiles.UserName
                         }
                         Send-OMSAPIIngestionFile @params
-
                     }
                 }
-                
                 #endregion
-
                 #region Get and Send S2D Cluster Faults to OMS
                 $s2dFaults = Get-StorageSubSystem -ErrorAction Stop Cluster* | Debug-StorageSubSystem
                 $table  = @()
-                $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
-                
+                $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 If ($s2dFaults)
                 {
                     foreach ($s2dFault in $s2dFaults)
                     {
-                        if ($s2dFault.PerceivedSeverity -eq " Unknown" )
+                        if ($s2dFault.PerceivedSeverity -eq "Unknown" )
                         {
-                            $WESeverityNumber = 0
+                            $SeverityNumber = 0
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Information" )
+                        if ($s2dFault.PerceivedSeverity -eq "Information" )
                         {
-                            $WESeverityNumber = 2
+                            $SeverityNumber = 2
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
+                        if ($s2dFault.PerceivedSeverity -eq "Degraded/Warning" )
                         {
-                            $WESeverityNumber = 3
+                            $SeverityNumber = 3
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Minor" )
+                        if ($s2dFault.PerceivedSeverity -eq "Minor" )
                         {
-                            $WESeverityNumber = 4
+                            $SeverityNumber = 4
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Major" )
+                        if ($s2dFault.PerceivedSeverity -eq "Major" )
                         {
-                            $WESeverityNumber = 5
+                            $SeverityNumber = 5
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Critical" )
+                        if ($s2dFault.PerceivedSeverity -eq "Critical" )
                         {
-                            $WESeverityNumber = 6
+                            $SeverityNumber = 6
                         }
-                        if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
+                        if ($s2dFault.PerceivedSeverity -eq "Fatal/NonRecoverable" )
                         {
-                            $WESeverityNumber = 7
+                            $SeverityNumber = 7
                         }
-
                         $action=""
                         foreach ($recommendedAction in $s2dFault.RecommendedActions)
                         {
                             $action = $action + $recommendedAction
-                           ;  $action = $action + " | "
+$action = $action + " | "
                         }
-
-                       ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                        
-                            Timestamp = $WENowTime;
-                            SecondTimeStamp = $WENowTime;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                            Timestamp = $NowTime;
+                            SecondTimeStamp = $NowTime;
                             Severity = $s2dFault.PerceivedSeverity;
-                            SeverityNumber = $WESeverityNumber;
-                            FaultLevel = " Cluster" ;
+                            SeverityNumber = $SeverityNumber;
+                            FaultLevel = "Cluster" ;
                             FaultId = $s2dFault.FaultId;
                             FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                             FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
@@ -1130,92 +956,83 @@ if ($WEService) {                 # Run the service
                             FaultType = $s2dFault.FaultType;
                             Reason = $s2dFault.Reason;
                             RecommendedActions = $action;
-                            ClusterName = $WEClusterName
-                      } 
-                      $table = $table + $sx 
-                    
+                            ClusterName = $ClusterName
+                      }
+                      $table = $table + $sx
                     }
                 }
-
                 if($table)
                 {
                     # Convert to JSON
                     $jsonTable = $table | ConvertTo-Json -Depth 5
-
                     #Send to OMS
                     $params = @{
-                        TimeStampField = $WETimestampfield
-                        sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                        TimeStampField = $Timestampfield
+                        sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                         logType = $logType
                         body = $jsonTable
-                        customerId = $WEOMSCredsFromFiles.UserName
+                        customerId = $OMSCredsFromFiles.UserName
                     }
                     Send-OMSAPIIngestionFile @params
-
                 }
                 #endregion
-
                 #region Get and Send S2D Volume Faults to OMS
-                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq " CSVFS" }
+                $volumes = Get-Volume -ErrorAction Stop | where {$_.FileSystem -eq "CSVFS" }
                 $table  = @()
-                $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if ($volumes)
                 {
                     foreach ($volume in $volumes)
                     {
-                        $WEVolumeLabel = $volume.FileSystemLabel
-                        $WEFileSystemType = $volume.FileSystemType
-
-                        $s2dFaults = Get-Volume -FileSystemLabel $WEVolumeLabel | Debug-Volume
+                        $VolumeLabel = $volume.FileSystemLabel
+                        $FileSystemType = $volume.FileSystemType
+                        $s2dFaults = Get-Volume -FileSystemLabel $VolumeLabel | Debug-Volume
                         if($s2dFaults)
                         {
                             foreach ($s2dFault in $s2dFaults)
                             {
-                                if ($s2dFault.PerceivedSeverity -eq " Unknown" )
+                                if ($s2dFault.PerceivedSeverity -eq "Unknown" )
                                 {
-                                    $WESeverityNumber = 0
+                                    $SeverityNumber = 0
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Information" )
+                                if ($s2dFault.PerceivedSeverity -eq "Information" )
                                 {
-                                    $WESeverityNumber = 2
+                                    $SeverityNumber = 2
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
+                                if ($s2dFault.PerceivedSeverity -eq "Degraded/Warning" )
                                 {
-                                    $WESeverityNumber = 3
+                                    $SeverityNumber = 3
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Minor" )
+                                if ($s2dFault.PerceivedSeverity -eq "Minor" )
                                 {
-                                    $WESeverityNumber = 4
+                                    $SeverityNumber = 4
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Major" )
+                                if ($s2dFault.PerceivedSeverity -eq "Major" )
                                 {
-                                    $WESeverityNumber = 5
+                                    $SeverityNumber = 5
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Critical" )
+                                if ($s2dFault.PerceivedSeverity -eq "Critical" )
                                 {
-                                    $WESeverityNumber = 6
+                                    $SeverityNumber = 6
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
+                                if ($s2dFault.PerceivedSeverity -eq "Fatal/NonRecoverable" )
                                 {
-                                    $WESeverityNumber = 7
+                                    $SeverityNumber = 7
                                 }
-
                                 $action=""
                                 foreach ($recommendedAction in $s2dFault.RecommendedActions)
                                 {
                                     $action = $action + $recommendedAction
-                                   ;  $action = $action + " | "
+$action = $action + " | "
                                 }
-                                
-                               ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                            
-                                    Timestamp = $WENowTime;
-                                    SecondTimeStamp = $WENowTime;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                                    Timestamp = $NowTime;
+                                    SecondTimeStamp = $NowTime;
                                     Severity = $s2dFault.PerceivedSeverity;
-                                    SeverityNumber = $WESeverityNumber;
+                                    SeverityNumber = $SeverityNumber;
                                     FaultId = $s2dFault.FaultId;
-                                    FaultLevel = " Volume" ;
-                                    VolumeLabel = $WEVolumeLabel;
+                                    FaultLevel = "Volume" ;
+                                    VolumeLabel = $VolumeLabel;
                                     FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                                     FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
                                     FaultingObjectType = $s2dFault.FaultingObjectType;
@@ -1223,88 +1040,80 @@ if ($WEService) {                 # Run the service
                                     FaultType = $s2dFault.FaultType;
                                     Reason = $s2dFault.Reason;
                                     RecommendedActions = $action;
-                                    ClusterName = $WEClusterName
-                                } 
-                                $table = $table + $sx 
+                                    ClusterName = $ClusterName
+                                }
+                                $table = $table + $sx
                             }
                         }
-                        
                     }
-
                     if($table)
                     {
                         # Convert to JSON
                         $jsonTable = $table | ConvertTo-Json -Depth 5
-
                         #Send to OMS
                         $params = @{
-                            TimeStampField = $WETimestampfield }  } #endregion
-                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            TimeStampField = $Timestampfield }  } #endregion
+                            sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                             logType = $logType
                             body = $jsonTable
-                            customerId = $WEOMSCredsFromFiles.UserName
+                            customerId = $OMSCredsFromFiles.UserName
                         }
                         Send-OMSAPIIngestionFile @params
-
                 #region Get and Send S2D Share Faults to OMS
                 $shares = Get-FileShare -ErrorAction Stop | where {$_.ContinuouslyAvailable -eq $true}
                 $table  = @()
-                $WENowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
+                $NowTime = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ')
                 if($shares)
                 {
                     foreach ($share in $shares)
                     {
                         $shareName = $share.Name
-
                         $s2dFaults = Get-FileShare -Name $share.Name | Debug-FileShare
                         if($s2dFaults)
                         {
                             foreach ($s2dFault in $s2dFaults)
                             {
-                                if ($s2dFault.PerceivedSeverity -eq " Unknown" )
+                                if ($s2dFault.PerceivedSeverity -eq "Unknown" )
                                 {
-                                    $WESeverityNumber = 0
+                                    $SeverityNumber = 0
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Information" )
+                                if ($s2dFault.PerceivedSeverity -eq "Information" )
                                 {
-                                    $WESeverityNumber = 2
+                                    $SeverityNumber = 2
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Degraded/Warning" )
+                                if ($s2dFault.PerceivedSeverity -eq "Degraded/Warning" )
                                 {
-                                    $WESeverityNumber = 3
+                                    $SeverityNumber = 3
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Minor" )
+                                if ($s2dFault.PerceivedSeverity -eq "Minor" )
                                 {
-                                    $WESeverityNumber = 4
+                                    $SeverityNumber = 4
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Major" )
+                                if ($s2dFault.PerceivedSeverity -eq "Major" )
                                 {
-                                    $WESeverityNumber = 5
+                                    $SeverityNumber = 5
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Critical" )
+                                if ($s2dFault.PerceivedSeverity -eq "Critical" )
                                 {
-                                    $WESeverityNumber = 6
+                                    $SeverityNumber = 6
                                 }
-                                if ($s2dFault.PerceivedSeverity -eq " Fatal/NonRecoverable" )
+                                if ($s2dFault.PerceivedSeverity -eq "Fatal/NonRecoverable" )
                                 {
-                                    $WESeverityNumber = 7
+                                    $SeverityNumber = 7
                                 }
-
                                 $action=""
                                 foreach ($recommendedAction in $s2dFault.RecommendedActions)
                                 {
                                     $action = $action + $recommendedAction
-                                   ;  $action = $action + " | "
+$action = $action + " | "
                                 }
-                                
-                               ;  $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                            
-                                    Timestamp = $WENowTime;
-                                    SecondTimeStamp = $WENowTime;
+$sx = New-Object -ErrorAction Stop PSObject -Property @{
+                                    Timestamp = $NowTime;
+                                    SecondTimeStamp = $NowTime;
                                     Severity = $s2dFault.PerceivedSeverity;
-                                    SeverityNumber = $WESeverityNumber;
+                                    SeverityNumber = $SeverityNumber;
                                     FaultId = $s2dFault.FaultId;
-                                    FaultLevel = " Share" ;
+                                    FaultLevel = "Share" ;
                                     ShareName = $shareName;
                                     FaultingObjectDescription = $s2dFault.FaultingObjectDescription;
                                     FaultingObjectLocation = $s2dFault.FaultingObjectLocation;
@@ -1313,46 +1122,39 @@ if ($WEService) {                 # Run the service
                                     FaultType = $s2dFault.FaultType;
                                     Reason = $s2dFault.Reason;
                                     RecommendedActions = $action;
-                                    ClusterName = $WEClusterName
-                                } 
-                                $table = $table + $sx 
+                                    ClusterName = $ClusterName
+                                }
+                                $table = $table + $sx
                             }
                         }
-                        
                     }
-
                     if($table)
                     {
                         # Convert to JSON
                         $jsonTable = $table | ConvertTo-Json -Depth 5
-
                         #Send to OMS
                         $params = @{
-                            TimeStampField = $WETimestampfield
-                            sharedKey = $WEOMSCredsFromFiles.GetNetworkCredential().password
+                            TimeStampField = $Timestampfield
+                            sharedKey = $OMSCredsFromFiles.GetNetworkCredential().password
                             logType = $logType
                             body = $jsonTable
-                            customerId = $WEOMSCredsFromFiles.UserName
+                            customerId = $OMSCredsFromFiles.UserName
                         }
                         Send-OMSAPIIngestionFile @params
-
                     }
-                    
                 }
                 #endregion
             }
-            
           }
-           
         }
         default { # Should not happen
-          Log " $scriptName -Service # Unexpected event from ${source}: $WEMessage"
+          Log " $scriptName -Service # Unexpected event from ${source}: $Message"
         }
       }
     } while ($message -ne " exit" )
   } catch { # An exception occurred while runnning the service
     $msg = $_.Exception.Message
-   ;  $line = $_.InvocationInfo.ScriptLineNumber
+$line = $_.InvocationInfo.ScriptLineNumber
     Log " $scriptName -Service # Error at line ${line}: $msg"
   } finally { # Invoked in all cases: Exception or normally by -Stop
     # Cleanup the periodic timer used in the above example
@@ -1362,15 +1164,11 @@ if ($WEService) {                 # Run the service
     # Terminate the control pipe handler thread
     Get-PSThread -ErrorAction Stop | Remove-PSThread -ErrorAction Stop # Remove all remaining threads
     # Flush all leftover events (There may be some that arrived after we exited the while event loop, but before we unregistered the events)
-   ;  $events = Get-Event -ErrorAction Stop | Remove-Event -ErrorAction Stop
+$events = Get-Event -ErrorAction Stop | Remove-Event -ErrorAction Stop
     # Log a termination event, no matter what the cause is.
     Write-EventLog -LogName $logName -Source $serviceName -EventId 1006 -EntryType Information -Message " $script -Service # Exiting"
     Log " $scriptName -Service # Exiting"
   }
   return
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

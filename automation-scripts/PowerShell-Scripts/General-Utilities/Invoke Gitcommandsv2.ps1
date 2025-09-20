@@ -1,93 +1,41 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Invoke Gitcommandsv2
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Gitcommandsv2
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Test-RequiredPath {
+function Test-RequiredPath {
     [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
-[CmdletBinding()]
-param([Parameter(Mandatory=$false)]
+param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPath)
-    if (!(Test-Path $WEPath)) {
-        Write-Warning " Required path not found: $WEPath"
+    [string]$Path)
+    if (!(Test-Path $Path)) {
+        Write-Warning "Required path not found: $Path"
         return $false
     }
     return $true
 }
-
-
-
-
-
-
-
-$WEErrorActionPreference = " Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-& " C:\Program Files\Git\mingw64\bin\git.exe" status
-& " C:\Program Files\Git\mingw64\bin\git.exe" fetch
-
-& " C:\Program Files\Git\mingw64\bin\git.exe" add -A
-; 
-$commit_message = $null; 
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+& "C:\Program Files\Git\mingw64\bin\git.exe" status
+& "C:\Program Files\Git\mingw64\bin\git.exe" fetch
+& "C:\Program Files\Git\mingw64\bin\git.exe" add -A
+$commit_message = $null;
 $commit_message = Read-Host -Prompt 'Please enter commit message'
-
-& " C:\Program Files\Git\mingw64\bin\git.exe" commit -m $commit_message
-
-& " C:\Program Files\Git\mingw64\bin\git.exe" push
-
-& " C:\Program Files\Git\mingw64\bin\git.exe" pull
-
-
-
+& "C:\Program Files\Git\mingw64\bin\git.exe" commit -m $commit_message
+& "C:\Program Files\Git\mingw64\bin\git.exe" push
+& "C:\Program Files\Git\mingw64\bin\git.exe" pull
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

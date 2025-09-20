@@ -1,58 +1,37 @@
 #Requires -Module Az.Resources, Az.PolicyInsights
-#Requires -Version 7.0
+#Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Creates and manages Azure Policy initiatives (policy sets)
-
-.DESCRIPTION
-    Comprehensive tool for creating, updating, and managing Azure Policy initiatives.
     Supports bundling multiple policy definitions into cohesive governance packages
     with parameter mapping and metadata management.
-
 .PARAMETER InitiativeName
     Name of the policy initiative to create or update
-
 .PARAMETER DisplayName
     Display name for the initiative
-
 .PARAMETER Description
     Detailed description of the initiative's purpose
-
 .PARAMETER Category
     Metadata category for the initiative
-
 .PARAMETER PolicyDefinitionIds
     Array of policy definition IDs to include
-
 .PARAMETER ManagementGroupName
     Management group scope for the initiative
-
 .PARAMETER SubscriptionId
     Subscription scope for the initiative
-
 .PARAMETER Parameters
     JSON string or hashtable of initiative parameters
-
 .PARAMETER Metadata
     Additional metadata for the initiative
 
-.EXAMPLE
     .\create-initiative.ps1 -InitiativeName "SecurityBaseline" -Category "Security"
 
     Creates a security baseline initiative
 
-.EXAMPLE
     .\create-initiative.ps1 -InitiativeName "CostControl" -PolicyDefinitionIds @("/providers/Microsoft.Authorization/policyDefinitions/...")
 
     Creates initiative with specific policies
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2025-05-23
-    LastModified: 2025-09-19
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -105,6 +84,7 @@ if (-not $DisplayName) {
 if (-not $Description) {
     $Description = "Policy initiative for $Category governance"
 }
+
 #endregion
 
 #region Functions
@@ -177,9 +157,8 @@ function Get-PolicyDefinitions {
 
             if ($policy) {
                 [void]$definitions.Add($policy)
-            }
-        }
-        catch {
+            
+} catch {
             Write-Warning "Could not retrieve policy definition: $policyId - $_"
         }
     }
@@ -268,11 +247,10 @@ function New-PolicyInitiative {
 
         if ($PSCmdlet.ShouldProcess($scope, "Create/Update Policy Initiative '$Name'")) {
             $initiative = New-AzPolicySetDefinition @params
-            Write-Information "Policy initiative '$Name' created successfully" -InformationAction Continue
+            Write-Host "Policy initiative '$Name' created successfully" -InformationAction Continue
             return $initiative
-        }
-    }
-    catch {
+        
+} catch {
         Write-Error "Failed to create policy initiative: $_"
         throw
     }
@@ -318,7 +296,7 @@ function Export-InitiativeDefinition {
         }
 
         $export | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-        Write-Information "Initiative definition exported to: $OutputPath" -InformationAction Continue
+        Write-Host "Initiative definition exported to: $OutputPath" -InformationAction Continue
         return $OutputPath
     }
     catch {
@@ -326,11 +304,12 @@ function Export-InitiativeDefinition {
         throw
     }
 }
+
 #endregion
 
 #region Main-Execution
 try {
-    Write-Information "[START] Creating Policy Initiative" -InformationAction Continue
+    Write-Host "[START] Creating Policy Initiative" -InformationAction Continue
 
     # Get context
     $context = Get-AzContext
@@ -355,19 +334,19 @@ try {
         throw "No policy definitions specified. Provide PolicyDefinitionIds or use a Template."
     }
 
-    Write-Information "[RETRIEVE] Getting policy definitions..." -InformationAction Continue
+    Write-Host "[RETRIEVE] Getting policy definitions..." -InformationAction Continue
     $params = @{
         PolicyIds = $PolicyDefinitionIds
         ManagementGroup = $ManagementGroupName
         Subscription = $SubscriptionId
     }
-    $policies @params
+    $policies = Get-PolicyDefinitions @params
 
     if ($policies.Count -eq 0) {
         throw "No valid policy definitions found"
     }
 
-    Write-Information "Found $($policies.Count) valid policy definitions" -InformationAction Continue
+    Write-Host "Found $($policies.Count) valid policy definitions" -InformationAction Continue
 
     # Set metadata
     if (-not $Metadata) {
@@ -379,16 +358,16 @@ try {
     $Metadata['createdOn'] = Get-Date -Format 'yyyy-MM-dd'
 
     # Build initiative definition
-    Write-Information "[BUILD] Creating initiative definition..." -InformationAction Continue
+    Write-Host "[BUILD] Creating initiative definition..." -InformationAction Continue
     $params = @{
         PolicyDefinitions = $policies
         Parameters = $Parameters
         Metadata = $Metadata
     }
-    $initiativeDefinition @params
+    $initiativeDefinition = Build-InitiativeDefinition @params
 
     # Create the initiative
-    Write-Information "[CREATE] Creating policy initiative: $InitiativeName" -InformationAction Continue
+    Write-Host "[CREATE] Creating policy initiative: $InitiativeName" -InformationAction Continue
     $params = @{
         DisplayName = $DisplayName
         Subscription = $SubscriptionId
@@ -397,19 +376,19 @@ try {
         Description = $Description
         ManagementGroup = $ManagementGroupName
     }
-    $initiative @params
+    $initiative = New-PolicyInitiative @params
 
     # Display summary
     if ($initiative) {
         $summary = Get-InitiativeSummary -Initiative $initiative
-        Write-Information "`n[SUMMARY] Policy Initiative Created:" -InformationAction Continue
+        Write-Host "`n[SUMMARY] Policy Initiative Created:" -InformationAction Continue
         $summary | Format-List
 
         # Export definition
         $exportPath = Export-InitiativeDefinition -Initiative $initiative
     }
 
-    Write-Information "[COMPLETE] Policy initiative created successfully" -InformationAction Continue
+    Write-Host "[COMPLETE] Policy initiative created successfully" -InformationAction Continue
 
     # Return the initiative
     return $initiative
@@ -428,4 +407,6 @@ finally {
     # Cleanup
     $ProgressPreference = 'Continue'
 }
+
 #endregion
+

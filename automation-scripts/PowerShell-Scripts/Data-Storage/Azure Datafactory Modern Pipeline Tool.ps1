@@ -1,55 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure Datafactory Modern Pipeline Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Datafactory Modern Pipeline Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
 .SYNOPSIS
     Azure Data Factory Modern Pipeline Management Tool
+
 .DESCRIPTION
-    Advanced tool for creating, managing, and monitoring Azure Data Factory pipelines
+    Tool for creating, managing, and monitoring Azure Data Factory pipelines
+#>
     with modern data integration capabilities including real-time analytics and AI/ML integration.
 .PARAMETER ResourceGroupName
     Target Resource Group for Data Factory
@@ -72,348 +27,247 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .PARAMETER LinkedServiceName
     Name of the linked service
 .PARAMETER EnableMonitoring
-    Enable comprehensive monitoring and alerting
+    Enable  monitoring and alerting
 .PARAMETER EnablePrivateEndpoints
     Create private endpoints for secure access
 .PARAMETER GitConfiguration
     Git repository configuration for CI/CD
 .PARAMETER Tags
     Tags to apply to resources
-.EXAMPLE
-    .\Azure-DataFactory-Modern-Pipeline-Tool.ps1 -ResourceGroupName " data-rg" -DataFactoryName " modern-adf" -Location " East US" -Action " Create" -EnableMonitoring
-.EXAMPLE
-    .\Azure-DataFactory-Modern-Pipeline-Tool.ps1 -ResourceGroupName " data-rg" -DataFactoryName " modern-adf" -Action " Deploy" -PipelineName " etl-pipeline" -PipelineDefinitionPath " C:\pipelines\etl.json"
-.NOTES
+    .\Azure-DataFactory-Modern-Pipeline-Tool.ps1 -ResourceGroupName " data-rg" -DataFactoryName " modern-adf" -Location "East US" -Action "Create" -EnableMonitoring
+    .\Azure-DataFactory-Modern-Pipeline-Tool.ps1 -ResourceGroupName " data-rg" -DataFactoryName " modern-adf" -Action "Deploy" -PipelineName " etl-pipeline" -PipelineDefinitionPath "C:\pipelines\etl.json"
     Author: Wesley Ellis
     Version: 2.0
     Requires: PowerShell 7.0+, Az.DataFactory module
-
-
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
+    [string]$ResourceGroupName,
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDataFactoryName,
-    
+    [string]$DataFactoryName,
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
+    [string]$Location,
     [Parameter(Mandatory = $true)]
-    [ValidateSet(" Create" , " Deploy" , " Monitor" , " Trigger" , " Configure" , " Delete" , " Export" )]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAction,
-    
+    [ValidateSet("Create", "Deploy", "Monitor", "Trigger", "Configure", "Delete", "Export")]
+    [string]$Action,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPipelineName,
-    
+    [string]$PipelineName,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PipelineDefinitionPath,
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEPipelineDefinitionPath,
-    
+    [string]$TriggerName,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
+    [ValidateSet("Schedule", "Tumbling", "Event", "Manual")]
+    [string]$TriggerType = "Schedule",
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$DatasetName,
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string]$WETriggerName,
-    
+    [string]$LinkedServiceName,
     [Parameter(Mandatory = $false)]
-    [ValidateSet(" Schedule" , " Tumbling" , " Event" , " Manual" )]
-    [string]$WETriggerType = " Schedule" ,
-    
+    [switch]$EnableMonitoring,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDatasetName,
-    
+    [switch]$EnablePrivateEndpoints,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELinkedServiceName,
-    
+    [hashtable]$GitConfiguration = @{},
     [Parameter(Mandatory = $false)]
-    [switch]$WEEnableMonitoring,
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnablePrivateEndpoints,
-    
-    [Parameter(Mandatory = $false)]
-    [hashtable]$WEGitConfiguration = @{},
-    
-    [Parameter(Mandatory = $false)]
-    [hashtable]$WETags = @{
-        Environment = " Production"
-        Application = " DataFactory"
-        ManagedBy = " AutomationScript"
+    [hashtable]$Tags = @{
+        Environment = "Production"
+        Application = "DataFactory"
+        ManagedBy = "AutomationScript"
     }
 )
-
-#region Functions
-
-
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.DataFactory -Force -ErrorAction Stop
     Import-Module Az.Storage -Force -ErrorAction Stop
-    Write-WELog "  Successfully imported required Azure modules" " INFO" -ForegroundColor Green
+    Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "  Failed to import required modules: $($_.Exception.Message)"
-    exit 1
+    throw
 }
-
-
-[CmdletBinding()]
-function WE-Write-EnhancedLog {
-    param(
-        [Parameter(Mandatory=$false)]
+function Write-Verbose "Log entry"ndatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEMessage,
-        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
-        [string]$WELevel = " Info"
+    [string]$Message,
+        [ValidateSet("Info" , "Warning" , "Error" , "Success" )]
+        [string]$Level = "Info"
     )
-    
     $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
     $colors = @{
-        Info = " White"
-        Warning = " Yellow" 
-        Error = " Red"
-        Success = " Green"
+        Info = "White"
+        Warning = "Yellow"
+        Error = "Red"
+        Success = "Green"
     }
-    
-    Write-WELog " [$timestamp] $WEMessage" " INFO" -ForegroundColor $colors[$WELevel]
+    Write-Host " [$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
-
-
-[CmdletBinding()]
-function WE-New-DataFactoryInstance -ErrorAction Stop {
+function New-DataFactoryInstance -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Azure Data Factory instance" )) {
-            Write-EnhancedLog " Creating Azure Data Factory instance: $WEDataFactoryName" " Info"
-        
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Create Azure Data Factory instance" )) {
+            Write-Verbose "Log entry"ng Azure Data Factory instance: $DataFactoryName" "Info"
             # Check if Data Factory already exists
-            $existingDataFactory = Get-AzDataFactoryV2 -ResourceGroupName $WEResourceGroupName -Name $WEDataFactoryName -ErrorAction SilentlyContinue
+            $existingDataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -ErrorAction SilentlyContinue
             if ($existingDataFactory) {
-                Write-EnhancedLog " Data Factory already exists: $WEDataFactoryName" " Warning"
+                Write-Verbose "Log entry"Name" "Warning"
                 return $existingDataFactory
             }
-            
             # Create Data Factory
-            $dataFactory = Set-AzDataFactoryV2 -ResourceGroupName $WEResourceGroupName -Name $WEDataFactoryName -Location $WELocation -Tag $WETags
-            Write-EnhancedLog " Successfully created Data Factory: $WEDataFactoryName" " Success"
-            
+            $dataFactory = Set-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -Location $Location -Tag $Tags
+            Write-Verbose "Log entry"Name" "Success"
             # Configure Git integration if provided
-            if ($WEGitConfiguration.Keys.Count -gt 0) {
+            if ($GitConfiguration.Keys.Count -gt 0) {
                 Set-DataFactoryGitConfiguration -ErrorAction Stop
             }
-            
             return $dataFactory
         }
-        
     } catch {
-        Write-EnhancedLog " Failed to create Data Factory: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"n.Message)" "Error"
         throw
     }
 }
-
-
-[CmdletBinding()]
-function WE-Set-DataFactoryGitConfiguration -ErrorAction Stop {
+function Set-DataFactoryGitConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Git integration for Data Factory" )) {
-            Write-EnhancedLog " Configuring Git integration for Data Factory..." " Info"
-        
-            if ($WEGitConfiguration.ContainsKey(" RepoUrl" ) -and $WEGitConfiguration.ContainsKey(" BranchName" )) {
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Configure Git integration for Data Factory" )) {
+            Write-Verbose "Log entry"nfiguring Git integration for Data Factory..." "Info"
+            if ($GitConfiguration.ContainsKey("RepoUrl" ) -and $GitConfiguration.ContainsKey("BranchName" )) {
                 $gitConfig = @{
-                    ResourceGroupName = $WEResourceGroupName
-                    DataFactoryName = $WEDataFactoryName
-                    RepositoryUrl = $WEGitConfiguration.RepoUrl
-                    BranchName = $WEGitConfiguration.BranchName
-                    RootFolder = $WEGitConfiguration.RootFolder ?? " /"
-                    CollaborationBranch = $WEGitConfiguration.CollaborationBranch ?? " main"
+                    ResourceGroupName = $ResourceGroupName
+                    DataFactoryName = $DataFactoryName
+                    RepositoryUrl = $GitConfiguration.RepoUrl
+                    BranchName = $GitConfiguration.BranchName
+                    RootFolder = $GitConfiguration.RootFolder ?? " /"
+                    CollaborationBranch = $GitConfiguration.CollaborationBranch ?? " main"
                 }
-                
                 Set-AzDataFactoryV2GitIntegration -ErrorAction Stop @gitConfig
-                Write-EnhancedLog " Successfully configured Git integration" " Success"
+                Write-Verbose "Log entry"nfigured Git integration" "Success"
             }
         }
-        
     } catch {
-        Write-EnhancedLog " Failed to configure Git integration: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"nfigure Git integration: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-ModernDataPipeline -ErrorAction Stop {
+function New-ModernDataPipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     try {
-        if ($WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create modern data pipeline templates" )) {
-            Write-EnhancedLog " Creating modern data pipeline templates..." " Info"
-        
+        if ($PSCmdlet.ShouldProcess($DataFactoryName, "Create modern data pipeline templates" )) {
+            Write-Verbose "Log entry"ng modern data pipeline templates..." "Info"
         # Create sample linked services
         New-SampleLinkedService -ErrorAction Stop
-        
         # Create sample datasets
         New-SampleDataset -ErrorAction Stop
-        
         # Create sample pipelines
         New-SamplePipeline -ErrorAction Stop
-        
-        Write-EnhancedLog " Successfully created modern data pipeline templates" " Success"
+        Write-Verbose "Log entry"n data pipeline templates" "Success"
         }
-        
     } catch {
-        Write-EnhancedLog " Failed to create pipeline templates: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"ne templates: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-SampleLinkedService -ErrorAction Stop {
+function New-SampleLinkedService -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample linked services" )) {
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample linked services" )) {
         return
     }
-    
     try {
         # Azure SQL Database Linked Service
         $sqlLinkedService = @{
-            type = " AzureSqlDatabase"
+            type = "AzureSqlDatabase"
             typeProperties = @{
                 connectionString = @{
-                    type = " AzureKeyVaultSecret"
+                    type = "AzureKeyVaultSecret"
                     store = @{
-                        referenceName = " KeyVaultLinkedService"
-                        type = " LinkedServiceReference"
+                        referenceName = "KeyVaultLinkedService"
+                        type = "LinkedServiceReference"
                     }
-                    secretName = " SqlConnectionString"
+                    secretName = "SqlConnectionString"
                 }
             }
         }
-        
-        Set-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " AzureSqlDatabaseLinkedService" -DefinitionObject $sqlLinkedService
-        
+        Set-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "AzureSqlDatabaseLinkedService" -DefinitionObject $sqlLinkedService
         # Azure Blob Storage Linked Service
         $blobLinkedService = @{
-            type = " AzureBlobStorage"
+            type = "AzureBlobStorage"
             typeProperties = @{
-                serviceEndpoint = " https://modernstorageaccount.blob.core.windows.net/"
-                accountKind = " StorageV2"
-                authenticationType = " MSI"
+                serviceEndpoint = "https://modernstorageaccount.blob.core.windows.net/"
+                accountKind = "StorageV2"
+                authenticationType = "MSI"
             }
         }
-        
-        Set-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " AzureBlobStorageLinkedService" -DefinitionObject $blobLinkedService
-        
+        Set-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "AzureBlobStorageLinkedService" -DefinitionObject $blobLinkedService
         # Azure Synapse Analytics Linked Service
         $synapseLinkedService = @{
-            type = " AzureSqlDW"
+            type = "AzureSqlDW"
             typeProperties = @{
                 connectionString = @{
-                    type = " AzureKeyVaultSecret"
+                    type = "AzureKeyVaultSecret"
                     store = @{
-                        referenceName = " KeyVaultLinkedService"
-                        type = " LinkedServiceReference"
+                        referenceName = "KeyVaultLinkedService"
+                        type = "LinkedServiceReference"
                     }
-                    secretName = " SynapseConnectionString"
+                    secretName = "SynapseConnectionString"
                 }
             }
         }
-        
-        Set-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " AzureSynapseLinkedService" -DefinitionObject $synapseLinkedService
-        
+        Set-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "AzureSynapseLinkedService" -DefinitionObject $synapseLinkedService
         # Key Vault Linked Service
         $keyVaultLinkedService = @{
-            type = " AzureKeyVault"
+            type = "AzureKeyVault"
             typeProperties = @{
-                baseUrl = " https://modern-keyvault.vault.azure.net/"
+                baseUrl = "https://modern-keyvault.vault.azure.net/"
             }
         }
-        
-        Set-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " KeyVaultLinkedService" -DefinitionObject $keyVaultLinkedService
-        
-        Write-EnhancedLog " Created sample linked services" " Success"
-        
+        Set-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "KeyVaultLinkedService" -DefinitionObject $keyVaultLinkedService
+        Write-Verbose "Log entry"nked services" "Success"
     } catch {
-        Write-EnhancedLog " Failed to create linked services: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"nked services: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-SampleDataset -ErrorAction Stop {
+function New-SampleDataset -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample datasets" )) {
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample datasets" )) {
         return
     }
-    
     try {
         # Source SQL Dataset
         $sourceDataset = @{
-            type = " AzureSqlTable"
+            type = "AzureSqlTable"
             linkedServiceName = @{
-                referenceName = " AzureSqlDatabaseLinkedService"
-                type = " LinkedServiceReference"
+                referenceName = "AzureSqlDatabaseLinkedService"
+                type = "LinkedServiceReference"
             }
             typeProperties = @{
                 schema = " dbo"
-                table = " SourceTable"
+                table = "SourceTable"
             }
         }
-        
-        Set-AzDataFactoryV2Dataset -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " SourceSqlDataset" -DefinitionObject $sourceDataset
-        
+        Set-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "SourceSqlDataset" -DefinitionObject $sourceDataset
         # Blob Storage Dataset
         $blobDataset = @{
-            type = " DelimitedText"
+            type = "DelimitedText"
             linkedServiceName = @{
-                referenceName = " AzureBlobStorageLinkedService"
-                type = " LinkedServiceReference"
+                referenceName = "AzureBlobStorageLinkedService"
+                type = "LinkedServiceReference"
             }
             typeProperties = @{
                 location = @{
-                    type = " AzureBlobStorageLocation"
+                    type = "AzureBlobStorageLocation"
                     container = " data"
                     fileName = " output.csv"
                 }
@@ -423,72 +277,60 @@ function WE-New-SampleDataset -ErrorAction Stop {
                 firstRowAsHeader = $true
             }
         }
-        
-        Set-AzDataFactoryV2Dataset -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " BlobOutputDataset" -DefinitionObject $blobDataset
-        
+        Set-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "BlobOutputDataset" -DefinitionObject $blobDataset
         # Synapse Dataset
         $synapseDataset = @{
-            type = " AzureSqlDWTable"
+            type = "AzureSqlDWTable"
             linkedServiceName = @{
-                referenceName = " AzureSynapseLinkedService"
-                type = " LinkedServiceReference"
+                referenceName = "AzureSynapseLinkedService"
+                type = "LinkedServiceReference"
             }
             typeProperties = @{
                 schema = " dbo"
-                table = " DimCustomer"
+                table = "DimCustomer"
             }
         }
-        
-        Set-AzDataFactoryV2Dataset -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " SynapseDataset" -DefinitionObject $synapseDataset
-        
-        Write-EnhancedLog " Created sample datasets" " Success"
-        
-    } catch {
-        Write-EnhancedLog " Failed to create datasets: $($_.Exception.Message)" " Error"
+        Set-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "SynapseDataset" -DefinitionObject $synapseDataset
+        Write-Verbose "Log entry"nhancedLog "Failed to create datasets: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-SamplePipeline -ErrorAction Stop {
+function New-SamplePipeline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create sample pipelines" )) {
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create sample pipelines" )) {
         return
     }
-    
     try {
         # Modern ETL Pipeline
         $etlPipeline = @{
             activities = @(
                 @{
-                    name = " CopyFromSqlToBlob"
-                    type = " Copy"
+                    name = "CopyFromSqlToBlob"
+                    type = "Copy"
                     inputs = @(
                         @{
-                            referenceName = " SourceSqlDataset"
-                            type = " DatasetReference"
+                            referenceName = "SourceSqlDataset"
+                            type = "DatasetReference"
                         }
                     )
                     outputs = @(
                         @{
-                            referenceName = " BlobOutputDataset"
-                            type = " DatasetReference"
+                            referenceName = "BlobOutputDataset"
+                            type = "DatasetReference"
                         }
                     )
                     typeProperties = @{
                         source = @{
-                            type = " AzureSqlSource"
-                            sqlReaderQuery = " SELECT * FROM dbo.SourceTable WHERE LastModified >= '@{formatDateTime(pipeline().parameters.StartDate, 'yyyy-MM-dd')}'"
+                            type = "AzureSqlSource"
+                            sqlReaderQuery = "SELECT * FROM dbo.SourceTable WHERE LastModified >= '@{formatDateTime(pipeline().parameters.StartDate, 'yyyy-MM-dd')}'"
                         }
                         sink = @{
-                            type = " DelimitedTextSink"
+                            type = "DelimitedTextSink"
                             storeSettings = @{
-                                type = " AzureBlobStorageWriteSettings"
+                                type = "AzureBlobStorageWriteSettings"
                             }
                             formatSettings = @{
-                                type = " DelimitedTextWriteSettings"
+                                type = "DelimitedTextWriteSettings"
                                 quoteAllText = $true
                                 fileExtension = " .csv"
                             }
@@ -499,12 +341,12 @@ function WE-New-SamplePipeline -ErrorAction Stop {
                     }
                 },
                 @{
-                    name = " DataTransformation"
-                    type = " DatabricksNotebook"
+                    name = "DataTransformation"
+                    type = "DatabricksNotebook"
                     dependsOn = @(
                         @{
-                            activity = " CopyFromSqlToBlob"
-                            dependencyConditions = @(" Succeeded" )
+                            activity = "CopyFromSqlToBlob"
+                            dependencyConditions = @("Succeeded" )
                         }
                     )
                     typeProperties = @{
@@ -515,38 +357,38 @@ function WE-New-SamplePipeline -ErrorAction Stop {
                         }
                     }
                     linkedServiceName = @{
-                        referenceName = " DatabricksLinkedService"
-                        type = " LinkedServiceReference"
+                        referenceName = "DatabricksLinkedService"
+                        type = "LinkedServiceReference"
                     }
                 },
                 @{
-                    name = " LoadToSynapse"
-                    type = " Copy"
+                    name = "LoadToSynapse"
+                    type = "Copy"
                     dependsOn = @(
                         @{
-                            activity = " DataTransformation"
-                            dependencyConditions = @(" Succeeded" )
+                            activity = "DataTransformation"
+                            dependencyConditions = @("Succeeded" )
                         }
                     )
                     inputs = @(
                         @{
-                            referenceName = " BlobOutputDataset"
-                            type = " DatasetReference"
+                            referenceName = "BlobOutputDataset"
+                            type = "DatasetReference"
                         }
                     )
                     outputs = @(
                         @{
-                            referenceName = " SynapseDataset"
-                            type = " DatasetReference"
+                            referenceName = "SynapseDataset"
+                            type = "DatasetReference"
                         }
                     )
                     typeProperties = @{
                         source = @{
-                            type = " DelimitedTextSource"
+                            type = "DelimitedTextSource"
                         }
                         sink = @{
-                            type = " SqlDWSink"
-                            preCopyScript = " TRUNCATE TABLE dbo.DimCustomer"
+                            type = "SqlDWSink"
+                            preCopyScript = "TRUNCATE TABLE dbo.DimCustomer"
                             allowPolyBase = $true
                             polyBaseSettings = @{
                                 rejectValue = 0
@@ -557,8 +399,8 @@ function WE-New-SamplePipeline -ErrorAction Stop {
                         enableStaging = $true
                         stagingSettings = @{
                             linkedServiceName = @{
-                                referenceName = " AzureBlobStorageLinkedService"
-                                type = " LinkedServiceReference"
+                                referenceName = "AzureBlobStorageLinkedService"
+                                type = "LinkedServiceReference"
                             }
                             path = " staging"
                         }
@@ -567,100 +409,78 @@ function WE-New-SamplePipeline -ErrorAction Stop {
             )
             parameters = @{
                 StartDate = @{
-                    type = " String"
+                    type = "String"
                     defaultValue = " @formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
                 }
             }
         }
-        
-        Set-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " ModernETLPipeline" -DefinitionObject $etlPipeline
-        
+        Set-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "ModernETLPipeline" -DefinitionObject $etlPipeline
         # Real-time Streaming Pipeline
         $streamingPipeline = @{
             activities = @(
                 @{
-                    name = " ProcessEventHubData"
-                    type = " ExecuteDataFlow"
+                    name = "ProcessEventHubData"
+                    type = "ExecuteDataFlow"
                     typeProperties = @{
                         dataflow = @{
-                            referenceName = " EventStreamDataFlow"
-                            type = " DataFlowReference"
+                            referenceName = "EventStreamDataFlow"
+                            type = "DataFlowReference"
                         }
                         compute = @{
                             coreCount = 8
-                            computeType = " General"
+                            computeType = "General"
                         }
                         integrationRuntime = @{
-                            referenceName = " DataFlowIntegrationRuntime"
-                            type = " IntegrationRuntimeReference"
+                            referenceName = "DataFlowIntegrationRuntime"
+                            type = "IntegrationRuntimeReference"
                         }
                     }
                 }
             )
         }
-        
-        Set-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " RealTimeStreamingPipeline" -DefinitionObject $streamingPipeline
-        
-        Write-EnhancedLog " Created sample pipelines" " Success"
-        
+        Set-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "RealTimeStreamingPipeline" -DefinitionObject $streamingPipeline
+        Write-Verbose "Log entry"nes" "Success"
     } catch {
-        Write-EnhancedLog " Failed to create pipelines: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"nes: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-Deploy-PipelineFromFile {
+function Deploy-PipelineFromFile {
     param(
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPipelineName,
-        [string]$WEDefinitionPath
+    [string]$PipelineName,
+        [string]$DefinitionPath
     )
-    
     try {
-        Write-EnhancedLog " Deploying pipeline '$WEPipelineName' from: $WEDefinitionPath" " Info"
-        
-        if (-not (Test-Path $WEDefinitionPath)) {
-            throw " Pipeline definition file not found: $WEDefinitionPath"
+        Write-Verbose "Log entry"ng pipeline '$PipelineName' from: $DefinitionPath" "Info"
+        if (-not (Test-Path $DefinitionPath)) {
+            throw "Pipeline definition file not found: $DefinitionPath"
         }
-        
-        $pipelineDefinition = Get-Content -ErrorAction Stop $WEDefinitionPath -Raw | ConvertFrom-Json
-        
-        Set-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $WEPipelineName -DefinitionObject $pipelineDefinition
-        
-        Write-EnhancedLog " Successfully deployed pipeline: $WEPipelineName" " Success"
-        
+        $pipelineDefinition = Get-Content -ErrorAction Stop $DefinitionPath -Raw | ConvertFrom-Json
+        Set-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $PipelineName -DefinitionObject $pipelineDefinition
+        Write-Verbose "Log entry"ne: $PipelineName" "Success"
     } catch {
-        Write-EnhancedLog " Failed to deploy pipeline: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"ne: $($_.Exception.Message)" "Error"
         throw
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-DataFactoryTrigger -ErrorAction Stop {
+function New-DataFactoryTrigger -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Create Data Factory triggers" )) {
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Create Data Factory triggers" )) {
         return
     }
-    
     try {
-        Write-EnhancedLog " Creating Data Factory triggers..." " Info"
-        
+        Write-Verbose "Log entry"ng Data Factory triggers..." "Info"
         # Schedule Trigger
         $scheduleTrigger = @{
-            type = " ScheduleTrigger"
+            type = "ScheduleTrigger"
             typeProperties = @{
                 recurrence = @{
-                    frequency = " Day"
+                    frequency = "Day"
                     interval = 1
                     startTime = (Get-Date).AddDays(1).ToString(" yyyy-MM-ddTHH:mm:ssZ" )
-                    timeZone = " UTC"
+                    timeZone = "UTC"
                     schedule = @{
                         hours = @(2)
                         minutes = @(0)
@@ -670,8 +490,8 @@ function WE-New-DataFactoryTrigger -ErrorAction Stop {
             pipelines = @(
                 @{
                     pipelineReference = @{
-                        referenceName = " ModernETLPipeline"
-                        type = " PipelineReference"
+                        referenceName = "ModernETLPipeline"
+                        type = "PipelineReference"
                     }
                     parameters = @{
                         StartDate = " @formatDateTime(addDays(utcnow(), -1), 'yyyy-MM-dd')"
@@ -679,126 +499,93 @@ function WE-New-DataFactoryTrigger -ErrorAction Stop {
                 }
             )
         }
-        
-        Set-AzDataFactoryV2Trigger -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " DailyETLTrigger" -DefinitionObject $scheduleTrigger
-        
+        Set-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "DailyETLTrigger" -DefinitionObject $scheduleTrigger
         # Event-based Trigger
         $eventTrigger = @{
-            type = " BlobEventsTrigger"
+            type = "BlobEventsTrigger"
             typeProperties = @{
                 blobPathBeginsWith = " /data/input/"
                 blobPathEndsWith = " .csv"
                 ignoreEmptyBlobs = $true
-                scope = " /subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$WEResourceGroupName/providers/Microsoft.Storage/storageAccounts/modernstorageaccount"
-                events = @(" Microsoft.Storage.BlobCreated" )
+                scope = " /subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.Storage/storageAccounts/modernstorageaccount"
+                events = @("Microsoft.Storage.BlobCreated" )
             }
             pipelines = @(
                 @{
                     pipelineReference = @{
-                        referenceName = " RealTimeStreamingPipeline"
-                        type = " PipelineReference"
+                        referenceName = "RealTimeStreamingPipeline"
+                        type = "PipelineReference"
                     }
                 }
             )
         }
-        
-        Set-AzDataFactoryV2Trigger -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name " BlobEventTrigger" -DefinitionObject $eventTrigger
-        
-        Write-EnhancedLog " Successfully created triggers" " Success"
-        
-    } catch {
-        Write-EnhancedLog " Failed to create triggers: $($_.Exception.Message)" " Error"
+        Set-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name "BlobEventTrigger" -DefinitionObject $eventTrigger
+        Write-Verbose "Log entry"nhancedLog "Failed to create triggers: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-Get-DataFactoryMonitoring -ErrorAction Stop {
+function Get-DataFactoryMonitoring -ErrorAction Stop {
     try {
-        Write-EnhancedLog " Monitoring Data Factory pipelines..." " Info"
-        
+        Write-Verbose "Log entry"nitoring Data Factory pipelines..." "Info"
         # Get pipeline runs from last 24 hours
         $startTime = (Get-Date).AddDays(-1)
         $endTime = Get-Date -ErrorAction Stop
-        
-        $pipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
-        
-        Write-EnhancedLog " Pipeline Runs in Last 24 Hours:" " Info"
+        $pipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
+        Write-Verbose "Log entry"ne Runs in Last 24 Hours:" "Info"
         foreach ($run in $pipelineRuns) {
             $status = switch ($run.Status) {
-                " Succeeded" { " Success" }
-                " Failed" { " Error" }
-                " InProgress" { " Info" }
-                default { " Warning" }
+                "Succeeded" { "Success" }
+                "Failed" { "Error" }
+                "InProgress" { "Info" }
+                default { "Warning" }
             }
-            
-            Write-EnhancedLog "  Pipeline: $($run.PipelineName)" " Info"
-            Write-EnhancedLog "  Run ID: $($run.RunId)" " Info"
-            Write-EnhancedLog "  Status: $($run.Status)" $status
-            Write-EnhancedLog "  Start Time: $($run.RunStart)" " Info"
-            Write-EnhancedLog "  Duration: $($run.DurationInMs / 1000) seconds" " Info"
-            Write-EnhancedLog "  ---" " Info"
+            Write-Verbose "Log entry"ne: $($run.PipelineName)" "Info"
+            Write-Verbose "Log entry"n ID: $($run.RunId)" "Info"
+            Write-Verbose "Log entry"n.Status)" $status
+            Write-Verbose "Log entry"n.RunStart)" "Info"
+            Write-Verbose "Log entry"n: $($run.DurationInMs / 1000) seconds" "Info"
+            Write-Verbose "Log entry"nfo"
         }
-        
         # Get trigger runs
-        $triggerRuns = Get-AzDataFactoryV2TriggerRun -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
-        
-        Write-EnhancedLog " Trigger Runs in Last 24 Hours:" " Info"
+        $triggerRuns = Get-AzDataFactoryV2TriggerRun -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -LastUpdatedAfter $startTime -LastUpdatedBefore $endTime
+        Write-Verbose "Log entry"ns in Last 24 Hours:" "Info"
         foreach ($run in $triggerRuns) {
-            Write-EnhancedLog "  Trigger: $($run.TriggerName)" " Info"
-            Write-EnhancedLog "  Status: $($run.Status)" " Info"
-            Write-EnhancedLog "  Trigger Time: $($run.TriggerRunTimestamp)" " Info"
-            Write-EnhancedLog "  ---" " Info"
+            Write-Verbose "Log entry"n.TriggerName)" "Info"
+            Write-Verbose "Log entry"n.Status)" "Info"
+            Write-Verbose "Log entry"n.TriggerRunTimestamp)" "Info"
+            Write-Verbose "Log entry"nfo"
         }
-        
         # Get activity runs for failed pipeline runs
-        $failedRuns = $pipelineRuns | Where-Object { $_.Status -eq " Failed" }
+        $failedRuns = $pipelineRuns | Where-Object { $_.Status -eq "Failed" }
         foreach ($failedRun in $failedRuns) {
-            Write-EnhancedLog " Activity details for failed pipeline run: $($failedRun.RunId)" " Error"
-            $activityRuns = Get-AzDataFactoryV2ActivityRun -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -PipelineRunId $failedRun.RunId -RunStartedAfter $startTime -RunStartedBefore $endTime
-            
+            Write-Verbose "Log entry"ne run: $($failedRun.RunId)" "Error"
+            $activityRuns = Get-AzDataFactoryV2ActivityRun -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -PipelineRunId $failedRun.RunId -RunStartedAfter $startTime -RunStartedBefore $endTime
             foreach ($activity in $activityRuns) {
-                if ($activity.Status -eq " Failed" ) {
-                    Write-EnhancedLog "  Failed Activity: $($activity.ActivityName)" " Error"
-                    Write-EnhancedLog "  Error: $($activity.Error.Message)" " Error"
-                }
-            }
-        }
-        
-    } catch {
-        Write-EnhancedLog " Failed to monitor Data Factory: $($_.Exception.Message)" " Error"
+                if ($activity.Status -eq "Failed" ) {
+                    Write-Verbose "Log entry"Name)" "Error"
+                    Write-Verbose "Log entry"nhancedLog "Failed to monitor Data Factory: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
+function Set-DataFactoryMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if (-not $WEPSCmdlet.ShouldProcess($WEDataFactoryName, " Configure Data Factory monitoring" )) {
+    if (-not $PSCmdlet.ShouldProcess($DataFactoryName, "Configure Data Factory monitoring" )) {
         return
     }
-    
     try {
-        Write-EnhancedLog " Configuring Data Factory monitoring..." " Info"
-        
+        Write-Verbose "Log entry"nfiguring Data Factory monitoring..." "Info"
         # Create Log Analytics workspace
-        $workspaceName = " law-$WEResourceGroupName-adf"
-        $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $WEResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
-        
+        $workspaceName = " law-$ResourceGroupName-adf"
+        $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
         if (-not $workspace) {
-            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $WEResourceGroupName -Name $workspaceName -Location $WELocation
-            Write-EnhancedLog " Created Log Analytics workspace: $workspaceName" " Success"
+            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
+            Write-Verbose "Log entry"nalytics workspace: $workspaceName" "Success"
         }
-        
         # Configure diagnostic settings
-        $dataFactory = Get-AzDataFactoryV2 -ResourceGroupName $WEResourceGroupName -Name $WEDataFactoryName
-        
+        $dataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName
         $diagnosticSettings = @{
             logs = @(
                 @{
-                    category = " PipelineRuns"
+                    category = "PipelineRuns"
                     enabled = $true
                     retentionPolicy = @{
                         enabled = $true
@@ -806,7 +593,7 @@ function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
                     }
                 },
                 @{
-                    category = " TriggerRuns"
+                    category = "TriggerRuns"
                     enabled = $true
                     retentionPolicy = @{
                         enabled = $true
@@ -814,7 +601,7 @@ function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
                     }
                 },
                 @{
-                    category = " ActivityRuns"
+                    category = "ActivityRuns"
                     enabled = $true
                     retentionPolicy = @{
                         enabled = $true
@@ -824,7 +611,7 @@ function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
             )
             metrics = @(
                 @{
-                    category = " AllMetrics"
+                    category = "AllMetrics"
                     enabled = $true
                     retentionPolicy = @{
                         enabled = $true
@@ -833,140 +620,101 @@ function WE-Set-DataFactoryMonitoring -ErrorAction Stop {
                 }
             )
         }
-        
-        Set-AzDiagnosticSetting -ResourceId $dataFactory.DataFactoryId -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name " $WEDataFactoryName-diagnostics"
-        
-        Write-EnhancedLog " Successfully configured monitoring" " Success"
-        
+        Set-AzDiagnosticSetting -ResourceId $dataFactory.DataFactoryId -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name " $DataFactoryName-diagnostics"
+        Write-Verbose "Log entry"nfigured monitoring" "Success"
     } catch {
-        Write-EnhancedLog " Failed to configure monitoring: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"nfigure monitoring: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-Export-DataFactoryConfiguration {
+function Export-DataFactoryConfiguration {
     try {
-        Write-EnhancedLog " Exporting Data Factory configuration..." " Info"
-        
+        Write-Verbose "Log entry"ng Data Factory configuration..." "Info"
         $exportPath = " .\DataFactory-Export-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
         New-Item -ItemType Directory -Path $exportPath -Force | Out-Null
-        
         # Export pipelines
-        $pipelines = Get-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName
+        $pipelines = Get-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName
         foreach ($pipeline in $pipelines) {
-            $pipelineDefinition = Get-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $pipeline.Name
+            $pipelineDefinition = Get-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $pipeline.Name
             $pipelineDefinition | ConvertTo-Json -Depth 20 | Out-File -FilePath " $exportPath\pipeline-$($pipeline.Name).json" -Encoding UTF8
         }
-        
         # Export datasets
-        $datasets = Get-AzDataFactoryV2Dataset -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName
+        $datasets = Get-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName
         foreach ($dataset in $datasets) {
-            $datasetDefinition = Get-AzDataFactoryV2Dataset -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $dataset.Name
+            $datasetDefinition = Get-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $dataset.Name
             $datasetDefinition | ConvertTo-Json -Depth 20 | Out-File -FilePath " $exportPath\dataset-$($dataset.Name).json" -Encoding UTF8
         }
-        
         # Export linked services
-        $linkedServices = Get-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName
+        $linkedServices = Get-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName
         foreach ($linkedService in $linkedServices) {
-            $linkedServiceDefinition = Get-AzDataFactoryV2LinkedService -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $linkedService.Name
+            $linkedServiceDefinition = Get-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $linkedService.Name
             $linkedServiceDefinition | ConvertTo-Json -Depth 20 | Out-File -FilePath " $exportPath\linkedservice-$($linkedService.Name).json" -Encoding UTF8
         }
-        
         # Export triggers
-        $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName
+        $triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName
         foreach ($trigger in $triggers) {
-            $triggerDefinition = Get-AzDataFactoryV2Trigger -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -Name $trigger.Name
+            $triggerDefinition = Get-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -Name $trigger.Name
             $triggerDefinition | ConvertTo-Json -Depth 20 | Out-File -FilePath " $exportPath\trigger-$($trigger.Name).json" -Encoding UTF8
         }
-        
-        Write-EnhancedLog " Successfully exported Data Factory configuration to: $exportPath" " Success"
-        
+        Write-Verbose "Log entry"nfiguration to: $exportPath" "Success"
     } catch {
-        Write-EnhancedLog " Failed to export Data Factory configuration: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"nfiguration: $($_.Exception.Message)" "Error"
     }
 }
-
-
 try {
-    Write-EnhancedLog " Starting Azure Data Factory Modern Pipeline Tool" " Info"
-    Write-EnhancedLog " Action: $WEAction" " Info"
-    Write-EnhancedLog " Data Factory Name: $WEDataFactoryName" " Info"
-    Write-EnhancedLog " Resource Group: $WEResourceGroupName" " Info"
-    
+    Write-Verbose "Log entry"ng Azure Data Factory Modern Pipeline Tool" "Info"
+    Write-Verbose "Log entry"n: $Action" "Info"
+    Write-Verbose "Log entry"Name: $DataFactoryName" "Info"
+    Write-Verbose "Log entry"Name" "Info"
     # Ensure resource group exists
-    $rg = Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction SilentlyContinue
+    $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
-        Write-EnhancedLog " Creating resource group: $WEResourceGroupName" " Info"
-        $rg = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Tag $WETags
-        Write-EnhancedLog " Successfully created resource group" " Success"
-    }
-    
-    switch ($WEAction) {
-        " Create" {
-           ;  $dataFactory = New-DataFactoryInstance -ErrorAction Stop
+        Write-Verbose "Log entry"ng resource group: $ResourceGroupName" "Info"
+        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        Write-Verbose "Log entry"n) {
+        "Create" {
+$dataFactory = New-DataFactoryInstance -ErrorAction Stop
             New-ModernDataPipeline
             New-DataFactoryTrigger -ErrorAction Stop
-            
-            if ($WEEnableMonitoring) {
+            if ($EnableMonitoring) {
                 Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
-        
-        " Deploy" {
-            if (-not $WEPipelineName) {
-                throw " PipelineName parameter is required for Deploy action"
+        "Deploy" {
+            if (-not $PipelineName) {
+                throw "PipelineName parameter is required for Deploy action"
             }
-            
-            if ($WEPipelineDefinitionPath) {
-                Deploy-PipelineFromFile -PipelineName $WEPipelineName -DefinitionPath $WEPipelineDefinitionPath
+            if ($PipelineDefinitionPath) {
+                Deploy-PipelineFromFile -PipelineName $PipelineName -DefinitionPath $PipelineDefinitionPath
             } else {
                 New-ModernDataPipeline -ErrorAction Stop
             }
         }
-        
-        " Monitor" {
+        "Monitor" {
             Get-DataFactoryMonitoring -ErrorAction Stop
         }
-        
-        " Trigger" {
-            if (-not $WEPipelineName) {
-                throw " PipelineName parameter is required for Trigger action"
+        "Trigger" {
+            if (-not $PipelineName) {
+                throw "PipelineName parameter is required for Trigger action"
             }
-            
-            Write-EnhancedLog " Triggering pipeline: $WEPipelineName" " Info"
-           ;  $runId = Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $WEResourceGroupName -DataFactoryName $WEDataFactoryName -PipelineName $WEPipelineName
-            Write-EnhancedLog " Pipeline triggered successfully. Run ID: $runId" " Success"
+            Write-Verbose "Log entry"ng pipeline: $PipelineName" "Info"
+$runId = Invoke-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $DataFactoryName -PipelineName $PipelineName
+            Write-Verbose "Log entry"ne triggered successfully. Run ID: $runId" "Success"
         }
-        
-        " Configure" {
+        "Configure" {
             New-DataFactoryTrigger -ErrorAction Stop
-            if ($WEEnableMonitoring) {
+            if ($EnableMonitoring) {
                 Set-DataFactoryMonitoring -ErrorAction Stop
             }
         }
-        
-        " Export" {
+        "Export" {
             Export-DataFactoryConfiguration
         }
-        
-        " Delete" {
-            Write-EnhancedLog " Deleting Data Factory: $WEDataFactoryName" " Warning"
-            Remove-AzDataFactoryV2 -ResourceGroupName $WEResourceGroupName -Name $WEDataFactoryName -Force
-            Write-EnhancedLog " Successfully deleted Data Factory" " Success"
-        }
-    }
-    
-    Write-EnhancedLog " Azure Data Factory Modern Pipeline Tool completed successfully" " Success"
-    
+        "Delete" {
+            Write-Verbose "Log entry"ng Data Factory: $DataFactoryName" "Warning"
+            Remove-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $DataFactoryName -Force
+            Write-Verbose "Log entry"nhancedLog "Azure Data Factory Modern Pipeline Tool completed successfully" "Success"
 } catch {
-    Write-EnhancedLog " Tool execution failed: $($_.Exception.Message)" " Error"
-    exit 1
+    Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
+    throw
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

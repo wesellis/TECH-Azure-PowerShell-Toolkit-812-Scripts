@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+.DESCRIPTION`n    Automate Azure operations
 #>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ScaleSetName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VmSize,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$InstanceCount = 2
 )
-
-#region Functions
-
-Write-Information "Creating VM Scale Set: $ScaleSetName"
-
+Write-Host "Creating VM Scale Set: $ScaleSetName"
 # Create scale set configuration
 $params = @{
     ErrorAction = "Stop"
@@ -46,7 +27,6 @@ $params = @{
     Location = $Location
 }
 $VmssConfig @params
-
 # Add network profile
 $params = @{
     CreatePublicIPAddress = $false
@@ -56,7 +36,6 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $VmssConfig @params
-
 # Set OS profile
 $params = @{
     ComputerNamePrefix = "vmss"
@@ -65,7 +44,6 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $VmssConfig @params
-
 # Set storage profile
 $params = @{
     ImageReferenceOffer = "WindowsServer"
@@ -77,7 +55,6 @@ $params = @{
     ImageReferencePublisher = "MicrosoftWindowsServer"
 }
 $VmssConfig @params
-
 # Create the scale set
 $params = @{
     ErrorAction = "Stop"
@@ -86,12 +63,9 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $Vmss @params
+Write-Host "VM Scale Set created successfully:"
+Write-Host "Name: $($Vmss.Name)"
+Write-Host "Location: $($Vmss.Location)"
+Write-Host "VM Size: $VmSize"
+Write-Host "Instance Count: $InstanceCount"
 
-Write-Information " VM Scale Set created successfully:"
-Write-Information "  Name: $($Vmss.Name)"
-Write-Information "  Location: $($Vmss.Location)"
-Write-Information "  VM Size: $VmSize"
-Write-Information "  Instance Count: $InstanceCount"
-
-
-#endregion

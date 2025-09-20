@@ -1,51 +1,31 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [hashtable]$Tags = @{}
 )
-
-#region Functions
-
-Write-Information "Creating Resource Group: $ResourceGroupName"
-
+Write-Host "Creating Resource Group: $ResourceGroupName"
 if ($Tags.Count -gt 0) {
     $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
-    Write-Information "Tags applied:"
+    Write-Host "Tags applied:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Information "  $($Tag.Key): $($Tag.Value)"
+        Write-Host "  $($Tag.Key): $($Tag.Value)"
     }
 } else {
     $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 }
+Write-Host "Resource Group created successfully:"
+Write-Host "Name: $($ResourceGroup.ResourceGroupName)"
+Write-Host "Location: $($ResourceGroup.Location)"
+Write-Host "Provisioning State: $($ResourceGroup.ProvisioningState)"
+Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
 
-Write-Information " Resource Group created successfully:"
-Write-Information "  Name: $($ResourceGroup.ResourceGroupName)"
-Write-Information "  Location: $($ResourceGroup.Location)"
-Write-Information "  Provisioning State: $($ResourceGroup.ProvisioningState)"
-Write-Information "  Resource ID: $($ResourceGroup.ResourceId)"
-
-
-#endregion

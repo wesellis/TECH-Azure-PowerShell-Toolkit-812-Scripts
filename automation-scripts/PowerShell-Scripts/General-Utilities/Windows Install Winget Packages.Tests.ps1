@@ -1,231 +1,139 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Install Winget Packages.Tests
-
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Install Winget Packages.Tests
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-
 BeforeAll {
     $script:IsUnderTest = $true
-    Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
+    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot)
 try {
     # Main script execution
 '_common/windows-retry-utils.psm1')
-    . (Join-Path $WEPSScriptRoot 'windows-install-winget-packages.ps1') -Packages 'UNUSED'
+    . (Join-Path $PSScriptRoot 'windows-install-winget-packages.ps1') -Packages 'UNUSED'
 }
-
-Describe " CreateDevVhdTests" {
+Describe "CreateDevVhdTests" {
     BeforeEach {
         $script:LASTEXITCODE = 0
         $script:sleepTimes = @()
-        Mock -CommandName Start-Sleep -ModuleName windows-retry-utils -MockWith { 
-
+        Mock -CommandName Start-Sleep -ModuleName windows-retry-utils -MockWith {
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($seconds) $script:sleepTimes += $seconds; Write-WELog " Sleeping $seconds seconds" " INFO" }
-
+param ($seconds) $script:sleepTimes += $seconds; Write-Host "Sleeping $seconds seconds" }
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-
-            throw " Must be mocked by the test! Invoking $commandLine."
+            throw "Must be mocked by the test! Invoking $commandLine."
         }
-
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-
-            Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+            Write-Host " === [Mock] Invoking $commandLine"
         } -ParameterFilter { $commandLine -like '*winget.exe --info' }
-
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-    
-            Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+            Write-Host " === [Mock] Invoking $commandLine"
             $script:LASTEXITCODE = 123
         } -ParameterFilter { $commandLine -like '*robocopy.exe /R:5 /W:5 /S *AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir C:\.tools\Setup\Logs\WinGet' }
-
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-    
-            Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+            Write-Host " === [Mock] Invoking $commandLine"
             $script:LASTEXITCODE = 123
-        } -ParameterFilter { $commandLine -like 'C:\Windows\System32\icacls.exe " C:\Program Files\WinGet\Packages" /t /q /grant " BUILTIN\Users:(rx)" ' }
+        } -ParameterFilter { $commandLine -like 'C:\Windows\System32\icacls.exe "C:\Program Files\WinGet\Packages" /t /q /grant "BUILTIN\Users:(rx)" ' }
     }
-
-    It " InstallSuccess_<TestName>" -ForEach @(
+    It "InstallSuccess_<TestName>" -ForEach @(
         @{
             TestName     = 'SinglePackageNoVersion';
             TestPackages = 'TestPkg_975'
@@ -248,181 +156,129 @@ param(
         }
     ) {
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-
-            foreach ($expectedArg in $WEExpectedArgs) {
+            foreach ($expectedArg in $ExpectedArgs) {
                 if ($commandLine -like " *winget.exe install --id $expectedArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force" ) {
-                    Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+                    Write-Host " === [Mock] Invoking $commandLine"
                     return
                 }
             }
-
-            throw " Unexpected command: $commandLine"
+            throw "Unexpected command: $commandLine"
         }
-
-        Install-WinGet-Packages -Packages $WETestPackages
-        Should -Invoke Invoke-Executable -Times (3 + $WEExpectedArgs.Count) -Exactly
+        Install-WinGet-Packages -Packages $TestPackages
+        Should -Invoke Invoke-Executable -Times (3 + $ExpectedArgs.Count) -Exactly
         $script:sleepTimes | Should -Be @()
         $global:LASTEXITCODE | Should -Be 0
     }
-
-    It " InvalidPackageFormat" {
-        { 
+    It "InvalidPackageFormat" {
+        {
             Install-WinGet-Packages -Packages 'TestPkg_975@2.0.1@3.0.1'
         } | Should -Throw 'Unexpected format for package TestPkg_975@2.0.1@3.0.1. Expected format is *'
         $script:sleepTimes | Should -Be @()
     }
-
-    It " MissingWinGet" {
+    It "MissingWinGet" {
         [CmdletBinding()]
-function WE-Get-Command -ErrorAction Stop { return $null }
+function Get-Command -ErrorAction Stop { return $null }
         { Install-WinGet-Packages -Packages 'TestPkg_975' } | Should -Throw 'Could not locate winget.exe'
         $script:sleepTimes | Should -Be @()
     }
-
-    It " ThrowOnInstallFailure" {
+    It "ThrowOnInstallFailure" {
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-
             if ($commandLine -like " *winget.exe install --id TestPkg_1  --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force" ) {
-                Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+                Write-Host " === [Mock] Invoking $commandLine"
                 return
             }
-
             if ($commandLine -like '*winget.exe install --id TestPkg_2  --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force') {
                 $script:LASTEXITCODE = 1
-                Write-WELog " === [Mock] Failed command: $commandLine" " INFO"
+                Write-Host " === [Mock] Failed command: $commandLine"
                 return
             }
-
-            throw " Unexpected command: $commandLine"
+            throw "Unexpected command: $commandLine"
         }
-
-        { Install-WinGet-Packages -Packages 'TestPkg_1, TestPkg_2 , TestPkg_3' }  | Should -Throw " Failed to install TestPkg_2 with exit code 1. WinGet return codes are listed at https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md"
+        { Install-WinGet-Packages -Packages 'TestPkg_1, TestPkg_2 , TestPkg_3' }  | Should -Throw "Failed to install TestPkg_2 with exit code 1. WinGet return codes are listed at https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md"
         $script:sleepTimes | Should -Be @(1, 1, 1, 1, 1)
         Should -Invoke Invoke-Executable -Times 8 -Exactly
     }
-
-    It " IgnoreInstallFailure" {
+    It "IgnoreInstallFailure" {
         Mock Invoke-Executable {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
                 [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
             )
-
             foreach ($expectedArg in @('TestPkg_2 ', 'TestPkg_3 ')) {
                 if ($commandLine -like " *winget.exe install --id $expectedArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force" ) {
-                    Write-WELog " === [Mock] Invoking $commandLine" " INFO"
+                    Write-Host " === [Mock] Invoking $commandLine"
                     return
                 }
             }
-
             if ($commandLine -like '*winget.exe install --id TestPkg_2  --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force') {
                 $script:LASTEXITCODE = 1
-                Write-WELog " === [Mock] Failed command: $commandLine" " INFO"
+                Write-Host " === [Mock] Failed command: $commandLine"
                 return
             }
-
-            throw " Unexpected command: $commandLine"
+            throw "Unexpected command: $commandLine"
         }
-
         Install-WinGet-Packages -Packages 'TestPkg_1, TestPkg_2 , TestPkg_3' -IgnorePackageInstallFailures $true
         $script:sleepTimes | Should -Be @(1, 1, 1, 1, 1)
         $global:LASTEXITCODE | Should -Be 0
         Should -Invoke Invoke-Executable -Times 11 -Exactly
     }
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

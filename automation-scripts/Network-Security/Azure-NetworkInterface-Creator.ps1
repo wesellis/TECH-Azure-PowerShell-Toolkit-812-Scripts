@@ -1,42 +1,23 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Azure script
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$NicName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$Location,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SubnetId,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$PublicIpId
 )
-
-#region Functions
-
-Write-Information "Creating Network Interface: $NicName"
-
+Write-Host "Creating Network Interface: $NicName"
 if ($PublicIpId) {
     $params = @{
         ResourceGroupName = $ResourceGroupName
@@ -57,11 +38,8 @@ if ($PublicIpId) {
     }
     $Nic @params
 }
+Write-Host "Network Interface created successfully:"
+Write-Host "Name: $($Nic.Name)"
+Write-Host "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+Write-Host "Location: $($Nic.Location)"
 
-Write-Information "Network Interface created successfully:"
-Write-Information "  Name: $($Nic.Name)"
-Write-Information "  Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
-Write-Information "  Location: $($Nic.Location)"
-
-
-#endregion

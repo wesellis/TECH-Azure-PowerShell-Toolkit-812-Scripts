@@ -1,128 +1,69 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Resourcegroup Cost Calculator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Resourcegroup Cost Calculator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$WEResourceGroupName
+    [Parameter(Mandatory)]
+    [string]$ResourceGroupName
 )
-
-#region Functions
-
-Write-WELog " Calculating estimated costs for Resource Group: $WEResourceGroupName" " INFO"
-
-$WEResources = Get-AzResource -ResourceGroupName $WEResourceGroupName
-
-$WETotalEstimatedCost = 0
-$WECostBreakdown = @()
-
-foreach ($WEResource in $WEResources) {
-    $WEEstimatedMonthlyCost = 0
-    
-    switch ($WEResource.ResourceType) {
-        " Microsoft.Compute/virtualMachines" { $WEEstimatedMonthlyCost = 73.00 }
-        " Microsoft.Storage/storageAccounts" { $WEEstimatedMonthlyCost = 25.00 }
-        " Microsoft.Sql/servers/databases" { $WEEstimatedMonthlyCost = 200.00 }
-        " Microsoft.Network/applicationGateways" { $WEEstimatedMonthlyCost = 125.00 }
-        " Microsoft.ContainerInstance/containerGroups" {;  $WEEstimatedMonthlyCost = 50.00 }
-        default {;  $WEEstimatedMonthlyCost = 10.00 }
+Write-Host "Calculating estimated costs for Resource Group: $ResourceGroupName"
+$Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
+$TotalEstimatedCost = 0
+$CostBreakdown = @()
+foreach ($Resource in $Resources) {
+    $EstimatedMonthlyCost = 0
+    switch ($Resource.ResourceType) {
+        "Microsoft.Compute/virtualMachines" { $EstimatedMonthlyCost = 73.00 }
+        "Microsoft.Storage/storageAccounts" { $EstimatedMonthlyCost = 25.00 }
+        "Microsoft.Sql/servers/databases" { $EstimatedMonthlyCost = 200.00 }
+        "Microsoft.Network/applicationGateways" { $EstimatedMonthlyCost = 125.00 }
+        "Microsoft.ContainerInstance/containerGroups" {;  $EstimatedMonthlyCost = 50.00 }
+        default {;  $EstimatedMonthlyCost = 10.00 }
     }
-    
-    $WECostBreakdown = $WECostBreakdown + [PSCustomObject]@{
-        ResourceName = $WEResource.Name
-        ResourceType = $WEResource.ResourceType
-        EstimatedMonthlyCost = $WEEstimatedMonthlyCost
+    $CostBreakdown = $CostBreakdown + [PSCustomObject]@{
+        ResourceName = $Resource.Name
+        ResourceType = $Resource.ResourceType
+        EstimatedMonthlyCost = $EstimatedMonthlyCost
     }
-    
-   ;  $WETotalEstimatedCost = $WETotalEstimatedCost + $WEEstimatedMonthlyCost
+$TotalEstimatedCost = $TotalEstimatedCost + $EstimatedMonthlyCost
 }
-
-Write-WELog " `nCost Breakdown:" " INFO"
-foreach ($WEItem in $WECostBreakdown) {
-    Write-WELog "  $($WEItem.ResourceName): $($WEItem.EstimatedMonthlyCost) USD/month" " INFO"
+Write-Host " `nCost Breakdown:"
+foreach ($Item in $CostBreakdown) {
+    Write-Host "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
 }
-
-Write-WELog " `nTotal Estimated Monthly Cost: $WETotalEstimatedCost USD" " INFO"
-Write-WELog " Total Estimated Annual Cost: $($WETotalEstimatedCost * 12) USD" " INFO"
-
-
-
-
+Write-Host " `nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
+Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

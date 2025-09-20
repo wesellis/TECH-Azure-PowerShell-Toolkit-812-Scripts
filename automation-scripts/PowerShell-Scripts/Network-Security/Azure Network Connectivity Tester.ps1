@@ -1,115 +1,57 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Network Connectivity Tester
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Network Connectivity Tester
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$SourceVMName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WESourceVMName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETargetAddress,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEPort = 80,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEResourceGroupName
+    [string]$TargetAddress,
+    [Parameter()]
+    [int]$Port = 80,
+    [Parameter()]
+    [string]$ResourceGroupName
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName " Azure Network Connectivity Tester" -Version " 1.0" -Description " Test network connectivity"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection -RequiredModules @('Az.Network'))) {
-        throw " Azure connection validation failed"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
-    $vm = Get-AzVM -Name $WESourceVMName -ResourceGroupName $WEResourceGroupName
+    }
+    $vm = Get-AzVM -Name $SourceVMName -ResourceGroupName $ResourceGroupName
     $networkWatcher = Get-AzNetworkWatcher -Location $vm.Location
-
-   ;  $connectivityTest = @{
+$connectivityTest = @{
         Source = @{
             ResourceId = $vm.Id
         }
         Destination = @{
-            Address = $WETargetAddress
-            Port = $WEPort
+            Address = $TargetAddress
+            Port = $Port
         }
     }
 
-    Write-Log "  Testing connectivity from $WESourceVMName to $WETargetAddress`:$WEPort..." -Level INFO
-    
-   ;  $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
-    
-    Write-WELog " Connectivity Test Results:" " INFO" -ForegroundColor Cyan
-    Write-WELog " Status: $($result.ConnectionStatus)" " INFO" -ForegroundColor $(if($result.ConnectionStatus -eq " Reachable" ){" Green" }else{" Red" })
-    Write-WELog " Average Latency: $($result.AvgLatencyInMs) ms" " INFO" -ForegroundColor White
-    Write-WELog " Min Latency: $($result.MinLatencyInMs) ms" " INFO" -ForegroundColor White
-    Write-WELog " Max Latency: $($result.MaxLatencyInMs) ms" " INFO" -ForegroundColor White
-    Write-WELog " Probes Sent: $($result.ProbesSent)" " INFO" -ForegroundColor White
-    Write-WELog " Probes Failed: $($result.ProbesFailed)" " INFO" -ForegroundColor White
+$result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
+    Write-Host "Connectivity Test Results:" -ForegroundColor Cyan
+    Write-Host "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable" ){"Green" }else{"Red" })
+    Write-Host "Average Latency: $($result.AvgLatencyInMs) ms" -ForegroundColor White
+    Write-Host "Min Latency: $($result.MinLatencyInMs) ms" -ForegroundColor White
+    Write-Host "Max Latency: $($result.MaxLatencyInMs) ms" -ForegroundColor White
+    Write-Host "Probes Sent: $($result.ProbesSent)" -ForegroundColor White
+    Write-Host "Probes Failed: $($result.ProbesFailed)" -ForegroundColor White
+} catch { throw }
 
-} catch {
-    Write-Log "  Network connectivity test failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

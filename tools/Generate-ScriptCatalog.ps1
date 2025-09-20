@@ -1,24 +1,11 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
-
+    Generate ScriptCatalog
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    NOTES
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Generate-ScriptCatalog.ps1
-# Generates a comprehensive catalog of all PowerShell scripts in the repository
-# Version: 2.0
-
+# Generates a
 param(
     [string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
     [string]$OutputFormat = "Markdown",
@@ -109,8 +96,8 @@ Total Scripts: $($Scripts.Count)
         $markdown += "|--------|-------------|------------|------|`n"
         
         foreach ($script in ($category.Group | Sort-Object Name)) {
-            $params = if ($script.Parameters) { $script.Parameters -join ", " } else { "None" }
-            $tags = if ($script.Tags) { $script.Tags | ForEach-Object { "``$_``" } | Select-Object -Unique } -join " "
+            $params = if ($script.Parameters) { $script.Parameters -join ", "} else { "None" }
+            $tags = if ($script.Tags) { ($script.Tags | ForEach-Object { "``$_``" } | Select-Object -Unique) -join " " } else { "" }
             $markdown += "| [$($script.Name)]($($script.Path)) | $($script.Description) | $params | $tags |`n"
         }
     }
@@ -171,7 +158,7 @@ function Generate-HTMLCatalog {
             <tbody>
 "@
         foreach ($script in ($category.Group | Sort-Object Name)) {
-            $params = if ($script.Parameters) { $script.Parameters -join ", " } else { "None" }
+            $params = if ($script.Parameters) { $script.Parameters -join ", "} else { "None" }
             $tags = if ($script.Tags) { ($script.Tags | ForEach-Object { "<span class='tag'>$_</span>" }) -join " " } else { "" }
             $html += @"
                 <tr class="script-row">
@@ -239,3 +226,4 @@ Write-Host "`nCatalog generation complete!" -ForegroundColor Cyan
 Write-Host "Total scripts cataloged: $($scriptMetadata.Count)" -ForegroundColor Yellow
 
 #endregion
+

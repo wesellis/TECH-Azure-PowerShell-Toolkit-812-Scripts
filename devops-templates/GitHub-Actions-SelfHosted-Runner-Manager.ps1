@@ -1,14 +1,9 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Accounts, Az.Resources, Az.Compute
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     GitHub Actions Self-Hosted Runner Enterprise Management Tool
+
 .DESCRIPTION
-    Advanced tool for deploying, managing, and scaling GitHub Actions self-hosted runners
+    tool for deploying, managing, and scaling GitHub Actions self-hosted runners
     on Azure with enterprise security, monitoring, and auto-scaling capabilities.
 .PARAMETER ResourceGroupName
     Target Resource Group for runner infrastructure
@@ -37,7 +32,7 @@
 .PARAMETER MaxRunners
     Maximum number of runners for auto-scaling
 .PARAMETER EnableMonitoring
-    Enable comprehensive monitoring and alerting
+    Enable
 .PARAMETER EnableSpotInstances
     Use Azure Spot VMs for cost optimization
 .PARAMETER CustomImage
@@ -52,9 +47,7 @@
     Key Vault name for storing secrets
 .PARAMETER Tags
     Tags to apply to resources
-.EXAMPLE
     .\GitHub-Actions-SelfHosted-Runner-Manager.ps1 -ResourceGroupName "github-runners-rg" -RunnerGroupName "enterprise-runners" -Location "East US" -Action "Deploy" -GitHubOrganization "myorg" -RunnerCount 5 -EnableAutoScaling
-.EXAMPLE
     .\GitHub-Actions-SelfHosted-Runner-Manager.ps1 -ResourceGroupName "github-runners-rg" -Action "Scale" -RunnerCount 10 -EnableMonitoring
 .NOTES
     Author: Wesley Ellis
@@ -143,14 +136,13 @@ try {
     Import-Module Az.Compute -Force -ErrorAction Stop
     Import-Module Az.Network -Force -ErrorAction Stop
     Import-Module Az.KeyVault -Force -ErrorAction Stop
-    Write-Information " Successfully imported required Azure modules"
+    Write-Host "Successfully imported required Azure modules"
 } catch {
-    Write-Error " Failed to import required modules: $($_.Exception.Message)"
-    exit 1
+    Write-Error "Failed to import required modules: $($_.Exception.Message)"
+    throw
 }
 
 # Enhanced logging function
-[CmdletBinding()]
 function Write-EnhancedLog {
     param(
         [string]$Message,
@@ -166,12 +158,11 @@ function Write-EnhancedLog {
         Success = "Green"
     }
     
-    Write-Information "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 # Get GitHub registration token
-[CmdletBinding()]
-function Get-GitHubRegistrationToken -ErrorAction Stop {
+function Get-GitHubRegistrationToken {
     try {
         Write-EnhancedLog "Getting GitHub runner registration token..." "Info"
         
@@ -203,8 +194,7 @@ function Get-GitHubRegistrationToken -ErrorAction Stop {
 }
 
 # Create runner infrastructure
-[CmdletBinding()]
-function New-RunnerInfrastructure -ErrorAction Stop {
+function New-RunnerInfrastructure {
     try {
         Write-EnhancedLog "Creating GitHub Actions runner infrastructure..." "Info"
         
@@ -262,8 +252,7 @@ function New-RunnerInfrastructure -ErrorAction Stop {
 }
 
 # Generate runner configuration script
-[CmdletBinding()]
-function New-RunnerConfigurationScript -ErrorAction Stop {
+function New-RunnerConfigurationScript {
     param(
         [string]$RegistrationToken,
         [string]$RunnerName,
@@ -342,12 +331,12 @@ echo "GitHub Actions runner '$RunnerName' configured successfully"
             # Windows PowerShell script
             $configScript = @"
 # GitHub Actions Runner Configuration Script for Windows
-Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force
+Set-ExecutionPolicy Bypass -Scope Process -Force
 
 # Install Chocolatey
-if (!(Get-Command -ErrorAction Stop choco -ErrorAction SilentlyContinue)) {
+if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    iex ((New-Object -ErrorAction Stop System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
 # Install required software
@@ -361,12 +350,12 @@ choco install -y gh
 New-Item -ItemType Directory -Path `$runnerPath -Force
 
 # Download GitHub Actions runner
-Set-Location -ErrorAction Stop `$runnerPath
+Set-Location `$runnerPath
 `$runnerVersion = (Invoke-RestMethod -Uri "https://api.github.com/repos/actions/runner/releases/latest").tag_name.TrimStart('v')
 `$runnerUrl = "https://github.com/actions/runner/releases/download/v`$runnerVersion/actions-runner-win-x64-`$runnerVersion.zip"
 Invoke-WebRequest -Uri `$runnerUrl -OutFile "actions-runner.zip"
 Expand-Archive -Path "actions-runner.zip" -DestinationPath . -Force
-Remove-Item -ErrorAction Stop "actions-runner.zip"
+Remove-Item "actions-runner.zip"
 
 # Configure runner
 & .\config.cmd --url "$runnerUrl" --token "$RegistrationToken" --name "$RunnerName" --labels "$labelsString" --unattended --replace
@@ -375,7 +364,7 @@ Remove-Item -ErrorAction Stop "actions-runner.zip"
 & .\svc.sh install
 & .\svc.sh start
 
-Write-Information "GitHub Actions runner '$RunnerName' configured successfully"
+Write-Host "GitHub Actions runner '$RunnerName' configured successfully"
 "@
         }
         
@@ -388,7 +377,6 @@ Write-Information "GitHub Actions runner '$RunnerName' configured successfully"
 }
 
 # Deploy GitHub Actions runners
-[CmdletBinding()]
 function Install-GitHubRunners {
     param([hashtable]$Infrastructure)
     
@@ -468,8 +456,7 @@ function Install-GitHubRunners {
 }
 
 # Configure auto-scaling
-[CmdletBinding()]
-function Set-RunnerAutoScaling -ErrorAction Stop {
+function Set-RunnerAutoScaling {
     try {
         if (-not $EnableAutoScaling) {
             Write-EnhancedLog "Auto-scaling is not enabled" "Info"
@@ -491,8 +478,7 @@ function Set-RunnerAutoScaling -ErrorAction Stop {
 }
 
 # Monitor runner status
-[CmdletBinding()]
-function Get-RunnerStatus -ErrorAction Stop {
+function Get-RunnerStatus {
     try {
         Write-EnhancedLog "Checking GitHub Actions runner status..." "Info"
         
@@ -551,8 +537,7 @@ function Get-RunnerStatus -ErrorAction Stop {
 }
 
 # Scale runners
-[CmdletBinding()]
-function Set-RunnerScale -ErrorAction Stop {
+function Set-RunnerScale {
     param([int]$TargetCount)
     
     try {
@@ -597,8 +582,7 @@ function Set-RunnerScale -ErrorAction Stop {
 }
 
 # Remove all runners
-[CmdletBinding()]
-function Remove-RunnerInfrastructure -ErrorAction Stop {
+function Remove-RunnerInfrastructure {
     try {
         Write-EnhancedLog "Removing GitHub Actions runner infrastructure..." "Warning"
         
@@ -693,7 +677,8 @@ try {
     
 } catch {
     Write-EnhancedLog "Tool execution failed: $($_.Exception.Message)" "Error"
-    exit 1
+    throw
 }
 
 #endregion
+

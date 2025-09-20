@@ -3,56 +3,37 @@
 #Requires -Module Az.Monitor
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
-    Generates comprehensive Azure governance and compliance reports
+    Generates
 
-.DESCRIPTION
     Creates detailed reports covering resource compliance, policy assignments,
     role assignments, resource locks, and activity logs. Supports multiple
     output formats and automated scheduling.
-
 .PARAMETER ReportType
     Type of report: Compliance, Security, Inventory, Activity, Custom
-
 .PARAMETER SubscriptionId
     Target subscription (uses current context if not specified)
-
 .PARAMETER ResourceGroupName
     Limit report to specific resource group
-
 .PARAMETER OutputFormat
     Report format: HTML, JSON, CSV, Excel
-
 .PARAMETER OutputPath
     Custom output path for report files
-
 .PARAMETER TimeRange
     Time range for activity reports: 1h, 6h, 24h, 7d, 30d
-
 .PARAMETER IncludeCharts
     Include visual charts in HTML reports
-
 .PARAMETER EmailRecipients
     Email addresses for report distribution
-
 .PARAMETER Compress
     Create compressed archive of all reports
 
-.EXAMPLE
     .\generate-report.ps1 -ReportType Compliance -OutputFormat HTML
 
     Generate HTML compliance report for current subscription
 
-.EXAMPLE
     .\generate-report.ps1 -ReportType Security -ResourceGroupName "RG-Prod" -IncludeCharts
 
-    Generate security report for production resource group with charts
-
-.NOTES
-    Version: 1.0.0
-    Created: 2024-11-15
-#>
+    Generate security report for production resource group with charts#>
 
 [CmdletBinding()]
 param(
@@ -134,9 +115,8 @@ function Get-ComplianceData {
                 NonCompliantResources = ($policyStates | Where-Object { -not $_.IsCompliant }).Count
                 TotalPolicies = $assignments.Count
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to retrieve compliance data: $_"
         return @{
             PolicyStates = @()
@@ -173,9 +153,8 @@ function Get-SecurityData {
                 TotalNSGs = $nsgs.Count
                 UnprotectedResources = 0  # Calculate based on resources without locks
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to retrieve security data: $_"
         return @{
             RoleAssignments = @()
@@ -215,9 +194,8 @@ function Get-InventoryData {
                 UniqueLocations = $groupedByLocation.Count
                 ResourceGroups = $groupedByRG.Count
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to retrieve inventory data: $_"
         return @{
             Resources = @()
@@ -272,9 +250,8 @@ function Get-ActivityData {
                 StartTime = $startTime
                 EndTime = Get-Date
             }
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to retrieve activity data: $_"
         return @{
             Activities = @()
@@ -488,9 +465,8 @@ function New-ReportArchive {
             Write-Host "Report archive created: $ArchivePath" -ForegroundColor Green
         } else {
             Write-Warning "Compress-Archive not available. Skipping archive creation."
-        }
-    }
-    catch {
+        
+} catch {
         Write-Warning "Failed to create archive: $_"
     }
 }
@@ -570,3 +546,4 @@ Write-Host "Files created:" -ForegroundColor Cyan
 $reportFiles | ForEach-Object {
     Write-Host "  - $_" -ForegroundColor Green
 }
+

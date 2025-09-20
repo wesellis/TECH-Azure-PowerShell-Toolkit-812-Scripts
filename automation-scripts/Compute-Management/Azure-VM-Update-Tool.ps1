@@ -1,30 +1,15 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Update VMs
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
+    Update VMs
 #>
 param (
     [string]$ResourceGroupName,
     [string]$VmName
 )
-
-#region Functions
-
 # Add your VM update logic here
 # Example: Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
-Write-Information "Update VM functionality to be implemented for $VmName in $ResourceGroupName"
+Write-Host "Update VM functionality to be implemented for $VmName in $ResourceGroupName"
 
-
-#endregion

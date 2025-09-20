@@ -1,129 +1,5 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Sets up Azure budget alerts and monitoring for proactive cost management.
-
-.DESCRIPTION
-    This script creates and configures Azure budgets with automated alert thresholds
-    to notify stakeholders when spending approaches or exceeds defined limits.
-    Supports subscription-level, resource group-level, and custom scope budgets.
-
-.PARAMETER BudgetName
-    Name for the budget. Will be auto-generated if not specified.
-
-.PARAMETER BudgetAmount
-    Monthly budget amount in USD.
-
-.PARAMETER SubscriptionId
-    Azure subscription ID. Uses current context if not specified.
-
-.PARAMETER ResourceGroup
-    Optional resource group name for resource group-scoped budget.
-
-.PARAMETER AlertThreshold
-    Array of percentage thresholds for alerts (e.g., @(50, 80, 95)).
-
-.PARAMETER Recipients
-    Array of email addresses to receive budget alerts.
-
-.PARAMETER StartDate
-    Budget start date. Defaults to first day of current month.
-
-.PARAMETER EndDate
-    Budget end date. Defaults to one year from start date.
-
-.PARAMETER Department
-    Department name for budget categorization and filtering.
-
-.PARAMETER CostCenter
-    Cost center code for budget allocation tracking.
-
-.EXAMPLE
-    .\Setup-BudgetAlerts.ps1 -BudgetAmount 10000 -AlertThreshold @(80, 95) -Recipients @("finance@company.com")
-
-.EXAMPLE
-    .\Setup-BudgetAlerts.ps1 -BudgetName "Production-Budget" -BudgetAmount 15000 -ResourceGroup "Production-RG" -AlertThreshold @(50, 75, 90, 95)
-
-.EXAMPLE
-    .\Setup-BudgetAlerts.ps1 -BudgetAmount 5000 -Department "IT" -CostCenter "CC001" -Recipients @("it-manager@company.com", "finance@company.com")
-
-.NOTES
-    Author: Wesley Ellis
-    Email: wes@wesellis.com
-    Created: May 23, 2025
-    Version: 1.0
-
-    Prerequisites:
-    - Azure PowerShell module (Az)
-    - Budget Contributor role or higher
-    - Valid email addresses for notifications
-    - Azure Cost Management enabled
-#>
-
-[CmdletBinding()]
-param(
-    [Parameter(Mandatory = $false)]
-    [string]$BudgetName,
-    
-    [Parameter(Mandatory = $true)]
-    [decimal]$BudgetAmount,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$SubscriptionId,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$ResourceGroup,
-    
-    [Parameter(Mandatory = $false)]
-    [int[]]$AlertThreshold = @(80, 95),
-    
-    [Parameter(Mandatory = $true)]
-    [string[]]$Recipients,
-    
-    [Parameter(Mandatory = $false)]
-    [datetime]$StartDate = (Get-Date -Day 1),
-    
-    [Parameter(Mandatory = $false)]
-    [datetime]$EndDate,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$Department,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$CostCenter
-)
-
-#region Functions
-
-# Script configuration
-$ErrorActionPreference = "Stop"
-$ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$LogPath = Join-Path (Split-Path $ScriptRoot -Parent) "logs"
-
-# Ensure log directory exists
-if (-not (Test-Path $LogPath)) {
-    New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
-}
-
-# Logging function
-[CmdletBinding()]
-function Write-Log {
-    param([string]$Message, [string]$Level = "INFO")
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
-    Write-Output $logEntry
-    Add-Content -Path (Join-Path $LogPath "budget-alerts.log") -Value $logEntry
-}
-
-[CmdletBinding()]
-function Test-AzureConnection {
-    <#
-    .SYNOPSIS
         Validates Azure connection and permissions
     #>
     try {
@@ -142,8 +18,8 @@ function Test-AzureConnection {
     }
 }
 
-[CmdletBinding()]
-function Get-BudgetScope -ErrorAction Stop {
+function Get-BudgetScope {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Determines the appropriate scope for the budget
@@ -165,8 +41,8 @@ function Get-BudgetScope -ErrorAction Stop {
     return $scope
 }
 
-[CmdletBinding()]
-function New-BudgetAlerts -ErrorAction Stop {
+function New-BudgetAlerts {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Creates budget alert notifications
@@ -195,8 +71,8 @@ function New-BudgetAlerts -ErrorAction Stop {
     return $notifications
 }
 
-[CmdletBinding()]
-function New-AzureBudget -ErrorAction Stop {
+function New-AzureBudget {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Creates or updates an Azure budget with alerts
@@ -269,8 +145,8 @@ function New-AzureBudget -ErrorAction Stop {
     }
 }
 
-[CmdletBinding()]
 function Test-BudgetConfiguration {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Validates budget configuration and sends test notification
@@ -345,16 +221,15 @@ Azure Cost Management System
             CurrentSpend = $currentSpend
             UtilizationPercent = $utilizationPercent
             AlertStatus = $alertStatus
-        }
-    }
-    catch {
+        
+} catch {
         Write-Log "Budget test failed: $($_.Exception.Message)" -Level "WARNING"
         return $null
     }
 }
 
-[CmdletBinding()]
 function Show-BudgetSummary {
+    [CmdletBinding()]
     <#
     .SYNOPSIS
         Displays a summary of the created budget configuration
@@ -364,50 +239,52 @@ function Show-BudgetSummary {
         [hashtable]$TestResults
     )
     
-    Write-Information "`n" + "="*60 -ForegroundColor Cyan
-    Write-Information "BUDGET ALERT SETUP SUMMARY"
-    Write-Information "="*60 -ForegroundColor Cyan
+    Write-Host "`n$('=' * 60)" -ForegroundColor Cyan
+    Write-Host "BUDGET ALERT SETUP SUMMARY" -ForegroundColor White
+    Write-Host "$('=' * 60)" -ForegroundColor Cyan
     
-    Write-Information "Budget Name: " -NoNewline
-    Write-Information $Budget.Name -ForegroundColor White
+    Write-Host "Budget Name: " -NoNewline -ForegroundColor White
+    Write-Host $Budget.Name -ForegroundColor Green
     
-    Write-Information "Budget Amount: " -NoNewline
-    Write-Information $BudgetAmount.ToString('C') -ForegroundColor Green
+    Write-Host "Budget Amount: " -NoNewline -ForegroundColor White
+    Write-Host $BudgetAmount.ToString('C') -ForegroundColor Green
     
-    Write-Information "Scope: " -NoNewline
-    Write-Information $Budget.Scope -ForegroundColor White
+    Write-Host "Scope: " -NoNewline -ForegroundColor White
+    Write-Host $Budget.Scope -ForegroundColor Gray
     
-    Write-Information "Time Period: " -NoNewline
-    Write-Information "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))"
+    Write-Host "Time Period: " -NoNewline -ForegroundColor White
+    Write-Host "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Gray
     
-    Write-Information "Alert Thresholds: " -NoNewline
-    Write-Information ($AlertThreshold -join "%, ") + "%"
+    Write-Host "Alert Thresholds: " -NoNewline -ForegroundColor White
+    Write-Host "$(($AlertThreshold -join '%, '))%" -ForegroundColor Yellow
     
-    Write-Information "Recipients: " -NoNewline
-    Write-Information ($Recipients -join ", ")
+    Write-Host "Recipients: " -NoNewline -ForegroundColor White
+    Write-Host ($Recipients -join ", ") -ForegroundColor Gray
     
     if ($TestResults) {
-        Write-Information "`nCurrent Status:"
-        Write-Information "Current Spending: " -NoNewline
-        Write-Information $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Host "`nCurrent Status:" -ForegroundColor White
+        Write-Host "Current Spending: " -NoNewline -ForegroundColor White
+        Write-Host $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
         
-        Write-Information "Budget Utilization: " -NoNewline
-        Write-Information "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Host "Budget Utilization: " -NoNewline -ForegroundColor White
+        Write-Host "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
         
-        Write-Information "Alert Status: " -NoNewline
-        Write-Information $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Host "Alert Status: " -NoNewline -ForegroundColor White
+        Write-Host $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
     }
     
-    Write-Information "`nNext Steps:"
-    Write-Information "• Monitor budget in Azure Portal (Cost Management + Billing)"
-    Write-Information "• Check email alerts when thresholds are reached"
-    Write-Information "• Review and adjust budget amounts as needed"
-    Write-Information "• Set up additional budgets for other scopes if required"
+    Write-Host "`nNext Steps:" -ForegroundColor White
+    Write-Host "- Monitor budget in Azure Portal (Cost Management + Billing)" -ForegroundColor Gray
+    Write-Host "- Check email alerts when thresholds are reached" -ForegroundColor Gray
+    Write-Host "- Review and adjust budget amounts as needed" -ForegroundColor Gray
+    Write-Host "- Set up additional budgets for other scopes if required" -ForegroundColor Gray
     
-    Write-Information "`n Budget alert setup completed successfully!"
+    Write-Host "`nBudget alert setup completed successfully!" -ForegroundColor Green
 }
 
-# Main execution
+#endregion
+
+#region Main-Execution
 try {
     Write-Log "Starting Azure budget alerts setup"
     
@@ -479,11 +356,11 @@ try {
 catch {
     Write-Log "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error "Budget setup failed: $($_.Exception.Message)"
-    exit 1
+    throw
 }
 finally {
     Write-Log "Script execution completed"
 }
 
-
 #endregion
+

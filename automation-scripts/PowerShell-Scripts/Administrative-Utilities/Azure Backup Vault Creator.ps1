@@ -1,163 +1,93 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Backup Vault Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Backup Vault Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$VaultName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVaultName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEStorageType = " GeoRedundant"
+    [string]$Location,
+    [Parameter()]
+    [string]$StorageType = "GeoRedundant"
 )
-
-#region Functions
-
-Write-WELog " Creating Recovery Services Vault: $WEVaultName" " INFO"
-
-; 
+Write-Host "Creating Recovery Services Vault: $VaultName"
 $params = @{
     ErrorAction = "Stop"
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEVaultName
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    Name = $VaultName
+    Location = $Location
 }
-$WEVault @params
-
-
-Set-AzRecoveryServicesVaultContext -Vault $WEVault
-
-
+$Vault @params
+Set-AzRecoveryServicesVaultContext -Vault $Vault
 $params = @{
-    BackupStorageRedundancy = $WEStorageType
+    BackupStorageRedundancy = $StorageType
     ErrorAction = "Stop"
-    Vault = $WEVault
+    Vault = $Vault
 }
 Set-AzRecoveryServicesBackupProperty @params
-
-Write-WELog "  Recovery Services Vault created successfully:" " INFO"
-Write-WELog "  Name: $($WEVault.Name)" " INFO"
-Write-WELog "  Location: $($WEVault.Location)" " INFO"
-Write-WELog "  Storage Type: $WEStorageType" " INFO"
-Write-WELog "  Resource ID: $($WEVault.ID)" " INFO"
-
-
-Write-WELog " `nDefault Backup Policies:" " INFO" ; 
-$WEPolicies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $WEVault.ID
-foreach ($WEPolicy in $WEPolicies) {
-    Write-WELog "  • $($WEPolicy.Name) [$($WEPolicy.WorkloadType)]" " INFO"
+Write-Host "Recovery Services Vault created successfully:"
+Write-Host "Name: $($Vault.Name)"
+Write-Host "Location: $($Vault.Location)"
+Write-Host "Storage Type: $StorageType"
+Write-Host "Resource ID: $($Vault.ID)"
+Write-Host " `nDefault Backup Policies:" ;
+$Policies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $Vault.ID
+foreach ($Policy in $Policies) {
+    Write-Host "   $($Policy.Name) [$($Policy.WorkloadType)]"
 }
-
-Write-WELog " `nVault Capabilities:" " INFO"
-Write-WELog " • VM backup and restore" " INFO"
-Write-WELog " • File and folder backup" " INFO"
-Write-WELog " • SQL Server backup" " INFO"
-Write-WELog " • Azure File Shares backup" " INFO"
-Write-WELog " • Cross-region restore" " INFO"
-Write-WELog " • Point-in-time recovery" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Configure backup policies" " INFO"
-Write-WELog " 2. Enable backup for resources" " INFO"
-Write-WELog " 3. Schedule backup jobs" " INFO"
-Write-WELog " 4. Test restore procedures" " INFO"
-Write-WELog " 5. Monitor backup status" " INFO"
-
-Write-WELog " `nSupported Workloads:" " INFO"
-Write-WELog " • Azure Virtual Machines" " INFO"
-Write-WELog " • Azure File Shares" " INFO"
-Write-WELog " • SQL Server in Azure VMs" " INFO"
-Write-WELog " • SAP HANA in Azure VMs" " INFO"
-
-
-
+Write-Host " `nVault Capabilities:"
+Write-Host "VM backup and restore"
+Write-Host "File and folder backup"
+Write-Host "SQL Server backup"
+Write-Host "Azure File Shares backup"
+Write-Host "Cross-region restore"
+Write-Host "Point-in-time recovery"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Configure backup policies"
+Write-Host " 2. Enable backup for resources"
+Write-Host " 3. Schedule backup jobs"
+Write-Host " 4. Test restore procedures"
+Write-Host " 5. Monitor backup status"
+Write-Host " `nSupported Workloads:"
+Write-Host "Azure Virtual Machines"
+Write-Host "Azure File Shares"
+Write-Host "SQL Server in Azure VMs"
+Write-Host "SAP HANA in Azure VMs"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

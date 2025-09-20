@@ -1,118 +1,54 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Devops Pipeline Trigger
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Azure automation
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Devops Pipeline Trigger
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Organization,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEOrganization,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$Project,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PipelineId,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEProject,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPipelineId,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPersonalAccessToken,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WESourceBranch = " main"
+    [string]$PersonalAccessToken,
+    [Parameter()]
+    [string]$SourceBranch = "main"
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName " Azure DevOps Pipeline Trigger" -Version " 1.0" -Description " Trigger DevOps pipelines remotely"
-
+Write-Host "Azure Script Started" -ForegroundColor Green
 try {
-    $base64Token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(" :$WEPersonalAccessToken" ))
-    $headers = @{ Authorization = " Basic $base64Token" }
-    
-    $uri = " https://dev.azure.com/$WEOrganization/$WEProject/_apis/pipelines/$WEPipelineId/runs?api-version=6.0"
-    
-   ;  $body = @{
+    $base64Token = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$PersonalAccessToken"))
+    $headers = @{ Authorization = "Basic $base64Token" }
+    $uri = "https://dev.azure.com/$Organization/$Project/_apis/pipelines/$PipelineId/runs?api-version=6.0"
+$body = @{
         stagesToSkip = @()
         resources = @{
             repositories = @{
                 self = @{
-                    refName = " refs/heads/$WESourceBranch"
+                    refName = "refs/heads/$SourceBranch"
                 }
             }
         }
     } | ConvertTo-Json -Depth 3
-
-   ;  $response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType " application/json"
-    
-    Write-WELog "  Pipeline triggered successfully!" " INFO" -ForegroundColor Green
-    Write-WELog " Run ID: $($response.id)" " INFO" -ForegroundColor Cyan
-    Write-WELog " URL: $($response._links.web.href)" " INFO" -ForegroundColor Yellow
-
+$response = Invoke-RestMethod -Uri $uri -Method Post -Headers $headers -Body $body -ContentType " application/json"
+    Write-Host "Pipeline triggered successfully!" -ForegroundColor Green
+    Write-Host "Run ID: $($response.id)" -ForegroundColor Cyan
+    Write-Host "URL: $($response._links.web.href)" -ForegroundColor Yellow
 } catch {
-    Write-Log "  Pipeline trigger failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
+
+    throw
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

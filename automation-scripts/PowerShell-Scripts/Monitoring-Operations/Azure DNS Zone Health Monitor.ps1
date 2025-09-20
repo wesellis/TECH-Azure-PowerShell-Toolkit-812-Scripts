@@ -1,241 +1,162 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Dns Zone Health Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Dns Zone Health Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEZoneName
+    [string]$ResourceGroupName,
+    [string]$ZoneName
 )
-
-#region Functions
-
-Write-WELog " Monitoring DNS Zone: $WEZoneName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEDnsZone = Get-AzDnsZone -ResourceGroupName $WEResourceGroupName -Name $WEZoneName
-
-Write-WELog " DNS Zone Information:" " INFO"
-Write-WELog "  Zone Name: $($WEDnsZone.Name)" " INFO"
-Write-WELog "  Resource Group: $($WEDnsZone.ResourceGroupName)" " INFO"
-Write-WELog "  Number of Record Sets: $($WEDnsZone.NumberOfRecordSets)" " INFO"
-Write-WELog "  Max Number of Record Sets: $($WEDnsZone.MaxNumberOfRecordSets)" " INFO"
-
-
-Write-WELog " `nName Servers:" " INFO"
-foreach ($WENameServer in $WEDnsZone.NameServers) {
-    Write-WELog "  $WENameServer" " INFO"
+Write-Host "Monitoring DNS Zone: $ZoneName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host " ============================================" "INFO"
+$DnsZone = Get-AzDnsZone -ResourceGroupName $ResourceGroupName -Name $ZoneName
+Write-Host "DNS Zone Information:" "INFO"
+Write-Host "Zone Name: $($DnsZone.Name)" "INFO"
+Write-Host "Resource Group: $($DnsZone.ResourceGroupName)" "INFO"
+Write-Host "Number of Record Sets: $($DnsZone.NumberOfRecordSets)" "INFO"
+Write-Host "Max Number of Record Sets: $($DnsZone.MaxNumberOfRecordSets)" "INFO"
+Write-Host " `nName Servers:" "INFO"
+foreach ($NameServer in $DnsZone.NameServers) {
+    Write-Host "  $NameServer" "INFO"
 }
-
-
-Write-WELog " `nDNS Record Sets:" " INFO"
-$WERecordSets = Get-AzDnsRecordSet -ResourceGroupName $WEResourceGroupName -ZoneName $WEZoneName
-
-
-$WERecordSummary = $WERecordSets | Group-Object RecordType
-Write-WELog " `nRecord Type Summary:" " INFO"
-foreach ($WEGroup in $WERecordSummary) {
-    Write-WELog "  $($WEGroup.Name): $($WEGroup.Count) records" " INFO"
+Write-Host " `nDNS Record Sets:" "INFO"
+$RecordSets = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName
+$RecordSummary = $RecordSets | Group-Object RecordType
+Write-Host " `nRecord Type Summary:" "INFO"
+foreach ($Group in $RecordSummary) {
+    Write-Host "  $($Group.Name): $($Group.Count) records" "INFO"
 }
-
-
-Write-WELog " `nDetailed Record Sets:" " INFO"
-foreach ($WERecordSet in $WERecordSets | Sort-Object RecordType, Name) {
-    Write-WELog "  - Name: $($WERecordSet.Name)" " INFO"
-    Write-WELog "    Type: $($WERecordSet.RecordType)" " INFO"
-    Write-WELog "    TTL: $($WERecordSet.Ttl) seconds" " INFO"
-    
+Write-Host " `n Record Sets:" "INFO"
+foreach ($RecordSet in $RecordSets | Sort-Object RecordType, Name) {
+    Write-Host "  - Name: $($RecordSet.Name)" "INFO"
+    Write-Host "    Type: $($RecordSet.RecordType)" "INFO"
+    Write-Host "    TTL: $($RecordSet.Ttl) seconds" "INFO"
     # Display records based on type
-    switch ($WERecordSet.RecordType) {
-        " A" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Value: $($WERecord.Ipv4Address)" " INFO"
+    switch ($RecordSet.RecordType) {
+        "A" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Value: $($Record.Ipv4Address)" "INFO"
             }
         }
-        " AAAA" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Value: $($WERecord.Ipv6Address)" " INFO"
+        "AAAA" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Value: $($Record.Ipv6Address)" "INFO"
             }
         }
-        " CNAME" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Value: $($WERecord.Cname)" " INFO"
+        "CNAME" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Value: $($Record.Cname)" "INFO"
             }
         }
-        " MX" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Value: $($WERecord.Preference) $($WERecord.Exchange)" " INFO"
+        "MX" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Value: $($Record.Preference) $($Record.Exchange)" "INFO"
             }
         }
-        " NS" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Value: $($WERecord.Nsdname)" " INFO"
+        "NS" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Value: $($Record.Nsdname)" "INFO"
             }
         }
-        " TXT" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                $WETxtValue = ($WERecord.Value -join ' ').Substring(0, [Math]::Min(50, ($WERecord.Value -join ' ').Length))
-                Write-WELog "    Value: $WETxtValue..." " INFO"
+        "TXT" {
+            foreach ($Record in $RecordSet.Records) {
+                $TxtValue = ($Record.Value -join ' ').Substring(0, [Math]::Min(50, ($Record.Value -join ' ').Length))
+                Write-Host "    Value: $TxtValue..." "INFO"
             }
         }
-        " SOA" {
-            foreach ($WERecord in $WERecordSet.Records) {
-                Write-WELog "    Host: $($WERecord.Host)" " INFO"
-                Write-WELog "    Email: $($WERecord.Email)" " INFO"
-                Write-WELog "    Serial: $($WERecord.SerialNumber)" " INFO"
-                Write-WELog "    Refresh: $($WERecord.RefreshTime)" " INFO"
-                Write-WELog "    Retry: $($WERecord.RetryTime)" " INFO"
-                Write-WELog "    Expire: $($WERecord.ExpireTime)" " INFO"
-                Write-WELog "    Minimum TTL: $($WERecord.MinimumTtl)" " INFO"
+        "SOA" {
+            foreach ($Record in $RecordSet.Records) {
+                Write-Host "    Host: $($Record.Host)" "INFO"
+                Write-Host "    Email: $($Record.Email)" "INFO"
+                Write-Host "    Serial: $($Record.SerialNumber)" "INFO"
+                Write-Host "    Refresh: $($Record.RefreshTime)" "INFO"
+                Write-Host "    Retry: $($Record.RetryTime)" "INFO"
+                Write-Host "    Expire: $($Record.ExpireTime)" "INFO"
+                Write-Host "    Minimum TTL: $($Record.MinimumTtl)" "INFO"
             }
         }
     }
-    Write-WELog "    ---" " INFO"
+    Write-Host "    ---" "INFO"
 }
-
-
-Write-WELog " `nDNS Health Checks:" " INFO"
-
-
-$WEHasSOA = $WERecordSets | Where-Object { $_.RecordType -eq " SOA" -and $_.Name -eq " @" }
-$WEHasNS = $WERecordSets | Where-Object { $_.RecordType -eq " NS" -and $_.Name -eq " @" }
-$WEHasA = $WERecordSets | Where-Object { $_.RecordType -eq " A" -and $_.Name -eq " @" }
-$WEHasWWW = $WERecordSets | Where-Object { $_.Name -eq " www" }
-
-Write-WELog "  [OK] SOA Record: $(if ($WEHasSOA) { 'Present' } else { 'Missing' })" " INFO"
-Write-WELog "  [OK] NS Records: $(if ($WEHasNS) { 'Present' } else { 'Missing' })" " INFO"
-Write-WELog "  [OK] Root A Record: $(if ($WEHasA) { 'Present' } else { 'Missing (Optional)' })" " INFO"
-Write-WELog "  [OK] WWW Record: $(if ($WEHasWWW) { 'Present' } else { 'Missing (Recommended)' })" " INFO"
-
-
-$WELowTTLRecords = $WERecordSets | Where-Object { $_.Ttl -lt 300 -and $_.RecordType -ne " SOA" }
-if ($WELowTTLRecords.Count -gt 0) {
-    Write-WELog "  [WARN] Low TTL Warning: $($WELowTTLRecords.Count) records have TTL < 5 minutes" " INFO"
-    foreach ($WERecord in $WELowTTLRecords) {
-        Write-WELog "    - $($WERecord.Name) ($($WERecord.RecordType)): $($WERecord.Ttl)s" " INFO"
+Write-Host " `nDNS Health Checks:" "INFO"
+$HasSOA = $RecordSets | Where-Object { $_.RecordType -eq "SOA" -and $_.Name -eq " @" }
+$HasNS = $RecordSets | Where-Object { $_.RecordType -eq "NS" -and $_.Name -eq " @" }
+$HasA = $RecordSets | Where-Object { $_.RecordType -eq "A" -and $_.Name -eq " @" }
+$HasWWW = $RecordSets | Where-Object { $_.Name -eq " www" }
+Write-Host "  [OK] SOA Record: $(if ($HasSOA) { 'Present' } else { 'Missing' })" "INFO"
+Write-Host "  [OK] NS Records: $(if ($HasNS) { 'Present' } else { 'Missing' })" "INFO"
+Write-Host "  [OK] Root A Record: $(if ($HasA) { 'Present' } else { 'Missing (Optional)' })" "INFO"
+Write-Host "  [OK] WWW Record: $(if ($HasWWW) { 'Present' } else { 'Missing (Recommended)' })" "INFO"
+$LowTTLRecords = $RecordSets | Where-Object { $_.Ttl -lt 300 -and $_.RecordType -ne "SOA" }
+if ($LowTTLRecords.Count -gt 0) {
+    Write-Host "  [WARN] Low TTL Warning: $($LowTTLRecords.Count) records have TTL < 5 minutes" "INFO"
+    foreach ($Record in $LowTTLRecords) {
+        Write-Host "    - $($Record.Name) ($($Record.RecordType)): $($Record.Ttl)s" "INFO"
     }
 }
-
-$WEHighTTLRecords = $WERecordSets | Where-Object { $_.Ttl -gt 86400 -and $_.RecordType -ne " SOA" -and $_.RecordType -ne " NS" }
-if ($WEHighTTLRecords.Count -gt 0) {
-    Write-WELog "  [WARN] High TTL Warning: $($WEHighTTLRecords.Count) records have TTL > 24 hours" " INFO"
+$HighTTLRecords = $RecordSets | Where-Object { $_.Ttl -gt 86400 -and $_.RecordType -ne "SOA" -and $_.RecordType -ne "NS" }
+if ($HighTTLRecords.Count -gt 0) {
+    Write-Host "  [WARN] High TTL Warning: $($HighTTLRecords.Count) records have TTL > 24 hours" "INFO"
 }
-
-
-Write-WELog " `nDNS Resolution Test:" " INFO"
+Write-Host " `nDNS Resolution Test:" "INFO"
 try {
     # Test resolution of the zone itself
-   ;  $WEResolutionTest = Resolve-DnsName -Name $WEZoneName -Type NS -ErrorAction SilentlyContinue
-    if ($WEResolutionTest) {
-        Write-WELog "  [OK] Zone resolution: Successful" " INFO"
-        Write-WELog "    Responding name servers:" " INFO"
-        foreach ($WENS in $WEResolutionTest | Where-Object { $_.Type -eq " NS" }) {
-            Write-WELog "      $($WENS.NameHost)" " INFO"
+$ResolutionTest = Resolve-DnsName -Name $ZoneName -Type NS -ErrorAction SilentlyContinue
+    if ($ResolutionTest) {
+        Write-Host "  [OK] Zone resolution: Successful" "INFO"
+        Write-Host "    Responding name servers:" "INFO"
+        foreach ($NS in $ResolutionTest | Where-Object { $_.Type -eq "NS" }) {
+            Write-Host "      $($NS.NameHost)" "INFO"
         }
     } else {
-        Write-WELog "  [FAIL] Zone resolution: Failed" " INFO"
+        Write-Host "  [FAIL] Zone resolution: Failed" "INFO"
     }
-    
     # Test A record resolution if exists
-    if ($WEHasA) {
-       ;  $WEARecordTest = Resolve-DnsName -Name $WEZoneName -Type A -ErrorAction SilentlyContinue
-        if ($WEARecordTest) {
-            Write-WELog "  [OK] A record resolution: Successful" " INFO"
-            foreach ($WEA in $WEARecordTest | Where-Object { $_.Type -eq " A" }) {
-                Write-WELog "    $($WEZoneName) -> $($WEA.IPAddress)" " INFO"
+    if ($HasA) {
+$ARecordTest = Resolve-DnsName -Name $ZoneName -Type A -ErrorAction SilentlyContinue
+        if ($ARecordTest) {
+            Write-Host "  [OK] A record resolution: Successful" "INFO"
+            foreach ($A in $ARecordTest | Where-Object { $_.Type -eq "A" }) {
+                Write-Host "    $($ZoneName) -> $($A.IPAddress)" "INFO"
             }
         }
     }
-    
 } catch {
-    Write-WELog "  [WARN] DNS resolution test failed: $($_.Exception.Message)" " INFO"
+    Write-Host "  [WARN] DNS resolution test failed: $($_.Exception.Message)" "INFO"
 }
+Write-Host " `nRecommendations:" "INFO"
+Write-Host " 1. Ensure proper TTL values for your use case" "INFO"
+Write-Host " 2. Verify name server configuration at your registrar" "INFO"
+Write-Host " 3. Monitor DNS query patterns and performance" "INFO"
+Write-Host " 4. Consider adding health checks for critical records" "INFO"
+Write-Host " 5. Implement DNS monitoring and alerting" "INFO"
+Write-Host " `nDNS Zone monitoring completed at $(Get-Date)" "INFO"
 
-Write-WELog " `nRecommendations:" " INFO"
-Write-WELog " 1. Ensure proper TTL values for your use case" " INFO"
-Write-WELog " 2. Verify name server configuration at your registrar" " INFO"
-Write-WELog " 3. Monitor DNS query patterns and performance" " INFO"
-Write-WELog " 4. Consider adding health checks for critical records" " INFO"
-Write-WELog " 5. Implement DNS monitoring and alerting" " INFO"
-
-Write-WELog " `nDNS Zone monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

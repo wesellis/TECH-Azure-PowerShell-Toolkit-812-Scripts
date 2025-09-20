@@ -1,118 +1,60 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Service Health Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Service Health Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" All" , " Service" , " Planned" , " Health" , " Security" )]
-    [string]$WEEventType = " All" ,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDaysBack = 7,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEActiveOnly
+    [string]$SubscriptionId,
+    [Parameter()]
+    [ValidateSet("All" , "Service" , "Planned" , "Health" , "Security" )]
+    [string]$EventType = "All" ,
+    [Parameter()]
+    [int]$DaysBack = 7,
+    [Parameter()]
+    [switch]$ActiveOnly
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName " Azure Service Health Monitor" -Version " 1.0" -Description " Monitor Azure service health and incidents"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection -RequiredModules @('Az.AlertsManagement'))) {
-        throw " Azure connection validation failed"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
-
-    if ($WESubscriptionId) { Set-AzContext -SubscriptionId $WESubscriptionId }
-
-    $startTime = (Get-Date).AddDays(-$WEDaysBack)
+    }
+    if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
+    $startTime = (Get-Date).AddDays(-$DaysBack)
     $serviceHealthEvents = Get-AzServiceHealth -StartTime $startTime
-
-    if ($WEActiveOnly) {
-        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.Status -eq " Active" }
+    if ($ActiveOnly) {
+        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.Status -eq "Active" }
     }
-
-    if ($WEEventType -ne " All" ) {
-       ;  $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $WEEventType }
+    if ($EventType -ne "All" ) {
+$serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $EventType }
     }
-
-    Write-WELog " Service Health Summary (Last $WEDaysBack days):" " INFO" -ForegroundColor Cyan
-    Write-WELog " Total Events: $($serviceHealthEvents.Count)" " INFO" -ForegroundColor White
-    
-   ;  $eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
+    Write-Host "Service Health Summary (Last $DaysBack days):" -ForegroundColor Cyan
+    Write-Host "Total Events: $($serviceHealthEvents.Count)" -ForegroundColor White
+$eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
         [PSCustomObject]@{
             EventType = $_.Name
             Count = $_.Count
-            ActiveEvents = ($_.Group | Where-Object { $_.Status -eq " Active" }).Count
+            ActiveEvents = ($_.Group | Where-Object { $_.Status -eq "Active" }).Count
         }
     }
-    
     $eventSummary | Format-Table EventType, Count, ActiveEvents
-
     if ($serviceHealthEvents.Count -gt 0) {
-        Write-WELog " Recent Events:" " INFO" -ForegroundColor Yellow
+        Write-Host "Recent Events:" -ForegroundColor Yellow
         $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
+} catch { throw }
 
-} catch {
-    Write-Log "  Service health monitoring failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

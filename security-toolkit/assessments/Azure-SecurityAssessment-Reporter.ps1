@@ -1,52 +1,40 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
-
+    SecurityAssessment Reporter
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    NOTES
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Security Assessment Reporter
-# Professional Azure automation script for comprehensive security analysis
+# Professional Azure automation script for
 # Version: 2.0 | Enhanced for enterprise security governance
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceGroupName,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$SubscriptionId,
     
-    [Parameter(Mandatory=$false)]
-    [ValidateSet("Quick", "Comprehensive", "Compliance", "Custom")]
+    [Parameter()]
+    [ValidateSet("Quick", "", "Compliance", "Custom")]
     [string]$AssessmentType = "Quick",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$OutputPath = ".\SecurityAssessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').json",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ReportFormat = "JSON",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$IncludeRecommendations,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$ExportToCSV,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$SendToLogAnalytics,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$LogAnalyticsWorkspaceId
 )
 
@@ -56,7 +44,7 @@ param(
 # Module import removed - use #Requires instead
 
 # Professional banner
-Show-Banner -ScriptName "Azure Security Assessment Reporter" -Version "2.0" -Description "Comprehensive security posture analysis and compliance reporting"
+Show-Banner -ScriptName "Azure Security Assessment Reporter" -Version "2.0" -Description "security posture analysis and compliance reporting"
 
 try {
     # Test Azure connection and security modules
@@ -248,7 +236,7 @@ try {
     $policyStates = Invoke-AzureOperation -Operation {
         # Get policy states (requires Az.PolicyInsights module)
         try {
-            if (Get-Module -ErrorAction Stop Az.PolicyInsights -ListAvailable) {
+            if (Get-Module Az.PolicyInsights -ListAvailable -ErrorAction Stop) {
                 Import-Module Az.PolicyInsights
                 $filter = if ($ResourceGroupName) { "ResourceGroup eq '$ResourceGroupName'" } else { $null }
                 Get-AzPolicyState -Filter $filter | Select-Object -First 100
@@ -368,51 +356,51 @@ try {
     }
 
     # Display Summary
-    Write-Information ""
-    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
-    Write-Information "                              SECURITY ASSESSMENT COMPLETED"  
-    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
-    Write-Information ""
-    Write-Information "  Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
-    Write-Information ""
-    Write-Information " Assessment Summary:"
-    Write-Information "   • Total Resources: $($complianceResults.TotalResources)"
-    Write-Information "   • Security Findings: $($assessmentResults.Summary.TotalFindings)"
-    Write-Information "   • Critical Issues: $($assessmentResults.Summary.CriticalFindings)"
-    Write-Information "   • Medium Issues: $($assessmentResults.Summary.MediumFindings)"
-    Write-Information "   • Low Issues: $($assessmentResults.Summary.LowFindings)"
-    Write-Information "   • Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%"
-    Write-Information ""
-    Write-Information "� Output Files:"
-    Write-Information "   • JSON Report: $OutputPath"
+    Write-Host ""
+    Write-Host ""
+    Write-Host "                              SECURITY ASSESSMENT COMPLETED"  
+    Write-Host ""
+    Write-Host ""
+    Write-Host "Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
+    Write-Host ""
+    Write-Host "Assessment Summary:"
+    Write-Host "    Total Resources: $($complianceResults.TotalResources)"
+    Write-Host "    Security Findings: $($assessmentResults.Summary.TotalFindings)"
+    Write-Host "    Critical Issues: $($assessmentResults.Summary.CriticalFindings)"
+    Write-Host "    Medium Issues: $($assessmentResults.Summary.MediumFindings)"
+    Write-Host "    Low Issues: $($assessmentResults.Summary.LowFindings)"
+    Write-Host "    Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%"
+    Write-Host ""
+    Write-Host "�� Output Files:"
+    Write-Host "    JSON Report: $OutputPath"
     if ($ExportToCSV) {
-        Write-Information "   • CSV Export: $csvPath"
+        Write-Host "    CSV Export: $csvPath"
     }
-    Write-Information ""
+    Write-Host ""
     
     if ($assessmentResults.Summary.CriticalFindings -gt 0) {
-        Write-Information "[WARN]  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
-        Write-Information ""
+        Write-Host "[WARN]  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
+        Write-Host ""
     }
 
-    Write-Log " Security assessment completed successfully!" -Level SUCCESS
+    Write-Log "Security assessment completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Information ""
-    Write-Information " Troubleshooting Tips:"
-    Write-Information "   • Verify Security Center is enabled on the subscription"
-    Write-Information "   • Check permissions for Security Reader role"
-    Write-Information "   • Ensure Az.Security module is installed and updated"
-    Write-Information "   • Validate subscription and resource group access"
-    Write-Information ""
+    Write-Host ""
+    Write-Host "Troubleshooting Tips:"
+    Write-Host "    Verify Security Center is enabled on the subscription"
+    Write-Host "    Check permissions for Security Reader role"
+    Write-Host "    Ensure Az.Security module is installed and updated"
+    Write-Host "    Validate subscription and resource group access"
+    Write-Host ""
     
-    exit 1
+    throw
 }
 
 Write-Progress -Activity "Security Assessment" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
 
-
 #endregion
+

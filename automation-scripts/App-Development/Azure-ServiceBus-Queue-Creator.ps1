@@ -1,39 +1,21 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Service Bus
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Service Bus
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$NamespaceName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$QueueName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$MaxSizeInMegabytes = 1024
 )
-
-#region Functions
-
-Write-Information "Creating Service Bus queue: $QueueName"
-
+Write-Host "Creating Service Bus queue: $QueueName"
 $params = @{
     ErrorAction = "Stop"
     MaxSizeInMegabytes = $MaxSizeInMegabytes
@@ -42,12 +24,9 @@ $params = @{
     Name = $QueueName
 }
 $Queue @params
+Write-Host "Queue created successfully:"
+Write-Host "Name: $($Queue.Name)"
+Write-Host "Max Size: $($Queue.MaxSizeInMegabytes) MB"
+Write-Host "Status: $($Queue.Status)"
+Write-Host "Namespace: $NamespaceName"
 
-Write-Information "Queue created successfully:"
-Write-Information "  Name: $($Queue.Name)"
-Write-Information "  Max Size: $($Queue.MaxSizeInMegabytes) MB"
-Write-Information "  Status: $($Queue.Status)"
-Write-Information "  Namespace: $NamespaceName"
-
-
-#endregion

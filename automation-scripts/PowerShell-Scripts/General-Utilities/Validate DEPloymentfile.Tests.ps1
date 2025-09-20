@@ -1,81 +1,46 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Validate Deploymentfile.Tests
-
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Validate Deploymentfile.Tests
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-﻿Describe "Validate-DeploymentFile" {
+Describe "Validate-DeploymentFile" {
     BeforeAll {
-        $WEErrorActionPreference = 'Stop'
-        $dataFolder = " $(Split-Path $WEPSCommandPath -Parent)/data/validate-deploymentfile-tests"
-
-        Import-Module " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Local.psm1" -Force
-        
-        function WE-Validate-DeploymentFile(
-            [string][Parameter(Mandatory = $true)]$WESampleFolder,
-            [string][Parameter(Mandatory = $true)]$WETemplateFileName,
+        $ErrorActionPreference = 'Stop'
+        $dataFolder = " $(Split-Path $PSCommandPath -Parent)/data/validate-deploymentfile-tests"
+        Import-Module " $(Split-Path $PSCommandPath -Parent)/../ci-scripts/Local.psm1" -Force
+        function Validate-DeploymentFile(
+            [string][Parameter(Mandatory = $true)]$SampleFolder,
+            [string][Parameter(Mandatory = $true)]$TemplateFileName,
             [switch]$isPR
         ) {
             $bicepSupported = $templateFileName.EndsWith('.bicep')
-            $cmdlet = " $(Split-Path $WEPSCommandPath -Parent)/../ci-scripts/Validate-DeploymentFile.ps1"
-            $WEErrorActionPreference = 'ContinueSilently'
+            $cmdlet = " $(Split-Path $PSCommandPath -Parent)/../ci-scripts/Validate-DeploymentFile.ps1"
+            $ErrorActionPreference = 'ContinueSilently'
             $err = $null
             $warn = $null
-            $WEError.Clear()
+            $Error.Clear()
             $params = @{
-                SampleFolder = $WESampleFolder
-                WarningVariable = "warn 6>&1 2>$null 3>$null # Write-Information $buildHostOutput $WEErrorActionPreference = 'Stop' $vars = Find-VarsFromWriteHostOutput $buildHostOutput $labelBicepWarnings = $vars[" LABEL_BICEP_WARNINGS" ]"
+                SampleFolder = $SampleFolder
+                WarningVariable = "warn 6>&1 2>$null 3>$null # Write-Host $buildHostOutput $ErrorActionPreference = 'Stop' $vars = Find-VarsFromWriteHostOutput $buildHostOutput $labelBicepWarnings = $vars["LABEL_BICEP_WARNINGS" ]"
                 MainTemplateFilenameJson = "($bicepSupported ? 'azuredeploy.json' : $templateFileName)"
-                eq = " True" $hasErrors = $err.Count"
+                eq = "True" $hasErrors = $err.Count"
                 ErrorVariable = "err"
                 gt = "0"
                 BicepVersion = "1.2.3"
-                BicepPath = "($WEENV:BICEP_PATH ? $WEENV:BICEP_PATH : 'bicep')"
+                BicepPath = "($ENV:BICEP_PATH ? $ENV:BICEP_PATH : 'bicep')"
                 ErrorAction = "SilentlyContinue"
                 BuildReason = "($isPR ? 'PullRequest' : 'SomethingOtherThanPullRequest')"
                 MainTemplateFilenameBicep = "($bicepSupported ? $templateFileName : 'main.bicep')"
             }
             $buildHostOutput @params
-
             $hasErrors, $hasWarnings, $labelBicepWarnings
         }
     }
-
     It 'bicep has no errors' {
         $folder = " $dataFolder/bicep-success"
         $params = @{
@@ -84,7 +49,6 @@
             TemplateFileName = " main.bicep" $hasErrors | Should"
         }
         $hasErrors, @params
-
     It 'bicep has errors and warnings' {
         $folder = " $dataFolder/bicep-error"
         $params = @{
@@ -93,7 +57,6 @@
             TemplateFileName = " main.bicep" $hasErrors | Should"
         }
         $hasErrors, @params
-
     It 'bicep has linter warnings' {
         $folder = " $dataFolder/bicep-linter-warnings"
         $params = @{
@@ -102,7 +65,6 @@
             TemplateFileName = " main.bicep" $hasErrors | Should"
         }
         $hasErrors, @params
-
     It 'bicep has compiler warnings' {
         $folder = " $dataFolder/bicep-compiler-warnings"
         $params = @{
@@ -111,9 +73,8 @@
             TemplateFileName = " main.bicep" $hasErrors | Should"
         }
         $hasErrors, @params
-
     It 'not bicep' {
-       ;  $folder = " $dataFolder/json-success"
+$folder = " $dataFolder/json-success"
         $params = @{
             Be = $false }
             SampleFolder = $folder
@@ -122,8 +83,3 @@
         $hasErrors, @params
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

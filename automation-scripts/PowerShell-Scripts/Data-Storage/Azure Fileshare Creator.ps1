@@ -1,142 +1,80 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Fileshare Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Fileshare Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$StorageAccountName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEShareName,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEQuotaInGB = 1024
+    [string]$ShareName,
+    [Parameter()]
+    [int]$QuotaInGB = 1024
 )
-
-#region Functions
-
-Write-WELog " Creating File Share: $WEShareName" " INFO"
-
-$WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
-$WEContext = $WEStorageAccount.Context
-
+Write-Host "Creating File Share: $ShareName" "INFO"
+$StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
+$Context = $StorageAccount.Context
 $params = @{
     ErrorAction = "Stop"
-    Context = $WEContext
-    QuotaGiB = $WEQuotaInGB
-    Name = $WEShareName
+    Context = $Context
+    QuotaGiB = $QuotaInGB
+    Name = $ShareName
 }
-$WEFileShare @params
+$FileShare @params
+Write-Host "File Share created successfully:" "INFO"
+Write-Host "Name: $($FileShare.Name)" "INFO"
+Write-Host "Quota: $QuotaInGB GB" "INFO"
+Write-Host "Storage Account: $StorageAccountName" "INFO"
 
-Write-WELog "  File Share created successfully:" " INFO"
-Write-WELog "  Name: $($WEFileShare.Name)" " INFO"
-Write-WELog "  Quota: $WEQuotaInGB GB" " INFO"
-Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
-
-; 
-$WEKeys = Get-AzStorageAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName; 
-$WEKey = $WEKeys[0].Value
-
-Write-WELog " `nConnection Information:" " INFO"
-Write-WELog "  UNC Path: \\$WEStorageAccountName.file.core.windows.net\$WEShareName" " INFO"
-Write-WELog "  Mount Command (Windows):" " INFO"
-Write-WELog "    net use Z: \\$WEStorageAccountName.file.core.windows.net\$WEShareName /u:AZURE\$WEStorageAccountName $WEKey" " INFO"
-Write-WELog "  Mount Command (Linux):" " INFO"
-Write-WELog "    sudo mount -t cifs //$WEStorageAccountName.file.core.windows.net/$WEShareName /mnt/myfileshare -o vers=3.0,username=$WEStorageAccountName,password=$WEKey,dir_mode=0777,file_mode=0777" " INFO"
-
-
-
-
+$Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName;
+$Key = $Keys[0].Value
+Write-Host " `nConnection Information:" "INFO"
+Write-Host "UNC Path: \\$StorageAccountName.file.core.windows.net\$ShareName" "INFO"
+Write-Host "Mount Command (Windows):" "INFO"
+Write-Host "    net use Z: \\$StorageAccountName.file.core.windows.net\$ShareName /u:AZURE\$StorageAccountName $Key" "INFO"
+Write-Host "Mount Command (Linux):" "INFO"
+Write-Host "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$ShareName /mnt/myfileshare -o vers=3.0,username=$StorageAccountName,password=$Key,dir_mode=0777,file_mode=0777" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

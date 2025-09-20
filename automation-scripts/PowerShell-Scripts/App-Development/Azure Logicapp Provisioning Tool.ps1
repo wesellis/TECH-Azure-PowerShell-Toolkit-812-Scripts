@@ -1,206 +1,132 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Logicapp Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Logicapp Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AppName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAppName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPlanName,
-    [string]$WEPlanSku = " WS1" ,
-    [hashtable]$WETags = @{}
+    [string]$PlanName,
+    [string]$PlanSku = "WS1" ,
+    [hashtable]$Tags = @{}
 )
-
-#region Functions
-
-Write-WELog " Provisioning Logic App: $WEAppName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-
-
-if ($WEPlanName) {
-    Write-WELog " App Service Plan: $WEPlanName" " INFO"
-    
+Write-Host "Provisioning Logic App: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+if ($PlanName) {
+    Write-Host "App Service Plan: $PlanName"
     # Check if plan exists
-    $WEPlan = Get-AzAppServicePlan -ResourceGroupName $WEResourceGroupName -Name $WEPlanName -ErrorAction SilentlyContinue
-    
-    if (-not $WEPlan) {
-        Write-WELog " Creating App Service Plan for Logic App..." " INFO"
+    $Plan = Get-AzAppServicePlan -ResourceGroupName $ResourceGroupName -Name $PlanName -ErrorAction SilentlyContinue
+    if (-not $Plan) {
+        Write-Host "Creating App Service Plan for Logic App..."
         $params = @{
-            ResourceGroupName = $WEResourceGroupName
-            Tier = " WorkflowStandard"
-            WorkerSize = " WS1"  Write-WELog " App Service Plan created: $($WEPlan.Name)" " INFO" } else { Write-WELog " Using existing App Service Plan: $($WEPlan.Name)" " INFO" }"
-            Location = $WELocation
+            ResourceGroupName = $ResourceGroupName
+            Tier = "WorkflowStandard"
+            WorkerSize = "WS1"  Write-Host "App Service Plan created: $($Plan.Name)" "INFO" } else { Write-Host "Using existing App Service Plan: $($Plan.Name)" }"
+            Location = $Location
             ErrorAction = "Stop"
-            Name = $WEPlanName
+            Name = $PlanName
         }
-        $WEPlan @params
+        $Plan @params
 }
-
-
-Write-WELog " `nCreating Logic App..." " INFO"
-if ($WEPlanName) {
+Write-Host " `nCreating Logic App..."
+if ($PlanName) {
     # Logic App with dedicated plan (Standard tier)
    $params = @{
-       AppServicePlan = $WEPlanName
+       AppServicePlan = $PlanName
        ErrorAction = "Stop"
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WEAppName
-       Location = $WELocation
+       ResourceGroupName = $ResourceGroupName
+       Name = $AppName
+       Location = $Location
    }
    ; @params
 } else {
     # Consumption-based Logic App
    $params = @{
        ErrorAction = "Stop"
-       ResourceGroupName = $WEResourceGroupName
-       Name = $WEAppName
-       Location = $WELocation
+       ResourceGroupName = $ResourceGroupName
+       Name = $AppName
+       Location = $Location
    }
    ; @params
 }
-
-
-if ($WETags.Count -gt 0) {
-    Write-WELog " `nApplying tags:" " INFO"
-    foreach ($WETag in $WETags.GetEnumerator()) {
-        Write-WELog "  $($WETag.Key): $($WETag.Value)" " INFO"
+if ($Tags.Count -gt 0) {
+    Write-Host " `nApplying tags:"
+    foreach ($Tag in $Tags.GetEnumerator()) {
+        Write-Host "  $($Tag.Key): $($Tag.Value)"
     }
-    Set-AzResource -ResourceId $WELogicApp.Id -Tag $WETags -Force
+    Set-AzResource -ResourceId $LogicApp.Id -Tag $Tags -Force
 }
-
-Write-WELog " `nLogic App $WEAppName provisioned successfully" " INFO"
-Write-WELog " Logic App ID: $($WELogicApp.Id)" " INFO"
-Write-WELog " State: $($WELogicApp.State)" " INFO"
-Write-WELog " Definition: $($WELogicApp.Definition)" " INFO"
-
-if ($WEPlanName) {
-    Write-WELog " Plan Type: Standard (Dedicated)" " INFO"
-    Write-WELog " Plan Name: $WEPlanName" " INFO"
+Write-Host " `nLogic App $AppName provisioned successfully"
+Write-Host "Logic App ID: $($LogicApp.Id)"
+Write-Host "State: $($LogicApp.State)"
+Write-Host "Definition: $($LogicApp.Definition)"
+if ($PlanName) {
+    Write-Host "Plan Type: Standard (Dedicated)"
+    Write-Host "Plan Name: $PlanName"
 } else {
-    Write-WELog " Plan Type: Consumption" " INFO"
+    Write-Host "Plan Type: Consumption"
 }
-
-Write-WELog " `nLogic App Designer:" " INFO"
-Write-WELog " Portal URL: https://portal.azure.com/#@/resource$($WELogicApp.Id)/designer" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Open Logic App Designer in Azure Portal" " INFO"
-Write-WELog " 2. Add triggers (HTTP, Schedule, Event Grid, etc.)" " INFO"
-Write-WELog " 3. Add actions (Send email, call APIs, data operations)" " INFO"
-Write-WELog " 4. Configure connectors for external services" " INFO"
-Write-WELog " 5. Test and enable the Logic App workflow" " INFO"
-
-Write-WELog " `nCommon Triggers:" " INFO"
-Write-WELog "  • HTTP Request (webhook)" " INFO"
-Write-WELog "  • Recurrence (scheduled)" " INFO"
-Write-WELog "  • Event Grid events" " INFO"
-Write-WELog "  • Service Bus messages" " INFO"
-Write-WELog "  • File system changes" " INFO"
-
-Write-WELog " `nCommon Actions:" " INFO"
-Write-WELog "  • HTTP requests to APIs" " INFO"
-Write-WELog "  • Send emails (Office 365, Outlook)" " INFO"
-Write-WELog "  • Database operations (SQL, Cosmos DB)" " INFO"
-Write-WELog "  • File operations (SharePoint, OneDrive)" " INFO"
-Write-WELog "  • Conditional logic and loops" " INFO"
-
-Write-WELog " `nLogic App provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nLogic App Designer:"
+Write-Host "Portal URL: https://portal.azure.com/#@/resource$($LogicApp.Id)/designer"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Open Logic App Designer in Azure Portal"
+Write-Host " 2. Add triggers (HTTP, Schedule, Event Grid, etc.)"
+Write-Host " 3. Add actions (Send email, call APIs, data operations)"
+Write-Host " 4. Configure connectors for external services"
+Write-Host " 5. Test and enable the Logic App workflow"
+Write-Host " `nCommon Triggers:"
+Write-Host "   HTTP Request (webhook)"
+Write-Host "   Recurrence (scheduled)"
+Write-Host "   Event Grid events"
+Write-Host "   Service Bus messages"
+Write-Host "   File system changes"
+Write-Host " `nCommon Actions:"
+Write-Host "   HTTP requests to APIs"
+Write-Host "   Send emails (Office 365, Outlook)"
+Write-Host "   Database operations (SQL, Cosmos DB)"
+Write-Host "   File operations (SharePoint, OneDrive)"
+Write-Host "   Conditional logic and loops"
+Write-Host " `nLogic App provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

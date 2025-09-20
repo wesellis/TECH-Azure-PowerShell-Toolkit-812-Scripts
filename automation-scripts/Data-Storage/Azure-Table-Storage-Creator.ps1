@@ -1,63 +1,38 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage storage
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage storage
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$TableName
 )
-
-#region Functions
-
-Write-Information "Creating Table Storage: $TableName"
-
+Write-Host "Creating Table Storage: $TableName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
-
 $Table = New-AzStorageTable -Name $TableName -Context $Context
-
-Write-Information " Table Storage created successfully:"
-Write-Information "  Name: $($Table.Name)"
-Write-Information "  Storage Account: $StorageAccountName"
-Write-Information "  Context: $($Context.StorageAccountName)"
-
+Write-Host "Table Storage created successfully:"
+Write-Host "Name: $($Table.Name)"
+Write-Host "Storage Account: $StorageAccountName"
+Write-Host "Context: $($Context.StorageAccountName)"
 # Get connection info
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Key = $Keys[0].Value
+Write-Host "`nConnection Information:"
+Write-Host "Table Endpoint: https://$StorageAccountName.table.core.windows.net/"
+Write-Host "Table Name: $TableName"
+Write-Host "Access Key: $($Key.Substring(0,8))..."
+Write-Host "`nConnection String:"
+Write-Host "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$Key;TableEndpoint=https://$StorageAccountName.table.core.windows.net/;"
+Write-Host "`nTable Storage Features:"
+Write-Host "NoSQL key-value store"
+Write-Host "Partition and row key structure"
+Write-Host "Automatic scaling"
+Write-Host "REST API access"
 
-Write-Information "`nConnection Information:"
-Write-Information "  Table Endpoint: https://$StorageAccountName.table.core.windows.net/"
-Write-Information "  Table Name: $TableName"
-Write-Information "  Access Key: $($Key.Substring(0,8))..."
-
-Write-Information "`nConnection String:"
-Write-Information "  DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$Key;TableEndpoint=https://$StorageAccountName.table.core.windows.net/;"
-
-Write-Information "`nTable Storage Features:"
-Write-Information "• NoSQL key-value store"
-Write-Information "• Partition and row key structure"
-Write-Information "• Automatic scaling"
-Write-Information "• REST API access"
-
-
-#endregion

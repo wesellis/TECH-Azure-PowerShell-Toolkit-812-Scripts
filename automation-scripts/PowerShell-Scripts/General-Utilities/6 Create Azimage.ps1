@@ -1,63 +1,22 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    6 Create Azimage
+    Create Azimage
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Create Azimage operation
 #>
+    Author: Wes Ellis (wes@wesellis.com)
 
-<#
-.SYNOPSIS
-    We Enhanced 6 Create Azimage
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-$vmName = " FGC-CR08NW2-MIG"
-$rgName = " FGC_AVD_RG1"
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+$vmName = "FGC-CR08NW2-MIG"
+$rgName = "FGC_AVD_RG1"
 $location = " canadacentral"
-$imageName = " FGC-CR08NW2-AVD-Nerdio-image-v1"
-
-
-
+$imageName = "FGC-CR08NW2-AVD-Nerdio-image-v1"
 $vm = Get-AzVm -Name $vmName -ResourceGroupName $rgName
-
-
 $diskID = $vm.StorageProfile.OsDisk.ManagedDisk.Id
-
-
-
-
 $imageConfig = New-AzImageConfig -Location $location
 $setAzImageOsDiskSplat = @{
     Image = $imageConfig
@@ -67,20 +26,11 @@ $setAzImageOsDiskSplat = @{
     # ManagedDiskId = $disk.Id
     ManagedDiskId = $diskID
 }
-
 $imageConfig = Set-AzImageOsDisk -ErrorAction Stop @setAzImageOsDiskSplat
-
-; 
 $newAzImageSplat = @{
     ImageName = $imageName
     ResourceGroupName = $rgName
     Image = $imageConfig
 }
-; 
 $image = New-AzImage -ErrorAction Stop @newAzImageSplat
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

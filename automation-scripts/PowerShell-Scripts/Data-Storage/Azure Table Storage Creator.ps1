@@ -1,136 +1,74 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Table Storage Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Table Storage Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$WETableName
+    [string]$StorageAccountName,
+    [Parameter(Mandatory)]
+    [string]$TableName
 )
+Write-Host "Creating Table Storage: $TableName" "INFO"
+$StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
+$Context = $StorageAccount.Context
+$Table = New-AzStorageTable -Name $TableName -Context $Context
+Write-Host "Table Storage created successfully:" "INFO"
+Write-Host "Name: $($Table.Name)" "INFO"
+Write-Host "Storage Account: $StorageAccountName" "INFO"
+Write-Host "Context: $($Context.StorageAccountName)" "INFO"
 
-#region Functions
-
-Write-WELog " Creating Table Storage: $WETableName" " INFO"
-
-$WEStorageAccount = Get-AzStorageAccount -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName
-$WEContext = $WEStorageAccount.Context
-
-$WETable = New-AzStorageTable -Name $WETableName -Context $WEContext
-
-Write-WELog "  Table Storage created successfully:" " INFO"
-Write-WELog "  Name: $($WETable.Name)" " INFO"
-Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
-Write-WELog "  Context: $($WEContext.StorageAccountName)" " INFO"
-
-; 
-$WEKeys = Get-AzStorageAccountKey -ResourceGroupName $WEResourceGroupName -Name $WEStorageAccountName; 
-$WEKey = $WEKeys[0].Value
-
-Write-WELog " `nConnection Information:" " INFO"
-Write-WELog "  Table Endpoint: https://$WEStorageAccountName.table.core.windows.net/" " INFO"
-Write-WELog "  Table Name: $WETableName" " INFO"
-Write-WELog "  Access Key: $($WEKey.Substring(0,8))..." " INFO"
-
-Write-WELog " `nConnection String:" " INFO"
-Write-WELog "  DefaultEndpointsProtocol=https;AccountName=$WEStorageAccountName;AccountKey=$WEKey;TableEndpoint=https://$WEStorageAccountName.table.core.windows.net/;" " INFO"
-
-Write-WELog " `nTable Storage Features:" " INFO"
-Write-WELog " • NoSQL key-value store" " INFO"
-Write-WELog " • Partition and row key structure" " INFO"
-Write-WELog " • Automatic scaling" " INFO"
-Write-WELog " • REST API access" " INFO"
-
-
-
-
+$Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName;
+$Key = $Keys[0].Value
+Write-Host " `nConnection Information:" "INFO"
+Write-Host "Table Endpoint: https://$StorageAccountName.table.core.windows.net/" "INFO"
+Write-Host "Table Name: $TableName" "INFO"
+Write-Host "Access Key: $($Key.Substring(0,8))..." "INFO"
+Write-Host " `nConnection String:" "INFO"
+Write-Host "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$Key;TableEndpoint=https://$StorageAccountName.table.core.windows.net/;" "INFO"
+Write-Host " `nTable Storage Features:" "INFO"
+Write-Host "NoSQL key-value store" "INFO"
+Write-Host "Partition and row key structure" "INFO"
+Write-Host "Automatic scaling" "INFO"
+Write-Host "REST API access" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

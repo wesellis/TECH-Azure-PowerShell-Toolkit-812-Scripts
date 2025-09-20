@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Provision Azure Virtual Machine
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Create and provision a new Azure Virtual Machine with specified configuration
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$VmName,
@@ -27,27 +16,17 @@ param (
     [string]$ImageOffer = "WindowsServer",
     [string]$ImageSku = "2022-Datacenter"
 )
-
-#region Functions
-
-Write-Information "Provisioning Virtual Machine: $VmName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "Location: $Location"
-Write-Information "VM Size: $VmSize"
-
+Write-Host "Provisioning Virtual Machine: $VmName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "VM Size: $VmSize"
 # Create VM configuration
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
-
 # Set operating system
-$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object -ErrorAction Stop PSCredential($AdminUsername, $AdminPassword))
-
+$VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Windows -ComputerName $VmName -Credential (New-Object PSCredential($AdminUsername, $AdminPassword))
 # Set source image
 $VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName $ImagePublisher -Offer $ImageOffer -Skus $ImageSku -Version "latest"
-
 # Create the VM
 New-AzVM -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
+Write-Host "Virtual Machine $VmName provisioned successfully"
 
-Write-Information "Virtual Machine $VmName provisioned successfully"
-
-
-#endregion

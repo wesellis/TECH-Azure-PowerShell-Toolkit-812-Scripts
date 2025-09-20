@@ -1,150 +1,87 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Resource Tagger
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Resource Tagger
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [hashtable]$Tags = @{},
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [hashtable]$WETags = @{},
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceType,
-    [switch]$WEWhatIf,
-    [switch]$WEForce
+    [string]$ResourceType,
+    [switch]$WhatIf,
+    [switch]$Force
 )
-
-#region Functions
-
-Write-WELog " Azure Resource Tagger" " INFO" -ForegroundColor Cyan
-Write-WELog " =====================" " INFO" -ForegroundColor Cyan
-
-if ($WETags.Count -eq 0) {
-    Write-WELog " No tags specified. Example usage:" " INFO" -ForegroundColor Yellow
-    Write-WELog "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}" " INFO" -ForegroundColor White
+Write-Host "Azure Resource Tagger" -ForegroundColor Cyan
+Write-Host " =====================" -ForegroundColor Cyan
+if ($Tags.Count -eq 0) {
+    Write-Host "No tags specified. Example usage:" -ForegroundColor Yellow
+    Write-Host "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}" -ForegroundColor White
     return
 }
-
-Write-WELog " Target Resource Group: $WEResourceGroupName" " INFO" -ForegroundColor Green
-Write-WELog " Tags to Apply:" " INFO" -ForegroundColor Green
-foreach ($tag in $WETags.GetEnumerator()) {
-    Write-WELog "  $($tag.Key): $($tag.Value)" " INFO" -ForegroundColor White
+Write-Host "Target Resource Group: $ResourceGroupName" -ForegroundColor Green
+Write-Host "Tags to Apply:" -ForegroundColor Green
+foreach ($tag in $Tags.GetEnumerator()) {
+    Write-Host "  $($tag.Key): $($tag.Value)" -ForegroundColor White
 }
-
-if ($WEWhatIf) {
-    Write-WELog " `n[WHAT-IF MODE] - No changes will be made" " INFO" -ForegroundColor Yellow
+if ($WhatIf) {
+    Write-Host " `n[WHAT-IF MODE] - No changes will be made" -ForegroundColor Yellow
 }
-
-
-$resources = if ($WEResourceType) {
-    Get-AzResource -ResourceGroupName $WEResourceGroupName -ResourceType $WEResourceType
+$resources = if ($ResourceType) {
+    Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType $ResourceType
 } else {
-    Get-AzResource -ResourceGroupName $WEResourceGroupName
+    Get-AzResource -ResourceGroupName $ResourceGroupName
 }
-
-Write-WELog " `nFound $($resources.Count) resources to tag" " INFO" -ForegroundColor Green
-; 
+Write-Host " `nFound $($resources.Count) resources to tag" -ForegroundColor Green
 $taggedCount = 0
 foreach ($resource in $resources) {
     try {
-        if ($WEWhatIf) {
-            Write-WELog "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))" " INFO" -ForegroundColor Yellow
+        if ($WhatIf) {
+            Write-Host "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))" -ForegroundColor Yellow
         } else {
             # Merge existing tags with new tags
-           ;  $existingTags = $resource.Tags ?? @{}
-            foreach ($tag in $WETags.GetEnumerator()) {
+$existingTags = $resource.Tags ?? @{}
+            foreach ($tag in $Tags.GetEnumerator()) {
                 $existingTags[$tag.Key] = $tag.Value
             }
-            
-            Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$WEForce
-            Write-WELog "  [OK] Tagged: $($resource.Name)" " INFO" -ForegroundColor Green
+            Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$Force
+            Write-Host "  [OK] Tagged: $($resource.Name)" -ForegroundColor Green
             $taggedCount++
         }
     } catch {
-        Write-Warning " Failed to tag resource '$($resource.Name)': $($_.Exception.Message)"
+        Write-Warning "Failed to tag resource '$($resource.Name)': $($_.Exception.Message)"
     }
 }
-
-if (-not $WEWhatIf) {
-    Write-WELog " `n[OK] Successfully tagged $taggedCount resources" " INFO" -ForegroundColor Green
+if (-not $WhatIf) {
+    Write-Host " `n[OK] Successfully tagged $taggedCount resources" -ForegroundColor Green
 }
+Write-Host " `nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan
 
-Write-WELog " `nResource tagging completed at $(Get-Date)" " INFO" -ForegroundColor Cyan
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

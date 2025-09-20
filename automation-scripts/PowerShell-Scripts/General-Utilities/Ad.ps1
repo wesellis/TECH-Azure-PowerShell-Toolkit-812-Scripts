@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Ad
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Ad
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
@@ -52,33 +22,27 @@ param(
     $deploymentUserName,
     $deploymentUserPassword
 )
-
-#region Functions
-
-$script:ErrorActionPreference = 'Stop'; 
+$script:ErrorActionPreference = 'Stop';
 $count = 0
-
 for ($count = 0; $count -lt 6; $count++) {
     try {
         $secpasswd = ConvertTo-SecureString $password -AsPlainText -Force
         $domainShort = $domainFqdn.Split(" ." )[0]
         $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" , $secpasswd
-        
-        if ($authType -eq " CredSSP" ) {
+        if ($authType -eq "CredSSP" ) {
             try {
                 Enable-WSManCredSSP -Role Client -DelegateComputer $ip -Force
             }
             catch {
-                echo " Enable-WSManCredSSP failed"
+                echo "Enable-WSManCredSSP failed"
             }
         }
-        
         $session = New-PSSession -ComputerName $ip -Port $port -Authentication $authType -Credential $cred
         if ($ifdeleteadou) {
             Invoke-Command -Session $session -ScriptBlock {
-                $WEOUPrefixList = @(" OU=Computers," , " OU=Users," , "" )
-                foreach ($prefix in $WEOUPrefixList) {
-                    $ouname = " $prefix$WEUsing:adouPath"
+                $OUPrefixList = @("OU=Computers," , "OU=Users," , "" )
+                foreach ($prefix in $OUPrefixList) {
+                    $ouname = " $prefix$Using:adouPath"
                     echo " try to get OU: $ouname"
                     Try {
                         $ou = Get-ADOrganizationalUnit -Identity $ouname
@@ -88,29 +52,28 @@ for ($count = 0; $count -lt 6; $count++) {
                     }
                     if ($ou) {
                         Set-ADOrganizationalUnit -Identity $ouname -ProtectedFromAccidentalDeletion $false
-                        $ou | Remove-ADOrganizationalUnit -Recursive -Confirm:$WEFalse 
-                        echo " Deleted adou: $ouname"
+                        $ou | Remove-ADOrganizationalUnit -Recursive -Confirm:$False
+                        echo "Deleted adou: $ouname"
                     }
                 }
             }
-            
         }
-       ;  $deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
-       ;  $lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
+$deploymentSecPasswd = ConvertTo-SecureString $deploymentUserPassword -AsPlainText -Force
+$lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName, $deploymentSecPasswd
         Invoke-Command -Session $session -ScriptBlock {
-            echo " Install Nuget Provider"
+            echo "Install Nuget Provider"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false
-            echo " Install AsHciADArtifactsPreCreationTool"
+            echo "Install AsHciADArtifactsPreCreationTool"
             Install-Module AsHciADArtifactsPreCreationTool -Repository PSGallery -Force -Confirm:$false
-            echo " Add KdsRootKey"
+            echo "Add KdsRootKey"
             Add-KdsRootKey -EffectiveTime ((Get-Date).addhours(-10))
-            echo " New HciAdObjectsPreCreation"
-            New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $WEUsing:lcmCred -AsHciOUName $WEUsing:adouPath
+            echo "New HciAdObjectsPreCreation"
+            New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $Using:lcmCred -AsHciOUName $Using:adouPath
         }
         break
     }
     catch {
-        echo " Error in retry ${count}:`n$_"
+        echo "Error in retry ${count}:`n$_"
         sleep 600
     }
     finally {
@@ -119,13 +82,7 @@ for ($count = 0; $count -lt 6; $count++) {
         }
     }
 }
-
 if ($count -ge 6) {
-    throw " Failed to provision AD after 6 retries."
+    throw "Failed to provision AD after 6 retries."
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

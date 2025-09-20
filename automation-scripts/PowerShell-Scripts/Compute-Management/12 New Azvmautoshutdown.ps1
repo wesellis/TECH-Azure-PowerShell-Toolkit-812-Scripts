@@ -1,70 +1,24 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    12 New Azvmautoshutdown
+    Configure VM auto-shutdown
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Schedule automatic VM shutdown
+    Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+# Get subscription and VM details
+$SubscriptionId = (Get-AzContext).Subscription.Id
+$VM = Get-AzVM -ResourceGroupName $RGName -Name $VMName
+$VMResourceId = $VM.Id;
+$ScheduledShutdownResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$RGName/providers/microsoft.devtestlab/schedules/shutdown-computevm-$VMName"
+$Properties = @{}
+$Properties.Add('status', 'Enabled')
+$Properties.Add('taskType', 'ComputeVmShutdownTask')
+$Properties.Add('dailyRecurrence', @{'time'= 1159})
+$Properties.Add('timeZoneId', "Eastern Standard Time" )
+$Properties.Add('notificationSettings', @{status='Disabled'; timeInMinutes=15})
+$Properties.Add('targetResourceId', $VMResourceId)
+New-AzResource -Location eastus -ResourceId $ScheduledShutdownResourceId  -Properties $Properties -Force
 
-<#
-.SYNOPSIS
-    We Enhanced 12 New Azvmautoshutdown
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WESubscriptionId = $WEAzContext.Context.Subscription.Id
-New-AzResource -Location eastus -ResourceId $WEScheduledShutdownResourceId  -Properties $WEProperties -Force
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-$WESubscriptionId = $WEAzContext.Context.Subscription.Id
-$WEVM = Get-AzVM -ResourceGroupName $WERGName -Name VMName
-$WEVMResourceId = $WEVM.Id; 
-$WEScheduledShutdownResourceId = " /subscriptions/$WESubscriptionId/resourceGroups/wayneVMRG/providers/microsoft.devtestlab/schedules/shutdown-computevm-$WEVMName"
-; 
-$WEProperties = @{}
-$WEProperties.Add('status', 'Enabled')
-$WEProperties.Add('taskType', 'ComputeVmShutdownTask')
-$WEProperties.Add('dailyRecurrence', @{'time'= 1159})
-$WEProperties.Add('timeZoneId', " Eastern Standard Time" )
-$WEProperties.Add('notificationSettings', @{status='Disabled'; timeInMinutes=15})
-$WEProperties.Add('targetResourceId', $WEVMResourceId)
-
-
-New-AzResource -Location eastus -ResourceId $WEScheduledShutdownResourceId  -Properties $WEProperties -Force
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

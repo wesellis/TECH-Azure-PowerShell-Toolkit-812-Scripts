@@ -1,239 +1,163 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Containerinstance Status Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Containerinstance Status Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEContainerGroupName
+    [string]$ResourceGroupName,
+    [string]$ContainerGroupName
 )
-
-#region Functions
-
-Write-WELog " Monitoring Container Instance: $WEContainerGroupName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEContainerGroup = Get-AzContainerGroup -ResourceGroupName $WEResourceGroupName -Name $WEContainerGroupName
-
-Write-WELog " Container Group Information:" " INFO"
-Write-WELog "  Name: $($WEContainerGroup.Name)" " INFO"
-Write-WELog "  Location: $($WEContainerGroup.Location)" " INFO"
-Write-WELog "  Provisioning State: $($WEContainerGroup.ProvisioningState)" " INFO"
-Write-WELog "  OS Type: $($WEContainerGroup.OsType)" " INFO"
-Write-WELog "  Restart Policy: $($WEContainerGroup.RestartPolicy)" " INFO"
-Write-WELog "  IP Address: $($WEContainerGroup.IpAddress)" " INFO"
-Write-WELog "  FQDN: $($WEContainerGroup.Fqdn)" " INFO"
-
-
-if ($WEContainerGroup.IpAddressPorts) {
-    Write-WELog " `nExposed Ports:" " INFO"
-    foreach ($WEPort in $WEContainerGroup.IpAddressPorts) {
-        Write-WELog "  - Port: $($WEPort.Port) ($($WEPort.Protocol))" " INFO"
+Write-Host "Monitoring Container Instance: $ContainerGroupName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host " ============================================"
+$ContainerGroup = Get-AzContainerGroup -ResourceGroupName $ResourceGroupName -Name $ContainerGroupName
+Write-Host "Container Group Information:"
+Write-Host "Name: $($ContainerGroup.Name)"
+Write-Host "Location: $($ContainerGroup.Location)"
+Write-Host "Provisioning State: $($ContainerGroup.ProvisioningState)"
+Write-Host "OS Type: $($ContainerGroup.OsType)"
+Write-Host "Restart Policy: $($ContainerGroup.RestartPolicy)"
+Write-Host "IP Address: $($ContainerGroup.IpAddress)"
+Write-Host "FQDN: $($ContainerGroup.Fqdn)"
+if ($ContainerGroup.IpAddressPorts) {
+    Write-Host " `nExposed Ports:"
+    foreach ($Port in $ContainerGroup.IpAddressPorts) {
+        Write-Host "  - Port: $($Port.Port) ($($Port.Protocol))"
     }
 }
-
-
-Write-WELog " `nContainer Details:" " INFO"
-foreach ($WEContainer in $WEContainerGroup.Containers) {
-    Write-WELog "  - Container: $($WEContainer.Name)" " INFO"
-    Write-WELog "    Image: $($WEContainer.Image)" " INFO"
-    Write-WELog "    CPU Requests: $($WEContainer.RequestCpu)" " INFO"
-    Write-WELog "    Memory Requests: $($WEContainer.RequestMemoryInGb) GB" " INFO"
-    
-    if ($WEContainer.LimitsMemoryInGb) {
-        Write-WELog "    Memory Limits: $($WEContainer.LimitsMemoryInGb) GB" " INFO"
+Write-Host " `nContainer Details:"
+foreach ($Container in $ContainerGroup.Containers) {
+    Write-Host "  - Container: $($Container.Name)"
+    Write-Host "    Image: $($Container.Image)"
+    Write-Host "    CPU Requests: $($Container.RequestCpu)"
+    Write-Host "    Memory Requests: $($Container.RequestMemoryInGb) GB"
+    if ($Container.LimitsMemoryInGb) {
+        Write-Host "    Memory Limits: $($Container.LimitsMemoryInGb) GB"
     }
-    if ($WEContainer.LimitsCpu) {
-        Write-WELog "    CPU Limits: $($WEContainer.LimitsCpu)" " INFO"
+    if ($Container.LimitsCpu) {
+        Write-Host "    CPU Limits: $($Container.LimitsCpu)"
     }
-    
     # Container state
-    if ($WEContainer.InstanceViewCurrentState) {
-        Write-WELog "    Current State: $($WEContainer.InstanceViewCurrentState.State)" " INFO"
-        Write-WELog "    Start Time: $($WEContainer.InstanceViewCurrentState.StartTime)" " INFO"
-        if ($WEContainer.InstanceViewCurrentState.ExitCode) {
-            Write-WELog "    Exit Code: $($WEContainer.InstanceViewCurrentState.ExitCode)" " INFO"
+    if ($Container.InstanceViewCurrentState) {
+        Write-Host "    Current State: $($Container.InstanceViewCurrentState.State)"
+        Write-Host "    Start Time: $($Container.InstanceViewCurrentState.StartTime)"
+        if ($Container.InstanceViewCurrentState.ExitCode) {
+            Write-Host "    Exit Code: $($Container.InstanceViewCurrentState.ExitCode)"
         }
     }
-    
     # Previous state (if any)
-    if ($WEContainer.InstanceViewPreviousState) {
-        Write-WELog "    Previous State: $($WEContainer.InstanceViewPreviousState.State)" " INFO"
-        if ($WEContainer.InstanceViewPreviousState.ExitCode) {
-            Write-WELog "    Previous Exit Code: $($WEContainer.InstanceViewPreviousState.ExitCode)" " INFO"
+    if ($Container.InstanceViewPreviousState) {
+        Write-Host "    Previous State: $($Container.InstanceViewPreviousState.State)"
+        if ($Container.InstanceViewPreviousState.ExitCode) {
+            Write-Host "    Previous Exit Code: $($Container.InstanceViewPreviousState.ExitCode)"
         }
     }
-    
     # Restart count
-    Write-WELog "    Restart Count: $($WEContainer.InstanceViewRestartCount)" " INFO"
-    
+    Write-Host "    Restart Count: $($Container.InstanceViewRestartCount)"
     # Events
-    if ($WEContainer.InstanceViewEvents) {
-        Write-WELog "    Recent Events:" " INFO"
-        $WERecentEvents = $WEContainer.InstanceViewEvents | Sort-Object LastTimestamp -Descending | Select-Object -First 3
-        foreach ($WEEvent in $WERecentEvents) {
-            Write-WELog "      $($WEEvent.LastTimestamp): $($WEEvent.Message)" " INFO"
+    if ($Container.InstanceViewEvents) {
+        Write-Host "    Recent Events:"
+        $RecentEvents = $Container.InstanceViewEvents | Sort-Object LastTimestamp -Descending | Select-Object -First 3
+        foreach ($Event in $RecentEvents) {
+            Write-Host "      $($Event.LastTimestamp): $($Event.Message)"
         }
     }
-    
     # Environment variables (without values for security)
-    if ($WEContainer.EnvironmentVariables) {
-        Write-WELog "    Environment Variables: $($WEContainer.EnvironmentVariables.Count) configured" " INFO"
-        $WESafeEnvVars = $WEContainer.EnvironmentVariables | Where-Object { 
-            $_.Name -notlike " *KEY*" -and 
-            $_.Name -notlike " *SECRET*" -and 
-            $_.Name -notlike " *PASSWORD*" 
+    if ($Container.EnvironmentVariables) {
+        Write-Host "    Environment Variables: $($Container.EnvironmentVariables.Count) configured"
+        $SafeEnvVars = $Container.EnvironmentVariables | Where-Object {
+            $_.Name -notlike " *KEY*" -and
+            $_.Name -notlike " *SECRET*" -and
+            $_.Name -notlike " *PASSWORD*"
         }
-        if ($WESafeEnvVars) {
-            Write-WELog "      Non-sensitive variables: $($WESafeEnvVars.Name -join ', ')" " INFO"
+        if ($SafeEnvVars) {
+            Write-Host "      Non-sensitive variables: $($SafeEnvVars.Name -join ', ')"
         }
     }
-    
     # Ports
-    if ($WEContainer.Ports) {
-        Write-WELog "    Container Ports:" " INFO"
-        foreach ($WEPort in $WEContainer.Ports) {
-            Write-WELog "      - $($WEPort.Port)/$($WEPort.Protocol)" " INFO"
+    if ($Container.Ports) {
+        Write-Host "    Container Ports:"
+        foreach ($Port in $Container.Ports) {
+            Write-Host "      - $($Port.Port)/$($Port.Protocol)"
         }
     }
-    
-    Write-WELog "    ---" " INFO"
+    Write-Host "    ---"
 }
-
-
-if ($WEContainerGroup.Volumes) {
-    Write-WELog " `nVolumes:" " INFO"
-    foreach ($WEVolume in $WEContainerGroup.Volumes) {
-        Write-WELog "  - Volume: $($WEVolume.Name)" " INFO"
-        if ($WEVolume.AzureFile) {
-            Write-WELog "    Type: Azure File Share" " INFO"
-            Write-WELog "    Share Name: $($WEVolume.AzureFile.ShareName)" " INFO"
-            Write-WELog "    Storage Account: $($WEVolume.AzureFile.StorageAccountName)" " INFO"
-        } elseif ($WEVolume.EmptyDir) {
-            Write-WELog "    Type: Empty Directory" " INFO"
-        } elseif ($WEVolume.Secret) {
-            Write-WELog "    Type: Secret" " INFO"
+if ($ContainerGroup.Volumes) {
+    Write-Host " `nVolumes:"
+    foreach ($Volume in $ContainerGroup.Volumes) {
+        Write-Host "  - Volume: $($Volume.Name)"
+        if ($Volume.AzureFile) {
+            Write-Host "    Type: Azure File Share"
+            Write-Host "    Share Name: $($Volume.AzureFile.ShareName)"
+            Write-Host "    Storage Account: $($Volume.AzureFile.StorageAccountName)"
+        } elseif ($Volume.EmptyDir) {
+            Write-Host "    Type: Empty Directory"
+        } elseif ($Volume.Secret) {
+            Write-Host "    Type: Secret"
         }
     }
 }
-
-
-Write-WELog " `nRecent Container Logs:" " INFO"
-foreach ($WEContainer in $WEContainerGroup.Containers) {
+Write-Host " `nRecent Container Logs:"
+foreach ($Container in $ContainerGroup.Containers) {
     try {
-        Write-WELog "  Container: $($WEContainer.Name)" " INFO"
-        $WELogs = Get-AzContainerInstanceLog -ResourceGroupName $WEResourceGroupName -ContainerGroupName $WEContainerGroupName -ContainerName $WEContainer.Name -Tail 10
-        if ($WELogs) {
-            $WELogLines = $WELogs -split " `n" | Select-Object -Last 5
-            foreach ($WELine in $WELogLines) {
-                if ($WELine.Trim()) {
-                    Write-WELog "    $WELine" " INFO"
+        Write-Host "Container: $($Container.Name)"
+        $Logs = Get-AzContainerInstanceLog -ResourceGroupName $ResourceGroupName -ContainerGroupName $ContainerGroupName -ContainerName $Container.Name -Tail 10
+        if ($Logs) {
+            $LogLines = $Logs -split " `n" | Select-Object -Last 5
+            foreach ($Line in $LogLines) {
+                if ($Line.Trim()) {
+                    Write-Host "    $Line"
                 }
             }
         } else {
-            Write-WELog "    No logs available" " INFO"
+            Write-Host "    No logs available"
         }
     } catch {
-        Write-WELog "    Unable to retrieve logs: $($_.Exception.Message)" " INFO"
+        Write-Host "    Unable to retrieve logs: $($_.Exception.Message)"
     }
-    Write-WELog "    ---" " INFO"
+    Write-Host "    ---"
 }
-
-
-if ($WEContainerGroup.IpAddress -and $WEContainerGroup.IpAddressPorts) {
-    Write-WELog " `nAccess Information:" " INFO"
-    foreach ($WEPort in $WEContainerGroup.IpAddressPorts) {
-       ;  $WEProtocol = if ($WEPort.Port -eq 443) { " https" } else { " http" }
-        Write-WELog "  $WEProtocol`://$($WEContainerGroup.IpAddress):$($WEPort.Port)" " INFO"
+if ($ContainerGroup.IpAddress -and $ContainerGroup.IpAddressPorts) {
+    Write-Host " `nAccess Information:"
+    foreach ($Port in $ContainerGroup.IpAddressPorts) {
+$Protocol = if ($Port.Port -eq 443) { " https" } else { " http" }
+        Write-Host "  $Protocol`://$($ContainerGroup.IpAddress):$($Port.Port)"
     }
-    
-    if ($WEContainerGroup.Fqdn -and $WEContainerGroup.IpAddressPorts) {
-        Write-WELog " `nFQDN Access:" " INFO"
-        foreach ($WEPort in $WEContainerGroup.IpAddressPorts) {
-           ;  $WEProtocol = if ($WEPort.Port -eq 443) { " https" } else { " http" }
-            Write-WELog "  $WEProtocol`://$($WEContainerGroup.Fqdn):$($WEPort.Port)" " INFO"
+    if ($ContainerGroup.Fqdn -and $ContainerGroup.IpAddressPorts) {
+        Write-Host " `nFQDN Access:"
+        foreach ($Port in $ContainerGroup.IpAddressPorts) {
+$Protocol = if ($Port.Port -eq 443) { " https" } else { " http" }
+            Write-Host "  $Protocol`://$($ContainerGroup.Fqdn):$($Port.Port)"
         }
     }
 }
+Write-Host " `nContainer Instance monitoring completed at $(Get-Date)"
 
-Write-WELog " `nContainer Instance monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

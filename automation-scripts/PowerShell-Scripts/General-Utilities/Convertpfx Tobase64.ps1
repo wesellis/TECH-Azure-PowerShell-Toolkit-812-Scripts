@@ -1,44 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Convertpfx Tobase64
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Convertpfx Tobase64
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -48,18 +18,11 @@ $ErrorActionPreference = "Stop"
 param(
     [string] [Parameter(mandatory = $true)] $pfxFile
 )
-
 #region Functions
-; 
-$fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream 
+$fileContent = get-content -ErrorAction Stop " $pfxFile" -AsByteStream
 [System.Convert]::ToBase64String($fileContent) | Set-Content -Encoding ascii " $pfxFile.txt"
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

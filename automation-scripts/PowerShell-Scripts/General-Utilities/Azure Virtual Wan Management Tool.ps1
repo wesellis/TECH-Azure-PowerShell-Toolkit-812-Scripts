@@ -1,55 +1,18 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Virtual Wan Management Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Virtual Wan Management Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-.SYNOPSIS
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Azure Virtual WAN Enterprise Management Tool
-.DESCRIPTION
-    Advanced tool for creating, configuring, and managing Azure Virtual WAN infrastructure
+    Tool for creating, configuring, and managing Azure Virtual WAN infrastructure
     with SD-WAN capabilities, secure hubs, and global connectivity.
 .PARAMETER ResourceGroupName
     Target Resource Group for Virtual WAN resources
@@ -66,7 +29,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .PARAMETER HubLocation
     Location for the virtual hub
 .PARAMETER HubAddressPrefix
-    Address prefix for the virtual hub (e.g., " 10.1.0.0/24" )
+    Address prefix for the virtual hub (e.g., "10.1.0.0/24" )
 .PARAMETER EnableVpnGateway
     Enable VPN Gateway in the hub
 .PARAMETER EnableExpressRouteGateway
@@ -78,7 +41,7 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
 .PARAMETER VpnSiteNames
     Array of VPN site names to create
 .PARAMETER EnableMonitoring
-    Enable comprehensive monitoring and diagnostics
+    Enable  monitoring and diagnostics
 .PARAMETER EnableSecurityBaseline
     Apply security baseline configurations
 .PARAMETER RouteTableName
@@ -87,527 +50,353 @@ $WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Cont
     Array of connection names to create
 .PARAMETER Tags
     Tags to apply to resources
-.EXAMPLE
-    .\Azure-Virtual-WAN-Management-Tool.ps1 -ResourceGroupName " wan-rg" -VirtualWANName " corp-wan" -Location " East US" -Action " Create" -VWANType " Standard" -EnableMonitoring
-.EXAMPLE
-    .\Azure-Virtual-WAN-Management-Tool.ps1 -ResourceGroupName " wan-rg" -VirtualWANName " corp-wan" -Action " AddHub" -HubName " hub-east" -HubLocation " East US" -HubAddressPrefix " 10.1.0.0/24" -EnableVpnGateway -EnableAzureFirewall
-.NOTES
+    .\Azure-Virtual-WAN-Management-Tool.ps1 -ResourceGroupName " wan-rg" -VirtualWANName " corp-wan" -Location "East US" -Action Create" -VWANType "Standard" -EnableMonitoring
+    .\Azure-Virtual-WAN-Management-Tool.ps1 -ResourceGroupName " wan-rg" -VirtualWANName " corp-wan" -Action "AddHub" -HubName " hub-east" -HubLocation "East US" -HubAddressPrefix " 10.1.0.0/24" -EnableVpnGateway -EnableAzureFirewall
     Author: Wesley Ellis
     Version: 2.0
     Requires: PowerShell 7.0+, Azure PowerShell modules
-
-
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
+    [string]$ResourceGroupName,
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVirtualWANName,
-    
+    [string]$VirtualWANName,
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
+    [string]$Location,
     [Parameter(Mandatory = $true)]
-    [ValidateSet(" Create" , " Configure" , " Monitor" , " Scale" , " Delete" , " AddHub" , " RemoveHub" , " Status" )]
-    [Parameter(Mandatory=$false)]
+    [ValidateSet("Create" , "Configure" , "Monitor" , "Scale" , "Delete" , "AddHub" , "RemoveHub" , "Status" )]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Action,
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("Basic" , "Standard" )]
+    [string]$VWANType = "Standard" ,
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAction,
-    
+    [string]$HubName,
     [Parameter(Mandatory = $false)]
-    [ValidateSet(" Basic" , " Standard" )]
-    [string]$WEVWANType = " Standard" ,
-    
-    [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$HubLocation,
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEHubName,
-    
+    [string]$HubAddressPrefix,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
+    [switch]$EnableVpnGateway,
+    [Parameter(Mandatory = $false)]
+    [switch]$EnableExpressRouteGateway,
+    [Parameter(Mandatory = $false)]
+    [switch]$EnableAzureFirewall,
+    [Parameter(Mandatory = $false)]
+    [switch]$EnableP2SVpn,
+    [Parameter(Mandatory = $false)]
+    [string[]]$VpnSiteNames = @(),
+    [Parameter(Mandatory = $false)]
+    [switch]$EnableMonitoring,
+    [Parameter(Mandatory = $false)]
+    [switch]$EnableSecurityBaseline,
+    [Parameter(Mandatory = $false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubLocation,
-    
+    [string]$RouteTableName,
     [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubAddressPrefix,
-    
+    [string[]]$ConnectionNames = @(),
     [Parameter(Mandatory = $false)]
-    [switch]$WEEnableVpnGateway,
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnableExpressRouteGateway,
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnableAzureFirewall,
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnableP2SVpn,
-    
-    [Parameter(Mandatory = $false)]
-    [string[]]$WEVpnSiteNames = @(),
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnableMonitoring,
-    
-    [Parameter(Mandatory = $false)]
-    [switch]$WEEnableSecurityBaseline,
-    
-    [Parameter(Mandatory = $false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERouteTableName,
-    
-    [Parameter(Mandatory = $false)]
-    [string[]]$WEConnectionNames = @(),
-    
-    [Parameter(Mandatory = $false)]
-    [hashtable]$WETags = @{
-        Environment = " Production"
-        Application = " VirtualWAN"
-        ManagedBy = " AutomationScript"
+    [hashtable]$Tags = @{
+        Environment = "Production"
+        Application = "VirtualWAN"
+        ManagedBy = "AutomationScript"
     }
 )
-
-#region Functions
-
-
 try {
     Import-Module Az.Accounts -Force -ErrorAction Stop
     Import-Module Az.Resources -Force -ErrorAction Stop
     Import-Module Az.Network -Force -ErrorAction Stop
-    Write-WELog "  Successfully imported required Azure modules" " INFO" -ForegroundColor Green
+    Write-Host "Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "  Failed to import required modules: $($_.Exception.Message)"
-    exit 1
+    throw
 }
-
-
-[CmdletBinding()]
-function WE-Write-EnhancedLog {
-    param(
-        [Parameter(Mandatory=$false)]
+function Write-Verbose "Log entry"ndatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEMessage,
-        [ValidateSet(" Info" , " Warning" , " Error" , " Success" )]
-        [string]$WELevel = " Info"
+    [string]$Message,
+        [ValidateSet("Info" , "Warning" , "Error" , "Success" )]
+        [string]$Level = "Info"
     )
-    
     $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
     $colors = @{
-        Info = " White"
-        Warning = " Yellow" 
-        Error = " Red"
-        Success = " Green"
+        Info = "White"
+        Warning = "Yellow"
+        Error = "Red"
+        Success = "Green"
     }
-    
-    Write-WELog " [$timestamp] $WEMessage" " INFO" -ForegroundColor $colors[$WELevel]
+    Write-Host " [$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
-
-
-[CmdletBinding()]
-function WE-New-VirtualWAN -ErrorAction Stop {
+function New-VirtualWAN -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN '$WEVirtualWANName'" , " Create" )) {
+    if ($PSCmdlet.ShouldProcess("Virtual WAN '$VirtualWANName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating Virtual WAN: $WEVirtualWANName" " Info"
-            
+            Write-Verbose "Log entry"ng Virtual WAN: $VirtualWANName" "Info"
             # Check if Virtual WAN already exists
-            $existingWAN = Get-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEVirtualWANName -ErrorAction SilentlyContinue
+            $existingWAN = Get-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $VirtualWANName -ErrorAction SilentlyContinue
             if ($existingWAN) {
-                Write-EnhancedLog " Virtual WAN already exists: $WEVirtualWANName" " Warning"
+                Write-Verbose "Log entry"N already exists: $VirtualWANName" "Warning"
                 return $existingWAN
             }
-            
             # Create Virtual WAN
-            $virtualWAN = New-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEVirtualWANName -Location $WELocation -VirtualWANType $WEVWANType -Tag $WETags
-            
-            Write-EnhancedLog " Successfully created Virtual WAN: $WEVirtualWANName" " Success"
+            $virtualWAN = New-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $VirtualWANName -Location $Location -VirtualWANType $VWANType -Tag $Tags
+            Write-Verbose "Log entry"N: $VirtualWANName" "Success"
             return $virtualWAN
-            
         } catch {
-            Write-EnhancedLog " Failed to create Virtual WAN: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"N: $($_.Exception.Message)" "Error"
             throw
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-VirtualHub -ErrorAction Stop {
+function New-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$WANName,
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEWANName,
-        [Parameter(Mandatory=$false)]
+    [string]$HubName,
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName,
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubLocation,
-        [string]$WEAddressPrefix
+    [string]$HubLocation,
+        [string]$AddressPrefix
     )
-    
-    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName'" , " Create" )) {
+    if ($PSCmdlet.ShouldProcess("Virtual Hub '$HubName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating Virtual Hub: $WEHubName in $WEHubLocation" " Info"
-            
+            Write-Verbose "Log entry"ng Virtual Hub: $HubName in $HubLocation" "Info"
             # Check if Virtual Hub already exists
-            $existingHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName -ErrorAction SilentlyContinue
+            $existingHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName -ErrorAction SilentlyContinue
             if ($existingHub) {
-                Write-EnhancedLog " Virtual Hub already exists: $WEHubName" " Warning"
+                Write-Verbose "Log entry"Name" "Warning"
                 return $existingHub
             }
-            
             # Get Virtual WAN
-            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEWANName
+            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $WANName
             if (-not $virtualWAN) {
-                throw " Virtual WAN '$WEWANName' not found"
+                throw "Virtual WAN '$WANName' not found"
             }
-            
             # Create Virtual Hub
-            $virtualHub = New-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName -Location $WEHubLocation -VirtualWan $virtualWAN -AddressPrefix $WEAddressPrefix -Tag $WETags
-            
-            Write-EnhancedLog " Successfully created Virtual Hub: $WEHubName" " Success"
-            
+            $virtualHub = New-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName -Location $HubLocation -VirtualWan $virtualWAN -AddressPrefix $AddressPrefix -Tag $Tags
+            Write-Verbose "Log entry"Name" "Success"
             # Configure gateways if requested
-            if ($WEEnableVpnGateway) {
-                New-VpnGateway -HubName $WEHubName
+            if ($EnableVpnGateway) {
+                New-VpnGateway -HubName $HubName
             }
-            
-            if ($WEEnableExpressRouteGateway) {
-                New-ExpressRouteGateway -HubName $WEHubName
+            if ($EnableExpressRouteGateway) {
+                New-ExpressRouteGateway -HubName $HubName
             }
-            
-            if ($WEEnableAzureFirewall) {
-                New-AzureFirewall -HubName $WEHubName
+            if ($EnableAzureFirewall) {
+                New-AzureFirewall -HubName $HubName
             }
-            
             return $virtualHub
-            
         } catch {
-            Write-EnhancedLog " Failed to create Virtual Hub: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"n.Message)" "Error"
             throw
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-VpnGateway -ErrorAction Stop {
+function New-VpnGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName)
-    
-    $vpnGatewayName = " $WEHubName-vpn-gw"
-    if ($WEPSCmdlet.ShouldProcess(" VPN Gateway '$vpnGatewayName'" , " Create" )) {
+    [string]$HubName)
+    $vpnGatewayName = " $HubName-vpn-gw"
+    if ($PSCmdlet.ShouldProcess("VPN Gateway '$vpnGatewayName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating VPN Gateway in hub: $WEHubName" " Info"
-            
-            $virtualHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName
-            
+            Write-Verbose "Log entry"ng VPN Gateway in hub: $HubName" "Info"
+            $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
             # Create VPN Gateway
-            $vpnGateway = New-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name $vpnGatewayName -VirtualHub $virtualHub -VpnGatewayScaleUnit 1 -Tag $WETags
-            
-            Write-EnhancedLog " Successfully created VPN Gateway: $vpnGatewayName" " Success"
+            $vpnGateway = New-AzVpnGateway -ResourceGroupName $ResourceGroupName -Name $vpnGatewayName -VirtualHub $virtualHub -VpnGatewayScaleUnit 1 -Tag $Tags
+            Write-Verbose "Log entry"N Gateway: $vpnGatewayName" "Success"
             return $vpnGateway
-            
         } catch {
-            Write-EnhancedLog " Failed to create VPN Gateway: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"N Gateway: $($_.Exception.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-ExpressRouteGateway -ErrorAction Stop {
+function New-ExpressRouteGateway -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName)
-    
-    $erGatewayName = " $WEHubName-er-gw"
-    if ($WEPSCmdlet.ShouldProcess(" ExpressRoute Gateway '$erGatewayName'" , " Create" )) {
+    [string]$HubName)
+    $erGatewayName = " $HubName-er-gw"
+    if ($PSCmdlet.ShouldProcess("ExpressRoute Gateway '$erGatewayName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating ExpressRoute Gateway in hub: $WEHubName" " Info"
-            
-            $virtualHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName
-            
+            Write-Verbose "Log entry"ng ExpressRoute Gateway in hub: $HubName" "Info"
+            $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
             # Create ExpressRoute Gateway
-            $erGateway = New-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name $erGatewayName -VirtualHub $virtualHub -MinScaleUnits 1 -Tag $WETags
-            
-            Write-EnhancedLog " Successfully created ExpressRoute Gateway: $erGatewayName" " Success"
+            $erGateway = New-AzExpressRouteGateway -ResourceGroupName $ResourceGroupName -Name $erGatewayName -VirtualHub $virtualHub -MinScaleUnits 1 -Tag $Tags
+            Write-Verbose "Log entry"Name" "Success"
             return $erGateway
-            
         } catch {
-            Write-EnhancedLog " Failed to create ExpressRoute Gateway: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"n.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-AzureFirewall -ErrorAction Stop {
+function New-AzureFirewall -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName)
-    
-    $firewallName = " $WEHubName-azfw"
-    if ($WEPSCmdlet.ShouldProcess(" Azure Firewall '$firewallName'" , " Create" )) {
+    [string]$HubName)
+    $firewallName = " $HubName-azfw"
+    if ($PSCmdlet.ShouldProcess("Azure Firewall '$firewallName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating Azure Firewall in hub: $WEHubName" " Info"
-            
-            $virtualHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName
-            
+            Write-Verbose "Log entry"ng Azure Firewall in hub: $HubName" "Info"
+            $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
             # Create Firewall Policy
-            $firewallPolicyName = " $WEHubName-fw-policy"
-            $firewallPolicy = New-AzFirewallPolicy -ResourceGroupName $WEResourceGroupName -Name $firewallPolicyName -Location $virtualHub.Location -Tag $WETags
-            
+            $firewallPolicyName = " $HubName-fw-policy"
+            $firewallPolicy = New-AzFirewallPolicy -ResourceGroupName $ResourceGroupName -Name $firewallPolicyName -Location $virtualHub.Location -Tag $Tags
             # Create Azure Firewall
-            $azureFirewall = New-AzFirewall -Name $firewallName -ResourceGroupName $WEResourceGroupName -Location $virtualHub.Location -VirtualHubId $virtualHub.Id -FirewallPolicyId $firewallPolicy.Id -SkuName " AZFW_Hub" -SkuTier " Standard" -Tag $WETags
-            
-            Write-EnhancedLog " Successfully created Azure Firewall: $firewallName" " Success"
+            $azureFirewall = New-AzFirewall -Name $firewallName -ResourceGroupName $ResourceGroupName -Location $virtualHub.Location -VirtualHubId $virtualHub.Id -FirewallPolicyId $firewallPolicy.Id -SkuName "AZFW_Hub" -SkuTier "Standard" -Tag $Tags
+            Write-Verbose "Log entry"Name" "Success"
             return $azureFirewall
-            
         } catch {
-            Write-EnhancedLog " Failed to create Azure Firewall: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"n.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-VpnSite -ErrorAction Stop {
+function New-VpnSite -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEWANName,
-        [string[]]$WESiteNames
+    [string]$WANName,
+        [string[]]$SiteNames
     )
-    
-    if ($WEPSCmdlet.ShouldProcess(" VPN Sites: $($WESiteNames -join ', ')" , " Create" )) {
+    if ($PSCmdlet.ShouldProcess("VPN Sites: $($SiteNames -join ', ')" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating VPN sites..." " Info"
-            
-            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEWANName
+            Write-Verbose "Log entry"ng VPN sites..." "Info"
+            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $WANName
             $createdSites = @()
-            
-            foreach ($siteName in $WESiteNames) {
-                Write-EnhancedLog " Creating VPN site: $siteName" " Info"
-                
+            foreach ($siteName in $SiteNames) {
+                Write-Verbose "Log entry"ng VPN site: $siteName" "Info"
                 # Example site configuration - customize as needed
-                $vpnSite = New-AzVpnSite -ResourceGroupName $WEResourceGroupName -Name $siteName -Location $WELocation -VirtualWan $virtualWAN -IpAddress " 203.0.113.1" -AddressSpace @(" 192.168.1.0/24" ) -DeviceModel " Generic" -DeviceVendor " Generic" -LinkSpeedInMbps 50 -Tag $WETags
-                
+                $vpnSite = New-AzVpnSite -ResourceGroupName $ResourceGroupName -Name $siteName -Location $Location -VirtualWan $virtualWAN -IpAddress " 203.0.113.1" -AddressSpace @(" 192.168.1.0/24" ) -DeviceModel "Generic" -DeviceVendor "Generic" -LinkSpeedInMbps 50 -Tag $Tags
                 $createdSites = $createdSites + $vpnSite
-                Write-EnhancedLog " Successfully created VPN site: $siteName" " Success"
+                Write-Verbose "Log entry"N site: $siteName" "Success"
             }
-            
             return $createdSites
-            
         } catch {
-            Write-EnhancedLog " Failed to create VPN sites: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"N sites: $($_.Exception.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-Set-P2SVpnConfiguration -ErrorAction Stop {
+function Set-P2SVpnConfiguration -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName)
-    
-    $p2sGatewayName = " $WEHubName-p2s-gw"
-    if ($WEPSCmdlet.ShouldProcess(" Point-to-Site VPN Gateway '$p2sGatewayName'" , " Configure" )) {
+    [string]$HubName)
+    $p2sGatewayName = " $HubName-p2s-gw"
+    if ($PSCmdlet.ShouldProcess("Point-to-Site VPN Gateway '$p2sGatewayName'" , "Configure" )) {
         try {
-            Write-EnhancedLog " Configuring Point-to-Site VPN for hub: $WEHubName" " Info"
-            
+            Write-Verbose "Log entry"nfiguring Point-to-Site VPN for hub: $HubName" "Info"
             # Get virtual hub
-            $virtualHub = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName
-            
+            $virtualHub = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName
             # Configure address pool for P2S clients
-            $p2sConnectionConfig = New-AzP2sVpnGateway -ResourceGroupName $WEResourceGroupName -Name $p2sGatewayName -VirtualHubId $virtualHub.Id -VpnClientAddressPool @(" 172.16.0.0/24" ) -Tag $WETags
-            
-            Write-EnhancedLog " Successfully configured Point-to-Site VPN: $p2sGatewayName" " Success"
+            $p2sConnectionConfig = New-AzP2sVpnGateway -ResourceGroupName $ResourceGroupName -Name $p2sGatewayName -VirtualHubId $virtualHub.Id -VpnClientAddressPool @(" 172.16.0.0/24" ) -Tag $Tags
+            Write-Verbose "Log entry"nfigured Point-to-Site VPN: $p2sGatewayName" "Success"
             return $p2sConnectionConfig
-            
         } catch {
-            Write-EnhancedLog " Failed to configure Point-to-Site VPN: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"nfigure Point-to-Site VPN: $($_.Exception.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-New-HubRouteTable -ErrorAction Stop {
+function New-HubRouteTable -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param(
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName,
-        [string]$WERouteTableName
+    [string]$HubName,
+        [string]$RouteTableName
     )
-    
-    if ($WEPSCmdlet.ShouldProcess(" Route Table '$WERouteTableName' in hub '$WEHubName'" , " Create" )) {
+    if ($PSCmdlet.ShouldProcess("Route Table '$RouteTableName' in hub '$HubName'" , "Create" )) {
         try {
-            Write-EnhancedLog " Creating custom route table: $WERouteTableName" " Info"
-            
+            Write-Verbose "Log entry"ng custom route table: $RouteTableName" "Info"
             # Create custom route table
-            $routeTable = New-AzVHubRouteTable -ResourceGroupName $WEResourceGroupName -VirtualHubName $WEHubName -Name $WERouteTableName
-            
+            $routeTable = New-AzVHubRouteTable -ResourceGroupName $ResourceGroupName -VirtualHubName $HubName -Name $RouteTableName
             # Example route configuration
-            $route1 = New-AzStaticRoute -Name " DefaultRoute" -AddressPrefix @(" 0.0.0.0/0" ) -NextHopIpAddress " 10.0.0.1"
+            $route1 = New-AzStaticRoute -Name "DefaultRoute" -AddressPrefix @(" 0.0.0.0/0" ) -NextHopIpAddress " 10.0.0.1"
             $routeTable = Add-AzVHubRoute -VirtualHubRouteTable $routeTable -StaticRoute $route1
-            
-            Write-EnhancedLog " Successfully created route table: $WERouteTableName" " Success"
+            Write-Verbose "Log entry"Name" "Success"
             return $routeTable
-            
         } catch {
-            Write-EnhancedLog " Failed to create route table: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"n.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-Get-VirtualWANStatus -ErrorAction Stop {
+function Get-VirtualWANStatus -ErrorAction Stop {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
     param()
-    
     try {
-        Write-EnhancedLog " Monitoring Virtual WAN status..." " Info"
-        
+        Write-Verbose "Log entry"nitoring Virtual WAN status..." "Info"
         # Get Virtual WAN details
-        $virtualWAN = Get-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEVirtualWANName
-        
-        Write-EnhancedLog " Virtual WAN Status:" " Info"
-        Write-EnhancedLog "  Name: $($virtualWAN.Name)" " Info"
-        Write-EnhancedLog "  Type: $($virtualWAN.VirtualWANType)" " Info"
-        Write-EnhancedLog "  Provisioning State: $($virtualWAN.ProvisioningState)" " Info"
-        Write-EnhancedLog "  Location: $($virtualWAN.Location)" " Info"
-        Write-EnhancedLog "  Resource Group: $($virtualWAN.ResourceGroupName)" " Info"
-        
+        $virtualWAN = Get-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $VirtualWANName
+        Write-Verbose "Log entry"N Status:" "Info"
+        Write-Verbose "Log entry"Name: $($virtualWAN.Name)" "Info"
+        Write-Verbose "Log entry"N.VirtualWANType)" "Info"
+        Write-Verbose "Log entry"ning State: $($virtualWAN.ProvisioningState)" "Info"
+        Write-Verbose "Log entry"n: $($virtualWAN.Location)" "Info"
+        Write-Verbose "Log entry"N.ResourceGroupName)" "Info"
         # Get Virtual Hubs
-        $virtualHubs = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName
-        Write-EnhancedLog " Virtual Hubs:" " Info"
-        
+        $virtualHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName
+        Write-Verbose "Log entry"nfo"
         foreach ($hub in $virtualHubs) {
-            Write-EnhancedLog "  Hub: $($hub.Name)" " Info"
-            Write-EnhancedLog "    Location: $($hub.Location)" " Info"
-            Write-EnhancedLog "    Address Prefix: $($hub.AddressPrefix)" " Info"
-            Write-EnhancedLog "    Provisioning State: $($hub.ProvisioningState)" " Info"
-            
+            Write-Verbose "Log entry"Name)" "Info"
+            Write-Verbose "Log entry"n: $($hub.Location)" "Info"
+            Write-Verbose "Log entry"nfo"
+            Write-Verbose "Log entry"ning State: $($hub.ProvisioningState)" "Info"
             # Check for gateways
-            $vpnGateway = Get-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name " $($hub.Name)-vpn-gw" -ErrorAction SilentlyContinue
+            $vpnGateway = Get-AzVpnGateway -ResourceGroupName $ResourceGroupName -Name " $($hub.Name)-vpn-gw" -ErrorAction SilentlyContinue
             if ($vpnGateway) {
-                Write-EnhancedLog "    VPN Gateway: Deployed" " Success"
+                Write-Verbose "Log entry"N Gateway: Deployed" "Success"
             }
-            
-            $erGateway = Get-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name " $($hub.Name)-er-gw" -ErrorAction SilentlyContinue
+            $erGateway = Get-AzExpressRouteGateway -ResourceGroupName $ResourceGroupName -Name " $($hub.Name)-er-gw" -ErrorAction SilentlyContinue
             if ($erGateway) {
-                Write-EnhancedLog "    ExpressRoute Gateway: Deployed" " Success"
-            }
-            
-            $firewall = Get-AzFirewall -ResourceGroupName $WEResourceGroupName -Name " $($hub.Name)-azfw" -ErrorAction SilentlyContinue
+                Write-Verbose "Log entry"Name $ResourceGroupName -Name " $($hub.Name)-azfw" -ErrorAction SilentlyContinue
             if ($firewall) {
-                Write-EnhancedLog "    Azure Firewall: Deployed" " Success"
-            }
-        }
-        
-        # Get VPN Sites
-        $vpnSites = Get-AzVpnSite -ResourceGroupName $WEResourceGroupName
+                Write-Verbose "Log entry"N Sites
+        $vpnSites = Get-AzVpnSite -ResourceGroupName $ResourceGroupName
         if ($vpnSites) {
-            Write-EnhancedLog " VPN Sites:" " Info"
+            Write-Verbose "Log entry"N Sites:" "Info"
             foreach ($site in $vpnSites) {
-                Write-EnhancedLog "  Site: $($site.Name)" " Info"
-                Write-EnhancedLog "    IP Address: $($site.IpAddress)" " Info"
-                Write-EnhancedLog "    Link Speed: $($site.LinkSpeedInMbps) Mbps" " Info"
+                Write-Verbose "Log entry"Name)" "Info"
+                Write-Verbose "Log entry"nfo"
+                Write-Verbose "Log entry"nk Speed: $($site.LinkSpeedInMbps) Mbps" "Info"
             }
         }
-        
     } catch {
-        Write-EnhancedLog " Failed to get Virtual WAN status: $($_.Exception.Message)" " Error"
+        Write-Verbose "Log entry"N status: $($_.Exception.Message)" "Error"
     }
 }
-
-
-[CmdletBinding()]
-function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
+function Set-VirtualWANMonitoring -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN monitoring configuration" , " Apply" )) {
+    if ($PSCmdlet.ShouldProcess("Virtual WAN monitoring configuration" , "Apply" )) {
         try {
-            Write-EnhancedLog " Configuring Virtual WAN monitoring..." " Info"
-            
+            Write-Verbose "Log entry"nfiguring Virtual WAN monitoring..." "Info"
             # Create Log Analytics workspace
-            $workspaceName = " law-$WEResourceGroupName-vwan"
-            $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $WEResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
-            
+            $workspaceName = " law-$ResourceGroupName-vwan"
+            $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
             if (-not $workspace) {
-                $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $WEResourceGroupName -Name $workspaceName -Location $WELocation
-                Write-EnhancedLog " Created Log Analytics workspace: $workspaceName" " Success"
+                $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
+                Write-Verbose "Log entry"nalytics workspace: $workspaceName" "Success"
             }
-            
             # Configure diagnostic settings for Virtual WAN
-            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEVirtualWANName
-            
+            $virtualWAN = Get-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $VirtualWANName
             $diagnosticSettings = @{
                 logs = @(
                     @{
-                        category = " GatewayDiagnosticLog"
+                        category = "GatewayDiagnosticLog"
                         enabled = $true
                         retentionPolicy = @{
                             enabled = $true
@@ -615,7 +404,7 @@ function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
                         }
                     },
                     @{
-                        category = " IKEDiagnosticLog"
+                        category = "IKEDiagnosticLog"
                         enabled = $true
                         retentionPolicy = @{
                             enabled = $true
@@ -623,7 +412,7 @@ function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
                         }
                     },
                     @{
-                        category = " RouteDiagnosticLog"
+                        category = "RouteDiagnosticLog"
                         enabled = $true
                         retentionPolicy = @{
                             enabled = $true
@@ -633,7 +422,7 @@ function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
                 )
                 metrics = @(
                     @{
-                        category = " AllMetrics"
+                        category = "AllMetrics"
                         enabled = $true
                         retentionPolicy = @{
                             enabled = $true
@@ -642,195 +431,142 @@ function WE-Set-VirtualWANMonitoring -ErrorAction Stop {
                     }
                 )
             }
-            
-            Set-AzDiagnosticSetting -ResourceId $virtualWAN.Id -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name " $WEVirtualWANName-diagnostics"
-            
-            Write-EnhancedLog " Successfully configured monitoring" " Success"
-            
+            Set-AzDiagnosticSetting -ResourceId $virtualWAN.Id -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name " $VirtualWANName-diagnostics"
+            Write-Verbose "Log entry"nfigured monitoring" "Success"
         } catch {
-            Write-EnhancedLog " Failed to configure monitoring: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"nfigure monitoring: $($_.Exception.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-Set-SecurityBaseline -ErrorAction Stop {
+function Set-SecurityBaseline -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
-    if ($WEPSCmdlet.ShouldProcess(" Virtual WAN security baseline" , " Apply" )) {
+    if ($PSCmdlet.ShouldProcess("Virtual WAN security baseline" , "Apply" )) {
         try {
-            Write-EnhancedLog " Applying security baseline configurations..." " Info"
-            
+            Write-Verbose "Log entry"ng security baseline configurations..." "Info"
             # This would implement security best practices
             # Example configurations:
-            
             # 1. Enable Network Security Groups
             # 2. Configure Azure Firewall rules
             # 3. Set up route filtering
             # 4. Enable DDoS protection
             # 5. Configure access policies
-            
-            Write-EnhancedLog " Security baseline configurations applied" " Success"
-            
+            Write-Verbose "Log entry"ne configurations applied" "Success"
         } catch {
-            Write-EnhancedLog " Failed to apply security baseline: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"ne: $($_.Exception.Message)" "Error"
         }
     }
 }
-
-
-[CmdletBinding()]
-function WE-Remove-VirtualHub -ErrorAction Stop {
+function Remove-VirtualHub -ErrorAction Stop {
     [CmdletBinding(SupportsShouldProcess)]
-    param([Parameter(Mandatory=$false)]
+    param([Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEHubName)
-    
-    if ($WEPSCmdlet.ShouldProcess(" Virtual Hub '$WEHubName' and all associated resources" , " Remove" )) {
+    [string]$HubName)
+    if ($PSCmdlet.ShouldProcess("Virtual Hub '$HubName' and all associated resources" , "Remove" )) {
         try {
-            Write-EnhancedLog " Removing Virtual Hub: $WEHubName" " Warning"
-            
+            Write-Verbose "Log entry"ng Virtual Hub: $HubName" "Warning"
             # Remove associated resources first
-            $vpnGateway = Get-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-vpn-gw" -ErrorAction SilentlyContinue
+            $vpnGateway = Get-AzVpnGateway -ResourceGroupName $ResourceGroupName -Name " $HubName-vpn-gw" -ErrorAction SilentlyContinue
             if ($vpnGateway) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove VPN Gateway '$($vpnGateway.Name)'?" , " Confirm Gateway Removal" )) {
-                    Remove-AzVpnGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-vpn-gw" -Force
+                if ($PSCmdlet.ShouldContinue("Remove VPN Gateway '$($vpnGateway.Name)'?" , "Confirm Gateway Removal" )) {
+                    Remove-AzVpnGateway -ResourceGroupName $ResourceGroupName -Name " $HubName-vpn-gw" -Force
                 }
             }
-            
-            $erGateway = Get-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-er-gw" -ErrorAction SilentlyContinue
+            $erGateway = Get-AzExpressRouteGateway -ResourceGroupName $ResourceGroupName -Name " $HubName-er-gw" -ErrorAction SilentlyContinue
             if ($erGateway) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove ExpressRoute Gateway '$($erGateway.Name)'?" , " Confirm Gateway Removal" )) {
-                    Remove-AzExpressRouteGateway -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-er-gw" -Force
+                if ($PSCmdlet.ShouldContinue("Remove ExpressRoute Gateway '$($erGateway.Name)'?" , "Confirm Gateway Removal" )) {
+                    Remove-AzExpressRouteGateway -ResourceGroupName $ResourceGroupName -Name " $HubName-er-gw" -Force
                 }
             }
-            
-            $firewall = Get-AzFirewall -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-azfw" -ErrorAction SilentlyContinue
+            $firewall = Get-AzFirewall -ResourceGroupName $ResourceGroupName -Name " $HubName-azfw" -ErrorAction SilentlyContinue
             if ($firewall) {
-                if ($WEPSCmdlet.ShouldContinue(" Remove Azure Firewall '$($firewall.Name)'?" , " Confirm Firewall Removal" )) {
-                    Remove-AzFirewall -ResourceGroupName $WEResourceGroupName -Name " $WEHubName-azfw" -Force
+                if ($PSCmdlet.ShouldContinue("Remove Azure Firewall '$($firewall.Name)'?" , "Confirm Firewall Removal" )) {
+                    Remove-AzFirewall -ResourceGroupName $ResourceGroupName -Name " $HubName-azfw" -Force
                 }
             }
-            
             # Remove Virtual Hub
-            Remove-AzVirtualHub -ResourceGroupName $WEResourceGroupName -Name $WEHubName -Force
-            
-            Write-EnhancedLog " Successfully removed Virtual Hub: $WEHubName" " Success"
-            
+            Remove-AzVirtualHub -ResourceGroupName $ResourceGroupName -Name $HubName -Force
+            Write-Verbose "Log entry"Name" "Success"
         } catch {
-            Write-EnhancedLog " Failed to remove Virtual Hub: $($_.Exception.Message)" " Error"
+            Write-Verbose "Log entry"n.Message)" "Error"
             throw
         }
     }
 }
-
-
 try {
-    Write-EnhancedLog " Starting Azure Virtual WAN Management Tool" " Info"
-    Write-EnhancedLog " Action: $WEAction" " Info"
-    Write-EnhancedLog " Virtual WAN Name: $WEVirtualWANName" " Info"
-    Write-EnhancedLog " Resource Group: $WEResourceGroupName" " Info"
-    
+    Write-Verbose "Log entry"ng Azure Virtual WAN Management Tool" "Info"
+    Write-Verbose "Log entry"n: $Action" "Info"
+    Write-Verbose "Log entry"N Name: $VirtualWANName" "Info"
+    Write-Verbose "Log entry"Name" "Info"
     # Ensure resource group exists
-    $rg = Get-AzResourceGroup -Name $WEResourceGroupName -ErrorAction SilentlyContinue
+    $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
-        Write-EnhancedLog " Creating resource group: $WEResourceGroupName" " Info"
-        $rg = New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Tag $WETags
-        Write-EnhancedLog " Successfully created resource group" " Success"
-    }
-    
-    switch ($WEAction) {
-        " Create" {
+        Write-Verbose "Log entry"ng resource group: $ResourceGroupName" "Info"
+        $rg = New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Tag $Tags
+        Write-Verbose "Log entry"n) {
+        "Create" {
             $virtualWAN = New-VirtualWAN -ErrorAction Stop
-            
-            if ($WEVpnSiteNames.Count -gt 0) {
-                New-VpnSite -WANName $WEVirtualWANName -SiteNames $WEVpnSiteNames
+            if ($VpnSiteNames.Count -gt 0) {
+                New-VpnSite -WANName $VirtualWANName -SiteNames $VpnSiteNames
             }
-            
-            if ($WEEnableMonitoring) {
+            if ($EnableMonitoring) {
                 Set-VirtualWANMonitoring -ErrorAction Stop
             }
-            
-            if ($WEEnableSecurityBaseline) {
+            if ($EnableSecurityBaseline) {
                 Set-SecurityBaseline -ErrorAction Stop
             }
         }
-        
-        " AddHub" {
-            if (-not $WEHubName -or -not $WEHubLocation -or -not $WEHubAddressPrefix) {
-                throw " HubName, HubLocation, and HubAddressPrefix are required for AddHub action"
+        "AddHub" {
+            if (-not $HubName -or -not $HubLocation -or -not $HubAddressPrefix) {
+                throw "HubName, HubLocation, and HubAddressPrefix are required for AddHub action"
             }
-            
-           ;  $virtualHub = New-VirtualHub -WANName $WEVirtualWANName -HubName $WEHubName -HubLocation $WEHubLocation -AddressPrefix $WEHubAddressPrefix
-            
-            if ($WEEnableP2SVpn) {
-                Set-P2SVpnConfiguration -HubName $WEHubName
+$virtualHub = New-VirtualHub -WANName $VirtualWANName -HubName $HubName -HubLocation $HubLocation -AddressPrefix $HubAddressPrefix
+            if ($EnableP2SVpn) {
+                Set-P2SVpnConfiguration -HubName $HubName
             }
-            
-            if ($WERouteTableName) {
-                New-HubRouteTable -HubName $WEHubName -RouteTableName $WERouteTableName
+            if ($RouteTableName) {
+                New-HubRouteTable -HubName $HubName -RouteTableName $RouteTableName
             }
         }
-        
-        " RemoveHub" {
-            if (-not $WEHubName) {
-                throw " HubName parameter is required for RemoveHub action"
+        "RemoveHub" {
+            if (-not $HubName) {
+                throw "HubName parameter is required for RemoveHub action"
             }
-            Remove-VirtualHub -HubName $WEHubName
+            Remove-VirtualHub -HubName $HubName
         }
-        
-        " Configure" {
-            if ($WEEnableMonitoring) {
+        "Configure" {
+            if ($EnableMonitoring) {
                 Set-VirtualWANMonitoring -ErrorAction Stop
             }
-            
-            if ($WEEnableSecurityBaseline) {
+            if ($EnableSecurityBaseline) {
                 Set-SecurityBaseline -ErrorAction Stop
             }
         }
-        
-        " Monitor" {
+        "Monitor" {
             Get-VirtualWANStatus -ErrorAction Stop
         }
-        
-        " Status" {
+        "Status" {
             Get-VirtualWANStatus -ErrorAction Stop
         }
-        
-        " Scale" {
-            Write-EnhancedLog " Scaling operations would be implemented here" " Info"
+        "Scale" {
+            Write-Verbose "Log entry"ng operations would be implemented here" "Info"
             # This would implement scaling logic for gateways and connections
         }
-        
-        " Delete" {
-            Write-EnhancedLog " Deleting Virtual WAN: $WEVirtualWANName" " Warning"
-            
+        "Delete" {
+            Write-Verbose "Log entry"ng Virtual WAN: $VirtualWANName" "Warning"
             # Remove all hubs first
-           ;  $allHubs = Get-AzVirtualHub -ResourceGroupName $WEResourceGroupName
+$allHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName
             foreach ($hub in $allHubs) {
                 Remove-VirtualHub -HubName $hub.Name
             }
-            
             # Remove Virtual WAN
-            Remove-AzVirtualWan -ResourceGroupName $WEResourceGroupName -Name $WEVirtualWANName -Force
-            Write-EnhancedLog " Successfully deleted Virtual WAN" " Success"
+            Remove-AzVirtualWan -ResourceGroupName $ResourceGroupName -Name $VirtualWANName -Force
+            Write-Verbose "Log entry"N" "Success"
         }
     }
-    
-    Write-EnhancedLog " Azure Virtual WAN Management Tool completed successfully" " Success"
-    
+    Write-Verbose "Log entry"N Management Tool completed successfully" "Success"
 } catch {
-    Write-EnhancedLog " Tool execution failed: $($_.Exception.Message)" " Error"
-    exit 1
+    Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
+    throw
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

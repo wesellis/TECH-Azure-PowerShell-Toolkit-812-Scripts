@@ -1,100 +1,65 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Azure resources
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+.DESCRIPTION`n    Automate Azure operations and operations
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$GroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$Description,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$GroupType = "Security",
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [array]$MemberEmails = @()
 )
-
-#region Functions
-
-Write-Information "Creating Azure AD Group: $GroupName"
-
+Write-Host "Creating Azure AD Group: $GroupName"
 try {
     # Create the group
-    $GroupParams = @{
-        DisplayName = $GroupName
-        SecurityEnabled = ($GroupType -eq "Security")
-        MailEnabled = ($GroupType -eq "Mail")
-    }
-    
     if ($Description) {
         $GroupParams.Description = $Description
     }
-    
     if ($GroupType -eq "Mail") {
         $GroupParams.MailNickname = ($GroupName -replace '\s', '').ToLower()
     }
-    
     $Group = New-AzADGroup -ErrorAction Stop @GroupParams
-    
-    Write-Information " Azure AD Group created successfully:"
-    Write-Information "  Group Name: $($Group.DisplayName)"
-    Write-Information "  Object ID: $($Group.Id)"
-    Write-Information "  Group Type: $GroupType"
-    
+    Write-Host "Azure AD Group created successfully:"
+    Write-Host "Group Name: $($Group.DisplayName)"
+    Write-Host "Object ID: $($Group.Id)"
+    Write-Host "Group Type: $GroupType"
     if ($Description) {
-        Write-Information "  Description: $Description"
+        Write-Host "Description: $Description"
     }
-    
     # Add members if provided
     if ($MemberEmails.Count -gt 0) {
-        Write-Information "`nAdding members to group..."
-        
+        Write-Host "`nAdding members to group..."
         foreach ($Email in $MemberEmails) {
             try {
                 $User = Get-AzADUser -UserPrincipalName $Email
                 if ($User) {
                     Add-AzADGroupMember -GroupObject $Group -MemberObjectId $User.Id
-                    Write-Information "   Added: $Email"
+                    Write-Host "   Added: $Email"
                 } else {
-                    Write-Information "   User not found: $Email"
+                    Write-Host "   User not found: $Email"
                 }
             } catch {
-                Write-Information "   Failed to add $Email : $($_.Exception.Message)"
+                Write-Host "   Failed to add $Email : $($_.Exception.Message)"
             }
         }
     }
-    
-    Write-Information "`nGroup Management:"
-    Write-Information "• Use this group for role assignments"
-    Write-Information "• Assign Azure resource permissions"
-    Write-Information "• Manage application access"
-    Write-Information "• Control subscription access"
-    
-    Write-Information "`nNext Steps:"
-    Write-Information "1. Assign Azure roles to this group"
-    Write-Information "2. Add/remove members as needed"
-    Write-Information "3. Configure conditional access policies"
-    Write-Information "4. Set up group-based licensing"
-    
+    Write-Host "`nGroup Management:"
+    Write-Host "Use this group for role assignments"
+    Write-Host "Assign Azure resource permissions"
+    Write-Host "Manage application access"
+    Write-Host "Control subscription access"
+    Write-Host "`nNext Steps:"
+    Write-Host "1. Assign Azure roles to this group"
+    Write-Host "2. Add/remove members as needed"
+    Write-Host "3. Configure conditional access policies"
+    Write-Host "4. Set up group-based licensing"
 } catch {
     Write-Error "Failed to create Azure AD group: $($_.Exception.Message)"
 }
 
-
-#endregion

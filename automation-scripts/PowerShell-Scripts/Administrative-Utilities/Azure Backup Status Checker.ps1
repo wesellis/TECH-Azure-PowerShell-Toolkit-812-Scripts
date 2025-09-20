@@ -1,118 +1,57 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Backup Status Checker
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Backup Status Checker
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVaultName,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEShowUnprotected
+    [string]$VaultName,
+    [Parameter()]
+    [switch]$ShowUnprotected
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName " Azure Backup Status Checker" -Version " 1.0" -Description " Verify backup protection status"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    if (-not (Test-AzureConnection -RequiredModules @('Az.RecoveryServices'))) {
-        throw " Azure connection validation failed"
+    if (-not (Get-AzContext)) { Connect-AzAccount }
     }
-
-    $vaults = if ($WEVaultName) {
-        Get-AzRecoveryServicesVault -Name $WEVaultName
+    $vaults = if ($VaultName) {
+        Get-AzRecoveryServicesVault -Name $VaultName
     } else {
         Get-AzRecoveryServicesVault -ErrorAction Stop
     }
-
     $backupReport = @()
-    
     foreach ($vault in $vaults) {
         Set-AzRecoveryServicesVaultContext -Vault $vault
         $backupItems = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM
-        
         $backupReport = $backupReport + [PSCustomObject]@{
             VaultName = $vault.Name
             ResourceGroup = $vault.ResourceGroupName
             ProtectedItems = $backupItems.Count
-            LastBackupStatus = if ($backupItems) { ($backupItems | Sort-Object LastBackupTime -Descending)[0].LastBackupStatus } else { " No backups" }
+            LastBackupStatus = if ($backupItems) { ($backupItems | Sort-Object LastBackupTime -Descending)[0].LastBackupStatus } else { "No backups" }
         }
     }
-
-    if ($WEShowUnprotected) {
+    if ($ShowUnprotected) {
         $allVMs = Get-AzVM -ErrorAction Stop
-       ;  $protectedVMs = $vaults | ForEach-Object {
+$protectedVMs = $vaults | ForEach-Object {
             Set-AzRecoveryServicesVaultContext -Vault $_
             Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM
         }
-        
-       ;  $unprotectedVMs = $allVMs | Where-Object { $_.Name -notin $protectedVMs.Name }
-        Write-WELog " Unprotected VMs: $($unprotectedVMs.Count)" " INFO" -ForegroundColor Red
-        $unprotectedVMs | ForEach-Object { Write-WELog "  • $($_.Name)" " INFO" -ForegroundColor Yellow }
+$unprotectedVMs = $allVMs | Where-Object { $_.Name -notin $protectedVMs.Name }
+        Write-Host "Unprotected VMs: $($unprotectedVMs.Count)" -ForegroundColor Red
+        $unprotectedVMs | ForEach-Object { Write-Host "   $($_.Name)" -ForegroundColor Yellow }
     }
-
     $backupReport | Format-Table -AutoSize
-    Write-Log "  Backup status check completed" -Level SUCCESS
 
-} catch {
-    Write-Log "  Backup status check failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
+} catch { throw }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

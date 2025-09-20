@@ -1,47 +1,16 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Vmdemo
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Vmdemo
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 Configuration vmDemo
 {
-
 [CmdletBinding()
 try {
     # Main script execution
@@ -49,52 +18,47 @@ try {
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-	[string]$WENodeName = 'localhost'
+	[string]$NodeName = 'localhost'
 )
-
-#region Functions
-
 Import-DscResource -ModuleName ComputerManagementDsc, cChoco, xStorage, xPSDesiredStateConfiguration
-
-Node $WENodeName 
+Node $NodeName
 	{
 		LocalConfigurationManager
 			{
 				DebugMode = 'ForceModuleImport'
-
 			}
 		cChocoinstaller InstallChoco {
-				InstallDir  = " C:\Choco"	   
+				InstallDir  = "C:\Choco"
 			}
 		cChocoPackageInstaller installIometer {
 				Name        = " iometer"
 				DependsOn   = " [cChocoInstaller]installChoco"
-				AutoUpgrade = $WETrue
+				AutoUpgrade = $True
 			}
 		xWaitforDisk Disk2
 			{
 				DiskNumber = 2
 				RetryIntervalSec = 60
 				RetryCount = 60
-			} 
+			}
 		xWaitforDisk Disk3
 			{
 				DiskNumber = 3
 				RetryIntervalSec = 60
 				RetryCount = 60
-			} 
+			}
 		xWaitforDisk Disk4
 			{
 				DiskNumber = 4
 				RetryIntervalSec = 60
 				RetryCount = 60
-			} 
+			}
 		xWaitforDisk Disk5
 			{
 				DiskNumber = 5
 				RetryIntervalSec = 60
 				RetryCount = 60
-			} 
+			}
 		xDisk MVolume
 			{
 				DiskNumber = 2
@@ -125,33 +89,27 @@ Node $WENodeName
 			}
 		File DirectoryCreate
 			{
-				Ensure = " Present"
-				Type = " Directory"
-				DestinationPath = " C:\iometerTests"    
+				Ensure = "Present"
+				Type = "Directory"
+				DestinationPath = "C:\iometerTests"
 			}
 		xRemoteFile DownloadTests
 			{
-				DestinationPath = " C:\iometerTests\iometerTests.zip"
-				Uri = " https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/demos/storage-iops-latency-throughput-demo/dsc/vmDemo.zip"
+				DestinationPath = "C:\iometerTests\iometerTests.zip"
+				Uri = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/demos/storage-iops-latency-throughput-demo/dsc/vmDemo.zip"
 				DependsOn = " [File]DirectoryCreate"
 			}
 		xArchive ExpandArchive
 			{
-				Path = " C:\iometerTests\iometerTests.zip"
-				Destination = " C:\iometerTests"
+				Path = "C:\iometerTests\iometerTests.zip"
+				Destination = "C:\iometerTests"
 				DependsOn = " [xRemoteFile]DownloadTests"
 			}
 	}
-
 }
 vmDemo
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,606 +1,438 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    20.4 New Iaacazvmwindows
+    New Iaacazvmwindows
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced 20.4 New Iaacazvmwindows
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function WE-New-IaaCAzVMWindows -ErrorAction Stop {
+function New-IaaCAzVMWindows -ErrorAction Stop {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-    
-
-function Write-WELog {
+function Write-Host {
     param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
 param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]$WELocationName,
+        [String]$LocationName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]$WECustomerName,
+        [String]$CustomerName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]$WEVMName,
+        [String]$VMName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]$WEResourceGroupName,
+        [String]$ResourceGroupName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]$datetime,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [hashtable]$WETags,
+        [hashtable]$Tags,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [String]$WEComputerName,
+        [String]$ComputerName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVMSize,
+    [string]$VMSize,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOSDiskCaching,
+    [string]$OSDiskCaching,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOSCreateOption,
+    [string]$OSCreateOption,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGUID,
+    [string]$GUID,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOSDiskName,
-
+    [string]$OSDiskName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEASGName,
+    [string]$ASGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WENSGName,
+    [string]$NSGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDNSNameLabel,
+    [string]$DNSNameLabel,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WENICPrefix,
+    [string]$NICPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WENICName,
+    [string]$NICName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEIPConfigName,
+    [string]$IPConfigName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPublicIPAddressName,
+    [string]$PublicIPAddressName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVnetName,
+    [string]$VnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubnetName,
+    [string]$SubnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPublicIPAllocation,
+    [string]$PublicIPAllocation,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVnetAddressPrefix, 
+    [string]$VnetAddressPrefix,
         # [Parameter(Mandatory = $true)]
         # [ValidateNotNullOrEmpty()]
-        # [Parameter(Mandatory=$false)]
+        # [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESourceAddressPrefixCIDR,
+    [string]$SourceAddressPrefixCIDR,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubnetAddressPrefix,
+    [string]$SubnetAddressPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESourceAddressPrefix,
-
+    [string]$SourceAddressPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPublisherName,
+    [string]$PublisherName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEOffer,
+    [string]$Offer,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESkus,
+    [string]$Skus,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVersion,
-
+    [string]$Version,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDiskSizeInGB,
+    [string]$DiskSizeInGB,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEExtensionName,
+    [string]$ExtensionName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEExtensionPublisher,
+    [string]$ExtensionPublisher,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEExtensionType,
+    [string]$ExtensionType,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETypeHandlerVersion,
+    [string]$TypeHandlerVersion,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEUsersGroupName,
+    [string]$UsersGroupName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAdminsGroupName,
+    [string]$AdminsGroupName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERoleDefinitionNameUsers,
+    [string]$RoleDefinitionNameUsers,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERoleDefinitionNameAdmins,
+    [string]$RoleDefinitionNameAdmins,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETime,
+    [string]$Time,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETimeZone,
+    [string]$TimeZone,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEEmail,
+    [string]$Email,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [String]$secretLength
-
     )
-
     #Creating the Resource Group Name
     $newAzResourceGroupSplat = @{
-        Name     = $WEResourceGroupName
-        Location = $WELocationName
-        Tag      = $WETags
+        Name     = $ResourceGroupName
+        Location = $LocationName
+        Tag      = $Tags
     }
-
     New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-
-
     #Creating the Subnet for the VM
     $newAzVirtualNetworkSubnetConfigSplat = @{
-        Name          = $WESubnetName
-        AddressPrefix = $WESubnetAddressPrefix
+        Name          = $SubnetName
+        AddressPrefix = $SubnetAddressPrefix
     }
-    $WESingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
-
+    $SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
     #Creating the VNET for the VM
     $newAzVirtualNetworkSplat = @{
-        Name              = $WENetworkName
-        ResourceGroupName = $WEResourceGroupName
-        Location          = $WELocationName
-        AddressPrefix     = $WEVnetAddressPrefix
-        Subnet            = $WESingleSubnet
-        Tag               = $WETags
+        Name              = $NetworkName
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        AddressPrefix     = $VnetAddressPrefix
+        Subnet            = $SingleSubnet
+        Tag               = $Tags
     }
-    $WEVnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
-
-
+    $Vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
     $getAzVirtualNetworkSubnetConfigSplat = @{
-        Name           = $WESubnetName
+        Name           = $SubnetName
         VirtualNetwork = $vnet
     }
-    
-    $WESubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
-
-
+    $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
     $newAzNetworkInterfaceIpConfigSplat = @{
-        Name                     = $WEIPConfigName
-        Subnet                   = $WESubnet
-        PublicIpAddress          = $WEPIP
-        ApplicationSecurityGroup = $WEASG
+        Name                     = $IPConfigName
+        Subnet                   = $Subnet
+        PublicIpAddress          = $PIP
+        ApplicationSecurityGroup = $ASG
         Primary                  = $true
     }
-    
-    $WEIPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-
+    $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
     #Creating the PublicIP for the VM
     $newAzPublicIpAddressSplat = @{
-        Name              = $WEPublicIPAddressName
-        DomainNameLabel   = $WEDNSNameLabel
-        ResourceGroupName = $WEResourceGroupName
-        Location          = $WELocationName
-        AllocationMethod  = $WEPublicIPAllocation
-        Tag               = $WETags
+        Name              = $PublicIPAddressName
+        DomainNameLabel   = $DNSNameLabel
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        AllocationMethod  = $PublicIPAllocation
+        Tag               = $Tags
     }
-    $WEPIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-
+    $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
     #Creating the Application Security Group
     $newAzApplicationSecurityGroupSplat = @{
-        ResourceGroupName = " $WEResourceGroupName"
-        Name              = " $WEASGName"
-        Location          = " $WELocationName"
-        Tag               = $WETags
+        ResourceGroupName = " $ResourceGroupName"
+        Name              = " $ASGName"
+        Location          = " $LocationName"
+        Tag               = $Tags
     }
-    $WEASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-
-
+    $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
     $newAzNetworkSecurityRuleConfigSplat = @{
         # Name = 'rdp-rule'
         Name                                = 'RDP-rule'
-        # Description = " Allow RDP"
+        # Description = "Allow RDP"
         Description                         = 'Allow RDP'
         Access                              = 'Allow'
         Protocol                            = 'Tcp'
         Direction                           = 'Inbound'
         Priority                            = 100
-        SourceAddressPrefix                 = $WESourceAddressPrefix
-        # SourceAddressPrefixCIDR             = $WESourceAddressPrefixCIDR
+        SourceAddressPrefix                 = $SourceAddressPrefix
+        # SourceAddressPrefixCIDR             = $SourceAddressPrefixCIDR
         SourcePortRange                     = '*'
         DestinationPortRange                = '3389'
-        DestinationApplicationSecurityGroup = $WEASG
+        DestinationApplicationSecurityGroup = $ASG
     }
     $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
-
     #Create a new NSG based on Rules #1 & #2
     $newAzNetworkSecurityGroupSplat = @{
-        ResourceGroupName = $WEResourceGroupName
-        Location          = $WELocationName
-        Name              = $WENSGName
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        Name              = $NSGName
         # SecurityRules     = $rule1, $rule2
         SecurityRules     = $rule1
-        Tag               = $WETags
+        Tag               = $Tags
     }
-    $WENSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-
-
+    $NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
     #Creating the NIC for the VM
     $newAzNetworkInterfaceSplat = @{
-        Name                   = $WENICName
-        ResourceGroupName      = $WEResourceGroupName
-        Location               = $WELocationName
-        NetworkSecurityGroupId = $WENSG.Id
-        # ApplicationSecurityGroup = $WEASG
-        IpConfiguration        = $WEIPConfig1
-        Tag                    = $WETags
-    
+        Name                   = $NICName
+        ResourceGroupName      = $ResourceGroupName
+        Location               = $LocationName
+        NetworkSecurityGroupId = $NSG.Id
+        # ApplicationSecurityGroup = $ASG
+        IpConfiguration        = $IPConfig1
+        Tag                    = $Tags
     }
-    $WENIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
-
-
+    $NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
     #Define a credential object to store the username and password for the VM
-    $WEVMLocalAdminPassword = Generate-Password -length $WEPassWordLength
-   ;  $WEVMLocalAdminSecurePassword = $WEVMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
-   ;  $WECredential = New-Object -ErrorAction Stop PSCredential ($WEVMLocalAdminUser, $WEVMLocalAdminSecurePassword);
-    $WECredential = Get-Credential -ErrorAction Stop
-
+    $VMLocalAdminPassword = Generate-Password -length $PassWordLength
+$VMLocalAdminSecurePassword = $VMLocalAdminPassword | ConvertTo-SecureString -Force -AsPlainText
+$Credential = New-Object -ErrorAction Stop PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
+    $Credential = Get-Credential -ErrorAction Stop
     #Creating the VM Config Object for the VM
     $newAzVMConfigSplat = @{
-        VMName = $WEVMName
-        VMSize = $WEVMSize
-        Tags   = $WETags
+        VMName = $VMName
+        VMSize = $VMSize
+        Tags   = $Tags
     }
-    $WEVirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-
+    $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
     #Creating the OS Object for the VM
     $setAzVMOperatingSystemSplat = @{
-        VM           = $WEVirtualMachine
+        VM           = $VirtualMachine
         Windows      = $true
-        ComputerName = $WEComputerName
-        Credential   = $WECredential
+        ComputerName = $ComputerName
+        Credential   = $Credential
     }
-    $WEVirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-
+    $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
     #Adding the NIC to the VM
     $addAzVMNetworkInterfaceSplat = @{
-        VM = $WEVirtualMachine
-        Id = $WENIC.Id
+        VM = $VirtualMachine
+        Id = $NIC.Id
     }
-    $WEVirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-
+    $VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
     $setAzVMSourceImageSplat = @{
-        VM            = $WEVirtualMachine
-        PublisherName = $WEPublisherName
-        Offer         = $WEOffer
-        Skus          = $WESkus
-        Version       = $WEVersion
-    
+        VM            = $VirtualMachine
+        PublisherName = $PublisherName
+        Offer         = $Offer
+        Skus          = $Skus
+        Version       = $Version
     }
-    $WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
-
+    $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
     #Setting the VM OS Disk to the VM
     $setAzVMOSDiskSplat = @{
-        VM           = $WEVirtualMachine
-        Name         = $WEOSDiskName
-        Caching      = $WEOSDiskCaching
-        CreateOption = $WEOSCreateOption
-        DiskSizeInGB = $WEDiskSizeInGB
+        VM           = $VirtualMachine
+        Name         = $OSDiskName
+        Caching      = $OSDiskCaching
+        CreateOption = $OSCreateOption
+        DiskSizeInGB = $DiskSizeInGB
     }
-    $WEVirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-
+    $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
     #Creating the VM
     $newAzVMSplat = @{
-        ResourceGroupName = $WEResourceGroupName
-        Location          = $WELocationName
-        VM                = $WEVirtualMachine
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        VM                = $VirtualMachine
         Verbose           = $true
-        Tag               = $WETags
+        Tag               = $Tags
     }
     New-AzVM -ErrorAction Stop @newAzVMSplat
-    
     #Post Deployment Configuration #1
     $setAzVMExtensionSplat = @{
-        ResourceGroupName  = $WEResourceGroupName
-        Location           = $WELocationName
-        VMName             = $WEVMName
-        Name               = $WEExtensionName
-        Publisher          = $WEExtensionPublisher
-        ExtensionType      = $WEExtensionType
-        TypeHandlerVersion = $WETypeHandlerVersion
-        # SettingString = $WESettingsString
+        ResourceGroupName  = $ResourceGroupName
+        Location           = $LocationName
+        VMName             = $VMName
+        Name               = $ExtensionName
+        Publisher          = $ExtensionPublisher
+        ExtensionType      = $ExtensionType
+        TypeHandlerVersion = $TypeHandlerVersion
+        # SettingString = $SettingsString
     }
     Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
-
-
     #Post Deployment Configuration #2
-    $WEUsersGroupName = $WEUsersGroupName
+    $UsersGroupName = $UsersGroupName
     #Store the Object ID in a var
-    $WEObjectID = (Get-AzADGroup -SearchString $WEUsersGroupName).ID
+    $ObjectID = (Get-AzADGroup -SearchString $UsersGroupName).ID
     #Store the Resource Type of the VM
-    $vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
+    $vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
     #Create a new AZ Role Assignment at the Azure RBAC Level for that VM for Standard users
-
-    $WENewAzRoleAssignmentParams = @{
-        ObjectId           = $WEObjectID
-        RoleDefinitionName = $WERoleDefinitionNameUsers
-        ResourceGroupName  = $WEResourceGroupName
-        ResourceName       = $WEVMName
+    $NewAzRoleAssignmentParams = @{
+        ObjectId           = $ObjectID
+        RoleDefinitionName = $RoleDefinitionNameUsers
+        ResourceGroupName  = $ResourceGroupName
+        ResourceName       = $VMName
         ResourceType       = $vmtype
     }
     New-AzRoleAssignment -ErrorAction Stop @NewAzRoleAssignmentParams
-
-
-
-
     #Post Deployment Configuration #3
-    $WEAdminsGroupName = $WEAdminsGroupName
+    $AdminsGroupName = $AdminsGroupName
     #Store the Object ID in a var
-    $WEObjectID = (Get-AzADGroup -SearchString $WEUsersGroupName).ID
+    $ObjectID = (Get-AzADGroup -SearchString $UsersGroupName).ID
     #Store the Resource Type of the VM
-    $vmtype = (Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVMName).Type
+    $vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
     #Create a new AZ Role Assignment at the Azure RBAC Level for that VM for Standard users
-    
-   ;  $WENewAzRoleAssignmentParams = @{
-        ObjectId           = $WEObjectID
-        RoleDefinitionName = $WERoleDefinitionNameAdmins
-        ResourceGroupName  = $WEResourceGroupName
-        ResourceName       = $WEVMName
+$NewAzRoleAssignmentParams = @{
+        ObjectId           = $ObjectID
+        RoleDefinitionName = $RoleDefinitionNameAdmins
+        ResourceGroupName  = $ResourceGroupName
+        ResourceName       = $VMName
         ResourceType       = $vmtype
     }
     New-AzRoleAssignment -ErrorAction Stop @NewAzRoleAssignmentParams
-
-
     #Post Deployment Configuration #4
-   ;  $setAzVMAutoShutdownSplat = @{
-        ResourceGroupName = $WEResourceGroupName
-        Name              = $WEVMName
+$setAzVMAutoShutdownSplat = @{
+        ResourceGroupName = $ResourceGroupName
+        Name              = $VMName
         Enable            = $true
-        Time              = $WETime
-        TimeZone          = $WETimeZone
-        Email             = $WEEmail
+        Time              = $Time
+        TimeZone          = $TimeZone
+        Email             = $Email
     }
-
     Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
-
-
-
     #Give the user their VM Login Details
     Write-Information \'The VM is now ready.... here is your login details\'
-    Write-Information \'username:\' $WEVMLocalAdminUser
-    Write-Information \'Password:\' $WEVMLocalAdminPassword
-    Write-Information \'DNSName:\' $WEDNSNameLabel
-        
-
+    Write-Information \'username:\' $VMLocalAdminUser
+    Write-Information \'Password:\' $VMLocalAdminPassword
+    Write-Information \'DNSName:\' $DNSNameLabel
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

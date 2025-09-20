@@ -1,242 +1,162 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Access Review Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Access Review Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ReviewName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEReviewName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$Description,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEDescription,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEGroupId,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDurationInDays = 14,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEReviewerType = " GroupOwners" ,
-    
-    [Parameter(Mandatory=$false)]
-    [array]$WEReviewerEmails = @()
+    [string]$GroupId,
+    [Parameter()]
+    [int]$DurationInDays = 14,
+    [Parameter()]
+    [string]$ReviewerType = "GroupOwners" ,
+    [Parameter()]
+    [array]$ReviewerEmails = @()
 )
-
-#region Functions
-
-Write-WELog " Creating Access Review: $WEReviewName" " INFO"
-
+Write-Host "Creating Access Review: $ReviewName"
 try {
     # Check if Microsoft.Graph.Identity.Governance module is available
     if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Identity.Governance)) {
-        Write-Warning " Microsoft.Graph.Identity.Governance module is required for full functionality"
-        Write-WELog " Install with: Install-Module Microsoft.Graph.Identity.Governance" " INFO"
+        Write-Warning "Microsoft.Graph.Identity.Governance module is required for full functionality"
+        Write-Host "Install with: Install-Module Microsoft.Graph.Identity.Governance"
     }
-    
     # Connect to Microsoft Graph
-    Connect-MgGraph -Scopes " AccessReview.ReadWrite.All"
-    
-    Write-WELog "  Connected to Microsoft Graph" " INFO"
-    
+    Connect-MgGraph -Scopes "AccessReview.ReadWrite.All"
+    Write-Host "Connected to Microsoft Graph"
     # Get group information
-    $WEGroup = Get-MgGroup -GroupId $WEGroupId
-    if (-not $WEGroup) {
-        Write-Error " Group not found: $WEGroupId"
+    $Group = Get-MgGroup -GroupId $GroupId
+    if (-not $Group) {
+        Write-Error "Group not found: $GroupId"
         return
     }
-    
-    Write-WELog " 📋 Access Review Configuration:" " INFO"
-    Write-WELog "  Review Name: $WEReviewName" " INFO"
-    Write-WELog "  Description: $WEDescription" " INFO"
-    Write-WELog "  Target Group: $($WEGroup.DisplayName)" " INFO"
-    Write-WELog "  Duration: $WEDurationInDays days" " INFO"
-    Write-WELog "  Reviewer Type: $WEReviewerType" " INFO"
-    
+    Write-Host "Access Review Configuration:"
+    Write-Host "Review Name: $ReviewName"
+    Write-Host "Description: $Description"
+    Write-Host "Target Group: $($Group.DisplayName)"
+    Write-Host "Duration: $DurationInDays days"
+    Write-Host "Reviewer Type: $ReviewerType"
     # Calculate review dates
-    $WEStartDate = Get-Date -ErrorAction Stop
-    $WEEndDate = $WEStartDate.AddDays($WEDurationInDays)
-    
-    Write-WELog "  Start Date: $($WEStartDate.ToString('yyyy-MM-dd'))" " INFO"
-    Write-WELog "  End Date: $($WEEndDate.ToString('yyyy-MM-dd'))" " INFO"
-    
+    $StartDate = Get-Date -ErrorAction Stop
+    $EndDate = $StartDate.AddDays($DurationInDays)
+    Write-Host "Start Date: $($StartDate.ToString('yyyy-MM-dd'))"
+    Write-Host "End Date: $($EndDate.ToString('yyyy-MM-dd'))"
     # Access review template
-   ;  $WEAccessReviewTemplate = @{
-        displayName = $WEReviewName
-        description = $WEDescription
-        startDate = $WEStartDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
-        endDate = $WEEndDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
+$AccessReviewTemplate = @{
+        displayName = $ReviewName
+        description = $Description
+        startDate = $StartDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
+        endDate = $EndDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
         scope = @{
-            query = " /groups/$WEGroupId/members"
-            queryType = " MicrosoftGraph"
+            query = " /groups/$GroupId/members"
+            queryType = "MicrosoftGraph"
         }
         reviewers = @()
         settings = @{
-            defaultDecision = " None"
+            defaultDecision = "None"
             defaultDecisionEnabled = $false
-            instanceDurationInDays = $WEDurationInDays
+            instanceDurationInDays = $DurationInDays
             autoApplyDecisionsEnabled = $false
             recommendationsEnabled = $true
             recurrenceType = " onetime"
         }
     }
-    
     # Configure reviewers
-    switch ($WEReviewerType) {
-        " GroupOwners" {
-            $WEAccessReviewTemplate.reviewers += @{
-                query = " /groups/$WEGroupId/owners"
-                queryType = " MicrosoftGraph"
+    switch ($ReviewerType) {
+        "GroupOwners" {
+            $AccessReviewTemplate.reviewers += @{
+                query = " /groups/$GroupId/owners"
+                queryType = "MicrosoftGraph"
             }
         }
-        " SpecificUsers" {
-            foreach ($WEEmail in $WEReviewerEmails) {
+        "SpecificUsers" {
+            foreach ($Email in $ReviewerEmails) {
                 try {
-                   ;  $WEUser = Get-MgUser -Filter " userPrincipalName eq '$WEEmail'"
-                    if ($WEUser) {
-                        $WEAccessReviewTemplate.reviewers += @{
-                            query = " /users/$($WEUser.Id)"
-                            queryType = " MicrosoftGraph"
+$User = Get-MgUser -Filter " userPrincipalName eq '$Email'"
+                    if ($User) {
+                        $AccessReviewTemplate.reviewers += @{
+                            query = " /users/$($User.Id)"
+                            queryType = "MicrosoftGraph"
                         }
                     }
                 } catch {
-                    Write-Warning " Could not find user: $WEEmail"
+                    Write-Warning "Could not find user: $Email"
                 }
             }
         }
-        " SelfReview" {
-            $WEAccessReviewTemplate.reviewers += @{
+        "SelfReview" {
+            $AccessReviewTemplate.reviewers += @{
                 query = " /users"
-                queryType = " MicrosoftGraph"
+                queryType = "MicrosoftGraph"
                 queryRoot = " decisions"
             }
         }
     }
-    
-    Write-WELog " `n[WARN]️ IMPORTANT NOTES:" " INFO"
-    Write-WELog " • Access reviews require Azure AD Premium P2" " INFO"
-    Write-WELog " • Reviewers will receive email notifications" " INFO"
-    Write-WELog " • Configure auto-apply based on your needs" " INFO"
-    Write-WELog " • Monitor review progress and follow up" " INFO"
-    
-    Write-WELog " `nAccess Review Benefits:" " INFO"
-    Write-WELog " • Periodic access certification" " INFO"
-    Write-WELog " • Compliance with governance policies" " INFO"
-    Write-WELog " • Automated access cleanup" " INFO"
-    Write-WELog " • Audit trail of access decisions" " INFO"
-    Write-WELog " • Risk reduction through regular reviews" " INFO"
-    
-    Write-WELog " `nReview Process:" " INFO"
-    Write-WELog " 1. Reviewers receive notification emails" " INFO"
-    Write-WELog " 2. Review access for each member" " INFO"
-    Write-WELog " 3. Approve or deny continued access" " INFO"
-    Write-WELog " 4. Provide justification for decisions" " INFO"
-    Write-WELog " 5. System applies decisions (if auto-apply enabled)" " INFO"
-    
-    Write-WELog " `nBest Practices:" " INFO"
-    Write-WELog " • Schedule regular recurring reviews" " INFO"
-    Write-WELog " • Use appropriate reviewers (managers, group owners)" " INFO"
-    Write-WELog " • Enable recommendations for guidance" " INFO"
-    Write-WELog " • Set reasonable review periods (1-4 weeks)" " INFO"
-    Write-WELog " • Follow up on incomplete reviews" " INFO"
-    
-    Write-WELog " `nManual Creation Steps:" " INFO"
-    Write-WELog " 1. Azure Portal > Azure Active Directory" " INFO"
-    Write-WELog " 2. Identity Governance > Access Reviews" " INFO"
-    Write-WELog " 3. New Access Review" " INFO"
-    Write-WELog " 4. Configure scope, reviewers, and settings" " INFO"
-    Write-WELog " 5. Start the review" " INFO"
-    
-    Write-WELog " `n Access review template prepared" " INFO"
-    Write-WELog " 🚨 Use Azure Portal to create the actual review for safety" " INFO"
-    Write-WELog " 📧 Reviewers will be notified via email when review starts" " INFO"
-    
+    Write-Host " `n[WARN] IMPORTANT NOTES:"
+    Write-Host "Access reviews require Azure AD Premium P2"
+    Write-Host "Reviewers will receive email notifications"
+    Write-Host "Configure auto-apply based on your needs"
+    Write-Host "Monitor review progress and follow up"
+    Write-Host " `nAccess Review Benefits:"
+    Write-Host "Periodic access certification"
+    Write-Host "Compliance with governance policies"
+    Write-Host "Automated access cleanup"
+    Write-Host "Audit trail of access decisions"
+    Write-Host "Risk reduction through regular reviews"
+    Write-Host " `nReview Process:"
+    Write-Host " 1. Reviewers receive notification emails"
+    Write-Host " 2. Review access for each member"
+    Write-Host " 3. Approve or deny continued access"
+    Write-Host " 4. Provide justification for decisions"
+    Write-Host " 5. System applies decisions (if auto-apply enabled)"
+    Write-Host " `nBest Practices:"
+    Write-Host "Schedule regular recurring reviews"
+    Write-Host "Use appropriate reviewers (managers, group owners)"
+    Write-Host "Enable recommendations for guidance"
+    Write-Host "Set reasonable review periods (1-4 weeks)"
+    Write-Host "Follow up on incomplete reviews"
+    Write-Host " `nManual Creation Steps:"
+    Write-Host " 1. Azure Portal > Azure Active Directory"
+    Write-Host " 2. Identity Governance > Access Reviews"
+    Write-Host " 3. New Access Review"
+    Write-Host " 4. Configure scope, reviewers, and settings"
+    Write-Host " 5. Start the review"
+    Write-Host " `n Access review template prepared"
+    Write-Host "Use Azure Portal to create the actual review for safety"
+    Write-Host "Reviewers will be notified via email when review starts"
 } catch {
-    Write-Error " Access review creation failed: $($_.Exception.Message)"
-    Write-WELog " 💡 Tip: Use Azure Portal for creating Access Reviews" " INFO"
+    Write-Error "Access review creation failed: $($_.Exception.Message)"
+    Write-Host "Tip: Use Azure Portal for creating Access Reviews"
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

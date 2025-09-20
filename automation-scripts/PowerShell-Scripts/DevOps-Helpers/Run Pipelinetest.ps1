@@ -1,76 +1,29 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Run Pipelinetest
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
+    Creates a set of test deployments by creating PRs for saved test deployment branches (that begin with keep/testdeployment/)
 .NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Run Pipelinetest
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
- .SYNOPSIS
-    Creates a set of test deployments in the pipeline
-
- .DESCRIPTION
-    Creates a set of test deployments by creating PRs for saved test deployment branches (that begin with keep/testdeployment/)
-try {
-    # Main script execution
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
 )
-
-#region Functions
-
-$WEErrorActionPreference = " Stop"
-
-$repoRoot = Resolve-Path " $WEPSScriptRoot/../.."
-
-
-$testBranches 
-)
-
+try {
+$repoRoot = Resolve-Path "$PSScriptRoot/../.."
+$testBranches = @()
 $yesAll = $false
-foreach ($shortBranch in $WETestBranches) {
+foreach ($shortBranch in $TestBranches) {
   write-warning $shortBranch
-  $fullBranch = " keep/testdeployment/$shortBranch"
+  $fullBranch = "keep/testdeployment/$shortBranch"
   write-warning $fullBranch
-  
   $yes = $false
   if (!$yesAll) {
-    $answer = Read-Host " Create a PR for $($fullBranch)? (Y/N/A)"
+    $answer = Read-Host "Create a PR for $($fullBranch)? (Y/N/A)"
     if ($answer -eq 'Y') {
       $yes = $true
     }
@@ -80,35 +33,25 @@ foreach ($shortBranch in $WETestBranches) {
     }
   }
   else {
-   ;  $yes = $true
+$yes = $true
   }
-
   if ($yes) {
     git stash
-
     git checkout master
     git pull
     git checkout $fullBranch
     git rebase master
     git push -f
-
-   ;  $body = @"
+$body = @"
 DO NOT CHECK IN!
 This is a test deployment for branch $fullBranch
 " @
-
-    gh pr create --head $fullBranch --title " Test: $shortBranch" --body $body --label " test deployment" --repo " Azure/azure-quickstart-templates" --draft
-
+    gh pr create --head $fullBranch --title "Test: $shortBranch" --body $body --label "test deployment" --repo "Azure/azure-quickstart-templates" --draft
     git stash apply
   }
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

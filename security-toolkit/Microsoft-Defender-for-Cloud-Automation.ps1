@@ -1,59 +1,45 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
 
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
-    Azure automation script
-
-.DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Microsoft Defender for Cloud Automationcom)#>
 # Microsoft Defender for Cloud Automation Tool
 # Professional Azure security automation script
 # Version: 1.0 | Enterprise security posture management automation
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$SubscriptionId,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateSet("EnableDefender", "ConfigurePolicies", "GetSecurityScore", "ExportFindings", "ConfigureAlerts", "EnableAutoProvisioning")]
     [string]$Action = "GetSecurityScore",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string[]]$DefenderPlans = @("VirtualMachines", "AppService", "SqlServers", "StorageAccounts", "KeyVaults", "Containers", "Arm"),
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ExportPath = ".\defender-export",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$LogAnalyticsWorkspaceId,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string[]]$AlertEmails = @(),
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateSet("High", "Medium", "Low")]
     [string]$MinimumAlertSeverity = "Medium",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$EnableJITAccess,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$EnableFileIntegrityMonitoring,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$EnableAdaptiveApplicationControls,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$DetailedOutput
 )
 
@@ -118,22 +104,22 @@ try {
                     
                 } catch {
                     $failedPlans += $plan
-                    Write-Log " Failed to enable Defender for $plan`: $($_.Exception.Message)" -Level ERROR
+                    Write-Log "Failed to enable Defender for $plan`: $($_.Exception.Message)" -Level ERROR
                 }
             }
             
-            Write-Information ""
-            Write-Information " Defender for Cloud Plan Status"
-            Write-Information "════════════════════════════════════════════════════════════════════"
-            Write-Information " Enabled Plans ($($enabledPlans.Count)):"
+            Write-Host ""
+            Write-Host "Defender for Cloud Plan Status"
+            Write-Host ""
+            Write-Host "Enabled Plans ($($enabledPlans.Count)):"
             foreach ($plan in $enabledPlans) {
-                Write-Information "   • $plan"
+                Write-Host "    $plan"
             }
             
             if ($failedPlans.Count -gt 0) {
-                Write-Information " Failed Plans ($($failedPlans.Count)):"
+                Write-Host "Failed Plans ($($failedPlans.Count)):"
                 foreach ($plan in $failedPlans) {
-                    Write-Information "   • $plan"
+                    Write-Host "    $plan"
                 }
             }
         }
@@ -146,23 +132,23 @@ try {
                 Get-AzPolicyAssignment -Scope "/subscriptions/$SubscriptionId" | Where-Object { $_.Properties.DisplayName -like "*Security Center*" -or $_.Properties.DisplayName -like "*Azure Security Benchmark*" }
             } -OperationName "Get Security Policy Assignments"
             
-            Write-Information ""
-            Write-Information "� Current Security Policy Assignments"
-            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Host ""
+            Write-Host "�� Current Security Policy Assignments"
+            Write-Host ""
             
             foreach ($assignment in $policyAssignments) {
                 $complianceState = Get-AzPolicyState -PolicyAssignmentName $assignment.Name -Top 1 | Select-Object -First 1
                 $complianceStatus = if ($complianceState) { $complianceState.ComplianceState } else { "Unknown" }
                 
-                Write-Information "• $($assignment.Properties.DisplayName)"
-                Write-Information "  Scope: $($assignment.Properties.Scope)"
-                Write-Information "  Compliance: $complianceStatus" -ForegroundColor $(if ($complianceStatus -eq "Compliant") { "Green" } elseif ($complianceStatus -eq "NonCompliant") { "Red" } else { "Yellow" })
-                Write-Information ""
+                Write-Host " $($assignment.Properties.DisplayName)"
+                Write-Host "Scope: $($assignment.Properties.Scope)"
+                Write-Host "Compliance: $complianceStatus" -ForegroundColor $(if ($complianceStatus -eq "Compliant") { "Green" } elseif ($complianceStatus -eq "NonCompliant") { "Red" } else { "Yellow" })
+                Write-Host ""
             }
             
             # Configure auto-provisioning if enabled
             if ($EnableJITAccess -or $EnableFileIntegrityMonitoring -or $EnableAdaptiveApplicationControls) {
-                Write-Log "Configuring advanced security features..." -Level INFO
+                Write-Log "Configuring security features..." -Level INFO
                 
                 $autoProvisioningSettings = @{
                     "Enabled" = "On"
@@ -212,31 +198,31 @@ try {
             $mediumFindings = $recommendations | Where-Object { $_.properties.status.severity -eq "Medium" -and $_.properties.status.code -eq "Unhealthy" }
             $lowFindings = $recommendations | Where-Object { $_.properties.status.severity -eq "Low" -and $_.properties.status.code -eq "Unhealthy" }
             
-            Write-Information ""
-            Write-Information "  Security Score Dashboard"
-            Write-Information "════════════════════════════════════════════════════════════════════"
+            Write-Host ""
+            Write-Host "Security Score Dashboard"
+            Write-Host ""
             
             if ($securityScore) {
                 $currentScore = [math]::Round(($securityScore.properties.score.current / $securityScore.properties.score.max) * 100, 1)
                 $scoreColor = if ($currentScore -ge 80) { "Green" } elseif ($currentScore -ge 60) { "Yellow" } else { "Red" }
                 
-                Write-Information " Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
-                Write-Information ""
+                Write-Host "Overall Security Score: $currentScore% ($($securityScore.properties.score.current)/$($securityScore.properties.score.max))" -ForegroundColor $scoreColor
+                Write-Host ""
             }
             
-            Write-Information "� Security Findings by Severity:"
-            Write-Information "   • Critical (High): $($criticalFindings.Count)"
-            Write-Information "   • Medium: $($mediumFindings.Count)"  
-            Write-Information "   • Low: $($lowFindings.Count)"
-            Write-Information ""
+            Write-Host "�� Security Findings by Severity:"
+            Write-Host "    Critical (High): $($criticalFindings.Count)"
+            Write-Host "    Medium: $($mediumFindings.Count)"  
+            Write-Host "    Low: $($lowFindings.Count)"
+            Write-Host ""
             
             if ($DetailedOutput -and $criticalFindings.Count -gt 0) {
-                Write-Information "� Critical Security Issues (Top 10):"
-                Write-Information "════════════════════════════════════════════════════════════════════"
+                Write-Host "�� Critical Security Issues (Top 10):"
+                Write-Host ""
                 $criticalFindings | Select-Object -First 10 | ForEach-Object {
-                    Write-Information "• $($_.properties.displayName)"
-                    Write-Information "  Resource: $($_.properties.resourceDetails.id)"
-                    Write-Information ""
+                    Write-Host " $($_.properties.displayName)"
+                    Write-Host "Resource: $($_.properties.resourceDetails.id)"
+                    Write-Host ""
                 }
             }
         }
@@ -249,7 +235,7 @@ try {
                 New-Item -Path $ExportPath -ItemType Directory -Force | Out-Null
             }
             
-            # Get comprehensive security data
+            # Get
             $securityData = Invoke-AzureOperation -Operation {
                 $subscriptionId = (Get-AzContext).Subscription.Id
                 
@@ -372,14 +358,14 @@ try {
     Write-ProgressStep -StepNumber 5 -TotalSteps 8 -StepName "Recommendations" -Status "Analyzing security recommendations"
     
     $securityRecommendations = @(
-        "💡 Enable Defender for Cloud on all supported resource types",
-        "💡 Configure Log Analytics workspace for centralized logging",
-        "💡 Set up automated remediation for common security issues",
-        "💡 Enable Just-in-Time VM access for administrative access",
-        "💡 Configure network security groups with least privilege access",
-        "💡 Enable disk encryption for all virtual machines",
-        "💡 Implement Azure Key Vault for secrets management",
-        "💡 Configure backup and disaster recovery policies"
+        "Enable Defender for Cloud on all supported resource types",
+        "Configure Log Analytics workspace for centralized logging",
+        "Set up automated remediation for common security issues",
+        "Enable Just-in-Time VM access for administrative access",
+        "Configure network security groups with least privilege access",
+        "Enable disk encryption for all virtual machines",
+        "Implement Azure Key Vault for secrets management",
+        "Configure backup and disaster recovery policies"
     )
 
     # Compliance assessment
@@ -414,78 +400,78 @@ try {
     } else { 0 }
 
     # Success summary
-    Write-Information ""
-    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
-    Write-Information "                      MICROSOFT DEFENDER FOR CLOUD STATUS"  
-    Write-Information "════════════════════════════════════════════════════════════════════════════════════════════"
-    Write-Information ""
+    Write-Host ""
+    Write-Host ""
+    Write-Host "                      MICROSOFT DEFENDER FOR CLOUD STATUS"  
+    Write-Host ""
+    Write-Host ""
     
-    Write-Information "  Defender for Cloud Overview:"
-    Write-Information "   • Subscription: $SubscriptionId"
-    Write-Information "   • Plans Enabled: $($enabledPlans.Count)/$($currentPlans.Count)" -ForegroundColor $(if ($enabledPlans.Count -gt 0) { "Green" } else { "Red" })
-    Write-Information "   • Coverage Score: $overallSecurityScore%" -ForegroundColor $(if ($overallSecurityScore -ge 80) { "Green" } elseif ($overallSecurityScore -ge 50) { "Yellow" } else { "Red" })
+    Write-Host "Defender for Cloud Overview:"
+    Write-Host "    Subscription: $SubscriptionId"
+    Write-Host "    Plans Enabled: $($enabledPlans.Count)/$($currentPlans.Count)" -ForegroundColor $(if ($enabledPlans.Count -gt 0) { "Green" } else { "Red" })
+    Write-Host "    Coverage Score: $overallSecurityScore%" -ForegroundColor $(if ($overallSecurityScore -ge 80) { "Green" } elseif ($overallSecurityScore -ge 50) { "Yellow" } else { "Red" })
     
     if ($enabledPlans.Count -gt 0) {
-        Write-Information ""
-        Write-Information " Enabled Protection Plans:"
+        Write-Host ""
+        Write-Host "Enabled Protection Plans:"
         foreach ($plan in $enabledPlans) {
-            Write-Information "   • $($plan.Name)"
+            Write-Host "    $($plan.Name)"
         }
     }
     
     if ($freePlans.Count -gt 0) {
-        Write-Information ""
-        Write-Information "[WARN]  Free Tier Plans (Consider Upgrading):"
+        Write-Host ""
+        Write-Host "[WARN]  Free Tier Plans (Consider Upgrading):"
         foreach ($plan in $freePlans) {
-            Write-Information "   • $($plan.Name)"
+            Write-Host "    $($plan.Name)"
         }
     }
     
-    Write-Information ""
-    Write-Information " Estimated Monthly Costs:"
+    Write-Host ""
+    Write-Host "Estimated Monthly Costs:"
     foreach ($cost in $costEstimates.GetEnumerator()) {
-        Write-Information "   • $($cost.Key): $($cost.Value)"
+        Write-Host "    $($cost.Key): $($cost.Value)"
     }
     
-    Write-Information ""
-    Write-Information "� Security Recommendations:"
+    Write-Host ""
+    Write-Host "�� Security Recommendations:"
     foreach ($recommendation in $securityRecommendations) {
-        Write-Information "   $recommendation"
+        Write-Host "   $recommendation"
     }
     
-    Write-Information ""
-    Write-Information "🏛  Compliance Standards Available:"
+    Write-Host ""
+    Write-Host "Compliance Standards Available:"
     foreach ($standard in $complianceStandards) {
-        Write-Information "   • $standard"
+        Write-Host "    $standard"
     }
     
-    Write-Information ""
-    Write-Information "� Next Steps:"
-    Write-Information "   • Review and remediate high-priority security recommendations"
-    Write-Information "   • Configure custom security policies for your environment"
-    Write-Information "   • Set up regular security assessments and reporting"
-    Write-Information "   • Implement automated response to security incidents"
-    Write-Information "   • Train your team on security best practices"
-    Write-Information ""
+    Write-Host ""
+    Write-Host "�� Next Steps:"
+    Write-Host "    Review and remediate high-priority security recommendations"
+    Write-Host "    Configure custom security policies for your environment"
+    Write-Host "    Set up regular security assessments and reporting"
+    Write-Host "    Implement automated response to security incidents"
+    Write-Host "    Train your team on security best practices"
+    Write-Host ""
 
-    Write-Log " Microsoft Defender for Cloud operation '$Action' completed successfully!" -Level SUCCESS
+    Write-Log "Microsoft Defender for Cloud operation '$Action' completed successfully!" -Level SUCCESS
 
 } catch {
-    Write-Log " Microsoft Defender for Cloud operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+    Write-Log "Microsoft Defender for Cloud operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
     
-    Write-Information ""
-    Write-Information " Troubleshooting Tips:"
-    Write-Information "   • Verify Security Center access permissions"
-    Write-Information "   • Check subscription eligibility for Defender plans"
-    Write-Information "   • Ensure Azure Security module is installed and updated"
-    Write-Information "   • Validate network connectivity to Azure Security endpoints"
-    Write-Information ""
+    Write-Host ""
+    Write-Host "Troubleshooting Tips:"
+    Write-Host "    Verify Security Center access permissions"
+    Write-Host "    Check subscription eligibility for Defender plans"
+    Write-Host "    Ensure Azure Security module is installed and updated"
+    Write-Host "    Validate network connectivity to Azure Security endpoints"
+    Write-Host ""
     
-    exit 1
+    throw
 }
 
 Write-Progress -Activity "Microsoft Defender for Cloud Management" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
 
-
 #endregion
+

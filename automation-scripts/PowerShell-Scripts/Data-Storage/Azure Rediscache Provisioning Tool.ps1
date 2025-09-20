@@ -1,146 +1,84 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Rediscache Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Rediscache Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$CacheName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WECacheName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WESkuName = " Standard" ,
-    [string]$WESkuFamily = " C" ,
-    [int]$WESkuCapacity = 1,
-    [bool]$WEEnableNonSslPort = $false,
-    [hashtable]$WERedisConfiguration = @{}
+    [string]$Location,
+    [string]$SkuName = "Standard" ,
+    [string]$SkuFamily = "C" ,
+    [int]$SkuCapacity = 1,
+    [bool]$EnableNonSslPort = $false,
+    [hashtable]$RedisConfiguration = @{}
 )
+Write-Host "Provisioning Redis Cache: $CacheName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host "Location: $Location" "INFO"
+Write-Host "SKU: $SkuName $SkuFamily$SkuCapacity" "INFO"
+Write-Host "Non-SSL Port Enabled: $EnableNonSslPort" "INFO"
 
-#region Functions
-
-Write-WELog " Provisioning Redis Cache: $WECacheName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " SKU: $WESkuName $WESkuFamily$WESkuCapacity" " INFO"
-Write-WELog " Non-SSL Port Enabled: $WEEnableNonSslPort" " INFO"
-
-; 
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    SkuName = $WESkuName
-    Location = $WELocation
-    SkuFamily = $WESkuFamily
-    SkuCapacity = $WESkuCapacity
+    ResourceGroupName = $ResourceGroupName
+    SkuName = $SkuName
+    Location = $Location
+    SkuFamily = $SkuFamily
+    SkuCapacity = $SkuCapacity
     ErrorAction = "Stop"
-    Name = $WECacheName
+    Name = $CacheName
 }
-$WERedisCache @params
-
-if ($WERedisConfiguration.Count -gt 0) {
-    Write-WELog " `nApplying Redis Configuration:" " INFO"
-    foreach ($WEConfig in $WERedisConfiguration.GetEnumerator()) {
-        Write-WELog "  $($WEConfig.Key): $($WEConfig.Value)" " INFO"
+$RedisCache @params
+if ($RedisConfiguration.Count -gt 0) {
+    Write-Host " `nApplying Redis Configuration:" "INFO"
+    foreach ($Config in $RedisConfiguration.GetEnumerator()) {
+        Write-Host "  $($Config.Key): $($Config.Value)" "INFO"
     }
 }
-
-Write-WELog " `nRedis Cache $WECacheName provisioned successfully" " INFO"
-Write-WELog " Host Name: $($WERedisCache.HostName)" " INFO"
-Write-WELog " Port: $($WERedisCache.Port)" " INFO"
-Write-WELog " SSL Port: $($WERedisCache.SslPort)" " INFO"
-Write-WELog " Provisioning State: $($WERedisCache.ProvisioningState)" " INFO"
-
-
-Write-WELog " `nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet" " INFO"
-
-Write-WELog " `nRedis Cache provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nRedis Cache $CacheName provisioned successfully" "INFO"
+Write-Host "Host Name: $($RedisCache.HostName)" "INFO"
+Write-Host "Port: $($RedisCache.Port)" "INFO"
+Write-Host "SSL Port: $($RedisCache.SslPort)" "INFO"
+Write-Host "Provisioning State: $($RedisCache.ProvisioningState)" "INFO"
+Write-Host " `nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet" "INFO"
+Write-Host " `nRedis Cache provisioning completed at $(Get-Date)" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

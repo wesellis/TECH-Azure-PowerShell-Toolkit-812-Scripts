@@ -2,81 +2,53 @@
 #Requires -Module Az.Resources
 #Requires -Version 5.1
 
-<#
-.SYNOPSIS
     Creates and manages budget alerts for cost monitoring and control
-
-.DESCRIPTION
-    Comprehensive budget management tool that creates spending alerts, monitors consumption,
     and sends notifications when thresholds are reached. Supports multiple budget types,
     time grains, and notification channels including email, webhooks, and action groups.
-
 .PARAMETER BudgetName
     Name of the budget to create or manage
-
 .PARAMETER Scope
     Scope for the budget (subscription, resource group, or management group)
-
 .PARAMETER Amount
     Budget amount in the specified currency
-
 .PARAMETER Currency
     Currency code (default: USD)
-
 .PARAMETER TimeGrain
     Budget time period: Monthly, Quarterly, Annual, BillingMonth, BillingQuarter, BillingYear
-
 .PARAMETER StartDate
     Start date for the budget period
-
 .PARAMETER EndDate
     End date for the budget period (optional for recurring budgets)
-
 .PARAMETER ThresholdPercentages
     Array of percentage thresholds that trigger alerts (e.g., 80, 90, 100, 110)
-
 .PARAMETER NotificationEmails
     Email addresses to receive budget alerts
-
 .PARAMETER WebhookUrl
     Webhook URL for programmatic notifications
-
 .PARAMETER ActionGroupId
     Resource ID of the Action Group for alert routing
-
 .PARAMETER FilterResourceGroups
     Filter budget to specific resource groups
-
 .PARAMETER FilterTags
     Filter budget by resource tags (hashtable)
-
 .PARAMETER IncludeForecast
     Include forecasted spend in threshold calculations
-
 .PARAMETER Action
     Action to perform: Create, Update, Delete, List, GetAlerts
 
-.EXAMPLE
-    .\create-budget-alerts.ps1 -BudgetName "Monthly-Production" -Amount 5000 -TimeGrain Monthly -ThresholdPercentages 80,100 -NotificationEmails "team@company.com"
+    .\create-budget-alerts.ps1 -BudgetName "Monthly-Production" -Amount 5000 -TimeGrain Monthly -ThresholdPercentages 80,100 -NotificationEmails "team@example.com"
 
     Creates monthly budget with alerts at 80% and 100% thresholds
 
-.EXAMPLE
     .\create-budget-alerts.ps1 -Action List -Scope "/subscriptions/xxx-xxx"
 
     Lists all budgets in the subscription
 
-.EXAMPLE
     .\create-budget-alerts.ps1 -BudgetName "Q1-Budget" -Amount 15000 -TimeGrain Quarterly -FilterResourceGroups "RG-Prod","RG-Dev"
 
     Creates quarterly budget filtered to specific resource groups
 
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-    LastModified: 2025-09-19
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Create')]
 param(
@@ -160,6 +132,7 @@ if ($ExportReport -and -not $ExportPath) {
 
 # Initialize logging
 $script:LogPath = ".\BudgetManagement_$(Get-Date -Format 'yyyyMMdd').log"
+
 #endregion
 
 #region Helper-Functions
@@ -242,18 +215,19 @@ function Format-CurrencyAmount {
 
     $currencySymbols = @{
         'USD' = '$'
-        'EUR' = '€'
+        'EUR' = ''
         'GBP' = '£'
         'CAD' = 'C$'
         'AUD' = 'A$'
-        'INR' = '₹'
-        'JPY' = '¥'
-        'CNY' = '¥'
+        'INR' = ''
+        'JPY' = '�'
+        'CNY' = '�'
     }
 
     $symbol = if ($currencySymbols.ContainsKey($Currency)) { $currencySymbols[$Currency] } else { $Currency }
     return "$symbol$([Math]::Round($Amount, 2))"
 }
+
 #endregion
 
 #region Core-Functions
@@ -404,9 +378,8 @@ function New-AzureBudget {
 
             Write-LogEntry "Successfully created budget: $($BudgetConfig.Name)" -Level Success
             return $budget
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Failed to create budget: $_" -Level Error
         throw
     }
@@ -442,9 +415,8 @@ function Update-AzureBudget {
             $budget = Set-AzConsumptionBudget @updateParams
             Write-LogEntry "Successfully updated budget: $Name" -Level Success
             return $budget
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Failed to update budget: $_" -Level Error
         throw
     }
@@ -470,9 +442,8 @@ function Remove-AzureBudget {
         if ($PSCmdlet.ShouldProcess($Name, "Remove Budget")) {
             Remove-AzConsumptionBudget @removeParams
             Write-LogEntry "Successfully removed budget: $Name" -Level Success
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Failed to remove budget: $_" -Level Error
         throw
     }
@@ -612,6 +583,7 @@ function Get-BudgetUsageReport {
         throw
     }
 }
+
 #endregion
 
 #region Main-Execution
@@ -671,10 +643,10 @@ try {
             $budget = New-AzureBudget @params
 
             Write-Host "`nBudget created successfully!" -ForegroundColor Green
-            Write-Host "  Name: $($budget.Name)" -ForegroundColor White
-            Write-Host "  Amount: $(Format-CurrencyAmount -Amount $Amount -Currency $Currency)" -ForegroundColor White
-            Write-Host "  Time Grain: $TimeGrain" -ForegroundColor White
-            Write-Host "  Alerts: $($ThresholdPercentages -join '%, ')%" -ForegroundColor White
+            Write-Host "Name: $($budget.Name)" -ForegroundColor White
+            Write-Host "Amount: $(Format-CurrencyAmount -Amount $Amount -Currency $Currency)" -ForegroundColor White
+            Write-Host "Time Grain: $TimeGrain" -ForegroundColor White
+            Write-Host "Alerts: $($ThresholdPercentages -join '%, ')%" -ForegroundColor White
         }
 
         'Update' {
@@ -772,5 +744,6 @@ finally {
     # Cleanup
     $ProgressPreference = 'Continue'
 }
+
 #endregion
 

@@ -1,21 +1,9 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
-
+    AI Assistant
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    NOTES
+    Author: Wes Ellis (wes@wesellis.com)#>
 # AI-Assistant.ps1
 # Natural Language AI Assistant for Azure PowerShell Scripts
 # Version: 3.0
@@ -317,7 +305,7 @@ function Invoke-AIAssistant {
     $recommender = [ScriptRecommendationEngine]::new()
     $context = [ConversationContext]::new()
     
-    Write-Host "`n🤖 AI Assistant Processing..." -ForegroundColor Cyan
+    Write-Host "`n� AI Assistant Processing..." -ForegroundColor Cyan
     
     # Parse intent
     $intent = $nlp.ParseIntent($Query)
@@ -345,7 +333,7 @@ function Invoke-AIAssistant {
             Write-Host "   Category: $($script.Category) | Relevance: $($script.Relevance)" -ForegroundColor DarkGray
         }
         
-        Write-Host "`n� Suggested Command:" -ForegroundColor Cyan
+        Write-Host "`n�� Suggested Command:" -ForegroundColor Cyan
         $suggestedScript = $scripts[0]
         Write-Host "& '$($suggestedScript.Path)'" -ForegroundColor White
     }
@@ -368,23 +356,23 @@ function Invoke-AIAssistant {
     Write-Host "`n Recommendations:" -ForegroundColor Cyan
     switch ($intent.Intent) {
         "create" {
-            Write-Host "• Ensure resource group exists before creating resources" -ForegroundColor White
-            Write-Host "• Apply appropriate tags for cost tracking" -ForegroundColor White
-            Write-Host "• Consider using ARM templates for repeatability" -ForegroundColor White
+            Write-Host "Ensure resource group exists before creating resources" -ForegroundColor White
+            Write-Host "Apply appropriate tags for cost tracking" -ForegroundColor White
+            Write-Host "Consider using ARM templates for repeatability" -ForegroundColor White
         }
         "delete" {
-            Write-Host "• [WARN] Verify resource dependencies before deletion" -ForegroundColor Yellow
-            Write-Host "• Consider backing up data first" -ForegroundColor White
-            Write-Host "• Use -WhatIf parameter to preview changes" -ForegroundColor White
+            Write-Host " [WARN] Verify resource dependencies before deletion" -ForegroundColor Yellow
+            Write-Host "Consider backing up data first" -ForegroundColor White
+            Write-Host "Use -WhatIf parameter to preview changes" -ForegroundColor White
         }
         "secure" {
-            Write-Host "• Enable encryption at rest and in transit" -ForegroundColor White
-            Write-Host "• Configure network security groups" -ForegroundColor White
-            Write-Host "• Implement Azure Key Vault for secrets" -ForegroundColor White
+            Write-Host "Enable encryption at rest and in transit" -ForegroundColor White
+            Write-Host "Configure network security groups" -ForegroundColor White
+            Write-Host "Implement Azure Key Vault for secrets" -ForegroundColor White
         }
         default {
-            Write-Host "• Review Azure best practices documentation" -ForegroundColor White
-            Write-Host "• Test in non-production environment first" -ForegroundColor White
+            Write-Host "Review Azure best practices documentation" -ForegroundColor White
+            Write-Host "Test in non-production environment first" -ForegroundColor White
         }
     }
     
@@ -396,33 +384,33 @@ function Invoke-AIAssistant {
 
 function Start-InteractiveAssistant {
     Write-Host @"
-╔══════════════════════════════════════════════════════════════╗
-║         Azure AI Assistant - Natural Language Mode          ║
-║                    Powered by Advanced NLP                  ║
-╚══════════════════════════════════════════════════════════════╝
+
+�         Azure AI Assistant - Natural Language Mode          �
+�                    Powered by NLP                  �
+
 "@ -ForegroundColor Cyan
     
     Write-Host "`nExamples:" -ForegroundColor Yellow
-    Write-Host "  • 'Create a virtual machine in production resource group'" -ForegroundColor Gray
-    Write-Host "  • 'List all storage accounts'" -ForegroundColor Gray
-    Write-Host "  • 'Secure my web app named myapp'" -ForegroundColor Gray
-    Write-Host "  • 'Optimize costs for development environment'" -ForegroundColor Gray
+    Write-Host "   'Create a virtual machine in production resource group'" -ForegroundColor Gray
+    Write-Host "   'List all storage accounts'" -ForegroundColor Gray
+    Write-Host "   'Secure my web app named myapp'" -ForegroundColor Gray
+    Write-Host "   'Optimize costs for development environment'" -ForegroundColor Gray
     Write-Host "`nType 'exit' to quit`n" -ForegroundColor DarkGray
     
     $context = [ConversationContext]::new()
     $context.LoadHistory()
     
     while ($true) {
-        Write-Host "`n� " -NoNewline -ForegroundColor Cyan
+        Write-Host "`n�� " -NoNewline -ForegroundColor Cyan
         $userInput = Read-Host "How can I help you with Azure"
         
         if ($userInput -eq 'exit' -or $userInput -eq 'quit') {
-            Write-Host "`n� Goodbye!" -ForegroundColor Green
+            Write-Host "`n�� Goodbye!" -ForegroundColor Green
             break
         }
         
         if ($userInput -eq 'history') {
-            Write-Host "`n� Conversation History:" -ForegroundColor Yellow
+            Write-Host "`n�� Conversation History:" -ForegroundColor Yellow
             $context.History | ForEach-Object {
                 Write-Host "$($_.Role): $($_.Content)" -ForegroundColor Gray
             }
@@ -456,11 +444,11 @@ function Start-VoiceInterface {
     $speechGrammar = New-Object System.Speech.Recognition.Grammar($grammar)
     $speech.LoadGrammar($speechGrammar)
     
-    Write-Host "� Voice interface active. Say 'Azure' followed by your command..." -ForegroundColor Cyan
+    Write-Host "�� Voice interface active. Say 'Azure' followed by your command..." -ForegroundColor Cyan
     
     Register-ObjectEvent -InputObject $speech -EventName SpeechRecognized -Action {
         $result = $event.SourceEventArgs.Result.Text
-        Write-Host "`n� Heard: $result" -ForegroundColor Yellow
+        Write-Host "`n�� Heard: $result" -ForegroundColor Yellow
         Invoke-AIAssistant -Query $result
     }
     
@@ -485,3 +473,4 @@ if ($Interactive) {
 }
 
 #endregion
+

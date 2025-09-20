@@ -1,193 +1,120 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Containerinstance Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Containerinstance Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$ContainerGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Image,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEContainerGroupName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEImage,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WEOsType = " Linux" ,
-    [double]$WECpu = 1.0,
-    [double]$WEMemory = 1.5,
-    [array]$WEPorts = @(80),
-    [hashtable]$WEEnvironmentVariables = @{},
-    [string]$WERestartPolicy = " Always"
+    [string]$Location,
+    [string]$OsType = "Linux" ,
+    [double]$Cpu = 1.0,
+    [double]$Memory = 1.5,
+    [array]$Ports = @(80),
+    [hashtable]$EnvironmentVariables = @{},
+    [string]$RestartPolicy = "Always"
 )
-
-#region Functions
-
-Write-WELog " Provisioning Container Instance: $WEContainerGroupName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Container Image: $WEImage" " INFO"
-Write-WELog " OS Type: $WEOsType" " INFO"
-Write-WELog " CPU: $WECpu cores" " INFO"
-Write-WELog " Memory: $WEMemory GB" " INFO"
-Write-WELog " Ports: $($WEPorts -join ', ')" " INFO"
-Write-WELog " Restart Policy: $WERestartPolicy" " INFO"
-
-
-$WEPortObjects = @()
-foreach ($WEPort in $WEPorts) {
-    $WEPortObjects = $WEPortObjects + New-AzContainerInstancePortObject -Port $WEPort -Protocol TCP
+Write-Host "Provisioning Container Instance: $ContainerGroupName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Container Image: $Image"
+Write-Host "OS Type: $OsType"
+Write-Host "CPU: $Cpu cores"
+Write-Host "Memory: $Memory GB"
+Write-Host "Ports: $($Ports -join ', ')"
+Write-Host "Restart Policy: $RestartPolicy"
+$PortObjects = @()
+foreach ($Port in $Ports) {
+    $PortObjects = $PortObjects + New-AzContainerInstancePortObject -Port $Port -Protocol TCP
 }
-
-
-$WEEnvVarObjects = @()
-if ($WEEnvironmentVariables.Count -gt 0) {
-    Write-WELog " `nEnvironment Variables:" " INFO"
-    foreach ($WEEnvVar in $WEEnvironmentVariables.GetEnumerator()) {
-        Write-WELog "  $($WEEnvVar.Key): $($WEEnvVar.Value)" " INFO"
-        $WEEnvVarObjects = $WEEnvVarObjects + New-AzContainerInstanceEnvironmentVariableObject -Name $WEEnvVar.Key -Value $WEEnvVar.Value
+$EnvVarObjects = @()
+if ($EnvironmentVariables.Count -gt 0) {
+    Write-Host " `nEnvironment Variables:"
+    foreach ($EnvVar in $EnvironmentVariables.GetEnumerator()) {
+        Write-Host "  $($EnvVar.Key): $($EnvVar.Value)"
+        $EnvVarObjects = $EnvVarObjects + New-AzContainerInstanceEnvironmentVariableObject -Name $EnvVar.Key -Value $EnvVar.Value
     }
 }
-
-; 
 $params = @{
-    RequestMemoryInGb = $WEMemory
-    Name = $WEContainerGroupName
-    Port = $WEPortObjects
-    RequestCpu = $WECpu
-    Image = $WEImage
+    RequestMemoryInGb = $Memory
+    Name = $ContainerGroupName
+    Port = $PortObjects
+    RequestCpu = $Cpu
+    Image = $Image
     ErrorAction = "Stop"
 }
-$WEContainer @params
-
-if ($WEEnvVarObjects.Count -gt 0) {
-    $WEContainer.EnvironmentVariable = $WEEnvVarObjects
+$Container @params
+if ($EnvVarObjects.Count -gt 0) {
+    $Container.EnvironmentVariable = $EnvVarObjects
 }
-
-
-Write-WELog " `nCreating Container Instance..." " INFO" ; 
+Write-Host " `nCreating Container Instance..." ;
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    RestartPolicy = $WERestartPolicy
-    Location = $WELocation
-    Container = $WEContainer
+    ResourceGroupName = $ResourceGroupName
+    RestartPolicy = $RestartPolicy
+    Location = $Location
+    Container = $Container
     IpAddressType = "Public"
-    OsType = $WEOsType
+    OsType = $OsType
     ErrorAction = "Stop"
-    Name = $WEContainerGroupName
+    Name = $ContainerGroupName
 }
-$WEContainerGroup @params
-
-Write-WELog " `nContainer Instance $WEContainerGroupName provisioned successfully" " INFO"
-Write-WELog " Public IP Address: $($WEContainerGroup.IpAddress)" " INFO"
-Write-WELog " FQDN: $($WEContainerGroup.Fqdn)" " INFO"
-Write-WELog " Provisioning State: $($WEContainerGroup.ProvisioningState)" " INFO"
-
-
-Write-WELog " `nContainer Status:" " INFO"
-foreach ($WEContainerStatus in $WEContainerGroup.Container) {
-    Write-WELog "  Container: $($WEContainerStatus.Name)" " INFO"
-    Write-WELog "  State: $($WEContainerStatus.InstanceView.CurrentState.State)" " INFO"
-    Write-WELog "  Restart Count: $($WEContainerStatus.InstanceView.RestartCount)" " INFO"
+$ContainerGroup @params
+Write-Host " `nContainer Instance $ContainerGroupName provisioned successfully"
+Write-Host "Public IP Address: $($ContainerGroup.IpAddress)"
+Write-Host "FQDN: $($ContainerGroup.Fqdn)"
+Write-Host "Provisioning State: $($ContainerGroup.ProvisioningState)"
+Write-Host " `nContainer Status:"
+foreach ($ContainerStatus in $ContainerGroup.Container) {
+    Write-Host "Container: $($ContainerStatus.Name)"
+    Write-Host "State: $($ContainerStatus.InstanceView.CurrentState.State)"
+    Write-Host "Restart Count: $($ContainerStatus.InstanceView.RestartCount)"
 }
-
-if ($WEContainerGroup.IpAddress -and $WEPorts) {
-    Write-WELog " `nAccess URLs:" " INFO"
-    foreach ($WEPort in $WEPorts) {
-        Write-WELog "  http://$($WEContainerGroup.IpAddress):$WEPort" " INFO"
+if ($ContainerGroup.IpAddress -and $Ports) {
+    Write-Host " `nAccess URLs:"
+    foreach ($Port in $Ports) {
+        Write-Host "  http://$($ContainerGroup.IpAddress):$Port"
     }
 }
-
-Write-WELog " `nContainer Instance provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nContainer Instance provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

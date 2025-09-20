@@ -1,112 +1,60 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Storage Lifecycle Manager
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Storage Lifecycle Manager
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEStorageAccountName,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDaysToTierCool = 30,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDaysToTierArchive = 90,
-    
-    [Parameter(Mandatory=$false)]
-    [int]$WEDaysToDelete = 365
+    [string]$StorageAccountName,
+    [Parameter()]
+    [int]$DaysToTierCool = 30,
+    [Parameter()]
+    [int]$DaysToTierArchive = 90,
+    [Parameter()]
+    [int]$DaysToDelete = 365
 )
+Write-Host "Configuring lifecycle management for: $StorageAccountName" "INFO"
 
-#region Functions
-
-Write-WELog " Configuring lifecycle management for: $WEStorageAccountName" " INFO"
-
-; 
-$WELifecycleRule = @{
+$LifecycleRule = @{
     enabled = $true
-    name = " DefaultLifecycleRule"
-    type = " Lifecycle"
+    name = "DefaultLifecycleRule"
+    type = "Lifecycle"
     definition = @{
         filters = @{
             blobTypes = @(" blockBlob" )
@@ -114,50 +62,39 @@ $WELifecycleRule = @{
         actions = @{
             baseBlob = @{
                 tierToCool = @{
-                    daysAfterModificationGreaterThan = $WEDaysToTierCool
+                    daysAfterModificationGreaterThan = $DaysToTierCool
                 }
                 tierToArchive = @{
-                    daysAfterModificationGreaterThan = $WEDaysToTierArchive
+                    daysAfterModificationGreaterThan = $DaysToTierArchive
                 }
                 delete = @{
-                    daysAfterModificationGreaterThan = $WEDaysToDelete
+                    daysAfterModificationGreaterThan = $DaysToDelete
                 }
             }
         }
     }
 }
 
-; 
-$WEPolicyJson = $WELifecycleRule | ConvertTo-Json -Depth 10
-
-
+$PolicyJson = $LifecycleRule | ConvertTo-Json -Depth 10
 $params = @{
     ErrorAction = "Stop"
-    Policy = $WEPolicyJson
-    ResourceGroupName = $WEResourceGroupName
-    StorageAccountName = $WEStorageAccountName
+    Policy = $PolicyJson
+    ResourceGroupName = $ResourceGroupName
+    StorageAccountName = $StorageAccountName
 }
 Set-AzStorageAccountManagementPolicy @params
-
-Write-WELog "  Lifecycle management configured successfully:" " INFO"
-Write-WELog "  Storage Account: $WEStorageAccountName" " INFO"
-Write-WELog "  Tier to Cool: After $WEDaysToTierCool days" " INFO"
-Write-WELog "  Tier to Archive: After $WEDaysToTierArchive days" " INFO"
-Write-WELog "  Delete: After $WEDaysToDelete days" " INFO"
-
-Write-WELog " `nLifecycle Benefits:" " INFO"
-Write-WELog " • Automatic cost optimization" " INFO"
-Write-WELog " • Compliance with retention policies" " INFO"
-Write-WELog " • Reduced management overhead" " INFO"
-Write-WELog " • Environmental efficiency" " INFO"
-
-
-
-
+Write-Host "Lifecycle management configured successfully:" "INFO"
+Write-Host "Storage Account: $StorageAccountName" "INFO"
+Write-Host "Tier to Cool: After $DaysToTierCool days" "INFO"
+Write-Host "Tier to Archive: After $DaysToTierArchive days" "INFO"
+Write-Host "Delete: After $DaysToDelete days" "INFO"
+Write-Host " `nLifecycle Benefits:" "INFO"
+Write-Host "Automatic cost optimization" "INFO"
+Write-Host "Compliance with retention policies" "INFO"
+Write-Host "Reduced management overhead" "INFO"
+Write-Host "Environmental efficiency" "INFO"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

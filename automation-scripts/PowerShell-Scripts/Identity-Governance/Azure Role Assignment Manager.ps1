@@ -1,142 +1,75 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Role Assignment Manager
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Role Assignment Manager
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PrincipalId,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEPrincipalId,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$RoleDefinitionName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERoleDefinitionName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEScope,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEPrincipalType = " User"
+    [string]$Scope,
+    [Parameter()]
+    [string]$PrincipalType = "User"
 )
-
-#region Functions
-
-Write-WELog " Managing role assignment:" " INFO"
-Write-WELog "  Principal ID: $WEPrincipalId" " INFO"
-Write-WELog "  Role: $WERoleDefinitionName" " INFO"
-Write-WELog "  Scope: $WEScope" " INFO"
-Write-WELog "  Type: $WEPrincipalType" " INFO"
-
+Write-Host "Managing role assignment:"
+Write-Host "Principal ID: $PrincipalId"
+Write-Host "Role: $RoleDefinitionName"
+Write-Host "Scope: $Scope"
+Write-Host "Type: $PrincipalType"
 try {
     # Check if assignment already exists
-   ;  $WEExistingAssignment = Get-AzRoleAssignment -ObjectId $WEPrincipalId -RoleDefinitionName $WERoleDefinitionName -Scope $WEScope -ErrorAction SilentlyContinue
-    
-    if ($WEExistingAssignment) {
-        Write-WELog " [WARN]️ Role assignment already exists" " INFO"
-        Write-WELog "  Assignment ID: $($WEExistingAssignment.RoleAssignmentId)" " INFO"
+$ExistingAssignment = Get-AzRoleAssignment -ObjectId $PrincipalId -RoleDefinitionName $RoleDefinitionName -Scope $Scope -ErrorAction SilentlyContinue
+    if ($ExistingAssignment) {
+        Write-Host "[WARN] Role assignment already exists"
+        Write-Host "Assignment ID: $($ExistingAssignment.RoleAssignmentId)"
         return
     }
-    
     # Create new role assignment
    $params = @{
        ErrorAction = "Stop"
-       RoleDefinitionName = $WERoleDefinitionName
-       ObjectId = $WEPrincipalId
-       Scope = $WEScope  Write-WELog "  Role assignment created successfully:" " INFO" Write-WELog "  Assignment ID: $($WEAssignment.RoleAssignmentId)" " INFO" Write-WELog "  Principal Name: $($WEAssignment.DisplayName)" " INFO" Write-WELog "  Role: $($WEAssignment.RoleDefinitionName)" " INFO" Write-WELog "  Scope: $($WEAssignment.Scope)" " INFO
+       RoleDefinitionName = $RoleDefinitionName
+       ObjectId = $PrincipalId
+       Scope = $Scope  Write-Host "Role assignment created successfully:" "INFO"Write-Host "Assignment ID: $($Assignment.RoleAssignmentId)" "INFO"Write-Host "Principal Name: $($Assignment.DisplayName)" "INFO"Write-Host "Role: $($Assignment.RoleDefinitionName)"Write-Host "Scope: $($Assignment.Scope)" " INFO
    }
    ; @params
 } catch {
-    Write-Error " Failed to create role assignment: $($_.Exception.Message)"
+    Write-Error "Failed to create role assignment: $($_.Exception.Message)"
 }
+Write-Host " `nCommon Azure Roles:"
+Write-Host "Owner - Full access including access management"
+Write-Host "Contributor - Full access except access management"
+Write-Host "Reader - Read-only access"
+Write-Host "User Access Administrator - Manage user access"
+Write-Host "Security Administrator - Security permissions"
+Write-Host "Backup Contributor - Backup management"
 
-Write-WELog " `nCommon Azure Roles:" " INFO"
-Write-WELog " • Owner - Full access including access management" " INFO"
-Write-WELog " • Contributor - Full access except access management" " INFO"
-Write-WELog " • Reader - Read-only access" " INFO"
-Write-WELog " • User Access Administrator - Manage user access" " INFO"
-Write-WELog " • Security Administrator - Security permissions" " INFO"
-Write-WELog " • Backup Contributor - Backup management" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

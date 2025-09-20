@@ -1,132 +1,63 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Vm Disk Detacher
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Vm Disk Detacher
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVmName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$WEDiskName
+    [string]$VmName,
+    [Parameter(Mandatory)]
+    [string]$DiskName
 )
-
-#region Functions
-
-Write-WELog " Detaching disk from VM: $WEVmName" " INFO"
-; 
-$WEVM = Get-AzVM -ResourceGroupName $WEResourceGroupName -Name $WEVmName
-
-; 
-$WEDiskToDetach = $WEVM.StorageProfile.DataDisks | Where-Object { $_.Name -eq $WEDiskName }
-
-if (-not $WEDiskToDetach) {
-    Write-Error " Disk '$WEDiskName' not found on VM '$WEVmName'"
+Write-Host "Detaching disk from VM: $VmName"
+$VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
+$DiskToDetach = $VM.StorageProfile.DataDisks | Where-Object { $_.Name -eq $DiskName }
+if (-not $DiskToDetach) {
+    Write-Error "Disk '$DiskName' not found on VM '$VmName'"
     return
 }
-
-Write-WELog " Found disk: $WEDiskName (LUN: $($WEDiskToDetach.Lun))" " INFO"
-
-
-Remove-AzVMDataDisk -VM $WEVM -Name $WEDiskName
-
-
-Update-AzVM -ResourceGroupName $WEResourceGroupName -VM $WEVM
-
-Write-WELog "  Disk detached successfully:" " INFO"
-Write-WELog "  Disk: $WEDiskName" " INFO"
-Write-WELog "  VM: $WEVmName" " INFO"
-Write-WELog "  LUN: $($WEDiskToDetach.Lun)" " INFO"
-Write-WELog "  Note: Disk is now available for attachment to other VMs" " INFO"
-
-
-
-
+Write-Host "Found disk: $DiskName (LUN: $($DiskToDetach.Lun))"
+Remove-AzVMDataDisk -VM $VM -Name $DiskName
+Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
+Write-Host "Disk detached successfully:"
+Write-Host "Disk: $DiskName"
+Write-Host "VM: $VmName"
+Write-Host "LUN: $($DiskToDetach.Lun)"
+Write-Host "Note: Disk is now available for attachment to other VMs"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

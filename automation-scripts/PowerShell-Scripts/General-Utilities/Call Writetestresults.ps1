@@ -1,78 +1,41 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Call Writetestresults
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Call Writetestresults
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEENV:SAMPLE_FOLDER = "."
-$WEENV:SAMPLE_NAME = Split-Path (Resolve-Path $WEENV:SAMPLE_FOLDER) -Leaf
-$WEENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" # TODO
-$WEENV:RESULT_BEST_PRACTICE = " FAIL"
-$WEENV:RESULT_CREDSCAN = " PASS"
-$WEENV:BUILD_REASON = " BatchedCI" # PullRequest/BatchedCI/IndividualCI/Manual
-$WEENV:AGENT_JOBSTATUS = " Succeeded"
-$WEENV:VALIDATION_TYPE = ""
-$WEENV:SUPPORTED_ENVIRONMENTS = " ['AzureUSGovernment','AzureCloud']"
-$WEENV:RESULT_DEPLOYMENT_PARAMETER = " PublicDeployment"
-$WEENV:RESULT_DEPLOYMENT = " True"
-$WEENV:BICEP_VERSION = " 0.3.1"
-$WEStorageAccountKey = " $WEENV:STORAGE_ACCOUNT_KEY"
-$WEENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = " 123"
-$WEENV:BUILD_BUILDNUMBER = " 1234.56"
-
-if (($WEStorageAccountKey -eq "" ) -or ($null -eq $WEStorageAccountKey)) {
-    Write-Error " Missing StorageAccountKey"
+$ENV:SAMPLE_FOLDER = "."
+$ENV:SAMPLE_NAME = Split-Path (Resolve-Path $ENV:SAMPLE_FOLDER) -Leaf
+$ENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" # TODO
+$ENV:RESULT_BEST_PRACTICE = "FAIL"
+$ENV:RESULT_CREDSCAN = "PASS"
+$ENV:BUILD_REASON = "BatchedCI" # PullRequest/BatchedCI/IndividualCI/Manual
+$ENV:AGENT_JOBSTATUS = "Succeeded"
+$ENV:VALIDATION_TYPE = ""
+$ENV:SUPPORTED_ENVIRONMENTS = " ['AzureUSGovernment','AzureCloud']"
+$ENV:RESULT_DEPLOYMENT_PARAMETER = "PublicDeployment"
+$ENV:RESULT_DEPLOYMENT = "True"
+$ENV:BICEP_VERSION = " 0.3.1"
+$StorageAccountKey = " $ENV:STORAGE_ACCOUNT_KEY"
+$ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = " 123"
+$ENV:BUILD_BUILDNUMBER = " 1234.56"
+if (($StorageAccountKey -eq "" ) -or ($null -eq $StorageAccountKey)) {
+    Write-Error "Missing StorageAccountKey"
     return
 }
-; 
-$script = " $WEPSScriptRoot/../ci-scripts/Write-TestResults"
+$script = " $PSScriptRoot/../ci-scripts/Write-TestResults"
 $params = @{
-    PublicDeployment = $WEENV:RESULT_DEPLOYMENT
+    PublicDeployment = $ENV:RESULT_DEPLOYMENT
     PRsContainerName = " badgestest"
     BadgesContainerName = " badgestest"
-    TableName = " QuickStartsMetadataServiceTest"
-    TableNamePRs = " QuickStartsMetadataServiceTestPRs"
-    StorageAccountKey = $WEStorageAccountKey
+    TableName = "QuickStartsMetadataServiceTest"
+    TableNamePRs = "QuickStartsMetadataServiceTestPRs"
+    StorageAccountKey = $StorageAccountKey
 }
 & @params
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

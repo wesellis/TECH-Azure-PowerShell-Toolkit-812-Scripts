@@ -1,183 +1,110 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Validate Deploymentfile
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Validate Deploymentfile
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-
 Determines the deployment file to use.
 For JSON samples, this is the JSON file included.
 For bicep samples:
   Build the bicep file to check for errors.
-
-
-
 [CmdletBinding()
 try {
     # Main script execution
 ]
 $ErrorActionPreference = "Stop" # Cmdlet binding needed to enable using -ErrorAction, -ErrorVariable etc from testing
-
-
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
 param(
-    [string] $WESampleFolder = $WEENV:SAMPLE_FOLDER,
-    [string] $WEMainTemplateFilenameBicep = $WEENV:MAINTEMPLATE_FILENAME,
-
-    [string] $WEBicepPath = $WEENV:BICEP_PATH,
-
-    [switch] $bicepSupported = ($WEENV:BICEP_SUPPORTED -eq " true" )
+    [string] $SampleFolder = $ENV:SAMPLE_FOLDER,
+    [string] $MainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME,
+    [string] $BicepPath = $ENV:BICEP_PATH,
+    [switch] $bicepSupported = ($ENV:BICEP_SUPPORTED -eq " true" )
 )
-
-#region Functions
-
-$WEError.Clear()
-
-
-Write-WELog " ##vso[task.setvariable variable=label.bicep.warnings]false" " INFO"
-
+$Error.Clear()
+Write-Host " ##vso[task.setvariable variable=label.bicep.warnings]false"
 if ($bicepSupported) {
-    $WEMainTemplatePathBicep = " $($WESampleFolder)/$($WEMainTemplateFilenameBicep)"
-    #$WEMainTemplatePathJson = " $($WESampleFolder)/$($WEMainTemplateFilenameJson)"
-    
+    $MainTemplatePathBicep = " $($SampleFolder)/$($MainTemplateFilenameBicep)"
+    #$MainTemplatePathJson = " $($SampleFolder)/$($MainTemplateFilenameJson)"
     # Build a JSON version of the bicep file
-    $WECompiledJsonFilename = " $($WEMainTemplateFilenameBicep).temp.json"
-    $WECompiledJsonPath = " $($WESampleFolder)/$($WECompiledJsonFilename)"
-    $errorFile = Join-Path $WESampleFolder " errors.txt"
-    Write-Information " BUILDING: $WEBicepPath build $WEMainTemplatePathBicep --outfile $WECompiledJsonPath"
-    Start-Process $WEBicepPath -ArgumentList @('build', $WEMainTemplatePathBicep, '--outfile', $WECompiledJsonPath) -RedirectStandardError $errorFile -Wait
+    $CompiledJsonFilename = " $($MainTemplateFilenameBicep).temp.json"
+    $CompiledJsonPath = " $($SampleFolder)/$($CompiledJsonFilename)"
+    $errorFile = Join-Path $SampleFolder " errors.txt"
+    Write-Host "BUILDING: $BicepPath build $MainTemplatePathBicep --outfile $CompiledJsonPath"
+    Start-Process $BicepPath -ArgumentList @('build', $MainTemplatePathBicep, '--outfile', $CompiledJsonPath) -RedirectStandardError $errorFile -Wait
     $errorOutput = [string[]](Get-Content -ErrorAction Stop $errorFile)
-
     Remove-Item -ErrorAction Stop $errorFil -Forcee -Force
-    
     $warnings = 0
     $errors = 0
     foreach ($item in $errorOutput) {
-        if ($item -imatch " : Warning " ) {
+        if ($item -imatch " : Warning" ) {
             $warnings = $warnings + 1
             Write-Warning $item
         }
         elseif ($item -imatch " : Error BCP" ) {
-           ;  $errors = $errors + 1
+$errors = $errors + 1
             Write-Error $item
         }
         else {
             # Build succeeded: 0 Warning(s), 0 Error(s) [possibly localized]
-            if ($item -match " 0 .* 0 " ) {
+            if ($item -match " 0 .* 0" ) {
                 # Succeeded
             }
             else {
                 # This should only occur on the last line (the error/warnings summary line)
                 if ($item -ne $errorOutput[-1]) {
-                    throw " Only the last error output line should not be a warning or error"
+                    throw "Only the last error output line should not be a warning or error"
                 }
             }
         }
     }
-
-    if (($errors -gt 0) -or !(Test-Path $WECompiledJsonPath)) {
+    if (($errors -gt 0) -or !(Test-Path $CompiledJsonPath)) {
         # Can't continue, fail pipeline
-        Write-Error " Bicep build failed."
+        Write-Error "Bicep build failed."
         return
-    }    
-
+    }
     if ($warnings -gt 0) {
         # Can't continue, fail pipeline
-        Write-Warning " Bicep build had warnings."
-        Write-WELog " ##vso[task.setvariable variable=label.bicep.warnings]true" " INFO"
-    }    
-
-
-
-
-
-
-
+        Write-Warning "Bicep build had warnings."
+        Write-Host " ##vso[task.setvariable variable=label.bicep.warnings]true"
+    }
     # If this is a PR, compare it against the JSON file included in the sample
     # if ($isPR) {
     $params = @{
         WriteToHost = "#"
-        TemplateFilePathExpected = $WECompiledJsonPath #
-        TemplateFilePathActual = $WEMainTemplatePathJson #
+        TemplateFilePathExpected = $CompiledJsonPath #
+        TemplateFilePathActual = $MainTemplatePathJson #
         RemoveGeneratorMetadata = "#"
     }
     # @params
-
     # Delete the temporary built JSON file
-    Remove-Item -ErrorAction Stop $WECompiledJsonPat -Forceh -Force
+    Remove-Item -ErrorAction Stop $CompiledJsonPat -Forceh -Force
 }
-
     # Just deploy the JSON file included in the sample
-    #Write-WELog " Bicep not supported in this sample, deploying to $WEMainTemplateFilenameJson" " INFO"
-    #$fileToDeploy = $WEMainTemplateFilenameJson
-
-
-
-
-
-
+    #Write-Host "Bicep not supported in this sample, deploying to $MainTemplateFilenameJson"
+    #$fileToDeploy = $MainTemplateFilenameJson
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

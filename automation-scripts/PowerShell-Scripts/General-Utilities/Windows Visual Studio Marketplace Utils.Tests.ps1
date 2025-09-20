@@ -1,65 +1,30 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Visual Studio Marketplace Utils.Tests
-
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Visual Studio Marketplace Utils.Tests
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-
 BeforeAll {
     $script:IsUnderTest = $true
     $retryModuleName = 'windows-retry-utils'
-    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot)
+    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $PSScriptRoot)
 try {
     # Main script execution
 " _common/$retryModuleName.psm1" )
-    
-    $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'  
-    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $WEPSScriptRoot) " _common/$marketplaceModuleName.psm1" )
-    
+    $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'
+    Import-Module -Force -Name (Join-Path $(Split-Path -Parent $PSScriptRoot) " _common/$marketplaceModuleName.psm1" )
     # Mock a x64 processor by default
     [CmdletBinding()]
-function WE-Get-CimInstance -ErrorAction Stop { }
+function Get-CimInstance -ErrorAction Stop { }
     Mock Get-CimInstance -ErrorAction Stop {
         [pscustomobject]@{ Architecture = 9 }
     } -Verifiable -ModuleName $marketplaceModuleName
-
     $script:currentAttempt = 0
     $script:sleepTimes = @()
     $params = @{
@@ -68,235 +33,181 @@ function WE-Get-CimInstance -ErrorAction Stop { }
         ModuleName = $retryModuleName
     }
     Mock @params
-
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
 param ($seconds) $script:sleepTimes += $seconds; }
-
     Mock Write-Information {} -ModuleName $marketplaceModuleName
     Mock Write-Information {} -ModuleName $retryModuleName
 }
-
-Describe " Get-ApiHeaders -ErrorAction Stop Tests" {
-    It " Should return the correct headers" {
+Describe "Get-ApiHeaders -ErrorAction Stop Tests" {
+    It "Should return the correct headers" {
         $headers = Get-ApiHeaders -ErrorAction Stop
-
         $headers | Should -Not -BeNullOrEmpty
-        $headers[" Accept" ] | Should -Be " application/json;api-version=3.0-preview.1"
-        $headers[" Content-Type" ] | Should -Be " application/json"
+        $headers["Accept" ] | Should -Be " application/json;api-version=3.0-preview.1"
+        $headers["Content-Type" ] | Should -Be " application/json"
     }
 }
-
-Describe " Get-ApiFlags -ErrorAction Stop Tests" {
-    It " Should be 402" {
+Describe "Get-ApiFlags -ErrorAction Stop Tests" {
+    It "Should be 402" {
         $flags = Get-ApiFlags -VersionNumber $null
-
         ($flags -band 402) | Should -Be 402
     }
 }
-
-Describe " Get-RequestBody -ErrorAction Stop Tests" {
-    It " Should create a valid request body" {
+Describe "Get-RequestBody -ErrorAction Stop Tests" {
+    It "Should create a valid request body" {
         $body = Get-RequestBody -ExtensionReference " test.extension" -Flags 402
         $jsonBody = $body | ConvertFrom-Json
-
         $jsonBody.filters[0].criteria[0].filterType | Should -Be 7
         $jsonBody.filters[0].criteria[0].value | Should -Be " test.extension"
         $jsonBody.flags | Should -Be 402
     }
 }
-
-Describe " Import-ExtensionByMetadata Tests" {
-    Context " When the destination file does not exist" {
+Describe "Import-ExtensionByMetadata Tests" {
+    Context "When the destination file does not exist" {
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEPath)
+param($Path)
                 return $false
             } -Verifiable -ModuleName $marketplaceModuleName
-
             Mock Copy-Item {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEPath, $WEDestination)
-                Write-WELog " Mocked: Copying $WEPath to $WEDestination" " INFO"
+param($Path, $Destination)
+                Write-Host "Mocked: Copying $Path to $Destination"
             } -Verifiable -ModuleName $marketplaceModuleName
-
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEVsixUrl, $WELocalFilePath)
-                Write-WELog " Mocked: Downloading $WEVsixUrl to $WELocalFilePath" " INFO"
+param($VsixUrl, $LocalFilePath)
+                Write-Host "Mocked: Downloading $VsixUrl to $LocalFilePath"
             } -Verifiable -ModuleName $marketplaceModuleName
         }
-
-        It " Should download and copy the file to the destination" {
-            $WEExtensionMetadata = [PSCustomObject]@{
-                name    = " SampleExtension"
+        It "Should download and copy the file to the destination" {
+            $ExtensionMetadata = [PSCustomObject]@{
+                name    = "SampleExtension"
                 vsixUrl = " http://localhost/sampleextension.VSIXPackage"
             }
-            $WEDownloadLocation = " c:\temp\"
-            $WEExpectedFilePath = Join-Path -Path $WEDownloadLocation -ChildPath " SampleExtension.vsix"
-            $WEResult = Import-ExtensionByMetadata -ExtensionMetadata $WEExtensionMetadata -DownloadLocation $WEDownloadLocation
-
+            $DownloadLocation = " c:\temp\"
+            $ExpectedFilePath = Join-Path -Path $DownloadLocation -ChildPath "SampleExtension.vsix"
+            $Result = Import-ExtensionByMetadata -ExtensionMetadata $ExtensionMetadata -DownloadLocation $DownloadLocation
             # Assertions
             Assert-MockCalled Import-RemoteVisualStudioPackageToPath -Exactly 1 -Scope It -ModuleName $marketplaceModuleName
             Assert-MockCalled Copy-Item -Exactly 1 -Scope It -ModuleName $marketplaceModuleName
-            $WEResult | Should -Be $WEExpectedFilePath
+            $Result | Should -Be $ExpectedFilePath
         }
     }
-
-    Context " When the destination file already exists" {
+    Context "When the destination file already exists" {
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEPath)
+param($Path)
                 $true
             } -Verifiable -ModuleName $marketplaceModuleName
-
             Mock Copy-Item {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEPath, $WEDestination)
-                Write-WELog " Mocked: Copying $WEPath to $WEDestination" " INFO"
+param($Path, $Destination)
+                Write-Host "Mocked: Copying $Path to $Destination"
             } -Verifiable -ModuleName $marketplaceModuleName
-
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEVsixUrl, $WELocalFilePath)
-                Write-WELog " Mocked: Downloading $WEVsixUrl to $WELocalFilePath" " INFO"
+param($VsixUrl, $LocalFilePath)
+                Write-Host "Mocked: Downloading $VsixUrl to $LocalFilePath"
             } -Verifiable -ModuleName $marketplaceModuleName
         }
-
-        It " Should not attempt to download or copy the file" {
-            $WEExtensionMetadata = [PSCustomObject]@{
-                name    = " SampleExtension"
+        It "Should not attempt to download or copy the file" {
+            $ExtensionMetadata = [PSCustomObject]@{
+                name    = "SampleExtension"
                 vsixUrl = " http://localhost/sampleextension.VSIXPackage"
             }
-            $WEDownloadLocation = " c:\temp\"
-            $WEExpectedFilePath = Join-Path -Path $WEDownloadLocation -ChildPath " SampleExtension.vsix"
-            $WEResult = Import-ExtensionByMetadata -ExtensionMetadata $WEExtensionMetadata -DownloadLocation $WEDownloadLocation
-
+            $DownloadLocation = " c:\temp\"
+            $ExpectedFilePath = Join-Path -Path $DownloadLocation -ChildPath "SampleExtension.vsix"
+            $Result = Import-ExtensionByMetadata -ExtensionMetadata $ExtensionMetadata -DownloadLocation $DownloadLocation
             # Assertions
             Assert-MockCalled Import-RemoteVisualStudioPackageToPath -Exactly 0 -Scope It -ModuleName $marketplaceModuleName
             Assert-MockCalled Copy-Item -Exactly 0 -Scope It -ModuleName $marketplaceModuleName
-            $WEResult | Should -Be $WEExpectedFilePath
+            $Result | Should -Be $ExpectedFilePath
         }
     }
-
-    Context " Retries and error handling" {
+    Context "Retries and error handling" {
         BeforeEach {
             Mock Test-Path {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEPath)
+param($Path)
                 return $false
             } -Verifiable -ModuleName $marketplaceModuleName
-
             Mock Import-RemoteVisualStudioPackageToPath {
                 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-param($WEVsixUrl, $WELocalFilePath)
-                throw " Simulated error"
+param($VsixUrl, $LocalFilePath)
+                throw "Simulated error"
             } -Verifiable -ModuleName $marketplaceModuleName
         }
-
-        It " Should throw an error if all retries fail" {
-            $WEExtensionMetadata = [PSCustomObject]@{
-                name    = " SampleExtension"
+        It "Should throw an error if all retries fail" {
+            $ExtensionMetadata = [PSCustomObject]@{
+                name    = "SampleExtension"
                 vsixUrl = " http://localhost/sampleextension.VSIXPackage"
             }
-            $WEDownloadLocation = " c:\temp\"
-            { Import-ExtensionByMetadata -ExtensionMetadata $WEExtensionMetadata -DownloadLocation $WEDownloadLocation } |
-            Should -Throw " Simulated error"
+            $DownloadLocation = " c:\temp\"
+            { Import-ExtensionByMetadata -ExtensionMetadata $ExtensionMetadata -DownloadLocation $DownloadLocation } |
+            Should -Throw "Simulated error"
         }
     }
 }
-
-Describe " Get-ExtensionMetadata" {
+Describe "Get-ExtensionMetadata" {
     BeforeEach {
         Mock Get-ApiHeaders -ErrorAction Stop { return @{} } -ModuleName $marketplaceModuleName
         Mock Get-ApiFlags -ErrorAction Stop { return 100 } -ModuleName $marketplaceModuleName
         Mock Get-RequestBody -ErrorAction Stop {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEExtensionReference, $WEFlags)
+param ($ExtensionReference, $Flags)
             return @{ mockBody = " data" }
         } -ModuleName $marketplaceModuleName
         Mock Invoke-MarketplaceApi {
-            
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
             return @{
                 results = @(@{
                         extensions = @(
@@ -307,13 +218,13 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                         targetPlatform = " x64" ;
                                         files          = @(
                                             @{
-                                                assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
+                                                assetType = "Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                 source    = " http://localhost/vsix"
                                             }
                                         );
                                         properties     = @(
                                             @{
-                                                key   = " Microsoft.VisualStudio.Code.PreRelease" ;
+                                                key   = "Microsoft.VisualStudio.Code.PreRelease" ;
                                                 value = " false"
                                             }
                                         )
@@ -325,45 +236,33 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
             }
         } -ModuleName $marketplaceModuleName
     }
-
-    Context " Valid scenarios" {
-        It " Should return metadata for a valid extension reference" {
+    Context "Valid scenarios" {
+        It "Should return metadata for a valid extension reference" {
             $result = Get-ExtensionMetadata -ExtensionReference " example.extension" -TargetPlatform " x64"
-
             $result | Should -Not -BeNullOrEmpty
             $result.name | Should -Be " example.extension"
             $result.vsixUrl | Should -Be " http://localhost/vsix"
             $result.dependencies | Should -BeNullOrEmpty
         }
-
-        It " Should return metadata for a specific version" {
+        It "Should return metadata for a specific version" {
             Mock Invoke-MarketplaceApi {
-                
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
                 return @{
                     results = @(@{
                             extensions = @(
@@ -374,13 +273,13 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                             targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
+                                                    assetType = "Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-2.0.0"
                                                 }
                                             );
                                             properties     = @(
                                                 @{
-                                                    key   = " Microsoft.VisualStudio.Code.PreRelease" ;
+                                                    key   = "Microsoft.VisualStudio.Code.PreRelease" ;
                                                     value = " false"
                                                 }
                                             )
@@ -391,41 +290,29 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                         })
                 }
             } -ModuleName $marketplaceModuleName
-
             $result = Get-ExtensionMetadata -ExtensionReference " example.extension" -VersionNumber " 2.0.0" -TargetPlatform " x64"
-
             $result | Should -Not -BeNullOrEmpty
             $result.vsixUrl | Should -Be " http://localhost/vsix-2.0.0"
         }
-
-        It " Should filter by target platform" {
+        It "Should filter by target platform" {
             Mock Invoke-MarketplaceApi {
-                
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
                 return @{
                     results = @(@{
                             extensions = @(
@@ -436,7 +323,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                             targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
+                                                    assetType = "Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-x64"
                                                 }
                                             );
@@ -447,7 +334,7 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                             targetPlatform = " arm64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
+                                                    assetType = "Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-arm64"
                                                 }
                                             );
@@ -459,43 +346,31 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                         })
                 }
             } -ModuleName $marketplaceModuleName
-
             $result = Get-ExtensionMetadata -ExtensionReference " example.extension" -TargetPlatform " arm64"
-
             $result | Should -Not -BeNullOrEmpty
             $result.vsixUrl | Should -Be " http://localhost/vsix-arm64"
         }
     }
-
-    Context " Error scenarios" {
-        It " Should throw an error for missing 'versions' property" {
+    Context "Error scenarios" {
+        It "Should throw an error for missing 'versions' property" {
             Mock Invoke-MarketplaceApi {
-                
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
                 return @{
                     results = @(@{
                             extensions = @(
@@ -506,39 +381,28 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                         })
                 }
             } -ModuleName $marketplaceModuleName
-
             { Get-ExtensionMetadata -ExtensionReference " invalid.extension" -TargetPlatform " x64" } |
-            Should -Throw " Property 'versions' is missing or inaccessible in the Marketplace API response. Ensure you have provided a valid extension id. The property 'versions' cannot be found on this object. Verify that the property exists."
+            Should -Throw "Property 'versions' is missing or inaccessible in the Marketplace API response. Ensure you have provided a valid extension id. The property 'versions' cannot be found on this object. Verify that the property exists."
         }
-
-        It " Should throw an error if no VSIXPackage is found" {
+        It "Should throw an error if no VSIXPackage is found" {
             Mock Invoke-MarketplaceApi {
-                
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
                 return @{
                     results = @(@{
                             extensions = @(
@@ -557,39 +421,28 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                         })
                 }
             } -ModuleName $marketplaceModuleName
-
             { Get-ExtensionMetadata -ExtensionReference " example.extension" -TargetPlatform " x64" } |
-            Should -Throw " No VSIXPackage was found in the file list for the extension metadata. Verify the extension and version specified are correct. The property 'source' cannot be found on this object. Verify that the property exists."
+            Should -Throw "No VSIXPackage was found in the file list for the extension metadata. Verify the extension and version specified are correct. The property 'source' cannot be found on this object. Verify that the property exists."
         }
-
-        It " Should throw an error if pre-release version is found but not allowed" {
+        It "Should throw an error if pre-release version is found but not allowed" {
             Mock Invoke-MarketplaceApi {
-                
-
-[CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEApiUrl, $WEHeaders, $WEBody)
+param ($ApiUrl, $Headers, $Body)
                 return @{
                     results = @(@{
                             extensions = @(
@@ -600,13 +453,13 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                                             targetPlatform = " x64" ;
                                             files          = @(
                                                 @{
-                                                    assetType = " Microsoft.VisualStudio.Services.VSIXPackage" ;
+                                                    assetType = "Microsoft.VisualStudio.Services.VSIXPackage" ;
                                                     source    = " http://localhost/vsix-2.0.0"
                                                 }
                                             );
                                             properties     = @(
                                                 @{
-                                                    key   = " Microsoft.VisualStudio.Code.PreRelease" ;
+                                                    key   = "Microsoft.VisualStudio.Code.PreRelease" ;
                                                     value = " true"
                                                 }
                                             )
@@ -617,57 +470,42 @@ param ($WEApiUrl, $WEHeaders, $WEBody)
                         })
                 }
             } -ModuleName $marketplaceModuleName
-
             { Get-ExtensionMetadata -ExtensionReference " example.extension" -TargetPlatform " x64" -DownloadPreRelease $false } |
-            Should -Throw " Extension 'example.extension' version 'Not specified' not found for 'x64'. Latest 10 versions found: (2.0.0)"
+            Should -Throw "Extension 'example.extension' version 'Not specified' not found for 'x64'. Latest 10 versions found: (2.0.0)"
         }
     }
 }
-
 Describe 'Get-CurrentPlatform' {
     It 'Should return win32-arm64 when processor is ARM64' {
         # Simulate an ARM64 processor
         Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 12 }
         } -Verifiable -ModuleName $marketplaceModuleName
-
         $result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-arm64'
-
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
     }
-
     It 'Should return win32-x64 when processor is x64' {
         # Simulate an x64 processor
         Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 9 }
         } -Verifiable -ModuleName $marketplaceModuleName
-
-       ;  $result = Get-CurrentPlatform -ErrorAction Stop
+$result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-x64'
-
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
     }
-
     It 'Should default to win32-x64 when processor architecture is unknown' {
         # Simulate an unknown processor architecture
         Mock Get-CimInstance -ErrorAction Stop {
             [pscustomobject]@{ Architecture = 99 }
         } -Verifiable -ModuleName $marketplaceModuleName
-
-       ;  $result = Get-CurrentPlatform -ErrorAction Stop
+$result = Get-CurrentPlatform -ErrorAction Stop
         $result | Should -Be 'win32-x64'
-
         Assert-MockCalled Get-CimInstance -Exactly 1 -ModuleName $marketplaceModuleName
     }
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

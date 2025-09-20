@@ -1,157 +1,94 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Aks Cluster Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Aks Cluster Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AksClusterName,
+    [int]$NodeCount = 3,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAksClusterName,
-    [int]$WENodeCount = 3,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WENodeVmSize = " Standard_DS2_v2" ,
-    [string]$WEKubernetesVersion = " 1.28.0" ,
-    [string]$WENetworkPlugin = " azure" ,
-    [bool]$WEEnableRBAC = $true,
-    [bool]$WEEnableManagedIdentity = $true
+    [string]$Location,
+    [string]$NodeVmSize = "Standard_DS2_v2" ,
+    [string]$KubernetesVersion = " 1.28.0" ,
+    [string]$NetworkPlugin = " azure" ,
+    [bool]$EnableRBAC = $true,
+    [bool]$EnableManagedIdentity = $true
 )
-
-#region Functions
-
-Write-WELog " Provisioning AKS Cluster: $WEAksClusterName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Node Count: $WENodeCount" " INFO"
-Write-WELog " Node VM Size: $WENodeVmSize" " INFO"
-Write-WELog " Kubernetes Version: $WEKubernetesVersion" " INFO"
-Write-WELog " Network Plugin: $WENetworkPlugin" " INFO"
-Write-WELog " RBAC Enabled: $WEEnableRBAC" " INFO"
-
-
-Write-WELog " `nCreating AKS cluster (this may take 10-15 minutes)..." " INFO" ; 
+Write-Host "Provisioning AKS Cluster: $AksClusterName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Node Count: $NodeCount"
+Write-Host "Node VM Size: $NodeVmSize"
+Write-Host "Kubernetes Version: $KubernetesVersion"
+Write-Host "Network Plugin: $NetworkPlugin"
+Write-Host "RBAC Enabled: $EnableRBAC"
+Write-Host " `nCreating AKS cluster (this may take 10-15 minutes)..." ;
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
-    NodeVmSize = $WENodeVmSize
-    NodeCount = $WENodeCount
-    Location = $WELocation
-    NetworkPlugin = $WENetworkPlugin
+    ResourceGroupName = $ResourceGroupName
+    NodeVmSize = $NodeVmSize
+    NodeCount = $NodeCount
+    Location = $Location
+    NetworkPlugin = $NetworkPlugin
     ErrorAction = "Stop"
-    KubernetesVersion = $WEKubernetesVersion
-    Name = $WEAksClusterName
+    KubernetesVersion = $KubernetesVersion
+    Name = $AksClusterName
 }
-$WEAksCluster @params
-
-Write-WELog " `nAKS Cluster $WEAksClusterName provisioned successfully!" " INFO"
-Write-WELog " Cluster FQDN: $($WEAksCluster.Fqdn)" " INFO"
-Write-WELog " Kubernetes Version: $($WEAksCluster.KubernetesVersion)" " INFO"
-Write-WELog " Provisioning State: $($WEAksCluster.ProvisioningState)" " INFO"
-Write-WELog " Power State: $($WEAksCluster.PowerState.Code)" " INFO"
-
-
-Write-WELog " `nNode Pool Information:" " INFO"
-foreach ($WENodePool in $WEAksCluster.AgentPoolProfiles) {
-    Write-WELog "  Pool Name: $($WENodePool.Name)" " INFO"
-    Write-WELog "  VM Size: $($WENodePool.VmSize)" " INFO"
-    Write-WELog "  Node Count: $($WENodePool.Count)" " INFO"
-    Write-WELog "  OS Type: $($WENodePool.OsType)" " INFO"
-    Write-WELog "  OS Disk Size: $($WENodePool.OsDiskSizeGB) GB" " INFO"
+$AksCluster @params
+Write-Host " `nAKS Cluster $AksClusterName provisioned successfully!"
+Write-Host "Cluster FQDN: $($AksCluster.Fqdn)"
+Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
+Write-Host "Provisioning State: $($AksCluster.ProvisioningState)"
+Write-Host "Power State: $($AksCluster.PowerState.Code)"
+Write-Host " `nNode Pool Information:"
+foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
+    Write-Host "Pool Name: $($NodePool.Name)"
+    Write-Host "VM Size: $($NodePool.VmSize)"
+    Write-Host "Node Count: $($NodePool.Count)"
+    Write-Host "OS Type: $($NodePool.OsType)"
+    Write-Host "OS Disk Size: $($NodePool.OsDiskSizeGB) GB"
 }
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Install kubectl: az aks install-cli" " INFO"
-Write-WELog " 2. Get credentials: az aks get-credentials --resource-group $WEResourceGroupName --name $WEAksClusterName" " INFO"
-Write-WELog " 3. Verify connection: kubectl get nodes" " INFO"
-
-Write-WELog " `nAKS Cluster provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nNext Steps:"
+Write-Host " 1. Install kubectl: az aks install-cli"
+Write-Host " 2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
+Write-Host " 3. Verify connection: kubectl get nodes"
+Write-Host " `nAKS Cluster provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

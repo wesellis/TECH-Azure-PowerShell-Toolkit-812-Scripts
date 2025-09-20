@@ -1,175 +1,102 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Resource Lock Manager
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Resource Lock Manager
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [ValidateSet(" Create" , " List" , " Remove" , " Audit" )]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
+    [ValidateSet("Create" , "List" , "Remove" , "Audit" )]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Action,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAction,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceName,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELockName,
-    
-    [Parameter(Mandatory=$false)]
-    [ValidateSet(" ReadOnly" , " Delete" )]
-    [string]$WELockLevel = " Delete" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WELockNotes = " Created by Azure Automation" ,
-    
-    [Parameter(Mandatory=$false)]
-    [switch]$WEForce
+    [string]$LockName,
+    [Parameter()]
+    [ValidateSet("ReadOnly" , "Delete" )]
+    [string]$LockLevel = "Delete",
+    [Parameter()]
+    [string]$LockNotes = "Lock created via script" ,
+    [Parameter()]
+    [switch]$Force
 )
-
-#region Functions
-
-
-# Module import removed - use #Requires instead
-
-Show-Banner -ScriptName " Azure Resource Lock Manager" -Version " 1.0" -Description " Manage resource locks for protection and governance"
-
+Write-Host "Script Started" -ForegroundColor Green
 try {
-    Write-ProgressStep -StepNumber 1 -TotalSteps 3 -StepName " Connection" -Status " Validating Azure connection"
-    if (-not (Test-AzureConnection)) {
-        throw " Azure connection validation failed"
+    # Progress stepNumber 1 -TotalSteps 3 -StepName "Connection" -Status "Validating Azure connection"
+    if (-not (Get-AzContext)) {
+        Connect-AzAccount
+        if (-not (Get-AzContext)) {
+            throw "Azure connection validation failed"
+        }
     }
+    }
+    # Progress stepNumber 2 -TotalSteps 3 -StepName "Lock Operation" -Status "Executing $Action"
+    switch ($Action) {
+        "Create" {
+            if (-not $LockName) { $LockName = "AutoLock-$(Get-Date -Format 'yyyyMMdd')" }
+            if ($ResourceName) {
+                $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
+                New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceId $resource.ResourceId -LockNotes $LockNotes
 
-    Write-ProgressStep -StepNumber 2 -TotalSteps 3 -StepName " Lock Operation" -Status " Executing $WEAction"
-    
-    switch ($WEAction) {
-        " Create" {
-            if (-not $WELockName) { $WELockName = " AutoLock-$(Get-Date -Format 'yyyyMMdd')" }
-            
-            if ($WEResourceName) {
-                $resource = Get-AzResource -ResourceGroupName $WEResourceGroupName -Name $WEResourceName
-                New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -ResourceId $resource.ResourceId -LockNotes $WELockNotes
-                Write-Log " [OK] Created $WELockLevel lock on resource: $WEResourceName" -Level SUCCESS
-            } elseif ($WEResourceGroupName) {
-                New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -ResourceGroupName $WEResourceGroupName -LockNotes $WELockNotes
-                Write-Log " [OK] Created $WELockLevel lock on resource group: $WEResourceGroupName" -Level SUCCESS
+            } elseif ($ResourceGroupName) {
+                New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceGroupName $ResourceGroupName -LockNotes $LockNotes
+
             } else {
-                New-AzResourceLock -LockName $WELockName -LockLevel $WELockLevel -LockNotes $WELockNotes
-                Write-Log " [OK] Created $WELockLevel lock on subscription" -Level SUCCESS
+                New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -LockNotes $LockNotes
+
             }
         }
-        
-        " List" {
-            if ($WEResourceGroupName) {
-                $locks = Get-AzResourceLock -ResourceGroupName $WEResourceGroupName
+        "List" {
+            if ($ResourceGroupName) {
+                $locks = Get-AzResourceLock -ResourceGroupName $ResourceGroupName
             } else {
                 $locks = Get-AzResourceLock -ErrorAction Stop
             }
-            
-            Write-WELog " Found $($locks.Count) resource locks:" " INFO" -ForegroundColor Cyan
+            Write-Host "Found $($locks.Count) resource locks:" -ForegroundColor Cyan
             $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
         }
-        
-        " Remove" {
-            if ($WELockName) {
-                if ($WEResourceGroupName) {
-                    Remove-AzResourceLock -LockName $WELockName -ResourceGroupName $WEResourceGroupName -Force:$WEForce
+        "Remove" {
+            if ($LockName) {
+                if ($ResourceGroupName) {
+                    Remove-AzResourceLock -LockName $LockName -ResourceGroupName $ResourceGroupName -Force:$Force
                 } else {
-                    Remove-AzResourceLock -LockName $WELockName -Force:$WEForce
+                    Remove-AzResourceLock -LockName $LockName -Force:$Force
                 }
-                Write-Log " [OK] Removed lock: $WELockName" -Level SUCCESS
+
             }
         }
-        
-        " Audit" {
-           ;  $allLocks = Get-AzResourceLock -ErrorAction Stop
-           ;  $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
+        "Audit" {
+$allLocks = Get-AzResourceLock -ErrorAction Stop
+$lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name
                     Count = $_.Count
                     Resources = $_.Group | Select-Object Name, ResourceGroupName, ResourceName
                 }
             }
-            
-            Write-WELog " Lock Audit Summary:" " INFO" -ForegroundColor Cyan
-            Write-WELog " Total Locks: $($allLocks.Count)" " INFO" -ForegroundColor White
+            Write-Host "Lock Audit Summary:" -ForegroundColor Cyan
+            Write-Host "Total Locks: $($allLocks.Count)" -ForegroundColor White
             $lockReport | ForEach-Object {
-                Write-WELog " $($_.LockLevel) Locks: $($_.Count)" " INFO" -ForegroundColor Yellow
+                Write-Host " $($_.LockLevel) Locks: $($_.Count)" -ForegroundColor Yellow
             }
         }
     }
+    # Progress stepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
 
-    Write-ProgressStep -StepNumber 3 -TotalSteps 3 -StepName " Complete" -Status " Operation complete"
-    Write-Log "  Resource lock operation completed successfully!" -Level SUCCESS
+} catch { throw }
 
-} catch {
-    Write-Log "  Resource lock operation failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    exit 1
-}
-
-Write-Progress -Activity " Resource Lock Management" -Completed
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

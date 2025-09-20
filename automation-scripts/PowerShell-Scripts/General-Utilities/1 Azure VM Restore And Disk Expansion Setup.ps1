@@ -1,89 +1,44 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    1 Azure Vm Restore And Disk Expansion Setup
+    Azure VM Restore And Disk Expansion Setup
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure VM Restore And Disk Expansion Setup operation
 #>
+    Author: Wes Ellis (wes@wesellis.com)
 
-<#
-.SYNOPSIS
-    We Enhanced 1 Azure Vm Restore And Disk Expansion Setup
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function WE-Initialize-RequiredModules {
-    
-
-[CmdletBinding()]
-function Write-WELog {
+function Initialize-RequiredModules {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [string[]]$WEModuleNames = @('Az.Accounts', 'Az.Compute', 'Az.RecoveryServices', 'PSWriteHTML')
+        [string[]]$ModuleNames = @('Az.Accounts', 'Az.Compute', 'Az.RecoveryServices', 'PSWriteHTML')
     )
-
     $results = @()
-    foreach ($module in $WEModuleNames) {
+    foreach ($module in $ModuleNames) {
         $moduleInfo = @{
             ModuleName = $module
             Status = 'Unknown'
             Message = ''
         }
-
         try {
             if (-not (Get-Module -ListAvailable -Name $module)) {
                 $installParams = @{
@@ -99,7 +54,6 @@ param(
                 $moduleInfo.Status = 'Present'
                 $moduleInfo.Message = 'Module was already installed'
             }
-
             $importParams = @{
                 Name = $module
                 ErrorAction = 'Stop'
@@ -109,90 +63,62 @@ param(
             if ($moduleInfo.Status -eq 'Unknown') {
                 $moduleInfo.Status = 'Imported'
                 $moduleInfo.Message = 'Module was imported successfully'
-            }
-        }
-        catch {
+
+} catch {
             $moduleInfo.Status = 'Error'
             $moduleInfo.Message = $_.Exception.Message
         }
-        
         $results = $results + [PSCustomObject]$moduleInfo
     }
-
     # Generate HTML report
     New-HTML -FilePath " .\ModuleInstallationReport.html" -ShowHTML {
-        New-HTMLTable -DataTable $results -Title " Module Installation Status Report"
+        New-HTMLTable -DataTable $results -Title "Module Installation Status Report"
     }
-
     # Export CSV report
     $results | Export-Csv -Path " .\ModuleInstallationReport.csv" -NoTypeInformation
-
     # Console output
     $results | Format-Table -AutoSize
-
     return $results
 }
-
-
-[CmdletBinding()]
-function WE-Connect-AzureEnvironment {
-    
-
-[CmdletBinding()]
-function Write-WELog {
+function Connect-AzureEnvironment {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
         [Parameter(Mandatory = $false)]
-        [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WESubscriptionId,
+    [string]$SubscriptionId,
         [Parameter(Mandatory = $false)]
-        [string]$WETenantId
+        [string]$TenantId
     )
-
     try {
         $connectParams = @{
             ErrorAction = 'Stop'
         }
-
-        if ($WETenantId) {
-            $connectParams.TenantId = $WETenantId
+        if ($TenantId) {
+            $connectParams.TenantId = $TenantId
         }
-
         Connect-AzAccount @connectParams
-
-        if ($WESubscriptionId) {
+        if ($SubscriptionId) {
             $subParams = @{
-                SubscriptionId = $WESubscriptionId
+                SubscriptionId = $SubscriptionId
                 ErrorAction = 'Stop'
             }
             Set-AzContext -ErrorAction Stop @subParams
         }
-
         $currentContext = Get-AzContext -ErrorAction Stop
         $connectionInfo = [PSCustomObject]@{
             SubscriptionName = $currentContext.Subscription.Name
@@ -201,42 +127,30 @@ param(
             AccountName = $currentContext.Account.Id
             Environment = $currentContext.Environment.Name
         }
-
         # Generate connection report
         New-HTML -FilePath " .\AzureConnectionReport.html" -ShowHTML {
-            New-HTMLTable -DataTable @($connectionInfo) -Title " Azure Connection Status Report"
+            New-HTMLTable -DataTable @($connectionInfo) -Title "Azure Connection Status Report"
         }
-
         return $connectionInfo
     }
     catch {
-        Write-Error " Failed to connect to Azure: $_"
+        Write-Error "Failed to connect to Azure: $_"
         throw
     }
 }
-
-
 try {
-    Write-WELog " Starting Azure environment setup..." " INFO" -ForegroundColor Cyan
-    
+    Write-Host "Starting Azure environment setup..." -ForegroundColor Cyan
     # Initialize modules
-    Write-WELog " `nInitializing required modules..." " INFO" -ForegroundColor Yellow
-   ;  $moduleResults = Initialize-RequiredModules
-    
+    Write-Host " `nInitializing required modules..." -ForegroundColor Yellow
+$moduleResults = Initialize-RequiredModules
     # Connect to Azure
-    Write-WELog " `nConnecting to Azure..." " INFO" -ForegroundColor Yellow
-   ;  $connectionInfo = Connect-AzureEnvironment
-    
-    Write-WELog " `nSetup completed successfully!" " INFO" -ForegroundColor Green
-    Write-WELog " Connection established to subscription: $($connectionInfo.SubscriptionName)" " INFO" -ForegroundColor Green
+    Write-Host " `nConnecting to Azure..." -ForegroundColor Yellow
+$connectionInfo = Connect-AzureEnvironment
+    Write-Host " `nSetup completed successfully!" -ForegroundColor Green
+    Write-Host "Connection established to subscription: $($connectionInfo.SubscriptionName)" -ForegroundColor Green
 }
 catch {
-    Write-WELog " Error during setup: $_" " INFO" -ForegroundColor Red
+    Write-Host "Error during setup: $_" -ForegroundColor Red
     throw
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

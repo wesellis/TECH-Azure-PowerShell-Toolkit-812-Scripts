@@ -1,21 +1,10 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Provision Azure Storage Account
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Create and configure Azure Storage Account with specified settings
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
     [string]$ResourceGroupName,
     [string]$StorageAccountName,
@@ -24,16 +13,12 @@ param (
     [string]$Kind = "StorageV2",
     [string]$AccessTier = "Hot"
 )
-
-#region Functions
-
-Write-Information "Provisioning Storage Account: $StorageAccountName"
-Write-Information "Resource Group: $ResourceGroupName"
-Write-Information "Location: $Location"
-Write-Information "SKU: $SkuName"
-Write-Information "Kind: $Kind"
-Write-Information "Access Tier: $AccessTier"
-
+Write-Host "Provisioning Storage Account: $StorageAccountName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "SKU: $SkuName"
+Write-Host "Kind: $Kind"
+Write-Host "Access Tier: $AccessTier"
 # Create the storage account
 $params = @{
     ResourceGroupName = $ResourceGroupName
@@ -42,13 +27,9 @@ $params = @{
     Location = $Location
     EnableHttpsTrafficOnly = $true
     Kind = $Kind
-    ErrorAction = "Stop"
     Name = $StorageAccountName
 }
-$StorageAccount @params
+$StorageAccount = New-AzStorageAccount @params
+Write-Host "Storage Account $StorageAccountName provisioned successfully"
+Write-Host "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)"
 
-Write-Information "Storage Account $StorageAccountName provisioned successfully"
-Write-Information "Primary Endpoint: $($StorageAccount.PrimaryEndpoints.Blob)"
-
-
-#endregion

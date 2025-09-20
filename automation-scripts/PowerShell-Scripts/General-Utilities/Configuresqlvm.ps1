@@ -1,73 +1,38 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Configuresqlvm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Configuresqlvm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
 configuration ConfigureSQLVM
 {
     [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-        [Parameter(Mandatory)] [String]$WEDNSServerIP,
-        [Parameter(Mandatory)] [String]$WEDomainFQDN,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$WEDomainAdminCreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$WESqlSvcCreds,
-        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$WESPSetupCreds
+        [Parameter(Mandatory)] [String]$DNSServerIP,
+        [Parameter(Mandatory)] [String]$DomainFQDN,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SqlSvcCreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds
     )
-
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 10.0.0 # Custom
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.6.2
     Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 17.0.0 # Custom workaround on SqlSecureConnection
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 6.0.0
-
     WaitForSqlSetup
-    [String] $WEDomainNetbiosName = (Get-NetBIOSName -DomainFQDN $WEDomainFQDN)
-    $WEInterface = Get-NetAdapter| Where-Object InterfaceDescription -Like " Microsoft Hyper-V Network Adapter*" | Select-Object -First 1
-    $WEInterfaceAlias = $($WEInterface.Name)
-    
+    [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
+    $Interface = Get-NetAdapter| Where-Object InterfaceDescription -Like "Microsoft Hyper-V Network Adapter*" | Select-Object -First 1
+    $InterfaceAlias = $($Interface.Name)
     # Format credentials to be qualified by domain name: " domain\username"
-    [System.Management.Automation.PSCredential] $WEDomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $WEDomainNetbiosName\$($WEDomainAdminCreds.UserName)" , $WEDomainAdminCreds.Password)
-    [System.Management.Automation.PSCredential] $WESQLCredsQualified = New-Object -ErrorAction Stop PSCredential (" ${DomainNetbiosName}\$($WESqlSvcCreds.UserName)" , $WESqlSvcCreds.Password)
-    [String];  $WEComputerName = Get-Content -ErrorAction Stop env:computername
-    [String];  $WEAdfsDnsEntryName = " adfs"
-
+    [System.Management.Automation.PSCredential] $DomainAdminCredsQualified = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" $DomainNetbiosName\$($DomainAdminCreds.UserName)" , $DomainAdminCreds.Password)
+    [System.Management.Automation.PSCredential] $SQLCredsQualified = New-Object -ErrorAction Stop PSCredential (" ${DomainNetbiosName}\$($SqlSvcCreds.UserName)" , $SqlSvcCreds.Password)
+    [String];  $ComputerName = Get-Content -ErrorAction Stop env:computername
+    [String];  $AdfsDnsEntryName = " adfs"
     Node localhost
     {
         LocalConfigurationManager
@@ -75,28 +40,22 @@ param(
             ConfigurationMode = 'ApplyOnly'
             RebootNodeIfNeeded = $true
         }
-
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        WindowsFeature AddADTools      { Name = " RSAT-AD-Tools" ;      Ensure = " Present" ; }
-        WindowsFeature AddADPowerShell { Name = " RSAT-AD-PowerShell" ; Ensure = " Present" ; }
-        
-        DnsServerAddress SetDNS { Address = $WEDNSServerIP; InterfaceAlias = $WEInterfaceAlias; AddressFamily  = 'IPv4' }
-        
-
+        WindowsFeature AddADTools      { Name = "RSAT-AD-Tools" ;      Ensure = "Present" ; }
+        WindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell" ; Ensure = "Present" ; }
+        DnsServerAddress SetDNS { Address = $DNSServerIP; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
         Script EnableFileSharing {
             GetScript  = { }
-            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup " File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq " Domain" }) }
-            SetScript  = { Set-NetFirewallRule -DisplayGroup " File And Printer Sharing" -Enabled True -Profile Domain }
+            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq "Domain" }) }
+            SetScript  = { Set-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -Profile Domain }
         }
-
         Script EnableRemoteEventViewerConnection {
             GetScript  = { }
-            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup " Remote Event Log Management" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq " Domain" }) }
-            SetScript  = { Set-NetFirewallRule -DisplayGroup " Remote Event Log Management" -Enabled True -Profile Domain }
+            TestScript = { return $null -ne (Get-NetFirewallRule -DisplayGroup "Remote Event Log Management" -Enabled True -ErrorAction SilentlyContinue | Where-Object { $_.Profile -eq "Domain" }) }
+            SetScript  = { Set-NetFirewallRule -DisplayGroup "Remote Event Log Management" -Enabled True -Profile Domain }
         }
-
         #**********************************************************
         # Join AD forest
         #**********************************************************
@@ -109,59 +68,54 @@ param(
             {
                 $dnsRecordFQDN = " $($using:AdfsDnsEntryName).$($using:DomainFQDN)"
                 $dnsRecordFound = $false
-               ;  $sleepTime = 15
+$sleepTime = 15
                 do {
                     try {
                         [Net.DNS]::GetHostEntry($dnsRecordFQDN)
-                       ;  $dnsRecordFound = $true
+$dnsRecordFound = $true
                     }
                     catch [System.Net.Sockets.SocketException] {
-                        # GetHostEntry() throws SocketException " No such host is known" if DNS entry is not found
-                        Write-Verbose -Verbose -Message " DNS record '$dnsRecordFQDN' not found yet: $_"
+                        # GetHostEntry() throws SocketException "No such host is known" if DNS entry is not found
+                        Write-Verbose -Verbose -Message "DNS record '$dnsRecordFQDN' not found yet: $_"
                         Start-Sleep -Seconds $sleepTime
                     }
                 } while ($false -eq $dnsRecordFound)
             }
-            GetScript            = { return @{ " Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            GetScript            = { return @{ "Result" = " false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { try { [Net.DNS]::GetHostEntry(" $($using:AdfsDnsEntryName).$($using:DomainFQDN)" ); return $true } catch { return $false } }
             DependsOn            = " [DnsServerAddress]SetDNS"
         }
-
-        # # If WaitForADDomain does not find the domain whtin " WaitTimeout" secs, it will signar a restart to DSC engine " RestartCount" times
+        # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signar a restart to DSC engine "RestartCount" times
         # WaitForADDomain WaitForDCReady
         # {
-        #     DomainName              = $WEDomainFQDN
+        #     DomainName              = $DomainFQDN
         #     WaitTimeout             = 1800
         #     RestartCount            = 2
-        #     WaitForValidCredentials = $WETrue
-        #     Credential              = $WEDomainAdminCredsQualified
+        #     WaitForValidCredentials = $True
+        #     Credential              = $DomainAdminCredsQualified
         #     DependsOn               = " [Script]WaitForADFSFarmReady"
         # }
-
-        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within " WaitTimeout" secs
+        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
         # PendingReboot RebootOnSignalFromWaitForDCReady
         # {
-        #     Name             = " RebootOnSignalFromWaitForDCReady"
+        #     Name             = "RebootOnSignalFromWaitForDCReady"
         #     SkipCcmClientSDK = $true
         #     DependsOn        = " [WaitForADDomain]WaitForDCReady"
         # }
-
         Computer JoinDomain
         {
-            Name       = $WEComputerName
-            DomainName = $WEDomainFQDN
-            Credential = $WEDomainAdminCredsQualified
+            Name       = $ComputerName
+            DomainName = $DomainFQDN
+            Credential = $DomainAdminCredsQualified
             # DependsOn  = " [PendingReboot]RebootOnSignalFromWaitForDCReady"
             DependsOn  = " [Script]WaitForADFSFarmReady"
         }
-
         PendingReboot RebootOnSignalFromJoinDomain
         {
-            Name             = " RebootOnSignalFromJoinDomain"
+            Name             = "RebootOnSignalFromJoinDomain"
             SkipCcmClientSDK = $true
             DependsOn        = " [Computer]JoinDomain"
         }
-
         #**********************************************************
         # Create accounts and configure SQL Server
         #**********************************************************
@@ -171,145 +125,132 @@ param(
         {
             GetScript = { }
             TestScript = { return $false }
-            SetScript = 
+            SetScript =
             {
                 $hostname = $using:ComputerName
-               ;  $domainFQDN = $using:DomainFQDN
-                setspn -D " MSSQLSvc/$hostname.$($domainFQDN)" " $hostname"
-                setspn -D " MSSQLSvc/$hostname.$($domainFQDN):1433" " $hostname"
+$domainFQDN = $using:DomainFQDN
+                setspn -D "MSSQLSvc/$hostname.$($domainFQDN)" " $hostname"
+                setspn -D "MSSQLSvc/$hostname.$($domainFQDN):1433" " $hostname"
             }
             DependsOn            = " [PendingReboot]RebootOnSignalFromJoinDomain"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
-
         ADUser CreateSqlSvcAccount
         {
-            DomainName           = $WEDomainFQDN
-            UserName             = $WESqlSvcCreds.UserName
-            UserPrincipalName    = " $($WESqlSvcCreds.UserName)@$WEDomainFQDN"
-            Password             = $WESQLCredsQualified
+            DomainName           = $DomainFQDN
+            UserName             = $SqlSvcCreds.UserName
+            UserPrincipalName    = " $($SqlSvcCreds.UserName)@WEDomainFQDN"
+            Password             = $SQLCredsQualified
             PasswordNeverExpires = $true
-            ServicePrincipalNames = @(" MSSQLSvc/$WEComputerName.$($WEDomainFQDN):1433" , " MSSQLSvc/$WEComputerName.$WEDomainFQDN" , " MSSQLSvc/$($WEComputerName):1433" , " MSSQLSvc/$WEComputerName" )
-            Ensure               = " Present"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            ServicePrincipalNames = @("MSSQLSvc/$ComputerName.$($DomainFQDN):1433" , "MSSQLSvc/$ComputerName.$DomainFQDN" , "MSSQLSvc/$($ComputerName):1433" , "MSSQLSvc/$ComputerName" )
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = " [Script]RemoveSQLSpnOnSQLMachine"
         }
-
         Script EnsureSQLServiceStarted
         {
             GetScript = { }
-            TestScript = { return (Get-Service -Name " MSSQLSERVER" ).Status -like 'Running' }
-            SetScript = { Start-Service -Name " MSSQLSERVER" }
+            TestScript = { return (Get-Service -Name "MSSQLSERVER" ).Status -like 'Running' }
+            SetScript = { Start-Service -Name "MSSQLSERVER" }
             DependsOn            = " [PendingReboot]RebootOnSignalFromJoinDomain"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
-
-        SqlMaxDop ConfigureMaxDOP { ServerName = $WEComputerName; InstanceName = " MSSQLSERVER" ; MaxDop = 1; DependsOn = " [Script]EnsureSQLServiceStarted" }
-
+        SqlMaxDop ConfigureMaxDOP { ServerName = $ComputerName; InstanceName = "MSSQLSERVER" ; MaxDop = 1; DependsOn = " [Script]EnsureSQLServiceStarted" }
         # Script WorkaroundErrorInSqlServiceAccountResource
         # {
         #     GetScript = { }
         #     TestScript = { return $false }
-        #     SetScript = { 
-        #         [reflection.assembly]::LoadWithPartialName(" Microsoft.SqlServer.SqlWmiManagement" )
+        #     SetScript = {
+        #         [reflection.assembly]::LoadWithPartialName("Microsoft.SqlServer.SqlWmiManagement" )
         #         $mc = New-Object -TypeName Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer
         #     }
-        #     DependsOn      = " [Script]EnsureSQLServiceStarted" , " [ADUser]CreateSqlSvcAccount"
-        #     PsDscRunAsCredential = $WEDomainAdminCredsQualified
+        #     DependsOn      = " [Script]EnsureSQLServiceStarted" , "[ADUser]CreateSqlSvcAccount"
+        #     PsDscRunAsCredential = $DomainAdminCredsQualified
         # }
-
         SqlServiceAccount SetSqlInstanceServiceAccount
         {
-            ServerName     = $WEComputerName
-            InstanceName   = " MSSQLSERVER"
-            ServiceType    = " DatabaseEngine"
-            ServiceAccount = $WESQLCredsQualified
+            ServerName     = $ComputerName
+            InstanceName   = "MSSQLSERVER"
+            ServiceType    = "DatabaseEngine"
+            ServiceAccount = $SQLCredsQualified
             RestartService = $true
-            DependsOn      = " [Script]EnsureSQLServiceStarted" , " [ADUser]CreateSqlSvcAccount"
+            DependsOn      = " [Script]EnsureSQLServiceStarted" , "[ADUser]CreateSqlSvcAccount"
             # DependsOn      = " [Script]WorkaroundErrorInSqlServiceAccountResource"
         }
-
         SqlLogin AddDomainAdminLogin
         {
-            Name         = " ${DomainNetbiosName}\$($WEDomainAdminCreds.UserName)"
-            Ensure       = " Present"
-            ServerName   = $WEComputerName
-            InstanceName = " MSSQLSERVER"
-            LoginType    = " WindowsUser"
+            Name         = " ${DomainNetbiosName}\$($DomainAdminCreds.UserName)"
+            Ensure       = "Present"
+            ServerName   = $ComputerName
+            InstanceName = "MSSQLSERVER"
+            LoginType    = "WindowsUser"
             DependsOn    = " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
-
         ADUser CreateSPSetupAccount
         {   # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
-            DomainName           = $WEDomainFQDN
-            UserName             = $WESPSetupCreds.UserName
-            UserPrincipalName    = " $($WESPSetupCreds.UserName)@$WEDomainFQDN"
-            Password             = $WESPSetupCreds
+            DomainName           = $DomainFQDN
+            UserName             = $SPSetupCreds.UserName
+            UserPrincipalName    = " $($SPSetupCreds.UserName)@WEDomainFQDN"
+            Password             = $SPSetupCreds
             PasswordNeverExpires = $true
-            Ensure               = " Present"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = " [PendingReboot]RebootOnSignalFromJoinDomain"
         }
-
         SqlLogin AddSPSetupLogin
         {
-            Name         = " ${DomainNetbiosName}\$($WESPSetupCreds.UserName)"
-            Ensure       = " Present"
-            ServerName   = $WEComputerName
-            InstanceName = " MSSQLSERVER"
-            LoginType    = " WindowsUser"
+            Name         = " ${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            Ensure       = "Present"
+            ServerName   = $ComputerName
+            InstanceName = "MSSQLSERVER"
+            LoginType    = "WindowsUser"
             DependsOn    = " [ADUser]CreateSPSetupAccount"
         }
-
         SqlRole GrantSQLRoleSysadmin
         {
             ServerRoleName   = " sysadmin"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WEDomainAdminCreds.UserName)" )
-            ServerName       = $WEComputerName
-            InstanceName     = " MSSQLSERVER"
-            Ensure           = " Present"
+            MembersToInclude = @(" ${DomainNetbiosName}\$($DomainAdminCreds.UserName)" )
+            ServerName       = $ComputerName
+            InstanceName     = "MSSQLSERVER"
+            Ensure           = "Present"
             DependsOn        = " [SqlLogin]AddDomainAdminLogin"
         }
-
         SqlRole GrantSQLRoleSecurityAdmin
         {
             ServerRoleName   = " securityadmin"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
-            ServerName       = $WEComputerName
-            InstanceName     = " MSSQLSERVER"
-            Ensure           = " Present"
+            MembersToInclude = @(" ${DomainNetbiosName}\$($SPSetupCreds.UserName)" )
+            ServerName       = $ComputerName
+            InstanceName     = "MSSQLSERVER"
+            Ensure           = "Present"
             DependsOn        = " [SqlLogin]AddSPSetupLogin"
         }
-
         SqlRole GrantSQLRoleDBCreator
         {
             ServerRoleName   = " dbcreator"
-            MembersToInclude = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
-            ServerName       = $WEComputerName
-            InstanceName     = " MSSQLSERVER"
-            Ensure           = " Present"
+            MembersToInclude = @(" ${DomainNetbiosName}\$($SPSetupCreds.UserName)" )
+            ServerName       = $ComputerName
+            InstanceName     = "MSSQLSERVER"
+            Ensure           = "Present"
             DependsOn        = " [SqlLogin]AddSPSetupLogin"
         }
-
-        # Since SharePointDsc 4.4.0, SPFarm " Switched from creating a Lock database to a Lock table in the TempDB. This to allow the use of precreated databases."
+        # Since SharePointDsc 4.4.0, SPFarm "Switched from creating a Lock database to a Lock table in the TempDB. This to allow the use of precreated databases."
         # But for this to work, the SPSetup account needs specific permissions on both the tempdb and the dbo schema
         SqlDatabaseUser AddSPSetupUserToTempdb
         {
-            ServerName           = $WEComputerName
-            InstanceName         = " MSSQLSERVER"
+            ServerName           = $ComputerName
+            InstanceName         = "MSSQLSERVER"
             DatabaseName         = " tempdb"
             UserType             = 'Login'
-            Name                 = " ${DomainNetbiosName}\$($WESPSetupCreds.UserName)"
-            LoginName            = " ${DomainNetbiosName}\$($WESPSetupCreds.UserName)"
+            Name                 = " ${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            LoginName            = " ${DomainNetbiosName}\$($SPSetupCreds.UserName)"
             DependsOn            = " [SqlLogin]AddSPSetupLogin"
         }
-
         # Reference: https://learn.microsoft.com/en-us/sql/t-sql/statements/grant-schema-permissions-transact-sql?view=sql-server-ver16
         SqlDatabasePermission GrantPermissionssToTempdb
         {
-            Name                 = " ${DomainNetbiosName}\$($WESPSetupCreds.UserName)"
-            ServerName           =  $WEComputerName
-            InstanceName         = " MSSQLSERVER"
+            Name                 = " ${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            ServerName           =  $ComputerName
+            InstanceName         = "MSSQLSERVER"
             DatabaseName         = " tempdb"
             Permission   = @(
                 DatabasePermission
@@ -330,79 +271,75 @@ param(
             )
             DependsOn            = " [SqlDatabaseUser]AddSPSetupUserToTempdb"
         }
-
         SqlDatabaseObjectPermission GrantPermissionssToDboSchema
         {
-            Name                 = " ${DomainNetbiosName}\$($WESPSetupCreds.UserName)"
-            ServerName           = $WEComputerName
-            InstanceName         = " MSSQLSERVER"
+            Name                 = " ${DomainNetbiosName}\$($SPSetupCreds.UserName)"
+            ServerName           = $ComputerName
+            InstanceName         = "MSSQLSERVER"
             DatabaseName         = " tempdb"
             SchemaName           = " dbo"
             ObjectName           = ""
-            ObjectType           = " Schema"
+            ObjectType           = "Schema"
             Permission           = @(
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " Select"
+                    State      = "Grant"
+                    Permission = "Select"
                 }
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " Update"
+                    State      = "Grant"
+                    Permission = "Update"
                 }
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " Insert"
+                    State      = "Grant"
+                    Permission = "Insert"
                 }
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " Execute"
+                    State      = "Grant"
+                    Permission = "Execute"
                 }
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " Control"
+                    State      = "Grant"
+                    Permission = "Control"
                 }
                 DSC_DatabaseObjectPermission
                 {
-                    State      = " Grant"
-                    Permission = " References"
+                    State      = "Grant"
+                    Permission = "References"
                 }
             )
             DependsOn            = " [SqlDatabaseUser]AddSPSetupUserToTempdb"
         }
-
         # SqlDatabaseRole 'GrantPermissionsToTempdb'
         # {
-        #     ServerName           = $WEComputerName
-        #     InstanceName         = " MSSQLSERVER"
+        #     ServerName           = $ComputerName
+        #     InstanceName         = "MSSQLSERVER"
         #     DatabaseName         = " tempdb"
         #     Name                 = " db_owner"
-        #     Ensure               = " Present"
-        #     MembersToInclude     = @(" ${DomainNetbiosName}\$($WESPSetupCreds.UserName)" )
-        #     PsDscRunAsCredential = $WESqlAdministratorCredential
+        #     Ensure               = "Present"
+        #     MembersToInclude     = @(" ${DomainNetbiosName}\$($SPSetupCreds.UserName)" )
+        #     PsDscRunAsCredential = $SqlAdministratorCredential
         #     DependsOn            = " [SqlLogin]AddSPSetupLogin"
         # }
-
         # Update GPO to ensure the root certificate of the CA is present in " cert:\LocalMachine\Root\" , otherwise certificate request will fail
-        # $WEDCServerName = Get-ADDomainController -ErrorAction Stop | Select-Object -First 1 -Expand Name
-        $WEDCServerName = " DC"
+        # $DCServerName = Get-ADDomainController -ErrorAction Stop | Select-Object -First 1 -Expand Name
+        $DCServerName = "DC"
         Script UpdateGPOToTrustRootCACert {
             SetScript            =
             {
                 gpupdate.exe /force
             }
             GetScript            = { }
-            TestScript           = 
+            TestScript           =
             {
                 $domainNetbiosName = $using:DomainNetbiosName
                 $dcName = $using:DCServerName
                 $rootCAName = " $domainNetbiosName-$dcName-CA"
                 $cert = Get-ChildItem -Path " cert:\LocalMachine\Root\" -DnsName " $rootCAName"
-                
                 if ($null -eq $cert) {
                     return $false   # Run SetScript
                 }
@@ -410,33 +347,30 @@ param(
                     return $true    # Root CA already present
                 }
             }
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
-
         CertReq GenerateSQLServerCertificate {
-            CARootName          = " $WEDomainNetbiosName-$WEDCServerName-CA"
-            CAServerFQDN        = " $WEDCServerName.$WEDomainFQDN"
-            Subject             = " $WEComputerName.$WEDomainFQDN"
-            FriendlyName        = " SQL Server Certificate"
+            CARootName          = " $DomainNetbiosName-$DCServerName-CA"
+            CAServerFQDN        = " $DCServerName.$DomainFQDN"
+            Subject             = " $ComputerName.$DomainFQDN"
+            FriendlyName        = "SQL Server Certificate"
             KeyLength           = '2048'
             Exportable          = $true
-            SubjectAltName      = " dns=$WEComputerName.$WEDomainFQDN&dns=$WEComputerName"
-            ProviderName        = '" Microsoft RSA SChannel Cryptographic Provider" '
+            SubjectAltName      = " dns=$ComputerName.$DomainFQDN&dns=$ComputerName"
+            ProviderName        = '"Microsoft RSA SChannel Cryptographic Provider" '
             OID                 = '1.3.6.1.5.5.7.3.1'
             KeyUsage            = 'CERT_KEY_ENCIPHERMENT_KEY_USAGE | CERT_DIGITAL_SIGNATURE_KEY_USAGE'
             CertificateTemplate = 'WebServer'
             AutoRenew           = $true
-            Credential          = $WEDomainAdminCredsQualified
+            Credential          = $DomainAdminCredsQualified
             DependsOn           = '[Script]UpdateGPOToTrustRootCACert'
         }
-
-        $sqlsvcUserName = $WESQLCredsQualified.UserName
+        $sqlsvcUserName = $SQLCredsQualified.UserName
         Script GrantSqlsvcFullControlToPrivateKey {
-            SetScript            = 
+            SetScript            =
             {
-                $subjectName = " CN=$($using:ComputerName).$($using:DomainFQDN)"
+                $subjectName = "CN=$($using:ComputerName).$($using:DomainFQDN)"
                 $sqlsvcUserName = $using:sqlsvcUserName
-
                 # Grant access to the certificate private key.
                 $cert = Get-ChildItem -ErrorAction Stop Cert:\LocalMachine\My | Where-Object { $_.Subject -eq $subjectName }
                 $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
@@ -447,78 +381,71 @@ param(
                 $permissions.AddAccessRule($access_rule)
                 Set-Acl -Path $path -AclObject $permissions
             }
-            GetScript            =  
+            GetScript            =
             {
                 # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                return @{ " Result" = " false" }
+                return @{ "Result" = " false" }
             }
-            TestScript           = 
+            TestScript           =
             {
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                 return $false
             }
             DependsOn            = " [CertReq]GenerateSQLServerCertificate"
-            PsDscRunAsCredential = $WEDomainAdminCredsQualified
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
-
-        # $subjectName = " CN=SQL.contoso.local"
-        # $sqlServerEncryptionCertThumbprint = Get-ChildItem -ErrorAction Stop Cert:\LocalMachine\My | Where-Object { $_.Subject -eq " CN=$WEComputerName.$WEDomainFQDN" } | Select-Object -Expand Thumbprint
+        # $subjectName = "CN=SQL.contoso.local"
+        # $sqlServerEncryptionCertThumbprint = Get-ChildItem -ErrorAction Stop Cert:\LocalMachine\My | Where-Object { $_.Subject -eq "CN=$ComputerName.$DomainFQDN" } | Select-Object -Expand Thumbprint
         SqlSecureConnection EnableSecureConnection
         {
             InstanceName    = 'MSSQLSERVER'
-            Thumbprint      = " CN=SQL.contoso.local"
+            Thumbprint      = "CN=SQL.contoso.local"
             ForceEncryption = $false
             Ensure          = 'Present'
-            ServiceAccount  = $WESqlSvcCreds.UserName
-            ServerName      = " $WEComputerName.$WEDomainFQDN"
+            ServiceAccount  = $SqlSvcCreds.UserName
+            ServerName      = " $ComputerName.$DomainFQDN"
             DependsOn       = '[Script]GrantSqlsvcFullControlToPrivateKey'
         }
-
         # Open port on the firewall only when everything is ready, as SharePoint DSC is testing it to start creating the farm
         Firewall AddDatabaseEngineFirewallRule
         {
-            Direction   = " Inbound"
-            Name        = " SQL-Server-Database-Engine-TCP-In"
-            DisplayName = " SQL Server Database Engine (TCP-In)"
-            Description = " Inbound rule for SQL Server to allow TCP traffic for the Database Engine."
-            Group       = " SQL Server"
-            Enabled     = " True"
-            Protocol    = " TCP"
+            Direction   = "Inbound"
+            Name        = "SQL-Server-Database-Engine-TCP-In"
+            DisplayName = "SQL Server Database Engine (TCP-In)"
+            Description = "Inbound rule for SQL Server to allow TCP traffic for the Database Engine."
+            Group       = "SQL Server"
+            Enabled     = "True"
+            Protocol    = "TCP"
             LocalPort   = " 1433"
-            Ensure      = " Present"
+            Ensure      = "Present"
         }
     }
 }
-
 [CmdletBinding()]
-function WE-Get-NetBIOSName -ErrorAction Stop
+function Get-NetBIOSName -ErrorAction Stop
 {
     [OutputType([string])]
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [string]$WEDomainFQDN
+        [string]$DomainFQDN
     )
-
-    if ($WEDomainFQDN.Contains('.')) {
-        $length=$WEDomainFQDN.IndexOf('.')
+    if ($DomainFQDN.Contains('.')) {
+        $length=$DomainFQDN.IndexOf('.')
         if ( $length -ge 16) {
             $length=15
         }
-        return $WEDomainFQDN.Substring(0,$length)
+        return $DomainFQDN.Substring(0,$length)
     }
     else {
-        if ($WEDomainFQDN.Length -gt 15) {
-            return $WEDomainFQDN.Substring(0,15)
+        if ($DomainFQDN.Length -gt 15) {
+            return $DomainFQDN.Substring(0,15)
         }
         else {
-            return $WEDomainFQDN
+            return $DomainFQDN
         }
     }
 }
-
-[CmdletBinding()]
-function WE-WaitForSqlSetup
+function WaitForSqlSetup
 {
     # Wait for SQL Server Setup to finish before proceeding.
     while ($true)
@@ -534,25 +461,14 @@ function WE-WaitForSqlSetup
         }
     }
 }
-
-
-
-<#
+#>
 $password = ConvertTo-SecureString -String " mytopsecurepassword" -AsPlainText -Force
-$WEDomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
-$WESqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " sqlsvc" , $password
-$WESPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup" , $password
-$WEDNSServerIP = " 10.1.1.4"; 
-$WEDomainFQDN = " contoso.local"
-; 
-$outputPath = " C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
-ConfigureSQLVM -DNSServerIP $WEDNSServerIP -DomainFQDN $WEDomainFQDN -DomainAdminCreds $WEDomainAdminCreds -SqlSvcCreds $WESqlSvcCreds -SPSetupCreds $WESPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " yvand" , $password
+$SqlSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " sqlsvc" , $password
+$SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList " spsetup" , $password
+$DNSServerIP = " 10.1.1.4";
+$DomainFQDN = " contoso.local"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
+ConfigureSQLVM -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName=" localhost" ; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

@@ -1,94 +1,47 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Real Time Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Real Time Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
 param(
-    [Parameter(Mandatory=$false)][string[]]$WEResourceGroups = @(),
-    [Parameter(Mandatory=$false)][string[]]$WEResourceTypes = @(),
-    [Parameter(Mandatory=$false)][int]$WERefreshIntervalSeconds = 30,
-    [Parameter(Mandatory=$false)][string]$WEDashboardPort = " 8080" ,
-    [Parameter(Mandatory=$false)][Parameter(Mandatory=$false)]
+    [Parameter()][string[]]$ResourceGroups = @(),
+    [Parameter()][string[]]$ResourceTypes = @(),
+    [Parameter()][int]$RefreshIntervalSeconds = 30,
+    [Parameter()][string]$DashboardPort = " 8080" ,
+    [Parameter()][Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAlertWebhookUrl,
-    [Parameter(Mandatory=$false)][switch]$WEStartWebDashboard,
-    [Parameter(Mandatory=$false)][switch]$WEEnableAlerts,
-    [Parameter(Mandatory=$false)][switch]$WEExportMetrics
+    [string]$AlertWebhookUrl,
+    [Parameter()][switch]$StartWebDashboard,
+    [Parameter()][switch]$EnableAlerts,
+    [Parameter()][switch]$ExportMetrics
 )
-
-#region Functions
-
-$modulePath = Join-Path -Path $WEPSScriptRoot -ChildPath " .." -AdditionalChildPath " .." , " modules" , " AzureAutomationCommon"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." , " modules" , "AzureAutomationCommon"
 if (Test-Path $modulePath) { Import-Module $modulePath -Force }
-
-Show-Banner -ScriptName " Azure Real-time Monitor" -Description " Live monitoring with web dashboard and alerts"
-
-
+Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Real-time Monitor" -Description "Live monitoring with web dashboard and alerts"
 $script:MonitoringState = @{
     Running = $false
     Resources = @{}
@@ -96,230 +49,182 @@ $script:MonitoringState = @{
     Alerts = @()
     StartTime = Get-Date -ErrorAction Stop
 }
-
-[CmdletBinding()]
-function WE-Start-ResourceMonitoring {
+function Start-ResourceMonitoring {
     [CmdletBinding(SupportsShouldProcess)]
     param()
-    
     $script:MonitoringState.Running = $true
-    Write-Log " 🔴 Starting real-time monitoring..." -Level SUCCESS
-    
+
     while ($script:MonitoringState.Running) {
         try {
             $timestamp = Get-Date -ErrorAction Stop
-            Write-Log "  Collecting metrics at $($timestamp.ToString('HH:mm:ss'))" -Level INFO
-            
+
             # Get resources to monitor
-            $resources = if ($WEResourceGroups.Count -gt 0) {
-                $WEResourceGroups | ForEach-Object { Get-AzResource -ResourceGroupName $_ }
+            $resources = if ($ResourceGroups.Count -gt 0) {
+                $ResourceGroups | ForEach-Object { Get-AzResource -ResourceGroupName $_ }
             } else {
                 Get-AzResource -ErrorAction Stop
             }
-            
-            if ($WEResourceTypes.Count -gt 0) {
-                $resources = $resources | Where-Object { $_.ResourceType -in $WEResourceTypes }
+            if ($ResourceTypes.Count -gt 0) {
+                $resources = $resources | Where-Object { $_.ResourceType -in $ResourceTypes }
             }
-            
             # Collect metrics for each resource
             $currentMetrics = @()
             foreach ($resource in $resources) {
                 $metric = Get-ResourceHealthMetric -Resource $resource
                 $currentMetrics = $currentMetrics + $metric
-                
                 # Check for alerts
-                if ($WEEnableAlerts) {
+                if ($EnableAlerts) {
                     Test-ResourceAlert -Metric $metric
                 }
             }
-            
             # Update script state
             $script:MonitoringState.Metrics = $currentMetrics
             $script:MonitoringState.LastUpdate = $timestamp
-            
             # Display summary
-            $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq " Healthy" }).Count
-            $unhealthyCount = ($currentMetrics | Where-Object { $_.Status -ne " Healthy" }).Count
-            
-            Write-WELog "  Resources: $($resources.Count) |  Healthy: $healthyCount | [WARN]️ Issues: $unhealthyCount" " INFO" -ForegroundColor Green
-            
+            $healthyCount = ($currentMetrics | Where-Object { $_.Status -eq "Healthy" }).Count
+            $unhealthyCount = ($currentMetrics | Where-Object { $_.Status -ne "Healthy" }).Count
+            Write-Host "Resources: $($resources.Count) |  Healthy: $healthyCount | [WARN] Issues: $unhealthyCount" -ForegroundColor Green
             if ($unhealthyCount -gt 0) {
-                $issues = $currentMetrics | Where-Object { $_.Status -ne " Healthy" }
+                $issues = $currentMetrics | Where-Object { $_.Status -ne "Healthy" }
                 foreach ($issue in $issues) {
-                    Write-WELog "  [WARN]️ $($issue.Name): $($issue.Status) - $($issue.Details)" " INFO" -ForegroundColor Yellow
+                    Write-Host "  [WARN] $($issue.Name): $($issue.Status) - $($issue.Details)" -ForegroundColor Yellow
                 }
             }
-            
-            Start-Sleep -Seconds $WERefreshIntervalSeconds
-            
+            Start-Sleep -Seconds $RefreshIntervalSeconds
         } catch {
-            Write-Log " Monitoring error: $($_.Exception.Message)" -Level ERROR
+
             Start-Sleep -Seconds 5
         }
     }
 }
-
-[CmdletBinding()]
-function WE-Get-ResourceHealthMetric -ErrorAction Stop {
-    param($WEResource)
-    
+function Get-ResourceHealthMetric -ErrorAction Stop {
+    param($Resource)
     $metric = @{
-        Name = $WEResource.Name
-        ResourceGroup = $WEResource.ResourceGroupName
-        Type = $WEResource.ResourceType
-        Location = $WEResource.Location
-        Status = " Unknown"
+        Name = $Resource.Name
+        ResourceGroup = $Resource.ResourceGroupName
+        Type = $Resource.ResourceType
+        Location = $Resource.Location
+        Status = "Unknown"
         Details = ""
         Timestamp = Get-Date -ErrorAction Stop
         Metrics = @{}
     }
-    
     try {
-        switch ($WEResource.ResourceType) {
-            " Microsoft.Compute/virtualMachines" {
-                $vm = Get-AzVM -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -Status -ErrorAction SilentlyContinue
+        switch ($Resource.ResourceType) {
+            "Microsoft.Compute/virtualMachines" {
+                $vm = Get-AzVM -ResourceGroupName $Resource.ResourceGroupName -Name $Resource.Name -Status -ErrorAction SilentlyContinue
                 if ($vm) {
-                    $powerState = ($vm.Statuses | Where-Object { $_.Code -like " PowerState/*" }).DisplayStatus
-                    $metric.Status = if ($powerState -eq " VM running" ) { " Healthy" } else { " Unhealthy" }
+                    $powerState = ($vm.Statuses | Where-Object { $_.Code -like "PowerState/*" }).DisplayStatus
+                    $metric.Status = if ($powerState -eq "VM running" ) { "Healthy" } else { "Unhealthy" }
                     $metric.Details = $powerState
                     $metric.Metrics.PowerState = $powerState
                 }
             }
-            " Microsoft.Storage/storageAccounts" {
-                $storage = Get-AzStorageAccount -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -ErrorAction SilentlyContinue
+            "Microsoft.Storage/storageAccounts" {
+                $storage = Get-AzStorageAccount -ResourceGroupName $Resource.ResourceGroupName -Name $Resource.Name -ErrorAction SilentlyContinue
                 if ($storage) {
-                    $metric.Status = if ($storage.ProvisioningState -eq " Succeeded" ) { " Healthy" } else { " Unhealthy" }
+                    $metric.Status = if ($storage.ProvisioningState -eq "Succeeded" ) { "Healthy" } else { "Unhealthy" }
                     $metric.Details = $storage.ProvisioningState
                     $metric.Metrics.ProvisioningState = $storage.ProvisioningState
                     $metric.Metrics.Tier = $storage.Sku.Tier
                 }
             }
-            " Microsoft.Web/sites" {
-                $webapp = Get-AzWebApp -ResourceGroupName $WEResource.ResourceGroupName -Name $WEResource.Name -ErrorAction SilentlyContinue
+            "Microsoft.Web/sites" {
+                $webapp = Get-AzWebApp -ResourceGroupName $Resource.ResourceGroupName -Name $Resource.Name -ErrorAction SilentlyContinue
                 if ($webapp) {
-                    $metric.Status = if ($webapp.State -eq " Running" ) { " Healthy" } else { " Unhealthy" }
+                    $metric.Status = if ($webapp.State -eq "Running" ) { "Healthy" } else { "Unhealthy" }
                     $metric.Details = $webapp.State
                     $metric.Metrics.State = $webapp.State
                     $metric.Metrics.DefaultHostName = $webapp.DefaultHostName
                 }
             }
             default {
-                $metric.Status = " Healthy"
-                $metric.Details = " Basic monitoring"
+                $metric.Status = "Healthy"
+                $metric.Details = "Basic monitoring"
             }
         }
     } catch {
-        $metric.Status = " Error"
+        $metric.Status = "Error"
         $metric.Details = $_.Exception.Message
     }
-    
     return $metric
 }
-
-[CmdletBinding()]
-function WE-Test-ResourceAlert {
+function Test-ResourceAlert {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
-    param($WEMetric)
-    
+    param($Metric)
     $alertTriggered = $false
     $alertMessage = ""
-    
     # Check for common alert conditions
-    if ($WEMetric.Status -eq " Unhealthy" ) {
+    if ($Metric.Status -eq "Unhealthy" ) {
         $alertTriggered = $true
-        $alertMessage = " Resource $($WEMetric.Name) is unhealthy: $($WEMetric.Details)"
+        $alertMessage = "Resource $($Metric.Name) is unhealthy: $($Metric.Details)"
     }
-    
-    if ($WEMetric.Type -eq " Microsoft.Compute/virtualMachines" -and $WEMetric.Metrics.PowerState -eq " VM deallocated" ) {
+    if ($Metric.Type -eq "Microsoft.Compute/virtualMachines" -and $Metric.Metrics.PowerState -eq "VM deallocated" ) {
         $alertTriggered = $true
-        $alertMessage = " VM $($WEMetric.Name) has been deallocated"
+        $alertMessage = "VM $($Metric.Name) has been deallocated"
     }
-    
     if ($alertTriggered) {
-       ;  $alert = @{
+$alert = @{
             Timestamp = Get-Date -ErrorAction Stop
-            Resource = $WEMetric.Name
-            Type = $WEMetric.Type
+            Resource = $Metric.Name
+            Type = $Metric.Type
             Message = $alertMessage
-            Severity = " Warning"
+            Severity = "Warning"
         }
-        
         $script:MonitoringState.Alerts += $alert
-        Write-Log " 🚨 ALERT: $alertMessage" -Level WARN
-        
+
         # Send webhook notification if configured
-        if ($WEAlertWebhookUrl) {
+        if ($AlertWebhookUrl) {
             Send-AlertWebhook -Alert $alert
         }
     }
 }
-
-[CmdletBinding()]
-function WE-Send-AlertWebhook {
-    param($WEAlert)
-    
+function Send-AlertWebhook {
+    param($Alert)
     try {
-       ;  $payload = @{
-            text = " 🚨 Azure Alert: $($WEAlert.Message)"
-            timestamp = $WEAlert.Timestamp
-            resource = $WEAlert.Resource
-            severity = $WEAlert.Severity
+$payload = @{
+            text = "  Azure Alert: $($Alert.Message)"
+            timestamp = $Alert.Timestamp
+            resource = $Alert.Resource
+            severity = $Alert.Severity
         } | ConvertTo-Json
-        
-        Invoke-RestMethod -Uri $WEAlertWebhookUrl -Method Post -Body $payload -ContentType " application/json"
-        Write-Log " [OK] Alert sent to webhook" -Level SUCCESS
+        Invoke-RestMethod -Uri $AlertWebhookUrl -Method Post -Body $payload -ContentType " application/json"
+
     } catch {
-        Write-Log " Failed to send webhook alert: $($_.Exception.Message)" -Level ERROR
+
     }
 }
-
-
 try {
-    if (-not (Test-AzureConnection)) { throw " Azure connection required" }
-    
-    Write-Log "  Azure Real-time Monitor initialized" -Level SUCCESS
-    Write-Log " Refresh interval: $WERefreshIntervalSeconds seconds" -Level INFO
-    
-    if ($WEResourceGroups.Count -gt 0) {
-        Write-Log " Monitoring resource groups: $($WEResourceGroups -join ', ')" -Level INFO
+    if (-not (Get-AzContext)) { Connect-AzAccount }
+
+    if ($ResourceGroups.Count -gt 0) {
+
     }
-    
-    if ($WEResourceTypes.Count -gt 0) {
-        Write-Log " Monitoring resource types: $($WEResourceTypes -join ', ')" -Level INFO
+    if ($ResourceTypes.Count -gt 0) {
+
     }
-    
-    if ($WEStartWebDashboard) {
-        Write-Log " 🌐 Web dashboard will be available at: http://localhost:$WEDashboardPort" -Level INFO
+    if ($StartWebDashboard) {
+
         # Start dashboard in background job
-        Start-Job -ScriptBlock { 
+        Start-Job -ScriptBlock {
             # Dashboard code would go here
             while ($true) { Start-Sleep 1 }
         } | Out-Null
     }
-    
-    if ($WEEnableAlerts) {
-        Write-Log " 🚨 Alerting enabled" -Level INFO
-        if ($WEAlertWebhookUrl) {
-            Write-Log " Webhook URL configured" -Level INFO
+    if ($EnableAlerts) {
+
+        if ($AlertWebhookUrl) {
+
         }
     }
-    
     # Start monitoring
-    Write-Log " Press Ctrl+C to stop monitoring..." -Level INFO
+
     Start-ResourceMonitoring
-    
 } catch {
-    Write-Log " Monitor failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
+
     throw
 } finally {
     $script:MonitoringState.Running = $false
-    Write-Log " 🛑 Monitoring stopped" -Level INFO
+
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

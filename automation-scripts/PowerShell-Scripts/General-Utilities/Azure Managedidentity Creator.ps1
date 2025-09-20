@@ -1,128 +1,63 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Managedidentity Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Managedidentity Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$IdentityName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEIdentityName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WERole = " Reader" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEScope
+    [string]$Location,
+    [Parameter()]
+    [string]$Role = "Reader" ,
+    [Parameter()]
+    [string]$Scope
 )
-
-#region Functions
-
-Write-WELog " Creating Managed Identity: $WEIdentityName" " INFO"
-
+Write-Host "Creating Managed Identity: $IdentityName"
 try {
     # Create user-assigned managed identity
    $params = @{
-       ResourceGroupName = $WEResourceGroupName
-       WELog = " 1. Assign identity to Azure resources (VM, App Service, etc.)" " INFO" Write-WELog " 2. Grant necessary permissions" " INFO" Write-WELog " 3. Update application code to use managed identity" " INFO" Write-WELog " 4. Test secure resource access" " INFO"
-       Location = $WELocation  Write-WELog "  Managed Identity created successfully:" " INFO" Write-WELog "  Name: $($WEIdentity.Name)" " INFO" Write-WELog "  Client ID: $($WEIdentity.ClientId)" " INFO" Write-WELog "  Principal ID: $($WEIdentity.PrincipalId)" " INFO" Write-WELog "  Resource ID: $($WEIdentity.Id)" " INFO" Write-WELog "  Location: $($WEIdentity.Location)" " INFO"  # Assign role if specified if ($WERole
-       RoleDefinitionName = $WERole
-       ObjectId = $WEIdentity.PrincipalId
+       ResourceGroupName = $ResourceGroupName
+       WELog = " 1. Assign identity to Azure resources (VM, App Service, etc.)" "INFO"Write-Host " 2. Grant necessary permissions" "INFO"Write-Host " 3. Update application code to use managed identity" "INFO"Write-Host " 4. Test secure resource access"
+       Location = $Location  Write-Host "Managed Identity created successfully:" "INFO"Write-Host "Name: $($Identity.Name)" "INFO"Write-Host "Client ID: $($Identity.ClientId)" "INFO"Write-Host "Principal ID: $($Identity.PrincipalId)" "INFO"Write-Host "Resource ID: $($Identity.Id)" "INFO"Write-Host "Location: $($Identity.Location)"  # Assign role if specified if ($Role
+       RoleDefinitionName = $Role
+       ObjectId = $Identity.PrincipalId
        ErrorAction = "Stop"
-       Seconds = "10  # Wait for identity propagation  ;  $WERoleAssignment = New-AzRoleAssignment"
-       Name = $WEIdentityName
+       Seconds = "10  # Wait for identity propagation  ;  $RoleAssignment = New-AzRoleAssignment"
+       Name = $IdentityName
    }
    ; @params
 } catch {
-    Write-Error " Failed to create managed identity: $($_.Exception.Message)"
+    Write-Error "Failed to create managed identity: $($_.Exception.Message)"
 }
 
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

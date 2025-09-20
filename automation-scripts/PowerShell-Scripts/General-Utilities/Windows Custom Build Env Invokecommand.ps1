@@ -1,46 +1,14 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Windows Custom Build Env Invokecommand
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Windows Custom Build Env Invokecommand
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.DESCRIPTION
     Sets up a temporary environment for headless packages restoration and runs the requested script in the environment.
 .PARAMETER RepoRoot
     Full path to the repo's root directory.
@@ -50,32 +18,24 @@
     Optional comma separated list of Nuget feeds that are used during repo setup/build.
 .PARAMETER Script
     Passed to 'cmd.exe /c' for execution after the environment for restoring packages is configured.
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $WERepoRoot,
-    [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $WEScript,
-    [Parameter(Mandatory = $false)][String] $WERepoPackagesFeed,
-    [Parameter(Mandatory = $false)] [string] $WEAdditionalRepoFeeds
+    [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoRoot,
+    [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $Script,
+    [Parameter(Mandatory = $false)][String] $RepoPackagesFeed,
+    [Parameter(Mandatory = $false)] [string] $AdditionalRepoFeeds
 )
-
-#region Functions
-
 try {
-   ;  $WEErrorActionPreference = " Stop"
     Set-StrictMode -Version Latest
-
-    Set-Location -ErrorAction Stop $WERepoRoot
-    Import-Module -Force (Join-Path $(Split-Path -Parent $WEPSScriptRoot) '_common/windows-build-environment-utils.psm1')
-
+    Set-Location -ErrorAction Stop $RepoRoot
+    Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-build-environment-utils.psm1')
     $params = @{
-        Script = $WEScript
+        Script = $Script
         RepoKind = "Custom"
-        RepoPackagesFeed = $WERepoPackagesFeed
-        RepoRoot = $WERepoRoot
-        AdditionalRepoFeeds = $WEAdditionalRepoFeeds
+        RepoPackagesFeed = $RepoPackagesFeed
+        RepoRoot = $RepoRoot
+        AdditionalRepoFeeds = $AdditionalRepoFeeds
     }
     SetPackagesRestoreEnvironmentAndRunScript @params
 }
@@ -83,7 +43,3 @@ catch {
     Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
 }
 
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

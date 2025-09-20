@@ -1,121 +1,72 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Scheduledsnooze Parent
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Scheduledsnooze Parent
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
-<#
-.SYNOPSIS  
  Wrapper script for get all the VM's in all RG's or subscription level and then call the Start or Stop runbook
-.DESCRIPTION  
  Wrapper script for get all the VM's in all RG's or subscription level and then call the Start or Stop runbook
-.EXAMPLE  
-.\ScheduledSnooze_Parent.ps1 -Action "Value1" -WhatIf " False"
-Version History  
-v1.0   - Initial Release  
-
+.\ScheduledSnooze_Parent.ps1 -Action "Value1" -WhatIf "False"
+Version History
+v1.0   - Initial Release
 [CmdletBinding()]
-$ErrorActionPreference = " Stop"
+$ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true, HelpMessage = " Enter the value for Action. Values can be either stop or start" )][String]$WEAction,
-    [Parameter(Mandatory = $false, HelpMessage = " Enter the value for WhatIf. Values can be either true or false" )][bool]$WEWhatIf = $false
+    [Parameter(Mandatory = $true, HelpMessage = "Enter the value for Action. Values can be either stop or start" )][String]$Action,
+    [Parameter(Mandatory = $false, HelpMessage = "Enter the value for WhatIf. Values can be either true or false" )][bool]$WhatIf = $false
 )
-
-#region Functions
-
-function WE-ScheduleSnoozeAction ($WEVMObject, [Parameter(Mandatory=$false)]
+function ScheduleSnoozeAction ($VMObject, [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEAction) {
-    
-    Write-Output " Calling the ScheduledSnooze_Child wrapper (Action = $($WEAction))..."
-    if ($WEAction.ToLower() -eq 'start') {
-       ;  $params = @{" VMName" = " $($WEVMObject.Name)" ; " Action" = " start" ; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }   
-    }    
-    elseif ($WEAction.ToLower() -eq 'stop') {
-        $params = @{" VMName" = " $($WEVMObject.Name)" ; " Action" = " stop" ; " ResourceGroupName" = " $($WEVMObject.ResourceGroupName)" }                    
-    }    
-
-    Write-Output " Performing the schedule $($WEAction) for the VM : $($WEVMObject.Name)"
-    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'ScheduledSnooze_Child' -ResourceGroupName $aroResourceGroupName –Parameters $params
+    [string]$Action) {
+    Write-Output "Calling the ScheduledSnooze_Child wrapper (Action = $($Action))..."
+    if ($Action.ToLower() -eq 'start') {
+$params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " start" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
+    }
+    elseif ($Action.ToLower() -eq 'stop') {
+        $params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " stop" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
+    }
+    Write-Output "Performing the schedule $($Action) for the VM : $($VMObject.Name)"
+    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'ScheduledSnooze_Child' -ResourceGroupName $aroResourceGroupName Parameters $params
 }
-
-function WE-CheckExcludeVM ($WEFilterVMList) {
-    $WEAzureVM = Get-AzureRmVM -ErrorAction SilentlyContinue
-    [boolean] $WEISexists = $false
-            
+function CheckExcludeVM ($FilterVMList) {
+    $AzureVM = Get-AzureRmVM -ErrorAction SilentlyContinue
+    [boolean] $ISexists = $false
     [string[]] $invalidvm = @()
-    $WEExAzureVMList = @()
-
-    foreach ($filtervm in $WEVMfilterList) {
-        foreach ($vmname in $WEAzureVM) {
-            if ($WEVmname.Name.ToLower().Trim() -eq $filtervm.Tolower().Trim()) {                    
-                $WEISexists = $true
-                $WEExAzureVMList = $WEExAzureVMList + $vmname
-                break                    
+    $ExAzureVMList = @()
+    foreach ($filtervm in $VMfilterList) {
+        foreach ($vmname in $AzureVM) {
+            if ($Vmname.Name.ToLower().Trim() -eq $filtervm.Tolower().Trim()) {
+                $ISexists = $true
+                $ExAzureVMList = $ExAzureVMList + $vmname
+                break
             }
             else {
-                $WEISexists = $false
+                $ISexists = $false
             }
         }
-        if ($WEISexists -eq $false) {
+        if ($ISexists -eq $false) {
             $invalidvm = $invalidvm + $filtervm
         }
     }
     if ($null -ne $invalidvm) {
-        Write-Output " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
-        Write-Warning " Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
+        Write-Output "Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
+        Write-Warning "Runbook Execution Stopped! Invalid VM Name(s) in the exclude list: $($invalidvm) "
         exit
     }
     else {
-        Write-Output " Exclude VM's validation completed..."
-    }    
+        Write-Output "Exclude VM's validation completed..."
+    }
 }
-
-
-$connectionName = " AzureRunAsConnection"
+$connectionName = "AzureRunAsConnection"
 try {
-    # Get the connection " AzureRunAsConnection "
-    $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName         
-
-    " Logging in to Azure..."
+    # Get the connection "AzureRunAsConnection "
+    $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
+    "Logging in to Azure..."
     $params = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
@@ -125,100 +76,85 @@ try {
 }
 catch {
     if (!$servicePrincipalConnection) {
-        $WEErrorMessage = " Connection $connectionName not found."
-        throw $WEErrorMessage
+        $ErrorMessage = "Connection $connectionName not found."
+        throw $ErrorMessage
     }
     else {
         Write-Error -Message $_.Exception
         throw $_.Exception
     }
 }
-
-
-
-$WESubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
-$WEResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
-$WEExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
+$SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
+$ResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
+$ExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
 $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
 $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
-
-try {  
-    $WEAction = $WEAction.Trim().ToLower()
-
-    if (!($WEAction -eq " start" -or $WEAction -eq " stop" )) {
-        Write-Output " `$WEAction parameter value is : $($WEAction). Value should be either start or stop!"
-        Write-Output " Completed the runbook execution..."
+try {
+    $Action = $Action.Trim().ToLower()
+    if (!($Action -eq " start" -or $Action -eq " stop" )) {
+        Write-Output " `$Action parameter value is : $($Action). Value should be either start or stop!"
+        Write-Output "Completed the runbook execution..."
         exit
-    }            
-    Write-Output " Runbook Execution Started..."
-    [string[]] $WEVMfilterList = $WEExcludeVMNames -split " ,"
-    [string[]] $WEVMRGList = $WEResourceGroupNames -split " ,"
-
+    }
+    Write-Output "Runbook Execution Started..."
+    [string[]] $VMfilterList = $ExcludeVMNames -split " ,"
+    [string[]] $VMRGList = $ResourceGroupNames -split " ,"
     #Validate the Exclude List VM's and stop the execution if the list contains any invalid VM
-    if ([string]::IsNullOrEmpty($WEExcludeVMNames) -ne $true) {
-        Write-Output " Exclude VM's added so validating the resource(s)..."
-        CheckExcludeVM -FilterVMList $WEVMfilterList
-    } 
-    $WEAzureVMListTemp = $null
-    $WEAzureVMList = @()
+    if ([string]::IsNullOrEmpty($ExcludeVMNames) -ne $true) {
+        Write-Output "Exclude VM's added so validating the resource(s)..."
+        CheckExcludeVM -FilterVMList $VMfilterList
+    }
+    $AzureVMListTemp = $null
+    $AzureVMList = @()
     ##Getting VM Details based on RG List or Subscription
-    if ($null -ne $WEVMRGList) {
-        foreach ($WEResource in $WEVMRGList) {
-            Write-Output " Validating the resource group name ($($WEResource.Trim()))" 
-            $checkRGname = Get-AzureRmResourceGroup -Name $WEResource.Trim() -ev notPresent -ea 0  
+    if ($null -ne $VMRGList) {
+        foreach ($Resource in $VMRGList) {
+            Write-Output "Validating the resource group name ($($Resource.Trim()))"
+            $checkRGname = Get-AzureRmResourceGroup -Name $Resource.Trim() -ev notPresent -ea 0
             if ($null -eq $checkRGname) {
-                Write-Warning " $($WEResource) is not a valid Resource Group Name. Please Verify!"
+                Write-Warning " $($Resource) is not a valid Resource Group Name. Please Verify!"
             }
-            else {                   
-                Write-Output " Resource Group Exists..."
-                $WEAzureVMListTemp = Get-AzureRmVM -ResourceGroupName $WEResource -ErrorAction SilentlyContinue
-                if ($null -ne $WEAzureVMListTemp) {
-                    $WEAzureVMList = $WEAzureVMList + $WEAzureVMListTemp
+            else {
+                Write-Output "Resource Group Exists..."
+                $AzureVMListTemp = Get-AzureRmVM -ResourceGroupName $Resource -ErrorAction SilentlyContinue
+                if ($null -ne $AzureVMListTemp) {
+                    $AzureVMList = $AzureVMList + $AzureVMListTemp
                 }
             }
         }
-    } 
-    else {
-        Write-Output " Getting all the VM's from the subscription..."  
-        $WEAzureVMList = Get-AzureRmVM -ErrorAction SilentlyContinue
     }
-
-    $WEActualAzureVMList = @()
-    if ($null -ne $WEVMfilterList) {
-        foreach ($WEVM in $WEAzureVMList) {  
-            ##Checking Vm in excluded list                         
-            if ($WEVMfilterList -notcontains ($($WEVM.Name))) {
-                $WEActualAzureVMList = $WEActualAzureVMList + $WEVM
+    else {
+        Write-Output "Getting all the VM's from the subscription..."
+        $AzureVMList = Get-AzureRmVM -ErrorAction SilentlyContinue
+    }
+    $ActualAzureVMList = @()
+    if ($null -ne $VMfilterList) {
+        foreach ($VM in $AzureVMList) {
+            ##Checking Vm in excluded list
+            if ($VMfilterList -notcontains ($($VM.Name))) {
+                $ActualAzureVMList = $ActualAzureVMList + $VM
             }
         }
     }
     else {
-       ;  $WEActualAzureVMList = $WEAzureVMList
+$ActualAzureVMList = $AzureVMList
     }
-
-    Write-Output " The current action is $($WEAction)"
-        
-    if ($WEWhatIf -eq $false) {    
-                
-        foreach ($WEVM in $WEActualAzureVMList) {  
-            ScheduleSnoozeAction -VMObject $WEVM -Action $WEAction
+    Write-Output "The current action is $($Action)"
+    if ($WhatIf -eq $false) {
+        foreach ($VM in $ActualAzureVMList) {
+            ScheduleSnoozeAction -VMObject $VM -Action $Action
         }
     }
-    elseif ($WEWhatIf -eq $true) {
-        Write-Output " WhatIf parameter is set to True..."
-        Write-Output " When 'WhatIf' is set to TRUE, runbook provides a list of Azure Resources (e.g. VMs), that will be impacted if you choose to deploy this runbook."
-        Write-Output " No action will be taken at this time..."
-        Write-Output $($WEActualAzureVMList) | Select-Object Name, ResourceGroupName | Format-List
+    elseif ($WhatIf -eq $true) {
+        Write-Output "WhatIf parameter is set to True..."
+        Write-Output "When 'WhatIf' is set to TRUE, runbook provides a list of Azure Resources (e.g. VMs), that will be impacted if you choose to deploy this runbook."
+        Write-Output "No action will be taken at this time..."
+        Write-Output $($ActualAzureVMList) | Select-Object Name, ResourceGroupName | Format-List
     }
-    Write-Output " Runbook Execution Completed..."
+    Write-Output "Runbook Execution Completed..."
 }
 catch {
-   ;  $ex = $_.Exception
+$ex = $_.Exception
     Write-Output $_.Exception
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

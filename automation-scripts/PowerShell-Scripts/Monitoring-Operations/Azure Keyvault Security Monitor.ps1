@@ -1,138 +1,74 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Keyvault Security Monitor
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Keyvault Security Monitor
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [string]$WEVaultName
+    [string]$ResourceGroupName,
+    [string]$VaultName
 )
-
-#region Functions
-
-Write-WELog " Monitoring Key Vault: $WEVaultName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " ============================================" " INFO"
-
-
-$WEKeyVault = Get-AzKeyVault -ResourceGroupName $WEResourceGroupName -VaultName $WEVaultName
-
-Write-WELog " Key Vault Information:" " INFO"
-Write-WELog "  Vault Name: $($WEKeyVault.VaultName)" " INFO"
-Write-WELog "  Location: $($WEKeyVault.Location)" " INFO"
-Write-WELog "  Vault URI: $($WEKeyVault.VaultUri)" " INFO"
-Write-WELog "  SKU: $($WEKeyVault.Sku)" " INFO"
-Write-WELog "  Tenant ID: $($WEKeyVault.TenantId)" " INFO"
-
-
-Write-WELog " `nSecurity Configuration:" " INFO"
-Write-WELog "  Enabled for Deployment: $($WEKeyVault.EnabledForDeployment)" " INFO"
-Write-WELog "  Enabled for Disk Encryption: $($WEKeyVault.EnabledForDiskEncryption)" " INFO"
-Write-WELog "  Enabled for Template Deployment: $($WEKeyVault.EnabledForTemplateDeployment)" " INFO"
-Write-WELog "  Soft Delete Enabled: $($WEKeyVault.EnableSoftDelete)" " INFO"
-Write-WELog "  Purge Protection Enabled: $($WEKeyVault.EnablePurgeProtection)" " INFO"
-
-
-Write-WELog " `nAccess Policies: $($WEKeyVault.AccessPolicies.Count)" " INFO"
-foreach ($WEPolicy in $WEKeyVault.AccessPolicies) {
-    Write-WELog "  - Object ID: $($WEPolicy.ObjectId)" " INFO"
-    Write-WELog "    Application ID: $($WEPolicy.ApplicationId)" " INFO"
-    Write-WELog "    Permissions to Keys: $($WEPolicy.PermissionsToKeys -join ', ')" " INFO"
-    Write-WELog "    Permissions to Secrets: $($WEPolicy.PermissionsToSecrets -join ', ')" " INFO"
-    Write-WELog "    Permissions to Certificates: $($WEPolicy.PermissionsToCertificates -join ', ')" " INFO"
-    Write-WELog "    ---" " INFO"
+Write-Host "Monitoring Key Vault: $VaultName" "INFO"
+Write-Host "Resource Group: $ResourceGroupName" "INFO"
+Write-Host " ============================================" "INFO"
+$KeyVault = Get-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $VaultName
+Write-Host "Key Vault Information:" "INFO"
+Write-Host "Vault Name: $($KeyVault.VaultName)" "INFO"
+Write-Host "Location: $($KeyVault.Location)" "INFO"
+Write-Host "Vault URI: $($KeyVault.VaultUri)" "INFO"
+Write-Host "SKU: $($KeyVault.Sku)" "INFO"
+Write-Host "Tenant ID: $($KeyVault.TenantId)" "INFO"
+Write-Host " `nSecurity Configuration:" "INFO"
+Write-Host "Enabled for Deployment: $($KeyVault.EnabledForDeployment)" "INFO"
+Write-Host "Enabled for Disk Encryption: $($KeyVault.EnabledForDiskEncryption)" "INFO"
+Write-Host "Enabled for Template Deployment: $($KeyVault.EnabledForTemplateDeployment)" "INFO"
+Write-Host "Soft Delete Enabled: $($KeyVault.EnableSoftDelete)" "INFO"
+Write-Host "Purge Protection Enabled: $($KeyVault.EnablePurgeProtection)" "INFO"
+Write-Host " `nAccess Policies: $($KeyVault.AccessPolicies.Count)" "INFO"
+foreach ($Policy in $KeyVault.AccessPolicies) {
+    Write-Host "  - Object ID: $($Policy.ObjectId)" "INFO"
+    Write-Host "    Application ID: $($Policy.ApplicationId)" "INFO"
+    Write-Host "    Permissions to Keys: $($Policy.PermissionsToKeys -join ', ')" "INFO"
+    Write-Host "    Permissions to Secrets: $($Policy.PermissionsToSecrets -join ', ')" "INFO"
+    Write-Host "    Permissions to Certificates: $($Policy.PermissionsToCertificates -join ', ')" "INFO"
+    Write-Host "    ---" "INFO"
 }
-
-
 try {
-    $WESecrets = Get-AzKeyVaultSecret -VaultName $WEVaultName
-   ;  $WEKeys = Get-AzKeyVaultKey -VaultName $WEVaultName
-   ;  $WECertificates = Get-AzKeyVaultCertificate -VaultName $WEVaultName
-    
-    Write-WELog " `nVault Contents:" " INFO"
-    Write-WELog "  Secrets: $($WESecrets.Count)" " INFO"
-    Write-WELog "  Keys: $($WEKeys.Count)" " INFO"
-    Write-WELog "  Certificates: $($WECertificates.Count)" " INFO"
+    $Secrets = Get-AzKeyVaultSecret -VaultName $VaultName
+$Keys = Get-AzKeyVaultKey -VaultName $VaultName
+$Certificates = Get-AzKeyVaultCertificate -VaultName $VaultName
+    Write-Host " `nVault Contents:" "INFO"
+    Write-Host "Secrets: $($Secrets.Count)" "INFO"
+    Write-Host "Keys: $($Keys.Count)" "INFO"
+    Write-Host "Certificates: $($Certificates.Count)" "INFO"
 } catch {
-    Write-WELog " `nVault Contents: Unable to access (check permissions)" " INFO"
+    Write-Host " `nVault Contents: Unable to access (check permissions)" "INFO"
 }
+Write-Host " `nKey Vault monitoring completed at $(Get-Date)" "INFO"
 
-Write-WELog " `nKey Vault monitoring completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

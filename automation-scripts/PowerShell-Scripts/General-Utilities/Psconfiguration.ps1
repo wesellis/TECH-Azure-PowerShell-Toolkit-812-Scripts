@@ -1,45 +1,15 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Psconfiguration
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Psconfiguration
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-﻿configuration Configuration
+configuration Configuration
 {
    [CmdletBinding()
 try {
@@ -49,41 +19,38 @@ $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
         [Parameter(Mandatory)]
-        [String]$WEDomainName,
+        [String]$DomainName,
         [Parameter(Mandatory)]
-        [String]$WEDCName,
+        [String]$DCName,
         [Parameter(Mandatory)]
-        [String]$WEDPMPName,
+        [String]$DPMPName,
         [Parameter(Mandatory)]
-        [String]$WECSName,
+        [String]$CSName,
         [Parameter(Mandatory)]
-        [String]$WEPSName,
+        [String]$PSName,
         [Parameter(Mandatory)]
-        [System.Array]$WEClientName,
+        [System.Array]$ClientName,
         [Parameter(Mandatory)]
-        [String]$WEConfiguration,
+        [String]$Configuration,
         [Parameter(Mandatory)]
-        [String]$WEDNSIPAddress,
+        [String]$DNSIPAddress,
         [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$WEAdmincreds
+        [System.Management.Automation.PSCredential]$Admincreds
     )
     Import-DscResource -ModuleName TemplateHelpDSC
-    
-    $WELogFolder = " TempLog"
-    $WECM = " CMCB"
-    $WELogPath = " c:\$WELogFolder"
-    $WEDName = $WEDomainName.Split(" ." )[0]
-    $WEDCComputerAccount = " $WEDName\$WEDCName$"
-    $WECurrentRole = " PS"
-    if($WEConfiguration -ne " Standalone" )
+    $LogFolder = "TempLog"
+    $CM = "CMCB"
+    $LogPath = " c:\$LogFolder"
+    $DName = $DomainName.Split(" ." )[0]
+    $DCComputerAccount = " $DName\$DCName$"
+    $CurrentRole = "PS"
+    if($Configuration -ne "Standalone" )
     {
-        $WECSComputerAccount = " $WEDName\$WECSName$"
+        $CSComputerAccount = " $DName\$CSName$"
     }
-   ;  $WEDPMPComputerAccount = " $WEDName\$WEDPMPName$"
-   ;  $WEClients = [system.String]::Join(" ," , $WEClientName)
-    
-    [System.Management.Automation.PSCredential]$WEDomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($WEAdmincreds.UserName)" , $WEAdmincreds.Password)
-
+$DPMPComputerAccount = " $DName\$DPMPName$"
+$Clients = [system.String]::Join(" ," , $ClientName)
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
     Node LOCALHOST
     {
         LocalConfigurationManager
@@ -97,174 +64,151 @@ param(
             InitialSize = '8192'
             MaximumSize = '8192'
         }
-
         AddBuiltinPermission AddSQLPermission
         {
-            Ensure = " Present"
+            Ensure = "Present"
             DependsOn = " [SetCustomPagingFile]PagingSettings"
         }
-
         InstallFeatureForSCCM InstallFeature
         {
-            NAME = " PS"
-            Role = " Site Server"
+            NAME = "PS"
+            Role = "Site Server"
             DependsOn = " [AddBuiltinPermission]AddSQLPermission"
         }
-
         InstallADK ADKInstall
         {
-            ADKPath = " C:\adksetup.exe"
+            ADKPath = "C:\adksetup.exe"
             ADKWinPEPath = " c:\adksetupwinpe.exe"
-            Ensure = " Present"
+            Ensure = "Present"
             DependsOn = " [InstallFeatureForSCCM]InstallFeature"
         }
-
         DownloadAndInstallvcredist DownloadAndInstallvcredist
         {
-            Ensure = " Present"
+            Ensure = "Present"
             DependsOn = " [InstallADK]ADKInstall"
         }
-
         DownloadAndInstallODBC DownloadAndInstallODBC
         {
-            Ensure = " Present"
+            Ensure = "Present"
             DependsOn = " [DownloadAndInstallvcredist]DownloadAndInstallvcredist"
         }
-
-        if($WEConfiguration -eq " Standalone" )
+        if($Configuration -eq "Standalone" )
         {
             DownloadSCCM DownLoadSCCM
             {
-                CM = $WECM
-                Ensure = " Present"
+                CM = $CM
+                Ensure = "Present"
                 DependsOn = " [DownloadAndInstallODBC]DownloadAndInstallODBC"
             }
-
             SetDNS DnsServerAddress
             {
-                DNSIPAddress = $WEDNSIPAddress
-                Ensure = " Present"
+                DNSIPAddress = $DNSIPAddress
+                Ensure = "Present"
                 DependsOn = " [DownloadSCCM]DownLoadSCCM"
             }
-
             FileReadAccessShare DomainSMBShare
             {
-                Name = $WELogFolder
-                Path = $WELogPath
-                Account = $WEDCComputerAccount
+                Name = $LogFolder
+                Path = $LogPath
+                Account = $DCComputerAccount
                 DependsOn = " [File]ShareFolder"
             }
-
             FileReadAccessShare CMSourceSMBShare
             {
-                Name = $WECM
-                Path = " c:\$WECM"
-                Account = $WEDCComputerAccount
+                Name = $CM
+                Path = " c:\$CM"
+                Account = $DCComputerAccount
                 DependsOn = " [ChangeSQLServicesAccount]ChangeToLocalSystem"
             }
-
             RegisterTaskScheduler InstallAndUpdateSCCM
             {
-                TaskName = " ScriptWorkFlow"
-                ScriptName = " ScriptWorkFlow.ps1"
-                ScriptPath = $WEPSScriptRoot
-                ScriptArgument = " $WEDomainName $WECM $WEDName\$($WEAdmincreds.UserName) $WEDPMPName $WEClients $WEConfiguration $WECurrentRole $WELogFolder $WECSName $WEPSName"
-                Ensure = " Present"
+                TaskName = "ScriptWorkFlow"
+                ScriptName = "ScriptWorkFlow.ps1"
+                ScriptPath = $PSScriptRoot
+                ScriptArgument = " $DomainName $CM $DName\$($Admincreds.UserName) $DPMPName $Clients $Configuration $CurrentRole $LogFolder $CSName $PSName"
+                Ensure = "Present"
                 DependsOn = " [FileReadAccessShare]CMSourceSMBShare"
             }
         }
-        else 
+        else
         {
             SetDNS DnsServerAddress
             {
-                DNSIPAddress = $WEDNSIPAddress
-                Ensure = " Present"
+                DNSIPAddress = $DNSIPAddress
+                Ensure = "Present"
                 DependsOn = " [DownloadAndInstallODBC]DownloadAndInstallODBC"
             }
-
             WaitForConfigurationFile WaitCSJoinDomain
             {
-                Role = " DC"
-                MachineName = $WEDCName
-                LogFolder = $WELogFolder
-                ReadNode = " CSJoinDomain"
-                Ensure = " Present"
+                Role = "DC"
+                MachineName = $DCName
+                LogFolder = $LogFolder
+                ReadNode = "CSJoinDomain"
+                Ensure = "Present"
                 DependsOn = " [File]ShareFolder"
             }
-
             FileReadAccessShare DomainSMBShare
             {
-                Name = $WELogFolder
-                Path = $WELogPath
-                Account = $WEDCComputerAccount,$WECSComputerAccount
+                Name = $LogFolder
+                Path = $LogPath
+                Account = $DCComputerAccount,$CSComputerAccount
                 DependsOn = " [WaitForConfigurationFile]WaitCSJoinDomain"
             }
-
             RegisterTaskScheduler InstallAndUpdateSCCM
             {
-                TaskName = " ScriptWorkFlow"
-                ScriptName = " ScriptWorkFlow.ps1"
-                ScriptPath = $WEPSScriptRoot
-                ScriptArgument = " $WEDomainName $WECM $WEDName\$($WEAdmincreds.UserName) $WEDPMPName $WEClients $WEConfiguration $WECurrentRole $WELogFolder $WECSName $WEPSName"
-                Ensure = " Present"
+                TaskName = "ScriptWorkFlow"
+                ScriptName = "ScriptWorkFlow.ps1"
+                ScriptPath = $PSScriptRoot
+                ScriptArgument = " $DomainName $CM $DName\$($Admincreds.UserName) $DPMPName $Clients $Configuration $CurrentRole $LogFolder $CSName $PSName"
+                Ensure = "Present"
                 DependsOn = " [ChangeSQLServicesAccount]ChangeToLocalSystem"
             }
         }
-
         WaitForDomainReady WaitForDomain
         {
-            Ensure = " Present"
-            DCName = $WEDCName
+            Ensure = "Present"
+            DCName = $DCName
             WaitSeconds = 0
             DependsOn = " [SetDNS]DnsServerAddress"
         }
-
         JoinDomain JoinDomain
         {
-            DomainName = $WEDomainName
-            Credential = $WEDomainCreds
+            DomainName = $DomainName
+            Credential = $DomainCreds
             DependsOn = " [WaitForDomainReady]WaitForDomain"
         }
-        
         File ShareFolder
-        {            
-            DestinationPath = $WELogPath     
-            Type = 'Directory'            
+        {
+            DestinationPath = $LogPath
+            Type = 'Directory'
             Ensure = 'Present'
             DependsOn = " [JoinDomain]JoinDomain"
         }
-        
         OpenFirewallPortForSCCM OpenFirewall
         {
-            Name = " PS"
-            Role = " Site Server"
+            Name = "PS"
+            Role = "Site Server"
             DependsOn = " [JoinDomain]JoinDomain"
         }
-
         WaitForConfigurationFile DelegateControl
         {
-            Role = " DC"
-            MachineName = $WEDCName
-            LogFolder = $WELogFolder
-            ReadNode = " DelegateControl"
-            Ensure = " Present"
+            Role = "DC"
+            MachineName = $DCName
+            LogFolder = $LogFolder
+            ReadNode = "DelegateControl"
+            Ensure = "Present"
             DependsOn = " [OpenFirewallPortForSCCM]OpenFirewall"
         }
-
         ChangeSQLServicesAccount ChangeToLocalSystem
         {
-            SQLInstanceName = " MSSQLSERVER"
-            Ensure = " Present"
+            SQLInstanceName = "MSSQLSERVER"
+            Ensure = "Present"
             DependsOn = " [WaitForConfigurationFile]DelegateControl"
         }
     }
 }
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

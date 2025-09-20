@@ -1,163 +1,90 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Bastion Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Bastion Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$BastionName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEBastionName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEVNetName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$WELocation
+    [string]$VNetName,
+    [Parameter(Mandatory)]
+    [string]$Location
 )
-
-#region Functions
-
-Write-WELog " Creating Azure Bastion: $WEBastionName" " INFO"
-
-
-$WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
-
-
-$WEBastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $WEVNet -Name " AzureBastionSubnet" -ErrorAction SilentlyContinue
-if (-not $WEBastionSubnet) {
-    Write-WELog " Creating AzureBastionSubnet..." " INFO"
-    Add-AzVirtualNetworkSubnetConfig -Name " AzureBastionSubnet" -VirtualNetwork $WEVNet -AddressPrefix " 10.0.1.0/24"
-    Set-AzVirtualNetwork -VirtualNetwork $WEVNet
-    $WEVNet = Get-AzVirtualNetwork -ResourceGroupName $WEResourceGroupName -Name $WEVNetName
-    $WEBastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $WEVNet -Name " AzureBastionSubnet"
+Write-Host "Creating Azure Bastion: $BastionName"
+$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+$BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet" -ErrorAction SilentlyContinue
+if (-not $BastionSubnet) {
+    Write-Host "Creating AzureBastionSubnet..."
+    Add-AzVirtualNetworkSubnetConfig -Name "AzureBastionSubnet" -VirtualNetwork $VNet -AddressPrefix " 10.0.1.0/24"
+    Set-AzVirtualNetwork -VirtualNetwork $VNet
+    $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    $BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet"
 }
-
-
-$WEBastionIpName = " $WEBastionName-pip"; 
+$BastionIpName = " $BastionName-pip";
 $params = @{
-    ResourceGroupName = $WEResourceGroupName
+    ResourceGroupName = $ResourceGroupName
     Sku = "Standard"
-    Location = $WELocation
+    Location = $Location
     AllocationMethod = "Static"
     ErrorAction = "Stop"
-    Name = $WEBastionIpName
+    Name = $BastionIpName
 }
-$WEBastionIp @params
-
-
-Write-WELog " Creating Bastion host (this may take 10-15 minutes)..." " INFO" ; 
+$BastionIp @params
+Write-Host "Creating Bastion host (this may take 10-15 minutes)..." ;
 $params = @{
     ErrorAction = "Stop"
-    PublicIpAddress = $WEBastionIp
-    VirtualNetwork = $WEVNet
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEBastionName
+    PublicIpAddress = $BastionIp
+    VirtualNetwork = $VNet
+    ResourceGroupName = $ResourceGroupName
+    Name = $BastionName
 }
-$WEBastion @params
-
-Write-WELog "  Azure Bastion created successfully:" " INFO"
-Write-WELog "  Name: $($WEBastion.Name)" " INFO"
-Write-WELog "  Location: $($WEBastion.Location)" " INFO"
-Write-WELog "  Public IP: $($WEBastionIp.IpAddress)" " INFO"
-Write-WELog "  DNS Name: $($WEBastionIp.DnsSettings.Fqdn)" " INFO"
-
-Write-WELog " `nBastion Usage:" " INFO"
-Write-WELog " • Connect to VMs via Azure Portal" " INFO"
-Write-WELog " • No need for public IPs on VMs" " INFO"
-Write-WELog " • Secure RDP/SSH access" " INFO"
-Write-WELog " • No VPN client required" " INFO"
-
-
-
-
+$Bastion @params
+Write-Host "Azure Bastion created successfully:"
+Write-Host "Name: $($Bastion.Name)"
+Write-Host "Location: $($Bastion.Location)"
+Write-Host "Public IP: $($BastionIp.IpAddress)"
+Write-Host "DNS Name: $($BastionIp.DnsSettings.Fqdn)"
+Write-Host " `nBastion Usage:"
+Write-Host "Connect to VMs via Azure Portal"
+Write-Host "No need for public IPs on VMs"
+Write-Host "Secure RDP/SSH access"
+Write-Host "No VPN client required"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,159 +1,90 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Appservice Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Appservice Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$AppName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$PlanName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEAppName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEPlanName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WERuntime = " DOTNET" ,
-    [string]$WERuntimeVersion = " 6.0" ,
-    [bool]$WEHttpsOnly = $true,
-    [hashtable]$WEAppSettings = @{}
+    [string]$Location,
+    [string]$Runtime = "DOTNET" ,
+    [string]$RuntimeVersion = " 6.0" ,
+    [bool]$HttpsOnly = $true,
+    [hashtable]$AppSettings = @{}
 )
-
-#region Functions
-
-Write-WELog " Provisioning App Service: $WEAppName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " App Service Plan: $WEPlanName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Runtime: $WERuntime $WERuntimeVersion" " INFO"
-Write-WELog " HTTPS Only: $WEHttpsOnly" " INFO"
-
-; 
+Write-Host "Provisioning App Service: $AppName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "App Service Plan: $PlanName"
+Write-Host "Location: $Location"
+Write-Host "Runtime: $Runtime $RuntimeVersion"
+Write-Host "HTTPS Only: $HttpsOnly"
 $params = @{
     ErrorAction = "Stop"
-    Location = $WELocation
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEAppName
-    AppServicePlan = $WEPlanName
+    Location = $Location
+    ResourceGroupName = $ResourceGroupName
+    Name = $AppName
+    AppServicePlan = $PlanName
 }
-$WEWebApp @params
-
-Write-WELog " App Service created: $($WEWebApp.DefaultHostName)" " INFO"
-
-
-if ($WERuntime -eq " DOTNET" ) {
-    Set-AzWebApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName -NetFrameworkVersion " v$WERuntimeVersion"
+$WebApp @params
+Write-Host "App Service created: $($WebApp.DefaultHostName)"
+if ($Runtime -eq "DOTNET" ) {
+    Set-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName -NetFrameworkVersion " v$RuntimeVersion"
 }
-
-
-if ($WEHttpsOnly) {
-    Set-AzWebApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName -HttpsOnly $true
-    Write-WELog " HTTPS-only enforcement enabled" " INFO"
+if ($HttpsOnly) {
+    Set-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName -HttpsOnly $true
+    Write-Host "HTTPS-only enforcement enabled"
 }
-
-
-if ($WEAppSettings.Count -gt 0) {
-    Write-WELog " `nConfiguring App Settings:" " INFO"
-    foreach ($WESetting in $WEAppSettings.GetEnumerator()) {
-        Write-WELog "  $($WESetting.Key): $($WESetting.Value)" " INFO"
+if ($AppSettings.Count -gt 0) {
+    Write-Host " `nConfiguring App Settings:"
+    foreach ($Setting in $AppSettings.GetEnumerator()) {
+        Write-Host "  $($Setting.Key): $($Setting.Value)"
     }
-    Set-AzWebAppSlot -ResourceGroupName $WEResourceGroupName -Name $WEAppName -AppSettings $WEAppSettings
+    Set-AzWebAppSlot -ResourceGroupName $ResourceGroupName -Name $AppName -AppSettings $AppSettings
 }
-
-Write-WELog " `nApp Service $WEAppName provisioned successfully" " INFO"
-Write-WELog " URL: https://$($WEWebApp.DefaultHostName)" " INFO"
-Write-WELog " State: $($WEWebApp.State)" " INFO"
-
-Write-WELog " `nApp Service provisioning completed at $(Get-Date)" " INFO"
-
-
-
-
+Write-Host " `nApp Service $AppName provisioned successfully"
+Write-Host "URL: https://$($WebApp.DefaultHostName)"
+Write-Host "State: $($WebApp.State)"
+Write-Host " `nApp Service provisioning completed at $(Get-Date)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

@@ -1,82 +1,38 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
 .SYNOPSIS
     Invoke Azvmsourceimage
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Invoke Azvmsourceimage
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
-function WE-Invoke-AzVMSourceImage {
+function Invoke-AzVMSourceImage {
 }
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-[CmdletBinding()]
-function WE-Invoke-AzVMSourceImage {
-    #Region func Set-AzVMSourceImage -ErrorAction Stop 
-   ;  $setAzVMSourceImageSplat = @{
-        VM            = $WEVirtualMachine
-        # PublisherName = " Canonical"
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Invoke-AzVMSourceImage {
+    #Region func Set-AzVMSourceImage -ErrorAction Stop
+$setAzVMSourceImageSplat = @{
+        VM            = $VirtualMachine
+        # PublisherName = "Canonical"
         # Offer         = " 0001-com-ubuntu-server-focal"
         # Skus          = " 20_04-lts-gen2"
         # Version       = " latest"
-        publisherName = " MicrosoftWindowsDesktop"
+        publisherName = "MicrosoftWindowsDesktop"
         offer         = " office-365"
         Skus          = " 20h2-evd-o365pp"
         version       = " latest"
-
-
-        # publisherName = " MicrosoftWindowsServer"
-        # offer         = " WindowsServer"
+        # publisherName = "MicrosoftWindowsServer"
+        # offer         = "WindowsServer"
         # Skus          = " 2019-datacenter-gensecond"
         # version       = " latest"
-
-
-
         # Caching = 'ReadWrite'
     }
-
-
-   ;  $WEVirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
+$VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
     #endRegion func Set-AzVMSourceImage -ErrorAction Stop
-    
 }
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
 

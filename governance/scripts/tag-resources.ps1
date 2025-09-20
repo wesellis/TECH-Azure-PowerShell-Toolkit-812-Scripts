@@ -1,65 +1,44 @@
-#Requires -Module Az.Resources
-#Requires -Version 5.1
-
 <#
 .SYNOPSIS
     Manages and enforces resource tagging across subscriptions and resource groups
 
 .DESCRIPTION
-    Comprehensive tagging management tool that applies, validates, and enforces tags
     on resources. Supports bulk operations, tag inheritance, compliance reporting,
     and automated remediation of missing or incorrect tags.
-
 .PARAMETER Action
     Action to perform: Apply, Remove, Validate, Report, Inherit, Fix
-
 .PARAMETER Scope
     Scope for tag operations (subscription, resource group, or specific resource)
-
 .PARAMETER Tags
     Hashtable of tags to apply or validate
-
 .PARAMETER RequiredTags
     Array of tag names that must be present on all resources
-
 .PARAMETER ResourceType
     Filter operations to specific resource types
-
 .PARAMETER ResourceGroup
     Target specific resource group(s)
-
 .PARAMETER InheritFromResourceGroup
     Inherit tags from resource group to child resources
-
 .PARAMETER RemoveUnauthorized
     Remove tags not in the approved list
-
 .PARAMETER ExportPath
     Path for compliance report export
-
 .PARAMETER Force
     Skip confirmation prompts
-
 .EXAMPLE
     .\tag-resources.ps1 -Action Apply -Tags @{Environment='Production';Owner='TeamA'} -ResourceGroup "RG-Prod"
 
     Applies tags to all resources in the resource group
-
 .EXAMPLE
     .\tag-resources.ps1 -Action Validate -RequiredTags @('Environment','CostCenter','Owner')
 
     Validates that all resources have required tags
-
 .EXAMPLE
     .\tag-resources.ps1 -Action Inherit -InheritFromResourceGroup
 
     Inherits resource group tags to all child resources
-
 .NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 2.0.0
-    Created: 2024-11-15
-#>
+    Author: Azure PowerShell Toolkit#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -114,6 +93,7 @@ if (-not $ExportPath) {
 
 $script:LogPath = ".\TagOperations_$(Get-Date -Format 'yyyyMMdd').log"
 $script:ModifiedResources = @()
+
 #endregion
 
 #region Functions
@@ -249,9 +229,8 @@ function Apply-ResourceTags {
 
             Write-LogEntry "Applied tags to: $($Resource.Name)" -Level Success
             return $true
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Failed to apply tags to $($Resource.Name): $_" -Level Error
         return $false
     }
@@ -282,9 +261,8 @@ function Remove-ResourceTags {
 
             Write-LogEntry "Removed tags from: $($Resource.Name)" -Level Success
             return $true
-        }
-    }
-    catch {
+        
+} catch {
         Write-LogEntry "Failed to remove tags from $($Resource.Name): $_" -Level Error
         return $false
     }
@@ -389,6 +367,7 @@ function Invoke-TagInheritance {
 
     Write-LogEntry "Inherited tags to $inheritedCount resources in $($ResourceGroup.ResourceGroupName)" -Level Success
 }
+
 #endregion
 
 #region Main
@@ -481,10 +460,10 @@ try {
             } else { 0 }
 
             Write-Host "`nCompliance Summary:" -ForegroundColor Cyan
-            Write-Host "  Total Resources: $($resources.Count)" -ForegroundColor White
-            Write-Host "  Compliant: $compliantCount" -ForegroundColor Green
-            Write-Host "  Non-Compliant: $($resources.Count - $compliantCount)" -ForegroundColor Red
-            Write-Host "  Compliance Rate: $complianceRate%" -ForegroundColor $(
+            Write-Host "Total Resources: $($resources.Count)" -ForegroundColor White
+            Write-Host "Compliant: $compliantCount" -ForegroundColor Green
+            Write-Host "Non-Compliant: $($resources.Count - $compliantCount)" -ForegroundColor Red
+            Write-Host "Compliance Rate: $complianceRate%" -ForegroundColor $(
                 if ($complianceRate -ge 90) { 'Green' }
                 elseif ($complianceRate -ge 70) { 'Yellow' }
                 else { 'Red' }
@@ -608,4 +587,6 @@ catch {
 finally {
     $ProgressPreference = 'Continue'
 }
+
 #endregion
+

@@ -1,55 +1,30 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Analyze resource sizes
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Analyze resource sizes
+    Author: Wes Ellis (wes@wesellis.com)#>
 # Azure Resource Size Analyzer
 # Analyze and recommend right-sizing for Azure resources
-# Version: 1.0
-
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [int]$AnalysisDays = 30,
-    
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [switch]$IncludeRecommendations
 )
-
-#region Functions
-
-# Module import removed - use #Requires instead
-Show-Banner -ScriptName "Azure Resource Size Analyzer" -Version "1.0" -Description "Analyze resource utilization and sizing"
-
 try {
-    if (-not (Test-AzureConnection)) { throw "Azure connection validation failed" }
-
+    if (-not (Get-AzContext)) { throw "Not connected to Azure" }
     $vms = if ($ResourceGroupName) {
         Get-AzVM -ResourceGroupName $ResourceGroupName
     } else {
         Get-AzVM -ErrorAction Stop
     }
-
     $sizeAnalysis = @()
-    
     foreach ($vm in $vms) {
         $vmSize = Get-AzVMSize -Location $vm.Location | Where-Object { $_.Name -eq $vm.HardwareProfile.VmSize }
-        
         # Get basic metrics (simplified for demo)
         $analysis = [PSCustomObject]@{
             VMName = $vm.Name
@@ -61,25 +36,15 @@ try {
             PowerState = (Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status).Statuses[1].DisplayStatus
             Recommendation = "Monitor" # Placeholder - would need actual metrics
         }
-        
         $sizeAnalysis += $analysis
     }
-
-    Write-Information "VM Size Analysis:"
+    Write-Host "VM Size Analysis:"
     $sizeAnalysis | Format-Table VMName, CurrentSize, Cores, MemoryMB, PowerState, Recommendation
-
     $totalVMs = $sizeAnalysis.Count
     $runningVMs = ($sizeAnalysis | Where-Object { $_.PowerState -eq "VM running" }).Count
-    
-    Write-Information "Summary:"
-    Write-Information "  Total VMs: $totalVMs"
-    Write-Information "  Running VMs: $runningVMs"
-    Write-Information "  Stopped VMs: $($totalVMs - $runningVMs)"
+    Write-Host "Summary:"
+    Write-Host "Total VMs: $totalVMs"
+    Write-Host "Running VMs: $runningVMs"
+    Write-Host "Stopped VMs: $($totalVMs - $runningVMs)"
+} catch { throw }
 
-} catch {
-    Write-Log " Resource size analysis failed: $($_.Exception.Message)" -Level ERROR
-    exit 1
-}
-
-
-#endregion

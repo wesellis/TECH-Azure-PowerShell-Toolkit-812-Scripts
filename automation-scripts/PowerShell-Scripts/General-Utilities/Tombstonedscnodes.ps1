@@ -1,86 +1,29 @@
 #Requires -Version 7.0
 #Requires -Module Az.Resources
-
-<#
-#endregion
-
-#region Main-Execution
-.SYNOPSIS
     Tombstonedscnodes
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
+    Azure automation
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-#>
-
-<#
-.SYNOPSIS
-    We Enhanced Tombstonedscnodes
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
-
-
 <#PSScriptInfo
-
 .VERSION 1.0.0
-
 .GUID 4e07bb61-3d86-4150-8436-73d420d34457
-
 .AUTHOR Michael Greene
-
 .COMPANYNAME Microsoft Corporation
-
 .COPYRIGHT 2019
-
 .TAGS DSC AzureAutomation Runbook VMSS ScaleSet
-
 .LICENSEURI https://github.com/mgreenegit/tombstonedscnodes/license
-
 .PROJECTURI https://github.com/mgreenegit/tombstonedscnodes
-
-.ICONURI 
-
-.EXTERNALMODULEDEPENDENCIES 
-
-.REQUIREDSCRIPTS 
-
-.EXTERNALSCRIPTDEPENDENCIES 
-
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
 https://github.com/mgreenegit/tombstonedscnodes/readme.md
-
-.PRIVATEDATA 
-
-
-
-
-
-<# 
-
-.DESCRIPTION 
- This script provides an example for how to use a Runbook in Azure Automation to tombstone stale DSC nodes from State Configuration. 
-
-
+.PRIVATEDATA
+#>
+ This script provides an example for how to use a Runbook in Azure Automation to tombstone stale DSC nodes from State Configuration.
 [CmdletBinding()
 try {
     # Main script execution
@@ -89,83 +32,60 @@ $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
+    [string]$ResourceGroupName,
     [Parameter(Mandatory = $true)]
-    [string]$WEAutomationAccountName
+    [string]$AutomationAccountName
 )
-
-#region Functions
-
-$WETombstoneAction = $false
-$WETombstoneDays = 1
-$WEUnregisterAction = $false
-$WEUnregisterDays = 3
-
-
-$WEServicePrincipalConnection = Get-AutomationConnection -Name " AzureRunAsConnection"
+$TombstoneAction = $false
+$TombstoneDays = 1
+$UnregisterAction = $false
+$UnregisterDays = 3
+$ServicePrincipalConnection = Get-AutomationConnection -Name "AzureRunAsConnection"
 $params = @{
-    ApplicationId = $WEServicePrincipalConnection.ApplicationId
-    TenantId = $WEServicePrincipalConnection.TenantId
-    CertificateThumbprint = $WEServicePrincipalConnection.CertificateThumbprint | Write-Verbose
+    ApplicationId = $ServicePrincipalConnection.ApplicationId
+    TenantId = $ServicePrincipalConnection.TenantId
+    CertificateThumbprint = $ServicePrincipalConnection.CertificateThumbprint | Write-Verbose
 }
 Add-AzureRmAccount @params
-$WEContext = Set-AzureRmContext -SubscriptionId $WEServicePrincipalConnection.SubscriptionID | Write-Verbose
-
-; 
-$WESetTombstonedNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $WEResourceGroupName -AutomationAccountName $WEAutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$WETombstoneDays) -AND $_.NodeConfigurationName -notlike " Tombstoned.*" }
-Write-Output " Nodes to be tombstoned:"
-if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes" }
+$Context = Set-AzureRmContext -SubscriptionId $ServicePrincipalConnection.SubscriptionID | Write-Verbose
+$SetTombstonedNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$TombstoneDays) -AND $_.NodeConfigurationName -notlike "Tombstoned.*" }
+Write-Output "Nodes to be tombstoned:"
+if ($null -eq $SetTombstonedNodes) {Write-Output " 0 nodes" }
 else {
-    $WESetTombstonedNodes | % Name | Write-Output
+    $SetTombstonedNodes | % Name | Write-Output
 }
-
 Write-Output ""
-; 
-$WEUnregisterNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $WEResourceGroupName -AutomationAccountName $WEAutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$WEUnregisterDays) -AND $_.NodeConfigurationName -like " Tombstoned.*" }
-Write-Output " Nodes to be unregistered:"
-if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes" }
+$UnregisterNodes = Get-AzureRMAutomationDscNode -ResourceGroupName $ResourceGroupName -AutomationAccountName $AutomationAccountName | Where-Object {$_.Status -eq 'Unresponsive' -AND $_.LastSeen -lt (get-date).AddDays(-$UnregisterDays) -AND $_.NodeConfigurationName -like "Tombstoned.*" }
+Write-Output "Nodes to be unregistered:"
+if ($null -eq $UnregisterNodes) {Write-Output " 0 nodes" }
 else {
-    $WEUnregisterNodes | % Name | Write-Output
+    $UnregisterNodes | % Name | Write-Output
 }
-
 Write-Output ""
-
-
-
-if ($true -eq $WETombstoneAction) {
-    Write-Output " Taking action: Tombstone nodes"
-    if ($null -eq $WESetTombstonedNodes) {Write-Output " 0 nodes" }
+if ($true -eq $TombstoneAction) {
+    Write-Output "Taking action: Tombstone nodes"
+    if ($null -eq $SetTombstonedNodes) {Write-Output " 0 nodes" }
     else {
-        foreach ($WESetTombstonedNode in $WESetTombstonedNodes) {
-            Write-Output " Setting node configuration to " Tombstoned.$($WESetTombstonedNode.NodeConfigurationName)" for node $($WESetTombstonedNode.Name) with Id $($WESetTombstonedNode.Id) from account $($WESetTombstonedNode.AutomationAccountName)"
-            $WESetTombstonedNode | Set-AzureRmAutomationDscNode -NodeConfigurationName " Tombstoned.$($WESetTombstonedNode.NodeConfigurationName)" -Force
+        foreach ($SetTombstonedNode in $SetTombstonedNodes) {
+            Write-Output "Setting node configuration to " Tombstoned.$($SetTombstonedNode.NodeConfigurationName)" for node $($SetTombstonedNode.Name) with Id $($SetTombstonedNode.Id) from account $($SetTombstonedNode.AutomationAccountName)"
+            $SetTombstonedNode | Set-AzureRmAutomationDscNode -NodeConfigurationName "Tombstoned.$($SetTombstonedNode.NodeConfigurationName)" -Force
         }
     }
 }
-
 Write-Output ""
-
-if ($true -eq $WEUnregisterAction) {
-    Write-Output " Taking action: Unregister nodes"
-    if ($null -eq $WEUnregisterNodes) {Write-Output " 0 nodes" }
+if ($true -eq $UnregisterAction) {
+    Write-Output "Taking action: Unregister nodes"
+    if ($null -eq $UnregisterNodes) {Write-Output " 0 nodes" }
     else {
-        foreach ($WEUnregisterNode in $WEUnregisterNodes) {
-            Write-Output " Unregistering node $($WEUnregisterNode.Name) with Id $($WEUnregisterNode.Id) from account $($WEUnregisterNode.AutomationAccountName)"
-            $WEUnregisterNode | Unregister-AzureRMAutomationDscNode -Force
+        foreach ($UnregisterNode in $UnregisterNodes) {
+            Write-Output "Unregistering node $($UnregisterNode.Name) with Id $($UnregisterNode.Id) from account $($UnregisterNode.AutomationAccountName)"
+            $UnregisterNode | Unregister-AzureRMAutomationDscNode -Force
         }
     }
 }
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

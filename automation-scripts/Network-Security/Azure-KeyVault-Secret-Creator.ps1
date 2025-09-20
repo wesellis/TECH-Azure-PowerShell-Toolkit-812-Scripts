@@ -1,45 +1,24 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage Key Vault
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage Key Vault
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$VaultName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SecretName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$SecretValue
 )
-
-#region Functions
-
-Write-Information "Adding secret to Key Vault: $VaultName"
-
+Write-Host "Adding secret to Key Vault: $VaultName"
 $SecureString = ConvertTo-SecureString $SecretValue -AsPlainText -Force
-
 $Secret = Set-AzKeyVaultSecret -VaultName $VaultName -Name $SecretName -SecretValue $SecureString
+Write-Host "Secret added successfully:"
+Write-Host "Name: $($Secret.Name)"
+Write-Host "Version: $($Secret.Version)"
+Write-Host "Vault: $VaultName"
+Write-Host "Created: $($Secret.Created)"
 
-Write-Information "Secret added successfully:"
-Write-Information "  Name: $($Secret.Name)"
-Write-Information "  Version: $($Secret.Version)"
-Write-Information "  Vault: $VaultName"
-Write-Information "  Created: $($Secret.Created)"
-
-
-#endregion

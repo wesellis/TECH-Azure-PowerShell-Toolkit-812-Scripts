@@ -1,349 +1,251 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Deploy Aztemplate
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Deploy Aztemplate
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
 [CmdletBinding()]
 $ErrorActionPreference = "Stop"
 param(
-    [string] [Parameter(Mandatory = $true)] $WEArtifactStagingDirectory,
-    [string] [Parameter(Mandatory = $true)][alias(" ResourceGroupLocation" )] $WELocation,
-    [string] $WEResourceGroupName = (Split-Path $WEArtifactStagingDirectory -Leaf),
-    [switch] $WEUploadArtifacts,
-    [string] $WEStorageAccountName,
-    [string] $WEStorageContainerName = $WEResourceGroupName.ToLowerInvariant() + '-stageartifacts',
-    [string] $WETemplateFile = $WEArtifactStagingDirectory + '\mainTemplate.json',
-    [string] $WETemplateParametersFile = $WEArtifactStagingDirectory + '.\azuredeploy.parameters.json',
-    [string] $WEDSCSourceFolder = $WEArtifactStagingDirectory + '.\DSC',
-    [switch] $WEBuildDscPackage,
-    [switch] $WEValidateOnly,
-    [string] $WEDebugOptions = " None" ,
-    [string] $WEMode = " Incremental" ,
-    [string] $WEDeploymentName = ((Split-Path $WETemplateFile -LeafBase) + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')),
-    [string] $WEManagementGroupId,
-    [switch] $WEDev,
+    [string] [Parameter(Mandatory = $true)] $ArtifactStagingDirectory,
+    [string] [Parameter(Mandatory = $true)][alias("ResourceGroupLocation" )] $Location,
+    [string] $ResourceGroupName = (Split-Path $ArtifactStagingDirectory -Leaf),
+    [switch] $UploadArtifacts,
+    [string] $StorageAccountName,
+    [string] $StorageContainerName = $ResourceGroupName.ToLowerInvariant() + '-stageartifacts',
+    [string] $TemplateFile = $ArtifactStagingDirectory + '\mainTemplate.json',
+    [string] $TemplateParametersFile = $ArtifactStagingDirectory + '.\azuredeploy.parameters.json',
+    [string] $DSCSourceFolder = $ArtifactStagingDirectory + '.\DSC',
+    [switch] $BuildDscPackage,
+    [switch] $ValidateOnly,
+    [string] $DebugOptions = "None" ,
+    [string] $Mode = "Incremental" ,
+    [string] $DeploymentName = ((Split-Path $TemplateFile -LeafBase) + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')),
+    [string] $ManagementGroupId,
+    [switch] $Dev,
     [switch] $bicep,
     [switch] $whatIf
 )
-
-#region Functions
-
 try {
-    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent(" AzQuickStarts-$WEUI$($host.name)" .replace(" " , " _" ), " 1.0" )
+    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent("AzQuickStarts-$UI$($host.name)" .replace(" " , "_" ), "1.0" )
 }
 catch {
     Write-Error "An error occurred: $($_.Exception.Message)"
     throw
 }
-
-$WEErrorActionPreference = 'Stop'
 Set-StrictMode -Version 3
-
-[CmdletBinding()]
-function WE-Format-ValidationOutput {
-    
-
-[CmdletBinding()]
-function Write-WELog {
+function Format-ValidationOutput {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-param ($WEValidationOutput, [int] $WEDepth = 0)
+param ($ValidationOutput, [int] $Depth = 0)
     Set-StrictMode -Off
-    return @($WEValidationOutput | Where-Object { $null -ne $_ } | ForEach-Object { @('  ' * $WEDepth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($WEDepth + 1)) })
+    return @($ValidationOutput | Where-Object { $null -ne $_ } | ForEach-Object { @('  ' * $Depth + ': ' + $_.Message) + @(Format-ValidationOutput @($_.Details) ($Depth + 1)) })
 }
-
-$WEOptionalParameters = New-Object -TypeName Hashtable
-$WETemplateArgs = New-Object -TypeName Hashtable
-$WEArtifactStagingDirectory = ($WEArtifactStagingDirectory.TrimEnd('/')).TrimEnd('\')
-
-
-$isBicep = ($bicep -or $WETemplateFile.EndsWith('.bicep'))
+$OptionalParameters = New-Object -TypeName Hashtable
+$TemplateArgs = New-Object -TypeName Hashtable
+$ArtifactStagingDirectory = ($ArtifactStagingDirectory.TrimEnd('/')).TrimEnd('\')
+$isBicep = ($bicep -or $TemplateFile.EndsWith('.bicep'))
 if ($isBicep){
     $defaultTemplateFile = '\main.bicep'
 } else {
     $defaultTemplateFile = '\azuredeploy.json'
 }
-
-
-if (!(Test-Path $WETemplateFile)) { 
-    $WETemplateFile = $WEArtifactStagingDirectory + $defaultTemplateFile
+if (!(Test-Path $TemplateFile)) {
+    $TemplateFile = $ArtifactStagingDirectory + $defaultTemplateFile
 }
-
-
 if ($isBicep){
-    bicep build $WETemplateFile
+    bicep build $TemplateFile
     # now point the deployment to the json file that was just build
-    $WETemplateFile = $WETemplateFile.Replace('.bicep', '.json')
+    $TemplateFile = $TemplateFile.Replace('.bicep', '.json')
     $fromBicep = " (from bicep build)"
 }else{
     $fromBicep = ""
 }
-
-Write-WELog " Using template file $($fromBicep):  $WETemplateFile" " INFO"
-
-
-if ($WEDev) {
-    $WETemplateParametersFile = $WETemplateParametersFile.Replace('azuredeploy.parameters.json', 'azuredeploy.parameters.dev.json')
-    if (!(Test-Path $WETemplateParametersFile)) {
-        $WETemplateParametersFile = $WETemplateParametersFile.Replace('azuredeploy.parameters.dev.json', 'azuredeploy.parameters.1.json')
+Write-Host "Using template file $($fromBicep):  $TemplateFile"
+if ($Dev) {
+    $TemplateParametersFile = $TemplateParametersFile.Replace('azuredeploy.parameters.json', 'azuredeploy.parameters.dev.json')
+    if (!(Test-Path $TemplateParametersFile)) {
+        $TemplateParametersFile = $TemplateParametersFile.Replace('azuredeploy.parameters.dev.json', 'azuredeploy.parameters.1.json')
     }
 }
-
-Write-WELog " Using parameter file: $WETemplateParametersFile" " INFO"
-
-if (!$WEValidateOnly) {
-    $WEOptionalParameters.Add('DeploymentDebugLogLevel', $WEDebugOptions)
+Write-Host "Using parameter file: $TemplateParametersFile"
+if (!$ValidateOnly) {
+    $OptionalParameters.Add('DeploymentDebugLogLevel', $DebugOptions)
     if ($whatIf) {
-        $WEOptionalParameters.Add('WhatIf', $whatIf)
+        $OptionalParameters.Add('WhatIf', $whatIf)
     }
 }
-
-$WETemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WETemplateFile))
-$WETemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WETemplateParametersFile))
-
-$WETemplateJSON = Get-Content -ErrorAction Stop $WETemplateFile -Raw | ConvertFrom-Json
-
-$WETemplateSchema = $WETemplateJson | Select-Object -expand '$schema' -ErrorAction Ignore
-
-switch -Wildcard ($WETemplateSchema) {
+$TemplateFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateFile))
+$TemplateParametersFile = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $TemplateParametersFile))
+$TemplateJSON = Get-Content -ErrorAction Stop $TemplateFile -Raw | ConvertFrom-Json
+$TemplateSchema = $TemplateJson | Select-Object -expand '$schema' -ErrorAction Ignore
+switch -Wildcard ($TemplateSchema) {
     '*tenantDeploymentTemplate.json*' {
-        $deploymentScope = " Tenant"
+        $deploymentScope = "Tenant"
     }
     '*managementGroupDeploymentTemplate.json*' {
-        $deploymentScope = " ManagementGroup"
+        $deploymentScope = "ManagementGroup"
     }
     '*subscriptionDeploymentTemplate.json*' {
-        $deploymentScope = " Subscription"
+        $deploymentScope = "Subscription"
     }
     '*/deploymentTemplate.json*' {
-        $deploymentScope = " ResourceGroup"
-        $WEOptionalParameters.Add('Mode', $WEMode)
-        if(!$WEValidateOnly -and !$WEWhatIf) {
-            $WEOptionalParameters.Add('Force', $true)
+        $deploymentScope = "ResourceGroup"
+        $OptionalParameters.Add('Mode', $Mode)
+        if(!$ValidateOnly -and !$WhatIf) {
+            $OptionalParameters.Add('Force', $true)
         }
     }
 }
-
-Write-WELog " Running a $deploymentScope scoped deployment..." " INFO"
-
-$WEArtifactsLocationName = '_artifactsLocation'
-$WEArtifactsLocationSasTokenName = '_artifactsLocationSasToken'
-$WEArtifactsLocationParameter = $WETemplateJson | Select-Object -expand 'parameters' -ErrorAction Ignore | Select-Object -Expand $WEArtifactsLocationName -ErrorAction Ignore
-$WEArtifactsLocationSasTokenParameter = $WETemplateJson | Select-Object -expand 'parameters' -ErrorAction Ignore | Select-Object -Expand $WEArtifactsLocationSasTokenName -ErrorAction Ignore
-$useAbsolutePathStaging = $($null -ne $WEArtifactsLocationParameter)
-
-
-if ($WEUploadArtifacts -Or $useAbsolutePathStaging -or $WEArtifactsLocationSasTokenParameter) {
+Write-Host "Running a $deploymentScope scoped deployment..."
+$ArtifactsLocationName = '_artifactsLocation'
+$ArtifactsLocationSasTokenName = '_artifactsLocationSasToken'
+$ArtifactsLocationParameter = $TemplateJson | Select-Object -expand 'parameters' -ErrorAction Ignore | Select-Object -Expand $ArtifactsLocationName -ErrorAction Ignore
+$ArtifactsLocationSasTokenParameter = $TemplateJson | Select-Object -expand 'parameters' -ErrorAction Ignore | Select-Object -Expand $ArtifactsLocationSasTokenName -ErrorAction Ignore
+$useAbsolutePathStaging = $($null -ne $ArtifactsLocationParameter)
+if ($UploadArtifacts -Or $useAbsolutePathStaging -or $ArtifactsLocationSasTokenParameter) {
     # Convert relative paths to absolute paths if needed
-    $WEArtifactStagingDirectory = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WEArtifactStagingDirectory))
-    $WEDSCSourceFolder = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($WEPSScriptRoot, $WEDSCSourceFolder))
-
+    $ArtifactStagingDirectory = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $ArtifactStagingDirectory))
+    $DSCSourceFolder = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, $DSCSourceFolder))
     # Parse the parameter file and update the values of artifacts location and artifacts location SAS token if they are present
-    if (Test-Path $WETemplateParametersFile) {
-        $WEJsonParameters = Get-Content -ErrorAction Stop $WETemplateParametersFile -Raw | ConvertFrom-Json
-        if (($WEJsonParameters | Get-Member -Type NoteProperty 'parameters') -ne $null) {
-            $WEJsonParameters = $WEJsonParameters.parameters
+    if (Test-Path $TemplateParametersFile) {
+        $JsonParameters = Get-Content -ErrorAction Stop $TemplateParametersFile -Raw | ConvertFrom-Json
+        if (($JsonParameters | Get-Member -Type NoteProperty 'parameters') -ne $null) {
+            $JsonParameters = $JsonParameters.parameters
         }
     }
     else {
-        $WEJsonParameters = @{ }
+        $JsonParameters = @{ }
     }
-    
     # if using _artifacts* parameters, add them to the optional params and get the value from the param file (if any)
     if ($useAbsolutePathStaging) {
-        $WEOptionalParameters[$WEArtifactsLocationName] = $WEJsonParameters | Select-Object -Expand $WEArtifactsLocationName -ErrorAction Ignore | Select-Object -Expand 'value' -ErrorAction Ignore
-        $WEOptionalParameters[$WEArtifactsLocationSasTokenName] = $WEJsonParameters | Select-Object -Expand $WEArtifactsLocationSasTokenName -ErrorAction Ignore | Select-Object -Expand 'value' -ErrorAction Ignore
+        $OptionalParameters[$ArtifactsLocationName] = $JsonParameters | Select-Object -Expand $ArtifactsLocationName -ErrorAction Ignore | Select-Object -Expand 'value' -ErrorAction Ignore
+        $OptionalParameters[$ArtifactsLocationSasTokenName] = $JsonParameters | Select-Object -Expand $ArtifactsLocationSasTokenName -ErrorAction Ignore | Select-Object -Expand 'value' -ErrorAction Ignore
     }
-
     # Create DSC configuration archive
-    if ((Test-Path $WEDSCSourceFolder) -and ($WEBuildDscPackage)) {
-        $WEDSCSourceFilePaths = @(Get-ChildItem -ErrorAction Stop $WEDSCSourceFolder -File -Filter '*.ps1' | ForEach-Object -Process { $_.FullName })
-        foreach ($WEDSCSourceFilePath in $WEDSCSourceFilePaths) {
-            $WEDSCArchiveFilePath = $WEDSCSourceFilePath.Substring(0, $WEDSCSourceFilePath.Length - 4) + '.zip'
-            Publish-AzVMDscConfiguration $WEDSCSourceFilePath -OutputArchivePath $WEDSCArchiveFilePath -Force -Verbose
+    if ((Test-Path $DSCSourceFolder) -and ($BuildDscPackage)) {
+        $DSCSourceFilePaths = @(Get-ChildItem -ErrorAction Stop $DSCSourceFolder -File -Filter '*.ps1' | ForEach-Object -Process { $_.FullName })
+        foreach ($DSCSourceFilePath in $DSCSourceFilePaths) {
+            $DSCArchiveFilePath = $DSCSourceFilePath.Substring(0, $DSCSourceFilePath.Length - 4) + '.zip'
+            Publish-AzVMDscConfiguration $DSCSourceFilePath -OutputArchivePath $DSCArchiveFilePath -Force -Verbose
         }
     }
-
     # Create a storage account name if none was provided
-    if ($WEStorageAccountName -eq '') {
-        $WEStorageAccountName = 'stage' + ((Get-AzContext).Subscription.Id).Replace('-', '').substring(0, 19)
+    if ($StorageAccountName -eq '') {
+        $StorageAccountName = 'stage' + ((Get-AzContext).Subscription.Id).Replace('-', '').substring(0, 19)
     }
-
-    $WEStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $WEStorageAccountName })
-
+    $StorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $StorageAccountName })
     # Create the storage account if it doesn't already exist
-    if ($null -eq $WEStorageAccount) {
-        $WEStorageResourceGroupName = 'ARM_Deploy_Staging'
-        if ((Get-AzResourceGroup -Name $WEStorageResourceGroupName -Verbose -ErrorAction SilentlyContinue) -eq $null) {
-            New-AzResourceGroup -Name $WEStorageResourceGroupName -Location $WELocation -Verbose -Force -ErrorAction Stop
+    if ($null -eq $StorageAccount) {
+        $StorageResourceGroupName = 'ARM_Deploy_Staging'
+        if ((Get-AzResourceGroup -Name $StorageResourceGroupName -Verbose -ErrorAction SilentlyContinue) -eq $null) {
+            New-AzResourceGroup -Name $StorageResourceGroupName -Location $Location -Verbose -Force -ErrorAction Stop
         }
-        $WEStorageAccount = New-AzStorageAccount -StorageAccountName $WEStorageAccountName -Type 'Standard_LRS' -ResourceGroupName $WEStorageResourceGroupName -Location " $WELocation"
+        $StorageAccount = New-AzStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $StorageResourceGroupName -Location " $Location"
     }
-
-    if ($WEStorageContainerName.length -gt 63) {
-        $WEStorageContainerName = $WEStorageContainerName.Substring(0, 63)
+    if ($StorageContainerName.length -gt 63) {
+        $StorageContainerName = $StorageContainerName.Substring(0, 63)
     }
-    $WEArtifactStagingLocation = $WEStorageAccount.Context.BlobEndPoint + $WEStorageContainerName + " /"   
-
+    $ArtifactStagingLocation = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + " /"
     # Generate the value for artifacts location if it is not provided in the parameter file
-    if ($useAbsolutePathStaging -and $WEOptionalParameters[$WEArtifactsLocationName] -eq $null) {
+    if ($useAbsolutePathStaging -and $OptionalParameters[$ArtifactsLocationName] -eq $null) {
         #if the defaultValue for _artifactsLocation is using the template location, use the defaultValue, otherwise set it to the staging location
-        $defaultValue = $WEArtifactsLocationParameter | Select-Object -Expand 'defaultValue' -ErrorAction Ignore
+        $defaultValue = $ArtifactsLocationParameter | Select-Object -Expand 'defaultValue' -ErrorAction Ignore
         if ($defaultValue -like '*deployment().properties.templateLink.uri*') {
-            $WEOptionalParameters.Remove($WEArtifactsLocationName) # just use the defaultValue if it's using the template language function
+            $OptionalParameters.Remove($ArtifactsLocationName) # just use the defaultValue if it's using the template language function
         }
         else {
-            $WEOptionalParameters[$WEArtifactsLocationName] = $WEArtifactStagingLocation   
-        }
-    } 
-
-    # Copy files from the local storage staging location to the storage account container
-    New-AzStorageContainer -Name $WEStorageContainerName -Context $WEStorageAccount.Context -ErrorAction SilentlyContinue *>&1
-
-    $WEArtifactFilePaths = Get-ChildItem -ErrorAction Stop $WEArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
-    foreach ($WESourcePath in $WEArtifactFilePaths) {
-        
-        if ($WESourcePath -like " $WEDSCSourceFolder*" -and $WESourcePath -like " *.zip" -or !($WESourcePath -like " $WEDSCSourceFolder*" )) {
-            #When using DSC, just copy the DSC archive, not all the modules and source files
-            $blobName = ($WESourcePath -ireplace [regex]::Escape($WEArtifactStagingDirectory), "" ).TrimStart(" /" ).TrimStart(" \" )
-            Set-AzStorageBlobContent -File $WESourcePath -Blob $blobName -Container $WEStorageContainerName -Context $WEStorageAccount.Context -Force
+            $OptionalParameters[$ArtifactsLocationName] = $ArtifactStagingLocation
         }
     }
-
+    # Copy files from the local storage staging location to the storage account container
+    New-AzStorageContainer -Name $StorageContainerName -Context $StorageAccount.Context -ErrorAction SilentlyContinue *>&1
+    $ArtifactFilePaths = Get-ChildItem -ErrorAction Stop $ArtifactStagingDirectory -Recurse -File | ForEach-Object -Process { $_.FullName }
+    foreach ($SourcePath in $ArtifactFilePaths) {
+        if ($SourcePath -like " $DSCSourceFolder*" -and $SourcePath -like " *.zip" -or !($SourcePath -like " $DSCSourceFolder*" )) {
+            #When using DSC, just copy the DSC archive, not all the modules and source files
+            $blobName = ($SourcePath -ireplace [regex]::Escape($ArtifactStagingDirectory), "" ).TrimStart(" /" ).TrimStart(" \" )
+            Set-AzStorageBlobContent -File $SourcePath -Blob $blobName -Container $StorageContainerName -Context $StorageAccount.Context -Force
+        }
+    }
     # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file
     # first check to see if we need a sasToken (if it was not already provided in the param file or we're using relativePath)
-    if ($useAbsolutePathStaging -or $WEOptionalParameters[$WEArtifactsLocationSasTokenName] -eq $null) {
-        $sasToken = (New-AzStorageContainerSASToken -Container $WEStorageContainerName -Context $WEStorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+    if ($useAbsolutePathStaging -or $OptionalParameters[$ArtifactsLocationSasTokenName] -eq $null) {
+        $sasToken = (New-AzStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
     }
-
     # now set the parameter value for the QueryString or _artifactsLocationSasToken as appropriate
-    if($WEOptionalParameters[$WEArtifactsLocationSasTokenName] -eq $null -and $useAbsolutePathStaging){
-        $WEOptionalParameters[$WEArtifactsLocationSasTokenName] = ConvertTo-SecureString $sasToken -AsPlainText -Force
-        $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem -ErrorAction Stop $WETemplateFile).Name + $sasToken)
+    if($OptionalParameters[$ArtifactsLocationSasTokenName] -eq $null -and $useAbsolutePathStaging){
+        $OptionalParameters[$ArtifactsLocationSasTokenName] = ConvertTo-SecureString $sasToken -AsPlainText -Force
+        $TemplateArgs.Add('TemplateUri', $ArtifactStagingLocation + (Get-ChildItem -ErrorAction Stop $TemplateFile).Name + $sasToken)
     }elseif (!$useAbsolutePathStaging) {
-        $WEOptionalParameters['QueryString'] = $sasToken.TrimStart(" ?" ) # remove leading ? as it is not part of the QueryString
-        $WETemplateArgs.Add('TemplateUri', $WEArtifactStagingLocation + (Get-ChildItem -ErrorAction Stop $WETemplateFile).Name)
+        $OptionalParameters['QueryString'] = $sasToken.TrimStart(" ?" ) # remove leading ? as it is not part of the QueryString
+        $TemplateArgs.Add('TemplateUri', $ArtifactStagingLocation + (Get-ChildItem -ErrorAction Stop $TemplateFile).Name)
     }
 }
 else {
-
-    $WETemplateArgs.Add('TemplateFile', $WETemplateFile)
-
+    $TemplateArgs.Add('TemplateFile', $TemplateFile)
 }
-
-if (Test-Path $WETemplateParametersFile) {
-    $WETemplateArgs.Add('TemplateParameterFile', $WETemplateParametersFile)
+if (Test-Path $TemplateParametersFile) {
+    $TemplateArgs.Add('TemplateParameterFile', $TemplateParametersFile)
 }
-Write-Information ($WETemplateArgs | Out-String)
-Write-Information ($WEOptionalParameters | Out-String)
-
-
-if ($deploymentScope -eq " ResourceGroup" ) {
-    if ((Get-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -ErrorAction SilentlyContinue) -eq $null) {
-        New-AzResourceGroup -Name $WEResourceGroupName -Location $WELocation -Verbose -Force -ErrorAction Stop
+Write-Information ($TemplateArgs | Out-String)
+Write-Information ($OptionalParameters | Out-String)
+if ($deploymentScope -eq "ResourceGroup" ) {
+    if ((Get-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -ErrorAction SilentlyContinue) -eq $null) {
+        New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -Force -ErrorAction Stop
     }
 }
-
-if ($WEValidateOnly) {
-    
+if ($ValidateOnly) {
     switch ($deploymentScope) {
         " resourceGroup" {
-            $WEErrorMessages = Format-ValidationOutput (Test-AzResourceGroupDeployment -ResourceGroupName $WEResourceGroupName @TemplateArgs @OptionalParameters)
+            $ErrorMessages = Format-ValidationOutput (Test-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName @TemplateArgs @OptionalParameters)
         }
-        " Subscription" {
-            $WEErrorMessages = Format-ValidationOutput (Test-AzDeployment -Location $WELocation @TemplateArgs @OptionalParameters)
+        "Subscription" {
+            $ErrorMessages = Format-ValidationOutput (Test-AzDeployment -Location $Location @TemplateArgs @OptionalParameters)
         }
-        " managementGroup" {           
-            $WEErrorMessages = Format-ValidationOutput (Test-AzManagementGroupDeployment -Location $WELocation @TemplateArgs @OptionalParameters)
+        " managementGroup" {
+            $ErrorMessages = Format-ValidationOutput (Test-AzManagementGroupDeployment -Location $Location @TemplateArgs @OptionalParameters)
         }
         " tenant" {
-            $WEErrorMessages = Format-ValidationOutput (Test-AzTenantDeployment -Location $WELocation @TemplateArgs @OptionalParameters)
+            $ErrorMessages = Format-ValidationOutput (Test-AzTenantDeployment -Location $Location @TemplateArgs @OptionalParameters)
         }
     }
-
-    if ($WEErrorMessages) {
-        Write-Output '', 'Validation returned the following errors:', @($WEErrorMessages), '', 'Template is invalid.'
+    if ($ErrorMessages) {
+        Write-Output '', 'Validation returned the following errors:', @($ErrorMessages), '', 'Template is invalid.'
     }
     else {
         Write-Output '', 'Template is valid.'
     }
 }
-
 else {
-
-   ;  $WEErrorActionPreference = 'Continue' # Switch to Continue" so multiple errors can be formatted and output
-    
     switch ($deploymentScope) {
         " resourceGroup" {
             $params = @{
-                ResourceGroupName = $WEResourceGroupName @TemplateArgs @OptionalParameters
-                Location = $WELocation @TemplateArgs @OptionalParameters
-                ErrorVariable = "ErrorMessages } }  ;  $WEErrorActionPreference = 'Stop' if ($WEErrorMessages) { Write-Output '', 'Template deployment returned the following errors:', '', @(@($WEErrorMessages) | ForEach-Object { $_.Exception.Message }) Write-Error " Deployment failed." }"
+                ResourceGroupName = $ResourceGroupName @TemplateArgs @OptionalParameters
+                Location = $Location @TemplateArgs @OptionalParameters
+                ErrorVariable = "ErrorMessages } }  ;  $ErrorActionPreference = 'Stop' if ($ErrorMessages) { Write-Output '', 'Template deployment returned the following errors:', '', @(@($ErrorMessages) | ForEach-Object { $_.Exception.Message }) Write-Error "Deployment failed." }"
                 ManagementGroupId = $managementGroupId
-                Name = $WEDeploymentName
+                Name = $DeploymentName
             }
             New-AzResourceGroupDeployment @params
-
 }
 
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

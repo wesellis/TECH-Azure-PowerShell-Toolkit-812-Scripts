@@ -1,62 +1,28 @@
-#Requires -Version 7.0
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Installandupdatesccm
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Installandupdatesccm
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-Param($WEDomainFullName,$WECM,$WECMUser,$WERole,$WEProvisionToolPath)
-
-$WESMSInstallDir="${env:ProgramFiles}\Microsoft Configuration Manager"
-
-$logpath = $WEProvisionToolPath+" \InstallSCCMlog.txt"
-$WEConfigurationFile = Join-Path -Path $WEProvisionToolPath -ChildPath " $WERole.json"
-$WEConfiguration = Get-Content -Path $WEConfigurationFile | ConvertFrom-Json
-
-$WEConfiguration.InstallSCCM.Status = 'Running'
-$WEConfiguration.InstallSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-$cmpath = " c:\$WECM.exe"
-$cmsourceextractpath = " c:\$WECM"
+Param($DomainFullName,$CM,$CMUser,$Role,$ProvisionToolPath)
+$SMSInstallDir="${env:ProgramFiles}\Microsoft Configuration Manager"
+$logpath = $ProvisionToolPath+" \InstallSCCMlog.txt"
+$ConfigurationFile = Join-Path -Path $ProvisionToolPath -ChildPath " $Role.json"
+$Configuration = Get-Content -Path $ConfigurationFile | ConvertFrom-Json
+$Configuration.InstallSCCM.Status = 'Running'
+$Configuration.InstallSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
+$cmpath = " c:\$CM.exe"
+$cmsourceextractpath = " c:\$CM"
 if(!(Test-Path $cmpath))
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Copying SCCM installation source..." | Out-File -Append $logpath
-    $cmurl = " https://go.microsoft.com/fwlink/?linkid=2093192"
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Copying SCCM installation source..." | Out-File -Append $logpath
+    $cmurl = "https://go.microsoft.com/fwlink/?linkid=2093192"
     Invoke-WebRequest -Uri $cmurl -OutFile $cmpath
     if(!(Test-Path $cmsourceextractpath))
     {
@@ -64,15 +30,12 @@ if(!(Test-Path $cmpath))
         Start-Process -WorkingDirectory ($cmsourceextractpath) -Filepath ($cmpath) -ArgumentList ('/s') -wait
     }
 }
-
 $cmsourcepath = (Get-ChildItem -Path $cmsourceextractpath | ?{$_.Name.ToLower().Contains(" cd." )}).FullName
-$WECMINIPath = " $cmsourceextractpath\Standalone.ini"
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Check ini file." | Out-File -Append $logpath
-
+$CMINIPath = " $cmsourceextractpath\Standalone.ini"
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Check ini file." | Out-File -Append $logpath
 $cmini = @'
 [Identification]
 Action=InstallPrimarySite
-
 [Options]
 ProductID=EVAL
 SiteCode=%Role%
@@ -86,47 +49,39 @@ PrerequisitePath=%cmsourcepath%\REdist
 MobileDeviceLanguage=0
 AdminConsole=1
 JoinCEIP=0
-
 [SQLConfigOptions]
 SQLServerName=%SQLMachineFQDN%
 DatabaseName=%SQLInstance%CM_%Role%
 SQLSSBPort=4022
 SQLDataFilePath=%SQLDataFilePath%
 SQLLogFilePath=%SQLLogFilePath%
-
 [CloudConnectorOptions]
 CloudConnector=1
 CloudConnectorServer=%MachineFQDN%
 UseProxy=0
 ProxyName=
 ProxyPort=
-
 [SystemCenterOptions]
 SysCenterId=
-
 [HierarchyExpansionOption]
 '@
 $inst = (get-itemproperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server').InstalledInstances[0]
 $p = (Get-ItemProperty -ErrorAction Stop 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL').$inst
-
-$sqlinfo = Get-ItemProperty -ErrorAction Stop " HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
-$cmini = $cmini.Replace('%InstallDir%',$WESMSInstallDir)
-$cmini = $cmini.Replace('%MachineFQDN%'," $env:computername.$WEDomainFullName" )
-$cmini = $cmini.Replace('%SQLMachineFQDN%'," $env:computername.$WEDomainFullName" )
-$cmini = $cmini.Replace('%Role%',$WERole)
+$sqlinfo = Get-ItemProperty -ErrorAction Stop "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\$p\$inst"
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] ini file exist." | Out-File -Append $logpath
+$cmini = $cmini.Replace('%InstallDir%',$SMSInstallDir)
+$cmini = $cmini.Replace('%MachineFQDN%'," $env:computername.$DomainFullName" )
+$cmini = $cmini.Replace('%SQLMachineFQDN%'," $env:computername.$DomainFullName" )
+$cmini = $cmini.Replace('%Role%',$Role)
 $cmini = $cmini.Replace('%SQLDataFilePath%',$sqlinfo.DefaultData)
 $cmini = $cmini.Replace('%SQLLogFilePath%',$sqlinfo.DefaultLog)
-$cmini = $cmini.Replace('%CM%',$WECM)
+$cmini = $cmini.Replace('%CM%',$CM)
 $cmini = $cmini.Replace('%cmsourcepath%',$cmsourcepath)
-
 if(!(Test-Path $cmsourcepath\Redist))
 {
     New-Item -ErrorAction Stop $cmsourcepath\Redist -ItemType directory | Out-Null
 }
-    
-if($inst.ToUpper() -eq " MSSQLSERVER" )
+if($inst.ToUpper() -eq "MSSQLSERVER" )
 {
     $cmini = $cmini.Replace('%SQLInstance%',"" )
 }
@@ -135,82 +90,58 @@ else
     $tinstance = $inst.ToUpper() + " \"
     $cmini = $cmini.Replace('%SQLInstance%',$tinstance)
 }
-$WECMInstallationFile = " $cmsourcepath\SMSSETUP\BIN\X64\Setup.exe"
-$cmini > $WECMINIPath 
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Installing.." | Out-File -Append $logpath
-Start-Process -Filepath ($WECMInstallationFile) -ArgumentList ('/NOUSERINPUT /script " ' + $WECMINIPath + '" ') -wait
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
-
-Remove-Item -ErrorAction Stop $WECMINIPat -Forceh -Force
-
-$WEConfiguration.InstallSCCM.Status = 'Completed'
-$WEConfiguration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-
-$WEConfiguration.UpgradeSCCM.Status = 'Running'
-$WEConfiguration.UpgradeSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
+$CMInstallationFile = " $cmsourcepath\SMSSETUP\BIN\X64\Setup.exe"
+$cmini > $CMINIPath
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Installing.." | Out-File -Append $logpath
+Start-Process -Filepath ($CMInstallationFile) -ArgumentList ('/NOUSERINPUT /script " ' + $CMINIPath + '" ') -wait
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Finished installing CM." | Out-File -Append $logpath
+Remove-Item -ErrorAction Stop $CMINIPat -Forceh -Force
+$Configuration.InstallSCCM.Status = 'Completed'
+$Configuration.InstallSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
+$Configuration.UpgradeSCCM.Status = 'Running'
+$Configuration.UpgradeSCCM.StartTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
 Start-Sleep -Seconds 120
-$logpath = $WEProvisionToolPath+" \UpgradeCMlog.txt"
-$WESiteCode =  Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\SMS\Identification' -Name 'Site Code'
-
-$WEProviderMachineName = $env:COMPUTERNAME+" ." +$WEDomainFullName # SMS Provider machine name
-
-
+$logpath = $ProvisionToolPath+" \UpgradeCMlog.txt"
+$SiteCode =  Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\SMS\Identification' -Name 'Site Code'
+$ProviderMachineName = $env:COMPUTERNAME+" ." +$DomainFullName # SMS Provider machine name
 $initParams = @{}
-if($WEENV:SMS_ADMIN_UI_PATH -eq $null)
+if($ENV:SMS_ADMIN_UI_PATH -eq $null)
 {
-    $WEENV:SMS_ADMIN_UI_PATH = " C:\Program Files (x86)\Microsoft Configuration Manager\AdminConsole\bin\i386"
+    $ENV:SMS_ADMIN_UI_PATH = "C:\Program Files (x86)\Microsoft Configuration Manager\AdminConsole\bin\i386"
 }
-
-
 if((Get-Module -ErrorAction Stop ConfigurationManager) -eq $null) {
-    Import-Module " $($WEENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams
+    Import-Module " $($ENV:SMS_ADMIN_UI_PATH)\..\ConfigurationManager.psd1" @initParams
 }
-
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Setting PS Drive..." | Out-File -Append $logpath
-New-PSDrive -Name $WESiteCode -PSProvider CMSite -Root $WEProviderMachineName @initParams
-
-while((Get-PSDrive -Name $WESiteCode -PSProvider CMSite -ErrorAction SilentlyContinue) -eq $null) 
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Setting PS Drive..." | Out-File -Append $logpath
+New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $ProviderMachineName @initParams
+while((Get-PSDrive -Name $SiteCode -PSProvider CMSite -ErrorAction SilentlyContinue) -eq $null)
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Retry in 10s to set PS Drive. Please wait." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Retry in 10s to set PS Drive. Please wait." | Out-File -Append $logpath
     Start-Sleep -Seconds 10
-    New-PSDrive -Name $WESiteCode -PSProvider CMSite -Root $WEProviderMachineName @initParams
+    New-PSDrive -Name $SiteCode -PSProvider CMSite -Root $ProviderMachineName @initParams
 }
-
-
-Set-Location -ErrorAction Stop " $($WESiteCode):\" @initParams
-
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Setting $WECMUser as CM administrative user." | Out-File -Append $logpath
-New-CMAdministrativeUser -Name $WECMUser -RoleName " Full Administrator" -SecurityScopeName " All" ," All Systems" ," All Users and User Groups"
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Done" | Out-File -Append $logpath
-
+Set-Location -ErrorAction Stop " $($SiteCode):\" @initParams
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Setting $CMUser as CM administrative user." | Out-File -Append $logpath
+New-CMAdministrativeUser -Name $CMUser -RoleName "Full Administrator" -SecurityScopeName "All" ,"All Systems" ,"All Users and User Groups"
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Done" | Out-File -Append $logpath
 $upgradingfailed = $false
 $originalbuildnumber = ""
-
-
 $key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64)
-$subKey =  $key.OpenSubKey(" SOFTWARE\Microsoft\SMS\Components\SMS_Executive\Threads\SMS_DMP_DOWNLOADER" )
-$WEDMPState = $subKey.GetValue(" Current State" )
-while($WEDMPState -ne " Running" )
+$subKey =  $key.OpenSubKey("SOFTWARE\Microsoft\SMS\Components\SMS_Executive\Threads\SMS_DMP_DOWNLOADER" )
+$DMPState = $subKey.GetValue("Current State" )
+while($DMPState -ne "Running" )
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Current SMS_DMP_DOWNLOADER state is : $WEDMPState , will try again 30 seconds later..." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Current SMS_DMP_DOWNLOADER state is : $DMPState , will try again 30 seconds later..." | Out-File -Append $logpath
     Start-Sleep -Seconds 30
-    $WEDMPState = $subKey.GetValue(" Current State" )
+    $DMPState = $subKey.GetValue("Current State" )
 }
-
-" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Current SMS_DMP_DOWNLOADER state is : $WEDMPState " | Out-File -Append $logpath
-
-
+" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Current SMS_DMP_DOWNLOADER state is : $DMPState " | Out-File -Append $logpath
 function getupdate()
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Get CM update..." | Out-File -Append $logpath
-    $WECMPSSuppressFastNotUsedCheck = $true
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Get CM update..." | Out-File -Append $logpath
+    $CMPSSuppressFastNotUsedCheck = $true
     $updatepacklist= Get-CMSiteUpdate -Fast | ?{$_.State -ne 196612}
     $getupdateretrycount = 0
     while($updatepacklist.Count -eq 0)
@@ -219,17 +150,14 @@ function getupdate()
         {
             break
         }
-        " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Not found any updates, retry to invoke update check." | Out-File -Append $logpath
+        " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Not found any updates, retry to invoke update check." | Out-File -Append $logpath
         $getupdateretrycount++
-        " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Invoke CM Site update check..." | Out-File -Append $logpath
+        " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Invoke CM Site update check..." | Out-File -Append $logpath
         Invoke-CMSiteUpdateCheck -ErrorAction Ignore
         Start-Sleep 120
-
         $updatepacklist= Get-CMSiteUpdate -ErrorAction Stop | ?{$_.State -ne 196612}
     }
-
     $updatepack=""
-
     if($updatepacklist.Count -eq 0)
     {
     }
@@ -239,12 +167,10 @@ function getupdate()
     }
     else
     {
-        $updatepack= ($updatepacklist | sort -Property fullversion)[-1] 
+        $updatepack= ($updatepacklist | sort -Property fullversion)[-1]
     }
     return $updatepack
 }
-
-
 $state=@{
     0 = 'UNKNOWN'
     2 = 'ENABLED'
@@ -282,7 +208,7 @@ $state=@{
     196618 = 'INSTALL_CMU_SUCCESS'
     196619 = 'INSTALL_WAITING_CMU'
     262142 = 'INSTALL_CMU_FAILED'
-    #DETAILED INSTALL STATUS
+    # INSTALL STATUS
     196620 = 'INSTALL_INSTALLFILES'
     196621 = 'INSTALL_UPGRADESITECTRLIMAGE'
     196622 = 'INSTALL_CONFIGURESERVICEBROKER'
@@ -294,7 +220,6 @@ $state=@{
     196628 = 'INSTALL_UPGRADEDATABASE'
     196629 = 'INSTALL_UPDATEADMINCONSOLE'
 }
-
 $starttime= Get-Date -ErrorAction Stop
 $sites= Get-CMSite -ErrorAction Stop
 if($originalbuildnumber -eq "" )
@@ -308,18 +233,16 @@ if($originalbuildnumber -eq "" )
         $originalbuildnumber = $sites[0].BuildNumber
     }
 }
-
-
 $retrytimes = 0
 $downloadretrycount = 0
 $updatepack = getupdate
 if($updatepack -ne "" )
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Update package is " + $updatepack.Name | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Update package is " + $updatepack.Name | Out-File -Append $logpath
 }
 else
 {
-    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] No update package be found." | Out-File -Append $logpath
+    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] No update package be found." | Out-File -Append $logpath
 }
 while($updatepack -ne "" )
 {
@@ -328,7 +251,7 @@ while($updatepack -ne "" )
         $upgradingfailed = $true
         break
     }
-    $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name 
+    $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name
     while($updatepack.State -eq 327682 -or $updatepack.State -eq 262145 -or $updatepack.State -eq 327679)
     {
         #package not downloaded
@@ -340,47 +263,43 @@ while($updatepack -ne "" )
             $downloadstarttime = get-date -ErrorAction Stop
             while($updatepack.State -eq 327682)
             {
-                
-                " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package start to download, sleep 2 min..." | Out-File -Append $logpath
+                " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package start to download, sleep 2 min..." | Out-File -Append $logpath
                 Start-Sleep 120
                 $updatepack = Get-CMSiteUpdate -Name $updatepack.Name -Fast
                 $downloadspan = New-TimeSpan -Start $downloadstarttime -End (Get-Date)
                 if($downloadspan.Hours -ge 1)
                 {
-                    Restart-Service -DisplayName " SMS_Executive"
+                    Restart-Service -DisplayName "SMS_Executive"
                     $downloadretrycount++
                     Start-Sleep 120
                     $downloadstarttime = get-date -ErrorAction Stop
                 }
                 if($downloadretrycount -ge 2)
                 {
-                    " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Update package " + $updatepack.Name + " failed to start downloading in 2 hours." | Out-File -Append $logpath
+                    " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Update package " + $updatepack.Name + " failed to start downloading in 2 hours." | Out-File -Append $logpath
                     break
                 }
             }
         }
-        
         if($downloadretrycount -ge 2)
         {
             break
         }
-        
         #waiting package downloaded
         $downloadstarttime = get-date -ErrorAction Stop
         while($updatepack.State -eq 262145)
         {
-            " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package download, sleep 2 min..." | Out-File -Append $logpath
+            " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade package download, sleep 2 min..." | Out-File -Append $logpath
             Start-Sleep 120
             $updatepack = Get-CMSiteUpdate -Name $updatepack.Name -Fast
             $downloadspan = New-TimeSpan -Start $downloadstarttime -End (Get-Date)
             if($downloadspan.Hours -ge 1)
             {
-                Restart-Service -DisplayName " SMS_Executive"
+                Restart-Service -DisplayName "SMS_Executive"
                 Start-Sleep 120
                 $downloadstarttime = get-date -ErrorAction Stop
             }
         }
-
         #downloading failed
         if($updatepack.State -eq 327679)
         {
@@ -389,19 +308,17 @@ while($updatepack -ne "" )
             continue
         }
     }
-    
     if($downloadretrycount -ge 2)
     {
         break
     }
-    
     #trigger prerequisites check after the package downloaded
     Invoke-CMSiteUpdatePrerequisiteCheck -Name $updatepack.Name
     while($updatepack.State -ne 196607 -and $updatepack.State -ne 131074 -and $updatepack.State -ne 131075)
     {
-        (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting checking prerequisites complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) + " , sleep 2 min..." ) | Out-File -Append $logpath
+        (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Waiting checking prerequisites complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) + " , sleep 2 min..." ) | Out-File -Append $logpath
         Start-Sleep 120
-        $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name 
+        $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name
     }
     if($updatepack.State -eq 196607)
     {
@@ -413,33 +330,32 @@ while($updatepack -ne "" )
     Install-CMSiteUpdate -Name $updatepack.Name -SkipPrerequisiteCheck -Force
     while($updatepack.State -ne 196607 -and $updatepack.State -ne 262143 -and $updatepack.State -ne 196612)
     {
-        (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade Complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) + " , sleep 2 min..." ) | Out-File -Append $logpath
+        (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Waiting SCCM Upgrade Complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) + " , sleep 2 min..." ) | Out-File -Append $logpath
         Start-Sleep 120
-        $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name 
+        $updatepack = Get-CMSiteUpdate -Fast -Name $updatepack.Name
     }
     if($updatepack.State -eq 196612)
     {
-        (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] SCCM Upgrade Complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) ) | Out-File -Append $logpath
+        (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] SCCM Upgrade Complete, current pack " + $updatepack.Name + " state is " + ($state.($updatepack.State)) ) | Out-File -Append $logpath
         #we need waiting the copying files finished if there is only one site
         $toplevelsite =  Get-CMSite -ErrorAction Stop |where {$_.ReportingSiteCode -eq "" }
         if((Get-CMSite).count -eq 1)
         {
             $path= Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Microsoft\SMS\Setup' -Name 'Installation Directory'
-
             $fileversion=(Get-Item -ErrorAction Stop ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
             while($fileversion -ne $toplevelsite.BuildNumber)
             {
                 Start-Sleep 120
-               ;  $fileversion=(Get-Item -ErrorAction Stop ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
+$fileversion=(Get-Item -ErrorAction Stop ($path+'\cd.latest\SMSSETUP\BIN\X64\setup.exe')).VersionInfo.FileVersion.split('.')[2]
             }
             #Wait for copying files finished
             Start-Sleep 600
         }
         #Get if there are any other updates need to be installed
-       ;  $updatepack = getupdate 
+$updatepack = getupdate
         if($updatepack -ne "" )
         {
-            " [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Found another update package : " + $updatepack.Name | Out-File -Append $logpath
+            " [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Found another update package : " + $updatepack.Name | Out-File -Append $logpath
         }
     }
     if($updatepack.State -eq 196607 -or $updatepack.State -eq 262143 )
@@ -452,41 +368,34 @@ while($updatepack -ne "" )
         }
     }
 }
-
 if($upgradingfailed -eq $true)
 {
-    (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Upgrade " + $updatepack.Name + " failed" ) | Out-File -Append $logpath
+    (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Upgrade " + $updatepack.Name + " failed" ) | Out-File -Append $logpath
     if($($updatepack.Name).ToLower().Contains(" hotfix" ))
     {
-        (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] This is a hotfix, skip it and continue..." ) | Out-File -Append $logpath
-        $WEConfiguration.UpgradeSCCM.Status = 'CompletedWithHotfixInstallFailed'
+        (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] This is a hotfix, skip it and continue..." ) | Out-File -Append $logpath
+        $Configuration.UpgradeSCCM.Status = 'CompletedWithHotfixInstallFailed'
     }
     else
     {
-        $WEConfiguration.UpgradeSCCM.Status = 'Error'
-        $WEConfiguration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-        $WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
+        $Configuration.UpgradeSCCM.Status = 'Error'
+        $Configuration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+        $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
         throw
     }
 }
 else
 {
-    $WEConfiguration.UpgradeSCCM.Status = 'Completed'
+    $Configuration.UpgradeSCCM.Status = 'Completed'
 }
-
 if($downloadretrycount -ge 2)
 {
-    (" [$(Get-Date -format " MM/dd/yyyy HH:mm:ss" )] Upgrade " + $updatepack.Name + " failed to start downloading" ) | Out-File -Append $logpath
-    $WEConfiguration.UpgradeSCCM.Status = 'CompletedWithDownloadFailed'
-    $WEConfiguration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-    $WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
+    (" [$(Get-Date -format "MM/dd/yyyy HH:mm:ss" )] Upgrade " + $updatepack.Name + " failed to start downloading" ) | Out-File -Append $logpath
+    $Configuration.UpgradeSCCM.Status = 'CompletedWithDownloadFailed'
+    $Configuration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+    $Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
     throw
 }
+$Configuration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
+$Configuration | ConvertTo-Json | Out-File -FilePath $ConfigurationFile -Force
 
-$WEConfiguration.UpgradeSCCM.EndTime = Get-Date -format " yyyy-MM-dd HH:mm:ss"
-$WEConfiguration | ConvertTo-Json | Out-File -FilePath $WEConfigurationFile -Force
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion

@@ -1,116 +1,59 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Appservice Config Viewer
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Appservice Config Viewer
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [string]$WEAppName
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
+    [string]$AppName
 )
-
-#region Functions
-
-Write-WELog " Retrieving configuration for App Service: $WEAppName" " INFO"
-; 
-$WEWebApp = Get-AzWebApp -ResourceGroupName $WEResourceGroupName -Name $WEAppName
-
-Write-WELog " `nApp Service Configuration:" " INFO"
-Write-WELog "  Name: $($WEWebApp.Name)" " INFO"
-Write-WELog "  State: $($WEWebApp.State)" " INFO"
-Write-WELog "  Default Hostname: $($WEWebApp.DefaultHostName)" " INFO"
-Write-WELog "  Runtime Stack: $($WEWebApp.SiteConfig.LinuxFxVersion)" " INFO"
-Write-WELog "  .NET Version: $($WEWebApp.SiteConfig.NetFrameworkVersion)" " INFO"
-Write-WELog "  PHP Version: $($WEWebApp.SiteConfig.PhpVersion)" " INFO"
-Write-WELog "  HTTPS Only: $($WEWebApp.HttpsOnly)" " INFO"
-
-if ($WEWebApp.SiteConfig.AppSettings) {
-    Write-WELog " `nApplication Settings Count: $($WEWebApp.SiteConfig.AppSettings.Count)" " INFO"
+Write-Host "Retrieving configuration for App Service: $AppName"
+$WebApp = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName
+Write-Host " `nApp Service Configuration:"
+Write-Host "Name: $($WebApp.Name)"
+Write-Host "State: $($WebApp.State)"
+Write-Host "Default Hostname: $($WebApp.DefaultHostName)"
+Write-Host "Runtime Stack: $($WebApp.SiteConfig.LinuxFxVersion)"
+Write-Host "  .NET Version: $($WebApp.SiteConfig.NetFrameworkVersion)"
+Write-Host "PHP Version: $($WebApp.SiteConfig.PhpVersion)"
+Write-Host "HTTPS Only: $($WebApp.HttpsOnly)"
+if ($WebApp.SiteConfig.AppSettings) {
+    Write-Host " `nApplication Settings Count: $($WebApp.SiteConfig.AppSettings.Count)"
 }
-
-
-
-
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

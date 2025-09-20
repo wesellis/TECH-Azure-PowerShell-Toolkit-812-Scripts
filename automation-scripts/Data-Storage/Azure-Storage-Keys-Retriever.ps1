@@ -1,42 +1,22 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
-    Azure automation script
+    Manage storage
 
 .DESCRIPTION
-    Professional PowerShell script for Azure automation
-
-.NOTES
-    Author: Wes Ellis (wes@wesellis.com)
-    Version: 1.0.0
-    LastModified: 2025-09-19
-#>
+    Manage storage
+    Author: Wes Ellis (wes@wesellis.com)#>
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$ResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$StorageAccountName
 )
-
-#region Functions
-
-Write-Information "Retrieving access keys for Storage Account: $StorageAccountName"
-
+Write-Host "Retrieving access keys for Storage Account: $StorageAccountName"
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
+Write-Host "`nStorage Account Keys:"
+Write-Host "Primary Key: $($Keys[0].Value)"
+Write-Host "Secondary Key: $($Keys[1].Value)"
+Write-Host "`nConnection Strings:"
+Write-Host "Primary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[0].Value);EndpointSuffix=core.windows.net"
+Write-Host "Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[1].Value);EndpointSuffix=core.windows.net"
 
-Write-Information "`nStorage Account Keys:"
-Write-Information "  Primary Key: $($Keys[0].Value)"
-Write-Information "  Secondary Key: $($Keys[1].Value)"
-
-Write-Information "`nConnection Strings:"
-Write-Information "  Primary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[0].Value);EndpointSuffix=core.windows.net"
-Write-Information "  Secondary: DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$($Keys[1].Value);EndpointSuffix=core.windows.net"
-
-
-#endregion

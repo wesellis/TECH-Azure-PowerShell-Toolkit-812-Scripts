@@ -1,168 +1,93 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Staticwebapp Creator
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Staticwebapp Creator
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
     # Main script execution
-) { " Continue" } else { " SilentlyContinue" }
-
-
-
+) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]; 
-$ErrorActionPreference = " Stop"
+[CmdletBinding()];
 param(
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
+    [string]$Name,
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$Location,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEName,
-    
-    [Parameter(Mandatory=$true)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    
-    [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WERepositoryUrl,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEBranch = " main" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEAppLocation = " /" ,
-    
-    [Parameter(Mandatory=$false)]
-    [string]$WEOutputLocation = " dist"
+    [string]$RepositoryUrl,
+    [Parameter()]
+    [string]$Branch = " main" ,
+    [Parameter()]
+    [string]$AppLocation = " /" ,
+    [Parameter()]
+    [string]$OutputLocation = " dist"
 )
-
-#region Functions
-
-Write-WELog " Creating Static Web App: $WEName" " INFO"
-
-; 
+Write-Host "Creating Static Web App: $Name"
 $params = @{
     ErrorAction = "Stop"
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WEName
-    Location = $WELocation
+    ResourceGroupName = $ResourceGroupName
+    Name = $Name
+    Location = $Location
 }
-$WEStaticWebApp @params
-
-Write-WELog "  Static Web App created successfully:" " INFO"
-Write-WELog "  Name: $($WEStaticWebApp.Name)" " INFO"
-Write-WELog "  Location: $($WEStaticWebApp.Location)" " INFO"
-Write-WELog "  Default Hostname: $($WEStaticWebApp.DefaultHostname)" " INFO"
-Write-WELog "  Resource ID: $($WEStaticWebApp.Id)" " INFO"
-
-if ($WERepositoryUrl) {
-    Write-WELog "  Repository: $WERepositoryUrl" " INFO"
-    Write-WELog "  Branch: $WEBranch" " INFO"
-    Write-WELog "  App Location: $WEAppLocation" " INFO"
-    Write-WELog "  Output Location: $WEOutputLocation" " INFO"
+$StaticWebApp @params
+Write-Host "Static Web App created successfully:"
+Write-Host "Name: $($StaticWebApp.Name)"
+Write-Host "Location: $($StaticWebApp.Location)"
+Write-Host "Default Hostname: $($StaticWebApp.DefaultHostname)"
+Write-Host "Resource ID: $($StaticWebApp.Id)"
+if ($RepositoryUrl) {
+    Write-Host "Repository: $RepositoryUrl"
+    Write-Host "Branch: $Branch"
+    Write-Host "App Location: $AppLocation"
+    Write-Host "Output Location: $OutputLocation"
 }
-
-Write-WELog " `nStatic Web App Features:" " INFO"
-Write-WELog " • Global CDN distribution" " INFO"
-Write-WELog " • Automatic HTTPS" " INFO"
-Write-WELog " • Custom domains" " INFO"
-Write-WELog " • Staging environments" " INFO"
-Write-WELog " • GitHub/Azure DevOps integration" " INFO"
-Write-WELog " • Built-in authentication" " INFO"
-Write-WELog " • Serverless API support" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Connect to Git repository" " INFO"
-Write-WELog " 2. Configure build and deployment" " INFO"
-Write-WELog " 3. Set up custom domain" " INFO"
-Write-WELog " 4. Configure authentication providers" " INFO"
-Write-WELog " 5. Add API functions if needed" " INFO"
-
-Write-WELog " `nAccess your app at: https://$($WEStaticWebApp.DefaultHostname)" " INFO"
-
-
-
-
+Write-Host " `nStatic Web App Features:"
+Write-Host "Global CDN distribution"
+Write-Host "Automatic HTTPS"
+Write-Host "Custom domains"
+Write-Host "Staging environments"
+Write-Host "GitHub/Azure DevOps integration"
+Write-Host "Built-in authentication"
+Write-Host "Serverless API support"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Connect to Git repository"
+Write-Host " 2. Configure build and deployment"
+Write-Host " 3. Set up custom domain"
+Write-Host " 4. Configure authentication providers"
+Write-Host " 5. Add API functions if needed"
+Write-Host " `nAccess your app at: https://$($StaticWebApp.DefaultHostname)"
 } catch {
-    Write-Error " Script execution failed: $($_.Exception.Message)"
+    Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
 
-
-#endregion

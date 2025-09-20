@@ -1,168 +1,101 @@
-#Requires -Version 7.0
-#Requires -Module Az.Resources
-
 <#
-#endregion
-
-#region Main-Execution
 .SYNOPSIS
     Azure Eventgrid Topic Provisioning Tool
 
 .DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
-    Wes Ellis (wes@wesellis.com)
-
-.VERSION
-    1.0
-
-.NOTES
-    Requires appropriate permissions and modules
+    Azure automation
 #>
-
-<#
-.SYNOPSIS
-    We Enhanced Azure Eventgrid Topic Provisioning Tool
-
-.DESCRIPTION
-    Professional PowerShell script for enterprise automation.
-    Optimized for performance, reliability, and error handling.
-
-.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-.VERSION
     1.0
-
-.NOTES
     Requires appropriate permissions and modules
-
-
-$WEErrorActionPreference = "Stop"
-$WEVerbosePreference = if ($WEPSBoundParameters.ContainsKey('Verbose')) { " Continue" } else { " SilentlyContinue" }
-
-
-
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
-function Write-WELog {
+function Write-Host {
     [CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-        [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+        [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
-        [ValidateSet(" INFO" , " WARN" , " ERROR" , " SUCCESS" )]
-        [string]$Level = " INFO"
+        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [string]$Level = "INFO"
     )
-    
-   ;  $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-   ;  $colorMap = @{
-        " INFO" = " Cyan" ; " WARN" = " Yellow" ; " ERROR" = " Red" ; " SUCCESS" = " Green"
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colorMap = @{
+        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Information $logEntry -ForegroundColor $colorMap[$Level]
+    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-
-[CmdletBinding()]
-$ErrorActionPreference = " Stop"
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
+    [string]$ResourceGroupName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$WEResourceGroupName,
-    [Parameter(Mandatory=$false)]
+    [string]$TopicName,
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WETopicName,
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string]$WELocation,
-    [string]$WEInputSchema = " EventGridSchema" ,
-    [hashtable]$WETags = @{}
+    [string]$Location,
+    [string]$InputSchema = "EventGridSchema" ,
+    [hashtable]$Tags = @{}
 )
-
-#region Functions
-
-Write-WELog " Provisioning Event Grid Topic: $WETopicName" " INFO"
-Write-WELog " Resource Group: $WEResourceGroupName" " INFO"
-Write-WELog " Location: $WELocation" " INFO"
-Write-WELog " Input Schema: $WEInputSchema" " INFO"
-
-; 
+Write-Host "Provisioning Event Grid Topic: $TopicName"
+Write-Host "Resource Group: $ResourceGroupName"
+Write-Host "Location: $Location"
+Write-Host "Input Schema: $InputSchema"
 $params = @{
     ErrorAction = "Stop"
-    InputSchema = $WEInputSchema
-    ResourceGroupName = $WEResourceGroupName
-    Name = $WETopicName
-    Location = $WELocation
+    InputSchema = $InputSchema
+    ResourceGroupName = $ResourceGroupName
+    Name = $TopicName
+    Location = $Location
 }
-$WEEventGridTopic @params
-
-if ($WETags.Count -gt 0) {
-    Write-WELog " `nApplying tags:" " INFO"
-    foreach ($WETag in $WETags.GetEnumerator()) {
-        Write-WELog "  $($WETag.Key): $($WETag.Value)" " INFO"
+$EventGridTopic @params
+if ($Tags.Count -gt 0) {
+    Write-Host " `nApplying tags:"
+    foreach ($Tag in $Tags.GetEnumerator()) {
+        Write-Host "  $($Tag.Key): $($Tag.Value)"
     }
     # Apply tags (this would require Set-AzEventGridTopic -ErrorAction Stop in actual implementation)
 }
-
-Write-WELog " `nEvent Grid Topic $WETopicName provisioned successfully" " INFO"
-Write-WELog " Topic Endpoint: $($WEEventGridTopic.Endpoint)" " INFO"
-Write-WELog " Provisioning State: $($WEEventGridTopic.ProvisioningState)" " INFO"
-
-
+Write-Host " `nEvent Grid Topic $TopicName provisioned successfully"
+Write-Host "Topic Endpoint: $($EventGridTopic.Endpoint)"
+Write-Host "Provisioning State: $($EventGridTopic.ProvisioningState)"
 try {
-   ;  $WEKeys = Get-AzEventGridTopicKey -ResourceGroupName $WEResourceGroupName -Name $WETopicName
-    Write-WELog " `nAccess Keys:" " INFO"
-    Write-WELog "  Key 1: $($WEKeys.Key1.Substring(0,8))... (use for authentication)" " INFO"
-    Write-WELog "  Key 2: $($WEKeys.Key2.Substring(0,8))... (backup key)" " INFO"
+$Keys = Get-AzEventGridTopicKey -ResourceGroupName $ResourceGroupName -Name $TopicName
+    Write-Host " `nAccess Keys:"
+    Write-Host "Key 1: $($Keys.Key1.Substring(0,8))... (use for authentication)"
+    Write-Host "Key 2: $($Keys.Key2.Substring(0,8))... (backup key)"
 } catch {
-    Write-WELog " `nAccess Keys: Available via Get-AzEventGridTopicKey -ErrorAction Stop cmdlet" " INFO"
+    Write-Host " `nAccess Keys: Available via Get-AzEventGridTopicKey -ErrorAction Stop cmdlet"
 }
-
-Write-WELog " `nEvent Publishing:" " INFO"
-Write-WELog "  Endpoint: $($WEEventGridTopic.Endpoint)" " INFO"
-Write-WELog "  Headers Required:" " INFO"
-Write-WELog "    aeg-sas-key: [access key]" " INFO"
-Write-WELog "    Content-Type: application/json" " INFO"
-
-Write-WELog " `nNext Steps:" " INFO"
-Write-WELog " 1. Create event subscriptions for this topic" " INFO"
-Write-WELog " 2. Configure event handlers (Azure Functions, Logic Apps, etc.)" " INFO"
-Write-WELog " 3. Start publishing events to the topic endpoint" " INFO"
-Write-WELog " 4. Monitor event delivery through Azure Portal" " INFO"
-
-Write-WELog " `nSample Event Format (EventGridSchema):" " INFO"
+Write-Host " `nEvent Publishing:"
+Write-Host "Endpoint: $($EventGridTopic.Endpoint)"
+Write-Host "Headers Required:"
+Write-Host "    aeg-sas-key: [access key]"
+Write-Host "    Content-Type: application/json"
+Write-Host " `nNext Steps:"
+Write-Host " 1. Create event subscriptions for this topic"
+Write-Host " 2. Configure event handlers (Azure Functions, Logic Apps, etc.)"
+Write-Host " 3. Start publishing events to the topic endpoint"
+Write-Host " 4. Monitor event delivery through Azure Portal"
+Write-Host " `nSample Event Format (EventGridSchema):"
 Write-Information @"
 [
   {
     " id" : " unique-id" ,
-    " eventType" : " Custom.Event.Type" ,
+    " eventType" : "Custom.Event.Type" ,
     " subject" : " /myapp/vehicles/motorcycles" ,
     " eventTime" : " $(Get-Date -Format " yyyy-MM-ddTHH:mm:ssZ" )" ,
     " data" : {
-      " make" : " Ducati" ,
-      " model" : " Monster"
+      " make" : "Ducati" ,
+      " model" : "Monster"
     },
     " dataVersion" : " 1.0"
   }
 ]
 " @
+Write-Host " `nEvent Grid Topic provisioning completed at $(Get-Date)"
 
-Write-WELog " `nEvent Grid Topic provisioning completed at $(Get-Date)" " INFO"
-
-
-
-# Wesley Ellis Enterprise PowerShell Toolkit
-# Enhanced automation solutions: wesellis.com
-
-#endregion
