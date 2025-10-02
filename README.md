@@ -2,9 +2,11 @@
 
 A collection of PowerShell scripts for Azure infrastructure management and automation.
 
-[![PowerShell](https://img.shields.io/badge/PowerShell-7.0%2B-blue.svg)](https://github.com/PowerShell/PowerShell)
-[![Azure](https://img.shields.io/badge/Azure-Ready-0078D4.svg)](https://azure.microsoft.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![PowerShell](https://img.shields.io/badge/PowerShell-7.0+-5391FE?style=flat-square&logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
+[![Azure](https://img.shields.io/badge/Azure-Ready-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts?style=flat-square)](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts?style=flat-square)](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/commits)
 
 ## Overview
 
