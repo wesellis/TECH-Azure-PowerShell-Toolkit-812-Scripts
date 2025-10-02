@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter()]
     [string]$ResourceGroupName,
@@ -35,6 +37,4 @@ foreach ($Log in $RecentLogs) {
     Write-Information -Object "Status: $($Log.Status.Value)"
     Write-Information -Object "Resource: $($Log.ResourceId.Split('/')[-1])"
     Write-Information -Object "Caller: $($Log.Caller)"
-    Write-Information -Object ("-" * 40)
-}
-
+    Write-Information -Object ("-" * 40)`n}

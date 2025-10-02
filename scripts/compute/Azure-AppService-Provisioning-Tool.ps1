@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage App Services
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -18,13 +20,12 @@
     [bool]$HttpsOnly = $true,
     [hashtable]$AppSettings = @{}
 )
-Write-Host "Provisioning App Service: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "App Service Plan: $PlanName"
-Write-Host "Location: $Location"
-Write-Host "Runtime: $Runtime $RuntimeVersion"
-Write-Host "HTTPS Only: $HttpsOnly"
-# Create the App Service
+Write-Output "Provisioning App Service: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "App Service Plan: $PlanName"
+Write-Output "Location: $Location"
+Write-Output "Runtime: $Runtime $RuntimeVersion"
+Write-Output "HTTPS Only: $HttpsOnly"
 $params = @{
     ErrorAction = "Stop"
     Location = $Location
@@ -33,26 +34,25 @@ $params = @{
     AppServicePlan = $PlanName
 }
 $WebApp @params
-Write-Host "App Service created: $($WebApp.DefaultHostName)"
-# Configure runtime stack
+Write-Output "App Service created: $($WebApp.DefaultHostName)"
 if ($Runtime -eq "DOTNET") {
     Set-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName -NetFrameworkVersion "v$RuntimeVersion"
 }
-# Enable HTTPS only
 if ($HttpsOnly) {
     Set-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName -HttpsOnly $true
-    Write-Host "HTTPS-only enforcement enabled"
+    Write-Output "HTTPS-only enforcement enabled"
 }
-# Add app settings if provided
 if ($AppSettings.Count -gt 0) {
-    Write-Host "`nConfiguring App Settings:"
+    Write-Output "`nConfiguring App Settings:"
     foreach ($Setting in $AppSettings.GetEnumerator()) {
-        Write-Host "  $($Setting.Key): $($Setting.Value)"
+        Write-Output "  $($Setting.Key): $($Setting.Value)"
     }
     Set-AzWebAppSlot -ResourceGroupName $ResourceGroupName -Name $AppName -AppSettings $AppSettings
 }
-Write-Host "`nApp Service $AppName provisioned successfully"
-Write-Host "URL: https://$($WebApp.DefaultHostName)"
-Write-Host "State: $($WebApp.State)"
-Write-Host "`nApp Service provisioning completed at $(Get-Date)"
+Write-Output "`nApp Service $AppName provisioned successfully"
+Write-Output "URL: https://$($WebApp.DefaultHostName)"
+Write-Output "State: $($WebApp.State)"
+Write-Output "`nApp Service provisioning completed at $(Get-Date)"
+
+
 

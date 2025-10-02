@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -15,7 +15,7 @@
 
     CRITICAL SECURITY WARNING:
     Windows 7 reached end-of-life on January 14, 2020, and no longer receives security updates.
-    This script is provided for legacy testing purposes only. 
+    This script is provided for legacy testing purposes only.
     Microsoft has discontinued Windows 7 VM images in Azure Marketplace.
 
 .PARAMETER CustomerName
@@ -58,84 +58,76 @@
     This script will likely fail because Windows 7 images are no longer available in Azure Marketplace.
     Consider using Windows 10 or Windows 11 for modern testing scenarios.
     If Windows 7 is absolutely required, consider using custom images or on-premises virtualization.
-#>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$CustomerName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$LocationName,
-    
+
     [Parameter()]
     [string]$VMSize = "Standard_B2MS",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMAdminUser,
-    
+
     [Parameter(Mandatory = $true)]
     [SecureString]$VMAdminPassword,
-    
+
     [Parameter()]
     [ValidatePattern('^\d{2}:\d{2}$')]
     [string]$AutoShutdownTime = "23:59",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$NotificationEmail,
-    
+
     [Parameter()]
     [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$')]
     [string]$VnetAddressPrefix = "10.0.0.0/16",
-    
+
     [Parameter()]
     [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$')]
     [string]$SubnetAddressPrefix = "10.0.0.0/24",
-    
+
     [Parameter()]
     [ValidateSet("Dev", "Test", "Staging", "Production")]
     [string]$Environment = "Production"
 )
+    [string]$ErrorActionPreference = "Stop"
 
-# Set error handling preference
-$ErrorActionPreference = "Stop"
-
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colorMap = @{
+    $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
-    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
 
 try {
-    # Display critical security warnings
-    Write-Host ""
+    Write-Output ""
     Write-LogMessage "==========================================" -Level "ERROR"
     Write-LogMessage "CRITICAL SECURITY WARNING" -Level "ERROR"
     Write-LogMessage "==========================================" -Level "ERROR"
@@ -144,28 +136,23 @@ try {
     Write-LogMessage "Windows 7 images are NO LONGER AVAILABLE in Azure" -Level "ERROR"
     Write-LogMessage "This script will likely FAIL due to discontinued images" -Level "ERROR"
     Write-LogMessage "==========================================" -Level "ERROR"
-    Write-Host ""
-    
+    Write-Output ""
+
     Write-LogMessage "Starting Windows 7 VM creation attempt..." -Level "WARN"
     Write-LogMessage "Customer: $CustomerName" -Level "INFO"
     Write-LogMessage "VM Name: $VMName" -Level "INFO"
     Write-LogMessage "Location: $LocationName" -Level "INFO"
     Write-LogMessage "VM Size: $VMSize" -Level "INFO"
     Write-LogMessage "Environment: $Environment" -Level "INFO"
-
-    # Validate Azure context
     $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
-    
-    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
 
-    # Define variables
-    $ResourceGroupName = "${CustomerName}_${VMName}_RG"
-    $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
-    
-    # Define tags with security warnings
+    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
+    [string]$ResourceGroupName = "${CustomerName}_${VMName}_RG"
+    [string]$datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
+
     [hashtable]$Tags = @{
         "Autoshutdown"      = 'ON'
         "Createdby"         = $context.Account.Id
@@ -187,44 +174,38 @@ try {
         "ImageAvailability" = "DISCONTINUED in Azure"
     }
 
-    # Create Resource Group
     Write-LogMessage "Creating resource group: $ResourceGroupName" -Level "INFO"
-    $newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
-    $resourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
+    [string]$ResourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
     Write-LogMessage "Resource group created successfully" -Level "SUCCESS"
+    [string]$ComputerName = $VMName
+    [string]$OSDiskCaching = "ReadWrite"
+    [string]$OSCreateOption = "FromImage"
+    [string]$GUID = [guid]::NewGuid()
+    [string]$OSDiskName = "${VMName}_OSDisk_1_$GUID"
+    [string]$DNSNameLabel = "${VMName}dns".ToLower()
+    [string]$NetworkName = "${VMName}_group-vnet"
+    [string]$NICPrefix = 'NIC1'
+    [string]$NICName = "${VMName}_${NICPrefix}".ToLower()
+    [string]$IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
+    [string]$PublicIPAddressName = "${VMName}-ip"
+    [string]$SubnetName = "${VMName}-subnet"
+    [string]$NSGName = "${VMName}-nsg"
+    [string]$ASGName = "${VMName}_ASG1"
 
-    # Define network configuration variables
-    $ComputerName = $VMName
-    $OSDiskCaching = "ReadWrite"
-    $OSCreateOption = "FromImage"
-    $GUID = [guid]::NewGuid()
-    $OSDiskName = "${VMName}_OSDisk_1_$GUID"
-    $DNSNameLabel = "${VMName}dns".ToLower()
-    $NetworkName = "${VMName}_group-vnet"
-    $NICPrefix = 'NIC1'
-    $NICName = "${VMName}_${NICPrefix}".ToLower()
-    $IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
-    $PublicIPAddressName = "${VMName}-ip"
-    $SubnetName = "${VMName}-subnet"
-    $NSGName = "${VMName}-nsg"
-    $ASGName = "${VMName}_ASG1"
-
-    # Create Virtual Network and Subnet
     Write-LogMessage "Creating virtual network: $NetworkName" -Level "INFO"
     Write-LogMessage "VNet Address Prefix: $VnetAddressPrefix" -Level "INFO"
     Write-LogMessage "Subnet Address Prefix: $SubnetAddressPrefix" -Level "INFO"
-    
-    $newAzVirtualNetworkSubnetConfigSplat = @{
+    $NewAzVirtualNetworkSubnetConfigSplat = @{
         Name          = $SubnetName
         AddressPrefix = $SubnetAddressPrefix
     }
-    $SingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
-
-    $newAzVirtualNetworkSplat = @{
+    [string]$SingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+    $NewAzVirtualNetworkSplat = @{
         Name              = $NetworkName
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
@@ -232,12 +213,11 @@ try {
         Subnet            = $SingleSubnet
         Tag               = $Tags
     }
-    $Vnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+    [string]$Vnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
     Write-LogMessage "Virtual network created successfully" -Level "SUCCESS"
 
-    # Create Public IP
     Write-LogMessage "Creating static public IP address: $PublicIPAddressName" -Level "INFO"
-    $newAzPublicIpAddressSplat = @{
+    $NewAzPublicIpAddressSplat = @{
         Name              = $PublicIPAddressName
         DomainNameLabel   = $DNSNameLabel
         ResourceGroupName = $ResourceGroupName
@@ -245,49 +225,43 @@ try {
         AllocationMethod  = 'Static'
         Tag               = $Tags
     }
-    $PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+    [string]$PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
     Write-LogMessage "Public IP created successfully" -Level "SUCCESS"
 
-    # Get current public IP for NSG rule
     Write-LogMessage "Retrieving current public IP for security rules..." -Level "INFO"
     try {
-        $SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
-        $SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
+    [string]$SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
+    [string]$SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
         Write-LogMessage "Current public IP: $SourceAddressPrefix" -Level "INFO"
     }
     catch {
         Write-LogMessage "Could not retrieve public IP, using 0.0.0.0/0 (less secure)" -Level "WARN"
-        $SourceAddressPrefixCIDR = "0.0.0.0/0"
+    [string]$SourceAddressPrefixCIDR = "0.0.0.0/0"
     }
 
-    # Create Application Security Group
     Write-LogMessage "Creating application security group: $ASGName" -Level "INFO"
-    $newAzApplicationSecurityGroupSplat = @{
+    $NewAzApplicationSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $ASGName
         Location          = $LocationName
         Tag               = $Tags
     }
-    $ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+    [string]$ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
     Write-LogMessage "Application security group created successfully" -Level "SUCCESS"
-
-    # Get subnet configuration
     $Subnet = Get-AzVirtualNetworkSubnetConfig -Name $SubnetName -VirtualNetwork $Vnet
 
-    # Create IP Configuration
     Write-LogMessage "Creating network interface IP configuration" -Level "INFO"
-    $newAzNetworkInterfaceIpConfigSplat = @{
+    $NewAzNetworkInterfaceIpConfigSplat = @{
         Name                     = $IPConfigName
         Subnet                   = $Subnet
         PublicIpAddress          = $PIP
         ApplicationSecurityGroup = $ASG
         Primary                  = $true
     }
-    $IPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+    [string]$IPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
 
-    # Create Network Security Group Rule
     Write-LogMessage "Creating network security group rule for RDP access" -Level "INFO"
-    $newAzNetworkSecurityRuleConfigSplat = @{
+    $NewAzNetworkSecurityRuleConfigSplat = @{
         Name                                = 'RDP-rule'
         Description                         = 'Allow RDP'
         Access                              = 'Allow'
@@ -299,23 +273,21 @@ try {
         DestinationPortRange                = '3389'
         DestinationApplicationSecurityGroup = $ASG
     }
-    $rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+    [string]$rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
 
-    # Create Network Security Group
     Write-LogMessage "Creating network security group: $NSGName" -Level "INFO"
-    $newAzNetworkSecurityGroupSplat = @{
+    $NewAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         Name              = $NSGName
         SecurityRules     = $rule1
         Tag               = $Tags
     }
-    $NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+    [string]$NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
     Write-LogMessage "Network security group created successfully" -Level "SUCCESS"
 
-    # Create Network Interface
     Write-LogMessage "Creating network interface: $NICName" -Level "INFO"
-    $newAzNetworkInterfaceSplat = @{
+    $NewAzNetworkInterfaceSplat = @{
         Name                   = $NICName
         ResourceGroupName      = $ResourceGroupName
         Location               = $LocationName
@@ -323,49 +295,39 @@ try {
         IpConfiguration        = $IPConfig1
         Tag                    = $Tags
     }
-    $NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+    [string]$NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
     Write-LogMessage "Network interface created successfully" -Level "SUCCESS"
+    [string]$Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
 
-    # Create credential object
-    $Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
-
-    # Create VM Configuration
     Write-LogMessage "Creating VM configuration" -Level "INFO"
-    $newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName = $VMName
         VMSize = $VMSize
         Tags   = $Tags
     }
-    $VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
-
-    # Set VM Operating System
-    $setAzVMOperatingSystemSplat = @{
+    [string]$VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+    $SetAzVMOperatingSystemSplat = @{
         VM           = $VirtualMachine
         Windows      = $true
         ComputerName = $ComputerName
         Credential   = $Credential
     }
-    $VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    [string]$VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    [string]$VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
 
-    # Add Network Interface to VM
-    $VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
-
-    # Attempt to set VM Source Image (this will likely fail)
     Write-LogMessage "Attempting to configure VM source image (Windows 7 Enterprise)" -Level "WARN"
     Write-LogMessage "WARNING: This will likely fail - Windows 7 images discontinued" -Level "ERROR"
-    
+
     try {
-        # Check if Windows 7 images are available
         Write-LogMessage "Checking for Windows 7 image availability..." -Level "INFO"
-        
-        $setAzVMSourceImageSplat = @{
+    $SetAzVMSourceImageSplat = @{
             VM            = $VirtualMachine
             PublisherName = "microsoftwindowsdesktop"
             Offer         = "windows-7"
             Skus          = "win7-enterprise"
             Version       = "latest"
         }
-        $VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+    [string]$VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
         Write-LogMessage "VM source image configured (unexpected success!)" -Level "SUCCESS"
     }
     catch {
@@ -377,34 +339,30 @@ try {
         Write-LogMessage "2. Use Windows 11 for modern testing" -Level "WARN"
         Write-LogMessage "3. Create custom Windows 7 image (complex)" -Level "WARN"
         Write-LogMessage "4. Use on-premises virtualization for legacy testing" -Level "WARN"
-        
+
         throw "Windows 7 VM images are not available in Azure Marketplace. Consider using Windows 10 or 11 instead."
     }
-
-    # Set VM OS Disk
-    $setAzVMOSDiskSplat = @{
+    $SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
         DiskSizeInGB = 128
     }
-    $VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+    [string]$VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
 
-    # Create the VM (this will likely not be reached due to image failure)
     Write-LogMessage "Creating virtual machine: $VMName (this may take 5-10 minutes)" -Level "INFO"
-    $newAzVMSplat = @{
+    $NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
         Tag               = $Tags
     }
-    $vmResult = New-AzVM @newAzVMSplat
+    [string]$VmResult = New-AzVM @newAzVMSplat
     Write-LogMessage "Virtual machine created successfully!" -Level "SUCCESS"
 
-    # Configure Auto-Shutdown
     Write-LogMessage "Configuring auto-shutdown for $AutoShutdownTime" -Level "INFO"
-    $setAzVMAutoShutdownSplat = @{
+    $SetAzVMAutoShutdownSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $VMName
         Enable            = $true
@@ -415,8 +373,7 @@ try {
     Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
     Write-LogMessage "Auto-shutdown configured successfully" -Level "SUCCESS"
 
-    # Display connection information (unlikely to be reached)
-    Write-Host ""
+    Write-Output ""
     Write-LogMessage "VM Creation Completed Successfully!" -Level "SUCCESS"
     Write-LogMessage "==================================" -Level "INFO"
     Write-LogMessage "VM Name: $VMName" -Level "INFO"
@@ -424,16 +381,15 @@ try {
     Write-LogMessage "Location: $LocationName" -Level "INFO"
     Write-LogMessage "Operating System: Windows 7 Enterprise (END-OF-LIFE)" -Level "ERROR"
     Write-LogMessage "Username: $VMAdminUser" -Level "INFO"
-    
-    $fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
+    [string]$fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
     Write-LogMessage "FQDN: $fqdn" -Level "INFO"
     Write-LogMessage "RDP Connection: mstsc /v:$fqdn" -Level "INFO"
-    
+
     Write-LogMessage "Virtual Network: $NetworkName" -Level "INFO"
     Write-LogMessage "Auto-shutdown: $AutoShutdownTime Central Standard Time" -Level "INFO"
     Write-LogMessage "Notification email: $NotificationEmail" -Level "INFO"
-    
-    Write-Host ""
+
+    Write-Output ""
     Write-LogMessage "CRITICAL SECURITY REMINDERS:" -Level "ERROR"
     Write-LogMessage "1. Windows 7 is END-OF-LIFE - NO security updates" -Level "ERROR"
     Write-LogMessage "2. Isolate this VM completely from internet access" -Level "ERROR"
@@ -442,23 +398,22 @@ try {
 
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
-    
+
     if ($_.Exception.Message -like "*Windows 7*" -or $_.Exception.Message -like "*image*" -or $_.Exception.Message -like "*not available*") {
-        Write-Host ""
+        Write-Output ""
         Write-LogMessage "EXPECTED FAILURE - Windows 7 Images Discontinued" -Level "WARN"
         Write-LogMessage "=============================================" -Level "WARN"
         Write-LogMessage "This failure is expected because:" -Level "WARN"
         Write-LogMessage "1. Windows 7 reached end-of-life in January 2020" -Level "WARN"
         Write-LogMessage "2. Microsoft discontinued Windows 7 VM images" -Level "WARN"
         Write-LogMessage "3. No security updates are available" -Level "WARN"
-        Write-Host ""
+        Write-Output ""
         Write-LogMessage "RECOMMENDED ALTERNATIVES:" -Level "INFO"
         Write-LogMessage "• Use Windows 10 for modern testing" -Level "INFO"
         Write-LogMessage "• Use Windows 11 for latest features" -Level "INFO"
         Write-LogMessage "• Use Windows Server 2019/2022 for server workloads" -Level "INFO"
         Write-LogMessage "• For legacy testing, consider on-premises virtualization" -Level "INFO"
     }
-    
+
     Write-Error $_.Exception.Message
-    throw
-}
+    throw`n}

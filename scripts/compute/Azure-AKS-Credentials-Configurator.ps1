@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Aks
 
 <#`n.SYNOPSIS
@@ -12,6 +12,8 @@
 #>
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -19,16 +21,17 @@
     [Parameter()]
     [switch]$Admin
 )
-Write-Host "Configuring kubectl credentials for AKS cluster: $ClusterName"
+Write-Output "Configuring kubectl credentials for AKS cluster: $ClusterName"
 if ($Admin) {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Admin -Force
-    Write-Host "Admin credentials configured for cluster: $ClusterName"
+    Write-Output "Admin credentials configured for cluster: $ClusterName"
 } else {
     Import-AzAksCredential -ResourceGroupName $ResourceGroupName -Name $ClusterName -Force
-    Write-Host "User credentials configured for cluster: $ClusterName"
+    Write-Output "User credentials configured for cluster: $ClusterName"
 }
-Write-Host "`nTesting connection..."
+Write-Output "`nTesting connection..."
 kubectl get nodes
-Write-Host "`nKubectl is now configured for cluster: $ClusterName"
+Write-Output "`nKubectl is now configured for cluster: $ClusterName"
+
 
 

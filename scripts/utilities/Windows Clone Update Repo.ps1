@@ -1,112 +1,132 @@
-#Requires -Version 7.0
-    Windows Clone Update Repo
+#Requires -Version 7.4
+<#
+.SYNOPSIS
+    Brief description of the Windows Clone Update Repo script functionality
+.DESCRIPTION
+    Detailed description of what the Windows Clone Update Repo script does and how it works.
+    This script provides [specific functionality] and supports [key features].
+
+    Key capabilities:
+    - [Capability 1]
+    - [Capability 2]
+    - [Capability 3]
+
+.PARAMETER true
+    Description of the true parameter and its expected values
+.EXAMPLE
+    .\Windows Clone Update Repo.ps1
+
+    Basic example showing how to run the script with default parameters.
+.EXAMPLE
+    .\Windows Clone Update Repo.ps1 -Parameter "Value"
+
+    Example showing script usage with specific parameter values.
+.INPUTS
+    System.String
+    Objects that can be piped to this script
+.OUTPUTS
+    System.Object
+    Objects that this script outputs to the pipeline
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Created: January 17, 2025
+    Version: 1.0.0
+
+    Requirements:
+    - PowerShell 7.0 or later
+    - [Additional requirements as needed]
+
+    Change Log:
+    1.0.0 - 2025-01-17 - Initial version
+.LINK
+    https://github.com/wesellis/scripts
+.LINK
+    about_Comment_Based_Help
+Windows Clone Update Repo
     Azure automation
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
     Allows cloning a new or updating an existing repo (important for updating a chained image).
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    # Url of the repository to clone/sync.
     [Parameter(Mandatory = $true)]
-    [string] $repoUrl,
+    [string] $RepoUrl,
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $true)]
     [String] $repository_TargetDirectory,
-    # The repository Source Control options are git (default) or gvfs
     [Parameter(Mandatory = $false)]
     [String] $repository_SourceControl,
     [Parameter(Mandatory = $false)]
     [bool] $repository_cloneIfNotExists = $false,
     [Parameter(Mandatory = $false)]
-    [string] $repoName,
-    # The commit id to fetch/check out for the repo. $commitId is ignored if $branchName is provided.
+    [string] $RepoName,
     [Parameter(Mandatory = $false)]
-    [string] $commitId = 'latest',
-    # When provided, this is the branch to clone/fetch. Otherwise the default branch is cloned/pulled.
+    [string] $CommitId = 'latest',
     [Parameter(Mandatory = $false)]
-    [string] $branchName,
+    [string] $BranchName,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalCloningParameters,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalFetchParameters,
     [Parameter(Mandatory = $false)]
-    [bool] $enableGitCommitGraph = $false,
-    # Optional comma separated list of folders for sparse checkout. When provided, only these folders will be set and sparse-checkout is used for the repo
+    [bool] $EnableGitCommitGraph = $false,
     [Parameter(Mandatory = $false)]
-    [string] $sparseCheckoutFolders,
-    # Optional MSI client ID which is required if the VM has multiple user-assigned managed identities. This will be used to access Azure DevOps.
+    [string] $SparseCheckoutFolders,
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
 enum SourceControl {
-    git = 0  # default
+    git = 0
     gvfs
 }
-$logfilepath = $null
-$script:varLogArray = New-Object -TypeName "PSCustomObject"
+    $logfilepath = $null
+    $script:varLogArray = New-Object -TypeName "PSCustomObject"
 Function ProcessRunner(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$command,
+    $command,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$arguments,
-    [string]$argumentsToLog = '',
-    [bool] $checkForSuccess = $true,
-    [bool] $waitForDependents = $true
+    $arguments,
+    $ArgumentsToLog = '',
+    [bool] $CheckForSuccess = $true,
+    [bool] $WaitForDependents = $true
 ) {
-    <#`n.DESCRIPTION
-  Run a process and validate that the process started and completed without any errors
-  .PARAMETER command
-  The command that will be run
-  .PARAMETER arguments
-  The arguments required to run the supplied command. Do not use in logging as the string may contains a secret.
-  .PARAMETER argumentsToLog
-  The arguments representation that is safe to log
-  .PARAMETER checkForSuccess
-  If $false then do not check whether the command succeeded
-  #>
-    if (!$argumentsToLog) {
-        $argumentsToLog = $arguments
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $arguments
     }
-    $errLog = [System.IO.Path]::GetTempFileName()
-    if ($waitForDependents) {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+    $ErrLog = [System.IO.Path]::GetTempFileName()
+    if ($WaitForDependents) {
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -Wait -PassThru -NoNewWindow
     }
     else {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -NoNewWindow
     }
-    # If $process variable is null, something is wrong
     if (!$process) {
-        Write-Error "ERROR command failed to start: $command $argumentsToLog"
+        Write-Error "ERROR command failed to start: $command $ArgumentsToLog"
         return;
     }
-    if ($waitForDependents) {
-        $ExitCode = $process.ExitCode
+    if ($WaitForDependents) {
+    $ExitCode = $process.ExitCode
     }
     else {
-        # This will wait for the process to exit as Start-Process above will not block for the process to exit
-        $process.WaitForExit()
-        # There is a defect where the $process.ExitCode is empty.
-        # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
-        # The below is the workaround for the defect
-        $process.HasExited  # This will calculate the exitCode
-        $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+    $process.WaitForExit()
+    $process.HasExited
+    $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     if ($ExitCode -ne 0) {
-        Write-Output "Error running: $command $argumentsToLog"
+        Write-Output "Error running: $command $ArgumentsToLog"
         Write-Output "Exit code: $ExitCode"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
-        # if logfilepath is set, write that out too if the process exited
+        Get-Content -Path $ErrLog
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
-        if ($checkForSuccess) {
+        if ($CheckForSuccess) {
             throw "Exit code from process was nonzero"
         }
         else {
@@ -116,397 +136,335 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
 }
     Gvfs clones the repository and checks out to the specified gitBranchName
 function GvfsCloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsRepoLocation,
-        [ValidateNotNullOrEmpty()] $gvfsLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsRepoLocation,
+        [ValidateNotNullOrEmpty()] $GvfsLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GvfsRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    $cmdArgs = $(" " + $gvfsRepoLocation + " `"" + $gvfsLocalRepoLocation + " `"" )
-    # Known Issue: gvfs clone does not work with -b <branch> option.
-    # So, first gvfs clone without -b <branch> option
-    # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
-    # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
-    $prevCredentialHelper = &$gitExeLocation config --system credential.helper
-    # Configure credential.helper using " git config"
-$GitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-$CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
-    $runBlock = {
-        # gvfs clone
-        ExecuteGvfsCmd -gvfsExeLocation $gvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $cmdArgs
+    $CmdArgs = $(" " + $GvfsRepoLocation + " `"" + $GvfsLocalRepoLocation + " `"" )
+    Write-Output $("Gvfs cloning the git repo..." )
+    $PrevCredentialHelper = &$GitExeLocation config --system credential.helper
+    $GitAccessToken = Get-GitAccessToken -MsiClientID $MsiClientId
+    $CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
+    $RunBlock = {
+        ExecuteGvfsCmd -gvfsExeLocation $GvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    # Unconfigure credential.helper using " git config"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $PrevCredentialHelper"
 }
 [OutputType([bool])]
  -ErrorAction Stop {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoUrl
     )
     return ($RepoUrl -Match '^https://[a-zA-Z][\w\-_]*\.visualstudio\.com/.*' -or $RepoUrl -Match '^https://dev\.azure\.com/.*')
 }
     Clones the repository and checks out to the specified CommitId
 function CloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [Parameter(Mandatory = $false)] $optionalGitCloneArgs,
-        [Parameter(Mandatory = $false)] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [Parameter(Mandatory = $false)] $OptionalGitCloneArgs,
+        [Parameter(Mandatory = $false)] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gitRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GitRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to clone from.
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    # Prep to start git.exe
-    # Add optional git clone parameters
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalGitCloneArgs))) {
-        $optionalArgs = $optionalGitCloneArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalGitCloneArgs))) {
+    $OptionalArgs = $OptionalGitCloneArgs
     }
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        $optionalArgs = " -b $gitBranchName " + $optionalArgs
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $OptionalArgs = " -b $GitBranchName " + $OptionalArgs
     }
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        # Clone the repo without checking out any files. Sparse checkout folders will be set after clone, and then checked out.
-        $optionalArgs = $optionalArgs + " --no-checkout"
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $OptionalArgs = $OptionalArgs + " --no-checkout"
     }
-    $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
-    Write-Host $("Cloning the git repo..." )
-    $runBlock = {
-        # Remove existing repo folder in case it was created by the previous clone attempt
-        if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+    $CmdArgs = $($OptionalArgs + " " + $GitRepoLocation + " `"" + $GitLocalRepoLocation + " `"" )
+    Write-Output $("Cloning the git repo..." )
+    $RunBlock = {
+        if (Test-Path $GitLocalRepoLocation) {
+            Remove-Item -ErrorAction Stop $GitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " clone" -authHeader $AuthorizationHeader -gitCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location -ErrorAction Stop $gitLocalRepoLocation
-    # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $sparseGitCmd = " set $formattedSparseCheckoutFolders"
-        # Set sparse-checkout folders for checkout, then check them out
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " sparse-checkout" -authHeader $authorizationHeader -gitCmdArgs $sparseGitCmd -argumentsToLog $sparseGitCmd
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    Write-Information Changing to repo location: $(" '$GitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $GitLocalRepoLocation
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $SparseGitCmd = " set $FormattedSparseCheckoutFolders"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " sparse-checkout" -authHeader $AuthorizationHeader -gitCmdArgs $SparseGitCmd -argumentsToLog $SparseGitCmd
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader
     }
 }
     Updates the local repository to the commit ID specified
 function UpdateGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $commitId,
-        [string] $optionalFetchArgs,
-        [string] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $CommitId,
+        [string] $OptionalFetchArgs,
+        [string] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq $gitRepoLocation.Length -gt 8) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.Length -gt 8) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to update
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    $baseRepoSparseCheckout = Invoke-Expression -Command '&$gitExeLocation config --get core.sparseCheckout'
-    if ([string]::IsNullOrEmpty($baseRepoSparseCheckout)) {
-        $baseRepoSparseCheckout = $false
+    $BaseRepoSparseCheckout = Invoke-Expression -Command '&$GitExeLocation config --get core.sparseCheckout'
+    if ([string]::IsNullOrEmpty($BaseRepoSparseCheckout)) {
+    $BaseRepoSparseCheckout = $false
     }
-    $repoSparseCheckout = $false
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $repoSparseCheckout = $true
+    $RepoSparseCheckout = $false
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $RepoSparseCheckout = $true
     }
-    if ($repoSparseCheckout -ne $baseRepoSparseCheckout) {
-        Write-Host "Base image sparse checkout configuration: $baseRepoSparseCheckout"
-        Write-Host "Image sparse checkout configuration: $repoSparseCheckout"
+    if ($RepoSparseCheckout -ne $BaseRepoSparseCheckout) {
+        Write-Output "Base image sparse checkout configuration: $BaseRepoSparseCheckout"
+        Write-Output "Image sparse checkout configuration: $RepoSparseCheckout"
         throw "Sparse checkout configuration misaligned with base image"
     }
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalFetchArgs))) {
-        $optionalArgs = $optionalFetchArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalFetchArgs))) {
+    $OptionalArgs = $OptionalFetchArgs
     }
-    # Explicitly specified branch takes precedence over commitId
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        # Check out a temporary branch to be able to delete the requested one in case it is currently checked out
-        $tempBranch = (New-Guid).Guid
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " -b $tempBranch"
-        # Delete local branch in case it already exists
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $gitBranchName" -checkForSuccess $false
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $($gitBranchName):$($gitBranchName) $optionalArgs"
-        # (Re)create the local branch
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " $gitBranchName"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $tempBranch"
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $TempBranch = (New-Guid).Guid
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " -b $TempBranch"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $GitBranchName" -checkForSuccess $false
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $($GitBranchName):$($GitBranchName) $OptionalArgs"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " $GitBranchName"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $TempBranch"
     }
-    elseif ($commitId -ne 'latest') {
-        Write-Host "Fetching commit $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $commitId $optionalArgs"
-        # Reset command may need to reach out to ADO when GIT LFS is used
-        Write-Host "Resetting branch to $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " reset" -authHeader $authorizationHeader -gitCmdArgs " $commitId --hard"
+    elseif ($CommitId -ne 'latest') {
+        Write-Output "Fetching commit $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $CommitId $OptionalArgs"
+        Write-Output "Resetting branch to $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " reset" -authHeader $AuthorizationHeader -gitCmdArgs " $CommitId --hard"
     }
     else {
-        Write-Host "Pulling the latest commit"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " pull" -authHeader $authorizationHeader -gitCmdArgs $optionalArgs
+        Write-Output "Pulling the latest commit"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " pull" -authHeader $AuthorizationHeader -gitCmdArgs $OptionalArgs
     }
-    $logExpression = '&$gitExeLocation log -1 --quiet --format=%H'
-    $updateCommitID = Invoke-Expression -Command $logExpression
-    Add-VarForLogging -varName 'CommitID' -varValue $updateCommitID
+    $LogExpression = '&$GitExeLocation log -1 --quiet --format=%H'
+    $UpdateCommitID = Invoke-Expression -Command $LogExpression
+    Add-VarForLogging -varName 'CommitID' -varValue $UpdateCommitID
 }
     Executes a git command with arguments
 function ExecuteGitCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitCmd,
-        [string] $gitCmdArgs,
-        [string] $authHeader = '',
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitCmd,
+        [string] $GitCmdArgs,
+        [string] $AuthHeader = '',
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gitCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GitCmdArgs
     }
-    Write-Host $("Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
-    ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
+    Write-Output $("Running: "" $GitExeLocation"" $GitCmd $ArgumentsToLog" )
+    $arguments = " $($AuthHeader)$GitCmd $GitCmdArgs"
+    ProcessRunner -command $GitExeLocation -arguments $arguments -argumentsToLog " $GitCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess
 }
     Executes a gvfs command with arguments
 function ExecuteGvfsCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gvfsCmd,
-        [string] $gvfsCmdArgs,
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GvfsCmd,
+        [string] $GvfsCmdArgs,
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gvfsCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GvfsCmdArgs
     }
-    Write-Host $("Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = " $gvfsCmd $gvfsCmdArgs"
-    # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
-    # So, dont -Wait during Start-Process for gvfs clone
-    ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
+    Write-Output $("Running: "" $GvfsExeLocation"" $GvfsCmd $ArgumentsToLog" )
+    $arguments = " $GvfsCmd $GvfsCmdArgs"
+    ProcessRunner -command $GvfsExeLocation -arguments $arguments -argumentsToLog " $GvfsCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess -waitForDependents $false
 }
 function ConfigureGitRepoBeforeClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
 }
 function ConfigureGitRepoAfterClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
-        [ValidateNotNullOrEmpty()] [bool] $enableGitCommitGraph
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitLocalRepoLocation,
+        [ValidateNotNullOrEmpty()] [bool] $EnableGitCommitGraph
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($gitLocalRepoLocation -replace '\\','/')"
-    if ($enableGitCommitGraph -eq $true) {
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($GitLocalRepoLocation -replace '\\','/')"
+    if ($EnableGitCommitGraph -eq $true) {
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
     }
 }
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 function UpdateOrCloneRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $repoUrl,
-        [ValidateNotNullOrEmpty()][string] $targetDirectory,
-        [SourceControl]$sourceControl,
-        [ValidateNotNullOrEmpty()][string] $commitId,
-        [string] $gitBranchName,
-        [string] $optionalCloneArgs,
-        [bool] $cloneIfNotExists,
-        [string] $optionalFetchArgs,
-        [bool] $enableGitCommitGraph,
-        [string] $formattedSparseCheckoutFolders,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()][string] $RepoUrl,
+        [ValidateNotNullOrEmpty()][string] $TargetDirectory,
+        [SourceControl]$SourceControl,
+        [ValidateNotNullOrEmpty()][string] $CommitId,
+        [string] $GitBranchName,
+        [string] $OptionalCloneArgs,
+        [bool] $CloneIfNotExists,
+        [string] $OptionalFetchArgs,
+        [bool] $EnableGitCommitGraph,
+        [string] $FormattedSparseCheckoutFolders,
+        [string] $MsiClientId
     )
-    switch ($sourceControl) {
+    switch ($SourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-            # Get git install location
-            $gitexe = Get-Command -ErrorAction Stop git
-            $GitExeLocation = $gitexe.Source
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
-            # Get gvfs install location
-            $gvfsexe = Get-Command -ErrorAction Stop gvfs
-            $GvfsExeLocation = $gvfsexe.Source
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
         }
     }
-    ## Update or Clone Repo
-    $shouldCloneRepo = $false
-    # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'.
-    if ($repoUrl.Contains("" )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+    $ShouldCloneRepo = $false
+    if ($RepoUrl.Contains("" )) {
+    $RepoUrl = $RepoUrl.Replace(" " , "%20" )
     }
-    # If the Folder exists
-    if (!(Test-Path -Path $targetDirectory -PathType Container)) {
-        if ($cloneIfNotExists -eq $true) {
-            $shouldCloneRepo = $true
+    if (!(Test-Path -Path $TargetDirectory -PathType Container)) {
+        if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
         }
         else {
-            Write-Host " folder not found at '$targetDirectory'."
+            Write-Output " folder not found at '$TargetDirectory'."
             throw "folder not found."
         }
     }
     else {
-        Set-Location -ErrorAction Stop $targetDirectory
-        switch ($sourceControl) {
+        Set-Location -ErrorAction Stop $TargetDirectory
+        switch ($SourceControl) {
             git {
-                Write-Host "Testing if '$targetDirectory' hosts a git repository..."
-                # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                Write-Output "Testing if '$TargetDirectory' hosts a git repository..."
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
             }
             gvfs {
-                Write-Host "Testing if '$targetDirectory' hosts a gvfs repository..."
-                # gvfs status will return an error if this is not a gvfs repository
+                Write-Output "Testing if '$TargetDirectory' hosts a gvfs repository..."
                 &$GvfsExeLocation status
                 if ($? -eq $true) {
-                    # gvfs repository is always at " src" folder
-                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
-                    # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                    Set-Location -ErrorAction Stop (Join-Path $TargetDirectory " src" )
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
                 }
             }
         }
         if (-not $?) {
-            if ($cloneIfNotExists -eq $true) {
-                $shouldCloneRepo = $true
+            if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
             }
             else {
-                Write-Host " repository not found at '$targetDirectory'."
+                Write-Output " repository not found at '$TargetDirectory'."
                 throw "Repository not found."
             }
         }
     }
-    # If for some reason one of the checks above fails, we need to clone the repo.
-    if ($shouldCloneRepo -eq $true) {
-        # folder doesn't exist, clone into the folder
+    if ($ShouldCloneRepo -eq $true) {
         ConfigureGitRepoBeforeClone -gitExeLocation $GitExeLocation
-        switch ($sourceControl) {
+        switch ($SourceControl) {
             git {
-                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repoUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -optionalGitCloneArgs $optionalCloneArgs -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $msiClientId
+                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $RepoUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -optionalGitCloneArgs $OptionalCloneArgs -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $MsiClientId
             }
             gvfs {
-                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $repoUrl -gvfsLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -msiClientId $msiClientId
-                # git repository is always at " src" folder
-                $targetDirectory = Join-Path $targetDirectory " src"
+                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $RepoUrl -gvfsLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -msiClientId $MsiClientId
+    $TargetDirectory = Join-Path $TargetDirectory " src"
             }
         }
-        Write-Information Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location -ErrorAction Stop $targetDirectory
-        # update repo_originUrl to the new location
-        $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
-        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
+        Write-Information Changing to repo location: $(" '$TargetDirectory'" )
+        Set-Location -ErrorAction Stop $TargetDirectory
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $TargetDirectory -enableGitCommitGraph $EnableGitCommitGraph
     }
-    if ($shouldCloneRepo -and $commitId -eq 'latest') {
-        Write-Host "Skip pulling latest updates for just cloned repo: $repo_originUrl"
+    if ($ShouldCloneRepo -and $CommitId -eq 'latest') {
+        Write-Output "Skip pulling latest updates for just cloned repo: $repo_originUrl"
     }
     else {
         Write-Information Updating repo with Url: $repo_originUrl
-        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
+        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -commitId $CommitId -optionalFetchArgs $OptionalFetchArgs -msiClientId $MsiClientId
     }
 }
-function Add-VarForLogging ($varName, $varValue) {
-    <#`n.DESCRIPTION
-  Add a row to the logging array but only if the value is not null or whitespace
-  .PARAMETER varName
-  Name of the variable
-  .PARAMETER varValue
-  Value of the variable
-  #>
-    if (!([string]::IsNullOrWhiteSpace($varValue))) {
-        $global:varLogArray | Add-Member -MemberType NoteProperty -Name $varName -Value $varValue
+function Add-VarForLogging ($VarName, $VarValue) {
+    if (!([string]::IsNullOrWhiteSpace($VarValue))) {
+    $global:varLogArray | Add-Member -MemberType NoteProperty -Name $VarName -Value $VarValue
     }
 }
 function RunScriptSyncRepo(
-    $repoUrl,
+    $RepoUrl,
     $repository_TargetDirectory,
     [SourceControl]$repository_SourceControl,
     $repository_cloneIfNotExists = $false,
-    $repoName,
-    $commitId,
-    $branchName,
+    $RepoName,
+    $CommitId,
+    $BranchName,
     $repository_optionalCloningParameters,
     $repository_optionalFetchParameters,
-    $enableGitCommitGraph,
-    $sparseCheckoutFolders,
+    $EnableGitCommitGraph,
+    $SparseCheckoutFolders,
     $repository_MSIClientId
 ) {
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName "PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
-    # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location -ErrorAction Stop
-    # Set Repo Log file path
-    $repoLogFilePath = 'c:\.tools\RepoLogs'
+    $StartingDirectory = Get-Location -ErrorAction Stop
+    $RepoLogFilePath = 'c:\.tools\RepoLogs'
     try {
-        # Create log file location
-        mkdir " $repoLogFilePath" -Force
+        mkdir " $RepoLogFilePath" -Force
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-                # Get git install location
-                $gitexe = Get-Command -ErrorAction Stop git
-                $GitExeLocation = $gitexe.Source
-                # confirm git is there
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
                 ProcessRunner -command $GitExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find git.exe.
@@ -514,10 +472,8 @@ function RunScriptSyncRepo(
                 }
             }
             { $_ -eq [SourceControl]::gvfs } {
-                # Get gvfs install location
-                $gvfsexe = Get-Command -ErrorAction Stop gvfs
-                $GvfsExeLocation = $gvfsexe.Source
-                # confirm gvfs is there
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
                 ProcessRunner -command $GvfsExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find gvfs.exe.
@@ -526,150 +482,122 @@ function RunScriptSyncRepo(
             }
         }
         Write-Information --------------------------------------
-        Write-Host "Repository name: '$repoName'"
-        Write-Host "Commit id: '$commitId'"
-        Write-Host "BranchName name: '$branchName'"
+        Write-Output "Repository name: '$RepoName'"
+        Write-Output "Commit id: '$CommitId'"
+        Write-Output "BranchName name: '$BranchName'"
         Write-Information --------------------------------------
-        # Add input data variables to log array
-        Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
+        Add-VarForLogging -varName 'RepoURL' -varValue $RepoUrl
         Add-VarForLogging -varName 'repository_TargetDirectory' -varValue $repository_TargetDirectory
-        if (!([string]::IsNullOrWhiteSpace($branchName))) {
-            Write-Host "Use explicitly provided branch '$branchName' rather than commitId"
-            $commitId = 'latest'
+        if (!([string]::IsNullOrWhiteSpace($BranchName))) {
+            Write-Output "Use explicitly provided branch '$BranchName' rather than commitId"
+    $CommitId = 'latest'
         }
-        if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        if ([string]::IsNullOrWhiteSpace($RepoUrl)) {
             throw "RepoUrl must be known at this point"
         }
-        $formattedSparseCheckoutFolders = ""
-        if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
-            $formattedSparseCheckoutFolders = $quotedFolders -Join " "
+    $FormattedSparseCheckoutFolders = ""
+        if (-not [string]::IsNullOrWhiteSpace($SparseCheckoutFolders)) {
+    $QuotedFolders = $SparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
+    $FormattedSparseCheckoutFolders = $QuotedFolders -Join " "
         }
-        ## Update or Clone repo
-        UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
-        Write-Host "Var Log Array"
-        Write-Host $global:varLogArray | ConvertTo-Json
-        # Set the file name for logging repo sync variables
-        Write-Host "Derive Repo Log Name"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
-        # Write out file to output location
-        $outFile = " $repoLogFilePath\$repoLogFileName"
-        Write-Host "Write output file to " $outFile
-        $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
+        UpdateOrCloneRepo -repoUrl $RepoUrl -commitId $CommitId -gitBranchName $BranchName -enableGitCommitGraph $EnableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
+        Write-Output "Var Log Array"
+        Write-Output $global:varLogArray | ConvertTo-Json
+        Write-Output "Derive Repo Log Name"
+    $RepoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
+    $OutFile = " $RepoLogFilePath\$RepoLogFileName"
+        Write-Output "Write output file to " $OutFile
+    $global:varLogArray | ConvertTo-Json | Out-File -FilePath $OutFile
         Write-Information Completed!
     }
     catch {
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
-        if (($null -ne #Requires -Version 7.0
-    Windows Clone Update Repo
+        if (($null -ne Windows Clone Update Repo
     Azure automation
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
     Allows cloning a new or updating an existing repo (important for updating a chained image).
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    # Url of the repository to clone/sync.
     [Parameter(Mandatory = $true)]
-    [string] $repoUrl,
+    [string] $RepoUrl,
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $true)]
     [String] $repository_TargetDirectory,
-    # The repository Source Control options are git (default) or gvfs
     [Parameter(Mandatory = $false)]
     [String] $repository_SourceControl,
     [Parameter(Mandatory = $false)]
     [bool] $repository_cloneIfNotExists = $false,
     [Parameter(Mandatory = $false)]
-    [string] $repoName,
-    # The commit id to fetch/check out for the repo. $commitId is ignored if $branchName is provided.
+    [string] $RepoName,
     [Parameter(Mandatory = $false)]
-    [string] $commitId = 'latest',
-    # When provided, this is the branch to clone/fetch. Otherwise the default branch is cloned/pulled.
+    [string] $CommitId = 'latest',
     [Parameter(Mandatory = $false)]
-    [string] $branchName,
+    [string] $BranchName,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalCloningParameters,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalFetchParameters,
     [Parameter(Mandatory = $false)]
-    [bool] $enableGitCommitGraph = $false,
-    # Optional comma separated list of folders for sparse checkout. When provided, only these folders will be set and sparse-checkout is used for the repo
+    [bool] $EnableGitCommitGraph = $false,
     [Parameter(Mandatory = $false)]
-    [string] $sparseCheckoutFolders,
-    # Optional MSI client ID which is required if the VM has multiple user-assigned managed identities. This will be used to access Azure DevOps.
+    [string] $SparseCheckoutFolders,
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
 enum SourceControl {
-    git = 0  # default
+    git = 0
     gvfs
 }
-$logfilepath = $null
-$script:varLogArray = New-Object -TypeName "PSCustomObject"
+    $logfilepath = $null
+    $script:varLogArray = New-Object -TypeName "PSCustomObject"
 Function ProcessRunner(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$command,
+    $command,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$arguments,
-    [string]$argumentsToLog = '',
-    [bool] $checkForSuccess = $true,
-    [bool] $waitForDependents = $true
+    $arguments,
+    $ArgumentsToLog = '',
+    [bool] $CheckForSuccess = $true,
+    [bool] $WaitForDependents = $true
 ) {
-    <#`n.DESCRIPTION
-  Run a process and validate that the process started and completed without any errors
-  .PARAMETER command
-  The command that will be run
-  .PARAMETER arguments
-  The arguments required to run the supplied command. Do not use in logging as the string may contains a secret.
-  .PARAMETER argumentsToLog
-  The arguments representation that is safe to log
-  .PARAMETER checkForSuccess
-  If $false then do not check whether the command succeeded
-  #>
-    if (!$argumentsToLog) {
-        $argumentsToLog = $arguments
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $arguments
     }
-    $errLog = [System.IO.Path]::GetTempFileName()
-    if ($waitForDependents) {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+    $ErrLog = [System.IO.Path]::GetTempFileName()
+    if ($WaitForDependents) {
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -Wait -PassThru -NoNewWindow
     }
     else {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -NoNewWindow
     }
-    # If $process variable is null, something is wrong
     if (!$process) {
-        Write-Error "ERROR command failed to start: $command $argumentsToLog"
+        Write-Error "ERROR command failed to start: $command $ArgumentsToLog"
         return;
     }
-    if ($waitForDependents) {
-        $ExitCode = $process.ExitCode
+    if ($WaitForDependents) {
+    $ExitCode = $process.ExitCode
     }
     else {
-        # This will wait for the process to exit as Start-Process above will not block for the process to exit
-        $process.WaitForExit()
-        # There is a defect where the $process.ExitCode is empty.
-        # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
-        # The below is the workaround for the defect
-        $process.HasExited  # This will calculate the exitCode
-        $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+    $process.WaitForExit()
+    $process.HasExited
+    $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     if ($ExitCode -ne 0) {
-        Write-Output "Error running: $command $argumentsToLog"
+        Write-Output "Error running: $command $ArgumentsToLog"
         Write-Output "Exit code: $ExitCode"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
-        # if logfilepath is set, write that out too if the process exited
+        Get-Content -Path $ErrLog
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
-        if ($checkForSuccess) {
+        if ($CheckForSuccess) {
             throw "Exit code from process was nonzero"
         }
         else {
@@ -679,397 +607,335 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
 }
     Gvfs clones the repository and checks out to the specified gitBranchName
 function GvfsCloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsRepoLocation,
-        [ValidateNotNullOrEmpty()] $gvfsLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsRepoLocation,
+        [ValidateNotNullOrEmpty()] $GvfsLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GvfsRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    $cmdArgs = $(" " + $gvfsRepoLocation + " `"" + $gvfsLocalRepoLocation + " `"" )
-    # Known Issue: gvfs clone does not work with -b <branch> option.
-    # So, first gvfs clone without -b <branch> option
-    # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
-    # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
-    $prevCredentialHelper = &$gitExeLocation config --system credential.helper
-    # Configure credential.helper using " git config"
-$GitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-$CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
-    $runBlock = {
-        # gvfs clone
-        ExecuteGvfsCmd -gvfsExeLocation $gvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $cmdArgs
+    $CmdArgs = $(" " + $GvfsRepoLocation + " `"" + $GvfsLocalRepoLocation + " `"" )
+    Write-Output $("Gvfs cloning the git repo..." )
+    $PrevCredentialHelper = &$GitExeLocation config --system credential.helper
+    $GitAccessToken = Get-GitAccessToken -MsiClientID $MsiClientId
+    $CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
+    $RunBlock = {
+        ExecuteGvfsCmd -gvfsExeLocation $GvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    # Unconfigure credential.helper using " git config"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $PrevCredentialHelper"
 }
 [OutputType([bool])]
  -ErrorAction Stop {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoUrl
     )
     return ($RepoUrl -Match '^https://[a-zA-Z][\w\-_]*\.visualstudio\.com/.*' -or $RepoUrl -Match '^https://dev\.azure\.com/.*')
 }
     Clones the repository and checks out to the specified CommitId
 function CloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [Parameter(Mandatory = $false)] $optionalGitCloneArgs,
-        [Parameter(Mandatory = $false)] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [Parameter(Mandatory = $false)] $OptionalGitCloneArgs,
+        [Parameter(Mandatory = $false)] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gitRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GitRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to clone from.
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    # Prep to start git.exe
-    # Add optional git clone parameters
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalGitCloneArgs))) {
-        $optionalArgs = $optionalGitCloneArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalGitCloneArgs))) {
+    $OptionalArgs = $OptionalGitCloneArgs
     }
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        $optionalArgs = " -b $gitBranchName " + $optionalArgs
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $OptionalArgs = " -b $GitBranchName " + $OptionalArgs
     }
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        # Clone the repo without checking out any files. Sparse checkout folders will be set after clone, and then checked out.
-        $optionalArgs = $optionalArgs + " --no-checkout"
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $OptionalArgs = $OptionalArgs + " --no-checkout"
     }
-    $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
-    Write-Host $("Cloning the git repo..." )
-    $runBlock = {
-        # Remove existing repo folder in case it was created by the previous clone attempt
-        if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+    $CmdArgs = $($OptionalArgs + " " + $GitRepoLocation + " `"" + $GitLocalRepoLocation + " `"" )
+    Write-Output $("Cloning the git repo..." )
+    $RunBlock = {
+        if (Test-Path $GitLocalRepoLocation) {
+            Remove-Item -ErrorAction Stop $GitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " clone" -authHeader $AuthorizationHeader -gitCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location -ErrorAction Stop $gitLocalRepoLocation
-    # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $sparseGitCmd = " set $formattedSparseCheckoutFolders"
-        # Set sparse-checkout folders for checkout, then check them out
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " sparse-checkout" -authHeader $authorizationHeader -gitCmdArgs $sparseGitCmd -argumentsToLog $sparseGitCmd
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    Write-Information Changing to repo location: $(" '$GitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $GitLocalRepoLocation
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $SparseGitCmd = " set $FormattedSparseCheckoutFolders"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " sparse-checkout" -authHeader $AuthorizationHeader -gitCmdArgs $SparseGitCmd -argumentsToLog $SparseGitCmd
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader
     }
 }
     Updates the local repository to the commit ID specified
 function UpdateGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $commitId,
-        [string] $optionalFetchArgs,
-        [string] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $CommitId,
+        [string] $OptionalFetchArgs,
+        [string] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq $gitRepoLocation.Length -gt 8) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.Length -gt 8) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to update
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    $baseRepoSparseCheckout = Invoke-Expression -Command '&$gitExeLocation config --get core.sparseCheckout'
-    if ([string]::IsNullOrEmpty($baseRepoSparseCheckout)) {
-        $baseRepoSparseCheckout = $false
+    $BaseRepoSparseCheckout = Invoke-Expression -Command '&$GitExeLocation config --get core.sparseCheckout'
+    if ([string]::IsNullOrEmpty($BaseRepoSparseCheckout)) {
+    $BaseRepoSparseCheckout = $false
     }
-    $repoSparseCheckout = $false
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $repoSparseCheckout = $true
+    $RepoSparseCheckout = $false
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $RepoSparseCheckout = $true
     }
-    if ($repoSparseCheckout -ne $baseRepoSparseCheckout) {
-        Write-Host "Base image sparse checkout configuration: $baseRepoSparseCheckout"
-        Write-Host "Image sparse checkout configuration: $repoSparseCheckout"
+    if ($RepoSparseCheckout -ne $BaseRepoSparseCheckout) {
+        Write-Output "Base image sparse checkout configuration: $BaseRepoSparseCheckout"
+        Write-Output "Image sparse checkout configuration: $RepoSparseCheckout"
         throw "Sparse checkout configuration misaligned with base image"
     }
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalFetchArgs))) {
-        $optionalArgs = $optionalFetchArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalFetchArgs))) {
+    $OptionalArgs = $OptionalFetchArgs
     }
-    # Explicitly specified branch takes precedence over commitId
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        # Check out a temporary branch to be able to delete the requested one in case it is currently checked out
-        $tempBranch = (New-Guid).Guid
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " -b $tempBranch"
-        # Delete local branch in case it already exists
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $gitBranchName" -checkForSuccess $false
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $($gitBranchName):$($gitBranchName) $optionalArgs"
-        # (Re)create the local branch
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " $gitBranchName"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $tempBranch"
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $TempBranch = (New-Guid).Guid
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " -b $TempBranch"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $GitBranchName" -checkForSuccess $false
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $($GitBranchName):$($GitBranchName) $OptionalArgs"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " $GitBranchName"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $TempBranch"
     }
-    elseif ($commitId -ne 'latest') {
-        Write-Host "Fetching commit $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $commitId $optionalArgs"
-        # Reset command may need to reach out to ADO when GIT LFS is used
-        Write-Host "Resetting branch to $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " reset" -authHeader $authorizationHeader -gitCmdArgs " $commitId --hard"
+    elseif ($CommitId -ne 'latest') {
+        Write-Output "Fetching commit $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $CommitId $OptionalArgs"
+        Write-Output "Resetting branch to $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " reset" -authHeader $AuthorizationHeader -gitCmdArgs " $CommitId --hard"
     }
     else {
-        Write-Host "Pulling the latest commit"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " pull" -authHeader $authorizationHeader -gitCmdArgs $optionalArgs
+        Write-Output "Pulling the latest commit"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " pull" -authHeader $AuthorizationHeader -gitCmdArgs $OptionalArgs
     }
-    $logExpression = '&$gitExeLocation log -1 --quiet --format=%H'
-    $updateCommitID = Invoke-Expression -Command $logExpression
-    Add-VarForLogging -varName 'CommitID' -varValue $updateCommitID
+    $LogExpression = '&$GitExeLocation log -1 --quiet --format=%H'
+    $UpdateCommitID = Invoke-Expression -Command $LogExpression
+    Add-VarForLogging -varName 'CommitID' -varValue $UpdateCommitID
 }
     Executes a git command with arguments
 function ExecuteGitCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitCmd,
-        [string] $gitCmdArgs,
-        [string] $authHeader = '',
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitCmd,
+        [string] $GitCmdArgs,
+        [string] $AuthHeader = '',
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gitCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GitCmdArgs
     }
-    Write-Host $("Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
-    ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
+    Write-Output $("Running: "" $GitExeLocation"" $GitCmd $ArgumentsToLog" )
+    $arguments = " $($AuthHeader)$GitCmd $GitCmdArgs"
+    ProcessRunner -command $GitExeLocation -arguments $arguments -argumentsToLog " $GitCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess
 }
     Executes a gvfs command with arguments
 function ExecuteGvfsCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gvfsCmd,
-        [string] $gvfsCmdArgs,
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GvfsCmd,
+        [string] $GvfsCmdArgs,
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gvfsCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GvfsCmdArgs
     }
-    Write-Host $("Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = " $gvfsCmd $gvfsCmdArgs"
-    # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
-    # So, dont -Wait during Start-Process for gvfs clone
-    ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
+    Write-Output $("Running: "" $GvfsExeLocation"" $GvfsCmd $ArgumentsToLog" )
+    $arguments = " $GvfsCmd $GvfsCmdArgs"
+    ProcessRunner -command $GvfsExeLocation -arguments $arguments -argumentsToLog " $GvfsCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess -waitForDependents $false
 }
 function ConfigureGitRepoBeforeClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
 }
 function ConfigureGitRepoAfterClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
-        [ValidateNotNullOrEmpty()] [bool] $enableGitCommitGraph
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitLocalRepoLocation,
+        [ValidateNotNullOrEmpty()] [bool] $EnableGitCommitGraph
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($gitLocalRepoLocation -replace '\\','/')"
-    if ($enableGitCommitGraph -eq $true) {
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($GitLocalRepoLocation -replace '\\','/')"
+    if ($EnableGitCommitGraph -eq $true) {
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
     }
 }
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 function UpdateOrCloneRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $repoUrl,
-        [ValidateNotNullOrEmpty()][string] $targetDirectory,
-        [SourceControl]$sourceControl,
-        [ValidateNotNullOrEmpty()][string] $commitId,
-        [string] $gitBranchName,
-        [string] $optionalCloneArgs,
-        [bool] $cloneIfNotExists,
-        [string] $optionalFetchArgs,
-        [bool] $enableGitCommitGraph,
-        [string] $formattedSparseCheckoutFolders,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()][string] $RepoUrl,
+        [ValidateNotNullOrEmpty()][string] $TargetDirectory,
+        [SourceControl]$SourceControl,
+        [ValidateNotNullOrEmpty()][string] $CommitId,
+        [string] $GitBranchName,
+        [string] $OptionalCloneArgs,
+        [bool] $CloneIfNotExists,
+        [string] $OptionalFetchArgs,
+        [bool] $EnableGitCommitGraph,
+        [string] $FormattedSparseCheckoutFolders,
+        [string] $MsiClientId
     )
-    switch ($sourceControl) {
+    switch ($SourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-            # Get git install location
-            $gitexe = Get-Command -ErrorAction Stop git
-            $GitExeLocation = $gitexe.Source
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
-            # Get gvfs install location
-            $gvfsexe = Get-Command -ErrorAction Stop gvfs
-            $GvfsExeLocation = $gvfsexe.Source
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
         }
     }
-    ## Update or Clone Repo
-    $shouldCloneRepo = $false
-    # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'.
-    if ($repoUrl.Contains("" )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+    $ShouldCloneRepo = $false
+    if ($RepoUrl.Contains("" )) {
+    $RepoUrl = $RepoUrl.Replace(" " , "%20" )
     }
-    # If the Folder exists
-    if (!(Test-Path -Path $targetDirectory -PathType Container)) {
-        if ($cloneIfNotExists -eq $true) {
-            $shouldCloneRepo = $true
+    if (!(Test-Path -Path $TargetDirectory -PathType Container)) {
+        if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
         }
         else {
-            Write-Host " folder not found at '$targetDirectory'."
+            Write-Output " folder not found at '$TargetDirectory'."
             throw "folder not found."
         }
     }
     else {
-        Set-Location -ErrorAction Stop $targetDirectory
-        switch ($sourceControl) {
+        Set-Location -ErrorAction Stop $TargetDirectory
+        switch ($SourceControl) {
             git {
-                Write-Host "Testing if '$targetDirectory' hosts a git repository..."
-                # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                Write-Output "Testing if '$TargetDirectory' hosts a git repository..."
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
             }
             gvfs {
-                Write-Host "Testing if '$targetDirectory' hosts a gvfs repository..."
-                # gvfs status will return an error if this is not a gvfs repository
+                Write-Output "Testing if '$TargetDirectory' hosts a gvfs repository..."
                 &$GvfsExeLocation status
                 if ($? -eq $true) {
-                    # gvfs repository is always at " src" folder
-                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
-                    # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                    Set-Location -ErrorAction Stop (Join-Path $TargetDirectory " src" )
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
                 }
             }
         }
         if (-not $?) {
-            if ($cloneIfNotExists -eq $true) {
-                $shouldCloneRepo = $true
+            if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
             }
             else {
-                Write-Host " repository not found at '$targetDirectory'."
+                Write-Output " repository not found at '$TargetDirectory'."
                 throw "Repository not found."
             }
         }
     }
-    # If for some reason one of the checks above fails, we need to clone the repo.
-    if ($shouldCloneRepo -eq $true) {
-        # folder doesn't exist, clone into the folder
+    if ($ShouldCloneRepo -eq $true) {
         ConfigureGitRepoBeforeClone -gitExeLocation $GitExeLocation
-        switch ($sourceControl) {
+        switch ($SourceControl) {
             git {
-                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repoUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -optionalGitCloneArgs $optionalCloneArgs -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $msiClientId
+                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $RepoUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -optionalGitCloneArgs $OptionalCloneArgs -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $MsiClientId
             }
             gvfs {
-                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $repoUrl -gvfsLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -msiClientId $msiClientId
-                # git repository is always at " src" folder
-                $targetDirectory = Join-Path $targetDirectory " src"
+                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $RepoUrl -gvfsLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -msiClientId $MsiClientId
+    $TargetDirectory = Join-Path $TargetDirectory " src"
             }
         }
-        Write-Information Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location -ErrorAction Stop $targetDirectory
-        # update repo_originUrl to the new location
-        $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
-        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
+        Write-Information Changing to repo location: $(" '$TargetDirectory'" )
+        Set-Location -ErrorAction Stop $TargetDirectory
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $TargetDirectory -enableGitCommitGraph $EnableGitCommitGraph
     }
-    if ($shouldCloneRepo -and $commitId -eq 'latest') {
-        Write-Host "Skip pulling latest updates for just cloned repo: $repo_originUrl"
+    if ($ShouldCloneRepo -and $CommitId -eq 'latest') {
+        Write-Output "Skip pulling latest updates for just cloned repo: $repo_originUrl"
     }
     else {
         Write-Information Updating repo with Url: $repo_originUrl
-        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
+        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -commitId $CommitId -optionalFetchArgs $OptionalFetchArgs -msiClientId $MsiClientId
     }
 }
-function Add-VarForLogging ($varName, $varValue) {
-    <#`n.DESCRIPTION
-  Add a row to the logging array but only if the value is not null or whitespace
-  .PARAMETER varName
-  Name of the variable
-  .PARAMETER varValue
-  Value of the variable
-  #>
-    if (!([string]::IsNullOrWhiteSpace($varValue))) {
-        $global:varLogArray | Add-Member -MemberType NoteProperty -Name $varName -Value $varValue
+function Add-VarForLogging ($VarName, $VarValue) {
+    if (!([string]::IsNullOrWhiteSpace($VarValue))) {
+    $global:varLogArray | Add-Member -MemberType NoteProperty -Name $VarName -Value $VarValue
     }
 }
 function RunScriptSyncRepo(
-    $repoUrl,
+    $RepoUrl,
     $repository_TargetDirectory,
     [SourceControl]$repository_SourceControl,
     $repository_cloneIfNotExists = $false,
-    $repoName,
-    $commitId,
-    $branchName,
+    $RepoName,
+    $CommitId,
+    $BranchName,
     $repository_optionalCloningParameters,
     $repository_optionalFetchParameters,
-    $enableGitCommitGraph,
-    $sparseCheckoutFolders,
+    $EnableGitCommitGraph,
+    $SparseCheckoutFolders,
     $repository_MSIClientId
 ) {
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName "PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
-    # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location -ErrorAction Stop
-    # Set Repo Log file path
-    $repoLogFilePath = 'c:\.tools\RepoLogs'
+    $StartingDirectory = Get-Location -ErrorAction Stop
+    $RepoLogFilePath = 'c:\.tools\RepoLogs'
     try {
-        # Create log file location
-        mkdir " $repoLogFilePath" -Force
+        mkdir " $RepoLogFilePath" -Force
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-                # Get git install location
-                $gitexe = Get-Command -ErrorAction Stop git
-                $GitExeLocation = $gitexe.Source
-                # confirm git is there
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
                 ProcessRunner -command $GitExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find git.exe.
@@ -1077,10 +943,8 @@ function RunScriptSyncRepo(
                 }
             }
             { $_ -eq [SourceControl]::gvfs } {
-                # Get gvfs install location
-                $gvfsexe = Get-Command -ErrorAction Stop gvfs
-                $GvfsExeLocation = $gvfsexe.Source
-                # confirm gvfs is there
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
                 ProcessRunner -command $GvfsExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find gvfs.exe.
@@ -1089,188 +953,158 @@ function RunScriptSyncRepo(
             }
         }
         Write-Information --------------------------------------
-        Write-Host "Repository name: '$repoName'"
-        Write-Host "Commit id: '$commitId'"
-        Write-Host "BranchName name: '$branchName'"
+        Write-Output "Repository name: '$RepoName'"
+        Write-Output "Commit id: '$CommitId'"
+        Write-Output "BranchName name: '$BranchName'"
         Write-Information --------------------------------------
-        # Add input data variables to log array
-        Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
+        Add-VarForLogging -varName 'RepoURL' -varValue $RepoUrl
         Add-VarForLogging -varName 'repository_TargetDirectory' -varValue $repository_TargetDirectory
-        if (!([string]::IsNullOrWhiteSpace($branchName))) {
-            Write-Host "Use explicitly provided branch '$branchName' rather than commitId"
-            $commitId = 'latest'
+        if (!([string]::IsNullOrWhiteSpace($BranchName))) {
+            Write-Output "Use explicitly provided branch '$BranchName' rather than commitId"
+    $CommitId = 'latest'
         }
-        if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        if ([string]::IsNullOrWhiteSpace($RepoUrl)) {
             throw "RepoUrl must be known at this point"
         }
-        $formattedSparseCheckoutFolders = ""
-        if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
-            $formattedSparseCheckoutFolders = $quotedFolders -Join " "
+    $FormattedSparseCheckoutFolders = ""
+        if (-not [string]::IsNullOrWhiteSpace($SparseCheckoutFolders)) {
+    $QuotedFolders = $SparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
+    $FormattedSparseCheckoutFolders = $QuotedFolders -Join " "
         }
-        ## Update or Clone repo
-        UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
-        Write-Host "Var Log Array"
-        Write-Host $global:varLogArray | ConvertTo-Json
-        # Set the file name for logging repo sync variables
-        Write-Host "Derive Repo Log Name"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
-        # Write out file to output location
-        $outFile = " $repoLogFilePath\$repoLogFileName"
-        Write-Host "Write output file to " $outFile
-        $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
+        UpdateOrCloneRepo -repoUrl $RepoUrl -commitId $CommitId -gitBranchName $BranchName -enableGitCommitGraph $EnableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
+        Write-Output "Var Log Array"
+        Write-Output $global:varLogArray | ConvertTo-Json
+        Write-Output "Derive Repo Log Name"
+    $RepoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
+    $OutFile = " $RepoLogFilePath\$RepoLogFileName"
+        Write-Output "Write output file to " $OutFile
+    $global:varLogArray | ConvertTo-Json | Out-File -FilePath $OutFile
         Write-Information Completed!
     }
     catch {
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message)) {
-$errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-            Write-Error $errMsg
+    $ErrMsg = $Error[0].Exception.Message
+            Write-Output $ErrMsg
+            Write-Error $ErrMsg
         }
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
         Write-Information \'Script failed.\'
-        Set-Location -ErrorAction Stop $startingDirectory
+        Set-Location -ErrorAction Stop $StartingDirectory
         throw
     }
-    Set-Location -ErrorAction Stop $startingDirectory
+    Set-Location -ErrorAction Stop $StartingDirectory
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    # If the optional parameter $repository_SourceControl is NOT passed in, default to git
-    [SourceControl]$sourceControl = [SourceControl]::git
-    # If the optional paramter $repository_SourceControl is passed in, ensure it has a valid value
+    [SourceControl]$SourceControl = [SourceControl]::git
     if (-not [String]::IsNullOrEmpty($repository_SourceControl)) {
-$sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
+    $SourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
     }
-            $params = @{
+    $params = @{
         repository_TargetDirectory = $repository_TargetDirectory
         repository_optionalCloningParameters = $repository_optionalCloningParameters
         repository_cloneIfNotExists = $repository_cloneIfNotExists
-        enableGitCommitGraph = $enableGitCommitGraph
-        sparseCheckoutFolders = $sparseCheckoutFolders
-        commitId = $commitId
+        enableGitCommitGraph = $EnableGitCommitGraph
+        sparseCheckoutFolders = $SparseCheckoutFolders
+        commitId = $CommitId
         repository_optionalFetchParameters = $repository_optionalFetchParameters
         repository_MSIClientId = $repository_MSIClientId
-        branchName = $branchName
-        repository_SourceControl = $sourceControl
-        repoName = $repoName
-        repoUrl = $repoUrl
+        branchName = $BranchName
+        repository_SourceControl = $SourceControl
+        repoName = $RepoName
+        repoUrl = $RepoUrl
     }
     RunScriptSyncRepo @params
 }
-.Exception.Message) -and ($null -ne #Requires -Version 7.0
-    Windows Clone Update Repo
+.Exception.Message) -and ($null -ne Windows Clone Update Repo
     Azure automation
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
     Allows cloning a new or updating an existing repo (important for updating a chained image).
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    # Url of the repository to clone/sync.
     [Parameter(Mandatory = $true)]
-    [string] $repoUrl,
+    [string] $RepoUrl,
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $true)]
     [String] $repository_TargetDirectory,
-    # The repository Source Control options are git (default) or gvfs
     [Parameter(Mandatory = $false)]
     [String] $repository_SourceControl,
     [Parameter(Mandatory = $false)]
     [bool] $repository_cloneIfNotExists = $false,
     [Parameter(Mandatory = $false)]
-    [string] $repoName,
-    # The commit id to fetch/check out for the repo. $commitId is ignored if $branchName is provided.
+    [string] $RepoName,
     [Parameter(Mandatory = $false)]
-    [string] $commitId = 'latest',
-    # When provided, this is the branch to clone/fetch. Otherwise the default branch is cloned/pulled.
+    [string] $CommitId = 'latest',
     [Parameter(Mandatory = $false)]
-    [string] $branchName,
+    [string] $BranchName,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalCloningParameters,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalFetchParameters,
     [Parameter(Mandatory = $false)]
-    [bool] $enableGitCommitGraph = $false,
-    # Optional comma separated list of folders for sparse checkout. When provided, only these folders will be set and sparse-checkout is used for the repo
+    [bool] $EnableGitCommitGraph = $false,
     [Parameter(Mandatory = $false)]
-    [string] $sparseCheckoutFolders,
-    # Optional MSI client ID which is required if the VM has multiple user-assigned managed identities. This will be used to access Azure DevOps.
+    [string] $SparseCheckoutFolders,
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
 enum SourceControl {
-    git = 0  # default
+    git = 0
     gvfs
 }
-$logfilepath = $null
-$script:varLogArray = New-Object -TypeName "PSCustomObject"
+    $logfilepath = $null
+    $script:varLogArray = New-Object -TypeName "PSCustomObject"
 Function ProcessRunner(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$command,
+    $command,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$arguments,
-    [string]$argumentsToLog = '',
-    [bool] $checkForSuccess = $true,
-    [bool] $waitForDependents = $true
+    $arguments,
+    $ArgumentsToLog = '',
+    [bool] $CheckForSuccess = $true,
+    [bool] $WaitForDependents = $true
 ) {
-    <#`n.DESCRIPTION
-  Run a process and validate that the process started and completed without any errors
-  .PARAMETER command
-  The command that will be run
-  .PARAMETER arguments
-  The arguments required to run the supplied command. Do not use in logging as the string may contains a secret.
-  .PARAMETER argumentsToLog
-  The arguments representation that is safe to log
-  .PARAMETER checkForSuccess
-  If $false then do not check whether the command succeeded
-  #>
-    if (!$argumentsToLog) {
-        $argumentsToLog = $arguments
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $arguments
     }
-    $errLog = [System.IO.Path]::GetTempFileName()
-    if ($waitForDependents) {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+    $ErrLog = [System.IO.Path]::GetTempFileName()
+    if ($WaitForDependents) {
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -Wait -PassThru -NoNewWindow
     }
     else {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -NoNewWindow
     }
-    # If $process variable is null, something is wrong
     if (!$process) {
-        Write-Error "ERROR command failed to start: $command $argumentsToLog"
+        Write-Error "ERROR command failed to start: $command $ArgumentsToLog"
         return;
     }
-    if ($waitForDependents) {
-        $ExitCode = $process.ExitCode
+    if ($WaitForDependents) {
+    $ExitCode = $process.ExitCode
     }
     else {
-        # This will wait for the process to exit as Start-Process above will not block for the process to exit
-        $process.WaitForExit()
-        # There is a defect where the $process.ExitCode is empty.
-        # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
-        # The below is the workaround for the defect
-        $process.HasExited  # This will calculate the exitCode
-        $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+    $process.WaitForExit()
+    $process.HasExited
+    $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     if ($ExitCode -ne 0) {
-        Write-Output "Error running: $command $argumentsToLog"
+        Write-Output "Error running: $command $ArgumentsToLog"
         Write-Output "Exit code: $ExitCode"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
-        # if logfilepath is set, write that out too if the process exited
+        Get-Content -Path $ErrLog
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
-        if ($checkForSuccess) {
+        if ($CheckForSuccess) {
             throw "Exit code from process was nonzero"
         }
         else {
@@ -1280,397 +1114,335 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
 }
     Gvfs clones the repository and checks out to the specified gitBranchName
 function GvfsCloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsRepoLocation,
-        [ValidateNotNullOrEmpty()] $gvfsLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsRepoLocation,
+        [ValidateNotNullOrEmpty()] $GvfsLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GvfsRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    $cmdArgs = $(" " + $gvfsRepoLocation + " `"" + $gvfsLocalRepoLocation + " `"" )
-    # Known Issue: gvfs clone does not work with -b <branch> option.
-    # So, first gvfs clone without -b <branch> option
-    # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
-    # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
-    $prevCredentialHelper = &$gitExeLocation config --system credential.helper
-    # Configure credential.helper using " git config"
-$GitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-$CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
-    $runBlock = {
-        # gvfs clone
-        ExecuteGvfsCmd -gvfsExeLocation $gvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $cmdArgs
+    $CmdArgs = $(" " + $GvfsRepoLocation + " `"" + $GvfsLocalRepoLocation + " `"" )
+    Write-Output $("Gvfs cloning the git repo..." )
+    $PrevCredentialHelper = &$GitExeLocation config --system credential.helper
+    $GitAccessToken = Get-GitAccessToken -MsiClientID $MsiClientId
+    $CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
+    $RunBlock = {
+        ExecuteGvfsCmd -gvfsExeLocation $GvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    # Unconfigure credential.helper using " git config"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $PrevCredentialHelper"
 }
 [OutputType([bool])]
  -ErrorAction Stop {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoUrl
     )
     return ($RepoUrl -Match '^https://[a-zA-Z][\w\-_]*\.visualstudio\.com/.*' -or $RepoUrl -Match '^https://dev\.azure\.com/.*')
 }
     Clones the repository and checks out to the specified CommitId
 function CloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [Parameter(Mandatory = $false)] $optionalGitCloneArgs,
-        [Parameter(Mandatory = $false)] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [Parameter(Mandatory = $false)] $OptionalGitCloneArgs,
+        [Parameter(Mandatory = $false)] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gitRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GitRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to clone from.
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    # Prep to start git.exe
-    # Add optional git clone parameters
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalGitCloneArgs))) {
-        $optionalArgs = $optionalGitCloneArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalGitCloneArgs))) {
+    $OptionalArgs = $OptionalGitCloneArgs
     }
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        $optionalArgs = " -b $gitBranchName " + $optionalArgs
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $OptionalArgs = " -b $GitBranchName " + $OptionalArgs
     }
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        # Clone the repo without checking out any files. Sparse checkout folders will be set after clone, and then checked out.
-        $optionalArgs = $optionalArgs + " --no-checkout"
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $OptionalArgs = $OptionalArgs + " --no-checkout"
     }
-    $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
-    Write-Host $("Cloning the git repo..." )
-    $runBlock = {
-        # Remove existing repo folder in case it was created by the previous clone attempt
-        if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+    $CmdArgs = $($OptionalArgs + " " + $GitRepoLocation + " `"" + $GitLocalRepoLocation + " `"" )
+    Write-Output $("Cloning the git repo..." )
+    $RunBlock = {
+        if (Test-Path $GitLocalRepoLocation) {
+            Remove-Item -ErrorAction Stop $GitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " clone" -authHeader $AuthorizationHeader -gitCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location -ErrorAction Stop $gitLocalRepoLocation
-    # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $sparseGitCmd = " set $formattedSparseCheckoutFolders"
-        # Set sparse-checkout folders for checkout, then check them out
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " sparse-checkout" -authHeader $authorizationHeader -gitCmdArgs $sparseGitCmd -argumentsToLog $sparseGitCmd
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    Write-Information Changing to repo location: $(" '$GitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $GitLocalRepoLocation
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $SparseGitCmd = " set $FormattedSparseCheckoutFolders"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " sparse-checkout" -authHeader $AuthorizationHeader -gitCmdArgs $SparseGitCmd -argumentsToLog $SparseGitCmd
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader
     }
 }
     Updates the local repository to the commit ID specified
 function UpdateGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $commitId,
-        [string] $optionalFetchArgs,
-        [string] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $CommitId,
+        [string] $OptionalFetchArgs,
+        [string] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq $gitRepoLocation.Length -gt 8) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.Length -gt 8) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to update
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    $baseRepoSparseCheckout = Invoke-Expression -Command '&$gitExeLocation config --get core.sparseCheckout'
-    if ([string]::IsNullOrEmpty($baseRepoSparseCheckout)) {
-        $baseRepoSparseCheckout = $false
+    $BaseRepoSparseCheckout = Invoke-Expression -Command '&$GitExeLocation config --get core.sparseCheckout'
+    if ([string]::IsNullOrEmpty($BaseRepoSparseCheckout)) {
+    $BaseRepoSparseCheckout = $false
     }
-    $repoSparseCheckout = $false
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $repoSparseCheckout = $true
+    $RepoSparseCheckout = $false
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $RepoSparseCheckout = $true
     }
-    if ($repoSparseCheckout -ne $baseRepoSparseCheckout) {
-        Write-Host "Base image sparse checkout configuration: $baseRepoSparseCheckout"
-        Write-Host "Image sparse checkout configuration: $repoSparseCheckout"
+    if ($RepoSparseCheckout -ne $BaseRepoSparseCheckout) {
+        Write-Output "Base image sparse checkout configuration: $BaseRepoSparseCheckout"
+        Write-Output "Image sparse checkout configuration: $RepoSparseCheckout"
         throw "Sparse checkout configuration misaligned with base image"
     }
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalFetchArgs))) {
-        $optionalArgs = $optionalFetchArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalFetchArgs))) {
+    $OptionalArgs = $OptionalFetchArgs
     }
-    # Explicitly specified branch takes precedence over commitId
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        # Check out a temporary branch to be able to delete the requested one in case it is currently checked out
-        $tempBranch = (New-Guid).Guid
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " -b $tempBranch"
-        # Delete local branch in case it already exists
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $gitBranchName" -checkForSuccess $false
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $($gitBranchName):$($gitBranchName) $optionalArgs"
-        # (Re)create the local branch
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " $gitBranchName"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $tempBranch"
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $TempBranch = (New-Guid).Guid
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " -b $TempBranch"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $GitBranchName" -checkForSuccess $false
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $($GitBranchName):$($GitBranchName) $OptionalArgs"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " $GitBranchName"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $TempBranch"
     }
-    elseif ($commitId -ne 'latest') {
-        Write-Host "Fetching commit $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $commitId $optionalArgs"
-        # Reset command may need to reach out to ADO when GIT LFS is used
-        Write-Host "Resetting branch to $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " reset" -authHeader $authorizationHeader -gitCmdArgs " $commitId --hard"
+    elseif ($CommitId -ne 'latest') {
+        Write-Output "Fetching commit $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $CommitId $OptionalArgs"
+        Write-Output "Resetting branch to $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " reset" -authHeader $AuthorizationHeader -gitCmdArgs " $CommitId --hard"
     }
     else {
-        Write-Host "Pulling the latest commit"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " pull" -authHeader $authorizationHeader -gitCmdArgs $optionalArgs
+        Write-Output "Pulling the latest commit"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " pull" -authHeader $AuthorizationHeader -gitCmdArgs $OptionalArgs
     }
-    $logExpression = '&$gitExeLocation log -1 --quiet --format=%H'
-    $updateCommitID = Invoke-Expression -Command $logExpression
-    Add-VarForLogging -varName 'CommitID' -varValue $updateCommitID
+    $LogExpression = '&$GitExeLocation log -1 --quiet --format=%H'
+    $UpdateCommitID = Invoke-Expression -Command $LogExpression
+    Add-VarForLogging -varName 'CommitID' -varValue $UpdateCommitID
 }
     Executes a git command with arguments
 function ExecuteGitCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitCmd,
-        [string] $gitCmdArgs,
-        [string] $authHeader = '',
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitCmd,
+        [string] $GitCmdArgs,
+        [string] $AuthHeader = '',
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gitCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GitCmdArgs
     }
-    Write-Host $("Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
-    ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
+    Write-Output $("Running: "" $GitExeLocation"" $GitCmd $ArgumentsToLog" )
+    $arguments = " $($AuthHeader)$GitCmd $GitCmdArgs"
+    ProcessRunner -command $GitExeLocation -arguments $arguments -argumentsToLog " $GitCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess
 }
     Executes a gvfs command with arguments
 function ExecuteGvfsCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gvfsCmd,
-        [string] $gvfsCmdArgs,
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GvfsCmd,
+        [string] $GvfsCmdArgs,
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gvfsCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GvfsCmdArgs
     }
-    Write-Host $("Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = " $gvfsCmd $gvfsCmdArgs"
-    # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
-    # So, dont -Wait during Start-Process for gvfs clone
-    ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
+    Write-Output $("Running: "" $GvfsExeLocation"" $GvfsCmd $ArgumentsToLog" )
+    $arguments = " $GvfsCmd $GvfsCmdArgs"
+    ProcessRunner -command $GvfsExeLocation -arguments $arguments -argumentsToLog " $GvfsCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess -waitForDependents $false
 }
 function ConfigureGitRepoBeforeClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
 }
 function ConfigureGitRepoAfterClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
-        [ValidateNotNullOrEmpty()] [bool] $enableGitCommitGraph
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitLocalRepoLocation,
+        [ValidateNotNullOrEmpty()] [bool] $EnableGitCommitGraph
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($gitLocalRepoLocation -replace '\\','/')"
-    if ($enableGitCommitGraph -eq $true) {
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($GitLocalRepoLocation -replace '\\','/')"
+    if ($EnableGitCommitGraph -eq $true) {
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
     }
 }
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 function UpdateOrCloneRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $repoUrl,
-        [ValidateNotNullOrEmpty()][string] $targetDirectory,
-        [SourceControl]$sourceControl,
-        [ValidateNotNullOrEmpty()][string] $commitId,
-        [string] $gitBranchName,
-        [string] $optionalCloneArgs,
-        [bool] $cloneIfNotExists,
-        [string] $optionalFetchArgs,
-        [bool] $enableGitCommitGraph,
-        [string] $formattedSparseCheckoutFolders,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()][string] $RepoUrl,
+        [ValidateNotNullOrEmpty()][string] $TargetDirectory,
+        [SourceControl]$SourceControl,
+        [ValidateNotNullOrEmpty()][string] $CommitId,
+        [string] $GitBranchName,
+        [string] $OptionalCloneArgs,
+        [bool] $CloneIfNotExists,
+        [string] $OptionalFetchArgs,
+        [bool] $EnableGitCommitGraph,
+        [string] $FormattedSparseCheckoutFolders,
+        [string] $MsiClientId
     )
-    switch ($sourceControl) {
+    switch ($SourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-            # Get git install location
-            $gitexe = Get-Command -ErrorAction Stop git
-            $GitExeLocation = $gitexe.Source
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
-            # Get gvfs install location
-            $gvfsexe = Get-Command -ErrorAction Stop gvfs
-            $GvfsExeLocation = $gvfsexe.Source
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
         }
     }
-    ## Update or Clone Repo
-    $shouldCloneRepo = $false
-    # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'.
-    if ($repoUrl.Contains("" )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+    $ShouldCloneRepo = $false
+    if ($RepoUrl.Contains("" )) {
+    $RepoUrl = $RepoUrl.Replace(" " , "%20" )
     }
-    # If the Folder exists
-    if (!(Test-Path -Path $targetDirectory -PathType Container)) {
-        if ($cloneIfNotExists -eq $true) {
-            $shouldCloneRepo = $true
+    if (!(Test-Path -Path $TargetDirectory -PathType Container)) {
+        if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
         }
         else {
-            Write-Host " folder not found at '$targetDirectory'."
+            Write-Output " folder not found at '$TargetDirectory'."
             throw "folder not found."
         }
     }
     else {
-        Set-Location -ErrorAction Stop $targetDirectory
-        switch ($sourceControl) {
+        Set-Location -ErrorAction Stop $TargetDirectory
+        switch ($SourceControl) {
             git {
-                Write-Host "Testing if '$targetDirectory' hosts a git repository..."
-                # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                Write-Output "Testing if '$TargetDirectory' hosts a git repository..."
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
             }
             gvfs {
-                Write-Host "Testing if '$targetDirectory' hosts a gvfs repository..."
-                # gvfs status will return an error if this is not a gvfs repository
+                Write-Output "Testing if '$TargetDirectory' hosts a gvfs repository..."
                 &$GvfsExeLocation status
                 if ($? -eq $true) {
-                    # gvfs repository is always at " src" folder
-                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
-                    # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                    Set-Location -ErrorAction Stop (Join-Path $TargetDirectory " src" )
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
                 }
             }
         }
         if (-not $?) {
-            if ($cloneIfNotExists -eq $true) {
-                $shouldCloneRepo = $true
+            if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
             }
             else {
-                Write-Host " repository not found at '$targetDirectory'."
+                Write-Output " repository not found at '$TargetDirectory'."
                 throw "Repository not found."
             }
         }
     }
-    # If for some reason one of the checks above fails, we need to clone the repo.
-    if ($shouldCloneRepo -eq $true) {
-        # folder doesn't exist, clone into the folder
+    if ($ShouldCloneRepo -eq $true) {
         ConfigureGitRepoBeforeClone -gitExeLocation $GitExeLocation
-        switch ($sourceControl) {
+        switch ($SourceControl) {
             git {
-                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repoUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -optionalGitCloneArgs $optionalCloneArgs -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $msiClientId
+                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $RepoUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -optionalGitCloneArgs $OptionalCloneArgs -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $MsiClientId
             }
             gvfs {
-                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $repoUrl -gvfsLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -msiClientId $msiClientId
-                # git repository is always at " src" folder
-                $targetDirectory = Join-Path $targetDirectory " src"
+                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $RepoUrl -gvfsLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -msiClientId $MsiClientId
+    $TargetDirectory = Join-Path $TargetDirectory " src"
             }
         }
-        Write-Information Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location -ErrorAction Stop $targetDirectory
-        # update repo_originUrl to the new location
-        $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
-        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
+        Write-Information Changing to repo location: $(" '$TargetDirectory'" )
+        Set-Location -ErrorAction Stop $TargetDirectory
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $TargetDirectory -enableGitCommitGraph $EnableGitCommitGraph
     }
-    if ($shouldCloneRepo -and $commitId -eq 'latest') {
-        Write-Host "Skip pulling latest updates for just cloned repo: $repo_originUrl"
+    if ($ShouldCloneRepo -and $CommitId -eq 'latest') {
+        Write-Output "Skip pulling latest updates for just cloned repo: $repo_originUrl"
     }
     else {
         Write-Information Updating repo with Url: $repo_originUrl
-        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
+        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -commitId $CommitId -optionalFetchArgs $OptionalFetchArgs -msiClientId $MsiClientId
     }
 }
-function Add-VarForLogging ($varName, $varValue) {
-    <#`n.DESCRIPTION
-  Add a row to the logging array but only if the value is not null or whitespace
-  .PARAMETER varName
-  Name of the variable
-  .PARAMETER varValue
-  Value of the variable
-  #>
-    if (!([string]::IsNullOrWhiteSpace($varValue))) {
-        $global:varLogArray | Add-Member -MemberType NoteProperty -Name $varName -Value $varValue
+function Add-VarForLogging ($VarName, $VarValue) {
+    if (!([string]::IsNullOrWhiteSpace($VarValue))) {
+    $global:varLogArray | Add-Member -MemberType NoteProperty -Name $VarName -Value $VarValue
     }
 }
 function RunScriptSyncRepo(
-    $repoUrl,
+    $RepoUrl,
     $repository_TargetDirectory,
     [SourceControl]$repository_SourceControl,
     $repository_cloneIfNotExists = $false,
-    $repoName,
-    $commitId,
-    $branchName,
+    $RepoName,
+    $CommitId,
+    $BranchName,
     $repository_optionalCloningParameters,
     $repository_optionalFetchParameters,
-    $enableGitCommitGraph,
-    $sparseCheckoutFolders,
+    $EnableGitCommitGraph,
+    $SparseCheckoutFolders,
     $repository_MSIClientId
 ) {
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName "PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
-    # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location -ErrorAction Stop
-    # Set Repo Log file path
-    $repoLogFilePath = 'c:\.tools\RepoLogs'
+    $StartingDirectory = Get-Location -ErrorAction Stop
+    $RepoLogFilePath = 'c:\.tools\RepoLogs'
     try {
-        # Create log file location
-        mkdir " $repoLogFilePath" -Force
+        mkdir " $RepoLogFilePath" -Force
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-                # Get git install location
-                $gitexe = Get-Command -ErrorAction Stop git
-                $GitExeLocation = $gitexe.Source
-                # confirm git is there
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
                 ProcessRunner -command $GitExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find git.exe.
@@ -1678,10 +1450,8 @@ function RunScriptSyncRepo(
                 }
             }
             { $_ -eq [SourceControl]::gvfs } {
-                # Get gvfs install location
-                $gvfsexe = Get-Command -ErrorAction Stop gvfs
-                $GvfsExeLocation = $gvfsexe.Source
-                # confirm gvfs is there
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
                 ProcessRunner -command $GvfsExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find gvfs.exe.
@@ -1690,188 +1460,158 @@ function RunScriptSyncRepo(
             }
         }
         Write-Information --------------------------------------
-        Write-Host "Repository name: '$repoName'"
-        Write-Host "Commit id: '$commitId'"
-        Write-Host "BranchName name: '$branchName'"
+        Write-Output "Repository name: '$RepoName'"
+        Write-Output "Commit id: '$CommitId'"
+        Write-Output "BranchName name: '$BranchName'"
         Write-Information --------------------------------------
-        # Add input data variables to log array
-        Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
+        Add-VarForLogging -varName 'RepoURL' -varValue $RepoUrl
         Add-VarForLogging -varName 'repository_TargetDirectory' -varValue $repository_TargetDirectory
-        if (!([string]::IsNullOrWhiteSpace($branchName))) {
-            Write-Host "Use explicitly provided branch '$branchName' rather than commitId"
-            $commitId = 'latest'
+        if (!([string]::IsNullOrWhiteSpace($BranchName))) {
+            Write-Output "Use explicitly provided branch '$BranchName' rather than commitId"
+    $CommitId = 'latest'
         }
-        if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        if ([string]::IsNullOrWhiteSpace($RepoUrl)) {
             throw "RepoUrl must be known at this point"
         }
-        $formattedSparseCheckoutFolders = ""
-        if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
-            $formattedSparseCheckoutFolders = $quotedFolders -Join " "
+    $FormattedSparseCheckoutFolders = ""
+        if (-not [string]::IsNullOrWhiteSpace($SparseCheckoutFolders)) {
+    $QuotedFolders = $SparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
+    $FormattedSparseCheckoutFolders = $QuotedFolders -Join " "
         }
-        ## Update or Clone repo
-        UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
-        Write-Host "Var Log Array"
-        Write-Host $global:varLogArray | ConvertTo-Json
-        # Set the file name for logging repo sync variables
-        Write-Host "Derive Repo Log Name"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
-        # Write out file to output location
-        $outFile = " $repoLogFilePath\$repoLogFileName"
-        Write-Host "Write output file to " $outFile
-        $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
+        UpdateOrCloneRepo -repoUrl $RepoUrl -commitId $CommitId -gitBranchName $BranchName -enableGitCommitGraph $EnableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
+        Write-Output "Var Log Array"
+        Write-Output $global:varLogArray | ConvertTo-Json
+        Write-Output "Derive Repo Log Name"
+    $RepoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
+    $OutFile = " $RepoLogFilePath\$RepoLogFileName"
+        Write-Output "Write output file to " $OutFile
+    $global:varLogArray | ConvertTo-Json | Out-File -FilePath $OutFile
         Write-Information Completed!
     }
     catch {
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message)) {
-$errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-            Write-Error $errMsg
+    $ErrMsg = $Error[0].Exception.Message
+            Write-Output $ErrMsg
+            Write-Error $ErrMsg
         }
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
         Write-Information \'Script failed.\'
-        Set-Location -ErrorAction Stop $startingDirectory
+        Set-Location -ErrorAction Stop $StartingDirectory
         throw
     }
-    Set-Location -ErrorAction Stop $startingDirectory
+    Set-Location -ErrorAction Stop $StartingDirectory
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    # If the optional parameter $repository_SourceControl is NOT passed in, default to git
-    [SourceControl]$sourceControl = [SourceControl]::git
-    # If the optional paramter $repository_SourceControl is passed in, ensure it has a valid value
+    [SourceControl]$SourceControl = [SourceControl]::git
     if (-not [String]::IsNullOrEmpty($repository_SourceControl)) {
-$sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
+    $SourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
     }
-            $params = @{
+    $params = @{
         repository_TargetDirectory = $repository_TargetDirectory
         repository_optionalCloningParameters = $repository_optionalCloningParameters
         repository_cloneIfNotExists = $repository_cloneIfNotExists
-        enableGitCommitGraph = $enableGitCommitGraph
-        sparseCheckoutFolders = $sparseCheckoutFolders
-        commitId = $commitId
+        enableGitCommitGraph = $EnableGitCommitGraph
+        sparseCheckoutFolders = $SparseCheckoutFolders
+        commitId = $CommitId
         repository_optionalFetchParameters = $repository_optionalFetchParameters
         repository_MSIClientId = $repository_MSIClientId
-        branchName = $branchName
-        repository_SourceControl = $sourceControl
-        repoName = $repoName
-        repoUrl = $repoUrl
+        branchName = $BranchName
+        repository_SourceControl = $SourceControl
+        repoName = $RepoName
+        repoUrl = $RepoUrl
     }
     RunScriptSyncRepo @params
 }
-.Exception.Message.Exception) -and ($null -ne #Requires -Version 7.0
-    Windows Clone Update Repo
+.Exception.Message.Exception) -and ($null -ne Windows Clone Update Repo
     Azure automation
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
     Allows cloning a new or updating an existing repo (important for updating a chained image).
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    # Url of the repository to clone/sync.
     [Parameter(Mandatory = $true)]
-    [string] $repoUrl,
+    [string] $RepoUrl,
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $true)]
     [String] $repository_TargetDirectory,
-    # The repository Source Control options are git (default) or gvfs
     [Parameter(Mandatory = $false)]
     [String] $repository_SourceControl,
     [Parameter(Mandatory = $false)]
     [bool] $repository_cloneIfNotExists = $false,
     [Parameter(Mandatory = $false)]
-    [string] $repoName,
-    # The commit id to fetch/check out for the repo. $commitId is ignored if $branchName is provided.
+    [string] $RepoName,
     [Parameter(Mandatory = $false)]
-    [string] $commitId = 'latest',
-    # When provided, this is the branch to clone/fetch. Otherwise the default branch is cloned/pulled.
+    [string] $CommitId = 'latest',
     [Parameter(Mandatory = $false)]
-    [string] $branchName,
+    [string] $BranchName,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalCloningParameters,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalFetchParameters,
     [Parameter(Mandatory = $false)]
-    [bool] $enableGitCommitGraph = $false,
-    # Optional comma separated list of folders for sparse checkout. When provided, only these folders will be set and sparse-checkout is used for the repo
+    [bool] $EnableGitCommitGraph = $false,
     [Parameter(Mandatory = $false)]
-    [string] $sparseCheckoutFolders,
-    # Optional MSI client ID which is required if the VM has multiple user-assigned managed identities. This will be used to access Azure DevOps.
+    [string] $SparseCheckoutFolders,
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
 enum SourceControl {
-    git = 0  # default
+    git = 0
     gvfs
 }
-$logfilepath = $null
-$script:varLogArray = New-Object -TypeName "PSCustomObject"
+    $logfilepath = $null
+    $script:varLogArray = New-Object -TypeName "PSCustomObject"
 Function ProcessRunner(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$command,
+    $command,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$arguments,
-    [string]$argumentsToLog = '',
-    [bool] $checkForSuccess = $true,
-    [bool] $waitForDependents = $true
+    $arguments,
+    $ArgumentsToLog = '',
+    [bool] $CheckForSuccess = $true,
+    [bool] $WaitForDependents = $true
 ) {
-    <#`n.DESCRIPTION
-  Run a process and validate that the process started and completed without any errors
-  .PARAMETER command
-  The command that will be run
-  .PARAMETER arguments
-  The arguments required to run the supplied command. Do not use in logging as the string may contains a secret.
-  .PARAMETER argumentsToLog
-  The arguments representation that is safe to log
-  .PARAMETER checkForSuccess
-  If $false then do not check whether the command succeeded
-  #>
-    if (!$argumentsToLog) {
-        $argumentsToLog = $arguments
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $arguments
     }
-    $errLog = [System.IO.Path]::GetTempFileName()
-    if ($waitForDependents) {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+    $ErrLog = [System.IO.Path]::GetTempFileName()
+    if ($WaitForDependents) {
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -Wait -PassThru -NoNewWindow
     }
     else {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -NoNewWindow
     }
-    # If $process variable is null, something is wrong
     if (!$process) {
-        Write-Error "ERROR command failed to start: $command $argumentsToLog"
+        Write-Error "ERROR command failed to start: $command $ArgumentsToLog"
         return;
     }
-    if ($waitForDependents) {
-        $ExitCode = $process.ExitCode
+    if ($WaitForDependents) {
+    $ExitCode = $process.ExitCode
     }
     else {
-        # This will wait for the process to exit as Start-Process above will not block for the process to exit
-        $process.WaitForExit()
-        # There is a defect where the $process.ExitCode is empty.
-        # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
-        # The below is the workaround for the defect
-        $process.HasExited  # This will calculate the exitCode
-        $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+    $process.WaitForExit()
+    $process.HasExited
+    $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     if ($ExitCode -ne 0) {
-        Write-Output "Error running: $command $argumentsToLog"
+        Write-Output "Error running: $command $ArgumentsToLog"
         Write-Output "Exit code: $ExitCode"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
-        # if logfilepath is set, write that out too if the process exited
+        Get-Content -Path $ErrLog
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
-        if ($checkForSuccess) {
+        if ($CheckForSuccess) {
             throw "Exit code from process was nonzero"
         }
         else {
@@ -1881,397 +1621,335 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
 }
     Gvfs clones the repository and checks out to the specified gitBranchName
 function GvfsCloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsRepoLocation,
-        [ValidateNotNullOrEmpty()] $gvfsLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsRepoLocation,
+        [ValidateNotNullOrEmpty()] $GvfsLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GvfsRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    $cmdArgs = $(" " + $gvfsRepoLocation + " `"" + $gvfsLocalRepoLocation + " `"" )
-    # Known Issue: gvfs clone does not work with -b <branch> option.
-    # So, first gvfs clone without -b <branch> option
-    # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
-    # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
-    $prevCredentialHelper = &$gitExeLocation config --system credential.helper
-    # Configure credential.helper using " git config"
-$GitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-$CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
-    $runBlock = {
-        # gvfs clone
-        ExecuteGvfsCmd -gvfsExeLocation $gvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $cmdArgs
+    $CmdArgs = $(" " + $GvfsRepoLocation + " `"" + $GvfsLocalRepoLocation + " `"" )
+    Write-Output $("Gvfs cloning the git repo..." )
+    $PrevCredentialHelper = &$GitExeLocation config --system credential.helper
+    $GitAccessToken = Get-GitAccessToken -MsiClientID $MsiClientId
+    $CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
+    $RunBlock = {
+        ExecuteGvfsCmd -gvfsExeLocation $GvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    # Unconfigure credential.helper using " git config"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $PrevCredentialHelper"
 }
 [OutputType([bool])]
  -ErrorAction Stop {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoUrl
     )
     return ($RepoUrl -Match '^https://[a-zA-Z][\w\-_]*\.visualstudio\.com/.*' -or $RepoUrl -Match '^https://dev\.azure\.com/.*')
 }
     Clones the repository and checks out to the specified CommitId
 function CloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [Parameter(Mandatory = $false)] $optionalGitCloneArgs,
-        [Parameter(Mandatory = $false)] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [Parameter(Mandatory = $false)] $OptionalGitCloneArgs,
+        [Parameter(Mandatory = $false)] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gitRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GitRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to clone from.
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    # Prep to start git.exe
-    # Add optional git clone parameters
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalGitCloneArgs))) {
-        $optionalArgs = $optionalGitCloneArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalGitCloneArgs))) {
+    $OptionalArgs = $OptionalGitCloneArgs
     }
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        $optionalArgs = " -b $gitBranchName " + $optionalArgs
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $OptionalArgs = " -b $GitBranchName " + $OptionalArgs
     }
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        # Clone the repo without checking out any files. Sparse checkout folders will be set after clone, and then checked out.
-        $optionalArgs = $optionalArgs + " --no-checkout"
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $OptionalArgs = $OptionalArgs + " --no-checkout"
     }
-    $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
-    Write-Host $("Cloning the git repo..." )
-    $runBlock = {
-        # Remove existing repo folder in case it was created by the previous clone attempt
-        if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+    $CmdArgs = $($OptionalArgs + " " + $GitRepoLocation + " `"" + $GitLocalRepoLocation + " `"" )
+    Write-Output $("Cloning the git repo..." )
+    $RunBlock = {
+        if (Test-Path $GitLocalRepoLocation) {
+            Remove-Item -ErrorAction Stop $GitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " clone" -authHeader $AuthorizationHeader -gitCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location -ErrorAction Stop $gitLocalRepoLocation
-    # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $sparseGitCmd = " set $formattedSparseCheckoutFolders"
-        # Set sparse-checkout folders for checkout, then check them out
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " sparse-checkout" -authHeader $authorizationHeader -gitCmdArgs $sparseGitCmd -argumentsToLog $sparseGitCmd
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    Write-Information Changing to repo location: $(" '$GitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $GitLocalRepoLocation
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $SparseGitCmd = " set $FormattedSparseCheckoutFolders"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " sparse-checkout" -authHeader $AuthorizationHeader -gitCmdArgs $SparseGitCmd -argumentsToLog $SparseGitCmd
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader
     }
 }
     Updates the local repository to the commit ID specified
 function UpdateGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $commitId,
-        [string] $optionalFetchArgs,
-        [string] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $CommitId,
+        [string] $OptionalFetchArgs,
+        [string] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq $gitRepoLocation.Length -gt 8) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.Length -gt 8) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to update
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    $baseRepoSparseCheckout = Invoke-Expression -Command '&$gitExeLocation config --get core.sparseCheckout'
-    if ([string]::IsNullOrEmpty($baseRepoSparseCheckout)) {
-        $baseRepoSparseCheckout = $false
+    $BaseRepoSparseCheckout = Invoke-Expression -Command '&$GitExeLocation config --get core.sparseCheckout'
+    if ([string]::IsNullOrEmpty($BaseRepoSparseCheckout)) {
+    $BaseRepoSparseCheckout = $false
     }
-    $repoSparseCheckout = $false
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $repoSparseCheckout = $true
+    $RepoSparseCheckout = $false
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $RepoSparseCheckout = $true
     }
-    if ($repoSparseCheckout -ne $baseRepoSparseCheckout) {
-        Write-Host "Base image sparse checkout configuration: $baseRepoSparseCheckout"
-        Write-Host "Image sparse checkout configuration: $repoSparseCheckout"
+    if ($RepoSparseCheckout -ne $BaseRepoSparseCheckout) {
+        Write-Output "Base image sparse checkout configuration: $BaseRepoSparseCheckout"
+        Write-Output "Image sparse checkout configuration: $RepoSparseCheckout"
         throw "Sparse checkout configuration misaligned with base image"
     }
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalFetchArgs))) {
-        $optionalArgs = $optionalFetchArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalFetchArgs))) {
+    $OptionalArgs = $OptionalFetchArgs
     }
-    # Explicitly specified branch takes precedence over commitId
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        # Check out a temporary branch to be able to delete the requested one in case it is currently checked out
-        $tempBranch = (New-Guid).Guid
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " -b $tempBranch"
-        # Delete local branch in case it already exists
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $gitBranchName" -checkForSuccess $false
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $($gitBranchName):$($gitBranchName) $optionalArgs"
-        # (Re)create the local branch
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " $gitBranchName"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $tempBranch"
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $TempBranch = (New-Guid).Guid
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " -b $TempBranch"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $GitBranchName" -checkForSuccess $false
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $($GitBranchName):$($GitBranchName) $OptionalArgs"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " $GitBranchName"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $TempBranch"
     }
-    elseif ($commitId -ne 'latest') {
-        Write-Host "Fetching commit $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $commitId $optionalArgs"
-        # Reset command may need to reach out to ADO when GIT LFS is used
-        Write-Host "Resetting branch to $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " reset" -authHeader $authorizationHeader -gitCmdArgs " $commitId --hard"
+    elseif ($CommitId -ne 'latest') {
+        Write-Output "Fetching commit $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $CommitId $OptionalArgs"
+        Write-Output "Resetting branch to $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " reset" -authHeader $AuthorizationHeader -gitCmdArgs " $CommitId --hard"
     }
     else {
-        Write-Host "Pulling the latest commit"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " pull" -authHeader $authorizationHeader -gitCmdArgs $optionalArgs
+        Write-Output "Pulling the latest commit"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " pull" -authHeader $AuthorizationHeader -gitCmdArgs $OptionalArgs
     }
-    $logExpression = '&$gitExeLocation log -1 --quiet --format=%H'
-    $updateCommitID = Invoke-Expression -Command $logExpression
-    Add-VarForLogging -varName 'CommitID' -varValue $updateCommitID
+    $LogExpression = '&$GitExeLocation log -1 --quiet --format=%H'
+    $UpdateCommitID = Invoke-Expression -Command $LogExpression
+    Add-VarForLogging -varName 'CommitID' -varValue $UpdateCommitID
 }
     Executes a git command with arguments
 function ExecuteGitCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitCmd,
-        [string] $gitCmdArgs,
-        [string] $authHeader = '',
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitCmd,
+        [string] $GitCmdArgs,
+        [string] $AuthHeader = '',
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gitCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GitCmdArgs
     }
-    Write-Host $("Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
-    ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
+    Write-Output $("Running: "" $GitExeLocation"" $GitCmd $ArgumentsToLog" )
+    $arguments = " $($AuthHeader)$GitCmd $GitCmdArgs"
+    ProcessRunner -command $GitExeLocation -arguments $arguments -argumentsToLog " $GitCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess
 }
     Executes a gvfs command with arguments
 function ExecuteGvfsCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gvfsCmd,
-        [string] $gvfsCmdArgs,
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GvfsCmd,
+        [string] $GvfsCmdArgs,
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gvfsCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GvfsCmdArgs
     }
-    Write-Host $("Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = " $gvfsCmd $gvfsCmdArgs"
-    # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
-    # So, dont -Wait during Start-Process for gvfs clone
-    ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
+    Write-Output $("Running: "" $GvfsExeLocation"" $GvfsCmd $ArgumentsToLog" )
+    $arguments = " $GvfsCmd $GvfsCmdArgs"
+    ProcessRunner -command $GvfsExeLocation -arguments $arguments -argumentsToLog " $GvfsCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess -waitForDependents $false
 }
 function ConfigureGitRepoBeforeClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
 }
 function ConfigureGitRepoAfterClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
-        [ValidateNotNullOrEmpty()] [bool] $enableGitCommitGraph
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitLocalRepoLocation,
+        [ValidateNotNullOrEmpty()] [bool] $EnableGitCommitGraph
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($gitLocalRepoLocation -replace '\\','/')"
-    if ($enableGitCommitGraph -eq $true) {
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($GitLocalRepoLocation -replace '\\','/')"
+    if ($EnableGitCommitGraph -eq $true) {
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
     }
 }
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 function UpdateOrCloneRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $repoUrl,
-        [ValidateNotNullOrEmpty()][string] $targetDirectory,
-        [SourceControl]$sourceControl,
-        [ValidateNotNullOrEmpty()][string] $commitId,
-        [string] $gitBranchName,
-        [string] $optionalCloneArgs,
-        [bool] $cloneIfNotExists,
-        [string] $optionalFetchArgs,
-        [bool] $enableGitCommitGraph,
-        [string] $formattedSparseCheckoutFolders,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()][string] $RepoUrl,
+        [ValidateNotNullOrEmpty()][string] $TargetDirectory,
+        [SourceControl]$SourceControl,
+        [ValidateNotNullOrEmpty()][string] $CommitId,
+        [string] $GitBranchName,
+        [string] $OptionalCloneArgs,
+        [bool] $CloneIfNotExists,
+        [string] $OptionalFetchArgs,
+        [bool] $EnableGitCommitGraph,
+        [string] $FormattedSparseCheckoutFolders,
+        [string] $MsiClientId
     )
-    switch ($sourceControl) {
+    switch ($SourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-            # Get git install location
-            $gitexe = Get-Command -ErrorAction Stop git
-            $GitExeLocation = $gitexe.Source
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
-            # Get gvfs install location
-            $gvfsexe = Get-Command -ErrorAction Stop gvfs
-            $GvfsExeLocation = $gvfsexe.Source
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
         }
     }
-    ## Update or Clone Repo
-    $shouldCloneRepo = $false
-    # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'.
-    if ($repoUrl.Contains("" )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+    $ShouldCloneRepo = $false
+    if ($RepoUrl.Contains("" )) {
+    $RepoUrl = $RepoUrl.Replace(" " , "%20" )
     }
-    # If the Folder exists
-    if (!(Test-Path -Path $targetDirectory -PathType Container)) {
-        if ($cloneIfNotExists -eq $true) {
-            $shouldCloneRepo = $true
+    if (!(Test-Path -Path $TargetDirectory -PathType Container)) {
+        if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
         }
         else {
-            Write-Host " folder not found at '$targetDirectory'."
+            Write-Output " folder not found at '$TargetDirectory'."
             throw "folder not found."
         }
     }
     else {
-        Set-Location -ErrorAction Stop $targetDirectory
-        switch ($sourceControl) {
+        Set-Location -ErrorAction Stop $TargetDirectory
+        switch ($SourceControl) {
             git {
-                Write-Host "Testing if '$targetDirectory' hosts a git repository..."
-                # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                Write-Output "Testing if '$TargetDirectory' hosts a git repository..."
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
             }
             gvfs {
-                Write-Host "Testing if '$targetDirectory' hosts a gvfs repository..."
-                # gvfs status will return an error if this is not a gvfs repository
+                Write-Output "Testing if '$TargetDirectory' hosts a gvfs repository..."
                 &$GvfsExeLocation status
                 if ($? -eq $true) {
-                    # gvfs repository is always at " src" folder
-                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
-                    # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                    Set-Location -ErrorAction Stop (Join-Path $TargetDirectory " src" )
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
                 }
             }
         }
         if (-not $?) {
-            if ($cloneIfNotExists -eq $true) {
-                $shouldCloneRepo = $true
+            if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
             }
             else {
-                Write-Host " repository not found at '$targetDirectory'."
+                Write-Output " repository not found at '$TargetDirectory'."
                 throw "Repository not found."
             }
         }
     }
-    # If for some reason one of the checks above fails, we need to clone the repo.
-    if ($shouldCloneRepo -eq $true) {
-        # folder doesn't exist, clone into the folder
+    if ($ShouldCloneRepo -eq $true) {
         ConfigureGitRepoBeforeClone -gitExeLocation $GitExeLocation
-        switch ($sourceControl) {
+        switch ($SourceControl) {
             git {
-                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repoUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -optionalGitCloneArgs $optionalCloneArgs -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $msiClientId
+                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $RepoUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -optionalGitCloneArgs $OptionalCloneArgs -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $MsiClientId
             }
             gvfs {
-                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $repoUrl -gvfsLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -msiClientId $msiClientId
-                # git repository is always at " src" folder
-                $targetDirectory = Join-Path $targetDirectory " src"
+                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $RepoUrl -gvfsLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -msiClientId $MsiClientId
+    $TargetDirectory = Join-Path $TargetDirectory " src"
             }
         }
-        Write-Information Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location -ErrorAction Stop $targetDirectory
-        # update repo_originUrl to the new location
-        $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
-        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
+        Write-Information Changing to repo location: $(" '$TargetDirectory'" )
+        Set-Location -ErrorAction Stop $TargetDirectory
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $TargetDirectory -enableGitCommitGraph $EnableGitCommitGraph
     }
-    if ($shouldCloneRepo -and $commitId -eq 'latest') {
-        Write-Host "Skip pulling latest updates for just cloned repo: $repo_originUrl"
+    if ($ShouldCloneRepo -and $CommitId -eq 'latest') {
+        Write-Output "Skip pulling latest updates for just cloned repo: $repo_originUrl"
     }
     else {
         Write-Information Updating repo with Url: $repo_originUrl
-        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
+        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -commitId $CommitId -optionalFetchArgs $OptionalFetchArgs -msiClientId $MsiClientId
     }
 }
-function Add-VarForLogging ($varName, $varValue) {
-    <#`n.DESCRIPTION
-  Add a row to the logging array but only if the value is not null or whitespace
-  .PARAMETER varName
-  Name of the variable
-  .PARAMETER varValue
-  Value of the variable
-  #>
-    if (!([string]::IsNullOrWhiteSpace($varValue))) {
-        $global:varLogArray | Add-Member -MemberType NoteProperty -Name $varName -Value $varValue
+function Add-VarForLogging ($VarName, $VarValue) {
+    if (!([string]::IsNullOrWhiteSpace($VarValue))) {
+    $global:varLogArray | Add-Member -MemberType NoteProperty -Name $VarName -Value $VarValue
     }
 }
 function RunScriptSyncRepo(
-    $repoUrl,
+    $RepoUrl,
     $repository_TargetDirectory,
     [SourceControl]$repository_SourceControl,
     $repository_cloneIfNotExists = $false,
-    $repoName,
-    $commitId,
-    $branchName,
+    $RepoName,
+    $CommitId,
+    $BranchName,
     $repository_optionalCloningParameters,
     $repository_optionalFetchParameters,
-    $enableGitCommitGraph,
-    $sparseCheckoutFolders,
+    $EnableGitCommitGraph,
+    $SparseCheckoutFolders,
     $repository_MSIClientId
 ) {
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName "PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
-    # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location -ErrorAction Stop
-    # Set Repo Log file path
-    $repoLogFilePath = 'c:\.tools\RepoLogs'
+    $StartingDirectory = Get-Location -ErrorAction Stop
+    $RepoLogFilePath = 'c:\.tools\RepoLogs'
     try {
-        # Create log file location
-        mkdir " $repoLogFilePath" -Force
+        mkdir " $RepoLogFilePath" -Force
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-                # Get git install location
-                $gitexe = Get-Command -ErrorAction Stop git
-                $GitExeLocation = $gitexe.Source
-                # confirm git is there
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
                 ProcessRunner -command $GitExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find git.exe.
@@ -2279,10 +1957,8 @@ function RunScriptSyncRepo(
                 }
             }
             { $_ -eq [SourceControl]::gvfs } {
-                # Get gvfs install location
-                $gvfsexe = Get-Command -ErrorAction Stop gvfs
-                $GvfsExeLocation = $gvfsexe.Source
-                # confirm gvfs is there
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
                 ProcessRunner -command $GvfsExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find gvfs.exe.
@@ -2291,189 +1967,159 @@ function RunScriptSyncRepo(
             }
         }
         Write-Information --------------------------------------
-        Write-Host "Repository name: '$repoName'"
-        Write-Host "Commit id: '$commitId'"
-        Write-Host "BranchName name: '$branchName'"
+        Write-Output "Repository name: '$RepoName'"
+        Write-Output "Commit id: '$CommitId'"
+        Write-Output "BranchName name: '$BranchName'"
         Write-Information --------------------------------------
-        # Add input data variables to log array
-        Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
+        Add-VarForLogging -varName 'RepoURL' -varValue $RepoUrl
         Add-VarForLogging -varName 'repository_TargetDirectory' -varValue $repository_TargetDirectory
-        if (!([string]::IsNullOrWhiteSpace($branchName))) {
-            Write-Host "Use explicitly provided branch '$branchName' rather than commitId"
-            $commitId = 'latest'
+        if (!([string]::IsNullOrWhiteSpace($BranchName))) {
+            Write-Output "Use explicitly provided branch '$BranchName' rather than commitId"
+    $CommitId = 'latest'
         }
-        if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        if ([string]::IsNullOrWhiteSpace($RepoUrl)) {
             throw "RepoUrl must be known at this point"
         }
-        $formattedSparseCheckoutFolders = ""
-        if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
-            $formattedSparseCheckoutFolders = $quotedFolders -Join " "
+    $FormattedSparseCheckoutFolders = ""
+        if (-not [string]::IsNullOrWhiteSpace($SparseCheckoutFolders)) {
+    $QuotedFolders = $SparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
+    $FormattedSparseCheckoutFolders = $QuotedFolders -Join " "
         }
-        ## Update or Clone repo
-        UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
-        Write-Host "Var Log Array"
-        Write-Host $global:varLogArray | ConvertTo-Json
-        # Set the file name for logging repo sync variables
-        Write-Host "Derive Repo Log Name"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
-        # Write out file to output location
-        $outFile = " $repoLogFilePath\$repoLogFileName"
-        Write-Host "Write output file to " $outFile
-        $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
+        UpdateOrCloneRepo -repoUrl $RepoUrl -commitId $CommitId -gitBranchName $BranchName -enableGitCommitGraph $EnableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
+        Write-Output "Var Log Array"
+        Write-Output $global:varLogArray | ConvertTo-Json
+        Write-Output "Derive Repo Log Name"
+    $RepoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
+    $OutFile = " $RepoLogFilePath\$RepoLogFileName"
+        Write-Output "Write output file to " $OutFile
+    $global:varLogArray | ConvertTo-Json | Out-File -FilePath $OutFile
         Write-Information Completed!
     }
     catch {
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message)) {
-$errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-            Write-Error $errMsg
+    $ErrMsg = $Error[0].Exception.Message
+            Write-Output $ErrMsg
+            Write-Error $ErrMsg
         }
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
         Write-Information \'Script failed.\'
-        Set-Location -ErrorAction Stop $startingDirectory
+        Set-Location -ErrorAction Stop $StartingDirectory
         throw
     }
-    Set-Location -ErrorAction Stop $startingDirectory
+    Set-Location -ErrorAction Stop $StartingDirectory
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    # If the optional parameter $repository_SourceControl is NOT passed in, default to git
-    [SourceControl]$sourceControl = [SourceControl]::git
-    # If the optional paramter $repository_SourceControl is passed in, ensure it has a valid value
+    [SourceControl]$SourceControl = [SourceControl]::git
     if (-not [String]::IsNullOrEmpty($repository_SourceControl)) {
-$sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
+    $SourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
     }
-            $params = @{
+    $params = @{
         repository_TargetDirectory = $repository_TargetDirectory
         repository_optionalCloningParameters = $repository_optionalCloningParameters
         repository_cloneIfNotExists = $repository_cloneIfNotExists
-        enableGitCommitGraph = $enableGitCommitGraph
-        sparseCheckoutFolders = $sparseCheckoutFolders
-        commitId = $commitId
+        enableGitCommitGraph = $EnableGitCommitGraph
+        sparseCheckoutFolders = $SparseCheckoutFolders
+        commitId = $CommitId
         repository_optionalFetchParameters = $repository_optionalFetchParameters
         repository_MSIClientId = $repository_MSIClientId
-        branchName = $branchName
-        repository_SourceControl = $sourceControl
-        repoName = $repoName
-        repoUrl = $repoUrl
+        branchName = $BranchName
+        repository_SourceControl = $SourceControl
+        repoName = $RepoName
+        repoUrl = $RepoUrl
     }
     RunScriptSyncRepo @params
 }
 .Exception.Message.Exception.Message)) {
-$errMsg = #Requires -Version 7.0
-    Windows Clone Update Repo
+    $ErrMsg = Windows Clone Update Repo
     Azure automation
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
     Allows cloning a new or updating an existing repo (important for updating a chained image).
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    # Url of the repository to clone/sync.
     [Parameter(Mandatory = $true)]
-    [string] $repoUrl,
+    [string] $RepoUrl,
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory = $true)]
     [String] $repository_TargetDirectory,
-    # The repository Source Control options are git (default) or gvfs
     [Parameter(Mandatory = $false)]
     [String] $repository_SourceControl,
     [Parameter(Mandatory = $false)]
     [bool] $repository_cloneIfNotExists = $false,
     [Parameter(Mandatory = $false)]
-    [string] $repoName,
-    # The commit id to fetch/check out for the repo. $commitId is ignored if $branchName is provided.
+    [string] $RepoName,
     [Parameter(Mandatory = $false)]
-    [string] $commitId = 'latest',
-    # When provided, this is the branch to clone/fetch. Otherwise the default branch is cloned/pulled.
+    [string] $CommitId = 'latest',
     [Parameter(Mandatory = $false)]
-    [string] $branchName,
+    [string] $BranchName,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalCloningParameters,
     [Parameter(Mandatory = $false)]
     [string] $repository_optionalFetchParameters,
     [Parameter(Mandatory = $false)]
-    [bool] $enableGitCommitGraph = $false,
-    # Optional comma separated list of folders for sparse checkout. When provided, only these folders will be set and sparse-checkout is used for the repo
+    [bool] $EnableGitCommitGraph = $false,
     [Parameter(Mandatory = $false)]
-    [string] $sparseCheckoutFolders,
-    # Optional MSI client ID which is required if the VM has multiple user-assigned managed identities. This will be used to access Azure DevOps.
+    [string] $SparseCheckoutFolders,
     [Parameter(Mandatory = $false)]
     [string] $repository_MSIClientId = $null
 )
 enum SourceControl {
-    git = 0  # default
+    git = 0
     gvfs
 }
-$logfilepath = $null
-$script:varLogArray = New-Object -TypeName "PSCustomObject"
+    $logfilepath = $null
+    $script:varLogArray = New-Object -TypeName "PSCustomObject"
 Function ProcessRunner(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$command,
+    $command,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$arguments,
-    [string]$argumentsToLog = '',
-    [bool] $checkForSuccess = $true,
-    [bool] $waitForDependents = $true
+    $arguments,
+    $ArgumentsToLog = '',
+    [bool] $CheckForSuccess = $true,
+    [bool] $WaitForDependents = $true
 ) {
-    <#`n.DESCRIPTION
-  Run a process and validate that the process started and completed without any errors
-  .PARAMETER command
-  The command that will be run
-  .PARAMETER arguments
-  The arguments required to run the supplied command. Do not use in logging as the string may contains a secret.
-  .PARAMETER argumentsToLog
-  The arguments representation that is safe to log
-  .PARAMETER checkForSuccess
-  If $false then do not check whether the command succeeded
-  #>
-    if (!$argumentsToLog) {
-        $argumentsToLog = $arguments
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $arguments
     }
-    $errLog = [System.IO.Path]::GetTempFileName()
-    if ($waitForDependents) {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -Wait -PassThru -NoNewWindow
+    $ErrLog = [System.IO.Path]::GetTempFileName()
+    if ($WaitForDependents) {
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -Wait -PassThru -NoNewWindow
     }
     else {
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -NoNewWindow
+    $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -NoNewWindow
     }
-    # If $process variable is null, something is wrong
     if (!$process) {
-        Write-Error "ERROR command failed to start: $command $argumentsToLog"
+        Write-Error "ERROR command failed to start: $command $ArgumentsToLog"
         return;
     }
-    if ($waitForDependents) {
-        $ExitCode = $process.ExitCode
+    if ($WaitForDependents) {
+    $ExitCode = $process.ExitCode
     }
     else {
-        # This will wait for the process to exit as Start-Process above will not block for the process to exit
-        $process.WaitForExit()
-        # There is a defect where the $process.ExitCode is empty.
-        # The full details is at https://stackoverflow.com/questions/10262231/obtaining-exitcode-using-start-process-and-waitforexit-instead-of-wait
-        # The below is the workaround for the defect
-        $process.HasExited  # This will calculate the exitCode
-        $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
+    $process.WaitForExit()
+    $process.HasExited
+    $ExitCode = $process.GetType().GetField(" exitCode" , "NonPublic,Instance" ).GetValue($process) # Get the ExitCode from the hidden field but it is not publicly available
     }
     if ($ExitCode -ne 0) {
-        Write-Output "Error running: $command $argumentsToLog"
+        Write-Output "Error running: $command $ArgumentsToLog"
         Write-Output "Exit code: $ExitCode"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
-        # if logfilepath is set, write that out too if the process exited
+        Get-Content -Path $ErrLog
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
-        if ($checkForSuccess) {
+        if ($CheckForSuccess) {
             throw "Exit code from process was nonzero"
         }
         else {
@@ -2483,397 +2129,335 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
 }
     Gvfs clones the repository and checks out to the specified gitBranchName
 function GvfsCloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()] $gvfsRepoLocation,
-        [ValidateNotNullOrEmpty()] $gvfsLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()] $GvfsRepoLocation,
+        [ValidateNotNullOrEmpty()] $GvfsLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GvfsRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Gvfs repo url is not a valid HTTPS clone url : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gvfsRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gvfsRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GvfsRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GvfsRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    $cmdArgs = $(" " + $gvfsRepoLocation + " `"" + $gvfsLocalRepoLocation + " `"" )
-    # Known Issue: gvfs clone does not work with -b <branch> option.
-    # So, first gvfs clone without -b <branch> option
-    # then, next git checkout <branch>
-    Write-Host $("Gvfs cloning the git repo..." )
-    # Limitation: gvfs clone doesn't take a -c parameter like git clone.
-    # So, the workaround is to configure and Unconfigure a custom credential.helper using " git config"
-    $prevCredentialHelper = &$gitExeLocation config --system credential.helper
-    # Configure credential.helper using " git config"
-$GitAccessToken = Get-GitAccessToken -MsiClientID $msiClientId
-$CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
-    $runBlock = {
-        # gvfs clone
-        ExecuteGvfsCmd -gvfsExeLocation $gvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $cmdArgs
+    $CmdArgs = $(" " + $GvfsRepoLocation + " `"" + $GvfsLocalRepoLocation + " `"" )
+    Write-Output $("Gvfs cloning the git repo..." )
+    $PrevCredentialHelper = &$GitExeLocation config --system credential.helper
+    $GitAccessToken = Get-GitAccessToken -MsiClientID $MsiClientId
+    $CredentialHelper = " `" !f() { test `" `$1`" = get && echo username=AzureManagedIdentity; echo password=$GitAccessToken; }; f`""
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $CredentialHelper" -argumentsToLog " --system credential.helper CUSTOM_AUTH_SCRIPT"
+    $RunBlock = {
+        ExecuteGvfsCmd -gvfsExeLocation $GvfsExeLocation -gvfsCmd " clone" -gvfsCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    # Unconfigure credential.helper using " git config"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $prevCredentialHelper"
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system credential.helper $PrevCredentialHelper"
 }
 [OutputType([bool])]
  -ErrorAction Stop {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoUrl
     )
     return ($RepoUrl -Match '^https://[a-zA-Z][\w\-_]*\.visualstudio\.com/.*' -or $RepoUrl -Match '^https://dev\.azure\.com/.*')
 }
     Clones the repository and checks out to the specified CommitId
 function CloneGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [Parameter(Mandatory = $false)] $optionalGitCloneArgs,
-        [Parameter(Mandatory = $false)] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [Parameter(Mandatory = $false)] $OptionalGitCloneArgs,
+        [Parameter(Mandatory = $false)] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS clone url : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq ($gitRepoLocation.Length -gt 8)) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Host $errMsg
-        Throw $errMsg
+    if ($false -eq ($GitRepoLocation.Length -gt 8)) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Output $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to clone from.
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    # Prep to start git.exe
-    # Add optional git clone parameters
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalGitCloneArgs))) {
-        $optionalArgs = $optionalGitCloneArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalGitCloneArgs))) {
+    $OptionalArgs = $OptionalGitCloneArgs
     }
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        $optionalArgs = " -b $gitBranchName " + $optionalArgs
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $OptionalArgs = " -b $GitBranchName " + $OptionalArgs
     }
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        # Clone the repo without checking out any files. Sparse checkout folders will be set after clone, and then checked out.
-        $optionalArgs = $optionalArgs + " --no-checkout"
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $OptionalArgs = $OptionalArgs + " --no-checkout"
     }
-    $cmdArgs = $($optionalArgs + " " + $gitRepoLocation + " `"" + $gitLocalRepoLocation + " `"" )
-    Write-Host $("Cloning the git repo..." )
-    $runBlock = {
-        # Remove existing repo folder in case it was created by the previous clone attempt
-        if (Test-Path $gitLocalRepoLocation) {
-            Remove-Item -ErrorAction Stop $gitLocalRepoLocatio -Forcen -Force -Recurse -Force
+    $CmdArgs = $($OptionalArgs + " " + $GitRepoLocation + " `"" + $GitLocalRepoLocation + " `"" )
+    Write-Output $("Cloning the git repo..." )
+    $RunBlock = {
+        if (Test-Path $GitLocalRepoLocation) {
+            Remove-Item -ErrorAction Stop $GitLocalRepoLocatio -Forcen -Force -Recurse -Force
         }
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " clone" -authHeader $authorizationHeader -gitCmdArgs $cmdArgs
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " clone" -authHeader $AuthorizationHeader -gitCmdArgs $CmdArgs
     }
-    RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
-    Write-Information Changing to repo location: $(" '$gitLocalRepoLocation'" )
-    Set-Location -ErrorAction Stop $gitLocalRepoLocation
-    # If sparse checkout, repo was cloned with --no-checkout option. Set folders desired for checkout, then check them out.
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $sparseGitCmd = " set $formattedSparseCheckoutFolders"
-        # Set sparse-checkout folders for checkout, then check them out
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " sparse-checkout" -authHeader $authorizationHeader -gitCmdArgs $sparseGitCmd -argumentsToLog $sparseGitCmd
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader
+    RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 30 -onFailureBlock {}
+    Write-Information Changing to repo location: $(" '$GitLocalRepoLocation'" )
+    Set-Location -ErrorAction Stop $GitLocalRepoLocation
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $SparseGitCmd = " set $FormattedSparseCheckoutFolders"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " sparse-checkout" -authHeader $AuthorizationHeader -gitCmdArgs $SparseGitCmd -argumentsToLog $SparseGitCmd
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader
     }
 }
     Updates the local repository to the commit ID specified
 function UpdateGitRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()] $gitRepoLocation,
-        [ValidateNotNullOrEmpty()] $gitLocalRepoLocation,
-        [string] $gitBranchName,
-        [string] $commitId,
-        [string] $optionalFetchArgs,
-        [string] $formattedSparseCheckoutFolders,
-        [Parameter(Mandatory = $false)][string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()] $GitRepoLocation,
+        [ValidateNotNullOrEmpty()] $GitLocalRepoLocation,
+        [string] $GitBranchName,
+        [string] $CommitId,
+        [string] $OptionalFetchArgs,
+        [string] $FormattedSparseCheckoutFolders,
+        [Parameter(Mandatory = $false)][string] $MsiClientId
     )
-    # pre-condition checks
-    if ($false -eq $gitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
-        $errMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.ToLowerInvariant().StartsWith(" https://" )) {
+    $ErrMsg = $("Error! The specified Git repo url is not a valid HTTPS url : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    if ($false -eq $gitRepoLocation.Length -gt 8) {
-        $errMsg = $("Error! The specified Git repo url is not valid : " + $gitRepoLocation)
-        Write-Error $errMsg
-        Throw $errMsg
+    if ($false -eq $GitRepoLocation.Length -gt 8) {
+    $ErrMsg = $("Error! The specified Git repo url is not valid : " + $GitRepoLocation)
+        Write-Error $ErrMsg
+        Throw $ErrMsg
     }
-    # Using specified credentials, create the actual repo url to update
-    $authorizationHeader = ''
-    if (Get-CanUseManagedIdentityForRepo -RepoUrl $gitRepoLocation) {
-        $authorizationHeader = Get-GitAuthorizationHeader -MsiClientID $msiClientId
+    $AuthorizationHeader = ''
+    if (Get-CanUseManagedIdentityForRepo -RepoUrl $GitRepoLocation) {
+    $AuthorizationHeader = Get-GitAuthorizationHeader -MsiClientID $MsiClientId
     }
-    $baseRepoSparseCheckout = Invoke-Expression -Command '&$gitExeLocation config --get core.sparseCheckout'
-    if ([string]::IsNullOrEmpty($baseRepoSparseCheckout)) {
-        $baseRepoSparseCheckout = $false
+    $BaseRepoSparseCheckout = Invoke-Expression -Command '&$GitExeLocation config --get core.sparseCheckout'
+    if ([string]::IsNullOrEmpty($BaseRepoSparseCheckout)) {
+    $BaseRepoSparseCheckout = $false
     }
-    $repoSparseCheckout = $false
-    if (-not [string]::IsNullOrEmpty($formattedSparseCheckoutFolders)) {
-        $repoSparseCheckout = $true
+    $RepoSparseCheckout = $false
+    if (-not [string]::IsNullOrEmpty($FormattedSparseCheckoutFolders)) {
+    $RepoSparseCheckout = $true
     }
-    if ($repoSparseCheckout -ne $baseRepoSparseCheckout) {
-        Write-Host "Base image sparse checkout configuration: $baseRepoSparseCheckout"
-        Write-Host "Image sparse checkout configuration: $repoSparseCheckout"
+    if ($RepoSparseCheckout -ne $BaseRepoSparseCheckout) {
+        Write-Output "Base image sparse checkout configuration: $BaseRepoSparseCheckout"
+        Write-Output "Image sparse checkout configuration: $RepoSparseCheckout"
         throw "Sparse checkout configuration misaligned with base image"
     }
-    $optionalArgs = ""
-    if (!([System.String]::IsNullOrWhiteSpace($optionalFetchArgs))) {
-        $optionalArgs = $optionalFetchArgs
+    $OptionalArgs = ""
+    if (!([System.String]::IsNullOrWhiteSpace($OptionalFetchArgs))) {
+    $OptionalArgs = $OptionalFetchArgs
     }
-    # Explicitly specified branch takes precedence over commitId
-    if (![string]::IsNullOrEmpty($gitBranchName)) {
-        # Check out a temporary branch to be able to delete the requested one in case it is currently checked out
-        $tempBranch = (New-Guid).Guid
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " -b $tempBranch"
-        # Delete local branch in case it already exists
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $gitBranchName" -checkForSuccess $false
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $($gitBranchName):$($gitBranchName) $optionalArgs"
-        # (Re)create the local branch
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " checkout" -authHeader $authorizationHeader -gitCmdArgs " $gitBranchName"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " branch" -gitCmdArgs " -D $tempBranch"
+    if (![string]::IsNullOrEmpty($GitBranchName)) {
+    $TempBranch = (New-Guid).Guid
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " -b $TempBranch"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $GitBranchName" -checkForSuccess $false
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $($GitBranchName):$($GitBranchName) $OptionalArgs"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " checkout" -authHeader $AuthorizationHeader -gitCmdArgs " $GitBranchName"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " branch" -gitCmdArgs " -D $TempBranch"
     }
-    elseif ($commitId -ne 'latest') {
-        Write-Host "Fetching commit $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " fetch" -authHeader $authorizationHeader -gitCmdArgs " origin $commitId $optionalArgs"
-        # Reset command may need to reach out to ADO when GIT LFS is used
-        Write-Host "Resetting branch to $commitId"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " reset" -authHeader $authorizationHeader -gitCmdArgs " $commitId --hard"
+    elseif ($CommitId -ne 'latest') {
+        Write-Output "Fetching commit $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " fetch" -authHeader $AuthorizationHeader -gitCmdArgs " origin $CommitId $OptionalArgs"
+        Write-Output "Resetting branch to $CommitId"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " reset" -authHeader $AuthorizationHeader -gitCmdArgs " $CommitId --hard"
     }
     else {
-        Write-Host "Pulling the latest commit"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " pull" -authHeader $authorizationHeader -gitCmdArgs $optionalArgs
+        Write-Output "Pulling the latest commit"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " pull" -authHeader $AuthorizationHeader -gitCmdArgs $OptionalArgs
     }
-    $logExpression = '&$gitExeLocation log -1 --quiet --format=%H'
-    $updateCommitID = Invoke-Expression -Command $logExpression
-    Add-VarForLogging -varName 'CommitID' -varValue $updateCommitID
+    $LogExpression = '&$GitExeLocation log -1 --quiet --format=%H'
+    $UpdateCommitID = Invoke-Expression -Command $LogExpression
+    Add-VarForLogging -varName 'CommitID' -varValue $UpdateCommitID
 }
     Executes a git command with arguments
 function ExecuteGitCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitCmd,
-        [string] $gitCmdArgs,
-        [string] $authHeader = '',
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitCmd,
+        [string] $GitCmdArgs,
+        [string] $AuthHeader = '',
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gitCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GitCmdArgs
     }
-    Write-Host $("Running: "" $gitExeLocation"" $gitCmd $argumentsToLog" )
-    $arguments = " $($authHeader)$gitCmd $gitCmdArgs"
-    ProcessRunner -command $gitExeLocation -arguments $arguments -argumentsToLog " $gitCmd $argumentsToLog" -checkForSuccess $checkForSuccess
+    Write-Output $("Running: "" $GitExeLocation"" $GitCmd $ArgumentsToLog" )
+    $arguments = " $($AuthHeader)$GitCmd $GitCmdArgs"
+    ProcessRunner -command $GitExeLocation -arguments $arguments -argumentsToLog " $GitCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess
 }
     Executes a gvfs command with arguments
 function ExecuteGvfsCmd {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $gvfsExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gvfsCmd,
-        [string] $gvfsCmdArgs,
-        [bool] $checkForSuccess = $true,
-        # If $gitCmdArgs contain secrets the caller is responsible for providing the alternative string to log
-        [string]$argumentsToLog = ''
+    param(
+        [ValidateNotNullOrEmpty()][string] $GvfsExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GvfsCmd,
+        [string] $GvfsCmdArgs,
+        [bool] $CheckForSuccess = $true,
+        $ArgumentsToLog = ''
     )
-    if (!$argumentsToLog) {
-        $argumentsToLog = $gvfsCmdArgs
+    if (!$ArgumentsToLog) {
+    $ArgumentsToLog = $GvfsCmdArgs
     }
-    Write-Host $("Running: "" $gvfsExeLocation"" $gvfsCmd $argumentsToLog" )
-    $arguments = " $gvfsCmd $gvfsCmdArgs"
-    # gvfs clone creates a child process (gvfs.mount.exe) which never exits. gvfs.mount.exe exits only after a gvfs unmount which is done later (if needed).
-    # So, dont -Wait during Start-Process for gvfs clone
-    ProcessRunner -command $gvfsExeLocation -arguments $arguments -argumentsToLog " $gvfsCmd $argumentsToLog" -checkForSuccess $checkForSuccess -waitForDependents $false
+    Write-Output $("Running: "" $GvfsExeLocation"" $GvfsCmd $ArgumentsToLog" )
+    $arguments = " $GvfsCmd $GvfsCmdArgs"
+    ProcessRunner -command $GvfsExeLocation -arguments $arguments -argumentsToLog " $GvfsCmd $ArgumentsToLog" -checkForSuccess $CheckForSuccess -waitForDependents $false
 }
 function ConfigureGitRepoBeforeClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.safecrlf true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system push.default simple"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.preloadindex true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.fscache true"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system core.longpaths true"
 }
 function ConfigureGitRepoAfterClone {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()] $gitExeLocation,
-        [ValidateNotNullOrEmpty()][string] $gitLocalRepoLocation,
-        [ValidateNotNullOrEmpty()] [bool] $enableGitCommitGraph
+    param(
+        [ValidateNotNullOrEmpty()] $GitExeLocation,
+        [ValidateNotNullOrEmpty()][string] $GitLocalRepoLocation,
+        [ValidateNotNullOrEmpty()] [bool] $EnableGitCommitGraph
     )
-    ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($gitLocalRepoLocation -replace '\\','/')"
-    if ($enableGitCommitGraph -eq $true) {
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
-        ExecuteGitCmd -gitExeLocation $gitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
+    ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --system --add safe.directory $($GitLocalRepoLocation -replace '\\','/')"
+    if ($EnableGitCommitGraph -eq $true) {
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local core.commitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " config" -gitCmdArgs " --local gc.writeCommitGraph true"
+        ExecuteGitCmd -gitExeLocation $GitExeLocation -gitCmd " commit-graph" -gitCmdArgs " write --reachable"
     }
 }
     Calls update of the targetDirectory is a valid repository. Else it will attempt to clone the repository.
 function UpdateOrCloneRepo {
-    [CmdletBinding()]
-param(
-        [ValidateNotNullOrEmpty()][string] $repoUrl,
-        [ValidateNotNullOrEmpty()][string] $targetDirectory,
-        [SourceControl]$sourceControl,
-        [ValidateNotNullOrEmpty()][string] $commitId,
-        [string] $gitBranchName,
-        [string] $optionalCloneArgs,
-        [bool] $cloneIfNotExists,
-        [string] $optionalFetchArgs,
-        [bool] $enableGitCommitGraph,
-        [string] $formattedSparseCheckoutFolders,
-        [string] $msiClientId
+    param(
+        [ValidateNotNullOrEmpty()][string] $RepoUrl,
+        [ValidateNotNullOrEmpty()][string] $TargetDirectory,
+        [SourceControl]$SourceControl,
+        [ValidateNotNullOrEmpty()][string] $CommitId,
+        [string] $GitBranchName,
+        [string] $OptionalCloneArgs,
+        [bool] $CloneIfNotExists,
+        [string] $OptionalFetchArgs,
+        [bool] $EnableGitCommitGraph,
+        [string] $FormattedSparseCheckoutFolders,
+        [string] $MsiClientId
     )
-    switch ($sourceControl) {
+    switch ($SourceControl) {
         { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-            # Get git install location
-            $gitexe = Get-Command -ErrorAction Stop git
-            $GitExeLocation = $gitexe.Source
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
         }
         { $_ -eq [SourceControl]::gvfs } {
-            # Get gvfs install location
-            $gvfsexe = Get-Command -ErrorAction Stop gvfs
-            $GvfsExeLocation = $gvfsexe.Source
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
         }
     }
-    ## Update or Clone Repo
-    $shouldCloneRepo = $false
-    # We don't need to fully url-encode the repo url. However we should replace whitespaces with '%20'.
-    if ($repoUrl.Contains("" )) {
-        $repoUrl = $repoUrl.Replace(" " , "%20" )
+    $ShouldCloneRepo = $false
+    if ($RepoUrl.Contains("" )) {
+    $RepoUrl = $RepoUrl.Replace(" " , "%20" )
     }
-    # If the Folder exists
-    if (!(Test-Path -Path $targetDirectory -PathType Container)) {
-        if ($cloneIfNotExists -eq $true) {
-            $shouldCloneRepo = $true
+    if (!(Test-Path -Path $TargetDirectory -PathType Container)) {
+        if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
         }
         else {
-            Write-Host " folder not found at '$targetDirectory'."
+            Write-Output " folder not found at '$TargetDirectory'."
             throw "folder not found."
         }
     }
     else {
-        Set-Location -ErrorAction Stop $targetDirectory
-        switch ($sourceControl) {
+        Set-Location -ErrorAction Stop $TargetDirectory
+        switch ($SourceControl) {
             git {
-                Write-Host "Testing if '$targetDirectory' hosts a git repository..."
-                # git remote will return an error if this is not a git repository
-                $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                Write-Output "Testing if '$TargetDirectory' hosts a git repository..."
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
             }
             gvfs {
-                Write-Host "Testing if '$targetDirectory' hosts a gvfs repository..."
-                # gvfs status will return an error if this is not a gvfs repository
+                Write-Output "Testing if '$TargetDirectory' hosts a gvfs repository..."
                 &$GvfsExeLocation status
                 if ($? -eq $true) {
-                    # gvfs repository is always at " src" folder
-                    Set-Location -ErrorAction Stop (Join-Path $targetDirectory " src" )
-                    # git remote will return an error if this is not a git repository
-                    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+                    Set-Location -ErrorAction Stop (Join-Path $TargetDirectory " src" )
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
                 }
             }
         }
         if (-not $?) {
-            if ($cloneIfNotExists -eq $true) {
-                $shouldCloneRepo = $true
+            if ($CloneIfNotExists -eq $true) {
+    $ShouldCloneRepo = $true
             }
             else {
-                Write-Host " repository not found at '$targetDirectory'."
+                Write-Output " repository not found at '$TargetDirectory'."
                 throw "Repository not found."
             }
         }
     }
-    # If for some reason one of the checks above fails, we need to clone the repo.
-    if ($shouldCloneRepo -eq $true) {
-        # folder doesn't exist, clone into the folder
+    if ($ShouldCloneRepo -eq $true) {
         ConfigureGitRepoBeforeClone -gitExeLocation $GitExeLocation
-        switch ($sourceControl) {
+        switch ($SourceControl) {
             git {
-                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repoUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -optionalGitCloneArgs $optionalCloneArgs -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $msiClientId
+                CloneGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $RepoUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -optionalGitCloneArgs $OptionalCloneArgs -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $MsiClientId
             }
             gvfs {
-                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $repoUrl -gvfsLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -msiClientId $msiClientId
-                # git repository is always at " src" folder
-                $targetDirectory = Join-Path $targetDirectory " src"
+                GvfsCloneGitRepo -gitExeLocation $GitExeLocation -gvfsExeLocation $GvfsExeLocation -gvfsRepoLocation $RepoUrl -gvfsLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -msiClientId $MsiClientId
+    $TargetDirectory = Join-Path $TargetDirectory " src"
             }
         }
-        Write-Information Changing to repo location: $(" '$targetDirectory'" )
-        Set-Location -ErrorAction Stop $targetDirectory
-        # update repo_originUrl to the new location
-        $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
-        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $targetDirectory -enableGitCommitGraph $enableGitCommitGraph
+        Write-Information Changing to repo location: $(" '$TargetDirectory'" )
+        Set-Location -ErrorAction Stop $TargetDirectory
+    $repo_originUrl = &$GitExeLocation remote get-url -ErrorAction Stop origin
+        ConfigureGitRepoAfterClone -gitExeLocation $GitExeLocation -gitLocalRepoLocation $TargetDirectory -enableGitCommitGraph $EnableGitCommitGraph
     }
-    if ($shouldCloneRepo -and $commitId -eq 'latest') {
-        Write-Host "Skip pulling latest updates for just cloned repo: $repo_originUrl"
+    if ($ShouldCloneRepo -and $CommitId -eq 'latest') {
+        Write-Output "Skip pulling latest updates for just cloned repo: $repo_originUrl"
     }
     else {
         Write-Information Updating repo with Url: $repo_originUrl
-        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $targetDirectory -gitBranchName $gitBranchName -commitId $commitId -optionalFetchArgs $optionalFetchArgs -msiClientId $msiClientId
+        UpdateGitRepo -gitExeLocation $GitExeLocation -gitRepoLocation $repo_originUrl -gitLocalRepoLocation $TargetDirectory -gitBranchName $GitBranchName -commitId $CommitId -optionalFetchArgs $OptionalFetchArgs -msiClientId $MsiClientId
     }
 }
-function Add-VarForLogging ($varName, $varValue) {
-    <#`n.DESCRIPTION
-  Add a row to the logging array but only if the value is not null or whitespace
-  .PARAMETER varName
-  Name of the variable
-  .PARAMETER varValue
-  Value of the variable
-  #>
-    if (!([string]::IsNullOrWhiteSpace($varValue))) {
-        $global:varLogArray | Add-Member -MemberType NoteProperty -Name $varName -Value $varValue
+function Add-VarForLogging ($VarName, $VarValue) {
+    if (!([string]::IsNullOrWhiteSpace($VarValue))) {
+    $global:varLogArray | Add-Member -MemberType NoteProperty -Name $VarName -Value $VarValue
     }
 }
 function RunScriptSyncRepo(
-    $repoUrl,
+    $RepoUrl,
     $repository_TargetDirectory,
     [SourceControl]$repository_SourceControl,
     $repository_cloneIfNotExists = $false,
-    $repoName,
-    $commitId,
-    $branchName,
+    $RepoName,
+    $CommitId,
+    $BranchName,
     $repository_optionalCloningParameters,
     $repository_optionalFetchParameters,
-    $enableGitCommitGraph,
-    $sparseCheckoutFolders,
+    $EnableGitCommitGraph,
+    $SparseCheckoutFolders,
     $repository_MSIClientId
 ) {
     $logfilepath = $null
     $script:varLogArray = New-Object -TypeName "PSCustomObject"
     Set-StrictMode -Version Latest
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls
-    # Track starting directory so we can reset it back at the end of the script
-    $startingDirectory = Get-Location -ErrorAction Stop
-    # Set Repo Log file path
-    $repoLogFilePath = 'c:\.tools\RepoLogs'
+    $StartingDirectory = Get-Location -ErrorAction Stop
+    $RepoLogFilePath = 'c:\.tools\RepoLogs'
     try {
-        # Create log file location
-        mkdir " $repoLogFilePath" -Force
+        mkdir " $RepoLogFilePath" -Force
         switch ($repository_SourceControl) {
             { ($_ -eq [SourceControl]::git) -or ($_ -eq [SourceControl]::gvfs) } {
-                # Get git install location
-                $gitexe = Get-Command -ErrorAction Stop git
-                $GitExeLocation = $gitexe.Source
-                # confirm git is there
+    $gitexe = Get-Command -ErrorAction Stop git
+    $GitExeLocation = $gitexe.Source
                 ProcessRunner -command $GitExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find git.exe.
@@ -2881,10 +2465,8 @@ function RunScriptSyncRepo(
                 }
             }
             { $_ -eq [SourceControl]::gvfs } {
-                # Get gvfs install location
-                $gvfsexe = Get-Command -ErrorAction Stop gvfs
-                $GvfsExeLocation = $gvfsexe.Source
-                # confirm gvfs is there
+    $gvfsexe = Get-Command -ErrorAction Stop gvfs
+    $GvfsExeLocation = $gvfsexe.Source
                 ProcessRunner -command $GvfsExeLocation -arguments " version"
                 if ($? -ne $true) {
                     Write-Error Unable to find gvfs.exe.
@@ -2893,115 +2475,104 @@ function RunScriptSyncRepo(
             }
         }
         Write-Information --------------------------------------
-        Write-Host "Repository name: '$repoName'"
-        Write-Host "Commit id: '$commitId'"
-        Write-Host "BranchName name: '$branchName'"
+        Write-Output "Repository name: '$RepoName'"
+        Write-Output "Commit id: '$CommitId'"
+        Write-Output "BranchName name: '$BranchName'"
         Write-Information --------------------------------------
-        # Add input data variables to log array
-        Add-VarForLogging -varName 'RepoURL' -varValue $repoUrl
+        Add-VarForLogging -varName 'RepoURL' -varValue $RepoUrl
         Add-VarForLogging -varName 'repository_TargetDirectory' -varValue $repository_TargetDirectory
-        if (!([string]::IsNullOrWhiteSpace($branchName))) {
-            Write-Host "Use explicitly provided branch '$branchName' rather than commitId"
-            $commitId = 'latest'
+        if (!([string]::IsNullOrWhiteSpace($BranchName))) {
+            Write-Output "Use explicitly provided branch '$BranchName' rather than commitId"
+    $CommitId = 'latest'
         }
-        if ([string]::IsNullOrWhiteSpace($repoUrl)) {
+        if ([string]::IsNullOrWhiteSpace($RepoUrl)) {
             throw "RepoUrl must be known at this point"
         }
-        $formattedSparseCheckoutFolders = ""
-        if (-not [string]::IsNullOrWhiteSpace($sparseCheckoutFolders)) {
-            $quotedFolders = $sparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
-            $formattedSparseCheckoutFolders = $quotedFolders -Join " "
+    $FormattedSparseCheckoutFolders = ""
+        if (-not [string]::IsNullOrWhiteSpace($SparseCheckoutFolders)) {
+    $QuotedFolders = $SparseCheckoutFolders -Split ',' | ForEach-Object { '" ' + $_ + '" ' }
+    $FormattedSparseCheckoutFolders = $QuotedFolders -Join " "
         }
-        ## Update or Clone repo
-        UpdateOrCloneRepo -repoUrl $repoUrl -commitId $commitId -gitBranchName $branchName -enableGitCommitGraph $enableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $formattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
-        Write-Host "Var Log Array"
-        Write-Host $global:varLogArray | ConvertTo-Json
-        # Set the file name for logging repo sync variables
-        Write-Host "Derive Repo Log Name"
-        $repoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
-        # Write out file to output location
-        $outFile = " $repoLogFilePath\$repoLogFileName"
-        Write-Host "Write output file to " $outFile
-        $global:varLogArray | ConvertTo-Json | Out-File -FilePath $outFile
+        UpdateOrCloneRepo -repoUrl $RepoUrl -commitId $CommitId -gitBranchName $BranchName -enableGitCommitGraph $EnableGitCommitGraph -targetDirectory $repository_TargetDirectory -sourceControl $repository_SourceControl -optionalCloneArgs $repository_optionalCloningParameters -cloneIfNotExists $repository_cloneIfNotExists -optionalFetchArgs $repository_optionalFetchParameters -formattedSparseCheckoutFolders $FormattedSparseCheckoutFolders -msiClientId $repository_MSIClientId
+        Write-Output "Var Log Array"
+        Write-Output $global:varLogArray | ConvertTo-Json
+        Write-Output "Derive Repo Log Name"
+    $RepoLogFileName = [IO.Path]::GetFileName(" $repository_TargetDirectory" ) + " .json"
+    $OutFile = " $RepoLogFilePath\$RepoLogFileName"
+        Write-Output "Write output file to " $OutFile
+    $global:varLogArray | ConvertTo-Json | Out-File -FilePath $OutFile
         Write-Information Completed!
     }
     catch {
         Write-Information -Object $_
         Write-Information -Object $_.ScriptStackTrace
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message)) {
-$errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-            Write-Error $errMsg
+    $ErrMsg = $Error[0].Exception.Message
+            Write-Output $ErrMsg
+            Write-Error $ErrMsg
         }
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
         Write-Information \'Script failed.\'
-        Set-Location -ErrorAction Stop $startingDirectory
+        Set-Location -ErrorAction Stop $StartingDirectory
         throw
     }
-    Set-Location -ErrorAction Stop $startingDirectory
+    Set-Location -ErrorAction Stop $StartingDirectory
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    # If the optional parameter $repository_SourceControl is NOT passed in, default to git
-    [SourceControl]$sourceControl = [SourceControl]::git
-    # If the optional paramter $repository_SourceControl is passed in, ensure it has a valid value
+    [SourceControl]$SourceControl = [SourceControl]::git
     if (-not [String]::IsNullOrEmpty($repository_SourceControl)) {
-$sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
+    $SourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
     }
-            $params = @{
+    $params = @{
         repository_TargetDirectory = $repository_TargetDirectory
         repository_optionalCloningParameters = $repository_optionalCloningParameters
         repository_cloneIfNotExists = $repository_cloneIfNotExists
-        enableGitCommitGraph = $enableGitCommitGraph
-        sparseCheckoutFolders = $sparseCheckoutFolders
-        commitId = $commitId
+        enableGitCommitGraph = $EnableGitCommitGraph
+        sparseCheckoutFolders = $SparseCheckoutFolders
+        commitId = $CommitId
         repository_optionalFetchParameters = $repository_optionalFetchParameters
         repository_MSIClientId = $repository_MSIClientId
-        branchName = $branchName
-        repository_SourceControl = $sourceControl
-        repoName = $repoName
-        repoUrl = $repoUrl
+        branchName = $BranchName
+        repository_SourceControl = $SourceControl
+        repoName = $RepoName
+        repoUrl = $RepoUrl
     }
     RunScriptSyncRepo @params
 }
 .Exception.Message.Exception.Message
-            Write-Host $errMsg
-            Write-Error $errMsg
+            Write-Output $ErrMsg
+            Write-Error $ErrMsg
         }
         if ([System.String]::IsNullOrWhiteSpace($logfilepath) -ne $true -and [System.IO.File]::Exists($logfilepath) -eq $true) {
-            Write-Host "Logfile output from '$logfilepath':"
+            Write-Output "Logfile output from '$logfilepath':"
             Get-Content -ErrorAction Stop $logfilepath
         }
         Write-Information \'Script failed.\'
-        Set-Location -ErrorAction Stop $startingDirectory
+        Set-Location -ErrorAction Stop $StartingDirectory
         throw
     }
-    Set-Location -ErrorAction Stop $startingDirectory
+    Set-Location -ErrorAction Stop $StartingDirectory
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
-    # If the optional parameter $repository_SourceControl is NOT passed in, default to git
-    [SourceControl]$sourceControl = [SourceControl]::git
-    # If the optional paramter $repository_SourceControl is passed in, ensure it has a valid value
+    [SourceControl]$SourceControl = [SourceControl]::git
     if (-not [String]::IsNullOrEmpty($repository_SourceControl)) {
-$sourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
+    $SourceControl = [Enum]::Parse([SourceControl], $repository_SourceControl)
     }
-            $params = @{
+    $params = @{
         repository_TargetDirectory = $repository_TargetDirectory
         repository_optionalCloningParameters = $repository_optionalCloningParameters
         repository_cloneIfNotExists = $repository_cloneIfNotExists
-        enableGitCommitGraph = $enableGitCommitGraph
-        sparseCheckoutFolders = $sparseCheckoutFolders
-        commitId = $commitId
+        enableGitCommitGraph = $EnableGitCommitGraph
+        sparseCheckoutFolders = $SparseCheckoutFolders
+        commitId = $CommitId
         repository_optionalFetchParameters = $repository_optionalFetchParameters
         repository_MSIClientId = $repository_MSIClientId
-        branchName = $branchName
-        repository_SourceControl = $sourceControl
-        repoName = $repoName
-        repoUrl = $repoUrl
+        branchName = $BranchName
+        repository_SourceControl = $SourceControl
+        repoName = $RepoName
+        repoUrl = $RepoUrl
     }
-    RunScriptSyncRepo @params
-}
-
-
+    RunScriptSyncRepo @params`n}

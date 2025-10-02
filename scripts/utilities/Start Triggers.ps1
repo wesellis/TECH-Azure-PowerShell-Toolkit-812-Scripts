@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Start Triggers
@@ -8,37 +8,34 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
     [switch] $Stop
 )
-$DeploymentScriptOutputs = @{}
+    $DeploymentScriptOutputs = @{}
 if (-not $Stop)
 {
     Start-Sleep -Seconds 10
 }
-$env:Triggers.Split('|')
+    $env:Triggers.Split('|')
 | ForEach-Object {
     $trigger = $_
     if ($Stop)
     {
         Write-Output "Stopping trigger $trigger..."
-       $params = @{
-           ErrorAction = "SilentlyContinue # Ignore errors, since the trigger may not exist } else { Write-Output "Starting trigger $trigger..." ;  $triggerOutput = Start-AzDataFactoryV2Trigger"
+    $params = @{
+           ErrorAction = "SilentlyContinue # Ignore errors, since the trigger may not exist } else { Write-Output "Starting trigger $trigger..." ;  $TriggerOutput = Start-AzDataFactoryV2Trigger"
            DataFactoryName = $env:DataFactoryName
            ResourceGroupName = $env:DataFactoryResourceGroup
            Name = $trigger
-           Force = "} if ($triggerOutput) { Write-Output " done..." } else { Write-Output " failed..." } $DeploymentScriptOutputs[$trigger] = $triggerOutput"
+           Force = "} if ($TriggerOutput) { Write-Output " done..." } else { Write-Output " failed..." } $DeploymentScriptOutputs[$trigger] = $TriggerOutput"
        }
        ; @params
 }
@@ -58,5 +55,4 @@ if (-not [string]::IsNullOrWhiteSpace($env:Pipelines))
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

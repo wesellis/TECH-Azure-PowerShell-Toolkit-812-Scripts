@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,91 +6,89 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AccountName
 )
-Write-Host "Monitoring Batch Account: $AccountName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "============================================"
-# Get Batch Account details
+Write-Output "Monitoring Batch Account: $AccountName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "============================================"
 $BatchAccount = Get-AzBatchAccount -ResourceGroupName $ResourceGroupName -Name $AccountName
-Write-Host "Batch Account Information:"
-Write-Host "Name: $($BatchAccount.AccountName)"
-Write-Host "Location: $($BatchAccount.Location)"
-Write-Host "Provisioning State: $($BatchAccount.ProvisioningState)"
-Write-Host "Account Endpoint: $($BatchAccount.AccountEndpoint)"
-Write-Host "Pool Allocation Mode: $($BatchAccount.PoolAllocationMode)"
-Write-Host "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
-Write-Host "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
+Write-Output "Batch Account Information:"
+Write-Output "Name: $($BatchAccount.AccountName)"
+Write-Output "Location: $($BatchAccount.Location)"
+Write-Output "Provisioning State: $($BatchAccount.ProvisioningState)"
+Write-Output "Account Endpoint: $($BatchAccount.AccountEndpoint)"
+Write-Output "Pool Allocation Mode: $($BatchAccount.PoolAllocationMode)"
+Write-Output "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
+Write-Output "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
 if ($BatchAccount.AutoStorageAccountId) {
     $StorageAccountName = $BatchAccount.AutoStorageAccountId.Split('/')[-1]
-    Write-Host "Auto Storage Account: $StorageAccountName"
+    Write-Output "Auto Storage Account: $StorageAccountName"
 }
-# Get batch context for  operations
 try {
     $BatchContext = Get-AzBatchAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName
-    # Get pools information
-    Write-Host "`nBatch Pools:"
+    Write-Output "`nBatch Pools:"
     $Pools = Get-AzBatchPool -BatchContext $BatchContext
     if ($Pools.Count -eq 0) {
-        Write-Host "No pools configured"
+        Write-Output "No pools configured"
     } else {
         foreach ($Pool in $Pools) {
-            Write-Host "  - Pool: $($Pool.Id)"
-            Write-Host "    State: $($Pool.State)"
-            Write-Host "    VM Size: $($Pool.VmSize)"
-            Write-Host "    Target Dedicated Nodes: $($Pool.TargetDedicatedComputeNodes)"
-            Write-Host "    Current Dedicated Nodes: $($Pool.CurrentDedicatedComputeNodes)"
-            Write-Host "    Target Low Priority Nodes: $($Pool.TargetLowPriorityComputeNodes)"
-            Write-Host "    Current Low Priority Nodes: $($Pool.CurrentLowPriorityComputeNodes)"
-            Write-Host "    Auto Scale Enabled: $($Pool.EnableAutoScale)"
-            Write-Host "    ---"
+            Write-Output "  - Pool: $($Pool.Id)"
+            Write-Output "    State: $($Pool.State)"
+            Write-Output "    VM Size: $($Pool.VmSize)"
+            Write-Output "    Target Dedicated Nodes: $($Pool.TargetDedicatedComputeNodes)"
+            Write-Output "    Current Dedicated Nodes: $($Pool.CurrentDedicatedComputeNodes)"
+            Write-Output "    Target Low Priority Nodes: $($Pool.TargetLowPriorityComputeNodes)"
+            Write-Output "    Current Low Priority Nodes: $($Pool.CurrentLowPriorityComputeNodes)"
+            Write-Output "    Auto Scale Enabled: $($Pool.EnableAutoScale)"
+            Write-Output "    ---"
         }
     }
-    # Get jobs information
-    Write-Host "`nBatch Jobs:"
+    Write-Output "`nBatch Jobs:"
     $Jobs = Get-AzBatchJob -BatchContext $BatchContext
     if ($Jobs.Count -eq 0) {
-        Write-Host "No active jobs"
+        Write-Output "No active jobs"
     } else {
         foreach ($Job in $Jobs) {
-            Write-Host "  - Job: $($Job.Id)"
-            Write-Host "    State: $($Job.State)"
-            Write-Host "    Pool: $($Job.PoolInformation.PoolId)"
-            Write-Host "    Priority: $($Job.Priority)"
-            Write-Host "    Creation Time: $($Job.CreationTime)"
-            # Get task count for this job
+            Write-Output "  - Job: $($Job.Id)"
+            Write-Output "    State: $($Job.State)"
+            Write-Output "    Pool: $($Job.PoolInformation.PoolId)"
+            Write-Output "    Priority: $($Job.Priority)"
+            Write-Output "    Creation Time: $($Job.CreationTime)"
             $TaskCounts = Get-AzBatchTaskCount -JobId $Job.Id -BatchContext $BatchContext -ErrorAction SilentlyContinue
             if ($TaskCounts) {
-                Write-Host "    Active Tasks: $($TaskCounts.Active)"
-                Write-Host "    Running Tasks: $($TaskCounts.Running)"
-                Write-Host "    Completed Tasks: $($TaskCounts.Completed)"
-                Write-Host "    Failed Tasks: $($TaskCounts.Failed)"
+                Write-Output "    Active Tasks: $($TaskCounts.Active)"
+                Write-Output "    Running Tasks: $($TaskCounts.Running)"
+                Write-Output "    Completed Tasks: $($TaskCounts.Completed)"
+                Write-Output "    Failed Tasks: $($TaskCounts.Failed)"
             }
-            Write-Host "    ---"
+            Write-Output "    ---"
         }
     }
 } catch {
-    Write-Host "`n pool and job information: Unable to retrieve (check permissions)"
-    Write-Host "Error: $($_.Exception.Message)"
+    Write-Output "`n pool and job information: Unable to retrieve (check permissions)"
+    Write-Output "Error: $($_.Exception.Message)"
 }
-# Display quota information
-Write-Host "`nQuota Information:"
-Write-Host "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
-Write-Host "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
-Write-Host "Pool Quota: $($BatchAccount.PoolQuota)"
-Write-Host "Active Job and Job Schedule Quota: $($BatchAccount.ActiveJobAndJobScheduleQuota)"
-Write-Host "`nBatch Account URLs:"
-Write-Host "Portal: https://portal.azure.com/#@/resource$($BatchAccount.Id)"
-Write-Host "Batch Explorer: https://azure.github.io/BatchExplorer/"
-Write-Host "`nNext Steps for Optimization:"
-Write-Host "1. Review pool utilization and scale settings"
-Write-Host "2. Monitor job completion times and failure rates"
-Write-Host "3. Optimize task distribution across nodes"
-Write-Host "4. Consider using low-priority VMs for cost savings"
-Write-Host "5. Implement auto-scaling for dynamic workloads"
-Write-Host "`nBatch Account monitoring completed at $(Get-Date)"
+Write-Output "`nQuota Information:"
+Write-Output "Dedicated Core Quota: $($BatchAccount.DedicatedCoreQuota)"
+Write-Output "Low Priority Core Quota: $($BatchAccount.LowPriorityCoreQuota)"
+Write-Output "Pool Quota: $($BatchAccount.PoolQuota)"
+Write-Output "Active Job and Job Schedule Quota: $($BatchAccount.ActiveJobAndJobScheduleQuota)"
+Write-Output "`nBatch Account URLs:"
+Write-Output "Portal: https://portal.azure.com/#@/resource$($BatchAccount.Id)"
+Write-Output "Batch Explorer: https://azure.github.io/BatchExplorer/"
+Write-Output "`nNext Steps for Optimization:"
+Write-Output "1. Review pool utilization and scale settings"
+Write-Output "2. Monitor job completion times and failure rates"
+Write-Output "3. Optimize task distribution across nodes"
+Write-Output "4. Consider using low-priority VMs for cost savings"
+Write-Output "5. Implement auto-scaling for dynamic workloads"
+Write-Output "`nBatch Account monitoring completed at $(Get-Date)"
+
+
 

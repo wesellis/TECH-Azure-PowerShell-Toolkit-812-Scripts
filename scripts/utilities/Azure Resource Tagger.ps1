@@ -1,94 +1,118 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Azure Resource Tagger
 
 .DESCRIPTION
-    Azure automation
+    Azure automation for tagging resources in bulk
 
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+.NOTES
+    Version: 1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+#>
+
 [CmdletBinding()]
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
 param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-[CmdletBinding()];
-param(
-    [Parameter()]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    [hashtable]$Tags = @{},
+
+    [Parameter(Mandatory)]
+    [hashtable]$Tags,
+
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceType,
+
+    [Parameter()]
     [switch]$WhatIf,
+
+    [Parameter()]
     [switch]$Force
 )
-Write-Host "Azure Resource Tagger" -ForegroundColor Cyan
-Write-Host " =====================" -ForegroundColor Cyan
-if ($Tags.Count -eq 0) {
-    Write-Host "No tags specified. Example usage:" -ForegroundColor Yellow
-    Write-Host "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}" -ForegroundColor White
-    return
-}
-Write-Host "Target Resource Group: $ResourceGroupName" -ForegroundColor Green
-Write-Host "Tags to Apply:" -ForegroundColor Green
-foreach ($tag in $Tags.GetEnumerator()) {
-    Write-Host "  $($tag.Key): $($tag.Value)" -ForegroundColor White
-}
-if ($WhatIf) {
-    Write-Host " `n[WHAT-IF MODE] - No changes will be made" -ForegroundColor Yellow
-}
-$resources = if ($ResourceType) {
-    Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType $ResourceType
-} else {
-    Get-AzResource -ResourceGroupName $ResourceGroupName
-}
-Write-Host " `nFound $($resources.Count) resources to tag" -ForegroundColor Green
-$taggedCount = 0
-foreach ($resource in $resources) {
-    try {
-        if ($WhatIf) {
-            Write-Host "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))" -ForegroundColor Yellow
-        } else {
-            # Merge existing tags with new tags
-$existingTags = $resource.Tags ?? @{}
-            foreach ($tag in $Tags.GetEnumerator()) {
-                $existingTags[$tag.Key] = $tag.Value
-            }
-            Set-AzResource -ResourceId $resource.ResourceId -Tag $existingTags -Force:$Force
-            Write-Host "  [OK] Tagged: $($resource.Name)" -ForegroundColor Green
-            $taggedCount++
-        }
-    } catch {
-        Write-Warning "Failed to tag resource '$($resource.Name)': $($_.Exception.Message)"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+function Write-Log {
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
     }
+    $LogEntry = "$timestamp [Resource-Tagger] [$Level] $Message"
+    Write-Host $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-if (-not $WhatIf) {
-    Write-Host " `n[OK] Successfully tagged $taggedCount resources" -ForegroundColor Green
+
+try {
+    Write-Log "Azure Resource Tagger" "INFO"
+    Write-Log "=====================" "INFO"
+
+    if ($Tags.Count -eq 0) {
+        Write-Log "No tags specified. Example usage:" "WARN"
+        Write-Log "  .\Azure-Resource-Tagger.ps1 -ResourceGroupName 'MyRG' -Tags @{Environment='Prod'; Owner='IT'}" "INFO"
+        return
+    }
+
+    Write-Log "Target Resource Group: $ResourceGroupName" "INFO"
+    Write-Log "Tags to Apply:" "INFO"
+    foreach ($tag in $Tags.GetEnumerator()) {
+        Write-Log "  $($tag.Key): $($tag.Value)" "INFO"
+    }
+
+    if ($WhatIf) {
+        Write-Log "`n[WHAT-IF MODE] - No changes will be made" "WARN"
+    }
+
+    # Get resources
+    $resources = if ($ResourceType) {
+        Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType $ResourceType
+    } else {
+        Get-AzResource -ResourceGroupName $ResourceGroupName
+    }
+
+    Write-Log "`nFound $($resources.Count) resources to tag" "INFO"
+
+    $TaggedCount = 0
+    foreach ($resource in $resources) {
+        try {
+            if ($WhatIf) {
+                Write-Log "  [WHAT-IF] Would tag: $($resource.Name) ($($resource.ResourceType))" "INFO"
+            } else {
+                $ExistingTags = $resource.Tags ?? @{}
+                foreach ($tag in $Tags.GetEnumerator()) {
+                    $ExistingTags[$tag.Key] = $tag.Value
+                }
+                Set-AzResource -ResourceId $resource.ResourceId -Tag $ExistingTags -Force:$Force
+                Write-Log "  [OK] Tagged: $($resource.Name)" "SUCCESS"
+                $TaggedCount++
+            }
+        } catch {
+            Write-Log "  [ERROR] Failed to tag $($resource.Name): $_" "ERROR"
+        }
+    }
+
+    if (-not $WhatIf) {
+        Write-Log "`nSuccessfully tagged $TaggedCount of $($resources.Count) resources" "SUCCESS"
+    }
+
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
 }
-Write-Host " `nResource tagging completed at $(Get-Date)" -ForegroundColor Cyan
-
-

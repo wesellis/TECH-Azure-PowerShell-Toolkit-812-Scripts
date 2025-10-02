@@ -1,10 +1,14 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.IotHub
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Manage Azure IoT Hub and device operations
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Create, configure, and manage IoT Hub instances and connected devices
 .PARAMETER ResourceGroupName
     Resource group name
@@ -21,22 +25,39 @@
 [OutputType([PSCustomObject])]
 param(
     [Parameter(Mandatory)]
-    [string]$ResourceGroupName,
+
+    [ValidateNotNullOrEmpty()]
+
+    [string] $ResourceGroupName,
 
     [Parameter(Mandatory)]
-    [string]$IoTHubName,
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $IoTHubName,
 
     [Parameter(Mandatory)]
     [ValidateSet('Create', 'Status', 'Device', 'Telemetry', 'Monitor')]
     [string]$Action,
 
     [Parameter()]
-    [string]$DeviceId,
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $DeviceId,
 
     [Parameter()]
-    [string]$Location = 'East US'
-)
 
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $Location = 'East US'
+)
 $ErrorActionPreference = 'Stop'
 
 try {
@@ -45,14 +66,13 @@ try {
     switch ($Action) {
         'Create' {
             if ($PSCmdlet.ShouldProcess($IoTHubName, 'Create IoT Hub')) {
-                $iotHubSplat = @{
+                $IotHubSplat = @{
                     ResourceGroupName = $ResourceGroupName
                     Name = $IoTHubName
                     Location = $Location
                     SkuName = 'S1'
                     Units = 1
                 }
-
                 $hub = New-AzIotHub @iotHubSplat
                 Write-Host "IoT Hub created: $($hub.Name)" -ForegroundColor Green
                 return $hub
@@ -61,7 +81,6 @@ try {
 
         'Status' {
             $hub = Get-AzIotHub -ResourceGroupName $ResourceGroupName -Name $IoTHubName
-
             $status = @{
                 Name = $hub.Name
                 Location = $hub.Location
@@ -82,13 +101,12 @@ try {
                 return
             }
 
-            Write-Host "Managing device: $DeviceId" -ForegroundColor Yellow
+            Write-Host "Managing device: $DeviceId" -ForegroundColor Green
             Write-Host "Use Azure CLI for device management: az iot hub device-identity list --hub-name $IoTHubName" -ForegroundColor Green
         }
 
         'Monitor' {
-            Write-Host "IoT Hub Monitoring Overview" -ForegroundColor Cyan
-
+            Write-Host "IoT Hub Monitoring Overview" -ForegroundColor Green
             $metrics = @{
                 HubName = $IoTHubName
                 MessagesToday = Get-Random -Minimum 1000 -Maximum 10000
@@ -102,7 +120,7 @@ try {
         }
 
         'Telemetry' {
-            Write-Host "Telemetry monitoring requires IoT Hub connection string" -ForegroundColor Yellow
+            Write-Host "Telemetry monitoring requires IoT Hub connection string" -ForegroundColor Green
             Write-Host "Consider using Azure Monitor for comprehensive telemetry analysis" -ForegroundColor Green
         }
     }

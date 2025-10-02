@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Sql Elasticpool Creator
@@ -8,34 +8,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -53,7 +50,7 @@ param(
     [ValidateNotNullOrEmpty()]
     [string]$ElasticPoolName,
     [Parameter()]
-    [string]$Edition = "Standard" ,
+    $Edition = "Standard" ,
     [Parameter()]
     [int]$PoolDtu = 100,
     [Parameter()]
@@ -61,9 +58,8 @@ param(
     [Parameter()]
     [int]$DatabaseDtuMax = 100
 )
-Write-Host "Creating SQL Elastic Pool: $ElasticPoolName" "INFO"
-
-$params = @{
+Write-Output "Creating SQL Elastic Pool: $ElasticPoolName" "INFO"
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Dtu = $PoolDtu
     Edition = $Edition
@@ -73,25 +69,24 @@ $params = @{
     ErrorAction = "Stop"
     DatabaseDtuMin = $DatabaseDtuMin
 }
-$ElasticPool @params
-Write-Host "SQL Elastic Pool created successfully:" "INFO"
-Write-Host "Name: $($ElasticPool.ElasticPoolName)" "INFO"
-Write-Host "Server: $($ElasticPool.ServerName)" "INFO"
-Write-Host "Edition: $($ElasticPool.Edition)" "INFO"
-Write-Host "Pool DTU: $($ElasticPool.Dtu)" "INFO"
-Write-Host "Database DTU Min: $($ElasticPool.DatabaseDtuMin)" "INFO"
-Write-Host "Database DTU Max: $($ElasticPool.DatabaseDtuMax)" "INFO"
-Write-Host "State: $($ElasticPool.State)" "INFO"
-Write-Host " `nElastic Pool Benefits:" "INFO"
-Write-Host "Cost optimization for multiple databases" "INFO"
-Write-Host "Automatic resource balancing" "INFO"
-Write-Host "Simplified management" "INFO"
-Write-Host "Predictable pricing model" "INFO"
-Write-Host " `nNext Steps:" "INFO"
-Write-Host " 1. Move existing databases to the pool" "INFO"
-Write-Host " 2. Create new databases in the pool" "INFO"
-Write-Host " 3. Monitor resource utilization" "INFO"
+    [string]$ElasticPool @params
+Write-Output "SQL Elastic Pool created successfully:" "INFO"
+Write-Output "Name: $($ElasticPool.ElasticPoolName)" "INFO"
+Write-Output "Server: $($ElasticPool.ServerName)" "INFO"
+Write-Output "Edition: $($ElasticPool.Edition)" "INFO"
+Write-Output "Pool DTU: $($ElasticPool.Dtu)" "INFO"
+Write-Output "Database DTU Min: $($ElasticPool.DatabaseDtuMin)" "INFO"
+Write-Output "Database DTU Max: $($ElasticPool.DatabaseDtuMax)" "INFO"
+Write-Output "State: $($ElasticPool.State)" "INFO"
+Write-Output " `nElastic Pool Benefits:" "INFO"
+Write-Output "Cost optimization for multiple databases" "INFO"
+Write-Output "Automatic resource balancing" "INFO"
+Write-Output "Simplified management" "INFO"
+Write-Output "Predictable pricing model" "INFO"
+Write-Output " `nNext Steps:" "INFO"
+Write-Output " 1. Move existing databases to the pool" "INFO"
+Write-Output " 2. Create new databases in the pool" "INFO"
+Write-Output " 3. Monitor resource utilization" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

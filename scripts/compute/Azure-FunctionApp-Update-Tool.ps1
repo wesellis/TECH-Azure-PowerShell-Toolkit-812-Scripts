@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,25 +6,23 @@
 
 .DESCRIPTION
     Manage Function Apps
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AppName,
     [string]$PlanName
 )
-# Get current Function App
 $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
-Write-Host "Function App: $($FunctionApp.Name)"
-Write-Host "Current Resource Group: $($FunctionApp.ResourceGroupName)"
-Write-Host "Current Location: $($FunctionApp.Location)"
-Write-Host "Current Runtime: $($FunctionApp.RuntimeVersion)"
-# Update the Function App
+Write-Output "Function App: $($FunctionApp.Name)"
+Write-Output "Current Resource Group: $($FunctionApp.ResourceGroupName)"
+Write-Output "Current Location: $($FunctionApp.Location)"
+Write-Output "Current Runtime: $($FunctionApp.RuntimeVersion)"
 if ($PlanName) {
-    Write-Host "Updating App Service Plan to: $PlanName"
+    Write-Output "Updating App Service Plan to: $PlanName"
     Set-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName -AppServicePlan $PlanName
-    Write-Host "Function App $AppName updated with new plan: $PlanName"
+    Write-Output "Function App $AppName updated with new plan: $PlanName"
 } else {
-    Write-Host "No plan specified - displaying current configuration only"
-}
-
+    Write-Output "No plan specified - displaying current configuration only"`n}

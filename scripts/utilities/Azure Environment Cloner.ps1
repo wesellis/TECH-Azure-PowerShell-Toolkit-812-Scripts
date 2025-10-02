@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,136 +9,117 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$SourceResourceGroup,
+    $SourceResourceGroup,
     [Parameter(Mandatory)][Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetResourceGroup,
+    $TargetResourceGroup,
     [Parameter()][Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetLocation,
+    $TargetLocation,
     [Parameter()][string[]]$ExcludeResourceTypes = @(),
     [Parameter()][hashtable]$TagOverrides = @{},
-    [Parameter()][string]$NamingConvention = " {OriginalName}" ,
+    [Parameter()]$NamingConvention = " {OriginalName}" ,
     [Parameter()][switch]$IncludeSecrets,
     [Parameter()][switch]$WhatIf,
     [Parameter()][switch]$Force
 )
-$modulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Environment Cloner" -Description "Clone entire Azure environments with intelligent mapping"
+    $ModulePath = Join-Path -Path $PSScriptRoot -ChildPath " .." -AdditionalChildPath " .." -AdditionalChildPath " modules" -AdditionalChildPath "AzureAutomationCommon"
+if (Test-Path $ModulePath) { Write-Output "Azure Script Started" # Color: $2 "Azure Environment Cloner" -Description "Clone entire Azure environments with intelligent mapping"
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
-    # Progress stepNumber 1 -TotalSteps 8 -StepName "Validation" -Status "Validating source environment..."
-    $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroup -ErrorAction Stop
-
-    # Get target location (default to source location)
-    $targetLoc = $TargetLocation ?? $sourceRG.Location
-    # Progress stepNumber 2 -TotalSteps 8 -StepName "Discovery" -Status "Analyzing source resources..."
-    $sourceResources = Get-AzResource -ResourceGroupName $SourceResourceGroup
-    $filteredResources = $sourceResources | Where-Object { $_.ResourceType -notin $ExcludeResourceTypes }
-
-    # Progress stepNumber 3 -TotalSteps 8 -StepName "Dependencies" -Status "Mapping dependencies..."
-    # Map resource dependencies
-    $dependencyMap = @{}
-    foreach ($resource in $filteredResources) {
-        $newName = $NamingConvention.Replace(" {OriginalName}" , $resource.Name)
-        $dependencyMap[$resource.ResourceId] = @{
+    $SourceRG = Get-AzResourceGroup -Name $SourceResourceGroup -ErrorAction Stop
+    $TargetLoc = $TargetLocation ?? $SourceRG.Location
+    $SourceResources = Get-AzResource -ResourceGroupName $SourceResourceGroup
+    $FilteredResources = $SourceResources | Where-Object { $_.ResourceType -notin $ExcludeResourceTypes }
+    $DependencyMap = @{}
+    foreach ($resource in $FilteredResources) {
+    $NewName = $NamingConvention.Replace(" {OriginalName}" , $resource.Name)
+    $DependencyMap[$resource.ResourceId] = @{
             OriginalResource = $resource
-            NewName = $newName
+            NewName = $NewName
             Dependencies = @()
             Created = $false
         }
     }
-    # Progress stepNumber 4 -TotalSteps 8 -StepName "Target Setup" -Status "Creating target resource group..."
     if ($WhatIf) {
 
     } else {
-        $targetRG = Get-AzResourceGroup -Name $TargetResourceGroup -ErrorAction SilentlyContinue
-        if (-not $targetRG) {
-            $targetRG = New-AzResourceGroup -Name $TargetResourceGroup -Location $targetLoc
+    $TargetRG = Get-AzResourceGroup -Name $TargetResourceGroup -ErrorAction SilentlyContinue
+        if (-not $TargetRG) {
+    $TargetRG = New-AzResourceGroup -Name $TargetResourceGroup -Location $TargetLoc
 
         }
     }
-    # Progress stepNumber 5 -TotalSteps 8 -StepName "ARM Templates" -Status "Generating deployment templates..."
-    # Export ARM templates for each resource type
-    $resourceTypes = $filteredResources | Group-Object ResourceType
+    $ResourceTypes = $FilteredResources | Group-Object ResourceType
     $templates = @{}
-    foreach ($resourceType in $resourceTypes) {
+    foreach ($ResourceType in $ResourceTypes) {
         if ($WhatIf) {
 
         } else {
             try {
-                $templatePath = " temp_template_$($resourceType.Name.Replace('/', '_')).json"
-                $resourceIds = $resourceType.Group.ResourceId
-                # Export ARM template
-                Export-AzResourceGroup -ResourceGroupName $SourceResourceGroup -Resource $resourceIds -Path $templatePath -Force
-                $templates[$resourceType.Name] = $templatePath
+    $TemplatePath = " temp_template_$($ResourceType.Name.Replace('/', '_')).json"
+    $ResourceIds = $ResourceType.Group.ResourceId
+                Export-AzResourceGroup -ResourceGroupName $SourceResourceGroup -Resource $ResourceIds -Path $TemplatePath -Force
+    $templates[$ResourceType.Name] = $TemplatePath
 
             } catch {
 
             }
         }
     }
-    # Progress stepNumber 6 -TotalSteps 8 -StepName "Secrets" -Status "Handling secrets and configurations..."
     if ($IncludeSecrets) {
-        # Handle Key Vault secrets
-        $keyVaults = $filteredResources | Where-Object { $_.ResourceType -eq "Microsoft.KeyVault/vaults" }
-        foreach ($kv in $keyVaults) {
+    $KeyVaults = $FilteredResources | Where-Object { $_.ResourceType -eq "Microsoft.KeyVault/vaults" }
+        foreach ($kv in $KeyVaults) {
             if ($WhatIf) {
 
             } else {
 
-                # Implementation would copy secrets here
             }
         }
     }
-    # Progress stepNumber 7 -TotalSteps 8 -StepName "Deployment" -Status "Deploying cloned resources..."
-    $deployedResources = @()
-    $deploymentErrors = @()
+    $DeployedResources = @()
+    $DeploymentErrors = @()
     foreach ($template in $templates.GetEnumerator()) {
         if ($WhatIf) {
 
         } else {
             try {
-                $deploymentName = "Clone-$($template.Key.Replace('/', '-'))-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-                $deployment = Invoke-AzureOperation -Operation {
-                    New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroup -TemplateFile $template.Value -Name $deploymentName
+    $DeploymentName = "Clone-$($template.Key.Replace('/', '-'))-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    $deployment = Invoke-AzureOperation -Operation {
+                    New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroup -TemplateFile $template.Value -Name $DeploymentName
                 } -OperationName "Deploy $($template.Key)"
-                $deployedResources = $deployedResources + $deployment
+    $DeployedResources = $DeployedResources + $deployment
 
             } catch {
-                $deploymentErrors = $deploymentErrors + "Failed to deploy $($template.Key): $($_.Exception.Message)"
+    $DeploymentErrors = $DeploymentErrors + "Failed to deploy $($template.Key): $($_.Exception.Message)"
 
             }
         }
     }
-    # Progress stepNumber 8 -TotalSteps 8 -StepName "Post-Processing" -Status "Applying tags and final configurations..."
-    # Apply tag overrides
     if ($TagOverrides.Count -gt 0 -and -not $WhatIf) {
-$newResources = Get-AzResource -ResourceGroupName $TargetResourceGroup
-        foreach ($resource in $newResources) {
+    $NewResources = Get-AzResource -ResourceGroupName $TargetResourceGroup
+        foreach ($resource in $NewResources) {
             try {
-$currentTags = $resource.Tags ?? @{}
+    $CurrentTags = $resource.Tags ?? @{}
                 foreach ($tag in $TagOverrides.GetEnumerator()) {
-                    $currentTags[$tag.Key] = $tag.Value
+    $CurrentTags[$tag.Key] = $tag.Value
                 }
-                Set-AzResource -ResourceId $resource.ResourceId -Tag $currentTags -Force
+                Set-AzResource -ResourceId $resource.ResourceId -Tag $CurrentTags -Force
             } catch {
 
             }
         }
     }
-    # Cleanup temporary files
     $templates.Values | ForEach-Object {
         if (Test-Path $_) { Remove-Item -ErrorAction Stop $ -Force_ -Force }
     }
@@ -146,14 +127,10 @@ $currentTags = $resource.Tags ?? @{}
 
     } else {
 
-        Write-Log "  Errors: $($deploymentErrors.Count)" -Level $(if ($deploymentErrors.Count -gt 0) { "WARN" } else { "SUCCESS" })
-        if ($deploymentErrors.Count -gt 0) {
-
-            $deploymentErrors | ForEach-Object {
+        Write-Log "  Errors: $($DeploymentErrors.Count)" -Level $(if ($DeploymentErrors.Count -gt 0) { "WARN" } else { "SUCCESS" })
+        if ($DeploymentErrors.Count -gt 0) {
+    $DeploymentErrors | ForEach-Object {
         }
     }
 } catch {
-        throw
-}
-
-
+        throw`n}

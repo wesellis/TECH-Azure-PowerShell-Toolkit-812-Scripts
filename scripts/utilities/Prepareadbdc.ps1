@@ -1,80 +1,110 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules xStorage, xNetworking
 
-<#`n.SYNOPSIS
-    Prepareadbdc
+<#
+.SYNOPSIS
+    Prepare AD Backup Domain Controller
 
 .DESCRIPTION
-    Azure automation
+    Azure DSC configuration to prepare a server as an Active Directory
+    backup domain controller. Configures disks, installs AD DS features,
+    and sets DNS server address.
 
+.PARAMETER DNSServer
+    IP address of the primary DNS server
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
+.PARAMETER RetryCount
+    Number of retry attempts for disk operations (default: 20)
+
+.PARAMETER RetryIntervalSec
+    Interval in seconds between retry attempts (default: 30)
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
-configuration PrepareADBDC
-{
-   [CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
-param(
-        [Parameter(Mandatory)]
+.NOTES
+    Version: 1.0
+    Requires appropriate permissions and DSC modules
+    Designed for Azure VM domain controller preparation
+#>
+
+Configuration PrepareADBDC {
+    param(
+        [Parameter(Mandatory = $true)]
         [String]$DNSServer,
-        [Int]$RetryCount=20,
-        [Int]$RetryIntervalSec=30
+
+        [Parameter(Mandatory = $false)]
+        [Int]$RetryCount = 20,
+
+        [Parameter(Mandatory = $false)]
+        [Int]$RetryIntervalSec = 30
     )
-    Import-DscResource -ModuleName  xStorage, xNetworking
-$Interface=Get-NetAdapter|Where Name -Like "Ethernet*" |Select-Object -First 1
-$InterfaceAlias=$($Interface.Name)
-    Node localhost
-    {
-        LocalConfigurationManager
-        {
+
+    Import-DscResource -ModuleName xStorage, xNetworking
+
+    # Get the primary network interface
+    $Interface = Get-NetAdapter | Where-Object { $_.Name -Like "Ethernet*" } | Select-Object -First 1
+    $InterfaceAlias = $($Interface.Name)
+
+    Node localhost {
+        LocalConfigurationManager {
             RebootNodeIfNeeded = $true
+            ConfigurationMode = 'ApplyOnly'
         }
-        xWaitforDisk Disk2
-        {
-                DiskNumber = 2
-                RetryIntervalSec =$RetryIntervalSec
-                RetryCount = $RetryCount
+
+        # Wait for data disk to be available
+        xWaitforDisk Disk2 {
+            DiskNumber = 2
+            RetryIntervalSec = $RetryIntervalSec
+            RetryCount = $RetryCount
         }
-        xDisk ADDataDisk
-        {
+
+        # Format and mount data disk
+        xDisk ADDataDisk {
             DiskNumber = 2
             DriveLetter = "F"
-            DependsOn = " [xWaitForDisk]Disk2"
+            FSLabel = "AD Data"
+            DependsOn = "[xWaitForDisk]Disk2"
         }
-        WindowsFeature ADDSInstall
-        {
+
+        # Install AD Domain Services
+        WindowsFeature ADDSInstall {
             Ensure = "Present"
             Name = "AD-Domain-Services"
+            IncludeAllSubFeature = $true
         }
-        WindowsFeature ADDSTools
-        {
+
+        # Install AD DS management tools
+        WindowsFeature ADDSTools {
             Ensure = "Present"
             Name = "RSAT-ADDS-Tools"
-            DependsOn = " [WindowsFeature]ADDSInstall"
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
-        WindowsFeature ADAdminCenter
-        {
+
+        # Install AD Admin Center
+        WindowsFeature ADAdminCenter {
             Ensure = "Present"
             Name = "RSAT-AD-AdminCenter"
-            DependsOn = " [WindowsFeature]ADDSTools"
+            DependsOn = "[WindowsFeature]ADDSTools"
         }
-        xDnsServerAddress DnsServerAddress
-        {
-            Address        = $DNSServer
+
+        # Install DNS management tools
+        WindowsFeature DNSTools {
+            Ensure = "Present"
+            Name = "RSAT-DNS-Server"
+            DependsOn = "[WindowsFeature]ADDSInstall"
+        }
+
+        # Configure DNS server address
+        xDnsServerAddress DnsServerAddress {
+            Address = $DNSServer
             InterfaceAlias = $InterfaceAlias
-            AddressFamily  = 'IPv4'
-            DependsOn=" [WindowsFeature]ADDSInstall"
+            AddressFamily = 'IPv4'
+            DependsOn = "[WindowsFeature]ADDSInstall"
         }
-   }
+    }
 }
-} catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+
+# Example usage:
+# PrepareADBDC -DNSServer '10.0.0.4'
+# Start-DscConfiguration -Path .\PrepareADBDC -Wait -Verbose -Force

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,9 +10,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Creates self-signed cert and associated Azure AD Azure Service Principal and Azure AD Application that allows
      Azure ARM authentication using -servicePrincipal flag.
      Requires AzureRM module version 4.2.1 or later.
@@ -38,7 +37,7 @@ param(
     [Parameter()]
     [int32]$CertYearsValid= 3,
     [Parameter()]
-    [string]$Environment= "AzureCloud"
+    $Environment= "AzureCloud"
 )
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
@@ -46,17 +45,16 @@ if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
 }
 function Roll-Back
 {
- [CmdletBinding()]
-param($thumbprint, $ApplicationId, $servicePrincipalID)
+ param($thumbprint, $ApplicationId, $ServicePrincipalID)
     if($thumbprint)
     {
         write-verbose "Removing self-signed cert from CurrentUser\My store" -Verbose
         ls cert:\CurrentUser\My | where{$_.Thumbprint -eq $thumbprint} | remove-item -ea SilentlyContinue
     }
-    if($servicePrincipalID)
+    if($ServicePrincipalID)
     {
-        write-verbose "Removing Azure AD Service Principal with object ID of $servicePrincipalID" -Verbose
-        Remove-AzureRmADServicePrincipal -ObjectId $servicePrincipalID -Force -ea SilentlyContinue
+        write-verbose "Removing Azure AD Service Principal with object ID of $ServicePrincipalID" -Verbose
+        Remove-AzureRmADServicePrincipal -ObjectId $ServicePrincipalID -Force -ea SilentlyContinue
     }
     if($ApplicationID)
     {
@@ -64,11 +62,11 @@ param($thumbprint, $ApplicationId, $servicePrincipalID)
         Get-AzureRmADApplication -ApplicationId $ApplicationId | Remove-AzureRmADApplication -Force -ea SilentlyContinue
     }
 }
-Write-Host "Enter credentials for the 'target' Azure Subscription..." -F Yellow
-$login= Login-AzureRmAccount -EnvironmentName $Environment
-$loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription -ErrorAction Stop
-$SubscriptionId = $sub.Id
+Write-Output "Enter credentials for the 'target' Azure Subscription..." -F Yellow
+    $login= Login-AzureRmAccount -EnvironmentName $Environment
+    $LoginID = $login.context.account.id
+    $sub = Get-AzureRmSubscription -ErrorAction Stop
+    $SubscriptionId = $sub.Id
 if($sub.count -gt 1) {
     $SubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | select * | Out-GridView -title "Select Target Subscription" -OutputMode Single).Id
     Select-AzureRmSubscription -SubscriptionId $SubscriptionId| Out-Null
@@ -79,10 +77,10 @@ if(! $SubscriptionId)
    write-warning "The provided credentials failed to authenticate or are not associcated to a valid subscription. Exiting the script."
    break
 }
-$TenantID = $sub.TenantId
-Write-Host "Logged into $($sub.Name) with subscriptionID $SubscriptionId as $loginID" -f Green
+    $TenantID = $sub.TenantId
+Write-Output "Logged into $($sub.Name) with subscriptionID $SubscriptionId as $LoginID" -f Green
 do {
-$SecPassword = read-host "Enter password for the exportable self-signed certificate" -AsSecureString
+    $SecPassword = read-host "Enter password for the exportable self-signed certificate" -AsSecureString
     if($SecPassword.Length -lt 1) {write-warning "Must enter secure password before proceeding. Exiting script." ; EXIT}
     $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecPassword))
     $SecConfirmPassword = read-host "Confirm password for the exportable self-signed certificate" -AsSecureString
@@ -92,44 +90,41 @@ while($Password -ne $confirmpassword )
 [string] $guid = (New-Guid).Guid
 [string] $ApplicationDisplayName = "AzureSP" +($guid.Substring(0,8))
 write-verbose "Creating self-signed certificate" -Verbose
-$CurrentDate = get-date -ErrorAction Stop
-$notAfter = $CurrentDate.AddYears($certYearsValid)
-$newCert = New-SelfSignedCertificate -DnsName " $ApplicationDisplayName" -CertStoreLocation cert:\CurrentUser\My -NotAfter $notAfter -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
-$endDate = $newCert.GetExpirationDateString()
-$thumbprint = $NewCert.Thumbprint
-$KeyValue = [System.Convert]::ToBase64String($newCert.GetRawCertData())
-$CertPath = $ApplicationDisplayName + " .pfx"
-$xport = Export-PFXCertificate -Cert $newcert -FilePath $CertPath -Password $SecPassword
+    $CurrentDate = get-date -ErrorAction Stop
+    $NotAfter = $CurrentDate.AddYears($CertYearsValid)
+    $NewCert = New-SelfSignedCertificate -DnsName " $ApplicationDisplayName" -CertStoreLocation cert:\CurrentUser\My -NotAfter $NotAfter -KeyExportPolicy Exportable -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider"
+    $EndDate = $NewCert.GetExpirationDateString()
+    $thumbprint = $NewCert.Thumbprint
+    $KeyValue = [System.Convert]::ToBase64String($NewCert.GetRawCertData())
+    $CertPath = $ApplicationDisplayName + " .pfx"
+    $xport = Export-PFXCertificate -Cert $newcert -FilePath $CertPath -Password $SecPassword
 write-verbose "Creating Azure AD Application and Service Principal" -Verbose
 try
 {
     $KeyCredential = New-Object -ErrorAction Stop  Microsoft.Azure.Commands.Resources.Models.ActiveDirectory.PSADKeyCredential
     $KeyCredential.StartDate = $CurrentDate
-    $KeyCredential.EndDate= $endDate
+    $KeyCredential.EndDate= $EndDate
     $KeyCredential.KeyId = $guid
-    #$KeyCredential.Type = "AsymmetricX509Cert"
-    #$KeyCredential.Usage = "Verify"
     $KeyCredential.CertValue = $KeyValue
-    $Application = New-AzureRmADApplication -DisplayName $ApplicationDisplayName -HomePage (" http://" + $ApplicationDisplayName) -IdentifierUris (" http://" + $guid) -KeyCredentials $keyCredential -ea Stop
+    $Application = New-AzureRmADApplication -DisplayName $ApplicationDisplayName -HomePage (" http://" + $ApplicationDisplayName) -IdentifierUris (" http://" + $guid) -KeyCredentials $KeyCredential -ea Stop
     $ApplicationId = $Application.ApplicationId
-    write-verbose "Azure AD Application created with application ID of $applicationID" -Verbose
-    $servicePrincipal = New-AzureRMADServicePrincipal -ApplicationId $ApplicationId -ea Stop
-    $servicePrincipalID = $servicePrincipal.Id
-    write-verbose  "Azure AD Service Principal created with object ID of $servicePrincipalID" -Verbose
+    write-verbose "Azure AD Application created with application ID of $ApplicationID" -Verbose
+    $ServicePrincipal = New-AzureRMADServicePrincipal -ApplicationId $ApplicationId -ea Stop
+    $ServicePrincipalID = $ServicePrincipal.Id
+    write-verbose  "Azure AD Service Principal created with object ID of $ServicePrincipalID" -Verbose
 }
 catch
 {
  write-error $_
  write-warning "Failed to create Azure AD Application and Service Principal'. Exiting the script"
- roll-back -thumbprint $thumbprint -ApplicationId $ApplicationId -servicePrincipalID $servicePrincipalID
+ roll-back -thumbprint $thumbprint -ApplicationId $ApplicationId -servicePrincipalID $ServicePrincipalID
  break
 }
-write-verbose "Adding Role to Service Principal $servicePrincipalID" -Verbose;
-$NewRole = $null;
-$Retries = 0;
+write-verbose "Adding Role to Service Principal $ServicePrincipalID" -Verbose;
+    $NewRole = $null;
+    $Retries = 0;
 While ($null -eq $NewRole -and $Retries -le 6)
 {
-    # Sleep here for a few seconds to allow the service principal application to become active (should only take a couple of seconds normally)
     Sleep 5
     try
     {
@@ -143,15 +138,15 @@ While ($null -eq $NewRole -and $Retries -le 6)
     $NewRole = Get-AzureRMRoleAssignment -ServicePrincipalName $ApplicationId -ErrorAction SilentlyContinue
     $Retries++;
 }
-if(! $newRole)
+if(! $NewRole)
 {
     write-warning "Failed to add role to Azure AD Service Principal'. Rolling back creation of certificate, application ID and service principal"
-    roll-back -thumbprint $thumbprint -ApplicationId $ApplicationId -servicePrincipalID $servicePrincipalID
+    roll-back -thumbprint $thumbprint -ApplicationId $ApplicationId -servicePrincipalID $ServicePrincipalID
 }
 else
 {
-    [string]$outstring = @"
-`$loginParams = @{
+    $outstring = @"
+`$LoginParams = @{
 "CertificateThumbprint" = '$thumbprint'
 "ApplicationId" = '$ApplicationId'
 "TenantId" = '$TenantId'
@@ -160,7 +155,6 @@ else
 }
 try
 {
-    # Log into Azure
     Login-AzureRmAccount @loginParams -ea Stop | out-null
 }
 catch
@@ -177,7 +171,4 @@ catch
 }
 Get-AzureRmResourceGroup -ErrorAction Stop
 " @
-    $outstring | out-file 'Login-AzureRM.ps1'
-}
-
-
+    $outstring | out-file 'Login-AzureRM.ps1'`n}

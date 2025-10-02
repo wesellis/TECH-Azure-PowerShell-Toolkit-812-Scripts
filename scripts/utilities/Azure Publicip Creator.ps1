@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Publicip Creator
@@ -8,51 +8,48 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$PublicIpName,
+    $PublicIpName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$Location,
+    $Location,
     [Parameter()]
-    [string]$AllocationMethod = "Static" ,
+    $AllocationMethod = "Static" ,
     [Parameter()]
-    [string]$Sku = "Standard"
+    $Sku = "Standard"
 )
-Write-Host "Creating Public IP: $PublicIpName"
-$params = @{
+Write-Output "Creating Public IP: $PublicIpName"
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
     Location = $Location
@@ -60,13 +57,12 @@ $params = @{
     ErrorAction = "Stop"
     Name = $PublicIpName
 }
-$PublicIp @params
-Write-Host "Public IP created successfully:"
-Write-Host "Name: $($PublicIp.Name)"
-Write-Host "IP Address: $($PublicIp.IpAddress)"
-Write-Host "Allocation: $($PublicIp.PublicIpAllocationMethod)"
-Write-Host "SKU: $($PublicIp.Sku.Name)"
+    $PublicIp @params
+Write-Output "Public IP created successfully:"
+Write-Output "Name: $($PublicIp.Name)"
+Write-Output "IP Address: $($PublicIp.IpAddress)"
+Write-Output "Allocation: $($PublicIp.PublicIpAllocationMethod)"
+Write-Output "SKU: $($PublicIp.Sku.Name)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

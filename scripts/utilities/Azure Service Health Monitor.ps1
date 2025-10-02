@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -14,22 +14,22 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$SubscriptionId,
+    $SubscriptionId,
     [Parameter()]
     [ValidateSet("All" , "Service" , "Planned" , "Health" , "Security" )]
-    [string]$EventType = "All" ,
+    $EventType = "All" ,
     [Parameter()]
     [int]$DaysBack = 7,
     [Parameter()]
     [switch]$ActiveOnly
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) {
         Connect-AzAccount
@@ -39,28 +39,26 @@ try {
     }
     }
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
-    $startTime = (Get-Date).AddDays(-$DaysBack)
-    $serviceHealthEvents = Get-AzServiceHealth -StartTime $startTime
+    $StartTime = (Get-Date).AddDays(-$DaysBack)
+    $ServiceHealthEvents = Get-AzServiceHealth -StartTime $StartTime
     if ($ActiveOnly) {
-        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.Status -eq "Active" }
+    $ServiceHealthEvents = $ServiceHealthEvents | Where-Object { $_.Status -eq "Active" }
     }
     if ($EventType -ne "All" ) {
-$serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $EventType }
+    $ServiceHealthEvents = $ServiceHealthEvents | Where-Object { $_.EventType -eq $EventType }
     }
-    Write-Host "Service Health Summary (Last $DaysBack days):" -ForegroundColor Cyan
-    Write-Host "Total Events: $($serviceHealthEvents.Count)" -ForegroundColor White
-$eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
+    Write-Output "Service Health Summary (Last $DaysBack days):" # Color: $2
+    Write-Output "Total Events: $($ServiceHealthEvents.Count)" # Color: $2
+    $EventSummary = $ServiceHealthEvents | Group-Object EventType | ForEach-Object {
         [PSCustomObject]@{
             EventType = $_.Name
             Count = $_.Count
             ActiveEvents = ($_.Group | Where-Object { $_.Status -eq "Active" }).Count
         }
     }
-    $eventSummary | Format-Table EventType, Count, ActiveEvents
-    if ($serviceHealthEvents.Count -gt 0) {
-        Write-Host "Recent Events:" -ForegroundColor Yellow
-        $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
+    $EventSummary | Format-Table EventType, Count, ActiveEvents
+    if ($ServiceHealthEvents.Count -gt 0) {
+        Write-Output "Recent Events:" # Color: $2
+    $ServiceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
-} catch { throw }
-
-
+} catch { throw`n}

@@ -1,86 +1,77 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 
-<#`n.SYNOPSIS
-    Invoke Gwyipconfig
+<#
+.SYNOPSIS
+    Create Azure Virtual Network Gateway IP configuration
 
 .DESCRIPTION
-    Invoke Gwyipconfig operation
-    Author: Wes Ellis (wes@wesellis.com)
+    Creates an Azure Virtual Network Gateway IP configuration with specified parameters.
+    This configuration is used when creating or updating virtual network gateways.
 
-    1.0
+.PARAMETER Name
+    The name for the gateway IP configuration
+
+.PARAMETER SubnetId
+    The resource ID of the subnet for the gateway
+
+.PARAMETER PublicIpAddressId
+    The resource ID of the public IP address (optional)
+
+.PARAMETER PrivateIpAddressAllocation
+    The private IP address allocation method (Static or Dynamic, default: Dynamic)
+
+.EXAMPLE
+    $config = .\Invoke-Gwyipconfig.ps1 -Name "GwConfig" -SubnetId "/subscriptions/.../subnets/GatewaySubnet"
+
+.EXAMPLE
+    $config = .\Invoke-Gwyipconfig.ps1 -Name "GwConfig" -SubnetId "/subscriptions/.../subnets/GatewaySubnet" -PublicIpAddressId "/subscriptions/.../publicIPAddresses/MyPIP"
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Name,
+
+    [Parameter(Mandatory = $true)]
+    [string]$SubnetId,
+
+    [Parameter()]
+    [string]$PublicIpAddressId,
+
+    [Parameter()]
+    [ValidateSet('Static', 'Dynamic')]
+    [string]$PrivateIpAddressAllocation = 'Dynamic'
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-[CmdletBinding()]
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
-function Write-Host {
-    param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-param(
-        # [Parameter(ValueFromPipelineByPropertyName)]
-        # $newAzResourceGroupSplat
-        [Parameter(ValueFromPipeline)]
-        $newAzVirtualNetworkGatewayIpConfigSplat
-    )
-    begin {
-    }
-    process {
-        try {
-$GatewayPublicIPConfig = New-AzVirtualNetworkGatewayIpConfig -ErrorAction Stop @newAzVirtualNetworkGatewayIpConfigSplat
-        }
-        catch {
-            Write-Error 'An Error happened when .. script execution will be halted'
-            #region CatchAll-Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
-            Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
-            $PSItem
-            Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red
-$ErrorMessage_1 = $_.Exception.Message
-            Write-Host $ErrorMessage_1  -ForegroundColor Red
-            Write-Output "Ran into an issue: $PSItem"
-            Write-Host "Ran into an issue: $PSItem"
-            throw "Ran into an issue: $PSItem"
-            throw "I am the catch"
-            throw "Ran into an issue: $PSItem"
-            $PSItem | Write-Information -ForegroundColor
-            $PSItem | Select-Object *
-            $PSCmdlet.ThrowTerminatingError($PSitem)
-            throw
-            throw "Something went wrong"
-            Write-Log $PSItem.ToString()
-            #EndRegion CatchAll
-            Exit
-        }
-        finally {
-        }
-    }
-    end {
-        return $GatewayPublicIPConfig
-    }
-}
 
+try {
+    Write-Verbose "Creating Virtual Network Gateway IP configuration: $Name"
+
+    $newAzVirtualNetworkGatewayIpConfigSplat = @{
+        Name = $Name
+        SubnetId = $SubnetId
+        PrivateIpAddressAllocation = $PrivateIpAddressAllocation
+    }
+
+    if ($PublicIpAddressId) {
+        Write-Verbose "Including Public IP Address: $PublicIpAddressId"
+        $newAzVirtualNetworkGatewayIpConfigSplat.PublicIpAddressId = $PublicIpAddressId
+    }
+
+    $gatewayIPConfig = New-AzVirtualNetworkGatewayIpConfig @newAzVirtualNetworkGatewayIpConfigSplat -ErrorAction Stop
+
+    Write-Output "Successfully created Virtual Network Gateway IP configuration: $Name"
+    return $gatewayIPConfig
+}
+catch {
+    Write-Error "Failed to create Virtual Network Gateway IP configuration: $($_.Exception.Message)"
+    throw
+}

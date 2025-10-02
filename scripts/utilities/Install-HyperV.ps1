@@ -1,7 +1,8 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -RunAsAdministrator
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Install Hyper-V features on Windows
 
 .DESCRIPTION
@@ -28,6 +29,7 @@
     Requires: Windows 10/11 Pro/Enterprise or Windows Server
     Requires: Administrator privileges
 #>
+
 [CmdletBinding(SupportsShouldProcess)]
 [OutputType([PSCustomObject])]
 param(
@@ -38,72 +40,66 @@ param(
     [switch]$Force
 )
 
+$ErrorActionPreference = 'Stop'
+
 begin {
     Write-Verbose "Starting Hyper-V installation process"
+    $OsInfo = Get-CimInstance -ClassName Win32_OperatingSystem
+    $SupportedVersions = @('10.0', '11.0')
 
-    # Check if running on supported OS
-    $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
-    $supportedVersions = @('10.0', '11.0')
-
-    if ($osInfo.Version.Split('.')[0] -notin $supportedVersions.Split('.')[0]) {
+    if ($OsInfo.Version.Split('.')[0] -notin $SupportedVersions.Split('.')[0]) {
         throw "Hyper-V requires Windows 10/11 or Windows Server 2016+"
     }
 }
 
 process {
     try {
-        # Check current Hyper-V status
         Write-Verbose "Checking current Hyper-V feature status"
-        $hyperVFeatures = Get-WindowsOptionalFeature -Online -FeatureName *hyper-v*
-
-        $featuresToEnable = @(
+        $HyperVFeatures = Get-WindowsOptionalFeature -Online -FeatureName *hyper-v*
+        $FeaturesToEnable = @(
             'Microsoft-Hyper-V-All'
         )
 
         if ($IncludeManagementTools) {
-            $featuresToEnable += @(
+            $FeaturesToEnable += @(
                 'Microsoft-Hyper-V-Management-PowerShell',
                 'Microsoft-Hyper-V-Tools-All'
             )
         }
-
         $results = @()
 
-        foreach ($featureName in $featuresToEnable) {
-            $feature = $hyperVFeatures | Where-Object { $_.FeatureName -eq $featureName }
+        foreach ($FeatureName in $FeaturesToEnable) {
+            $feature = $HyperVFeatures | Where-Object { $_.FeatureName -eq $FeatureName }
 
             if ($feature.State -eq 'Enabled') {
-                Write-Verbose "Feature $featureName is already enabled"
+                Write-Verbose "Feature $FeatureName is already enabled"
                 $results += [PSCustomObject]@{
-                    FeatureName = $featureName
+                    FeatureName = $FeatureName
                     Status = 'AlreadyEnabled'
                     RestartRequired = $false
                 }
                 continue
             }
 
-            if ($PSCmdlet.ShouldProcess($featureName, "Enable Windows Feature")) {
-                Write-Verbose "Enabling feature: $featureName"
-
-                $enableResult = Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All
-
+            if ($PSCmdlet.ShouldProcess($FeatureName, "Enable Windows Feature")) {
+                Write-Verbose "Enabling feature: $FeatureName"
+                $EnableResult = Enable-WindowsOptionalFeature -Online -FeatureName $FeatureName -All
                 $results += [PSCustomObject]@{
-                    FeatureName = $featureName
-                    Status = if ($enableResult.RestartNeeded) { 'EnabledRestartRequired' } else { 'Enabled' }
-                    RestartRequired = $enableResult.RestartNeeded
+                    FeatureName = $FeatureName
+                    Status = if ($EnableResult.RestartNeeded) { 'EnabledRestartRequired' } else { 'Enabled' }
+                    RestartRequired = $EnableResult.RestartNeeded
                 }
             }
         }
 
-        # Display summary
-        Write-Host "Hyper-V Installation Summary:" -ForegroundColor Green
+        Write-Output "Hyper-V Installation Summary:"
         $results | Format-Table -AutoSize
 
         if ($results | Where-Object { $_.RestartRequired }) {
             Write-Warning "A restart is required to complete the Hyper-V installation"
 
             if ($Force) {
-                Write-Host "Restarting computer in 10 seconds..." -ForegroundColor Yellow
+                Write-Output "Restarting computer in 10 seconds..."
                 Start-Sleep -Seconds 10
                 Restart-Computer -Force
             } else {

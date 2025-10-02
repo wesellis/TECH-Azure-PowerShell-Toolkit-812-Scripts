@@ -6,7 +6,7 @@
 
 .DESCRIPTION
     Find unusual spending patterns in Azure costs
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
     [Parameter()]
@@ -21,28 +21,24 @@
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
-    $startDate = (Get-Date).AddDays(-$DaysBack).ToString('yyyy-MM-dd')
-    $endDate = (Get-Date).ToString('yyyy-MM-dd')
-    # Get usage data
-    $usageData = Get-AzConsumptionUsageDetail -StartDate $startDate -EndDate $endDate
-    # Group by day and calculate daily costs
-    $dailyCosts = $usageData | Group-Object {($_.Date).ToString('yyyy-MM-dd')} | ForEach-Object {
+    $StartDate = (Get-Date).AddDays(-$DaysBack).ToString('yyyy-MM-dd')
+    $EndDate = (Get-Date).ToString('yyyy-MM-dd')
+    $UsageData = Get-AzConsumptionUsageDetail -StartDate $StartDate -EndDate $EndDate
+    $DailyCosts = $UsageData | Group-Object {($_.Date).ToString('yyyy-MM-dd')} | ForEach-Object {
         [PSCustomObject]@{
             Date = $_.Name
             TotalCost = ($_.Group | Measure-Object PretaxCost -Sum).Sum
         }
     } | Sort-Object Date
-    # Calculate average and detect anomalies
-    $avgCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
-    $anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $AnomalyThreshold) }
-    Write-Host "Cost Anomaly Analysis:"
-    Write-Host "Analysis Period: $startDate to $endDate"
-    Write-Host "Average Daily Cost: $${avgCost:F2}"
-    Write-Host "Anomaly Threshold: $${($avgCost * $AnomalyThreshold):F2}"
-    Write-Host "Anomalies Detected: $($anomalies.Count)"
+    $AvgCost = ($DailyCosts | Measure-Object TotalCost -Average).Average
+    $anomalies = $DailyCosts | Where-Object { $_.TotalCost -gt ($AvgCost * $AnomalyThreshold) }
+    Write-Output "Cost Anomaly Analysis:"
+    Write-Output "Analysis Period: $StartDate to $EndDate"
+    Write-Output "Average Daily Cost: $${avgCost:F2}"
+    Write-Output "Anomaly Threshold: $${($AvgCost * $AnomalyThreshold):F2}"
+    Write-Output "Anomalies Detected: $($anomalies.Count)"
     if ($anomalies.Count -gt 0) {
-        Write-Host "`nAnomalous Days:"
+        Write-Output "`nAnomalous Days:"
         $anomalies | Format-Table Date, @{Name="Cost";Expression={"$" + "{0:F2}" -f $_.TotalCost}}
     }
-} catch { throw }
-
+} catch { throw`n}

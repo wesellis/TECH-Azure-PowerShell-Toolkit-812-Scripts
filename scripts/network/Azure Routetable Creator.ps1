@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,34 +9,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -58,36 +55,33 @@ param(
     [Parameter()]
     [string]$NextHopIpAddress
 )
-Write-Host "Creating Route Table: $RouteTableName"
-$params = @{
+Write-Output "Creating Route Table: $RouteTableName"
+    $params = @{
     ErrorAction = "Stop"
     ResourceGroupName = $ResourceGroupName
     Name = $RouteTableName
     Location = $Location
 }
-$RouteTable @params
-Write-Host "Route Table created successfully:"
-Write-Host "Name: $($RouteTable.Name)"
-Write-Host "Location: $($RouteTable.Location)"
+    [string]$RouteTable @params
+Write-Output "Route Table created successfully:"
+Write-Output "Name: $($RouteTable.Name)"
+Write-Output "Location: $($RouteTable.Location)"
 if ($RouteName -and $AddressPrefix) {
-    Write-Host " `nAdding custom route: $RouteName"
+    Write-Output " `nAdding custom route: $RouteName"
     if ($NextHopIpAddress -and $NextHopType -eq "VirtualAppliance" ) {
-        $params = @{
+    $params = @{
             NextHopIpAddress = $NextHopIpAddress } else { Add-AzRouteConfig
-            RouteTable = $RouteTable  Write-Host "Custom route added:" "INFO"Write-Host "Route Name: $RouteName" "INFO"Write-Host "Address Prefix: $AddressPrefix" "INFO"Write-Host "Next Hop Type: $NextHopType" "INFO" if ($NextHopIpAddress) { Write-Host "Next Hop IP: $NextHopIpAddress" }
+            RouteTable = $RouteTable  Write-Output "Custom route added:" "INFO"Write-Output "Route Name: $RouteName" "INFO"Write-Output "Address Prefix: $AddressPrefix" "INFO"Write-Output "Next Hop Type: $NextHopType" "INFO" if ($NextHopIpAddress) { Write-Output "Next Hop IP: $NextHopIpAddress" }
             Name = $RouteName
             NextHopType = $NextHopType }  Set-AzRouteTable
             AddressPrefix = $AddressPrefix
         }
         Add-AzRouteConfig @params
 }
-Write-Host " `nNext Steps:"
-Write-Host " 1. Associate route table with subnet(s)"
-Write-Host " 2. Add additional routes as needed"
-Write-Host " 3. Test routing behavior"
+Write-Output " `nNext Steps:"
+Write-Output " 1. Associate route table with subnet(s)"
+Write-Output " 2. Add additional routes as needed"
+Write-Output " 3. Test routing behavior"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

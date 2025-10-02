@@ -1,12 +1,14 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Manage SQL resources
 
 .DESCRIPTION
     Manage SQL resources
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -23,7 +25,7 @@
     [Parameter()]
     [int]$DatabaseDtuMax = 100
 )
-Write-Host "Creating SQL Elastic Pool: $ElasticPoolName"
+Write-Output "Creating SQL Elastic Pool: $ElasticPoolName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Dtu = $PoolDtu
@@ -35,21 +37,23 @@ $params = @{
     DatabaseDtuMin = $DatabaseDtuMin
 }
 $ElasticPool @params
-Write-Host "SQL Elastic Pool created successfully:"
-Write-Host "Name: $($ElasticPool.ElasticPoolName)"
-Write-Host "Server: $($ElasticPool.ServerName)"
-Write-Host "Edition: $($ElasticPool.Edition)"
-Write-Host "Pool DTU: $($ElasticPool.Dtu)"
-Write-Host "Database DTU Min: $($ElasticPool.DatabaseDtuMin)"
-Write-Host "Database DTU Max: $($ElasticPool.DatabaseDtuMax)"
-Write-Host "State: $($ElasticPool.State)"
-Write-Host "`nElastic Pool Benefits:"
-Write-Host "Cost optimization for multiple databases"
-Write-Host "Automatic resource balancing"
-Write-Host "Simplified management"
-Write-Host "Predictable pricing model"
-Write-Host "`nNext Steps:"
-Write-Host "1. Move existing databases to the pool"
-Write-Host "2. Create new databases in the pool"
-Write-Host "3. Monitor resource utilization"
+Write-Output "SQL Elastic Pool created successfully:"
+Write-Output "Name: $($ElasticPool.ElasticPoolName)"
+Write-Output "Server: $($ElasticPool.ServerName)"
+Write-Output "Edition: $($ElasticPool.Edition)"
+Write-Output "Pool DTU: $($ElasticPool.Dtu)"
+Write-Output "Database DTU Min: $($ElasticPool.DatabaseDtuMin)"
+Write-Output "Database DTU Max: $($ElasticPool.DatabaseDtuMax)"
+Write-Output "State: $($ElasticPool.State)"
+Write-Output "`nElastic Pool Benefits:"
+Write-Output "Cost optimization for multiple databases"
+Write-Output "Automatic resource balancing"
+Write-Output "Simplified management"
+Write-Output "Predictable pricing model"
+Write-Output "`nNext Steps:"
+Write-Output "1. Move existing databases to the pool"
+Write-Output "2. Create new databases in the pool"
+Write-Output "3. Monitor resource utilization"
+
+
 

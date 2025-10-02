@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Import Azpfxcertazkeyvault
@@ -51,3 +51,4 @@ Connect-AzAccount
 $CertPassword = Read-Host -AsSecureString -Prompt 'Enter your cert password';
 $Password = Read-Host -Prompt "Enter secure value" -AsSecureString
 Import-AzKeyVaultCertificate -VaultName "MIAQBRDSKV1" -Name "MIASSLRDSCERT1" -FilePath "C:\Users\Abdullah.Ollivierre\AzureRepos2\Git-HubRepositry\Functions\Export-CertToPFX\PlaceZeroSSLCertfileshere\rds.miaonline.org\cert.pfx" -Password $Password
+

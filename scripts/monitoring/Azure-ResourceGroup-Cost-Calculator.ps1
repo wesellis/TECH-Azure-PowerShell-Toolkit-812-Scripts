@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,13 +6,15 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName
 )
-Write-Host "Calculating estimated costs for Resource Group: $ResourceGroupName"
+Write-Output "Calculating estimated costs for Resource Group: $ResourceGroupName"
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
 $TotalEstimatedCost = 0
 $CostBreakdown = @()
@@ -33,10 +35,12 @@ foreach ($Resource in $Resources) {
     }
     $TotalEstimatedCost += $EstimatedMonthlyCost
 }
-Write-Host "`nCost Breakdown:"
+Write-Output "`nCost Breakdown:"
 foreach ($Item in $CostBreakdown) {
-    Write-Host "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
+    Write-Output "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
 }
-Write-Host "`nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
-Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
+Write-Output "`nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
+Write-Output "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
+
+
 

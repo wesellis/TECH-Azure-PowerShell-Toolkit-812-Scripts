@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -13,6 +13,8 @@
 #>
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -24,7 +26,7 @@
     [Parameter()]
     [int]$PlatformUpdateDomainCount = 5
 )
-Write-Host "Creating Availability Set: $AvailabilitySetName"
+Write-Output "Creating Availability Set: $AvailabilitySetName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     PlatformUpdateDomainCount = $PlatformUpdateDomainCount
@@ -35,11 +37,12 @@ $params = @{
     Name = $AvailabilitySetName
 }
 $AvailabilitySet = New-AzAvailabilitySet @params
-Write-Host "Availability Set created successfully:"
-Write-Host "Name: $($AvailabilitySet.Name)"
-Write-Host "Location: $($AvailabilitySet.Location)"
-Write-Host "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
-Write-Host "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
-Write-Host "SKU: $($AvailabilitySet.Sku)"
+Write-Output "Availability Set created successfully:"
+Write-Output "Name: $($AvailabilitySet.Name)"
+Write-Output "Location: $($AvailabilitySet.Location)"
+Write-Output "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
+Write-Output "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
+Write-Output "SKU: $($AvailabilitySet.Sku)"
+
 
 

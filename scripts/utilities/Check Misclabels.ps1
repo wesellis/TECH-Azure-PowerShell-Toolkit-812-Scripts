@@ -1,55 +1,80 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Misclabels
+<#
+.SYNOPSIS
+    Check Miscellaneous Labels
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    This script checks various properties of a sample to determine if labels need to be added:
+    - Is the sample one of the 4 samples linked to by the custom deployment blade in the portal
+    - Is the sample in the root of the repo
+    - Does the sample name contain any uppercase characters (affects sorting in GitHub)
 
-    1.0
+.PARAMETER SampleName
+    Name of the sample to check
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    This script will check a few misc things on the PR to see if labels need to be added (by a subsequent task)
-try {
-    # Main script execution
-- is the sample being changed one of the 4 samples linked to by the custom deployment blade in the portal
-    - is the sample in the root of the repo
-    - does the sample name (i.e. path from root) contain any uppercase chars (affects sorting in GH)
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    [string]$sampleName = $ENV:SAMPLE_NAME
+    [Parameter()]
+    [string]$SampleName = $ENV:SAMPLE_NAME
 )
-Write-Host "Sample name: $sampleName"
-$PortalSamples = @(
-    " 101-vm-simple-linux" ,
-    " quickstarts\microsoft.compute\vm-simple-linux" ,
-    " 101-vm-simple-windows" ,
-    " quickstarts\microsoft.compute\vm-simple-windows" ,
-    " 201-cdn-with-web-app" ,
-    " quickstarts\microsoft.cdn\cdn-with-web-app" ,
-    " 201-sql-database-transparent-encryption-create" ,
-    " quickstarts\microsoft.sql\sql-database-transparent-encryption-create"
-)
-$PortalSamples | out-string
-if($PortalSamples -contains " $sampleName" ){
-    Write-Host "Portal Sample match..."
-    Write-Host " ##vso[task.setvariable variable=IsPortalSample]true"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    if ([string]::IsNullOrWhiteSpace($SampleName)) {
+        throw "SampleName parameter is required"
+    }
+
+    Write-Output "Sample name: $SampleName"
+
+    $PortalSamples = @(
+        "101-vm-simple-linux",
+        "quickstarts\microsoft.compute\vm-simple-linux",
+        "101-vm-simple-windows",
+        "quickstarts\microsoft.compute\vm-simple-windows",
+        "201-cdn-with-web-app",
+        "quickstarts\microsoft.cdn\cdn-with-web-app",
+        "201-sql-database-transparent-encryption-create",
+        "quickstarts\microsoft.sql\sql-database-transparent-encryption-create"
+    )
+
+    Write-Verbose "Portal samples list: $($PortalSamples -join ', ')"
+
+    if ($PortalSamples -contains $SampleName) {
+        Write-Output "Portal Sample match found..."
+        Write-Output "##vso[task.setvariable variable=IsPortalSample]true"
+    } else {
+        Write-Verbose "Sample is not a portal sample"
+        Write-Output "##vso[task.setvariable variable=IsPortalSample]false"
+    }
+
+    if (($SampleName.indexOf("\") -eq -1) -and ($SampleName.IndexOf("/") -eq -1)) {
+        Write-Output "Sample is in the root of the repo..."
+        Write-Output "##vso[task.setvariable variable=IsRootSample]true"
+    } else {
+        Write-Verbose "Sample is in a subdirectory"
+        Write-Output "##vso[task.setvariable variable=IsRootSample]false"
+    }
+
+    if ($SampleName -cmatch "[A-Z]") {
+        Write-Output "Sample name has UPPERCASE chars..."
+        Write-Output "##vso[task.setvariable variable=SampleHasUpperCase]true"
+    } else {
+        Write-Verbose "Sample name is all lowercase"
+        Write-Output "##vso[task.setvariable variable=SampleHasUpperCase]false"
+    }
+
+    Write-Verbose "Miscellaneous labels check completed successfully"
 }
-if(($sampleName.indexOf(" \" ) -eq -1) -and ($sampleName.IndexOf(" /" ) -eq -1)){
-    Write-Host "Sample is in the root of the repo..."
-    Write-Host " ##vso[task.setvariable variable=IsRootSample]true"
-} else {
-    Write-Host " ##vso[task.setvariable variable=IsRootSample]false"
-}
-if($sampleName -cmatch " [A-Z]" ){
-    Write-Host "Sample name has UPPERCASE chars..."
-    Write-Host " ##vso[task.setvariable variable=SampleHasUpperCase]true"
-} else {
-    Write-Host " ##vso[task.setvariable variable=SampleHasUpperCase]false"
-}
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }

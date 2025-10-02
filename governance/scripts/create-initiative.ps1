@@ -7,28 +7,27 @@
 .DESCRIPTION
     create initiative operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Creates and manages Azure Policy initiatives (policy sets)
     Supports bundling multiple policy definitions into cohesive governance packages
     with parameter mapping and metadata management.
-.PARAMETER InitiativeName
+.parameter InitiativeName
     Name of the policy initiative to create or update
-.PARAMETER DisplayName
+.parameter DisplayName
     Display name for the initiative
-.PARAMETER Description
+.parameter Description
     Detailed description of the initiative's purpose
-.PARAMETER Category
+.parameter Category
     Metadata category for the initiative
-.PARAMETER PolicyDefinitionIds
+.parameter PolicyDefinitionIds
     Array of policy definition IDs to include
-.PARAMETER ManagementGroupName
+.parameter ManagementGroupName
     Management group scope for the initiative
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Subscription scope for the initiative
-.PARAMETER Parameters
+.parameter Parameters
     JSON string or hashtable of initiative parameters
-.PARAMETER Metadata
+.parameter Metadata
     Additional metadata for the initiative
 
     .\create-initiative.ps1 -InitiativeName "SecurityBaseline" -Category "Security"
@@ -39,70 +38,64 @@
 
     Creates initiative with specific policies
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$InitiativeName,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$DisplayName,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$Description,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateSet('General', 'Security', 'Compliance', 'Cost Management', 'Operations')]
     [string]$Category = 'General',
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$PolicyDefinitionIds,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$ManagementGroupName,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidatePattern('^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$')]
     [string]$SubscriptionId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [object]$Parameters,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [hashtable]$Metadata,
 
-    [Parameter()]
+    [parameter()]
     [switch]$IncludeBuiltInPolicies,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Default', 'SecurityCenter', 'Regulatory')]
     [string]$Template
 )
-
-#region Initialize-Configuration
-$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
+    [string]$ErrorActionPreference = 'Stop'
+    [string]$ProgressPreference = 'SilentlyContinue'
 
 if (-not $DisplayName) {
-    $DisplayName = $InitiativeName
+    [string]$DisplayName = $InitiativeName
 }
 
 if (-not $Description) {
-    $Description = "Policy initiative for $Category governance"
+    [string]$Description = "Policy initiative for $Category governance"
 }
 
-#endregion
 
-#region Functions
-[OutputType([bool])]
+[OutputType([bool])] 
  {
-    [CmdletBinding()]
     param(
         [string]$TemplateName
     )
-
     $templates = @{
         'SecurityCenter' = @{
             DisplayName = 'Azure Security Center Recommendations'
@@ -134,41 +127,35 @@ if (-not $Description) {
 }
 
 function Get-PolicyDefinitions {
-    [CmdletBinding()]
     param(
         [string[]]$PolicyIds,
         [string]$ManagementGroup,
         [string]$Subscription
     )
+    [string]$definitions = [System.Collections.ArrayList]::new()
 
-    $definitions = [System.Collections.ArrayList]::new()
-
-    foreach ($policyId in $PolicyIds) {
+    foreach ($PolicyId in $PolicyIds) {
         try {
-            Write-Verbose "Retrieving policy definition: $policyId"
+            write-Verbose "Retrieving policy definition: $PolicyId"
 
-            if ($policyId -match '^/providers/Microsoft.Authorization/policyDefinitions/') {
-                # Built-in policy
-                $policy = Get-AzPolicyDefinition -Id $policyId
+            if ($PolicyId -match '^/providers/Microsoft.Authorization/policyDefinitions/') {
+    $policy = Get-AzPolicyDefinition -Id $PolicyId
             }
             elseif ($ManagementGroup) {
-                # Custom policy at management group scope
-                $policy = Get-AzPolicyDefinition -Name $policyId -ManagementGroupName $ManagementGroup
+    $policy = Get-AzPolicyDefinition -Name $PolicyId -ManagementGroupName $ManagementGroup
             }
             elseif ($Subscription) {
-                # Custom policy at subscription scope
-                $policy = Get-AzPolicyDefinition -Name $policyId -SubscriptionId $Subscription
+    $policy = Get-AzPolicyDefinition -Name $PolicyId -SubscriptionId $Subscription
             }
             else {
-                # Try current scope
-                $policy = Get-AzPolicyDefinition -Name $policyId
+    $policy = Get-AzPolicyDefinition -Name $PolicyId
             }
 
             if ($policy) {
                 [void]$definitions.Add($policy)
-            
+
 } catch {
-            Write-Warning "Could not retrieve policy definition: $policyId - $_"
+            write-Warning "Could not retrieve policy definition: $PolicyId - $_"
         }
     }
 
@@ -176,55 +163,49 @@ function Get-PolicyDefinitions {
 }
 
 function Build-InitiativeDefinition {
-    [CmdletBinding()]
     param(
         [object[]]$PolicyDefinitions,
         [object]$Parameters,
         [hashtable]$Metadata
     )
-
-    $policyDefinitions = [System.Collections.ArrayList]::new()
+    [string]$PolicyDefinitions = [System.Collections.ArrayList]::new()
 
     foreach ($policy in $PolicyDefinitions) {
-        $policyRef = @{
+    $PolicyRef = @{
             policyDefinitionId = $policy.PolicyDefinitionId
             policyDefinitionReferenceId = $policy.Name
         }
 
-        # Map parameters if they exist
         if ($policy.Properties.Parameters) {
-            $paramMapping = @{}
+    $ParamMapping = @{}
             foreach ($param in $policy.Properties.Parameters.PSObject.Properties) {
-                $paramName = $param.Name
-                # Check if initiative has this parameter
-                if ($Parameters -and $Parameters.PSObject.Properties[$paramName]) {
-                    $paramMapping[$paramName] = @{
-                        value = "[parameters('$paramName')]"
+    [string]$ParamName = $param.Name
+                if ($Parameters -and $Parameters.PSObject.Properties[$ParamName]) {
+    [string]$ParamMapping[$ParamName] = @{
+                        value = "[parameters('$ParamName')]"
                     }
                 }
             }
-            if ($paramMapping.Count -gt 0) {
-                $policyRef['parameters'] = $paramMapping
+            if ($ParamMapping.Count -gt 0) {
+    [string]$PolicyRef['parameters'] = $ParamMapping
             }
         }
 
-        [void]$policyDefinitions.Add($policyRef)
+        [void]$PolicyDefinitions.Add($PolicyRef)
     }
-
-    $initiativeDefinition = @{
-        policyDefinitions = $policyDefinitions
+    $InitiativeDefinition = @{
+        policyDefinitions = $PolicyDefinitions
         metadata = $Metadata
     }
 
     if ($Parameters) {
-        $initiativeDefinition['parameters'] = $Parameters
+    [string]$InitiativeDefinition['parameters'] = $Parameters
     }
 
-    return $initiativeDefinition
+    return $InitiativeDefinition
 }
 
 function New-PolicyInitiative {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$Name,
         [string]$DisplayName,
@@ -235,7 +216,7 @@ function New-PolicyInitiative {
     )
 
     try {
-        $params = @{
+    $params = @{
             Name = $Name
             DisplayName = $DisplayName
             Description = $Description
@@ -243,34 +224,32 @@ function New-PolicyInitiative {
         }
 
         if ($ManagementGroup) {
-            $params['ManagementGroupName'] = $ManagementGroup
-            $scope = "Management Group: $ManagementGroup"
+    [string]$params['ManagementGroupName'] = $ManagementGroup
+    [string]$scope = "Management Group: $ManagementGroup"
         }
         elseif ($Subscription) {
-            $params['SubscriptionId'] = $Subscription
-            $scope = "Subscription: $Subscription"
+    [string]$params['SubscriptionId'] = $Subscription
+    [string]$scope = "Subscription: $Subscription"
         }
         else {
-            $scope = "Current subscription"
+    [string]$scope = "Current subscription"
         }
 
         if ($PSCmdlet.ShouldProcess($scope, "Create/Update Policy Initiative '$Name'")) {
-            $initiative = New-AzPolicySetDefinition @params
-            Write-Host "Policy initiative '$Name' created successfully" -InformationAction Continue
+    [string]$initiative = New-AzPolicySetDefinition @params
+            Write-Output "Policy initiative '$Name' created successfully" -InformationAction Continue
             return $initiative
-        
+
 } catch {
-        Write-Error "Failed to create policy initiative: $_"
+        write-Error "Failed to create policy initiative: $_"
         throw
     }
 }
 
 function Get-InitiativeSummary {
-    [CmdletBinding()]
     param(
         [object]$Initiative
     )
-
     $summary = [PSCustomObject]@{
         Name = $Initiative.Name
         DisplayName = $Initiative.Properties.DisplayName
@@ -278,7 +257,7 @@ function Get-InitiativeSummary {
         PolicyCount = $Initiative.Properties.PolicyDefinitions.Count
         Metadata = $Initiative.Properties.Metadata
         Parameters = if ($Initiative.Properties.Parameters) {
-            $Initiative.Properties.Parameters.PSObject.Properties.Count
+    [string]$Initiative.Properties.Parameters.PSObject.Properties.Count
         } else { 0 }
         CreatedOn = $Initiative.Properties.CreatedOn
         UpdatedOn = $Initiative.Properties.UpdatedOn
@@ -288,62 +267,54 @@ function Get-InitiativeSummary {
 }
 
 function Export-InitiativeDefinition {
-    [CmdletBinding()]
     param(
         [object]$Initiative,
         [string]$OutputPath
     )
 
     if (-not $OutputPath) {
-        $OutputPath = Join-Path $PWD "$($Initiative.Name)_$(Get-Date -Format 'yyyyMMdd').json"
+    [string]$OutputPath = Join-Path $PWD "$($Initiative.Name)_$(Get-Date -Format 'yyyyMMdd').json"
     }
 
     try {
-        $export = @{
+    $export = @{
             Name = $Initiative.Name
             Properties = $Initiative.Properties
         }
-
-        $export | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-        Write-Host "Initiative definition exported to: $OutputPath" -InformationAction Continue
+    [string]$export | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
+        Write-Output "Initiative definition exported to: $OutputPath" -InformationAction Continue
         return $OutputPath
     }
     catch {
-        Write-Error "Failed to export initiative definition: $_"
+        write-Error "Failed to export initiative definition: $_"
         throw
     }
 }
 
-#endregion
 
-#region Main-Execution
 try {
-    Write-Host "[START] Creating Policy Initiative" -InformationAction Continue
-
-    # Get context
+    Write-Output "[START] Creating Policy Initiative" -InformationAction Continue
     $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
 
-    # Apply template if specified
     if ($Template -and $Template -ne 'Default') {
-        Write-Verbose "Applying template: $Template"
-        $templateConfig = Get-InitiativeTemplate -TemplateName $Template
+        write-Verbose "Applying template: $Template"
+    $TemplateConfig = Get-InitiativeTemplate -TemplateName $Template
 
-        if (-not $DisplayName) { $DisplayName = $templateConfig.DisplayName }
-        if (-not $Description) { $Description = $templateConfig.Description }
-        if (-not $PolicyDefinitionIds -and $templateConfig.Policies) {
-            $PolicyDefinitionIds = $templateConfig.Policies
+        if (-not $DisplayName) { $DisplayName = $TemplateConfig.DisplayName }
+        if (-not $Description) { $Description = $TemplateConfig.Description }
+        if (-not $PolicyDefinitionIds -and $TemplateConfig.Policies) {
+    [string]$PolicyDefinitionIds = $TemplateConfig.Policies
         }
     }
 
-    # Validate policy definitions
     if (-not $PolicyDefinitionIds -or $PolicyDefinitionIds.Count -eq 0) {
         throw "No policy definitions specified. Provide PolicyDefinitionIds or use a Template."
     }
 
-    Write-Host "[RETRIEVE] Getting policy definitions..." -InformationAction Continue
+    Write-Output "[RETRIEVE] Getting policy definitions..." -InformationAction Continue
     $params = @{
         PolicyIds = $PolicyDefinitionIds
         ManagementGroup = $ManagementGroupName
@@ -355,67 +326,55 @@ try {
         throw "No valid policy definitions found"
     }
 
-    Write-Host "Found $($policies.Count) valid policy definitions" -InformationAction Continue
+    Write-Output "Found $($policies.Count) valid policy definitions" -InformationAction Continue
 
-    # Set metadata
     if (-not $Metadata) {
-        $Metadata = @{}
+    $Metadata = @{}
     }
-    $Metadata['category'] = $Category
-    $Metadata['version'] = '1.0.0'
-    $Metadata['createdBy'] = $context.Account.Id
-    $Metadata['createdOn'] = Get-Date -Format 'yyyy-MM-dd'
+    [string]$Metadata['category'] = $Category
+    [string]$Metadata['version'] = '1.0.0'
+    [string]$Metadata['createdBy'] = $context.Account.Id
+    [string]$Metadata['createdOn'] = Get-Date -Format 'yyyy-MM-dd'
 
-    # Build initiative definition
-    Write-Host "[BUILD] Creating initiative definition..." -InformationAction Continue
+    Write-Output "[BUILD] Creating initiative definition..." -InformationAction Continue
     $params = @{
         PolicyDefinitions = $policies
         Parameters = $Parameters
         Metadata = $Metadata
     }
-    $initiativeDefinition = Build-InitiativeDefinition @params
+    [string]$InitiativeDefinition = Build-InitiativeDefinition @params
 
-    # Create the initiative
-    Write-Host "[CREATE] Creating policy initiative: $InitiativeName" -InformationAction Continue
+    Write-Output "[CREATE] Creating policy initiative: $InitiativeName" -InformationAction Continue
     $params = @{
         DisplayName = $DisplayName
         Subscription = $SubscriptionId
-        Definition = $initiativeDefinition
+        Definition = $InitiativeDefinition
         Name = $InitiativeName
         Description = $Description
         ManagementGroup = $ManagementGroupName
     }
-    $initiative = New-PolicyInitiative @params
+    [string]$initiative = New-PolicyInitiative @params
 
-    # Display summary
     if ($initiative) {
-        $summary = Get-InitiativeSummary -Initiative $initiative
-        Write-Host "`n[SUMMARY] Policy Initiative Created:" -InformationAction Continue
-        $summary | Format-List
-
-        # Export definition
-        $exportPath = Export-InitiativeDefinition -Initiative $initiative
+    $summary = Get-InitiativeSummary -Initiative $initiative
+        Write-Output "`n[SUMMARY] Policy Initiative Created:" -InformationAction Continue
+    [string]$summary | Format-List
+    [string]$ExportPath = Export-InitiativeDefinition -Initiative $initiative
     }
 
-    Write-Host "[COMPLETE] Policy initiative created successfully" -InformationAction Continue
+    Write-Output "[COMPLETE] Policy initiative created successfully" -InformationAction Continue
 
-    # Return the initiative
     return $initiative
 }
 catch {
-    $errorDetails = @{
+    $ErrorDetails = @{
         Message = $_.Exception.Message
         Category = $_.CategoryInfo.Category
         Line = $_.InvocationInfo.ScriptLineNumber
     }
 
-    Write-Error "Initiative creation failed: $($errorDetails.Message) at line $($errorDetails.Line)"
+    write-Error "Initiative creation failed: $($ErrorDetails.Message) at line $($ErrorDetails.Line)"
     throw
 }
 finally {
-    # Cleanup
-    $ProgressPreference = 'Continue'
-}
-
-#endregion\n
-
+    [string]$ProgressPreference = 'Continue'}

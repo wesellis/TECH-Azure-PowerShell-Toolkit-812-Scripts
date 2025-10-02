@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -24,9 +26,9 @@
 if (-not $BlobName) {
     $BlobName = Split-Path $LocalFilePath -Leaf
 }
-Write-Host "Uploading file to blob storage:"
-Write-Host "Local file: $LocalFilePath"
-Write-Host "Blob name: $BlobName"
+Write-Output "Uploading file to blob storage:"
+Write-Output "Local file: $LocalFilePath"
+Write-Output "Blob name: $BlobName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 $params = @{
@@ -37,6 +39,8 @@ $params = @{
     Container = $ContainerName
 }
 $Blob @params
-Write-Host "File uploaded successfully!"
-Write-Host "URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
+Write-Output "File uploaded successfully!"
+Write-Output "URL: $($Blob.ICloudBlob.StorageUri.PrimaryUri)"
+
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Container Vs2019 Lab
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -19,3 +21,5 @@ Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; [System.Net.
 choco install docker-desktop -y
 choco install git vscode -y
 choco install -y visualstudio2019community --package-parameters "--allWorkloads --includeRecommended --passive --locale en-IN"
+
+

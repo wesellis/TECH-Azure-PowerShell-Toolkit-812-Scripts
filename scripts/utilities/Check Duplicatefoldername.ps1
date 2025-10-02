@@ -1,44 +1,68 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Duplicatefoldername
+<#
+.SYNOPSIS
+    Check for duplicate folder names
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    This script checks for duplicate sample folder names that could cause issues with URL fragments
+    in documentation samples. Duplicate folder names will cause ingestion failures.
 
-    1.0
+.PARAMETER SampleFolder
+    Path to the sample folder to check
+
+.PARAMETER SampleName
+    Name of the sample to check for duplicates
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    This script will check to see if there any other sample folders with the same name.
-    The folder name is used for the urlFragement for doc samples and if there are dupes ingestion will fail.
-    We use the folder name (and not the full path)
-try {
-    # Main script execution
-to have more user friendly urls
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
     [Parameter()]
-    $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER,
+
     [Parameter()]
-    $sampleName = $ENV:SAMPLE_NAME
+    [string]$SampleName = $ENV:SAMPLE_NAME
 )
-if($SampleName.StartsWith('modules')){
-   # for modules we use version numbers, e.g. 0.9 so will have dupes, the the urlFragment will be the full path for a module and not an issue
-}else{
-$fragment = $SampleName.Split('\')[-1] # if the filesystem uses forward slashes, this won't work, which is true of other scripts as well
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    if ([string]::IsNullOrWhiteSpace($SampleName)) {
+        throw "SampleName parameter is required"
+    }
+
+    Write-Verbose "Checking for duplicate folder names for sample: $SampleName"
+
+    $fragment = if ($SampleName.StartsWith('modules')) {
+        Write-Verbose "Module sample detected, skipping duplicate check"
+        return
+    } else {
+        $SampleName.Split('\')[-1]
+    }
+
+    Write-Verbose "Searching for directories with name: $fragment"
+    $duplicateDirectories = Get-ChildItem -Directory -Recurse -Filter $fragment
+
+    Write-Output "Found directories: $($duplicateDirectories.FullName -join ', ')"
+
+    if ($duplicateDirectories.Count -gt 1) {
+        Write-Warning "Duplicate folder names found:"
+        foreach ($dir in $duplicateDirectories) {
+            Write-Output "  - $($dir.FullName)"
+        }
+        Write-Output "##vso[task.setvariable variable=duplicate.folderName]$true"
+    } else {
+        Write-Output "No duplicate folder names found"
+        Write-Verbose "Single directory found at: $($duplicateDirectories.FullName)"
+    }
 }
-$d = Get-ChildItem -Directory -Recurse -filter $fragment
-Write-Host $d
-if($d.count -gt 1){ # there should be at least one since this sample should be found
-    Write-Host "Duplicate folder names found:" -ForegroundColor Yellow
-    Write-Host $d
-    Write-Host " ##vso[task.setvariable variable=duplicate.folderName]$true"
-}
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

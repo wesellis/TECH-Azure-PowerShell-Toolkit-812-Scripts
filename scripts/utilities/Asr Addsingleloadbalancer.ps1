@@ -1,130 +1,151 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Compute, Az.Network, Az.Automation
 
-<#`n.SYNOPSIS
-    Asr Addsingleloadbalancer
+<#
+.SYNOPSIS
+    ASR Add Single Load Balancer
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure Site Recovery automation runbook that attaches an existing load balancer
+    to the vNics of virtual machines in a Recovery Plan during failover
 
-    1.0
+.PARAMETER RecoveryPlanContext
+    The recovery plan context object passed by Azure Site Recovery
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Original Author: krnese@microsoft.com - AzureCAT
+    Version: 1.0
+    Last Modified: March 20, 2017
     Requires appropriate permissions and modules
+    Pre-requisites:
+    - A Load Balancer with a backend pool
+    - Automation variables for Load Balancer name and Resource Group
 #>
-    .DESCRIPTION
-        This runbook will attach an existing load balancer to the vNics of the virtual machines, in the Recovery Plan during failover.
-        This will create a Public IP address for the failed over VM(s)
-try {
-    # Main script execution
-.
-        Pre-requisites
-        All resources involved are based on Azure Resource Manager (NOT Azure Classic)
-        - A Load Balancer with a backend pool
-        - Automation variables for the Load Balancer name, and the Resource Group containing the Load Balancer
-        To create the variables and use it towards multiple recovery plans, you should follow this pattern:
-            New-AzureRmAutomationVariable -ResourceGroupName <RGName containing the automation account> -AutomationAccountName <automationAccount Name> -Name <recoveryPlan Name>-lb -Value <name of the load balancer> -Encrypted $false
-            New-AzureRmAutomationVariable -ResourceGroupName <RGName containing the automation account> -AutomationAccountName <automationAccount Name> -Name <recoveryPlan Name>-lbrg -Value <name of the load balancer resource group> -Encrypted $false
-        The following AzureRm Modules are required
-        - AzureRm.Profile
-        - AzureRm.Resources
-        - AzureRm.Compute
-        - AzureRm.Network
-        How to add the script?
-        Add this script as a post action in boot up group where you need to associate the VMs with the existing Load Balancer
-    .NOTES
-        AUTHOR: krnese@microsoft.com - AzureCAT
-        LASTEDIT: 20 March, 2017
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-        [Object]$RecoveryPlanContext
-      )
-Write-output $RecoveryPlanContext
-if ($RecoveryPlanContext.FailoverDirection -ne "PrimaryToSecondary" )
-    {
-        Write-Output "Failover Direction is not Azure, and the script will stop."
+    [Parameter()]
+    [Object]$RecoveryPlanContext
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+    Write-Output "Recovery Plan Context received:"
+    Write-Output $RecoveryPlanContext
+
+    if ($RecoveryPlanContext.FailoverDirection -ne "PrimaryToSecondary") {
+        Write-Output "Failover Direction is not Azure, script will stop."
+        return
     }
-else {
-        $VMinfo = $RecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
-        Write-Output ("Found the following VMGuid(s): `n" + $VMInfo)
-            if ($VMInfo -is [system.array])
-            {
-                $VMinfo = $VMinfo[0]
-                Write-Output "Found multiple VMs in the Recovery Plan"
-            }
-            else
-            {
-                Write-Output "Found only a single VM in the Recovery Plan"
-            }
-Try
- {
-    #Logging in to Azure...
-    "Logging in to Azure..."
-    $Conn = Get-AutomationConnection -Name AzureRunAsConnection
-     Add-AzureRMAccount -ServicePrincipal -Tenant $Conn.TenantID -ApplicationId $Conn.ApplicationID -CertificateThumbprint $Conn.CertificateThumbprint
-    "Selecting Azure subscription..."
-    Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
- }
-Catch
- {
-      $ErrorMessage = 'Login to Azure subscription failed.'
-      $ErrorMessage = $ErrorMessage + " `n"
-      $ErrorMessage = $ErrorMessage + 'Error: '
-      $ErrorMessage = $ErrorMessage + $_
-      Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-Try
- {
-    $LBNameVariable = $RecoveryPlanContext.RecoveryPlanName + " -LB"
-    $LBRgVariable = $RecoveryPlanContext.RecoveryPlanName + " -LBRG"
-    $LBName = Get-AutomationVariable -Name $LBNameVariable
-    $LBRgName = Get-AutomationVariable -Name $LBRgVariable
-    $LoadBalancer = Get-AzureRmLoadBalancer -Name $LBName -ResourceGroupName $LBRgName
- }
-Catch
- {
-    $ErrorMessage = 'Failed to retrieve Load Balancer info from Automation variables.'
-    $ErrorMessage = $ErrorMessage + " `n"
-    $ErrorMessage = $ErrorMessage + 'Error: '
-    $ErrorMessage = $ErrorMessage + $_
-    Write-Error -Message $ErrorMessage -ErrorAction "Stop } #Getting VM details from the Recovery Plan Group, and associate the vNics with the Load Balancer"
-Try
- {
-    $VMinfo = $RecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
-    $VMs = $RecoveryPlanContext.VmMap
-    $vmMap = $RecoveryPlanContext.VmMap
-    foreach ($VMID in $VMinfo)
-    {
-        $VM = $vmMap.$VMID
-        Write-Output $VM.ResourceGroupName
-        Write-Output $VM.RoleName
-        $AzureVm = Get-AzureRmVm -ResourceGroupName $VM.ResourceGroupName -Name $VM.RoleName
-        If ($AzureVm.AvailabilitySetReference -eq $null)
-        {
-            Write-Output "No Availability Set is present for VM: `n" $AzureVm.Name
-        }
-        else
-        {
-            Write-Output "Availability Set is present for VM: `n" $AzureVm.Name
-        }
-        #Join the VMs NICs to backend pool of the Load Balancer
-$ARMNic = Get-AzureRmResource -ResourceId $AzureVm.NetworkInterfaceIDs[0]
-$Nic = Get-AzureRmNetworkInterface -Name $ARMNic.Name -ResourceGroupName $ARMNic.ResourceGroupName
-        $Nic.IpConfigurations[0].LoadBalancerBackendAddressPools.Add($LoadBalancer.BackendAddressPools[0]);
-        $Nic | Set-AzureRmNetworkInterface -ErrorAction Stop
-        Write-Output "Done configuring Load Balancing for VM" $AzureVm.Name
+
+    # Extract VM information
+    $vmInfo = $RecoveryPlanContext.VmMap | Get-Member |
+        Where-Object MemberType -eq NoteProperty |
+        Select-Object -ExpandProperty Name
+
+    Write-Output "Found the following VMGuid(s):"
+    Write-Output $vmInfo
+
+    if ($vmInfo -is [system.array]) {
+        $vmInfo = $vmInfo[0]
+        Write-Output "Found multiple VMs in the Recovery Plan"
     }
- }
-Catch
- {
-    $ErrorMessage = 'Failed to associate the VM with the Load Balancer.'
-    $ErrorMessage = $ErrorMessage + " `n"
-    $ErrorMessage = $ErrorMessage + 'Error: '
-$ErrorMessage = $ErrorMessage + $_
-    Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
+    else {
+        Write-Output "Found only a single VM in the Recovery Plan"
+    }
+
+    # Connect to Azure
+    try {
+        Write-Output "Logging in to Azure..."
+        $connection = Get-AutomationConnection -Name "AzureRunAsConnection" -ErrorAction Stop
+
+        $connectParams = @{
+            ServicePrincipal = $true
+            TenantId = $connection.TenantID
+            ApplicationId = $connection.ApplicationID
+            CertificateThumbprint = $connection.CertificateThumbprint
+        }
+
+        Connect-AzAccount @connectParams -ErrorAction Stop
+
+        Write-Output "Setting subscription context..."
+        Set-AzContext -SubscriptionId $connection.SubscriptionID -ErrorAction Stop
+    }
+    catch {
+        $errorMessage = "Login to Azure subscription failed: $_"
+        Write-Error $errorMessage
+        throw
+    }
+
+    # Get Load Balancer configuration from automation variables
+    try {
+        $lbNameVariable = $RecoveryPlanContext.RecoveryPlanName + "-LB"
+        $lbRgVariable = $RecoveryPlanContext.RecoveryPlanName + "-LBRG"
+
+        Write-Output "Retrieving automation variables: $lbNameVariable, $lbRgVariable"
+        $lbName = Get-AutomationVariable -Name $lbNameVariable -ErrorAction Stop
+        $lbRgName = Get-AutomationVariable -Name $lbRgVariable -ErrorAction Stop
+
+        Write-Output "Load Balancer Name: $lbName"
+        Write-Output "Load Balancer Resource Group: $lbRgName"
+
+        $loadBalancer = Get-AzLoadBalancer -Name $lbName -ResourceGroupName $lbRgName -ErrorAction Stop
+        Write-Output "Successfully retrieved Load Balancer configuration"
+    }
+    catch {
+        $errorMessage = "Failed to retrieve Load Balancer info from Automation variables: $_"
+        Write-Error $errorMessage
+        throw
+    }
+
+    # Associate VMs with Load Balancer
+    try {
+        $vmMap = $RecoveryPlanContext.VmMap
+
+        foreach ($vmId in $vmInfo) {
+            $vm = $vmMap.$vmId
+            Write-Output "`nProcessing VM:"
+            Write-Output "  Resource Group: $($vm.ResourceGroupName)"
+            Write-Output "  VM Name: $($vm.RoleName)"
+
+            # Get VM details
+            $azureVm = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.RoleName -ErrorAction Stop
+
+            # Check availability set
+            if ($azureVm.AvailabilitySetReference) {
+                Write-Output "  Availability Set is present for VM: $($azureVm.Name)"
+            }
+            else {
+                Write-Output "  No Availability Set is present for VM: $($azureVm.Name)"
+            }
+
+            # Get and update network interface
+            $nicResourceId = $azureVm.NetworkProfile.NetworkInterfaces[0].Id
+            $nicResource = Get-AzResource -ResourceId $nicResourceId -ErrorAction Stop
+            $nic = Get-AzNetworkInterface -Name $nicResource.Name -ResourceGroupName $nicResource.ResourceGroupName -ErrorAction Stop
+
+            # Add to load balancer backend pool
+            if ($loadBalancer.BackendAddressPools.Count -gt 0) {
+                $nic.IpConfigurations[0].LoadBalancerBackendAddressPools.Add($loadBalancer.BackendAddressPools[0])
+                Set-AzNetworkInterface -NetworkInterface $nic -ErrorAction Stop
+                Write-Output "  Successfully configured Load Balancing for VM: $($azureVm.Name)"
+            }
+            else {
+                Write-Warning "  No backend pools found in Load Balancer"
+            }
+        }
+
+        Write-Output "`nLoad Balancer association completed for all VMs"
+    }
+    catch {
+        $errorMessage = "Failed to associate VM with Load Balancer: $_"
+        Write-Error $errorMessage
+        throw
+    }
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

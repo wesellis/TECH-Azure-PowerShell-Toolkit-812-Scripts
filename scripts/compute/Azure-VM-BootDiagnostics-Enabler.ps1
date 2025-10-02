@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -13,6 +13,8 @@
 #>
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
@@ -20,22 +22,23 @@
     [Parameter()]
     [string]$StorageAccountName
 )
-Write-Host "Enabling boot diagnostics for VM: $VmName"
+Write-Output "Enabling boot diagnostics for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 if ($StorageAccountName) {
     Set-AzVMBootDiagnostic -VM $VM -Enable -ResourceGroupName $ResourceGroupName -StorageAccountName $StorageAccountName
-    Write-Host "Using storage account: $StorageAccountName"
+    Write-Output "Using storage account: $StorageAccountName"
 } else {
     Set-AzVMBootDiagnostic -VM $VM -Enable
-    Write-Host "Using managed storage"
+    Write-Output "Using managed storage"
 }
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM
-Write-Host "Boot diagnostics enabled successfully:"
-Write-Host "VM: $VmName"
-Write-Host "Resource Group: $ResourceGroupName"
+Write-Output "Boot diagnostics enabled successfully:"
+Write-Output "VM: $VmName"
+Write-Output "Resource Group: $ResourceGroupName"
 if ($StorageAccountName) {
-    Write-Host "Storage Account: $StorageAccountName"
+    Write-Output "Storage Account: $StorageAccountName"
 }
-Write-Host "Status: Enabled"
+Write-Output "Status: Enabled"
+
 
 

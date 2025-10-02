@@ -1,96 +1,146 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Configuresapvm
+<#
+.SYNOPSIS
+    Configure SAP VM
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script for SAP VM configuration with disk setup
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
-param(
-    [String] $DBDataLUNS = " 0,1,2" ,
-    [String] $DBLogLUNS = " 3" ,
-    [string] $DBDataDrive = "S:" ,
-    [string] $DBLogDrive = "L:" ,
-	[string] $DBDataName = " dbdata" ,
-    [string];  $DBLogName = " dblog"
-)
-#region Functions
+#>
+
 [CmdletBinding()]
-function Log
-{
-	[CmdletBinding()]
 param(
-		[string] $message
-	)
-$message = (Get-Date).ToString() + " : " + $message;
-	Write-Host $message;
-	if (-not (Test-Path (" c:" + [char]92 + " sapcd" )))
-	{
-		$nul = mkdir (" c:" + [char]92 + " sapcd" );
-	}
-	$message | Out-File -Append -FilePath (" c:" + [char]92 + " sapcd" + [char]92 + " log.txt" );
-}
-function Create-Pool
-{
-    [CmdletBinding()]
-param(
-    [Parameter()]
-    $arraystring,
-    [Parameter()]
-    $name,
-    [Parameter()]
-    $path
+    [String]$DBDataLUNS = "0,1,2",
+    [String]$DBLogLUNS = "3",
+    [String]$DBDataDrive = "S:",
+    [String]$DBLogDrive = "L:",
+    [String]$DBDataName = "dbdata",
+    [String]$DBLogName = "dblog"
+)
+
+$ErrorActionPreference = "Stop"
+
+function Write-Log {
+    param(
+        [string]$Message
     )
-    Log ("Creating volume for " + $arraystring);
-    $luns = $arraystring.Split(" ," );
-    if ($luns.Length -gt 1)
-    {
-        $count = 0;
-        $disks = @();
-        foreach ($lun in $luns)
-        {
-	    Log ("Preparing LUN " + $lun);
-            $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
-            $disk | Clear-Disk -RemoveData -RemoveOEM -Confirm:$false -ErrorAction SilentlyContinue;
-            $disks = $disks + Get-PhysicalDisk -UniqueId $disk.UniqueId;
-            $count++;
-        }
-        $subsystem = Get-StorageSubSystem;
-        Log "Creating Pool" ;
-        $pool = New-StoragePool -FriendlyName $name -StorageSubsystemFriendlyName $subsystem.FriendlyName -PhysicalDisks $disks -ResiliencySettingNameDefault Simple -ProvisioningTypeDefault Fixed;
-        Log "Creating disk" ;
-        $disk = New-VirtualDisk -StoragePoolUniqueId $pool.UniqueId -FriendlyName $name -UseMaximumSize -Interleave 65536
-        Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId
-$partition = New-Partition -UseMaximumSize -DiskId $disk.UniqueId -DriveLetter $path.Substring(0,1)
-        $partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false -AllocationUnitSize 65536
-    }
-    elseif ($luns.Length -eq 1)
-    {
-$lun = $luns[0];
-		Log ("Creating volume for disk " + $lun);
-        $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
-        $partition = $disk | Initialize-Disk -PartitionStyle GPT -ErrorAction SilentlyContinue -PassThru | New-Partition -DriveLetter $path.Substring(0,1) -UseMaximumSize;
-		sleep 10;
-		$partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false;
-    }
+
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Verbose "[$Timestamp] $Message"
 }
-Create-Pool -arraystring $DBDataLUNS -name $DBDataName -path $DBDataDrive
-Create-Pool -arraystring $DBLogLUNS -name $DBLogName -path $DBLogDrive
-} catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+
+try {
+    Write-Log "Starting SAP VM configuration"
+
+    # Parse LUN numbers
+    $DataLUNs = $DBDataLUNS -split ',' | ForEach-Object { [int]$_.Trim() }
+    $LogLUNs = $DBLogLUNS -split ',' | ForEach-Object { [int]$_.Trim() }
+
+    Write-Log "Data LUNs: $($DataLUNs -join ', ')"
+    Write-Log "Log LUNs: $($LogLUNs -join ', ')"
+
+    # Get disks by LUN
+    $DataDisks = @()
+    $LogDisks = @()
+
+    foreach ($lun in $DataLUNs) {
+        $disk = Get-Disk | Where-Object { $_.Location -match "LUN $lun" }
+        if ($disk) {
+            $DataDisks += $disk
+            Write-Log "Found data disk at LUN $lun"
+        }
+    }
+
+    foreach ($lun in $LogLUNs) {
+        $disk = Get-Disk | Where-Object { $_.Location -match "LUN $lun" }
+        if ($disk) {
+            $LogDisks += $disk
+            Write-Log "Found log disk at LUN $lun"
+        }
+    }
+
+    # Initialize disks if needed
+    foreach ($disk in $DataDisks) {
+        if ($disk.PartitionStyle -eq 'RAW') {
+            Write-Log "Initializing data disk $($disk.Number)"
+            Initialize-Disk -Number $disk.Number -PartitionStyle GPT -ErrorAction SilentlyContinue
+        }
+    }
+
+    foreach ($disk in $LogDisks) {
+        if ($disk.PartitionStyle -eq 'RAW') {
+            Write-Log "Initializing log disk $($disk.Number)"
+            Initialize-Disk -Number $disk.Number -PartitionStyle GPT -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Create storage pools if multiple disks
+    if ($DataDisks.Count -gt 1) {
+        Write-Log "Creating storage pool for data disks"
+
+        $PhysicalDisks = $DataDisks | ForEach-Object { Get-PhysicalDisk -UniqueId $_.UniqueId }
+
+        New-StoragePool -FriendlyName $DBDataName `
+                       -StorageSubSystemFriendlyName "Windows Storage*" `
+                       -PhysicalDisks $PhysicalDisks
+
+        New-VirtualDisk -StoragePoolFriendlyName $DBDataName `
+                       -FriendlyName "${DBDataName}_VDisk" `
+                       -ResiliencySettingName Simple `
+                       -UseMaximumSize
+
+        Get-VirtualDisk -FriendlyName "${DBDataName}_VDisk" |
+            Get-Disk |
+            Initialize-Disk -PartitionStyle GPT -PassThru |
+            New-Partition -DriveLetter $DBDataDrive.TrimEnd(':') -UseMaximumSize |
+            Format-Volume -FileSystem NTFS -NewFileSystemLabel $DBDataName -Confirm:$false
+    }
+    elseif ($DataDisks.Count -eq 1) {
+        Write-Log "Creating simple volume for data disk"
+
+        $DataDisks[0] |
+            New-Partition -DriveLetter $DBDataDrive.TrimEnd(':') -UseMaximumSize |
+            Format-Volume -FileSystem NTFS -NewFileSystemLabel $DBDataName -Confirm:$false
+    }
+
+    if ($LogDisks.Count -gt 0) {
+        if ($LogDisks.Count -gt 1) {
+            Write-Log "Creating storage pool for log disks"
+
+            $PhysicalDisks = $LogDisks | ForEach-Object { Get-PhysicalDisk -UniqueId $_.UniqueId }
+
+            New-StoragePool -FriendlyName $DBLogName `
+                           -StorageSubSystemFriendlyName "Windows Storage*" `
+                           -PhysicalDisks $PhysicalDisks
+
+            New-VirtualDisk -StoragePoolFriendlyName $DBLogName `
+                           -FriendlyName "${DBLogName}_VDisk" `
+                           -ResiliencySettingName Simple `
+                           -UseMaximumSize
+
+            Get-VirtualDisk -FriendlyName "${DBLogName}_VDisk" |
+                Get-Disk |
+                Initialize-Disk -PartitionStyle GPT -PassThru |
+                New-Partition -DriveLetter $DBLogDrive.TrimEnd(':') -UseMaximumSize |
+                Format-Volume -FileSystem NTFS -NewFileSystemLabel $DBLogName -Confirm:$false
+        }
+        else {
+            Write-Log "Creating simple volume for log disk"
+
+            $LogDisks[0] |
+                New-Partition -DriveLetter $DBLogDrive.TrimEnd(':') -UseMaximumSize |
+                Format-Volume -FileSystem NTFS -NewFileSystemLabel $DBLogName -Confirm:$false
+        }
+    }
+
+    Write-Log "SAP VM configuration completed successfully"
+}
+catch {
+    Write-Error "Failed to configure SAP VM: $($_.Exception.Message)"
     throw
 }
-
-

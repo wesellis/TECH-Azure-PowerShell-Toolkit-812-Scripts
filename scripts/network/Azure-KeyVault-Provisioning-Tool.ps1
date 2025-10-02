@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.KeyVault
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage Key Vault
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$VaultName,
@@ -18,11 +20,10 @@
     [bool]$EnabledForTemplateDeployment = $true,
     [bool]$EnabledForDiskEncryption = $true
 )
-Write-Host "Provisioning Key Vault: $VaultName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
-# Create the Key Vault
+Write-Output "Provisioning Key Vault: $VaultName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "SKU: $SkuName"
 $params = @{
     Sku = $SkuName
     VaultName = $VaultName
@@ -30,9 +31,11 @@ $params = @{
     Location = $Location
 }
 $KeyVault = New-AzKeyVault @params
-Write-Host "Key Vault $VaultName provisioned successfully"
-Write-Host "Vault URI: $($KeyVault.VaultUri)"
-Write-Host "Enabled for Deployment: $EnabledForDeployment"
-Write-Host "Enabled for Template Deployment: $EnabledForTemplateDeployment"
-Write-Host "Enabled for Disk Encryption: $EnabledForDiskEncryption"
+Write-Output "Key Vault $VaultName provisioned successfully"
+Write-Output "Vault URI: $($KeyVault.VaultUri)"
+Write-Output "Enabled for Deployment: $EnabledForDeployment"
+Write-Output "Enabled for Template Deployment: $EnabledForTemplateDeployment"
+Write-Output "Enabled for Disk Encryption: $EnabledForDiskEncryption"
+
+
 

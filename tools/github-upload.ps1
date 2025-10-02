@@ -5,7 +5,6 @@
 .DESCRIPTION
     github upload operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Uploads local repository changes to GitHub with detailed status reporting
 
@@ -31,7 +30,7 @@
 
     Shows what would be uploaded from all repositories in the base directory
 
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -52,63 +51,48 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$WhatIf
 )
-
-#region Initialize-Configuration
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-
-# Ensure Git is available
-$gitPath = Get-Command git -ErrorAction SilentlyContinue
-if (-not $gitPath) {
+$GitPath = Get-Command git -ErrorAction SilentlyContinue
+if (-not $GitPath) {
     $env:PATH += ";C:\Program Files\Git\bin"
-    $gitPath = Get-Command git -ErrorAction SilentlyContinue
-    if (-not $gitPath) {
+    $GitPath = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $GitPath) {
         throw "Git is not available in PATH. Please install Git or update PATH."
     }
 }
-
-# Upload statistics
-$uploadStats = @{
+$UploadStats = @{
     RepositoriesProcessed = 0
     RepositoriesWithChanges = 0
     RepositoriesUploaded = 0
     Errors = @()
 }
 
-#endregion
 
-#region Functions
-[OutputType([bool])]
- {
-    [CmdletBinding()]
+function Write-Log {
     param(
         [string]$Title
     )
-
     $separator = '=' * ($Title.Length + 10)
-    Write-Host "=== $Title ===" -InformationAction Continue
-    Write-Host $separator -InformationAction Continue
+    Write-Output "=== $Title ===" -InformationAction Continue
+    Write-Output $separator -InformationAction Continue
 }
 
 function Test-GitRepository {
-    [CmdletBinding()]
     param(
         [string]$Path
     )
-
-    $gitDir = Join-Path $Path ".git"
-    return (Test-Path $gitDir)
+    $GitDir = Join-Path $Path ".git"
+    return (Test-Path $GitDir)
 }
 
 function Get-GitStatus {
-    [CmdletBinding()]
     param(
         [string]$RepositoryPath
     )
 
     try {
         Push-Location $RepositoryPath
-
         $result = @{
             HasChanges = $false
             StagedFiles = @()
@@ -117,23 +101,17 @@ function Get-GitStatus {
             CurrentBranch = ''
             RemoteUrl = ''
         }
-
-        # Get status
-        $gitStatus = git status --porcelain 2>$null
-        if ($gitStatus) {
+        $GitStatus = git status --porcelain 2>$null
+        if ($GitStatus) {
             $result.HasChanges = $true
-            $result.ModifiedFiles = $gitStatus -split "`n" | Where-Object { $_ -match '^.M|^M.' }
-            $result.StagedFiles = $gitStatus -split "`n" | Where-Object { $_ -match '^A.|^M.' }
+            $result.ModifiedFiles = $GitStatus -split "`n" | Where-Object { $_ -match '^.M|^M.' }
+            $result.StagedFiles = $GitStatus -split "`n" | Where-Object { $_ -match '^A.|^M.' }
         }
-
-        # Get untracked files
-        $untrackedFiles = git ls-files --others --exclude-standard 2>$null
-        if ($untrackedFiles) {
-            $result.UntrackedFiles = $untrackedFiles -split "`n" | Where-Object { $_ }
+        $UntrackedFiles = git ls-files --others --exclude-standard 2>$null
+        if ($UntrackedFiles) {
+            $result.UntrackedFiles = $UntrackedFiles -split "`n" | Where-Object { $_ }
             $result.HasChanges = $true
         }
-
-        # Get branch info
         $result.CurrentBranch = git branch --show-current 2>$null
         $result.RemoteUrl = git remote get-url origin 2>$null
 
@@ -149,7 +127,6 @@ function Get-GitStatus {
 }
 
 function Invoke-GitCommitAndPush {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$RepositoryPath,
         [string]$Message,
@@ -158,15 +135,13 @@ function Invoke-GitCommitAndPush {
 
     try {
         Push-Location $RepositoryPath
-
-        $repoName = Split-Path $RepositoryPath -Leaf
+        $RepoName = Split-Path $RepositoryPath -Leaf
 
         if (-not $Message) {
             $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            $Message = "Updated $repoName - $timestamp"
+            $Message = "Updated $RepoName - $timestamp"
         }
 
-        # Stage all changes
         if ($PSCmdlet.ShouldProcess($RepositoryPath, "Stage all changes")) {
             git add . 2>$null
             if ($LASTEXITCODE -ne 0) {
@@ -174,20 +149,18 @@ function Invoke-GitCommitAndPush {
             }
         }
 
-        # Commit changes
         if ($PSCmdlet.ShouldProcess($RepositoryPath, "Commit with message: $Message")) {
             git commit -m $Message 2>$null
             if ($LASTEXITCODE -ne 0) {
                 throw "Failed to commit changes"
             }
-            Write-Host "  [OK] Changes committed" -InformationAction Continue
+            Write-Output "  [OK] Changes committed" -InformationAction Continue
         }
 
-        # Push to remote
         if ($PSCmdlet.ShouldProcess($RepositoryPath, "Push to remote")) {
             git push 2>$null
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "  [OK] Successfully pushed to GitHub" -InformationAction Continue
+                Write-Output "  [OK] Successfully pushed to GitHub" -InformationAction Continue
                 return $true
             }
             else {
@@ -208,35 +181,32 @@ function Invoke-GitCommitAndPush {
 }
 
 function Show-RepositoryInfo {
-    [CmdletBinding()]
     param(
         [string]$RepositoryPath,
         [object]$Status
     )
-
-    $repoName = Split-Path $RepositoryPath -Leaf
-    Write-Host "`n--- Repository: $repoName ---" -InformationAction Continue
-    Write-Host "Path: $RepositoryPath" -InformationAction Continue
-    Write-Host "Branch: $($Status.CurrentBranch)" -InformationAction Continue
-    Write-Host "Remote: $($Status.RemoteUrl)" -InformationAction Continue
+        $RepoName = Split-Path $RepositoryPath -Leaf
+    Write-Output "`n--- Repository: $RepoName ---" -InformationAction Continue
+    Write-Output "Path: $RepositoryPath" -InformationAction Continue
+    Write-Output "Branch: $($Status.CurrentBranch)" -InformationAction Continue
+    Write-Output "Remote: $($Status.RemoteUrl)" -InformationAction Continue
 
     if ($Status.ModifiedFiles.Count -gt 0) {
-        Write-Host "Modified files: $($Status.ModifiedFiles.Count)" -InformationAction Continue
+        Write-Output "Modified files: $($Status.ModifiedFiles.Count)" -InformationAction Continue
     }
 
     if ($Status.UntrackedFiles.Count -gt 0) {
-        Write-Host "Untracked files: $($Status.UntrackedFiles.Count)" -InformationAction Continue
+        Write-Output "Untracked files: $($Status.UntrackedFiles.Count)" -InformationAction Continue
         $Status.UntrackedFiles | Select-Object -First 5 | ForEach-Object {
-            Write-Host "  $_" -InformationAction Continue
+            Write-Output "  $_" -InformationAction Continue
         }
         if ($Status.UntrackedFiles.Count -gt 5) {
-            Write-Host "  ... and $($Status.UntrackedFiles.Count - 5) more" -InformationAction Continue
+            Write-Output "  ... and $($Status.UntrackedFiles.Count - 5) more" -InformationAction Continue
         }
     }
 }
 
 function Get-RecentCommits {
-    [CmdletBinding()]
     param(
         [string]$RepositoryPath,
         [int]$Count = 5
@@ -246,11 +216,11 @@ function Get-RecentCommits {
         Push-Location $RepositoryPath
         $commits = git log --oneline -$Count 2>$null
         if ($commits) {
-            Write-Host "Recent commits:" -InformationAction Continue
+            Write-Output "Recent commits:" -InformationAction Continue
             $commits | ForEach-Object {
-                Write-Host "  $_" -InformationAction Continue
+                Write-Output "  $_" -InformationAction Continue
             }
-        
+
 } catch {
         Write-Warning "Could not retrieve commit history: $_"
     }
@@ -259,100 +229,87 @@ function Get-RecentCommits {
     }
 }
 
-#endregion
 
-#region Main-Execution
 try {
     Write-UploadHeader "GitHub Repository Uploader"
-
-    # Determine repositories to process
-    $repositoriesToProcess = @()
+    $RepositoriesToProcess = @()
 
     if ($RepositoryPath) {
-        # Process single repository
         if (-not (Test-GitRepository -Path $RepositoryPath)) {
             throw "Specified path is not a Git repository: $RepositoryPath"
         }
-        $repositoriesToProcess += $RepositoryPath
-        Write-Host "Processing single repository: $RepositoryPath" -InformationAction Continue
+        $RepositoriesToProcess += $RepositoryPath
+        Write-Output "Processing single repository: $RepositoryPath" -InformationAction Continue
     }
     else {
-        # Process all repositories in base directory
         if (-not (Test-Path $BaseDirectory)) {
             throw "Base directory does not exist: $BaseDirectory"
         }
-
-        $repositoriesToProcess = Get-ChildItem $BaseDirectory -Directory |
+        $RepositoriesToProcess = Get-ChildItem $BaseDirectory -Directory |
             Where-Object { Test-GitRepository -Path $_.FullName } |
             Select-Object -ExpandProperty FullName
 
-        Write-Host "Found $($repositoriesToProcess.Count) Git repositories in: $BaseDirectory" -InformationAction Continue
+        Write-Output "Found $($RepositoriesToProcess.Count) Git repositories in: $BaseDirectory" -InformationAction Continue
     }
 
-    if ($repositoriesToProcess.Count -eq 0) {
+    if ($RepositoriesToProcess.Count -eq 0) {
         Write-Warning "No Git repositories found to process."
         return
     }
 
-    # Process each repository
-    foreach ($repoPath in $repositoriesToProcess) {
-        $uploadStats.RepositoriesProcessed++
+    foreach ($RepoPath in $RepositoriesToProcess) {
+        $UploadStats.RepositoriesProcessed++
 
         try {
-            $status = Get-GitStatus -RepositoryPath $repoPath
+            $status = Get-GitStatus -RepositoryPath $RepoPath
             if (-not $status) {
-                $uploadStats.Errors += "Failed to get status for: $repoPath"
+                $UploadStats.Errors += "Failed to get status for: $RepoPath"
                 continue
             }
 
-            Show-RepositoryInfo -RepositoryPath $repoPath -Status $status
+            Show-RepositoryInfo -RepositoryPath $RepoPath -Status $status
 
             if ($status.HasChanges -or $Force) {
-                $uploadStats.RepositoriesWithChanges++
+                $UploadStats.RepositoriesWithChanges++
 
-                if ($PSCmdlet.ShouldProcess($repoPath, "Upload changes to GitHub")) {
-                    $uploadResult = Invoke-GitCommitAndPush -RepositoryPath $repoPath -Message $CommitMessage -Status $status
-                    if ($uploadResult) {
-                        $uploadStats.RepositoriesUploaded++
-                        Get-RecentCommits -RepositoryPath $repoPath
+                if ($PSCmdlet.ShouldProcess($RepoPath, "Upload changes to GitHub")) {
+                    $UploadResult = Invoke-GitCommitAndPush -RepositoryPath $RepoPath -Message $CommitMessage -Status $status
+                    if ($UploadResult) {
+                        $UploadStats.RepositoriesUploaded++
+                        Get-RecentCommits -RepositoryPath $RepoPath
                     }
                 }
                 else {
-                    Write-Host "  [WHATIF] Would upload changes" -InformationAction Continue
+                    Write-Output "  [WHATIF] Would upload changes" -InformationAction Continue
                 }
             }
             else {
-                Write-Host "  [OK] No changes to upload" -InformationAction Continue
-            
-} catch {
-            $errorMsg = "Failed to process repository $repoPath`: $_"
-            $uploadStats.Errors += $errorMsg
-            Write-Warning $errorMsg
+                Write-Output "  [OK] No changes to upload" -InformationAction Continue
+
+        } catch {
+            $ErrorMsg = "Failed to process repository $RepoPath`: $_"
+            $UploadStats.Errors += $ErrorMsg
+            Write-Warning $ErrorMsg
         }
     }
 
-    # Display summary
     Write-UploadHeader "Upload Summary"
-    Write-Host "Repositories processed: $($uploadStats.RepositoriesProcessed)" -InformationAction Continue
-    Write-Host "Repositories with changes: $($uploadStats.RepositoriesWithChanges)" -InformationAction Continue
-    Write-Host "Repositories uploaded: $($uploadStats.RepositoriesUploaded)" -InformationAction Continue
+    Write-Output "Repositories processed: $($UploadStats.RepositoriesProcessed)" -InformationAction Continue
+    Write-Output "Repositories with changes: $($UploadStats.RepositoriesWithChanges)" -InformationAction Continue
+    Write-Output "Repositories uploaded: $($UploadStats.RepositoriesUploaded)" -InformationAction Continue
 
-    if ($uploadStats.Errors.Count -gt 0) {
-        Write-Host "Errors encountered: $($uploadStats.Errors.Count)" -InformationAction Continue
-        $uploadStats.Errors | ForEach-Object {
+    if ($UploadStats.Errors.Count -gt 0) {
+        Write-Output "Errors encountered: $($UploadStats.Errors.Count)" -InformationAction Continue
+        $UploadStats.Errors | ForEach-Object {
             Write-Warning "  - $_"
         }
     }
     else {
-        Write-Host "No errors encountered" -InformationAction Continue
+        Write-Output "No errors encountered" -InformationAction Continue
     }
 
-    Write-Host "`nUpload process completed!" -InformationAction Continue
+    Write-Output "`nUpload process completed!" -InformationAction Continue
 }
 catch {
     Write-Error "Upload process failed: $_"
-    throw
-}
-
-#endregion\n
-
+    throw`n}

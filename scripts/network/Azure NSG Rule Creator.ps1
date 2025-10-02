@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,34 +9,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -76,10 +73,9 @@ param(
     [Parameter(Mandatory)]
     [int]$Priority
 )
-Write-Host "Adding security rule to NSG: $NsgName" "INFO"
-
-$Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
-$params = @{
+Write-Output "Adding security rule to NSG: $NsgName" "INFO"
+    [string]$Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
+    $params = @{
     DestinationAddressPrefix = " *"
     Direction = "Inbound"
     Protocol = $Protocol
@@ -93,10 +89,7 @@ $params = @{
 }
 Add-AzNetworkSecurityRuleConfig @params
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
-Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName" "INFO"
+Write-Output "Security rule '$RuleName' added successfully to NSG: $NsgName" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

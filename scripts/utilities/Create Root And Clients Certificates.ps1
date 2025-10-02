@@ -1,137 +1,149 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Create Root And Clients Certificates
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script for creating root and client certificates for Point-to-Site VPN connections.
+    This script creates a root certificate and three client certificates for different organizational units.
 
+.PARAMETER PwdCertificates
+    Password for certificates (default: '12345')
 
+.NOTES
+    Version: 1.0
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
     Requires appropriate permissions and modules
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+    Creates certificates for marketing, sales, and engineering departments
+#>
+
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false, HelpMessage = 'password certificate', ValueFromPipeline = $true)]
-    [string]$pwdCertificates = '12345'
+    [Parameter(Mandatory = $false, HelpMessage = 'Password for certificates', ValueFromPipeline = $true)]
+    [string]$PwdCertificates = '12345'
 )
-for ($selection = 1 ; $selection -le 3 ; $selection++) {
-    switch ($selection) {
-        1 { $certSubject = 'CN=cert@marketing.contoso.com'; $clientNumb = '1' }
-        2 {;  $certSubject = 'CN=cert@sale.contoso.com'; $clientNumb = '2' }
-        3 {;  $certSubject = 'CN=cert@engineering.contoso.com'; $clientNumb = '3' }
+
+$ErrorActionPreference = "Stop"
+
+try {
+    Write-Output "Starting Root and Client Certificate creation..."
+
+    for ($selection = 1; $selection -le 3; $selection++) {
+        switch ($selection) {
+            1 { $CertSubject = 'CN=cert@marketing.contoso.com'; $ClientNumb = '1' }
+            2 { $CertSubject = 'CN=cert@sale.contoso.com'; $ClientNumb = '2' }
+            3 { $CertSubject = 'CN=cert@engineering.contoso.com'; $ClientNumb = '3' }
+        }
+
+        $CertPath = "C:\cert$ClientNumb\"
+        $PathFolder = [string](Split-Path -Path $CertPath -Parent)
+        $FolderName = [string](Split-Path -Path $CertPath -Leaf)
+
+        Write-Information "Folder to store digital certificates: $PathFolder$FolderName" -InformationAction Continue
+        New-Item -Path $PathFolder -Name $FolderName -ItemType Directory -Force | Out-Null
+        Write-Output ""
+
+        # Parameters for root certificate creation
+        $params = @{
+            Type              = 'Custom'
+            Subject           = 'CN=P2SRootCert'
+            KeySpec           = 'Signature'
+            KeyExportPolicy   = 'Exportable'
+            KeyUsage          = 'CertSign'
+            KeyUsageProperty  = 'Sign'
+            KeyLength         = 2048
+            HashAlgorithm     = 'sha256'
+            NotAfter          = (Get-Date).AddMonths(24)
+            CertStoreLocation = 'Cert:\CurrentUser\My'
+        }
+
+        Write-Output "$(Get-Date) - Checking P2S Root certificate in Cert:\CurrentUser\My"
+        $CertRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=P2SRootCert' }
+
+        if ($null -eq $CertRoot) {
+            $CertRoot = New-SelfSignedCertificate @params
+            Write-Output "$(Get-Date) - P2S Root certificate created"
+        }
+        else {
+            Write-Output "$(Get-Date) - P2S Root certificate already exists, skipping"
+        }
+
+        # Export root certificate with private key
+        $mypwd = Read-Host -AsSecureString -Prompt "Enter secure password for root certificate"
+        $CertRootThumbprint = (Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object -Property Subject -eq "CN=P2SRootCert" | Select-Object Thumbprint).Thumbprint
+        $CertRoot = Get-ChildItem -Path "Cert:\CurrentUser\My\$CertRootThumbprint"
+        Export-PfxCertificate -Cert $CertRoot -FilePath "$CertPath\P2SRoot-with-privKey.pfx" -Password $mypwd
+
+        Write-Output "$(Get-Date) - Start creation P2S Client cert: $CertSubject"
+
+        # Parameters for client certificate creation
+        $params = @{
+            Type              = 'Custom'
+            Subject           = $CertSubject
+            KeySpec           = 'Signature'
+            KeyExportPolicy   = 'Exportable'
+            KeyLength         = 2048
+            HashAlgorithm     = 'sha256'
+            NotAfter          = (Get-Date).AddMonths(18)
+            CertStoreLocation = 'Cert:\CurrentUser\My'
+            Signer            = $CertRoot
+            TextExtension     = @('2.5.29.37={text}1.3.6.1.5.5.7.3.2')
+        }
+
+        $CertClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $CertSubject }
+        if ($null -eq $CertClient) {
+            New-SelfSignedCertificate @params | Out-Null
+            Write-Output "$(Get-Date) - P2S Client cert: $CertSubject created"
+        }
+        else {
+            Write-Output "$(Get-Date) - P2S Client cert: $CertSubject already exists, skipping"
+        }
+
+        # Export root certificate as .cert file
+        $FileCert = $CertPath + 'P2SRoot' + $ClientNumb + '.cert'
+        $CertRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq "CN=P2SRootCert" }
+
+        if ($null -eq $CertRoot) {
+            Write-Output "$(Get-Date) - Root Certificate CN=P2SRootCert not found"
+            Write-Output "Stop processing!"
+            Exit
+        }
+        else {
+            Export-Certificate -Cert $CertRoot -FilePath $FileCert -Force | Out-Null
+            Write-Output "$(Get-Date) - Created the file: $FileCert"
+        }
+
+        # Convert to .cer format
+        $FileCer = $CertPath + 'P2SRoot' + $ClientNumb + '.cer'
+        Write-Output "$(Get-Date) - Creating root certificate in $FileCer"
+
+        if (-not (Test-Path -Path $FileCer)) {
+            certutil -encode $FileCert $FileCer | Out-Null
+            Write-Output "$(Get-Date) - Created root cer file"
+        }
+        else {
+            Write-Output "$(Get-Date) - Root .cer file exists, skipping"
+        }
+
+        # Export client certificate
+        $CertFilePath = $CertPath + 'certClient' + $ClientNumb + '.pfx'
+        $mypwd = Read-Host -AsSecureString -Prompt "Enter secure password for client certificate"
+        $CertClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $CertSubject }
+        Export-PfxCertificate -cert $CertClient -FilePath $CertFilePath -Password $mypwd
+
+        # Write password file
+        $PwdFile = $CertPath + 'certpwd.txt'
+        Write-Output ""
+        Write-Information "Writing password file: $PwdFile" -InformationAction Continue
+        Out-File -FilePath $PwdFile -Force -InputObject $PwdCertificates
+
+        Write-Output "$(Get-Date) - Completed certificate creation for client $ClientNumb"
     }
-    # The variable specifies the local folder to store the digital certificates
-    $certPath = "C:\cert$clientNumb\"
-    $pathFolder = [string](Split-Path -Path $certPath -Parent)
-    $folderName = [string](Split-Path -Path $certPath -Leaf)
-    Write-Information \'folder to store digital certificates: \'$pathFolder$folderName
-    # Create a local folder: 'C:\cert'
-    New-Item -Path $pathFolder -Name $folderName -ItemType Directory -Force
-    Write-Host ''
-    #
-    # Create self-signed Root Certificate
-    # It creates a self-signed root certificate named 'P2SRootCert' that is automatically installed in 'Certificates-Current User\Personal\Certificates'.
-    # You can view the certificate by opening certmgr.msc, or Manage User Certificates.
-    $params = @{
-        Type              = 'Custom'
-        Subject           = 'CN=P2SRootCert'
-        KeySpec           = 'Signature'
-        KeyExportPolicy   = 'Exportable'
-        KeyUsage          = 'CertSign'
-        KeyUsageProperty  = 'Sign'
-        KeyLength         = 2048
-        HashAlgorithm     = 'sha256'
-        NotAfter          = (Get-Date).AddMonths(24)
-        CertStoreLocation = 'Cert:\CurrentUser\My'
-    }
-    # Check if the Root Certificates already exists in the store:  Cert:\CurrentUser\My
-    Write-Host " $(Get-Date) - checking P2S Root certificate in Cert:\CurrentUser\My"
-    $certRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq 'CN=P2SRootCert' }
-    If ($null -eq $certRoot) {
-        # Create a new Root Certificate if it doesn't exist.
-        $certRoot = New-SelfSignedCertificate -ErrorAction Stop @params
-        Write-Host " $(Get-Date) - P2S Root certificate created"
-    }
-    Else {
-        # Root Certificate already exists in the store, skipping operation
-        Write-Host " $(Get-Date) - P2S Root certificate already exists, skipping"
-    }
-    # Fetch self-signed Root Certificate named 'P2SRootCert' from 'Certificates-Current User\Personal\Certificates'
-    $mypwd = Read-Host -AsSecureString -Prompt "Enter secure value"
-    $certRootThumbprint = (Get-ChildItem -Path "Cert:\CurrentUser\My" | where-Object  -Property Subject -eq  "CN=P2SRootCert" | Select-Object Thumbprint).Thumbprint
-    $certRoot = Get-ChildItem -Path "Cert:\CurrentUser\My\$certRootThumbprint"
-    # Export of the root certificate in format .pfx
-    # The private key is included in the export. Password is required for export operation.
-    Export-PfxCertificate -Cert $certRoot -FilePath $certPath'P2SRoot-with-privKey.pfx' -Password $mypwd
-    Write-Host " $(Get-Date) - start creation P2S Client cert: $certSubject" -ForegroundColor Yellow
-    # Generate a client certificate
-    # Each client computer that connects to a VNet using Point-to-Site must have a client certificate installed.
-    # You generate a client certificate from the self-signed root certificate, and then export and install the client certificate.
-    # If the client certificate isn't installed, authentication fails.
-    $params = @{
-        Type              = 'Custom'
-        Subject           = $certSubject
-        KeySpec           = 'Signature'
-        KeyExportPolicy   = 'Exportable'
-        KeyLength         = 2048
-        HashAlgorithm     = 'sha256'
-        NotAfter          = (Get-Date).AddMonths(18)
-        CertStoreLocation = 'Cert:\CurrentUser\My'
-        Signer            = $certRoot
-        TextExtension     = @('2.5.29.37={text}1.3.6.1.5.5.7.3.2')
-    }
-    # Create client cert
-    $certClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $certSubject }
-    If ($null -eq $certClient) {
-        # getting client certificate
-        New-SelfSignedCertificate -ErrorAction Stop @params
-        Write-Host " $(Get-Date) - P2S Client cert: $certSubject created" -ForegroundColor Yellow
-    }
-    Else { Write-Host " $(Get-Date) - P2S Client cert: $certSubject already exists, skipping....." }
-    # Save root certificate to file
-    $FileCert = $certPath + 'P2SRoot' + $clientNumb + '.cert'
-    $certRoot = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq "CN=P2SRootCert" }
-    If ($null -eq $certRoot) {
-        Write-Host " $(Get-Date) - Root Certificate CN=P2SRootCert not found "
-        Write-Host " stop processing!"
-        Exit
-    }
-    Else {
-        # Export of the root certificate in format .cer
-        # The private key is not included in the export. Password is not required for the export.
-        Export-Certificate -Cert $certRoot -FilePath $FileCert -Force | Out-Null
-        Write-Host " $(Get-Date) - Create the file: $FileCert" -ForegroundColor Green
-    }
-    # Convert to Base64 cer file
-    $FileCer = $certPath + 'P2SRoot' + $clientNumb + '.cer'
-    Write-Host " $(Get-Date) - Creating root certificate in $FileCer"
-    If (-not (Test-Path -Path $FileCer)) {
-        certutil -encode $FileCert $FileCer | Out-Null
-        Write-Host " $(Get-Date) - Created root cer file"
-    }
-    Else { Write-Host " $(Get-Date) - Root .cer file exists, skipping" }
-    $certFilePath = $certPath + 'certClient' + $clientNumb + '.pfx'
-    ####### export user certificate in Personal Information Exchange - PKCS #12 (.PFX)
-    $mypwd = Read-Host -AsSecureString -Prompt "Enter secure value"
-$certClient = Get-ChildItem -Path Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $certSubject }
-    Export-PfxCertificate -cert $certClient -FilePath $certFilePath -Password $mypwd
-    ### To see the thumbprint of exported user certificate
-    # (Get-PfxData -FilePath " $certPath\certClient.pfx" -Password $mypwd ).EndEntityCertificates[0]
-$pwdFile = $certPath + 'certpwd.txt'
-    Write-Host ''
-    Write-Information \'write password file: \'$pwdFile
-    Out-File -FilePath $pwdFile -Force -InputObject $pwdCertificates
+
+    Write-Output "Root and Client Certificate creation completed successfully."
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }

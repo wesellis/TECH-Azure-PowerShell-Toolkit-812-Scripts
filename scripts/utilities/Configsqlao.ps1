@@ -1,80 +1,103 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules xComputerManagement, xFailOverCluster, CDisk, xActiveDirectory, xDisk, xNetworking, xSql
 
-<#`n.SYNOPSIS
-    Configsqlao
+<#
+.SYNOPSIS
+    Configure SQL Always On
 
 .DESCRIPTION
-    Azure automation
+    DSC configuration for SQL Server Always On Availability Groups
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
 configuration ConfigSQLAO
 {
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
-param(
-        [Parameter(Mandatory)]
+    param(
+        [Parameter(Mandatory = $true)]
         [String]$DomainName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]$Admincreds,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]$SQLServiceCreds,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$ClusterName,
-        [Parameter(Mandatory)]
-        [String]$vmNamePrefix,
-        [Parameter(Mandatory)]
-        [Int]$vmCount,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
+        [String]$VmNamePrefix,
+
+        [Parameter(Mandatory = $true)]
+        [Int]$VmCount,
+
+        [Parameter(Mandatory = $true)]
         [String]$SqlAlwaysOnAvailabilityGroupName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$SqlAlwaysOnAvailabilityGroupListenerName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String[]]$ClusterIpAddresses,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$AGListenerIpAddress,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$SqlAlwaysOnEndpointName,
-        [Parameter(Mandatory)]
-        [String]$witnessStorageName,
-        [Parameter(Mandatory)]
-        [System.Management.Automation.PSCredential]$witnessStorageKey,
+
+        [Parameter(Mandatory = $true)]
+        [String]$WitnessStorageName,
+
+        [Parameter(Mandatory = $true)]
+        [System.Management.Automation.PSCredential]$WitnessStorageKey,
+
         [UInt32]$DatabaseEnginePort = 1433,
         [UInt32]$DatabaseMirrorPort = 5022,
         [UInt32]$ProbePortNumber = 59999,
-        [String]$DomainNetbiosName=(Get-NetBIOSName -DomainName $DomainName),
-        [Parameter(Mandatory)]
+        [String]$DomainNetbiosName = (Get-NetBIOSName -DomainName $DomainName),
+
+        [Parameter(Mandatory = $true)]
         [UInt32]$NumberOfDisks,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$WorkloadType,
-        [Int]$RetryCount=20,
-        [Int]$RetryIntervalSec=30
+
+        [Int]$RetryCount = 20,
+        [Int]$RetryIntervalSec = 30
     )
-    Import-DscResource -ModuleName xComputerManagement, xFailOverCluster,CDisk,xActiveDirectory,xDisk,xNetworking,xSql
-    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($Admincreds.UserName)" , $Admincreds.Password)
-    [System.Management.Automation.PSCredential]$DomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
-    [System.Management.Automation.PSCredential]$SQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainNetbiosName}\$($SQLServiceCreds.UserName)" , $SQLServiceCreds.Password)
+
+    Import-DscResource -ModuleName xComputerManagement, xFailOverCluster, CDisk, xActiveDirectory, xDisk, xNetworking, xSql
+
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
+    [System.Management.Automation.PSCredential]$DomainFQDNCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+    [System.Management.Automation.PSCredential]$SQLCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($SQLServiceCreds.UserName)", $SQLServiceCreds.Password)
+
     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+
     Enable-CredSSPNTLM -DomainName $DomainName
+
     $RebootVirtualMachine = $false
-    if ($DomainName)
-    {
+    if ($DomainName) {
         $RebootVirtualMachine = $true
     }
-    #Finding the next avaiable disk letter for Add disk
-$NewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1
-$NextAvailableDiskLetter = $NewDiskLetter[0]
-    [System.Collections.ArrayList]$Nodes=@()
-    For ($count=0; $count -lt $vmCount; $count++) {
-        $Nodes.Add($vmNamePrefix + $Count.ToString())
+
+    $NewDiskLetter = ls function:[f-z]: -n | ?{ !(test-path $_) } | select -First 1
+    $NextAvailableDiskLetter = $NewDiskLetter[0]
+
+    [System.Collections.ArrayList]$Nodes = @()
+    For ($count = 0; $count -lt $VmCount; $count++) {
+        $Nodes.Add($VmNamePrefix + $Count.ToString())
     }
+
     $PrimaryReplica = $Nodes[0]
+
     WaitForSqlSetup
+
     Node localhost
     {
         xSqlCreateVirtualDataDisk NewVirtualDisk
@@ -86,49 +109,57 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             StartingDeviceID = 2
             RebootVirtualMachine = $RebootVirtualMachine
         }
+
         WindowsFeature FC
         {
             Name = "Failover-Clustering"
             Ensure = "Present"
         }
-		WindowsFeature FailoverClusterTools
+
+        WindowsFeature FailoverClusterTools
         {
             Ensure = "Present"
             Name = "RSAT-Clustering-Mgmt"
-			DependsOn = " [WindowsFeature]FC"
+            DependsOn = "[WindowsFeature]FC"
         }
+
         WindowsFeature FCPS
         {
             Name = "RSAT-Clustering-PowerShell"
             Ensure = "Present"
-            DependsOn = " [WindowsFeature]FC"
+            DependsOn = "[WindowsFeature]FC"
         }
+
         WindowsFeature ADPS
         {
             Name = "RSAT-AD-PowerShell"
             Ensure = "Present"
         }
+
         Script SqlServerPowerShell
         {
             SetScript = '[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; Install-PackageProvider -Name NuGet -Force; Install-Module -Name SqlServer -AllowClobber -Force; Import-Module -Name SqlServer -ErrorAction SilentlyContinue'
             TestScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; if (Get-Module -Name SqlServer) { $True } else { $False }'
             GetScript = 'Import-Module -Name SqlServer -ErrorAction SilentlyContinue; @{Ensure = if (Get-Module -Name SqlServer) {"Present" } else {"Absent" }}'
         }
+
         xWaitForADDomain DscForestWait
         {
             DomainName = $DomainName
-            DomainUserCredential= $DomainCreds
+            DomainUserCredential = $DomainCreds
             RetryCount = $RetryCount
             RetryIntervalSec = $RetryIntervalSec
-	        DependsOn = " [WindowsFeature]ADPS"
+            DependsOn = "[WindowsFeature]ADPS"
         }
+
         xComputer DomainJoin
         {
             Name = $env:COMPUTERNAME
             DomainName = $DomainName
             Credential = $DomainCreds
-	        DependsOn = " [xWaitForADDomain]DscForestWait"
+            DependsOn = "[xWaitForADDomain]DscForestWait"
         }
+
         xFirewall DatabaseEngineFirewallRule
         {
             Direction = "Inbound"
@@ -141,8 +172,9 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             Protocol = "TCP"
             LocalPort = $DatabaseEnginePort -as [String]
             Ensure = "Present"
-            DependsOn = " [xComputer]DomainJoin"
+            DependsOn = "[xComputer]DomainJoin"
         }
+
         xFirewall DatabaseMirroringFirewallRule
         {
             Direction = "Inbound"
@@ -155,8 +187,9 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             Protocol = "TCP"
             LocalPort = $DatabaseMirrorPort -as [String]
             Ensure = "Present"
-            DependsOn = " [xComputer]DomainJoin"
+            DependsOn = "[xComputer]DomainJoin"
         }
+
         xFirewall LoadBalancerProbePortFirewallRule
         {
             Direction = "Inbound"
@@ -169,17 +202,19 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             Protocol = "TCP"
             LocalPort = $ProbePortNumber -as [String]
             Ensure = "Present"
-            DependsOn = " [xComputer]DomainJoin"
+            DependsOn = "[xComputer]DomainJoin"
         }
+
         xSqlLogin AddDomainAdminAccountToSysadminServerRole
         {
             Name = $DomainCreds.UserName
             LoginType = "WindowsUser"
-            ServerRoles = " sysadmin"
+            ServerRoles = "sysadmin"
             Enabled = $true
             Credential = $Admincreds
-            DependsOn = " [xComputer]DomainJoin"
+            DependsOn = "[xComputer]DomainJoin"
         }
+
         xADUser CreateSqlServerServiceAccount
         {
             DomainAdministratorCredential = $DomainCreds
@@ -187,32 +222,36 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             UserName = $SQLServicecreds.UserName
             Password = $SQLServicecreds
             Ensure = "Present"
-            DependsOn = " [xSqlLogin]AddDomainAdminAccountToSysadminServerRole"
+            DependsOn = "[xSqlLogin]AddDomainAdminAccountToSysadminServerRole"
         }
+
         xSqlLogin AddSqlServerServiceAccountToSysadminServerRole
         {
             Name = $SQLCreds.UserName
             LoginType = "WindowsUser"
-            ServerRoles = " sysadmin"
+            ServerRoles = "sysadmin"
             Enabled = $true
             Credential = $Admincreds
             PsDscRunAsCredential = $Admincreds
-            DependsOn = " [xADUser]CreateSqlServerServiceAccount"
+            DependsOn = "[xADUser]CreateSqlServerServiceAccount"
         }
+
         xSqlTsqlEndpoint AddSqlServerEndpoint
         {
             InstanceName = "MSSQLSERVER"
             PortNumber = $DatabaseEnginePort
             SqlAdministratorCredential = $Admincreds
             PsDscRunAsCredential = $Admincreds
-            DependsOn = " [xSqlLogin]AddSqlServerServiceAccountToSysadminServerRole"
+            DependsOn = "[xSqlLogin]AddSqlServerServiceAccountToSysadminServerRole"
         }
+
         xSQLServerStorageSettings AddSQLServerStorageSettings
         {
             InstanceName = "MSSQLSERVER"
             OptimizationType = $WorkloadType
-            DependsOn = " [xSqlTsqlEndpoint]AddSqlServerEndpoint"
+            DependsOn = "[xSqlTsqlEndpoint]AddSqlServerEndpoint"
         }
+
         xCluster FailoverCluster
         {
             Name = $ClusterName
@@ -220,15 +259,17 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             PsDscRunAsCredential = $DomainCreds
             Nodes = $Nodes
             ClusterIPAddresses = $ClusterIpAddresses
-            DependsOn = @(" [WindowsFeature]FCPS" ," [xComputer]DomainJoin" )
+            DependsOn = @("[WindowsFeature]FCPS", "[xComputer]DomainJoin")
         }
+
         Script CloudWitness
         {
-            SetScript = "Set-ClusterQuorum -CloudWitness -AccountName ${witnessStorageName} -AccessKey $($witnessStorageKey.GetNetworkCredential().Password)"
-            TestScript = " (Get-ClusterQuorum).QuorumResource.Name -eq 'Cloud Witness'"
-            GetScript = " @{Ensure = if ((Get-ClusterQuorum).QuorumResource.Name -eq 'Cloud Witness') {'Present'} else {'Absent'}}"
-            DependsOn = " [xCluster]FailoverCluster"
+            SetScript = "Set-ClusterQuorum -CloudWitness -AccountName ${witnessStorageName} -AccessKey $($WitnessStorageKey.GetNetworkCredential().Password)"
+            TestScript = "(Get-ClusterQuorum).QuorumResource.Name -eq 'Cloud Witness'"
+            GetScript = "@{Ensure = if ((Get-ClusterQuorum).QuorumResource.Name -eq 'Cloud Witness') {'Present'} else {'Absent'}}"
+            DependsOn = "[xCluster]FailoverCluster"
         }
+
         xSqlServer ConfigureSqlServerWithAlwaysOn
         {
             InstanceName = $env:COMPUTERNAME
@@ -241,8 +282,9 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             DomainAdministratorCredential = $DomainFQDNCreds
             EnableTcpIp = $true
             PsDscRunAsCredential = $Admincreds
-            DependsOn = " [xCluster]FailoverCluster"
+            DependsOn = "[xCluster]FailoverCluster"
         }
+
         xSqlEndpoint SqlAlwaysOnEndpoint
         {
             InstanceName = $env:COMPUTERNAME
@@ -251,8 +293,9 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             AllowedUser = $SQLServiceCreds.UserName
             SqlAdministratorCredential = $SQLCreds
             PsDscRunAsCredential = $DomainCreds
-            DependsOn = " [xSqlServer]ConfigureSqlServerWithAlwaysOn"
+            DependsOn = "[xSqlServer]ConfigureSqlServerWithAlwaysOn"
         }
+
         foreach ($Node in $Nodes) {
             If ($Node -ne $PrimaryReplica) {
                 xSqlServer "ConfigSecondaryWithAlwaysOn_$Node"
@@ -262,8 +305,9 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
                     Hadr = "Enabled"
                     DomainAdministratorCredential = $DomainFQDNCreds
                     PsDscRunAsCredential = $DomainCreds
-                    DependsOn = " [xCluster]FailoverCluster"
+                    DependsOn = "[xCluster]FailoverCluster"
                 }
+
                 xSqlEndpoint "SqlSecondaryAlwaysOnEndpoint_$Node"
                 {
                     InstanceName = $Node
@@ -272,26 +316,28 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
                     AllowedUser = $SQLServiceCreds.UserName
                     SqlAdministratorCredential = $SQLCreds
                     PsDscRunAsCredential = $DomainCreds
-                    DependsOn=" [xSqlServer]ConfigSecondaryWithAlwaysOn_$Node"
+                    DependsOn = "[xSqlServer]ConfigSecondaryWithAlwaysOn_$Node"
                 }
             }
         }
+
         xSqlAvailabilityGroup SqlAG
         {
             Name = $SqlAlwaysOnAvailabilityGroupName
             ClusterName = $ClusterName
             InstanceName = $env:COMPUTERNAME
             PortNumber = $DatabaseMirrorPort
-            DomainCredential =$DomainCreds
+            DomainCredential = $DomainCreds
             SqlAdministratorCredential = $Admincreds
             PsDscRunAsCredential = $DomainCreds
-	        DependsOn=" [xSqlEndpoint]SqlSecondaryAlwaysOnEndpoint_$($Nodes[-1])"
+            DependsOn = "[xSqlEndpoint]SqlSecondaryAlwaysOnEndpoint_$($Nodes[-1])"
         }
+
         xSqlAvailabilityGroupListener SqlAGListener
         {
             Name = $SqlAlwaysOnAvailabilityGroupListenerName
             AvailabilityGroupName = $SqlAlwaysOnAvailabilityGroupName
-            DomainNameFqdn = " ${SqlAlwaysOnAvailabilityGroupListenerName}.${DomainName}"
+            DomainNameFqdn = "${SqlAlwaysOnAvailabilityGroupListenerName}.${DomainName}"
             ListenerPortNumber = $DatabaseEnginePort
             ProbePortNumber = $ProbePortNumber
             ListenerIPAddress = $AGListenerIpAddress
@@ -299,92 +345,90 @@ $NextAvailableDiskLetter = $NewDiskLetter[0]
             DomainCredential = $DomainCreds
             SqlAdministratorCredential = $Admincreds
             PsDscRunAsCredential = $DomainCreds
-            DependsOn = " [xSqlAvailabilityGroup]SqlAG"
+            DependsOn = "[xSqlAvailabilityGroup]SqlAG"
         }
+
         LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
         }
     }
 }
-[CmdletBinding()]
-function WaitForSqlSetup
-{
-    # Wait for SQL Server Setup to finish before proceeding.
-    while ($true)
-    {
-        try
-        {
-            Get-ScheduledTaskInfo -ErrorAction Stop " \ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
+
+function WaitForSqlSetup {
+    while ($true) {
+        try {
+            Get-ScheduledTaskInfo -ErrorAction Stop "\ConfigureSqlImageTasks\RunConfigureImage" -ErrorAction Stop
             Start-Sleep -Seconds 5
         }
-        catch
-        {
+        catch {
             break
         }
     }
 }
-function Get-NetBIOSName -ErrorAction Stop
-{
+
+function Get-NetBIOSName {
     [OutputType([string])]
-    [CmdletBinding()]
-param(
-        [string]$DomainName
+    param(
+        $DomainName
     )
+
     if ($DomainName.Contains('.')) {
-$length=$DomainName.IndexOf('.')
-        if ( $length -ge 16) {
-$length=15
+        $length = $DomainName.IndexOf('.')
+        if ($length -ge 16) {
+            $length = 15
         }
-        return $DomainName.Substring(0,$length)
+        return $DomainName.Substring(0, $length)
     }
     else {
         if ($DomainName.Length -gt 15) {
-            return $DomainName.Substring(0,15)
+            return $DomainName.Substring(0, 15)
         }
         else {
             return $DomainName
         }
     }
 }
-function Enable-CredSSPNTLM
-{
-    [CmdletBinding()];
-param(
-        [Parameter(Mandatory)]
-        [string]$DomainName
+
+function Enable-CredSSPNTLM {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        $DomainName
     )
-    # This is needed for the case where NTLM authentication is used
+
     Write-Verbose 'STARTED:Setting up CredSSP for NTLM'
+
     Enable-WSManCredSSP -Role client -DelegateComputer localhost, *.$DomainName -Force -ErrorAction SilentlyContinue
     Enable-WSManCredSSP -Role server -Force -ErrorAction SilentlyContinue
-    if(-not (Test-Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -ErrorAction SilentlyContinue))
-    {
+
+    if (-not (Test-Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -ErrorAction SilentlyContinue)) {
         New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows -Name '\CredentialsDelegation' -ErrorAction SilentlyContinue
     }
-    if( -not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue))
-    {
+
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue)) {
         New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
     }
-    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -ErrorAction SilentlyContinue))
-    {
+
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -ErrorAction SilentlyContinue)) {
         New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'ConcatenateDefaults_AllowFreshNTLMOnly' -value '1' -PropertyType dword -ErrorAction SilentlyContinue
     }
-    if(-not (Test-Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -ErrorAction SilentlyContinue))
-    {
+
+    if (-not (Test-Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -ErrorAction SilentlyContinue)) {
         New-Item -Path HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation -Name 'AllowFreshCredentialsWhenNTLMOnly' -ErrorAction SilentlyContinue
     }
-    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -ErrorAction SilentlyContinue))
-    {
-        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -value " wsman/$env:COMPUTERNAME" -PropertyType string -ErrorAction SilentlyContinue
+
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -ErrorAction SilentlyContinue)) {
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '1' -value "wsman/$env:COMPUTERNAME" -PropertyType string -ErrorAction SilentlyContinue
     }
-    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -ErrorAction SilentlyContinue))
-    {
-        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -value " wsman/localhost" -PropertyType string -ErrorAction SilentlyContinue
+
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -ErrorAction SilentlyContinue)) {
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '2' -value "wsman/localhost" -PropertyType string -ErrorAction SilentlyContinue
     }
-    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -ErrorAction SilentlyContinue))
-    {
-        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -value " wsman/*.$DomainName" -PropertyType string -ErrorAction SilentlyContinue
+
+    if (-not (Get-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -ErrorAction SilentlyContinue)) {
+        New-ItemProperty -ErrorAction Stop HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly -Name '3' -value "wsman/*.$DomainName" -PropertyType string -ErrorAction SilentlyContinue
     }
+
     Write-Verbose "DONE:Setting up CredSSP for NTLM"
 }

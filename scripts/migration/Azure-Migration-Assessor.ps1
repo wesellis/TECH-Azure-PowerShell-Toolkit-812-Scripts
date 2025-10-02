@@ -1,9 +1,13 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Migrate, Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Azure migration assessment and planning
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Assess on-premises infrastructure for Azure migration readiness
 .PARAMETER ProjectName
     Azure Migrate project name
@@ -18,19 +22,31 @@
 [OutputType([PSCustomObject])]
 param(
     [Parameter(Mandatory)]
-    [string]$ProjectName,
+
+    [ValidateNotNullOrEmpty()]
+
+    [string] $ProjectName,
 
     [Parameter(Mandatory)]
-    [string]$ResourceGroupName,
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $ResourceGroupName,
 
     [Parameter(Mandatory)]
     [ValidateSet('VM', 'Database', 'WebApp', 'Storage')]
     [string]$AssessmentType,
 
     [Parameter()]
-    [string]$Location = 'East US'
-)
 
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $Location = 'East US'
+)
 $ErrorActionPreference = 'Stop'
 
 try {
@@ -38,10 +54,9 @@ try {
 
     switch ($AssessmentType) {
         'VM' {
-            Write-Host "VM Migration Assessment" -ForegroundColor Cyan
-            Write-Host "Checking Azure Migrate project: $ProjectName" -ForegroundColor Yellow
-
-            $assessmentResults = @{
+            Write-Host "VM Migration Assessment" -ForegroundColor Green
+            Write-Host "Checking Azure Migrate project: $ProjectName" -ForegroundColor Green
+            $AssessmentResults = @{
                 ProjectName = $ProjectName
                 AssessmentType = $AssessmentType
                 ReadinessScore = Get-Random -Minimum 75 -Maximum 95
@@ -53,13 +68,12 @@ try {
             }
 
             Write-Host "Assessment completed successfully" -ForegroundColor Green
-            return [PSCustomObject]$assessmentResults
+            return [PSCustomObject]$AssessmentResults
         }
 
         'Database' {
-            Write-Host "Database Migration Assessment" -ForegroundColor Cyan
-
-            $dbAssessment = @{
+            Write-Host "Database Migration Assessment" -ForegroundColor Green
+            $DbAssessment = @{
                 ProjectName = $ProjectName
                 AssessmentType = $AssessmentType
                 CompatibilityLevel = '100%'
@@ -70,13 +84,12 @@ try {
                 Warnings = @('Review connection strings', 'Update backup strategy')
             }
 
-            return [PSCustomObject]$dbAssessment
+            return [PSCustomObject]$DbAssessment
         }
 
         'WebApp' {
-            Write-Host "Web Application Migration Assessment" -ForegroundColor Cyan
-
-            $webAssessment = @{
+            Write-Host "Web Application Migration Assessment" -ForegroundColor Green
+            $WebAssessment = @{
                 ProjectName = $ProjectName
                 AssessmentType = $AssessmentType
                 Platform = 'Azure App Service'
@@ -86,13 +99,12 @@ try {
                 Features = @('Auto-scaling', 'Deployment slots', 'Custom domains')
             }
 
-            return [PSCustomObject]$webAssessment
+            return [PSCustomObject]$WebAssessment
         }
 
         'Storage' {
-            Write-Host "Storage Migration Assessment" -ForegroundColor Cyan
-
-            $storageAssessment = @{
+            Write-Host "Storage Migration Assessment" -ForegroundColor Green
+            $StorageAssessment = @{
                 ProjectName = $ProjectName
                 AssessmentType = $AssessmentType
                 RecommendedTier = 'Hot'
@@ -102,7 +114,7 @@ try {
                 CostOptimization = 'Lifecycle policies recommended'
             }
 
-            return [PSCustomObject]$storageAssessment
+            return [PSCustomObject]$StorageAssessment
         }
     }
 }

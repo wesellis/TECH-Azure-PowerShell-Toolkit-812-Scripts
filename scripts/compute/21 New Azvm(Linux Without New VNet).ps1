@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -11,7 +11,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -75,9 +74,7 @@ $newAzPublicIpAddressSplat = @{
     DomainNameLabel   = $DNSNameLabel
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
-    # AllocationMethod  = 'Dynamic'
     AllocationMethod  = 'Static'
-    # IpTag             = $ipTag
     Tag               = $Tags
 }
 $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
@@ -97,8 +94,6 @@ $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetwor
 $newAzNetworkInterfaceIpConfigSplat = @{
     Name                     = $IPConfigName
     Subnet                   = $Subnet
-    # Subnet                   = $Vnet.Subnets[0].Id
-    # PublicIpAddress          = $PIP.ID
     PublicIpAddress          = $PIP
     ApplicationSecurityGroup = $ASG
     Primary                  = $true
@@ -108,8 +103,6 @@ $newAzNetworkSecurityGroupSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
     Name              = $NSGName
-    # SecurityRules     = $rule1, $rule2
-    # SecurityRules     = $rule1
     Tag               = $Tags
 }
 $NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
@@ -117,10 +110,7 @@ $newAzNetworkInterfaceSplat = @{
     Name                   = $NICName
     ResourceGroupName      = $ResourceGroupName
     Location               = $LocationName
-    # SubnetId                 = $Vnet.Subnets[0].Id
-    # PublicIpAddressId        = $PIP.Id
     NetworkSecurityGroupId = $NSG.Id
-    # ApplicationSecurityGroup = $ASG
     IpConfiguration        = $IPConfig1
     Tag                    = $Tags
 }
@@ -134,12 +124,9 @@ $newAzVMConfigSplat = @{
 $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 $setAzVMOperatingSystemSplat = @{
     VM           = $VirtualMachine
-    # Windows      = $true
     Linux        = $true
     ComputerName = $ComputerName
     Credential   = $Credential
-    # ProvisionVMAgent = $true
-    # EnableAutoUpdate = $true
 }
 $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 $addAzVMNetworkInterfaceSplat = @{
@@ -158,11 +145,8 @@ $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 $setAzVMOSDiskSplat = @{
     VM           = $VirtualMachine
     Name         = $OSDiskName
-    # VhdUri = $OSDiskUri
-    # SourceImageUri = $SourceImageUri
     Caching      = $OSDiskCaching
     CreateOption = $OSCreateOption
-    # Windows = $true
     DiskSizeInGB = '100'
 };
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat

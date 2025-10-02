@@ -1,99 +1,118 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules ActiveDirectory
 
-<#`n.SYNOPSIS
-    Ad
+<#
+.SYNOPSIS
+    Active Directory automation for Azure Stack HCI
 
 .DESCRIPTION
-    Azure automation
+    Azure Stack HCI Active Directory automation script
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
+    [Parameter(Mandatory = $true)]
+    [string]$UserName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Password,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Basic', 'Negotiate', 'Kerberos', 'CredSSP')]
+    [string]$AuthType,
+
+    [Parameter(Mandatory = $true)]
+    [string]$AdouPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$IP,
+
     [Parameter()]
-    $userName,
+    [int]$Port = 5985,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DomainFqdn,
+
     [Parameter()]
-    $password,
-    [Parameter()]
-    $authType,
-    [Parameter()]
-    $adouPath,
-    [Parameter()]
-    $ip,
-    [Parameter()]
-    $port,
-    [Parameter()]
-    $domainFqdn,
-    [Parameter()]
-    $ifdeleteadou,
-    [Parameter()]
-    $deploymentUserName,
-    [Parameter()]
-    $deploymentUserPassword
+    [switch]$DeleteAdou,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DeploymentUserName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DeploymentUserPassword
 )
-$script:ErrorActionPreference = 'Stop';
-$count = 0
-for ($count = 0; $count -lt 6; $count++) {
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+$retryCount = 0
+$maxRetries = 6
+
+for ($retryCount = 0; $retryCount -lt $maxRetries; $retryCount++) {
     try {
-        $secpasswd = Read-Host -Prompt "Enter secure value" -AsSecureString
-        $domainShort = $domainFqdn.Split(" ." )[0]
-        $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList " $domainShort\$username" ,
-    [Parameter()]
-    $secpasswd
-        if ($authType -eq "CredSSP" ) {
+        $securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
+        $domainShort = $DomainFqdn.Split('.')[0]
+        $credential = New-Object System.Management.Automation.PSCredential("$domainShort\$UserName", $securePassword)
+
+        if ($AuthType -eq "CredSSP") {
             try {
-                Enable-WSManCredSSP -Role Client -DelegateComputer $ip -Force
+                Enable-WSManCredSSP -Role Client -DelegateComputer $IP -Force
             }
             catch {
-                echo "Enable-WSManCredSSP failed"
+                Write-Warning "Enable-WSManCredSSP failed: $($_.Exception.Message)"
             }
         }
-        $session = New-PSSession -ComputerName $ip -Port $port -Authentication $authType -Credential $cred
-        if ($ifdeleteadou) {
+
+        $session = New-PSSession -ComputerName $IP -Port $Port -Authentication $AuthType -Credential $credential
+
+        if ($DeleteAdou) {
             Invoke-Command -Session $session -ScriptBlock {
-                $OUPrefixList = @("OU=Computers," , "OU=Users," , "" )
-                foreach ($prefix in $OUPrefixList) {
-                    $ouname = " $prefix$Using:adouPath"
-                    echo " try to get OU: $ouname"
-                    Try {
-                        $ou = Get-ADOrganizationalUnit -Identity $ouname
+                $ouPrefixList = @("OU=Computers,", "OU=Users,", "")
+                foreach ($prefix in $ouPrefixList) {
+                    $ouName = "$prefix$Using:AdouPath"
+                    Write-Output "Attempting to get OU: $ouName"
+                    try {
+                        $ou = Get-ADOrganizationalUnit -Identity $ouName
                     }
-                    Catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] {
+                    catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] {
                         $ou = $null
                     }
                     if ($ou) {
-                        Set-ADOrganizationalUnit -Identity $ouname -ProtectedFromAccidentalDeletion $false
-                        $ou | Remove-ADOrganizationalUnit -Recursive -Confirm:$False
-                        echo "Deleted adou: $ouname"
+                        Set-ADOrganizationalUnit -Identity $ouName -ProtectedFromAccidentalDeletion $false
+                        $ou | Remove-ADOrganizationalUnit -Recursive -Confirm:$false
+                        Write-Output "Deleted OU: $ouName"
                     }
                 }
             }
         }
-$deploymentSecPasswd = Read-Host -Prompt "Enter secure value" -AsSecureString
-$lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList $deploymentUserName,
-    [Parameter()]
-    $deploymentSecPasswd
+
+        $deploymentSecurePassword = ConvertTo-SecureString $DeploymentUserPassword -AsPlainText -Force
+        $lcmCredential = New-Object System.Management.Automation.PSCredential($DeploymentUserName, $deploymentSecurePassword)
+
         Invoke-Command -Session $session -ScriptBlock {
-            echo "Install Nuget Provider"
+            Write-Output "Installing NuGet Provider"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false
-            echo "Install AsHciADArtifactsPreCreationTool"
+
+            Write-Output "Installing AsHciADArtifactsPreCreationTool"
             Install-Module AsHciADArtifactsPreCreationTool -Repository PSGallery -Force -Confirm:$false
-            echo "Add KdsRootKey"
-            Add-KdsRootKey -EffectiveTime ((Get-Date).addhours(-10))
-            echo "New HciAdObjectsPreCreation"
-            New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $Using:lcmCred -AsHciOUName $Using:adouPath
+
+            Write-Output "Adding KdsRootKey"
+            Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))
+
+            Write-Output "Creating HCI AD Objects"
+            New-HciAdObjectsPreCreation -AzureStackLCMUserCredential $Using:lcmCredential -AsHciOUName $Using:AdouPath
         }
         break
     }
     catch {
-        echo "Error in retry ${count}:`n$_"
-        sleep 600
+        Write-Warning "Error in retry $retryCount : $($_.Exception.Message)"
+        Start-Sleep 600
     }
     finally {
         if ($session) {
@@ -101,8 +120,7 @@ $lcmCred = New-Object -ErrorAction Stop System.Management.Automation.PSCredentia
         }
     }
 }
-if ($count -ge 6) {
-    throw "Failed to provision AD after 6 retries."
+
+if ($retryCount -ge $maxRetries) {
+    throw "Failed to provision AD after $maxRetries retries."
 }
-
-

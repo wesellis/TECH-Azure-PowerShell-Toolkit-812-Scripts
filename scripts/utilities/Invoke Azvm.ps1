@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,7 +10,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -21,17 +20,11 @@ function Invoke-AzVM {
 $ErrorActionPreference = "Stop";
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVM {
-    #region func-New-AzVM -ErrorAction Stop
-    #Creating the VM
-$newAzVMSplat = @{
+$NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
         Verbose           = $true
         Tag               = $Tags
     }
-    New-AzVM -ErrorAction Stop @newAzVMSplat
-    #endRegion func New-AzVM -ErrorAction Stop
-}
-
-
+    New-AzVM -ErrorAction Stop @newAzVMSplat`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,25 +6,25 @@
 
 .DESCRIPTION
     Manage App Services
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
     [Parameter(Mandatory)]
     [string]$AppName
 )
-Write-Host "Retrieving configuration for App Service: $AppName"
+Write-Output "Retrieving configuration for App Service: $AppName"
 $WebApp = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Name $AppName
-Write-Host "`nApp Service Configuration:"
-Write-Host "Name: $($WebApp.Name)"
-Write-Host "State: $($WebApp.State)"
-Write-Host "Default Hostname: $($WebApp.DefaultHostName)"
-Write-Host "Runtime Stack: $($WebApp.SiteConfig.LinuxFxVersion)"
-Write-Host "  .NET Version: $($WebApp.SiteConfig.NetFrameworkVersion)"
-Write-Host "PHP Version: $($WebApp.SiteConfig.PhpVersion)"
-Write-Host "HTTPS Only: $($WebApp.HttpsOnly)"
+Write-Output "`nApp Service Configuration:"
+Write-Output "Name: $($WebApp.Name)"
+Write-Output "State: $($WebApp.State)"
+Write-Output "Default Hostname: $($WebApp.DefaultHostName)"
+Write-Output "Runtime Stack: $($WebApp.SiteConfig.LinuxFxVersion)"
+Write-Output "  .NET Version: $($WebApp.SiteConfig.NetFrameworkVersion)"
+Write-Output "PHP Version: $($WebApp.SiteConfig.PhpVersion)"
+Write-Output "HTTPS Only: $($WebApp.HttpsOnly)"
 if ($WebApp.SiteConfig.AppSettings) {
-    Write-Host "`nApplication Settings Count: $($WebApp.SiteConfig.AppSettings.Count)"
-}
-
+    Write-Output "`nApplication Settings Count: $($WebApp.SiteConfig.AppSettings.Count)"`n}

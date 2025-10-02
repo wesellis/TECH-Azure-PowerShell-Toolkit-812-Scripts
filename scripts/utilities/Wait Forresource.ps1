@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,58 +10,55 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
 This script will query regional endpoints directly to determine if replication is complete
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter()]
-    $resourceId,
+    $ResourceId,
     [Parameter()]
-    $apiVersion,
+    $ApiVersion,
     [Parameter()]
-    $timeOutSeconds = 60
+    $TimeOutSeconds = 60
 )
-$token = Get-AzAccessToken -ErrorAction Stop
-$headers = @{
+    $token = Get-AzAccessToken -ErrorAction Stop
+    $headers = @{
     'Content-Type'  = 'application/json'
     'Authorization' = 'Bearer ' + $token.Token
 }
-$locations = @()
-$azureLocations = ((Invoke-AzRestMethod -Method GET -Path " /locations?api-version=2022-01-01" ).content | ConvertFrom-Json -Depth 100).value
-foreach($l in $azureLocations){
+    $locations = @()
+    $AzureLocations = ((Invoke-AzRestMethod -Method GET -Path "/locations?api-version=2022-01-01" ).content | ConvertFrom-Json -Depth 100).value
+foreach($l in $AzureLocations){
     if($l.metadata.RegionType -eq "Physical" ){
-        $locations = $locations + $l.name
-        #Write-Host $l.name + $l.metadata.RegionType
+    $locations = $locations + $l.name
     }
 }
-$env:FOUND = $true
-$endpoint = (Get-AzContext).Environment.ResourceManagerUrl.Split('/')[2]
-$locations | ForEach-Object -Parallel {
-    # AzureGov regional endpoints are seemingly random, so we need to MAP those...
+    $env:FOUND = $true
+    $endpoint = (Get-AzContext).Environment.ResourceManagerUrl.Split('/')[2]
+    $locations | ForEach-Object -Parallel {
     switch ($_) {
         " usgovvirginia" {
-            $region = " usgoveast"
+    $region = " usgoveast"
         }
         " usgovtexas" {
-            $region = " usgovsc"
+    $region = " usgovsc"
         }
         " usgovarizona" {
-            $region = " usgovsw"
+    $region = " usgovsw"
         }
         " usgoviowa" {
-            $region = " usgovcentral"
+    $region = " usgovcentral"
         }
         Default {
-            $region = $_
+    $region = $_
         }
     }
     $uri = "https://$region.$($using:endpoint)/$($using:resourceId)?api-version=$($using:apiVersion)"
     $r = $null
-    $stopTime = (Get-Date).AddSeconds($using:timeOutSeconds)
-    While ($null -eq $r -and $(Get-Date) -lt $stopTime) {
+    $StopTime = (Get-Date).AddSeconds($using:timeOutSeconds)
+    While ($null -eq $r -and $(Get-Date) -lt $StopTime) {
         try {
-            Write-Host $uri
+            Write-Output $uri
 $r = Invoke-RestMethod -Headers $using:headers -Method "GET" $uri
         }
         catch {
@@ -73,15 +70,16 @@ $r = Invoke-RestMethod -Headers $using:headers -Method "GET" $uri
             Start-Sleep 3
         }
         else {
-            Write-Host " response:`n$r`n... from $_" -ForegroundColor Green
+            Write-Output " response:`n$r`n... from $_" # Color: $2
         }
     }
     if($null -eq $r){
-        $env:FOUND = $false
+    $env:FOUND = $false
     }
 }
-$DeploymentScriptOutputs = @{}
-$DeploymentScriptOutputs['ResourceFound'] = $env:FOUND
-Write-Host $DeploymentScriptOutputs['ResourceFound']
+    $DeploymentScriptOutputs = @{}
+    $DeploymentScriptOutputs['ResourceFound'] = $env:FOUND
+Write-Output $DeploymentScriptOutputs['ResourceFound']
+
 
 

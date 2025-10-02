@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,7 +21,6 @@
     [string]$StorageType = "GeoRedundant"
 )
 Write-Host "Creating Recovery Services Vault: $VaultName"
-# Create Recovery Services Vault
 $params = @{
     ErrorAction = "Stop"
     ResourceGroupName = $ResourceGroupName
@@ -27,9 +28,7 @@ $params = @{
     Location = $Location
 }
 $Vault @params
-# Set vault context
 Set-AzRecoveryServicesVaultContext -Vault $Vault
-# Configure storage redundancy
 $params = @{
     BackupStorageRedundancy = $StorageType
     ErrorAction = "Stop"
@@ -41,7 +40,6 @@ Write-Host "Name: $($Vault.Name)"
 Write-Host "Location: $($Vault.Location)"
 Write-Host "Storage Type: $StorageType"
 Write-Host "Resource ID: $($Vault.ID)"
-# Display backup policies
 Write-Host "`nDefault Backup Policies:"
 $Policies = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $Vault.ID
 foreach ($Policy in $Policies) {
@@ -65,4 +63,5 @@ Write-Host "Azure Virtual Machines"
 Write-Host "Azure File Shares"
 Write-Host "SQL Server in Azure VMs"
 Write-Host "SAP HANA in Azure VMs"
+
 

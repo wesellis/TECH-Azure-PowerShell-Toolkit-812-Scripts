@@ -1,16 +1,28 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Helloworld
+<#
+.SYNOPSIS
+    Hello World
 
 .DESCRIPTION
-    Azure automation
-
+    Simple Hello World Azure automation script
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-Write-Host "Hello World!"
+
+.EXAMPLE
+    .\Helloworld.ps1
+#>
+
+[CmdletBinding()]
+param()
+
+$ErrorActionPreference = 'Stop'
+
+try {
+    Write-Output "Hello World!"
+} catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

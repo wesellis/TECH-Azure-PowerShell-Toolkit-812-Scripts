@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,13 +27,14 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -53,7 +50,7 @@ param(
     [Parameter()]
     [string]$Publisher = "Microsoft.Compute"
 )
-Write-Host "Managing VM extension: $ExtensionName"
+Write-Output "Managing VM extension: $ExtensionName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 $params = @{
     ResourceGroupName = $ResourceGroupName
@@ -66,13 +63,10 @@ $params = @{
     VMName = $VmName
 }
 Set-AzVMExtension @params
-Write-Host "Extension '$ExtensionName' installed successfully"
-Write-Host "VM: $VmName"
-Write-Host "Publisher: $Publisher"
-Write-Host "Type: $ExtensionType"
+Write-Output "Extension '$ExtensionName' installed successfully"
+Write-Output "VM: $VmName"
+Write-Output "Publisher: $Publisher"
+Write-Output "Type: $ExtensionType"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

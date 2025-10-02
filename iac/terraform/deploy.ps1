@@ -5,6 +5,9 @@
     Terraform deployment script for Azure PowerShell Toolkit
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Deploys Azure infrastructure using Terraform for the Azure PowerShell Toolkit.
     Handles Terraform initialization, planning, and deployment with proper state management.
 
@@ -59,76 +62,64 @@ param(
     [switch]$Destroy
 )
 
-Write-Host "Azure PowerShell Toolkit - Terraform Deployment" -ForegroundColor Cyan
+Write-Host "Azure PowerShell Toolkit - Terraform Deployment" -ForegroundColor Green
 Write-Host "Environment: $Environment" -ForegroundColor Green
 Write-Host "Location: $Location" -ForegroundColor Green
-Write-Host ""
+Write-Output ""
 
-# Check Terraform availability
 try {
-    $terraformVersion = terraform version
-    Write-Host "Terraform version: $($terraformVersion | Select-Object -First 1)" -ForegroundColor Green
+    $TerraformVersion = terraform version
+    Write-Host "Terraform version: $($TerraformVersion | Select-Object -First 1)" -ForegroundColor Green
 } catch {
     Write-Error "Terraform CLI not found. Install from: https://www.terraform.io/downloads"
     exit 1
 }
 
-# Check Azure authentication
 try {
     az account show | Out-Null
     $account = az account show | ConvertFrom-Json
     Write-Host "Azure subscription: $($account.name)" -ForegroundColor Green
 } catch {
-    Write-Host "Azure CLI authentication required. Running 'az login'..." -ForegroundColor Yellow
+    Write-Host "Azure CLI authentication required. Running 'az login'..." -ForegroundColor Green
     az login
 }
 
-# Get admin password if not provided
 if (-not $AdminPassword -and -not $Destroy) {
     $AdminPassword = Read-Host "Enter administrator password for VMs" -AsSecureString
 }
-
-# Convert SecureString to plain text
-$adminPasswordPlain = if ($AdminPassword) {
+$AdminPasswordPlain = if ($AdminPassword) {
     [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
         [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($AdminPassword)
     )
 } else { "" }
-
-# Set working directory to Terraform configuration
-$originalLocation = Get-Location
-$terraformDir = $PSScriptRoot
-Set-Location $terraformDir
+    $OriginalLocation = Get-Location
+    $TerraformDir = $PSScriptRoot
+Set-Location $TerraformDir
 
 try {
-    # Initialize Terraform
-    Write-Host "Initializing Terraform..." -ForegroundColor Yellow
+    Write-Host "Initializing Terraform..." -ForegroundColor Green
     terraform init
 
     if ($LASTEXITCODE -ne 0) {
         throw "Terraform initialization failed"
     }
-
-    # Create terraform.tfvars file
-    $tfVarsContent = @"
+    $TfVarsContent = @"
 environment      = "$Environment"
 location        = "$Location"
-admin_password  = "$adminPasswordPlain"
+admin_password = $env:CREDENTIAL_password
 deploy_advanced = $($DeployAdvanced.IsPresent.ToString().ToLower())
 "@
-
-    $tfVarsPath = Join-Path $terraformDir "terraform.tfvars"
-    Set-Content -Path $tfVarsPath -Value $tfVarsContent -Encoding UTF8
+    $TfVarsPath = Join-Path $TerraformDir "terraform.tfvars"
+    Set-Content -Path $TfVarsPath -Value $TfVarsContent -Encoding UTF8
 
     if ($Destroy) {
-        # Destroy infrastructure
-        Write-Host ""
-        Write-Host "Planning infrastructure destruction..." -ForegroundColor Red
+        Write-Output ""
+        Write-Host "Planning infrastructure destruction..." -ForegroundColor Green
         terraform plan -destroy -var-file="terraform.tfvars"
 
         if ($PSCmdlet.ShouldProcess("Terraform infrastructure", "Destroy")) {
-            Write-Host ""
-            Write-Host "Destroying infrastructure..." -ForegroundColor Red
+            Write-Output ""
+            Write-Host "Destroying infrastructure..." -ForegroundColor Green
             terraform destroy -var-file="terraform.tfvars" -auto-approve
 
             if ($LASTEXITCODE -eq 0) {
@@ -138,8 +129,7 @@ deploy_advanced = $($DeployAdvanced.IsPresent.ToString().ToLower())
             }
         }
     } else {
-        # Plan deployment
-        Write-Host "Planning Terraform deployment..." -ForegroundColor Yellow
+        Write-Host "Planning Terraform deployment..." -ForegroundColor Green
         terraform plan -var-file="terraform.tfvars" -out="tfplan"
 
         if ($LASTEXITCODE -ne 0) {
@@ -147,30 +137,28 @@ deploy_advanced = $($DeployAdvanced.IsPresent.ToString().ToLower())
         }
 
         if ($Plan) {
-            Write-Host ""
+            Write-Output ""
             Write-Host "Plan generated successfully. Review the plan above." -ForegroundColor Green
-            Write-Host "To apply this plan, run the script again without -Plan parameter." -ForegroundColor Yellow
+            Write-Host "To apply this plan, run the script again without -Plan parameter." -ForegroundColor Green
         } else {
-            # Apply deployment
             if ($PSCmdlet.ShouldProcess("Terraform infrastructure", "Deploy")) {
-                Write-Host ""
-                Write-Host "Applying Terraform deployment..." -ForegroundColor Cyan
+                Write-Output ""
+                Write-Host "Applying Terraform deployment..." -ForegroundColor Green
                 terraform apply "tfplan"
 
                 if ($LASTEXITCODE -eq 0) {
-                    Write-Host ""
+                    Write-Output ""
                     Write-Host "Deployment completed successfully!" -ForegroundColor Green
 
-                    # Display outputs
-                    Write-Host ""
-                    Write-Host "Deployment Outputs:" -ForegroundColor Cyan
+                    Write-Output ""
+                    Write-Host "Deployment Outputs:" -ForegroundColor Green
                     terraform output
 
-                    Write-Host ""
-                    Write-Host "Next steps:" -ForegroundColor Yellow
-                    Write-Host "1. Verify resources in the Azure portal" -ForegroundColor White
-                    Write-Host "2. Run PowerShell scripts against the deployed infrastructure" -ForegroundColor White
-                    Write-Host "3. Configure monitoring and alerting as needed" -ForegroundColor White
+                    Write-Output ""
+                    Write-Host "Next steps:" -ForegroundColor Green
+                    Write-Host "1. Verify resources in the Azure portal" -ForegroundColor Green
+                    Write-Host "2. Run PowerShell scripts against the deployed infrastructure" -ForegroundColor Green
+                    Write-Host "3. Configure monitoring and alerting as needed" -ForegroundColor Green
                 } else {
                     throw "Terraform apply failed"
                 }
@@ -182,19 +170,15 @@ deploy_advanced = $($DeployAdvanced.IsPresent.ToString().ToLower())
     Write-Error "Deployment failed: $($_.Exception.Message)"
     exit 1
 } finally {
-    # Clean up sensitive files
-    $tfVarsPath = Join-Path $terraformDir "terraform.tfvars"
-    if (Test-Path $tfVarsPath) {
-        Remove-Item $tfVarsPath -Force
+    $TfVarsPath = Join-Path $TerraformDir "terraform.tfvars"
+    if (Test-Path $TfVarsPath) {
+        Remove-Item $TfVarsPath -Force
     }
-
-    # Clean up variables
-    $adminPasswordPlain = $null
+    $AdminPasswordPlain = $null
     $AdminPassword = $null
 
-    # Return to original location
-    Set-Location $originalLocation
+    Set-Location $OriginalLocation
 }
 
-Write-Host ""
+Write-Output ""
 Write-Host "Terraform deployment process completed" -ForegroundColor Green

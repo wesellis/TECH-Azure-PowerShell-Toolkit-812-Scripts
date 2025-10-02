@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -20,6 +20,4 @@ $ErrorActionPreference = "Stop" ;
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName
 Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -eq 'CanadaCentral'}
-Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'}
-
-
+Get-AzLocation -ErrorAction Stop | Select-Object -Property Location, DisplayName | Where-Object {$_.Location -like '*Canada*'`n}

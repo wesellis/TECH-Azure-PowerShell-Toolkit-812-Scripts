@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
 
@@ -38,28 +38,27 @@
     Author: Wesley Ellis
     Version: 2.0
     Requires: PowerShell 7.0+, Az.DigitalTwins module
-#>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory = $true)]
-    [string]$InstanceName,
+    $InstanceName,
     [Parameter(Mandatory = $true)]
-    [string]$Location,
+    $Location,
     [Parameter(Mandatory = $true)]
     [ValidateSet("Create", "Delete", "Update", "Configure", "Monitor", "Deploy")]
-    [string]$Action,
+    $Action,
     [Parameter(Mandatory = $false)]
-    [string]$ModelDefinitions,
+    $ModelDefinitions,
     [Parameter(Mandatory = $false)]
     [switch]$EnablePrivateEndpoint,
     [Parameter(Mandatory = $false)]
     [switch]$EnableEventRouting,
     [Parameter(Mandatory = $false)]
-    [string]$EventHubNamespace,
+    $EventHubNamespace,
     [Parameter(Mandatory = $false)]
-    [string]$EventHubName = "digitaltwins-telemetry",
+    $EventHubName = "digitaltwins-telemetry",
     [Parameter(Mandatory = $false)]
     [switch]$EnableTimeSeriesInsights,
     [Parameter(Mandatory = $false)]
@@ -73,20 +72,19 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$AssignRoles
 )
-# Import required modules
+    $ErrorActionPreference = 'Stop'
+
 try {
-                    Write-Host "Successfully imported required Azure modules"
+                    Write-Output "Successfully imported required Azure modules"
 } catch {
     Write-Error "Failed to import required modules: $($_.Exception.Message)"
     throw
 }
-# Enhanced logging function
-[OutputType([bool])]
- {
+function Write-Log {
     param(
-        [string]$Message,
+        $Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]
-        [string]$Level = "Info"
+        $Level = "Info"
     )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $colors = @{
@@ -95,140 +93,121 @@ try {
         Error = "Red"
         Success = "Green"
     }
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Output "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
-# Create Azure Digital Twins instance
 function New-DigitalTwinsInstance -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param()
     if ($PSCmdlet.ShouldProcess("Digital Twins instance '$InstanceName'", "Create")) {
         try {
-            Write-Host "Creating Azure Digital Twins instance: $InstanceName" "Info"
-        # Check if instance already exists
-        $existingInstance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -ErrorAction SilentlyContinue
-        if ($existingInstance) {
-            Write-Host "Digital Twins instance already exists: $InstanceName" "Warning"
-            return $existingInstance
+            Write-Output "Creating Azure Digital Twins instance: $InstanceName" "Info"
+    $ExistingInstance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -ErrorAction SilentlyContinue
+        if ($ExistingInstance) {
+            Write-Output "Digital Twins instance already exists: $InstanceName" "Warning"
+            return $ExistingInstance
         }
-        # Create Digital Twins instance
-        $dtParams = @{
+    $DtParams = @{
             ResourceGroupName = $ResourceGroupName
             ResourceName = $InstanceName
             Location = $Location
             Tag = $Tags
         }
-        $digitalTwinsInstance = New-AzDigitalTwinsInstance -ErrorAction Stop @dtParams
-        Write-Host "Successfully created Digital Twins instance: $($digitalTwinsInstance.Name)" "Success"
-        # Wait for instance to be ready
+    $DigitalTwinsInstance = New-AzDigitalTwinsInstance -ErrorAction Stop @dtParams
+        Write-Output "Successfully created Digital Twins instance: $($DigitalTwinsInstance.Name)" "Success"
         do {
             Start-Sleep -Seconds 30
-            $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
-            Write-Host "Instance provisioning state: $($instance.ProvisioningState)" "Info"
+    $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
+            Write-Output "Instance provisioning state: $($instance.ProvisioningState)" "Info"
         } while ($instance.ProvisioningState -eq "Provisioning")
         if ($instance.ProvisioningState -eq "Succeeded") {
-            Write-Host "Digital Twins instance is ready for use" "Success"
+            Write-Output "Digital Twins instance is ready for use" "Success"
             return $instance
         } else {
             throw "Digital Twins instance provisioning failed: $($instance.ProvisioningState)"
         }
     } catch {
-        Write-Host "Failed to create Digital Twins instance: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to create Digital Twins instance: $($_.Exception.Message)" "Error"
         throw
     }
     }
 }
-# Configure private endpoint
 function New-PrivateEndpoint -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     if ($PSCmdlet.ShouldProcess("Private endpoint for '$InstanceName'", "Create")) {
         try {
-            Write-Host "Configuring private endpoint for Digital Twins instance" "Info"
-        # Create private DNS zone
-        $privateDnsZoneName = "privatelink.digitaltwins.azure.net"
-        $privateDnsZone = New-AzPrivateDnsZone -ResourceGroupName $ResourceGroupName -Name $privateDnsZoneName
-        Write-Host "Created private DNS zone: $($privateDnsZone.Name)" "Success"
-        # Create private endpoint
-        $privateEndpointName = "$InstanceName-pe"
-        $vnetName = "$ResourceGroupName-vnet"
-        $subnetName = "privatelink-subnet"
-        # Create VNet if not exists
-        $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $vnetName -ErrorAction SilentlyContinue
+            Write-Output "Configuring private endpoint for Digital Twins instance" "Info"
+    $PrivateDnsZoneName = "privatelink.digitaltwins.azure.net"
+    $PrivateDnsZone = New-AzPrivateDnsZone -ResourceGroupName $ResourceGroupName -Name $PrivateDnsZoneName
+        Write-Output "Created private DNS zone: $($PrivateDnsZone.Name)" "Success"
+    $PrivateEndpointName = "$InstanceName-pe"
+    $VnetName = "$ResourceGroupName-vnet"
+    $SubnetName = "privatelink-subnet"
+    $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VnetName -ErrorAction SilentlyContinue
         if (-not $vnet) {
-            $subnetConfig = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix "10.0.1.0/24"
-            $virtualnetworkSplat = @{
+    $SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix "10.0.1.0/24"
+    $VirtualnetworkSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
-    Name = $vnetName
+    Name = $VnetName
     AddressPrefix = "10.0.0.0/16"
-    Subnet = $subnetConfig
+    Subnet = $SubnetConfig
 }
 New-AzVirtualNetwork @virtualnetworkSplat
         }
-        # Create private endpoint connection
-        $privateEndpointConnection = New-AzPrivateLinkServiceConnection -Name "$privateEndpointName-connection" -PrivateLinkServiceId $DigitalTwinsInstance.Id -GroupId "API"
-        $privateEndpoint = New-AzPrivateEndpoint -ResourceGroupName $ResourceGroupName -Name $privateEndpointName -Location $Location -Subnet $vnet.Subnets[0] -PrivateLinkServiceConnection $privateEndpointConnection
-        Write-Host "Successfully configured private endpoint: $privateEndpointName" "Success"
-        return $privateEndpoint
+    $PrivateEndpointConnection = New-AzPrivateLinkServiceConnection -Name "$PrivateEndpointName-connection" -PrivateLinkServiceId $DigitalTwinsInstance.Id -GroupId "API"
+    $PrivateEndpoint = New-AzPrivateEndpoint -ResourceGroupName $ResourceGroupName -Name $PrivateEndpointName -Location $Location -Subnet $vnet.Subnets[0] -PrivateLinkServiceConnection $PrivateEndpointConnection
+        Write-Output "Successfully configured private endpoint: $PrivateEndpointName" "Success"
+        return $PrivateEndpoint
     } catch {
-        Write-Host "Failed to configure private endpoint: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to configure private endpoint: $($_.Exception.Message)" "Error"
     }
     }
 }
-# Configure event routing
 function Set-EventRouting -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     if ($PSCmdlet.ShouldProcess("Event routing for '$InstanceName'", "Configure")) {
         try {
-            Write-Host "Configuring event routing for Digital Twins instance" "Info"
-        # Create Event Hub namespace if not exists
+            Write-Output "Configuring event routing for Digital Twins instance" "Info"
         if (-not $EventHubNamespace) {
-            $EventHubNamespace = "$InstanceName-eventhub-ns"
+    $EventHubNamespace = "$InstanceName-eventhub-ns"
         }
-        $ehNamespace = Get-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -ErrorAction SilentlyContinue
-        if (-not $ehNamespace) {
-            $ehNamespace = New-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -Location $Location -SkuName "Standard"
-            Write-Host "Created Event Hub namespace: $EventHubNamespace" "Success"
+    $EhNamespace = Get-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -ErrorAction SilentlyContinue
+        if (-not $EhNamespace) {
+    $EhNamespace = New-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -Location $Location -SkuName "Standard"
+            Write-Output "Created Event Hub namespace: $EventHubNamespace" "Success"
         }
-        # Create Event Hub
-        $eventHub = Get-AzEventHub -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -EventHubName $EventHubName -ErrorAction SilentlyContinue
-        if (-not $eventHub) {
-            $eventHub = New-AzEventHub -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -EventHubName $EventHubName -MessageRetentionInDays 7 -PartitionCount 4
-            Write-Host "Created Event Hub: $EventHubName" "Success"
+    $EventHub = Get-AzEventHub -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -EventHubName $EventHubName -ErrorAction SilentlyContinue
+        if (-not $EventHub) {
+    $EventHub = New-AzEventHub -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -EventHubName $EventHubName -MessageRetentionInDays 7 -PartitionCount 4
+            Write-Output "Created Event Hub: $EventHubName" "Success"
         }
-        # Create event route endpoint
-        $endpointName = "telemetry-endpoint"
-        $endpointParams = @{
+    $EndpointName = "telemetry-endpoint"
+    $EndpointParams = @{
             ResourceGroupName = $ResourceGroupName
             ResourceName = $InstanceName
-            EndpointName = $endpointName
+            EndpointName = $EndpointName
             EndpointType = "EventHub"
             ConnectionString = (Get-AzEventHubKey -ResourceGroupName $ResourceGroupName -NamespaceName $EventHubNamespace -AuthorizationRuleName "RootManageSharedAccessKey").PrimaryConnectionString
             EventHubName = $EventHubName
         }
         New-AzDigitalTwinsEndpoint -ErrorAction Stop @endpointParams
-        # Create event route
-        $routeName = "telemetry-route"
-        $filter = "type = 'Microsoft.DigitalTwins.Twin.Telemetry'"
-        New-AzDigitalTwinsEventRoute -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -EventRouteName $routeName -EndpointName $endpointName -Filter $filter
-        Write-Host "Successfully configured event routing to Event Hub" "Success"
+    $RouteName = "telemetry-route"
+    $filter = "type = 'Microsoft.DigitalTwins.Twin.Telemetry'"
+        New-AzDigitalTwinsEventRoute -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -EventRouteName $RouteName -EndpointName $EndpointName -Filter $filter
+        Write-Output "Successfully configured event routing to Event Hub" "Success"
     } catch {
-        Write-Host "Failed to configure event routing: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to configure event routing: $($_.Exception.Message)" "Error"
     }
     }
 }
-# Deploy Digital Twins model
 function Install-DigitalTwinsModel {
     param(
         [object]$DigitalTwinsInstance,
-        [string]$ModelsPath
+        $ModelsPath
     )
     try {
         if (-not $ModelsPath -or -not (Test-Path $ModelsPath)) {
-            Write-Host "Creating sample Digital Twins models..." "Info"
-            # Create sample DTDL models
-            $factoryModel = @{
+            Write-Output "Creating sample Digital Twins models..." "Info"
+    $FactoryModel = @{
                 "@id" = "dtmi:com:example:Factory;1"
                 "@type" = "Interface"
                 "displayName" = "Factory"
@@ -256,7 +235,7 @@ function Install-DigitalTwinsModel {
                     }
                 )
             }
-            $productionLineModel = @{
+    $ProductionLineModel = @{
                 "@id" = "dtmi:com:example:ProductionLine;1"
                 "@type" = "Interface"
                 "displayName" = "Production Line"
@@ -284,68 +263,59 @@ function Install-DigitalTwinsModel {
                     }
                 )
             }
-            # Deploy models using Azure CLI (as Az.DigitalTwins doesn't have direct model upload)
-            $factoryModelJson = $factoryModel | ConvertTo-Json -Depth 10
-            $productionLineModelJson = $productionLineModel | ConvertTo-Json -Depth 10
-            $factoryModelJson | Out-File -FilePath ".\factory-model.json" -Encoding UTF8
-            $productionLineModelJson | Out-File -FilePath ".\production-line-model.json" -Encoding UTF8
-            # Use Azure CLI to upload models
+    $FactoryModelJson = $FactoryModel | ConvertTo-Json -Depth 10
+    $ProductionLineModelJson = $ProductionLineModel | ConvertTo-Json -Depth 10
+    $FactoryModelJson | Out-File -FilePath ".\factory-model.json" -Encoding UTF8
+    $ProductionLineModelJson | Out-File -FilePath ".\production-line-model.json" -Encoding UTF8
             az dt model create --dt-name $InstanceName --models ".\factory-model.json" ".\production-line-model.json"
-            Write-Host "Successfully deployed sample Digital Twins models" "Success"
-            # Create sample twins
-            $factoryTwin = @{
+            Write-Output "Successfully deployed sample Digital Twins models" "Success"
+    $FactoryTwin = @{
                 "\$metadata" = @{
                     "\$model" = "dtmi:com:example:Factory;1"
                 }
                 "FactoryName" = "Main Production Facility"
                 "Location" = "Seattle, WA"
             }
-            $productionLineTwin = @{
+    $ProductionLineTwin = @{
                 "\$metadata" = @{
                     "\$model" = "dtmi:com:example:ProductionLine;1"
                 }
                 "LineNumber" = 1
                 "Status" = "Running"
             }
-            $factoryTwinJson = $factoryTwin | ConvertTo-Json -Depth 10
-            $productionLineTwinJson = $productionLineTwin | ConvertTo-Json -Depth 10
-            $factoryTwinJson | Out-File -FilePath ".\factory-twin.json" -Encoding UTF8
-            $productionLineTwinJson | Out-File -FilePath ".\production-line-twin.json" -Encoding UTF8
-            # Create twins
+    $FactoryTwinJson = $FactoryTwin | ConvertTo-Json -Depth 10
+    $ProductionLineTwinJson = $ProductionLineTwin | ConvertTo-Json -Depth 10
+    $FactoryTwinJson | Out-File -FilePath ".\factory-twin.json" -Encoding UTF8
+    $ProductionLineTwinJson | Out-File -FilePath ".\production-line-twin.json" -Encoding UTF8
             az dt twin create --dt-name $InstanceName --dtmi "dtmi:com:example:Factory;1" --twin-id "Factory-001" --properties ".\factory-twin.json"
             az dt twin create --dt-name $InstanceName --dtmi "dtmi:com:example:ProductionLine;1" --twin-id "ProductionLine-001" --properties ".\production-line-twin.json"
-            # Create relationship
             az dt twin relationship create --dt-name $InstanceName --relationship-id "factory-contains-line" --relationship "contains" --source "Factory-001" --target "ProductionLine-001"
-            Write-Host "Successfully created sample digital twins and relationships" "Success"
+            Write-Output "Successfully created sample digital twins and relationships" "Success"
         } else {
-            Write-Host "Deploying models from: $ModelsPath" "Info"
-            $modelFiles = Get-ChildItem -Path $ModelsPath -Filter "*.json"
-            foreach ($modelFile in $modelFiles) {
-                az dt model create --dt-name $InstanceName --models $modelFile.FullName
-                Write-Host "Deployed model: $($modelFile.Name)" "Success"
+            Write-Output "Deploying models from: $ModelsPath" "Info"
+    $ModelFiles = Get-ChildItem -Path $ModelsPath -Filter "*.json"
+            foreach ($ModelFile in $ModelFiles) {
+                az dt model create --dt-name $InstanceName --models $ModelFile.FullName
+                Write-Output "Deployed model: $($ModelFile.Name)" "Success"
             }
         }
     } catch {
-        Write-Host "Failed to deploy Digital Twins models: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to deploy Digital Twins models: $($_.Exception.Message)" "Error"
     }
 }
-# Configure diagnostic setting
 function Set-DiagnosticSetting -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     if ($PSCmdlet.ShouldProcess("Diagnostic settings for '$InstanceName'", "Configure")) {
         try {
-            Write-Host "Configuring diagnostic settings for Digital Twins instance" "Info"
-        # Create Log Analytics workspace
-        $workspaceName = "law-$ResourceGroupName-dt"
-        $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
+            Write-Output "Configuring diagnostic settings for Digital Twins instance" "Info"
+    $WorkspaceName = "law-$ResourceGroupName-dt"
+    $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ErrorAction SilentlyContinue
         if (-not $workspace) {
-            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
-            Write-Host "Created Log Analytics workspace: $workspaceName" "Success"
+    $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -Location $Location
+            Write-Output "Created Log Analytics workspace: $WorkspaceName" "Success"
         }
-        # Configure diagnostic settings
-        $diagnosticName = "$InstanceName-diagnostics"
-        $logs = @(
+    $DiagnosticName = "$InstanceName-diagnostics"
+    $logs = @(
             @{
                 Category = "DigitalTwinsOperation"
                 Enabled = $true
@@ -379,7 +349,7 @@ function Set-DiagnosticSetting -ErrorAction Stop {
                 }
             }
         )
-        $metrics = @(
+    $metrics = @(
             @{
                 Category = "AllMetrics"
                 Enabled = $true
@@ -389,75 +359,65 @@ function Set-DiagnosticSetting -ErrorAction Stop {
                 }
             }
         )
-        Set-AzDiagnosticSetting -ResourceId $DigitalTwinsInstance.Id -WorkspaceId $workspace.ResourceId -Log $logs -Metric $metrics -Name $diagnosticName
-        Write-Host "Successfully configured diagnostic settings" "Success"
+        Set-AzDiagnosticSetting -ResourceId $DigitalTwinsInstance.Id -WorkspaceId $workspace.ResourceId -Log $logs -Metric $metrics -Name $DiagnosticName
+        Write-Output "Successfully configured diagnostic settings" "Success"
     } catch {
-        Write-Host "Failed to configure diagnostic settings: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to configure diagnostic settings: $($_.Exception.Message)" "Error"
     }
     }
 }
-# Assign RBAC role
 function Set-RoleAssignment -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param([object]$DigitalTwinsInstance)
     if ($PSCmdlet.ShouldProcess("RBAC roles for '$InstanceName'", "Configure")) {
         try {
-            Write-Host "Configuring RBAC roles for Digital Twins instance" "Info"
-        # Get current user
-        $currentUser = Get-AzContext -ErrorAction Stop
-        # Assign Azure Digital Twins Data Owner role
-        New-AzRoleAssignment -ObjectId $currentUser.Account.Id -RoleDefinitionName "Azure Digital Twins Data Owner" -Scope $DigitalTwinsInstance.Id
-        Write-Host "Successfully assigned Digital Twins Data Owner role to current user" "Success"
+            Write-Output "Configuring RBAC roles for Digital Twins instance" "Info"
+    $CurrentUser = Get-AzContext -ErrorAction Stop
+        New-AzRoleAssignment -ObjectId $CurrentUser.Account.Id -RoleDefinitionName "Azure Digital Twins Data Owner" -Scope $DigitalTwinsInstance.Id
+        Write-Output "Successfully assigned Digital Twins Data Owner role to current user" "Success"
     } catch {
-        Write-Host "Failed to assign RBAC roles: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to assign RBAC roles: $($_.Exception.Message)" "Error"
     }
     }
 }
-# Monitor Digital Twins instance
 function Get-DigitalTwinsStatus -ErrorAction Stop {
     param([object]$DigitalTwinsInstance)
     try {
-        Write-Host "Monitoring Digital Twins instance status..." "Info"
-        # Get instance details
-        $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
-        Write-Host "Instance Status:" "Info"
-        Write-Host "Name: $($instance.Name)" "Info"
-        Write-Host "Location: $($instance.Location)" "Info"
-        Write-Host "Provisioning State: $($instance.ProvisioningState)" "Info"
-        Write-Host "Host Name: $($instance.HostName)" "Info"
-        Write-Host "Created Time: $($instance.CreatedTime)" "Info"
-        # Get models count
-        $modelsCount = (az dt model list --dt-name $InstanceName --query "length(@)")
-        Write-Host "Models Count: $modelsCount" "Info"
-        # Get twins count
-        $twinsCount = (az dt twin query --dt-name $InstanceName --query-command "SELECT COUNT() FROM DIGITALTWINS" --query "result[0].COUNT")
-        Write-Host "Twins Count: $twinsCount" "Info"
-        Write-Host "Digital Twins monitoring completed" "Success"
+        Write-Output "Monitoring Digital Twins instance status..." "Info"
+    $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
+        Write-Output "Instance Status:" "Info"
+        Write-Output "Name: $($instance.Name)" "Info"
+        Write-Output "Location: $($instance.Location)" "Info"
+        Write-Output "Provisioning State: $($instance.ProvisioningState)" "Info"
+        Write-Output "Host Name: $($instance.HostName)" "Info"
+        Write-Output "Created Time: $($instance.CreatedTime)" "Info"
+    $ModelsCount = (az dt model list --dt-name $InstanceName --query "length(@)")
+        Write-Output "Models Count: $ModelsCount" "Info"
+    $TwinsCount = (az dt twin query --dt-name $InstanceName --query-command "SELECT COUNT() FROM DIGITALTWINS" --query "result[0].COUNT")
+        Write-Output "Twins Count: $TwinsCount" "Info"
+        Write-Output "Digital Twins monitoring completed" "Success"
     } catch {
-        Write-Host "Failed to monitor Digital Twins instance: $($_.Exception.Message)" "Error"
+        Write-Output "Failed to monitor Digital Twins instance: $($_.Exception.Message)" "Error"
     }
 }
-# Main execution
 try {
-    Write-Host "Starting Azure Digital Twins Management Tool" "Info"
-    Write-Host "Action: $Action" "Info"
-    Write-Host "Instance Name: $InstanceName" "Info"
-    Write-Host "Resource Group: $ResourceGroupName" "Info"
-    # Ensure resource group exists
+    Write-Output "Starting Azure Digital Twins Management Tool" "Info"
+    Write-Output "Action: $Action" "Info"
+    Write-Output "Instance Name: $InstanceName" "Info"
+    Write-Output "Resource Group: $ResourceGroupName" "Info"
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
-        Write-Host "Creating resource group: $ResourceGroupName" "Info"
-        $resourcegroupSplat = @{
+        Write-Output "Creating resource group: $ResourceGroupName" "Info"
+    $ResourcegroupSplat = @{
     Name = $ResourceGroupName
     Location = $Location
     Tag = $Tags
 }
 New-AzResourceGroup @resourcegroupSplat
-        Write-Host "Successfully created resource group" "Success"
+        Write-Output "Successfully created resource group" "Success"
     }
     switch ($Action) {
         "Create" {
-            $instance = New-DigitalTwinsInstance -ErrorAction Stop
+    $instance = New-DigitalTwinsInstance -ErrorAction Stop
             if ($EnablePrivateEndpoint) {
                 New-PrivateEndpoint -DigitalTwinsInstance $instance
             }
@@ -472,15 +432,15 @@ New-AzResourceGroup @resourcegroupSplat
             }
         }
         "Deploy" {
-            $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
+    $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
             Deploy-DigitalTwinsModel -DigitalTwinsInstance $instance -ModelsPath $ModelDefinitions
         }
         "Monitor" {
-            $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
+    $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
             Get-DigitalTwinsStatus -DigitalTwinsInstance $instance
         }
         "Configure" {
-            $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
+    $instance = Get-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName
             if ($EnableEventRouting) {
                 Set-EventRouting -DigitalTwinsInstance $instance
             }
@@ -489,14 +449,12 @@ New-AzResourceGroup @resourcegroupSplat
             }
         }
         "Delete" {
-            Write-Host "Deleting Digital Twins instance: $InstanceName" "Warning"
+            Write-Output "Deleting Digital Twins instance: $InstanceName" "Warning"
             Remove-AzDigitalTwinsInstance -ResourceGroupName $ResourceGroupName -ResourceName $InstanceName -Force
-            Write-Host "Successfully deleted Digital Twins instance" "Success"
+            Write-Output "Successfully deleted Digital Twins instance" "Success"
         }
     }
-    Write-Host "Azure Digital Twins Management Tool completed successfully" "Success"
+    Write-Output "Azure Digital Twins Management Tool completed successfully" "Success"
 } catch {
-    Write-Host "Tool execution failed: $($_.Exception.Message)" "Error"
-    throw
-}
-
+    Write-Output "Tool execution failed: $($_.Exception.Message)" "Error"
+    throw`n}

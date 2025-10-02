@@ -1,35 +1,59 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
+#Requires -Modules Az.Compute
 
-<#`n.SYNOPSIS
-    Creat Azdisk
+<#
+.SYNOPSIS
+    Create Azure disk
 
 .DESCRIPTION
-    Creat Azdisk operation
+    Create Azure disk operation
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Author: Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Location = 'Canada Central',
+
+    [Parameter(Mandatory = $true)]
+    [string]$ImageName = 'FGC_Kroll_Image',
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName = 'FGC_Kroll_Image_RG',
+
+    [Parameter(Mandatory = $true)]
+    [string]$DiskName = 'FGC_Kroll_Image_Disk',
+
+    [Parameter(Mandatory = $true)]
+    [long]$UploadSizeInBytes,
+
+    [Parameter()]
+    [string]$SkuName = 'Premium_LRS',
+
+    [Parameter()]
+    [string]$OsType = 'Windows',
+
+    [Parameter()]
+    [string]$HyperVGeneration = 'V2'
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-$location = 'Canada Central'
-$imageName = 'FGC_Kroll_Image'
-$rgName = 'FGC_Kroll_Image_RG'
-$Diskname = 'FGC_Kroll_Image_Disk'
+
 $newAzDiskConfigSplat = @{
-    # SkuName = 'Standard_LRS'
-    SkuName = 'Premium_LRS'
-    OsType = 'Windows'
-    UploadSizeInBytes = $vhdSizeBytes
-    Location = $location
+    SkuName = $SkuName
+    OsType = $OsType
+    UploadSizeInBytes = $UploadSizeInBytes
+    Location = $Location
     CreateOption = 'Upload'
-    HyperVGeneration = 'V2'
+    HyperVGeneration = $HyperVGeneration
 }
+
 $diskconfig = New-AzDiskConfig -ErrorAction Stop @newAzDiskConfigSplat
-New-AzDisk -ResourceGroupName $rgName -DiskName $Diskname -Disk $diskconfig
-
-
+$disk = New-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $DiskName -Disk $diskconfig -ErrorAction Stop
+$disk

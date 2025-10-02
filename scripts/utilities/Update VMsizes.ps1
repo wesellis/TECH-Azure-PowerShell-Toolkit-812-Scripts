@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Update Vmsizes
@@ -9,7 +9,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
+$ErrorActionPreference = 'Stop'
+
 When VM skus are retired, this script can be used to scrub the repo and update any sizes to a new one
 $a = @(
 "Standard_D2_v3" , "Standard_D1" ,
@@ -79,25 +80,22 @@ $a = @(
 $i = 0
 $map = @()
 do {
-    $mapItem = @{
+    $MapItem = @{
         old = $a[$i+1]
         new = $a[$i]
     }
-    $map = $map + $mapItem
+    $map = $map + $MapItem
     $i = $i + 2
 } until ($i -ge $a.Length)
-$jsonFiles = Get-ChildItem -Path " *.json" -Recurse
-foreach($f in $jsonFiles){
-    #Write-Host $f.FullName
+$JsonFiles = Get-ChildItem -Path " *.json" -Recurse
+foreach($f in $JsonFiles){
     $json = Get-Content -ErrorAction Stop $f.FullName -Raw
-    # Check to see if it's a template or param file
     if($json -like '*deploymentTemplate.json#" *' -or $json -like '*deploymentParameters.json#" *'){
-        #Write-Host "Searching... $($f.name)"
         $IsFileChanged = $false
         foreach($size in $map){
             if($json -like " *`" $($size.old)`"*" ){
 $IsFileChanged = $true
-                Write-Host " found `" $($size.old)`" in $($f.fullname)"
+                Write-Output " found `" $($size.old)`" in $($f.fullname)"
 $json = $json -ireplace " `" $($size.old)`"" , "`" $($size.new)`""
             }
         }
@@ -105,4 +103,4 @@ $json = $json -ireplace " `" $($size.old)`"" , "`" $($size.new)`""
             $json | Set-Content -Path $f.FullName
         }
     }
-}
+`n}

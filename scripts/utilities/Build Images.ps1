@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Build Images
@@ -8,7 +8,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -16,45 +15,43 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $ProgressPreference = 'SilentlyContinue'
-$imageBuildTimeoutInMinutes = ([int]$Env:PIPELINE_TIMEOUT_IN_MINUTES) - 5
-$imageBicepPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'main.bicep'
-$imageBuildProfileParam = 'imageBuildProfile={}'
+$ImageBuildTimeoutInMinutes = ([int]$Env:PIPELINE_TIMEOUT_IN_MINUTES) - 5
+$ImageBicepPath = Join-Path (Split-Path $PSScriptRoot -Parent) 'main.bicep'
+$ImageBuildProfileParam = 'imageBuildProfile={}'
 if ($Env:VM_SKU) {
-    $imageBuildProfileParam = " imageBuildProfile={"" sku"" : "" $Env:VM_SKU"" }"
+    $ImageBuildProfileParam = " imageBuildProfile={"" sku"" : "" $Env:VM_SKU"" }"
 }
-$artifactSourceParam = '{}'
+$ArtifactSourceParam = '{}'
 if ($Env:ARTIFACTS_SOURCE_OBJ) {
-    $artifactSourceParam = " artifactSource=$Env:ARTIFACTS_SOURCE_OBJ"
+    $ArtifactSourceParam = " artifactSource=$Env:ARTIFACTS_SOURCE_OBJ"
 }
-Write-Host " === Building images with deployment $Env:DEPLOYMENT_NAME"
+Write-Output " === Building images with deployment $Env:DEPLOYMENT_NAME"
 $params = @{
-    file = $imageBicepPath
-    parameters = "location=$Env:RESOURCES_LOCATION builderIdentity=$Env:BUILDER_IDENTITY imageIdentity=$Env:IMAGE_IDENTITY galleryName=$Env:GALLERY_NAME ignoreBuildFailure=true imageBuildTimeoutInMinutes=$imageBuildTimeoutInMinutes $imageBuildProfileParam $artifactSourceParam"
+    file = $ImageBicepPath
+    parameters = "location=$Env:RESOURCES_LOCATION builderIdentity=$Env:BUILDER_IDENTITY imageIdentity=$Env:IMAGE_IDENTITY galleryName=$Env:GALLERY_NAME ignoreBuildFailure=true imageBuildTimeoutInMinutes=$ImageBuildTimeoutInMinutes $ImageBuildProfileParam $ArtifactSourceParam"
     group = $Env:RESOURCE_GROUP
     name = $Env:DEPLOYMENT_NAME
     subscription = $Env:SUBSCRIPTION_ID
 }
-$deploymentOutput @params
-$deploymentOutput -Replace '\
+$DeploymentOutput @params
+$DeploymentOutput -Replace '\
 ', [Environment]::NewLine
-Write-Host " === Getting deployment result"
-$deploymentResult = (az deployment group show --subscription $Env:SUBSCRIPTION_ID --resource-group $Env:RESOURCE_GROUP --name $Env:DEPLOYMENT_NAME) | ConvertFrom-Json
-$deploymentResultProps = $deploymentResult.PSobject.Properties | Where-Object { $_.Name -eq 'properties' } | Select-Object -ExpandProperty Value
-$outputResources = $deploymentResultProps | Select-Object -ExpandProperty outputResources
-# Pattern matching for validation
-$imageTemplates = @($outputResources | Where-Object { $_ -match 'Microsoft.VirtualMachineImages' })
-$failuresCount = 0
-foreach ($imageTemplate in $imageTemplates) {
-    Write-Host " === Validating build result for image $($imageTemplate.id)"
-$templateInfo = (az image builder show --ids $imageTemplate.Id) | ConvertFrom-Json
-    if ($templateInfo.lastRunStatus.runState -ne "Succeeded" ) {
-        $failuresCount++
-        Write-Warning " !!! [ERROR] Image build failed with status '$($templateInfo.lastRunStatus.runState)', message '$($templateInfo.lastRunStatus.message)'"
+Write-Output " === Getting deployment result"
+$DeploymentResult = (az deployment group show --subscription $Env:SUBSCRIPTION_ID --resource-group $Env:RESOURCE_GROUP --name $Env:DEPLOYMENT_NAME) | ConvertFrom-Json
+$DeploymentResultProps = $DeploymentResult.PSobject.Properties | Where-Object { $_.Name -eq 'properties' } | Select-Object -ExpandProperty Value
+$OutputResources = $DeploymentResultProps | Select-Object -ExpandProperty outputResources
+$ImageTemplates = @($OutputResources | Where-Object { $_ -match 'Microsoft.VirtualMachineImages' })
+$FailuresCount = 0
+foreach ($ImageTemplate in $ImageTemplates) {
+    Write-Output " === Validating build result for image $($ImageTemplate.id)"
+$TemplateInfo = (az image builder show --ids $ImageTemplate.Id) | ConvertFrom-Json
+    if ($TemplateInfo.lastRunStatus.runState -ne "Succeeded" ) {
+        $FailuresCount++
+        Write-Warning " !!! [ERROR] Image build failed with status '$($TemplateInfo.lastRunStatus.runState)', message '$($TemplateInfo.lastRunStatus.message)'"
     }
 }
-if (($failuresCount -gt 0) -or ($imageTemplates.Count -eq 0)) {
-    Write-Error " !!! [ERROR] $failuresCount image build(s) failed"
+if (($FailuresCount -gt 0) -or ($ImageTemplates.Count -eq 0)) {
+    Write-Error " !!! [ERROR] $FailuresCount image build(s) failed"
 }
 else {
-    Write-Host " === Success: $($imageTemplates.Count) image build(s) succeeded"
-}
+    Write-Output " === Success: $($ImageTemplates.Count) image build(s) succeeded"`n}

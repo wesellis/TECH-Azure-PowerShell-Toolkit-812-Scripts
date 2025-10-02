@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,13 +9,14 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding(SupportsShouldProcess)]
-$collectAuditLogs,$collectionFromAllSubscriptions)
+$CollectAuditLogs,$CollectionFromAllSubscriptions)
 "Logging in to Azure..."
 $ArmConn = Get-AutomationConnection -Name AzureRunAsConnection
 if ($null -eq $ArmConn)
@@ -23,13 +24,13 @@ if ($null -eq $ArmConn)
 	throw "Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
 $retry = 6
-$syncOk = $false
+$SyncOk = $false
 do
 {
 	try
 	{
 		Add-AzureRMAccount -ServicePrincipal -Tenant $ArmConn.TenantID -ApplicationId $ArmConn.ApplicationID -CertificateThumbprint $ArmConn.CertificateThumbprint
-		$syncOk = $true
+		$SyncOk = $true
 	}
 	catch
 	{
@@ -39,7 +40,7 @@ do
 		$retry = $retry - 1
 		Start-Sleep -s 60
 	}
-} while (-not $syncOk -and $retry -ge 0)
+} while (-not $SyncOk -and $retry -ge 0)
 "Selecting Azure subscription..."
 $SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $ArmConn.SubscriptionId -TenantId $ArmConn.tenantid
 $subscriptionid=$ArmConn.SubscriptionId
@@ -67,9 +68,9 @@ $header = "Bearer " + $result.AccessToken;
 $headers = @{"Authorization" =$header;"Accept" =" application/json" }
 $body=$null
 $HTTPVerb="GET"
-$subscriptionInfoUri = "https://management.azure.com/subscriptions/" +$subscriptionid+"?api-version=2016-02-01"
-$subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
-IF($subscriptionInfo)
+$SubscriptionInfoUri = "https://management.azure.com/subscriptions/" +$subscriptionid+"?api-version=2016-02-01"
+$SubscriptionInfo = Invoke-RestMethod -Uri $SubscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
+IF($SubscriptionInfo)
 {
 	"Successfully connected to Azure ARM REST"
 }
@@ -81,15 +82,15 @@ IF($subscriptionInfo)
     {
         if ($null -eq $AsmConn) {
             Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
-            $getAsmHeader=$false
+            $GetAsmHeader=$false
         }
     }
      if ($null -eq $AsmConn) {
         Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
-        $getAsmHeader=$false
+        $GetAsmHeader=$false
     }Else
 	{
-			$getAsmHeader=$true
+			$GetAsmHeader=$true
     }
 $AAResourceGroup = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationResourceGroup-MS-Mgmt-SA'
 $AAAccount = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationAccount-MS-Mgmt-SA'
@@ -99,9 +100,9 @@ $LogsRunbookName="AzureSAIngestionLogs-MS-Mgmt-SA"
 $LogsScheduleName = "AzureStorageLogs-HourlySchedule"
 $MetricsEnablerRunbookName = "AzureSAMetricsEnabler-MS-Mgmt-SA"
 $MetricsEnablerScheduleName = "AzureStorageMetricsEnabler-DailySchedule"
-$mainSchedulerName="AzureSA-Scheduler-Hourly"
-$varText= "AAResourceGroup = $AAResourceGroup , AAAccount = $AAAccount"
-Write-output $varText
+$MainSchedulerName="AzureSA-Scheduler-Hourly"
+$VarText= "AAResourceGroup = $AAResourceGroup , AAAccount = $AAAccount"
+Write-output $VarText
 New-AzureRmAutomationVariable -Name varVMIopsList -Description "Variable to store IOPS limits for Azure VM Sizes." -Value $vmiolimits -Encrypted 0 -ResourceGroupName $AAResourceGroup -AutomationAccountName $AAAccount  -ea 0
 IF([string]::IsNullOrEmpty($AAAccount) -or [string]::IsNullOrEmpty($AAResourceGroup))
 {
@@ -129,10 +130,10 @@ if($min -in 0..10)
 $RBStart2=$RBStart1.AddMinutes(15)
 $RBStart3=$RBStart2.AddMinutes(15)
 $RBStart4=$RBStart3.AddMinutes(15)
-$allSchedules=Get-AzureRmAutomationSchedule -ErrorAction "Stop"
+$AllSchedules=Get-AzureRmAutomationSchedule -ErrorAction "Stop"
 -AutomationAccountName
 -ResourceGroupName $AAResourceGroup
-foreach ($sch in  $allSchedules|where{$_.Name -match $MetricsScheduleName -or $_.Name -match $MetricsEnablerScheduleName -or $_.Name -match $LogsScheduleName })
+foreach ($sch in  $AllSchedules|where{$_.Name -match $MetricsScheduleName -or $_.Name -match $MetricsEnablerScheduleName -or $_.Name -match $LogsScheduleName })
 {
 	Write-output "Removing Schedule $($sch.Name)    "
 	$params = @{
@@ -142,7 +143,7 @@ foreach ($sch in  $allSchedules|where{$_.Name -match $MetricsScheduleName -or $_
 	    AutomationAccountName = $AAAccount
 	}
 	if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
 }
 Write-output  "Creating schedule $MetricsScheduleName for runbook $MetricsRunbookName"
@@ -157,9 +158,9 @@ Do {
 	    StartTime = "(Get-Variable"
 	}
 	New-AzureRmAutomationSchedule @params
-	IF ($collectionFromAllSubscriptions  -match 'Enabled')
+	IF ($CollectionFromAllSubscriptions  -match 'Enabled')
 	{
-$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
+$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$GetAsmHeader}
 		$params = @{
 		    RunbookName = $MetricsRunbookName
 		    Parameters = $Params }Else {
@@ -168,7 +169,7 @@ $params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsm
 		    AutomationAccountName = $AAAccount
 		}
 		Register-AzureRmAutomationScheduledRunbook @params
-		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
+		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$GetAsmHeader}
 		$params = @{
 		    RunbookName = $MetricsRunbookName
 		    Parameters = $Params }
@@ -180,9 +181,8 @@ $params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsm
 	$i++
 }
 While ($i -le 4)
-IF($collectAuditLogs -eq 'Enabled')
+IF($CollectAuditLogs -eq 'Enabled')
 {
-	#Add the schedule an hour ahead and start the runbook
 	$RunbookStartTime = $Date =(get-date -Minute 05 -Second 00).AddHours(1).ToUniversalTime()
 	IF (($runbookstarttime-(Get-date).ToUniversalTime()).TotalMinutes -lt 6)
 	{
@@ -198,9 +198,9 @@ $RunbookStartTime=((Get-date).ToUniversalTime()).AddMinutes(7)
 	    StartTime = $RunbookStartTime
 	}
 	New-AzureRmAutomationSchedule @params
-	IF ($collectionFromAllSubscriptions  -match 'Enabled')
+	IF ($CollectionFromAllSubscriptions  -match 'Enabled')
 	{
-$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsmHeader}
+$params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$GetAsmHeader}
 		$params = @{
 		    RunbookName = $LogsRunbookName
 		    Parameters = $Params
@@ -212,7 +212,7 @@ $params = @{" collectionFromAllSubscriptions" = $true ; " getAsmHeader" =$getAsm
 		Start-AzureRmAutomationRunbook -AutomationAccountName $AAAccount -Name $LogsRunbookName -ResourceGroupName $AAResourceGroup -Parameters $Params | out-null
 	}Else
 	{
-		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$getAsmHeader}
+		$params = @{" collectionFromAllSubscriptions" = $false ; " getAsmHeader" =$GetAsmHeader}
 		$params = @{
 		    RunbookName = $LogsRunbookName
 		    Parameters = $Params
@@ -245,19 +245,17 @@ $params = @{
     ErrorAction = "Stop"
     or = $_.Name
 }
-$allSchedules=Get-AzureRmAutomationSchedule @params
-If ($allSchedules.count -ge 5)
+$AllSchedules=Get-AzureRmAutomationSchedule @params
+If ($AllSchedules.count -ge 5)
 {
 Write-output "Removing hourly schedule for this runbook as its not needed anymore  "
 $params = @{
     ErrorAction = "Stop"
     ResourceGroupName = $AAResourceGroup
-    Name = $mainSchedulerName
+    Name = $MainSchedulerName
     AutomationAccountName = $AAAccount
 }
 if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
-}
-
-
+`n}

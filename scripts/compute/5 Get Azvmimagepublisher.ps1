@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -31,5 +31,4 @@ Get-AzVMImagePublisher -Location 'CanadaCentral' | Select-Object -First 1
 Get-AzVMImagePublisher -Location 'CanadaCentral' | Select-Object -Property PublisherName
 Get-AzVMImagePublisher -Location 'CanadaCentral' | Where-Object {$_.PublisherName -like '*Canonical*'}
 Get-AzVMImagePublisher -Location 'CanadaCentral' | Where-Object {$_.PublisherName -like '*OpenLogic*'}
-Get-AzVMImagePublisher -Location 'CanadaCentral' | Where-Object {$_.PublisherName -like 'MicrosoftWindowsDesktop'}
-
+Get-AzVMImagePublisher -Location 'CanadaCentral' | Where-Object {$_.PublisherName -like 'MicrosoftWindowsDesktop'`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Functions
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage Function Apps
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -18,12 +20,11 @@
     [string]$RuntimeVersion = "7.2",
     [string]$StorageAccountName
 )
-Write-Host "Provisioning Function App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "App Service Plan: $PlanName"
-Write-Host "Location: $Location"
-Write-Host "Runtime: $Runtime $RuntimeVersion"
-# Create the Function App
+Write-Output "Provisioning Function App: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "App Service Plan: $PlanName"
+Write-Output "Location: $Location"
+Write-Output "Runtime: $Runtime $RuntimeVersion"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Name = $AppName
@@ -35,9 +36,11 @@ $params = @{
 }
 $FunctionApp = New-AzFunctionApp @params
 if ($StorageAccountName) {
-    Write-Host "Storage Account: $StorageAccountName"
+    Write-Output "Storage Account: $StorageAccountName"
 }
-Write-Host "Function App $AppName provisioned successfully"
-Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Host "State: $($FunctionApp.State)"
+Write-Output "Function App $AppName provisioned successfully"
+Write-Output "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Output "State: $($FunctionApp.State)"
+
+
 

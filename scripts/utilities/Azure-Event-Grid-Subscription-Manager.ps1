@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,24 +6,24 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Event Grid Subscription Manager
-# Manage Event Grid topics and subscriptions
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding(SupportsShouldProcess)]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateSet("CreateTopic", "CreateSubscription", "ListEvents", "DeleteTopic")]
-    [string]$Action,
+    $Action,
     [Parameter()]
-    [string]$TopicName,
+    $TopicName,
     [Parameter()]
-    [string]$SubscriptionName,
+    $SubscriptionName,
     [Parameter()]
-    [string]$EndpointUrl,
+    $EndpointUrl,
     [Parameter()]
-    [string]$Location = "East US"
+    $Location = "East US"
 )
 riptName "Azure Event Grid Subscription Manager" -Version "1.0" -Description "Manage Event Grid topics and subscriptions"
 try {
@@ -33,26 +33,25 @@ try {
     switch ($Action) {
         "CreateTopic" {
             $topic = New-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName -Location $Location
-            
-            Write-Host "Endpoint: $($topic.Endpoint)"
+
+            Write-Output "Endpoint: $($topic.Endpoint)"
         }
         "CreateSubscription" {
             $subscription = New-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName -EventSubscriptionName $SubscriptionName -Endpoint $EndpointUrl
-            
+
         }
         "ListEvents" {
             $topic = Get-AzEventGridTopic -ResourceGroupName $ResourceGroupName -Name $TopicName
             $subscriptions = Get-AzEventGridSubscription -ResourceGroupName $ResourceGroupName -TopicName $TopicName
-            Write-Host "Topic: $($topic.Name)"
-            Write-Host "Subscriptions: $($subscriptions.Count)"
+            Write-Output "Topic: $($topic.Name)"
+            Write-Output "Subscriptions: $($subscriptions.Count)"
             $subscriptions | Format-Table EventSubscriptionName, Destination
         }
         "DeleteTopic" {
             if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
-            
+
         }
     }
-} catch { throw }
-
+} catch { throw`n}

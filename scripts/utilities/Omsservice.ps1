@@ -1,26 +1,46 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules PSDesiredStateConfiguration
 
-<#`n.SYNOPSIS
-    Omsservice
+<#
+.SYNOPSIS
+    OMS Service Configuration
 
 .DESCRIPTION
-    Azure automation
+    Azure DSC configuration to ensure the Microsoft Monitoring Agent Health Service
+    is running. This is a simplified configuration that only manages the service state
+    after OMS has been installed.
 
-
-    Author: Wes Ellis (wes@wesellis.com)
-#>
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
-Configuration OMSSERVICE
-{
-    Import-DscResource -ModuleName xPSDesiredStateConfiguration
+.NOTES
+    Version: 1.0
+    Requires appropriate permissions and DSC modules
+    Assumes Microsoft Monitoring Agent is already installed
+#>
+
+Configuration OMSSERVICE {
+    param()
+
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
+
     Node localhost {
-        Service OMSService
-        {
+        # Ensure OMS Health Service is running
+        Service OMSService {
             Name = "HealthService"
             State = "Running"
+            StartupType = "Automatic"
+        }
+
+        # Optional: Monitor agent update service
+        Service AgentUpdateService {
+            Name = "MicrosoftMonitoringAgent"
+            State = "Running"
+            StartupType = "Automatic"
         }
     }
 }
+
+# Example usage:
+# OMSSERVICE
+# Start-DscConfiguration -Path .\OMSSERVICE -Wait -Verbose -Force

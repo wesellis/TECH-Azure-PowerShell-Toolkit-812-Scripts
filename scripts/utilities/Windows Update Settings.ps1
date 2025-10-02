@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Update Settings
@@ -16,10 +16,9 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 try {
-    Write-Host "Windows update settings are being configured ..."
+    Write-Output "Windows update settings are being configured ..."
     Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings' -Name 'RestartNotificationsAllowed2' -Value 1
-    Write-Host "Windows update settings complete"
+    Write-Output "Windows update settings complete"
 }
 catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

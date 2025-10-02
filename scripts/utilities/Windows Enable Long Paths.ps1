@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Enable Long Paths
@@ -16,3 +16,4 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1 -Type DWord -Force
+

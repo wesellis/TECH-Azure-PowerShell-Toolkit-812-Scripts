@@ -1,42 +1,77 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Deployment Script Utils
 
 .DESCRIPTION
-    Azure automation
-
-
+    Azure automation utility functions for deployment operations
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+
+.NOTES
+    Provides retry functionality for deployment operations
+    Supports exponential backoff and failure handling
+#>
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $ProgressPreference = 'SilentlyContinue'
-function RunWithRetries(
-    [ScriptBlock] $runBlock,
-    [ScriptBlock] $onFailureBlock = {},
-    [int] $retryAttempts = 5,
-    [int] $waitBeforeRetrySeconds = 5,
-    [bool] $ignoreFailure = $false,
-    [bool] $exponentialBackoff = $true
-) {
-    [int] $retriesLeft = $retryAttempts
-    while ($retriesLeft -ge 0) {
+
+function Invoke-WithRetries {
+    <#
+    .SYNOPSIS
+        Executes a script block with retry logic
+
+    .PARAMETER RunBlock
+        The script block to execute
+
+    .PARAMETER OnFailureBlock
+        Script block to execute on failure
+
+    .PARAMETER RetryAttempts
+        Number of retry attempts
+
+    .PARAMETER WaitBeforeRetrySeconds
+        Seconds to wait before retry
+
+    .PARAMETER IgnoreFailure
+        Whether to ignore failures
+
+    .PARAMETER ExponentialBackoff
+        Whether to use exponential backoff
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ScriptBlock]$RunBlock,
+
+        [ScriptBlock]$OnFailureBlock = {},
+
+        [int]$RetryAttempts = 5,
+
+        [int]$WaitBeforeRetrySeconds = 5,
+
+        [bool]$IgnoreFailure = $false,
+
+        [bool]$ExponentialBackoff = $true
+    )
+
+    [int]$RetriesLeft = $RetryAttempts
+
+    while ($RetriesLeft -ge 0) {
         try {
-            & $runBlock
+            & $RunBlock
             break
         }
         catch {
-            if ($retriesLeft -le 0) {
-                if ($onFailureBlock) {
-                    & $onFailureBlock
+            if ($RetriesLeft -le 0) {
+                if ($OnFailureBlock) {
+                    & $OnFailureBlock
                 }
-                if ($ignoreFailure) {
-                    Write-Host "[WARN] Ignoring the failure:`n$_`n$($_.ScriptStackTrace)"
+                if ($IgnoreFailure) {
+                    Write-Output "[WARN] Ignoring the failure:`n$_`n$($_.ScriptStackTrace)"
                     break
                 }
                 else {
@@ -44,15 +79,15 @@ function RunWithRetries(
                 }
             }
             else {
-                if ($exponentialBackoff) {
-$totalDelay = [Math]::Pow(2, $retryAttempts - $retriesLeft) * $waitBeforeRetrySeconds
+                if ($ExponentialBackoff) {
+                    $TotalDelay = [Math]::Pow(2, $RetryAttempts - $RetriesLeft) * $WaitBeforeRetrySeconds
                 }
                 else {
-$totalDelay = $waitBeforeRetrySeconds
+                    $TotalDelay = $WaitBeforeRetrySeconds
                 }
-                Write-Host "[WARN] Attempt failed: $_. Retrying in $totalDelay seconds. Retries left: $retriesLeft"
-                $retriesLeft--
-                Start-Sleep -Seconds $totalDelay
+                Write-Output "[WARN] Attempt failed: $_. Retrying in $TotalDelay seconds. Retries left: $RetriesLeft"
+                $RetriesLeft--
+                Start-Sleep -Seconds $TotalDelay
             }
         }
     }

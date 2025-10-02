@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Networkinterface Creator
@@ -8,33 +8,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -51,9 +48,9 @@ param(
     [Parameter()]
     [string]$PublicIpId
 )
-Write-Host "Creating Network Interface: $NicName"
+Write-Output "Creating Network Interface: $NicName"
 if ($PublicIpId) {
-   $params = @{
+    $params = @{
        ResourceGroupName = $ResourceGroupName
        Location = $Location
        PublicIpAddressId = $PublicIpId
@@ -63,7 +60,7 @@ if ($PublicIpId) {
    }
    ; @params
 } else {
-   $params = @{
+    $params = @{
        ErrorAction = "Stop"
        SubnetId = $SubnetId
        ResourceGroupName = $ResourceGroupName
@@ -72,11 +69,10 @@ if ($PublicIpId) {
    }
    ; @params
 }
-Write-Host "Network Interface created successfully:"
-Write-Host "Name: $($Nic.Name)"
-Write-Host "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
-Write-Host "Location: $($Nic.Location)"
+Write-Output "Network Interface created successfully:"
+Write-Output "Name: $($Nic.Name)"
+Write-Output "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+Write-Output "Location: $($Nic.Location)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

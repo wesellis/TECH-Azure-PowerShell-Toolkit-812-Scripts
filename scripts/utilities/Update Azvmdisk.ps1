@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,7 +10,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,11 +25,8 @@ Update-AzDisk -ResourceGroupName 'ResourceGroup01' -DiskName 'Disk01' -DiskUpdat
 $setAzVMOSDiskSplat = @{
     VM           = $VirtualMachine
     Name         = $OSDiskName
-    # VhdUri = $OSDiskUri
-    # SourceImageUri = $SourceImageUri
     Caching      = $OSDiskCaching
     CreateOption = $OSCreateOption
-    # Windows = $true
     DiskSizeInGB = '256'
 }
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,7 +10,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     .DESCRIPTION
         This script fails over SQL Always On Availability Group inside a Classic Azure virtual machine
 	Pre-requisites
@@ -28,35 +27,31 @@
         LASTEDIT: 15 May, 2017
 workflow ASR-SQL-FailoverAGClassic
  {
-     [CmdletBinding()
+    [string]$ErrorActionPreference = "Stop"
+[CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
          [Object]$RecoveryPlanContext
      )
-     $Cred = Get-AutomationPSCredential -name 'AzureCredential'
-     #Connect to Azure
-     $AzureAccount = Add-AzureAccount -Credential $Cred
-$AzureSubscriptionName = Get-AutomationVariable -ErrorAction Stop Name AzureSubscriptionName
+    [string]$Cred = Get-AutomationPSCredential -name 'AzureCredential'
+    [string]$AzureAccount = Add-AzureAccount -Credential $Cred
+    [string]$AzureSubscriptionName = Get-AutomationVariable -ErrorAction Stop Name AzureSubscriptionName
      Select-AzureSubscription -SubscriptionName $AzureSubscriptionName
      InLineScript
      {
-$scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery/scripts/SQLAGFailover.ps1"
+    [string]$scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/asr-automation-recovery/scripts/SQLAGFailover.ps1"
       Write-output " failovertype " + $Using:RecoveryPlanContext.FailoverType;
       if ($Using:RecoveryPlanContext.FailoverType -eq "Test" )
             {
                 Write-output " tfo"
                 Write-Output "Creating ILB"
-                Add-AzureInternalLoadBalancer -InternalLoadBalancerName SQLAGILB -SubnetName Subnet-1 -ServiceName SQLAzureVM-Test -StaticVNetIPAddress #IP
+                Add-AzureInternalLoadBalancer -InternalLoadBalancerName SQLAGILB -SubnetName Subnet-1 -ServiceName SQLAzureVM-Test -StaticVNetIPAddress
                 Write-Output "ILB Created"
-                #Update the script with name of the virtual machine recovered using Azure Backup
                 Write-Output "Adding SQL AG Endpoint"
                 Get-AzureVM -ServiceName "SQLAzureVM-Test" -Name "SQLAzureVM-Test" | Add-AzureEndpoint -Name sqlag -LBSetName sqlagset -Protocol tcp -LocalPort 1433 -PublicPort 1433 -ProbePort 59999 -ProbeProtocol tcp -ProbeIntervalInSeconds 10 -InternalLoadBalancerName SQLAGILB | Update-AzureVM
                 Write-Output "Added Endpoint"
-                $VM = Get-AzureVM -Name "SQLAzureVM-Test" -ServiceName "SQLAzureVM-Test"
+    [string]$VM = Get-AzureVM -Name "SQLAzureVM-Test" -ServiceName "SQLAzureVM-Test"
                 Write-Output "UnInstalling custom script extension"
                 Set-AzureVMCustomScriptExtension -Uninstall -ReferenceName CustomScriptExtension -VM $VM |Update-AzureVM
                 Write-Output "Installing custom script extension"
@@ -68,16 +63,11 @@ $scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-template
       else
             {
             Write-output " pfo/ufo" ;
-            #Get the SQL Azure Replica VM.
-            #Update the script to use the name of your VM and Cloud Service
-            $VM = Get-AzureVM -Name "SQLAzureVM" -ServiceName "SQLAzureReplica" ;
+    [string]$VM = Get-AzureVM -Name "SQLAzureVM" -ServiceName "SQLAzureReplica" ;
             Write-Output "Installing custom script extension"
-            #Install the Custom Script Extension on teh SQL Replica VM
             Set-AzureVMExtension -ExtensionName CustomScriptExtension -VM $VM -Publisher Microsoft.Compute -Version 1.*| Update-AzureVM;
             Write-output "Starting AG Failover" ;
-            #Execute the SQL Failover script
-            #Pass the SQL AG path as the argument.
-            $AGArgs=" -SQLAvailabilityGroupPath sqlserver:\sql\sqlazureVM\default\availabilitygroups\testag" ;
+    [string]$AGArgs=" -SQLAvailabilityGroupPath sqlserver:\sql\sqlazureVM\default\availabilitygroups\testag" ;
             Set-AzureVMCustomScriptExtension -VM $VM -FileUri $scriptpath -Run "SQLAGFailover.ps1" -Argument $AGArgs | Update-AzureVM;
             Write-output "Completed AG Failover" ;
             }
@@ -85,7 +75,4 @@ $scriptpath = "https://raw.githubusercontent.com/Azure/azure-quickstart-template
  }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

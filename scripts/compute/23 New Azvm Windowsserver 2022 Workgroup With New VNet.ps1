@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -11,7 +11,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -40,7 +39,7 @@ $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
     "Approved By"     = "Abdullah Ollivierre"
     "Approved On"     = "Jan-26-2022"
 }
-$newAzResourceGroupSplat = @{
+$NewAzResourceGroupSplat = @{
     Name     = $ResourceGroupName
     Location = $LocationName
     Tag      = $Tags
@@ -62,12 +61,12 @@ $SubnetName = -join (" $VMName" , "-subnet" )
 $SubnetAddressPrefix = " 10.0.0.0/24"
 $VnetAddressPrefix = " 10.0.0.0/16"
 $NSGName = -join (" $VMName" , "-nsg" )
-$newAzVirtualNetworkSubnetConfigSplat = @{
+$NewAzVirtualNetworkSubnetConfigSplat = @{
     Name          = $SubnetName
     AddressPrefix = $SubnetAddressPrefix
 }
 $SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
-$newAzVirtualNetworkSplat = @{
+$NewAzVirtualNetworkSplat = @{
     Name              = $NetworkName
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
@@ -76,46 +75,40 @@ $newAzVirtualNetworkSplat = @{
     Tag               = $Tags
 }
 $Vnet = New-AzVirtualNetwork -ErrorAction Stop @newAzVirtualNetworkSplat
-$newAzPublicIpAddressSplat = @{
+$NewAzPublicIpAddressSplat = @{
     Name              = $PublicIPAddressName
     DomainNameLabel   = $DNSNameLabel
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
-    # AllocationMethod  = 'Dynamic'
     AllocationMethod  = 'Static'
-    # IpTag             = $ipTag
     Tag               = $Tags
 }
 $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
 $SourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine
 $SourceAddressPrefixCIDR = -join (" $SourceAddressPrefix" , "/32" )
 $ASGName = -join (" $VMName" , "_ASG1" )
-$newAzApplicationSecurityGroupSplat = @{
+$NewAzApplicationSecurityGroupSplat = @{
     ResourceGroupName = " $ResourceGroupName"
     Name              = " $ASGName"
     Location          = " $LocationName"
     Tag               = $Tags
 }
 $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-$getAzVirtualNetworkSubnetConfigSplat = @{
+$GetAzVirtualNetworkSubnetConfigSplat = @{
     Name           = $SubnetName
     VirtualNetwork = $vnet
 }
 $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
-$newAzNetworkInterfaceIpConfigSplat = @{
+$NewAzNetworkInterfaceIpConfigSplat = @{
     Name                     = $IPConfigName
     Subnet                   = $Subnet
-    # Subnet                   = $Vnet.Subnets[0].Id
-    # PublicIpAddress          = $PIP.ID
     PublicIpAddress          = $PIP
     ApplicationSecurityGroup = $ASG
     Primary                  = $true
 }
 $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-$newAzNetworkSecurityRuleConfigSplat = @{
-    # Name = 'rdp-rule'
+$NewAzNetworkSecurityRuleConfigSplat = @{
     Name                                = 'RDP-rule'
-    # Description = "Allow RDP"
     Description                         = 'Allow RDP'
     Access                              = 'Allow'
     Protocol                            = 'Tcp'
@@ -123,31 +116,23 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     Priority                            = 100
     SourceAddressPrefix                 = $SourceAddressPrefixCIDR
     SourcePortRange                     = '*'
-    # DestinationAddressPrefix = '*'
-    # DestinationAddressPrefix = $DestinationAddressPrefixCIDR #this will throw an error due to {Microsoft.Azure.Commands.Network.Models.PSPublicIpAddress/32} work on it some time to fix
-    # DestinationAddressPrefix = '*'
-    # DestinationPortRange = 3389
     DestinationPortRange                = '3389'
     DestinationApplicationSecurityGroup = $ASG
 }
 $rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
-$newAzNetworkSecurityGroupSplat = @{
+$NewAzNetworkSecurityGroupSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
     Name              = $NSGName
-    # SecurityRules     = $rule1, $rule2
     SecurityRules     = $rule1
     Tag               = $Tags
 }
 $NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-$newAzNetworkInterfaceSplat = @{
+$NewAzNetworkInterfaceSplat = @{
     Name                   = $NICName
     ResourceGroupName      = $ResourceGroupName
     Location               = $LocationName
-    # SubnetId                 = $Vnet.Subnets[0].Id
-    # PublicIpAddressId        = $PIP.Id
     NetworkSecurityGroupId = $NSG.Id
-    # ApplicationSecurityGroup = $ASG
     IpConfiguration        = $IPConfig1
     Tag                    = $Tags
 }
@@ -156,63 +141,42 @@ $VMLocalAdminUser = Read-Host -Prompt 'Please enter a username to be created'
 $VMLocalAdminPassword = Generate-Password -length 16;
 $VMLocalAdminSecurePassword = $VMLocalAdminPassword | Read-Host -AsSecureString -Prompt "Enter secure value"
 $Credential = New-Object -ErrorAction Stop PSCredential ($VMLocalAdminUser, $VMLocalAdminSecurePassword);
-$newAzVMConfigSplat = @{
+$NewAzVMConfigSplat = @{
     VMName       = $VMName
     VMSize       = $VMSize
     Tags         = $Tags
     IdentityType = 'SystemAssigned'
 }
 $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-$setAzVMOperatingSystemSplat = @{
+$SetAzVMOperatingSystemSplat = @{
     VM               = $VirtualMachine
     Windows          = $true
-    # Linux        = $true
     ComputerName     = $ComputerName
     Credential       = $Credential
     ProvisionVMAgent = $true
-    # EnableAutoUpdate = $true
 }
 $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-$addAzVMNetworkInterfaceSplat = @{
+$AddAzVMNetworkInterfaceSplat = @{
     VM = $VirtualMachine
     Id = $NIC.Id
 }
 $VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-$setAzVMSourceImageSplat = @{
+$SetAzVMSourceImageSplat = @{
     VM             = $VirtualMachine
-    # PublisherName = "Canonical"
-    # Offer         = " 0001-com-ubuntu-server-focal"
-    # Skus          = " 20_04-lts-gen2"
-    # Version       = " latest"
-    # publisherName = "MicrosoftWindowsDesktop"
-    # offer         = " office-365"
-    # Skus          = " 20h2-evd-o365pp"
-    # version       = " latest"
     publisherName = "MicrosoftWindowsServer"
     offer         = "WindowsServer"
     Skus          = " 2022-datacenter-azure-edition-smalldisk"
     version       = " latest"
-    #Operating System
-    # publisherName = "MicrosoftWindowsDesktop"
-    # offer = " office-365"
-    # Skus = " 20h2-evd-o365pp"
-    # version = " latest"
-    # Caching = 'ReadWrite'
 }
 $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
-$setAzVMOSDiskSplat = @{
+$SetAzVMOSDiskSplat = @{
     VM           = $VirtualMachine
     Name         = $OSDiskName
-    # VhdUri = $OSDiskUri
-    # SourceImageUri = $SourceImageUri
     Caching      = $OSDiskCaching
     CreateOption = $OSCreateOption
-    # Windows = $true
-    # DiskSizeInGB = '128'
-    # StorageAccountType = 'Standard_LRS' //For HDD
 }
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-$newAzVMSplat = @{
+$NewAzVMSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
     VM                = $VirtualMachine
@@ -220,14 +184,11 @@ $newAzVMSplat = @{
     Tag               = $Tags
 }
 New-AzVM -ErrorAction Stop @newAzVMSplat
-$setAzVMAutoShutdownSplat = @{
-    # ResourceGroupName = 'RG-WE-001'
+$SetAzVMAutoShutdownSplat = @{
     ResourceGroupName = $ResourceGroupName
-    # Name              = 'MYVM001'
     Name              = $VMName
     Enable            = $true
     Time              = '23:59'
-    # TimeZone = "W. Europe Standard Time"
     TimeZone          = "Central Standard Time"
     Email             = " abdullah@canadacomputing.ca"
 }
@@ -235,6 +196,7 @@ Set-AzVMAutoShutdown -ErrorAction Stop @setAzVMAutoShutdownSplat
 Write-Information \'The VM is now ready.... here is your login details\'
 Write-Information \'username:\' $VMLocalAdminUser
 Write-Information \'Password:\' $VMLocalAdminPassword
-Write-Host "DNSName:' $DNSNameLabel'.$LocationName.cloudapp.azure.com"
+Write-Output "DNSName:' $DNSNameLabel'.$LocationName.cloudapp.azure.com"
+
 
 

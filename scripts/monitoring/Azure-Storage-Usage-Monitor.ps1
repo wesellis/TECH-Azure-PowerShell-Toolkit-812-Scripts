@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -7,20 +7,22 @@
 
 .DESCRIPTION
     Manage storage
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$StorageAccountName
 )
-# Get storage account details
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
-# Get storage metrics
 $Context = $StorageAccount.Context
 $Usage = Get-AzStorageUsage -Context $Context
-Write-Host "Storage Account: $($StorageAccount.StorageAccountName)"
-Write-Host "Resource Group: $($StorageAccount.ResourceGroupName)"
-Write-Host "Location: $($StorageAccount.Location)"
-Write-Host "SKU: $($StorageAccount.Sku.Name)"
-Write-Host "Usage: $($Usage.CurrentValue) / $($Usage.Limit)"
+Write-Output "Storage Account: $($StorageAccount.StorageAccountName)"
+Write-Output "Resource Group: $($StorageAccount.ResourceGroupName)"
+Write-Output "Location: $($StorageAccount.Location)"
+Write-Output "SKU: $($StorageAccount.Sku.Name)"
+Write-Output "Usage: $($Usage.CurrentValue) / $($Usage.Limit)"
+
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage NSGs
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -26,7 +28,7 @@
     [Parameter(Mandatory)]
     [int]$Priority
 )
-Write-Host "Adding security rule to NSG: $NsgName"
+Write-Output "Adding security rule to NSG: $NsgName"
 $Nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName -Name $NsgName
 $params = @{
     DestinationAddressPrefix = "*"
@@ -42,5 +44,7 @@ $params = @{
 }
 Add-AzNetworkSecurityRuleConfig @params
 Set-AzNetworkSecurityGroup -NetworkSecurityGroup $Nsg
-Write-Host "Security rule '$RuleName' added successfully to NSG: $NsgName"
+Write-Output "Security rule '$RuleName' added successfully to NSG: $NsgName"
+
+
 

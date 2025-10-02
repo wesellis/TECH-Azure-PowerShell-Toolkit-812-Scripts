@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -22,49 +22,45 @@
     .\Azure-Industrial-IoT-Orchestrator.ps1 -OperationMode "Deploy" -IndustryType "Manufacturing" -EnablePredictiveMaintenance
     Author: Wesley Ellis
     Date: June 2024    Requires: Az.DigitalTwins, Az.IotHub, Az.TimeSeriesInsights modules
-#>
-[CmdletBinding(SupportsShouldProcess=$true)]
-[CmdletBinding(SupportsShouldProcess)]
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [ValidateSet("Deploy", "Monitor", "Analyze", "Predict")]
-    [string]$OperationMode,
+    $OperationMode,
     [Parameter()]
     [ValidateSet("Manufacturing", "Energy", "Automotive", "Aerospace", "SmartBuilding")]
-    [string]$IndustryType = "Manufacturing",
+    $IndustryType = "Manufacturing",
     [Parameter()]
-    [string]$DigitalTwinInstanceName = "industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)",
+    $DigitalTwinInstanceName = "industrial-dt-$(Get-Random -Minimum 1000 -Maximum 9999)",
     [Parameter()]
-    [string]$IoTHubName = "industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)",
+    $IoTHubName = "industrial-iot-hub-$(Get-Random -Minimum 1000 -Maximum 9999)",
     [Parameter()]
-    [string]$ResourceGroupName = "rg-industrial-iot",
+    $ResourceGroupName = "rg-industrial-iot",
     [Parameter()]
-    [string]$Location = "East US",
+    $Location = "East US",
     [Parameter()]
     [switch]$EnablePredictiveMaintenance,
     [Parameter()]
     [int]$TimeSeriesRetentionDays = 90
 )
-# Import required modules
-$requiredModules = @('Az.Resources', 'Az.IotHub', 'Az.Storage', 'Az.EventGrid')
-foreach ($module in $requiredModules) {
+$RequiredModules = @('Az.Resources', 'Az.IotHub', 'Az.Storage', 'Az.EventGrid')
+foreach ($module in $RequiredModules) {
     if (!(Get-Module -ListAvailable -Name $module)) {
         Write-Warning "Module $module is not installed. Some features may not work."
     } else {
         Import-Module $module -ErrorAction SilentlyContinue
     }
 }
-# Industrial IoT Orchestrator Class
 class IndustrialIoTOrchestrator {
-    [string]$IndustryType
-    [string]$ResourceGroupName
-    [string]$Location
+    $IndustryType
+    $ResourceGroupName
+    $Location
     [hashtable]$DeviceModels
     [hashtable]$DigitalTwinModels
     [array]$Devices
     [hashtable]$TelemetryData
     [array]$Alerts
-    IndustrialIoTOrchestrator([string]$Industry, [string]$RG, [string]$Loc) {
+    IndustrialIoTOrchestrator($Industry, $RG, $Loc) {
         $this.IndustryType = $Industry
         $this.ResourceGroupName = $RG
         $this.Location = $Loc
@@ -76,7 +72,7 @@ class IndustrialIoTOrchestrator {
         $this.InitializeIndustryModels()
     }
     [void]InitializeIndustryModels() {
-        Write-Host "Initializing $($this.IndustryType) industry models..."
+        Write-Output "Initializing $($this.IndustryType) industry models..."
         switch ($this.IndustryType) {
             "Manufacturing" {
                 $this.DigitalTwinModels = @{
@@ -269,51 +265,41 @@ class IndustrialIoTOrchestrator {
             )
         }
     }
-    [void]DeployInfrastructure([string]$DigitalTwinName, [string]$IoTHubName) {
-        Write-Host "Deploying Industrial IoT infrastructure..."
-        # Create Resource Group
+    [void]DeployInfrastructure($DigitalTwinName, $IoTHubName) {
+        Write-Output "Deploying Industrial IoT infrastructure..."
         $rg = Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
         if (!$rg) {
-            Write-Host "Creating resource group: $($this.ResourceGroupName)"
+            Write-Output "Creating resource group: $($this.ResourceGroupName)"
             New-AzResourceGroup -Name $this.ResourceGroupName -Location $this.Location
         }
-        # Deploy IoT Hub
         $this.DeployIoTHub($IoTHubName)
-        # Deploy Digital Twins (using ARM template since Az.DigitalTwins might not be available)
         $this.DeployDigitalTwins($DigitalTwinName)
-        # Deploy Time Series Insights
         $this.DeployTimeSeriesInsights()
-        # Deploy Event Grid
         $this.DeployEventGrid()
-        # Deploy Storage Account for data lake
         $this.DeployDataLake()
-        Write-Host "Infrastructure deployment completed!"
+        Write-Output "Infrastructure deployment completed!"
     }
-    [void]DeployIoTHub([string]$IoTHubName) {
-        Write-Host "Deploying IoT Hub: $IoTHubName"
-        # Check if IoT Hub exists
-        $iotHub = Get-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -ErrorAction SilentlyContinue
-        if (!$iotHub) {
-            # Create IoT Hub
+    [void]DeployIoTHub($IoTHubName) {
+        Write-Output "Deploying IoT Hub: $IoTHubName"
+        $IotHub = Get-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -ErrorAction SilentlyContinue
+        if (!$IotHub) {
             New-AzIotHub -ResourceGroupName $this.ResourceGroupName -Name $IoTHubName -SkuName "S1" -Units 1 -Location $this.Location
-            # Configure message routing
             $this.ConfigureIoTHubRouting($IoTHubName)
         }
     }
-    [void]DeployDigitalTwins([string]$DigitalTwinName) {
-        Write-Host "Deploying Digital Twins instance: $DigitalTwinName"
-        # Use ARM template deployment since Az.DigitalTwins may not be available
-        $templateContent = $this.GetDigitalTwinsARMTemplate($DigitalTwinName)
-        $templatePath = ".\dt-template.json"
-        $templateContent | ConvertTo-Json -Depth 10 | Out-File -FilePath $templatePath
+    [void]DeployDigitalTwins($DigitalTwinName) {
+        Write-Output "Deploying Digital Twins instance: $DigitalTwinName"
+        $TemplateContent = $this.GetDigitalTwinsARMTemplate($DigitalTwinName)
+        $TemplatePath = ".\dt-template.json"
+        $TemplateContent | ConvertTo-Json -Depth 10 | Out-File -FilePath $TemplatePath
         try {
-            New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $templatePath -Verbose
-            Remove-Item -ErrorAction Stop $templatePath -ErrorAction SilentlyContinue
+            New-AzResourceGroupDeployment -ResourceGroupName $this.ResourceGroupName -TemplateFile $TemplatePath -Verbose
+            Remove-Item -ErrorAction Stop $TemplatePath -ErrorAction SilentlyContinue
         } catch {
             Write-Warning "Digital Twins deployment failed: $_"
         }
     }
-    [hashtable]GetDigitalTwinsARMTemplate([string]$InstanceName) {
+    [hashtable]GetDigitalTwinsARMTemplate($InstanceName) {
         return @{
             "`$schema" = "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#"
             "contentVersion" = "1.0.0.0"
@@ -334,50 +320,46 @@ class IndustrialIoTOrchestrator {
             )
         }
     }
-    [void]ConfigureIoTHubRouting([string]$IoTHubName) {
-        Write-Host "Configuring IoT Hub message routing..."
-        # Create custom endpoints for different message types
+    [void]ConfigureIoTHubRouting($IoTHubName) {
+        Write-Output "Configuring IoT Hub message routing..."
         $endpoints = @{
             "telemetry" = "telemetry-storage"
             "alerts" = "alerts-eventgrid"
             "maintenance" = "maintenance-queue"
         }
         foreach ($endpoint in $endpoints.GetEnumerator()) {
-            Write-Host "Creating endpoint: $($endpoint.Value)"
-            # Implementation would create actual endpoints
+            Write-Output "Creating endpoint: $($endpoint.Value)"
         }
     }
     [void]DeployTimeSeriesInsights() {
-        Write-Host "Deploying Time Series Insights environment..."
-        $tsiName = "tsi-$($this.ResourceGroupName)"
-        # TSI deployment would go here
-        Write-Host "Time Series Insights: $tsiName configured"
+        Write-Output "Deploying Time Series Insights environment..."
+        $TsiName = "tsi-$($this.ResourceGroupName)"
+        Write-Output "Time Series Insights: $TsiName configured"
     }
     [void]DeployEventGrid() {
-        Write-Host "Deploying Event Grid for real-time events..."
-        $eventGridName = "eg-industrial-iot"
-        # Event Grid deployment would go here
-        Write-Host "Event Grid: $eventGridName configured"
+        Write-Output "Deploying Event Grid for real-time events..."
+        $EventGridName = "eg-industrial-iot"
+        Write-Output "Event Grid: $EventGridName configured"
     }
     [void]DeployDataLake() {
-        Write-Host "Deploying Data Lake for analytics..."
-        $storageAccountName = "sa$($this.ResourceGroupName -replace '-', '')"
+        Write-Output "Deploying Data Lake for analytics..."
+        $StorageAccountName = "sa$($this.ResourceGroupName -replace '-', '')"
         try {
             $params = @{
-                Encoding = "UTF8  Write-Host "Dashboard saved to: $dashboardPath" }  [string]GenerateDashboardHTML([hashtable]$Data) { return @"
-                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-Host "Generating IoT Dashboard..."  $dashboardData = @{ IndustryType = $this.IndustryType TotalDevices = $this.Devices.Count OnlineDevices = ($this.Devices | Where-Object { $_.Status"
+                Encoding = "UTF8  Write-Output "Dashboard saved to: $DashboardPath" }  [string]GenerateDashboardHTML([hashtable]$Data) { return @"
+                Maximum = "10  return [math]::Max(0, [math]::Min(100, $score)) }  [void]GenerateIoTDashboard() { Write-Output "Generating IoT Dashboard..."  $DashboardData = @{ IndustryType = $this.IndustryType TotalDevices = $this.Devices.Count OnlineDevices = ($this.Devices | Where-Object { $_.Status"
                 gt = "70) { $score += 20 }  # Add random variation $score += Get-Random"
-                ErrorAction = "Stop }  $html = $this.GenerateDashboardHTML($dashboardData) $dashboardPath = ".\IoT-Dashboard-$(Get-Date"
+                ErrorAction = "Stop }  $html = $this.GenerateDashboardHTML($DashboardData) $DashboardPath = ".\IoT-Dashboard-$(Get-Date"
                 Location = $this.Location
                 eq = "High" }).Count LastUpdated = Get-Date"
-                le = $DeviceCount; $i++) { $deviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = "$deviceType-$i"DeviceType = $deviceType Location = "Floor-$([math]::Ceiling($i / 3))"Status = "Online" LastTelemetry = Get-Date
-                Depth = "10 Write-Host "Model JSON created for: $modelName" } }  [void]SimulateDevices([int]$DeviceCount = 10) { Write-Host "Simulating $DeviceCount Industrial IoT devices..."  for ($i = 1; $i"
-                Name = $storageAccountName
+                le = $DeviceCount; $i++) { $DeviceType = ($this.DigitalTwinModels.Keys | Get-Random) $device = @{ DeviceId = "$DeviceType-$i"DeviceType = $DeviceType Location = "Floor-$([math]::Ceiling($i / 3))"Status = "Online" LastTelemetry = Get-Date
+                Depth = "10 Write-Output "Model JSON created for: $ModelName" } }  [void]SimulateDevices([int]$DeviceCount = 10) { Write-Output "Simulating $DeviceCount Industrial IoT devices..."  for ($i = 1; $i"
+                Name = $StorageAccountName
                 Format = "yyyyMMdd-HHmmss').html" $html | Out-File"
-                EnableHierarchicalNamespace = $true  Write-Host "Data Lake storage account created: $storageAccountName" } catch { Write-Warning "Storage account creation failed: $_" } }  [void]CreateDigitalTwinModels() { Write-Host "Creating Digital Twin models for $($this.IndustryType)..."  foreach ($modelName in $this.DigitalTwinModels.Keys) { $model = $this.DigitalTwinModels[$modelName] Write-Host "Creating model: $modelName"  # In a real implementation, this would upload to Digital Twins $modelJson = $model | ConvertTo-Json
+                EnableHierarchicalNamespace = $true  Write-Output "Data Lake storage account created: $StorageAccountName" } catch { Write-Warning "Storage account creation failed: $_" } }  [void]CreateDigitalTwinModels() { Write-Output "Creating Digital Twin models for $($this.IndustryType)..."  foreach ($ModelName in $this.DigitalTwinModels.Keys) { $model = $this.DigitalTwinModels[$ModelName] Write-Output "Creating model: $ModelName"  # In a real implementation, this would upload to Digital Twins $ModelJson = $model | ConvertTo-Json
                 Minimum = "0"
                 SkuName = "Standard_LRS"
-                FilePath = $dashboardPath
+                FilePath = $DashboardPath
                 ResourceGroupName = $this.ResourceGroupName
                 Kind = "StorageV2"
             }
@@ -387,20 +369,20 @@ class IndustrialIoTOrchestrator {
 <head>
     <title>Industrial IoT Dashboard - $($Data.IndustryType)</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #1e1e1e; color: white; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background:
         .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .widget { background: #2d2d2d; padding: 20px; border-radius: 8px; border: 1px solid #404040; }
-        .widget h3 { margin: 0 0 15px 0; color: #00bcf2; }
-        .metric { font-size: 36px; font-weight: bold; color: #00ff00; }
-        .alert-high { color: #ff4444; }
+        .widget { background:
+        .widget h3 { margin: 0 0 15px 0; color:
+        .metric { font-size: 36px; font-weight: bold; color:
+        .alert-high { color:
         .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
-        .device-status { padding: 10px; background: #333; border-radius: 4px; text-align: center; }
-        .online { border-left: 4px solid #00ff00; }
-        .offline { border-left: 4px solid #ff4444; }
+        .device-status { padding: 10px; background:
+        .online { border-left: 4px solid
+        .offline { border-left: 4px solid
         .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: #00bcf2; margin: 0; }
-        .timestamp { color: #888; font-size: 14px; }
-        .chart-placeholder { height: 200px; background: #333; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #888; }
+        .header h1 { color:
+        .timestamp { color:
+        .chart-placeholder { height: 200px; background:
     </style>
 </head>
 <body>
@@ -445,54 +427,49 @@ class IndustrialIoTOrchestrator {
 "@
     }
 }
-# Main execution
 try {
-    Write-Host "Azure Industrial IoT Orchestrator v1.0"
-    Write-Host "======================================"
-    # Connect to Azure if needed
+    Write-Output "Azure Industrial IoT Orchestrator v1.0"
+    Write-Output "======================================"
     $context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..."
+        Write-Output "Connecting to Azure..."
         Connect-AzAccount
     }
-    # Initialize orchestrator
     $orchestrator = [IndustrialIoTOrchestrator]::new($IndustryType, $ResourceGroupName, $Location)
     switch ($OperationMode) {
         "Deploy" {
-            Write-Host "`n=== Deployment Mode ==="
+            Write-Output "`n=== Deployment Mode ==="
             $orchestrator.DeployInfrastructure($DigitalTwinInstanceName, $IoTHubName)
             $orchestrator.CreateDigitalTwinModels()
-            Write-Host "Deployment completed successfully!"
+            Write-Output "Deployment completed successfully!"
         }
         "Monitor" {
-            Write-Host "`n=== Monitoring Mode ==="
+            Write-Output "`n=== Monitoring Mode ==="
             $orchestrator.SimulateDevices(15)
             $orchestrator.GenerateIoTDashboard()
-            Write-Host "Monitoring dashboard generated!"
+            Write-Output "Monitoring dashboard generated!"
         }
         "Analyze" {
-            Write-Host "`n=== Analysis Mode ==="
+            Write-Output "`n=== Analysis Mode ==="
             $orchestrator.SimulateDevices(20)
             if ($EnablePredictiveMaintenance) {
                 $orchestrator.AnalyzePredictiveMaintenance()
-                Write-Host "Predictive maintenance analysis completed!"
-                Write-Host "Alerts generated: $($orchestrator.Alerts.Count)"
+                Write-Output "Predictive maintenance analysis completed!"
+                Write-Output "Alerts generated: $($orchestrator.Alerts.Count)"
             }
         }
         "Predict" {
-            Write-Host "`n=== Prediction Mode ==="
+            Write-Output "`n=== Prediction Mode ==="
             $orchestrator.SimulateDevices(25)
             $orchestrator.AnalyzePredictiveMaintenance()
-            Write-Host "`nPredictive Maintenance Results:"
+            Write-Output "`nPredictive Maintenance Results:"
             foreach ($alert in $orchestrator.Alerts) {
-                Write-Host "Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)"
+                Write-Output "Device: $($alert.DeviceId) | Score: $($alert.Score) | Severity: $($alert.Severity)"
             }
             $orchestrator.GenerateIoTDashboard()
         }
     }
-    Write-Host "`nIndustrial IoT orchestration completed for $IndustryType industry!"
+    Write-Output "`nIndustrial IoT orchestration completed for $IndustryType industry!"
 } catch {
     Write-Error "An error occurred: $_"
-    throw
-}
-
+    throw`n}

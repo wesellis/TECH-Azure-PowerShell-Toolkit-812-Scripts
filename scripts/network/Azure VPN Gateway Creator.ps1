@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -10,33 +10,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -61,35 +58,34 @@ param(
     [Parameter()]
     [string]$GatewaySku = "VpnGw1"
 )
-Write-Host "Creating VPN Gateway: $GatewayName" "INFO"
-$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-$GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
+Write-Output "Creating VPN Gateway: $GatewayName" "INFO"
+    [string]$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    [string]$GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
 if (-not $GatewaySubnet) {
-    Write-Host "Creating GatewaySubnet..." "INFO"
+    Write-Output "Creating GatewaySubnet..." "INFO"
     Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $VNet -AddressPrefix " 10.0.255.0/27"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
-    $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-    $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet"
+    [string]$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    [string]$GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet"
 }
-$GatewayIpName = " $GatewayName-pip"
-$params = @{
+    [string]$GatewayIpName = " $GatewayName-pip"
+    $params = @{
     ErrorAction = "Stop"
     AllocationMethod = "Dynamic"
     ResourceGroupName = $ResourceGroupName
     Name = $GatewayIpName
     Location = $Location
 }
-$GatewayIp @params
-
-$params = @{
+    [string]$GatewayIp @params
+    $params = @{
     ErrorAction = "Stop"
     PublicIpAddressId = $GatewayIp.Id
     SubnetId = $GatewaySubnet.Id
     Name = " gatewayConfig"
 }
-$GatewayIpConfig @params
-Write-Host "Creating VPN Gateway (this may take 30-45 minutes)..." "INFO" ;
-$params = @{
+    [string]$GatewayIpConfig @params
+Write-Output "Creating VPN Gateway (this may take 30-45 minutes)..." "INFO" ;
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
     GatewaySku = $GatewaySku
@@ -99,15 +95,12 @@ $params = @{
     ErrorAction = "Stop"
     Name = $GatewayName
 }
-$Gateway @params
-Write-Host "VPN Gateway created successfully:" "INFO"
-Write-Host "Name: $($Gateway.Name)" "INFO"
-Write-Host "Type: $($Gateway.GatewayType)" "INFO"
-Write-Host "SKU: $($Gateway.Sku.Name)" "INFO"
-Write-Host "Public IP: $($GatewayIp.IpAddress)" "INFO"
+    [string]$Gateway @params
+Write-Output "VPN Gateway created successfully:" "INFO"
+Write-Output "Name: $($Gateway.Name)" "INFO"
+Write-Output "Type: $($Gateway.GatewayType)" "INFO"
+Write-Output "SKU: $($Gateway.Sku.Name)" "INFO"
+Write-Output "Public IP: $($GatewayIp.IpAddress)" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

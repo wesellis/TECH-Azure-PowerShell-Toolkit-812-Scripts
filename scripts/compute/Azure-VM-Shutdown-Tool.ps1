@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,6 +6,9 @@
     Safely shuts down Azure Virtual Machines
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Shuts down Azure VMs with proper validation, confirmation prompts, and
     optional monitoring of the shutdown process. Supports both graceful
     and forced shutdown options.
@@ -27,11 +30,9 @@
     .\Azure-VM-Shutdown-Tool.ps1 -ResourceGroupName "RG-Production" -VmNames @("VM-Web01", "VM-Web02") -Force
     .\Azure-VM-Shutdown-Tool.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01" -Graceful -Wait
     Graceful shutdown preserves allocated resources while standard shutdown deallocates them.
-#>
-[CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
@@ -50,12 +51,11 @@
     [int]$TimeoutMinutes = 10
 )
 $ErrorActionPreference = 'Stop'
-[OutputType([PSCustomObject])]
- {
+function Write-Log {
     try {
         $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -66,54 +66,48 @@ $ErrorActionPreference = 'Stop'
     }
 }
 function Get-VMShutdownState {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name
     )
     try {
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
-        $powerState = ($vm.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
+        $PowerState = ($vm.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
         return @{
             VM = $vm
-            PowerState = $powerState
-            IsRunning = $powerState -eq 'VM running'
-        
+            PowerState = $PowerState
+            IsRunning = $PowerState -eq 'VM running'
+
 } catch {
         throw "Failed to get VM state for $Name : $_"
     }
 }
 function Stop-AzureVM {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [bool]$UseGraceful
     )
     try {
-        Write-Host "Checking VM state..." -ForegroundColor Yellow
-        $vmState = Get-VMShutdownState -ResourceGroup $ResourceGroup -Name $Name
-        Write-Host "VM Details:" -ForegroundColor Cyan
-        Write-Host "Name: $($vmState.VM.Name)"
-        Write-Host "Current State: $($vmState.PowerState)"
-        Write-Host "Location: $($vmState.VM.Location)"
-        if (-not $vmState.IsRunning) {
-            Write-Host "VM is already stopped: $($vmState.PowerState)" -ForegroundColor Yellow
+        Write-Host "Checking VM state..." -ForegroundColor Green
+        $VmState = Get-VMShutdownState -ResourceGroup $ResourceGroup -Name $Name
+        Write-Host "VM Details:" -ForegroundColor Green
+        Write-Output "Name: $($VmState.VM.Name)"
+        Write-Output "Current State: $($VmState.PowerState)"
+        Write-Output "Location: $($VmState.VM.Location)"
+        if (-not $VmState.IsRunning) {
+            Write-Host "VM is already stopped: $($VmState.PowerState)" -ForegroundColor Green
             return @{
                 VMName = $Name
                 Success = $true
                 Message = "VM was already stopped"
-                PowerState = $vmState.PowerState
+                PowerState = $VmState.PowerState
             }
         }
-        $shutdownType = if ($UseGraceful) { "graceful shutdown (preserves allocation)" } else { "standard shutdown (deallocates resources)" }
-        Write-Host "Performing $shutdownType..." -ForegroundColor Yellow
+        $ShutdownType = if ($UseGraceful) { "graceful shutdown (preserves allocation)" } else { "standard shutdown (deallocates resources)" }
+        Write-Host "Performing $ShutdownType..." -ForegroundColor Green
         if ($PSCmdlet.ShouldProcess($Name, "Shutdown VM")) {
             if ($UseGraceful) {
-                # Graceful shutdown - preserves allocation
                 Stop-AzVM -ResourceGroupName $ResourceGroup -Name $Name -StayProvisioned -Force
             } else {
-                # Standard shutdown - deallocates resources
                 Stop-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Force
             }
             Write-Host "Shutdown command initiated for $Name" -ForegroundColor Green
@@ -123,7 +117,7 @@ function Stop-AzureVM {
                 Message = "Shutdown initiated successfully"
                 ShutdownType = if ($UseGraceful) { "Graceful" } else { "Standard" }
             }
-        
+
 } catch {
         return @{
             VMName = $Name
@@ -133,25 +127,23 @@ function Stop-AzureVM {
     }
 }
 function Wait-ForVMShutdown {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [int]$TimeoutMinutes
     )
     $timeout = (Get-Date).AddMinutes($TimeoutMinutes)
-    $lastState = ""
-    Write-Host "Waiting for VM to shutdown (timeout: $TimeoutMinutes minutes)..." -ForegroundColor Yellow
+    $LastState = ""
+    Write-Host "Waiting for VM to shutdown (timeout: $TimeoutMinutes minutes)..." -ForegroundColor Green
     do {
         try {
-            $vmState = Get-VMShutdownState -ResourceGroup $ResourceGroup -Name $Name
-            $currentState = $vmState.PowerState
-            if ($currentState -ne $lastState) {
-                Write-Host "Current state: $currentState" -ForegroundColor Cyan
-                $lastState = $currentState
+            $VmState = Get-VMShutdownState -ResourceGroup $ResourceGroup -Name $Name
+            $CurrentState = $VmState.PowerState
+            if ($CurrentState -ne $LastState) {
+                Write-Host "Current state: $CurrentState" -ForegroundColor Green
+                $LastState = $CurrentState
             }
-            if ($currentState -like "*stopped*" -or $currentState -like "*deallocated*") {
-                Write-Host "VM shutdown completed: $currentState" -ForegroundColor Green
+            if ($CurrentState -like "*stopped*" -or $CurrentState -like "*deallocated*") {
+                Write-Host "VM shutdown completed: $CurrentState" -ForegroundColor Green
                 return $true
             }
             Start-Sleep -Seconds 10
@@ -164,75 +156,68 @@ function Wait-ForVMShutdown {
     Write-Warning "Timeout reached. VM may still be shutting down."
     return $false
 }
-# Main execution
-Write-Host "`nAzure VM Shutdown Tool" -ForegroundColor Cyan
+Write-Host "`nAzure VM Shutdown Tool" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
-# Test Azure connection
 if (-not (Test-AzureConnection)) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
-# Prepare VM list
-$vmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
-# Confirmation
+$VmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
 if (-not $Force) {
-    $shutdownType = if ($Graceful) { "graceful shutdown (preserves allocation)" } else { "standard shutdown (deallocates resources)" }
-    $vmCount = $vmList.Count
-    $vmText = if ($vmCount -eq 1) { "VM" } else { "$vmCount VMs" }
-    Write-Host "`nAbout to perform $shutdownType on $vmText in resource group '$ResourceGroupName':" -ForegroundColor Yellow
-    foreach ($vm in $vmList) {
-        Write-Host "  - $vm" -ForegroundColor White
+    $ShutdownType = if ($Graceful) { "graceful shutdown (preserves allocation)" } else { "standard shutdown (deallocates resources)" }
+    $VmCount = $VmList.Count
+    $VmText = if ($VmCount -eq 1) { "VM" } else { "$VmCount VMs" }
+    Write-Host "`nAbout to perform $ShutdownType on $VmText in resource group '$ResourceGroupName':" -ForegroundColor Green
+    foreach ($vm in $VmList) {
+        Write-Host "  - $vm" -ForegroundColor Green
     }
     if ($Graceful) {
-        Write-Host "`nNote: Graceful shutdown preserves resource allocation (you continue to pay for compute)" -ForegroundColor Yellow
+        Write-Host "`nNote: Graceful shutdown preserves resource allocation (you continue to pay for compute)" -ForegroundColor Green
     } else {
-        Write-Host "`nNote: Standard shutdown deallocates resources (stops billing for compute)" -ForegroundColor Cyan
+        Write-Host "`nNote: Standard shutdown deallocates resources (stops billing for compute)" -ForegroundColor Green
     }
     $confirmation = Read-Host "`nContinue? (y/N)"
     if ($confirmation -ne 'y') {
-        Write-Host "Operation cancelled" -ForegroundColor Yellow
+        Write-Host "Operation cancelled" -ForegroundColor Green
         exit 0
     }
 }
-# Process VMs
-Write-Host "`nStarting VM shutdown operations..." -ForegroundColor Yellow
+Write-Host "`nStarting VM shutdown operations..." -ForegroundColor Green
 $results = @()
-foreach ($vm in $vmList) {
+foreach ($vm in $VmList) {
     try {
-        Write-Host "`nProcessing VM: $vm" -ForegroundColor Cyan
+        Write-Host "`nProcessing VM: $vm" -ForegroundColor Green
         $result = Stop-AzureVM -ResourceGroup $ResourceGroupName -Name $vm -UseGraceful $Graceful
         $results += $result
-        # Wait for completion if requested
         if ($result.Success -and $Wait) {
-            $waitResult = Wait-ForVMShutdown -ResourceGroup $ResourceGroupName -Name $vm -TimeoutMinutes $TimeoutMinutes
-            $result.WaitCompleted = $waitResult
-        
+            $WaitResult = Wait-ForVMShutdown -ResourceGroup $ResourceGroupName -Name $vm -TimeoutMinutes $TimeoutMinutes
+            $result.WaitCompleted = $WaitResult
+
 } catch {
-        $errorResult = @{
+        $ErrorResult = @{
             VMName = $vm
             Success = $false
             Message = $_.Exception.Message
         }
-        $results += $errorResult
+        $results += $ErrorResult
     }
 }
-# Generate summary
-Write-Host "`nShutdown Operation Summary" -ForegroundColor Cyan
+Write-Host "`nShutdown Operation Summary" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
 $successful = ($results | Where-Object { $_.Success }).Count
 $failed = ($results | Where-Object { -not $_.Success }).Count
-Write-Host "Total VMs: $($results.Count)"
+Write-Output "Total VMs: $($results.Count)"
 Write-Host "Successful: $successful" -ForegroundColor Green
-Write-Host "Failed: $failed" -ForegroundColor $(if ($failed -gt 0) { 'Red' } else { 'Green' })
+Write-Output "Failed: $failed" -ForegroundColor $(if ($failed -gt 0) { 'Red' } else { 'Green' })
 if ($failed -gt 0) {
-    Write-Host "`nFailed VMs:" -ForegroundColor Red
+    Write-Host "`nFailed VMs:" -ForegroundColor Green
     $results | Where-Object { -not $_.Success } | ForEach-Object {
-        Write-Host "  - $($_.VMName): $($_.Message)" -ForegroundColor Red
+        Write-Host "  - $($_.VMName): $($_.Message)" -ForegroundColor Green
     }
 }
 Write-Host "`nOperation completed!" -ForegroundColor Green
-# Exit with appropriate code
-$exitCode = if ($failed -gt 0) { 1 } else { 0 }
-exit $exitCode
+$ExitCode = if ($failed -gt 0) { 1 } else { 0 }
+exit $ExitCode
+
 
 

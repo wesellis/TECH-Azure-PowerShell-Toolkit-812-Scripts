@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Upload Vhddiskstorageaccount
@@ -29,4 +29,5 @@ $addAzVhdSplat = @{
     ResourceGroupName = 'FGC_DevtestLab_RG'
 }
 Add-AzVhd @addAzVhdSplat
+
 

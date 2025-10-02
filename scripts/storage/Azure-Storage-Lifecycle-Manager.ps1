@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage storage
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -20,8 +22,7 @@
     [Parameter()]
     [int]$DaysToDelete = 365
 )
-Write-Host "Configuring lifecycle management for: $StorageAccountName"
-# Create lifecycle policy rule
+Write-Output "Configuring lifecycle management for: $StorageAccountName"
 $LifecycleRule = @{
     enabled = $true
     name = "DefaultLifecycleRule"
@@ -45,9 +46,7 @@ $LifecycleRule = @{
         }
     }
 }
-# Convert to JSON
 $PolicyJson = $LifecycleRule | ConvertTo-Json -Depth 10
-# Apply lifecycle policy
 $params = @{
     ErrorAction = "Stop"
     Policy = $PolicyJson
@@ -55,14 +54,16 @@ $params = @{
     StorageAccountName = $StorageAccountName
 }
 Set-AzStorageAccountManagementPolicy @params
-Write-Host "Lifecycle management configured successfully:"
-Write-Host "Storage Account: $StorageAccountName"
-Write-Host "Tier to Cool: After $DaysToTierCool days"
-Write-Host "Tier to Archive: After $DaysToTierArchive days"
-Write-Host "Delete: After $DaysToDelete days"
-Write-Host "`nLifecycle Benefits:"
-Write-Host "Automatic cost optimization"
-Write-Host "Compliance with retention policies"
-Write-Host "Reduced management overhead"
-Write-Host "Environmental efficiency"
+Write-Output "Lifecycle management configured successfully:"
+Write-Output "Storage Account: $StorageAccountName"
+Write-Output "Tier to Cool: After $DaysToTierCool days"
+Write-Output "Tier to Archive: After $DaysToTierArchive days"
+Write-Output "Delete: After $DaysToDelete days"
+Write-Output "`nLifecycle Benefits:"
+Write-Output "Automatic cost optimization"
+Write-Output "Compliance with retention policies"
+Write-Output "Reduced management overhead"
+Write-Output "Environmental efficiency"
+
+
 

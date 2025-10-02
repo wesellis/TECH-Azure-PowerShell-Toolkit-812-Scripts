@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,25 +6,24 @@
 
 .DESCRIPTION
     Tag resources
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Enhanced Azure Resource Tagger with Bulk Operations
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
-    [Parameter()][string]$ResourceGroupName,
-    [Parameter()][string]$SubscriptionId,
+$ErrorActionPreference = 'Stop'
+
+    [Parameter()]$ResourceGroupName,
+    [Parameter()]$SubscriptionId,
     [Parameter(Mandatory)][hashtable]$Tags,
     [Parameter()][string[]]$ResourceTypes,
-    [Parameter()][string]$TaggingStrategy = "Merge", # Merge, Replace, RemoveAll
-    [Parameter()][string]$ExportPath,
+    [Parameter()]$TaggingStrategy = "Merge", # Merge, Replace, RemoveAll
+    [Parameter()]$ExportPath,
     [Parameter()][switch]$WhatIf,
     [Parameter()][switch]$Force,
     [Parameter()][switch]$Parallel
 )
-# Import enhanced functions
-$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { try {
+$ModulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
+if (Test-Path $ModulePath) { try {
     if (-not (Get-AzContext)) { throw "Not connected to Azure" }
-        # Get resources based on scope
     $resources = if ($ResourceGroupName) {
         Get-AzResource -ResourceGroupName $ResourceGroupName
     } elseif ($SubscriptionId) {
@@ -33,23 +32,20 @@ if (Test-Path $modulePath) { try {
     } else {
         Get-AzResource -ErrorAction Stop
     }
-    # Filter by resource types if specified
     if ($ResourceTypes) {
         $resources = $resources | Where-Object { $_.ResourceType -in $ResourceTypes }
     }
-    
-        # Analyze current tagging state
-    $tagAnalysis = @{
+
+    $TagAnalysis = @{
         TotalResources = $resources.Count
         TaggedResources = ($resources | Where-Object { $_.Tags.Count -gt 0 }).Count
         UntaggedResources = ($resources | Where-Object { $_.Tags.Count -eq 0 }).Count
         UniqueTagKeys = ($resources.Tags.Keys | Sort-Object -Unique).Count
     }
-    
-        # Plan tagging operations
+
     $operations = @()
     foreach ($resource in $resources) {
-        $newTags = switch ($TaggingStrategy) {
+        $NewTags = switch ($TaggingStrategy) {
             "Merge" {
                 $merged = $resource.Tags ?? @{}
                 foreach ($tag in $Tags.GetEnumerator()) { $merged[$tag.Key] = $tag.Value }
@@ -61,22 +57,20 @@ if (Test-Path $modulePath) { try {
         $operations += @{
             Resource = $resource
             CurrentTags = $resource.Tags ?? @{}
-            NewTags = $newTags
+            NewTags = $NewTags
             Action = $TaggingStrategy
         }
     }
     if ($WhatIf) {
-        
+
         $operations | ForEach-Object {
-            
+
         }
         return
     }
-        # Execute tagging operations
-    $successCount = 0
-    $errorCount = 0
+    $SuccessCount = 0
+    $ErrorCount = 0
     if ($Parallel -and $operations.Count -gt 10) {
-        # Parallel execution for large operations
         $results = $operations | ForEach-Object -Parallel {
             try {
                 Set-AzResource -ResourceId $_.Resource.ResourceId -Tag $_.NewTags -Force:$using:Force
@@ -86,35 +80,30 @@ if (Test-Path $modulePath) { try {
                 return @{ Success = $false; ResourceName = $_.Resource.Name; Error = $_.Exception.Message }
             }
         } -ThrottleLimit 10
-        # Count results
-        $successCount = ($results | Where-Object { $_.Success }).Count
-        $errorCount = ($results | Where-Object { -not $_.Success }).Count
+        $SuccessCount = ($results | Where-Object { $_.Success }).Count
+        $ErrorCount = ($results | Where-Object { -not $_.Success }).Count
     } else {
-        # Sequential execution
         foreach ($operation in $operations) {
             try {
                 Invoke-AzureOperation -Operation {
                     Set-AzResource -ResourceId $operation.Resource.ResourceId -Tag $operation.NewTags -Force:$Force
                 } -OperationName "Tag Resource: $($operation.Resource.Name)" -MaxRetries 2
-                $successCount = $successCount + 1
-                
+                $SuccessCount = $SuccessCount + 1
+
             } catch {
-                
-                $errorCount = $errorCount + 1
+
+                $ErrorCount = $ErrorCount + 1
             }
         }
     }
-        # Export results if requested
     if ($ExportPath) {
         $results = $operations | Select-Object @{N="ResourceName";E={$_.Resource.Name}},
                                              @{N="ResourceType";E={$_.Resource.ResourceType}},
                                              @{N="Action";E={$_.Action}},
                                              @{N="TagCount";E={$_.NewTags.Count}}
         $results | Export-Csv -Path $ExportPath -NoTypeInformation
-        
-    }
-        Write-Log "  Failed: $errorCount resources" -Level $(if ($errorCount -gt 0) { "WARN" } else { "SUCCESS" })
-} catch {
-        throw
-}
 
+    }
+        Write-Log "  Failed: $ErrorCount resources" -Level $(if ($ErrorCount -gt 0) { "WARN" } else { "SUCCESS" })
+} catch {
+        throw`n}

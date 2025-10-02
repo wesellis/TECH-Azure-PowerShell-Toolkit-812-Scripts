@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,34 +9,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -53,33 +50,29 @@ param(
     [int]$TTL,
     [string]$RecordValue
 )
-
-$RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
-Write-Host "Updating DNS Record: $RecordSetName.$ZoneName" "INFO"
-Write-Host "Record Type: $RecordType" "INFO"
-Write-Host "Current TTL: $($RecordSet.Ttl)" "INFO"
-Write-Host "New TTL: $TTL" "INFO"
-Write-Host "New Value: $RecordValue" "INFO"
-$RecordSet.Ttl = $TTL
+    [string]$RecordSet = Get-AzDnsRecordSet -ResourceGroupName $ResourceGroupName -ZoneName $ZoneName -Name $RecordSetName -RecordType $RecordType
+Write-Output "Updating DNS Record: $RecordSetName.$ZoneName" "INFO"
+Write-Output "Record Type: $RecordType" "INFO"
+Write-Output "Current TTL: $($RecordSet.Ttl)" "INFO"
+Write-Output "New TTL: $TTL" "INFO"
+Write-Output "New Value: $RecordValue" "INFO"
+    [string]$RecordSet.Ttl = $TTL
 switch ($RecordType) {
     "A" {
-        $RecordSet.Records.Clear()
-        $RecordSet.Records.Add((New-AzDnsRecordConfig -IPv4Address $RecordValue))
+    [string]$RecordSet.Records.Clear()
+    [string]$RecordSet.Records.Add((New-AzDnsRecordConfig -IPv4Address $RecordValue))
     }
     "CNAME" {
-        $RecordSet.Records.Clear()
-        $RecordSet.Records.Add((New-AzDnsRecordConfig -Cname $RecordValue))
+    [string]$RecordSet.Records.Clear()
+    [string]$RecordSet.Records.Add((New-AzDnsRecordConfig -Cname $RecordValue))
     }
     "TXT" {
-        $RecordSet.Records.Clear()
-        $RecordSet.Records.Add((New-AzDnsRecordConfig -Value $RecordValue))
+    [string]$RecordSet.Records.Clear()
+    [string]$RecordSet.Records.Add((New-AzDnsRecordConfig -Value $RecordValue))
     }
 }
 Set-AzDnsRecordSet -RecordSet $RecordSet
-Write-Host "DNS record updated successfully" "INFO"
+Write-Output "DNS record updated successfully" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

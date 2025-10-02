@@ -1,75 +1,127 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Compute, Az.Automation
 
-<#`n.SYNOPSIS
-    Asr Wordpress Changemysqlconfig
+<#
+.SYNOPSIS
+    ASR WordPress Change MySQL Config
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure Site Recovery automation runbook that changes WordPress configuration
+    during failover by replacing wp-config.php with wp-config.php.Azure
 
-    1.0
+.PARAMETER RecoveryPlanContext
+    The recovery plan context object passed by Azure Site Recovery
+
+.PARAMETER RecoveryLocation
+    The Azure region to which VMs are recovering
+
+.PARAMETER ScriptUri
+    URI to the PowerShell script for changing WordPress DB configuration
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Original Author: RuturajD@microsoft.com
+    Version: 1.0
+    Last Modified: March 27, 2017
     Requires appropriate permissions and modules
 #>
-    .DESCRIPTION
-        This Runbook changes the WordPress configuration by replacing the wp-config.php and replace it with wp-config.php.Azure.
-        The old file will get renamed as wp-config.php.onprem
-        This is an example script used in blog https://azure.microsoft.com/en-us/blog/one-click-failover-of-application-to-microsoft-azure-using-site-recovery
-        This runbook uses an external powershellscript located at https://raw.githubusercontent.com/ruturaj/RecoveryPlanScripts/master/ChangeWPDBHostIP.ps1
-        and runs it inside all of the VMs of the group this script is added to.
-        Parameter to change -
-            $recoveryLocation - change this to the location to which the VM is recovering to
-    .NOTES
-        AUTHOR: RuturajD@microsoft.com
-        LASTEDIT: 27 March, 2017
-workflow ASR-Wordpress-ChangeMysqlConfig
-{
+
+workflow ASR-Wordpress-ChangeMysqlConfig {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
-param(
-        [parameter()]
-        [Object]$RecoveryPlanContext
+    param(
+        [Parameter()]
+        [Object]$RecoveryPlanContext,
+
+        [Parameter()]
+        [string]$RecoveryLocation = "southeastasia",
+
+        [Parameter()]
+        [string]$ScriptUri = "https://raw.githubusercontent.com/ruturaj/RecoveryPlanScripts/master/ChangeWPDBHostIP.ps1"
     )
-	$connectionName = "AzureRunAsConnection"
-    $recoveryLocation = " southeastasia"
-    # This is special code only added for this test run to avoid creating public IPs in S2S VPN network
-    #if ($RecoveryPlanContext.FailoverType -ne "Test" ) {
-    #    exit
-    #}
-	try
-	{
-		# Get the connection "AzureRunAsConnection "
-		$servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-		"Logging in to Azure..."
-		$params = @{
-		    Message = $_.Exception throw $_.Exception } }  ;  $VMinfo = $RecoveryPlanContext.VmMap | Get-Member
-		    ExpandProperty = "Name  Write-output $RecoveryPlanContext.VmMap Write-output $RecoveryPlanContext"
-		    TenantId = $servicePrincipalConnection.TenantId
-		    ApplicationId = $servicePrincipalConnection.ApplicationId
-		    EQ = "NoteProperty | select"
-		    ErrorAction = "Stop | Where-Object MemberType"
-		    CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint } catch { if (!$servicePrincipalConnection) { $ErrorMessage = "Connection $connectionName not found." throw $ErrorMessage } else{ Write-Error
-		}
-		#Add-AzureRmAccount @params
-$VMs = $RecoveryPlanContext.VmMap;
+
+    $ErrorActionPreference = "Stop"
+    $ConnectionName = "AzureRunAsConnection"
+
+    try {
+        Write-Output "Getting automation connection..."
+        $servicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName -ErrorAction Stop
+
+        Write-Output "Logging in to Azure..."
+        $connectParams = @{
+            ServicePrincipal = $true
+            TenantId = $servicePrincipalConnection.TenantId
+            ApplicationId = $servicePrincipalConnection.ApplicationId
+            CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+        }
+
+        Add-AzAccount @connectParams -ErrorAction Stop
+
+        Write-Output "Setting subscription context..."
+        Select-AzSubscription -SubscriptionId $servicePrincipalConnection.SubscriptionID -ErrorAction Stop
+    }
+    catch {
+        if (!$servicePrincipalConnection) {
+            $errorMessage = "Connection '$ConnectionName' not found."
+            Write-Error $errorMessage
+            throw $errorMessage
+        }
+        else {
+            Write-Error "Failed to connect to Azure: $_"
+            throw
+        }
+    }
+
+    Write-Output "Recovery Plan Context:"
+    Write-Output $RecoveryPlanContext
+
+    # Get VM information from recovery plan
+    $vmInfo = $RecoveryPlanContext.VmMap | Get-Member |
+        Where-Object MemberType -eq NoteProperty |
+        Select-Object -ExpandProperty Name
+
+    Write-Output "Found VMs:"
+    Write-Output $vmInfo
+
     $vmMap = $RecoveryPlanContext.VmMap
-    foreach($VMID in $VMinfo)
-    {
-$VM = $vmMap.$VMID
-        if( !(($VM -eq $Null) -Or ($VM.ResourceGroupName -eq $Null) -Or ($VM.RoleName -eq $Null))) {
-            #this is when some data is anot available and it will fail
-            Write-output "Resource group name " , $VM.ResourceGroupName
-            Write-output "Rolename " = $VM.RoleName
+
+    foreach ($vmId in $vmInfo) {
+        $vm = $vmMap.$vmId
+
+        if ((-not ($null -eq $vm)) -and
+            (-not ($null -eq $vm.ResourceGroupName)) -and
+            (-not ($null -eq $vm.RoleName))) {
+
+            Write-Output "`nProcessing VM:"
+            Write-Output "  Resource Group: $($vm.ResourceGroupName)"
+            Write-Output "  VM Name: $($vm.RoleName)"
+
             InlineScript {
-                $params = @{
-                    ResourceGroupName = $Using:VM.ResourceGroupName
-                    Name = " myCustomScript"
-                    FileUri = "https://raw.githubusercontent.com/ruturaj/RecoveryPlanScripts/master/ChangeWPDBHostIP.ps1"
-                    Location = $recoveryLocation } } }
-                    Run = "ChangeWPDBHostIP.ps1"
-                    VMName = $Using:VM.RoleName
+                try {
+                    $extensionParams = @{
+                        ResourceGroupName = $Using:vm.ResourceGroupName
+                        VMName = $Using:vm.RoleName
+                        Name = "WordPressConfigScript"
+                        FileUri = $Using:ScriptUri
+                        Run = "ChangeWPDBHostIP.ps1"
+                        Location = $Using:RecoveryLocation
+                        TypeHandlerVersion = "1.10"
+                    }
+
+                    Write-Output "Installing custom script extension on VM: $($Using:vm.RoleName)"
+                    Set-AzVMCustomScriptExtension @extensionParams -ErrorAction Stop
+
+                    Write-Output "Successfully configured WordPress on VM: $($Using:vm.RoleName)"
                 }
-                Set-AzureRmVMCustomScriptExtension @params
+                catch {
+                    Write-Error "Failed to configure WordPress on VM $($Using:vm.RoleName): $_"
+                    throw
+                }
+            }
+        }
+        else {
+            Write-Warning "Skipping VM due to missing information"
+        }
+    }
+
+    Write-Output "`nWordPress configuration update completed for all VMs"
 }
-
-

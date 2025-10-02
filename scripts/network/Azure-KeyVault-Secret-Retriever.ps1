@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.KeyVault
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage Key Vault
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$VaultName,
@@ -17,16 +19,18 @@
     [Parameter()]
     [switch]$AsPlainText
 )
-Write-Host "Retrieving secret from Key Vault: $VaultName"
+Write-Output "Retrieving secret from Key Vault: $VaultName"
 $Secret = Get-AzKeyVaultSecret -VaultName $VaultName -Name $SecretName
 if ($AsPlainText) {
     $SecretValue = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Secret.SecretValue))
-    Write-Host "Secret Value: $SecretValue"
+    Write-Output "Secret Value: $SecretValue"
 } else {
-    Write-Host "Secret retrieved (use -AsPlainText to display value):"
+    Write-Output "Secret retrieved (use -AsPlainText to display value):"
 }
-Write-Host "Name: $($Secret.Name)"
-Write-Host "Version: $($Secret.Version)"
-Write-Host "Created: $($Secret.Created)"
-Write-Host "Updated: $($Secret.Updated)"
+Write-Output "Name: $($Secret.Name)"
+Write-Output "Version: $($Secret.Version)"
+Write-Output "Created: $($Secret.Created)"
+Write-Output "Updated: $($Secret.Updated)"
+
+
 

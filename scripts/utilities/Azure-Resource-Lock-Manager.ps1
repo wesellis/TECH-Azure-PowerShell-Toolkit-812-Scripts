@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,24 +6,25 @@
 
 .DESCRIPTION
     Create, list, remove, or audit Azure resource locks
-    Author: Wes Ellis (wes@wesellis.com)#>
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding(SupportsShouldProcess)]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [ValidateSet("Create", "List", "Remove", "Audit")]
-    [string]$Action,
+    $Action,
     [Parameter()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter()]
-    [string]$ResourceName,
+    $ResourceName,
     [Parameter()]
-    [string]$LockName,
+    $LockName,
     [Parameter()]
     [ValidateSet("ReadOnly", "Delete")]
-    [string]$LockLevel = "Delete",
+    $LockLevel = "Delete",
     [Parameter()]
-    [string]$LockNotes = "Lock created via script",
+    $LockNotes = "Lock created via script",
     [Parameter()]
     [switch]$Force
 )
@@ -35,13 +36,13 @@ try {
             if ($ResourceName) {
                 $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceId $resource.ResourceId -LockNotes $LockNotes
-                Write-Host "Lock created on resource: $ResourceName" -ForegroundColor Green
+                Write-Output "Lock created on resource: $ResourceName" # Color: $2
             } elseif ($ResourceGroupName) {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceGroupName $ResourceGroupName -LockNotes $LockNotes
-                Write-Host "Lock created on resource group: $ResourceGroupName" -ForegroundColor Green
+                Write-Output "Lock created on resource group: $ResourceGroupName" # Color: $2
             } else {
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -LockNotes $LockNotes
-                Write-Host "Subscription-level lock created" -ForegroundColor Green
+                Write-Output "Subscription-level lock created" # Color: $2
             }
         }
         "List" {
@@ -50,38 +51,37 @@ try {
             } else {
                 $locks = Get-AzResourceLock
             }
-            Write-Host "Found $($locks.Count) resource locks:"
+            Write-Output "Found $($locks.Count) resource locks:"
             $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
         }
         "Remove" {
             if ($LockName) {
                 if ($ResourceGroupName) {
                     if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
                 } else {
                     if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
                 }
-                
+
             }
         }
         "Audit" {
-            $allLocks = Get-AzResourceLock -ErrorAction Stop
-            $lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
+            $AllLocks = Get-AzResourceLock -ErrorAction Stop
+            $LockReport = $AllLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name
                     Count = $_.Count
                     Resources = $_.Group | Select-Object Name, ResourceGroupName, ResourceName
                 }
             }
-            Write-Host "Lock Audit Summary:"
-            Write-Host "Total Locks: $($allLocks.Count)"
-            $lockReport | ForEach-Object {
-                Write-Host "$($_.LockLevel) Locks: $($_.Count)"
+            Write-Output "Lock Audit Summary:"
+            Write-Output "Total Locks: $($AllLocks.Count)"
+            $LockReport | ForEach-Object {
+                Write-Output "$($_.LockLevel) Locks: $($_.Count)"
             }
         }
     }
-    } catch { throw }
-
+    } catch { throw`n}

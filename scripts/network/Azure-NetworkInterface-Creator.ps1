@@ -1,12 +1,14 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure script
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,7 +21,7 @@
     [Parameter()]
     [string]$PublicIpId
 )
-Write-Host "Creating Network Interface: $NicName"
+Write-Output "Creating Network Interface: $NicName"
 if ($PublicIpId) {
     $params = @{
         ResourceGroupName = $ResourceGroupName
@@ -40,8 +42,10 @@ if ($PublicIpId) {
     }
     $Nic @params
 }
-Write-Host "Network Interface created successfully:"
-Write-Host "Name: $($Nic.Name)"
-Write-Host "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
-Write-Host "Location: $($Nic.Location)"
+Write-Output "Network Interface created successfully:"
+Write-Output "Name: $($Nic.Name)"
+Write-Output "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+Write-Output "Location: $($Nic.Location)"
+
+
 

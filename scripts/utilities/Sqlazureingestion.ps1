@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,7 +9,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -17,8 +16,8 @@
 $ErrorActionPreference = "Stop"
 $StartTime = [dateTime]::Now.Subtract([TimeSpan]::FromMinutes(5))
 $Timestampfield = "Timestamp"
-$customerID = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_ID'
-$sharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
+$CustomerID = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_ID'
+$SharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
 "Logging in to Azure..."
 $Conn = Get-AutomationConnection -Name AzureRunAsConnection
  $params = @{
@@ -29,8 +28,8 @@ $Conn = Get-AutomationConnection -Name AzureRunAsConnection
  Add-AzureRMAccount @params
 "Selecting Azure subscription..."
 $SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
-$logType  = " sqlazure"
-"Logtype Name for SQL DB(s) is $logType"
+$LogType  = " sqlazure"
+"Logtype Name for SQL DB(s) is $LogType"
 $SQLServers = Find-AzureRmResource -ResourceType Microsoft.Sql/servers
 $DBCount = 0
 $FailedConnections = @()
@@ -38,13 +37,10 @@ if($SQLServers -ne $Null)
 {
 	foreach($SQLServer in $SQLServers)
     	{
-		# Get resource usage metrics for a database in an elastic database for the specified time interval.
-		# This example will run every 10 minutes on a schedule and gather two data points for 15 metrics leveraging the ARM API
 		$DBList = Get-AzureRmSqlDatabase -ServerName $SQLServer.Name -ResourceGroupName $SQLServer.ResourceGroupName
-		# If the listing of databases is not $null
-		if($dbList -ne $Null)
+		if($DbList -ne $Null)
 		{
-			foreach ($db in $dbList)
+			foreach ($db in $DbList)
 			{
                 		if($db.Edition -ne "None" )
                 		{
@@ -52,11 +48,11 @@ if($SQLServers -ne $Null)
 		                    	$Metrics = @()
 		                    	if($db.ElasticPoolName -ne $Null)
 		    			{
-						$elasticPool = $db.ElasticPoolName
+						$ElasticPool = $db.ElasticPoolName
 		    			}
 		    			else
 		    			{
-						$elasticPool = " none"
+						$ElasticPool = " none"
 		    			}
 					try
 	                    		{
@@ -64,36 +60,30 @@ if($SQLServers -ne $Null)
 					}
 	                    		catch
 	            			{
-						# Add up failed connections due to offline or access denied
 						$FailedConnections = $FailedConnections + "Failed to connect to $($db.DatabaseName) on SQL Server $($db.ServerName)"
 					}
-					# Format metrics into a table.
 $table = @()
                     			foreach($metric in $Metrics)
                     			{
-                				foreach($metricValue in $metric.MetricValues)
+                				foreach($MetricValue in $metric.MetricValues)
 	                        		{
 $sx = New-Object -ErrorAction Stop PSObject -Property @{
-                	                		Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
+                	                		Timestamp = $MetricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
                         	        		MetricName = $metric.Name;
-                                			Average = $metricValue.Average;
+                                			Average = $MetricValue.Average;
                                 			SubscriptionID = $Conn.SubscriptionID;
                                 			ResourceGroup = $db.ResourceGroupName;
                                 			ServerName = $SQLServer.Name;
                                 			DatabaseName = $db.DatabaseName;
-		                        		ElasticPoolName = $elasticPool;
+		                        		ElasticPoolName = $ElasticPool;
 		                        		AzureSubscription = $SelectedAzureSub.subscription.subscriptionName;
 		                        		ResourceLink = "https://portal.azure.com/#resource/subscriptions/$($Conn.SubscriptionID)/resourceGroups/$($db.ResourceGroupName)/providers/Microsoft.Sql/Servers/$($SQLServer.Name)/databases/$($db.DatabaseName)"
                             				}
                             				$table = $table = $table + $sx
                         			}
-                	 			# Convert table to a JSON document for ingestion
-$jsonTable = ConvertTo-Json -InputObject $table
+$JsonTable = ConvertTo-Json -InputObject $table
                     			}
-		    			#Post the data to the endpoint - looking for an " accepted" response code
-                			Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonTable -logType $logType -TimeStampField $Timestampfield
-					# Uncomment below to troubleshoot
-					#$jsonTable
+                			Send-OMSAPIIngestionFile -customerId $CustomerId -sharedKey $SharedKey -body $JsonTable -logType $LogType -TimeStampField $Timestampfield
         			}
             		}
 		}
@@ -104,7 +94,4 @@ if($FailedConnections -ne $Null)
 {
     ""
     "Failed to connect to $($FailedConnections.Count) databases"
-    $FailedConnections
-}
-
-
+    $FailedConnections`n}

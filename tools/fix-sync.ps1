@@ -5,18 +5,13 @@
 .DESCRIPTION
     fix sync operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
-    fix synccom)#>
-# Fix GitHub sync issue
-Write-Host "Fixing GitHub sync..."
+    fix synccom)
+Write-Output "Fixing GitHub sync..."
 
-# Pull the remote changes first
 git pull origin main --allow-unrelated-histories
-Write-Host "Pulled remote changes"
+Write-Output "Pulled remote changes"
 
-# Push our local changes
 git push -u origin main
-Write-Host "Repository fully synchronized!"
+Write-Output "Repository fully synchronized!"
 
-#endregion\n

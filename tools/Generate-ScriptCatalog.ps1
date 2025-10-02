@@ -1,27 +1,21 @@
+#Requires -Version 7.0
 <#
 .SYNOPSIS
     Generate ScriptCatalog
 .DESCRIPTION
     NOTES
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Generate-ScriptCatalog.ps1
-# Generates a
-[CmdletBinding()]
-
-    [string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
+    Author: Wes Ellis (wes@wesellis.com)
+[string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
     [string]$OutputFormat = "Markdown",
     [string]$OutputPath = (Join-Path $RepositoryPath "SCRIPT-CATALOG.md"),
     [switch]$IncludeMetrics,
     [switch]$GenerateHTML
 )
 
-#region Functions
 
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
-[string]$ScriptPath)
-    
+function Write-Log {
+    [string]$ScriptPath)
+
     $metadata = @{
         Name = [System.IO.Path]::GetFileNameWithoutExtension($ScriptPath)
         Path = $ScriptPath.Replace($RepositoryPath, "").TrimStart("\", "/")
@@ -36,76 +30,69 @@
         RequiredModules = @()
         Tags = @()
     }
-    
+
     $content = Get-Content $ScriptPath -Raw
-    
-    # Extract metadata from comments
+
     if ($content -match '(?s)\.SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
         $metadata.Description = $Matches[1].Trim()
     }
-    
+
     if ($content -match '# Author:\s*(.+)') {
         $metadata.Author = $Matches[1].Trim()
     }
-    
+
     if ($content -match '# Version:\s*(.+)') {
         $metadata.Version = $Matches[1].Trim()
     }
-    
-    # Extract parameters
-    $paramMatches = [regex]::Matches($content, '\[Parameter.*?\]\s*\[.*?\]\s*\$(\w+)')
-    foreach ($match in $paramMatches) {
+
+    $ParamMatches = [regex]::Matches($content, '\[Parameter.*?\]\s*\[.*?\]\s*\$(\w+)')
+    foreach ($match in $ParamMatches) {
         $metadata.Parameters += $match.Groups[1].Value
     }
-    
-    # Extract required modules
-    $moduleMatches = [regex]::Matches($content, '#Requires -Modules?\s+(.+)')
-    foreach ($match in $moduleMatches) {
+
+    $ModuleMatches = [regex]::Matches($content, '#Requires -Modules?\s+(.+)')
+    foreach ($match in $ModuleMatches) {
         $metadata.RequiredModules += $match.Groups[1].Value.Split(',').Trim()
     }
-    
-    # Auto-generate tags based on content
-    $tagKeywords = @('Azure', 'Security', 'Compliance', 'Monitoring', 'Automation', 'DevOps', 'Cost', 'Backup', 'Network', 'Storage', 'Compute', 'Identity', 'Governance')
-    foreach ($keyword in $tagKeywords) {
+
+    $TagKeywords = @('Azure', 'Security', 'Compliance', 'Monitoring', 'Automation', 'DevOps', 'Cost', 'Backup', 'Network', 'Storage', 'Compute', 'Identity', 'Governance')
+    foreach ($keyword in $TagKeywords) {
         if ($content -match $keyword -or $metadata.Name -match $keyword) {
             $metadata.Tags += $keyword
         }
     }
-    
+
     return $metadata
 }
 
 function Generate-MarkdownCatalog {
-    [CmdletBinding()]
-[array]$Scripts)
-    
+    [array]$Scripts)
+
     $markdown = @"
-# Azure Enterprise Toolkit - Script Catalog
 Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 Total Scripts: $($Scripts.Count)
 
-## Table of Contents
 "@
 
     $categories = $Scripts | Group-Object Category | Sort-Object Name
     foreach ($category in $categories) {
         $markdown += "`n- [$($category.Name) ($($category.Count) scripts)](#$(($category.Name.ToLower() -replace '\s', '-')))"
     }
-    
+
     $markdown += "`n`n## Scripts by Category`n"
-    
+
     foreach ($category in $categories) {
         $markdown += "`n### $($category.Name)`n"
         $markdown += "| Script | Description | Parameters | Tags |`n"
         $markdown += "|--------|-------------|------------|------|`n"
-        
+
         foreach ($script in ($category.Group | Sort-Object Name)) {
             $params = if ($script.Parameters) { $script.Parameters -join ", "} else { "None" }
             $tags = if ($script.Tags) { ($script.Tags | ForEach-Object { "``$_``" } | Select-Object -Unique) -join " " } else { "" }
             $markdown += "| [$($script.Name)]($($script.Path)) | $($script.Description) | $params | $tags |`n"
         }
     }
-    
+
     if ($IncludeMetrics) {
         $markdown += "`n## Repository Metrics`n"
         $markdown += "- **Total Scripts**: $($Scripts.Count)`n"
@@ -114,14 +101,13 @@ Total Scripts: $($Scripts.Count)
         $markdown += "- **Categories**: $($categories.Count)`n"
         $markdown += "- **Most Common Tags**: $(($Scripts.Tags | Group-Object | Sort-Object Count -Descending | Select-Object -First 5).Name -join ', ')`n"
     }
-    
+
     return $markdown
 }
 
 function Generate-HTMLCatalog {
-    [CmdletBinding()]
-[array]$Scripts)
-    
+    [array]$Scripts)
+
     $html = @"
 <!DOCTYPE html>
 <html lang="en">
@@ -131,13 +117,13 @@ function Generate-HTMLCatalog {
     <title>Azure Enterprise Toolkit - Script Catalog</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; background: #f5f5f5; }
-        h1 { color: #0078d4; }
+        h1 { color:
         .category { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #0078d4; color: white; padding: 10px; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #eee; }
-        .tag { display: inline-block; padding: 2px 8px; background: #e1f5fe; color: #01579b; border-radius: 12px; font-size: 12px; margin: 2px; }
-        .search { padding: 10px; width: 100%; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 20px; }
+        th { background:
+        td { padding: 10px; border-bottom: 1px solid
+        .tag { display: inline-block; padding: 2px 8px; background:
+        .search { padding: 10px; width: 100%; font-size: 16px; border: 1px solid
     </style>
 </head>
 <body>
@@ -180,7 +166,7 @@ function Generate-HTMLCatalog {
     </div>
 "@
     }
-    
+
     $html += @"
     <script>
         function filterScripts(searchTerm) {
@@ -194,41 +180,40 @@ function Generate-HTMLCatalog {
 </body>
 </html>
 "@
-    
+
     return $html
 }
 
-# Main execution
-Write-Host "Scanning repository for PowerShell scripts..." -ForegroundColor Cyan
+Write-Output "Scanning repository for PowerShell scripts..." # Color: $2
 $scripts = Get-ChildItem -Path $RepositoryPath -Filter "*.ps1" -Recurse | Where-Object { $_.FullName -notmatch "\\(\.git|node_modules|packages)\\" }
 
-Write-Host "Found $($scripts.Count) scripts. Extracting metadata..." -ForegroundColor Yellow
+Write-Output "Found $($scripts.Count) scripts. Extracting metadata..." # Color: $2
 
-$scriptMetadata = @()
+$ScriptMetadata = @()
 $progress = 0
 foreach ($script in $scripts) {
     $progress++
     Write-Progress -Activity "Processing scripts" -Status "$progress of $($scripts.Count)" -PercentComplete (($progress / $scripts.Count) * 100)
-    $scriptMetadata += Get-ScriptMetadata -ScriptPath $script.FullName
+    $ScriptMetadata += Get-ScriptMetadata -ScriptPath $script.FullName
 }
 
-Write-Host "Generating catalog..." -ForegroundColor Green
+Write-Output "Generating catalog..." # Color: $2
 
 if ($OutputFormat -eq "Markdown" -or $GenerateHTML) {
-    $markdownContent = Generate-MarkdownCatalog -Scripts $scriptMetadata
-    $markdownContent | Out-File -FilePath $OutputPath -Encoding UTF8
-    Write-Host "Markdown catalog saved to: $OutputPath" -ForegroundColor Green
+    $MarkdownContent = Generate-MarkdownCatalog -Scripts $ScriptMetadata
+    $MarkdownContent | Out-File -FilePath $OutputPath -Encoding UTF8
+    Write-Output "Markdown catalog saved to: $OutputPath" # Color: $2
 }
 
 if ($GenerateHTML) {
-    $htmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
-    $htmlContent = Generate-HTMLCatalog -Scripts $scriptMetadata
-    $htmlContent | Out-File -FilePath $htmlPath -Encoding UTF8
-    Write-Host "HTML catalog saved to: $htmlPath" -ForegroundColor Green
+    $HtmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
+    $HtmlContent = Generate-HTMLCatalog -Scripts $ScriptMetadata
+    $HtmlContent | Out-File -FilePath $HtmlPath -Encoding UTF8
+    Write-Output "HTML catalog saved to: $HtmlPath" # Color: $2
 }
 
-Write-Host "`nCatalog generation complete!" -ForegroundColor Cyan
-Write-Host "Total scripts cataloged: $($scriptMetadata.Count)" -ForegroundColor Yellow
+Write-Output "`nCatalog generation complete!" # Color: $2
+Write-Output "Total scripts cataloged: $($ScriptMetadata.Count)" # Color: $2
 
-#endregion
+
 

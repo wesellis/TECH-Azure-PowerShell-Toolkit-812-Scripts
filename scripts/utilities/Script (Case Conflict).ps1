@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Script (Case Conflict)
@@ -8,34 +8,31 @@
     Wes Ellis (wes@wesellis.com)
     1.0
     Requires appropriate permissions and modules
-#>
 try {
-    # Main script execution
 
     Wes Ellis (wes@wesellis.com)
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
-  [bool] $myBool,
-  [int] $myInt,
-  [string] $myString,
-  [Object[]]$myArray,
-  [Object]$myObject
+  [bool] $MyBool,
+  [int] $MyInt,
+  [string] $MyString,
+  [Object[]]$MyArray,
+  [Object]$MyObject
 )
-Write-Output " myBool: $myBool"
-Write-Output " myInt: $myInt"
-Write-Output " myString: $myString"
-Write-Output " myArray: $myArray"
-Write-Output " myObject: $myObject"
-$DeploymentScriptOutputs = @{}
-$DeploymentScriptOutputs['myBool'] = $myBool
-$DeploymentScriptOutputs['myInt'] = $myInt
-$DeploymentScriptOutputs['myString'] = $myString
-$DeploymentScriptOutputs['myArray'] = $myArray
-$DeploymentScriptOutputs['myObject'] = $myObject
+Write-Output " myBool: $MyBool"
+Write-Output " myInt: $MyInt"
+Write-Output " myString: $MyString"
+Write-Output " myArray: $MyArray"
+Write-Output " myObject: $MyObject"
+    $DeploymentScriptOutputs = @{}
+    $DeploymentScriptOutputs['myBool'] = $MyBool
+    $DeploymentScriptOutputs['myInt'] = $MyInt
+    $DeploymentScriptOutputs['myString'] = $MyString
+    $DeploymentScriptOutputs['myArray'] = $MyArray
+    $DeploymentScriptOutputs['myObject'] = $MyObject
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

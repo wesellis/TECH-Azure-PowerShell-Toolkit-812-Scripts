@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -53,94 +53,85 @@
     .\Create-Windows10VM.ps1 -CustomerName "CanadaComputing" -VMName "Win10" -LocationName "CanadaCentral" -VnetName "DC01_group-vnet" -SubnetName "DC01-subnet" -VMAdminUser "admin" -NotificationEmail "admin@company.com"
 
 .EXAMPLE
-    $securePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
-    .\Create-Windows10VM.ps1 -CustomerName "TestCompany" -VMName "Win10-Migration" -LocationName "EastUS" -VnetName "TestVNet" -SubnetName "default" -VMAdminUser "migrationadmin" -VMAdminPassword $securePassword -NotificationEmail "it@testcompany.com"
-#>
+    [string]$SecurePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
+    .\Create-Windows10VM.ps1 -CustomerName "TestCompany" -VMName "Win10-Migration" -LocationName "EastUS" -VnetName "TestVNet" -SubnetName "default" -VMAdminUser "migrationadmin" -VMAdminPassword $SecurePassword -NotificationEmail "it@testcompany.com"
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$CustomerName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$LocationName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VnetName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$SubnetName,
-    
+
     [Parameter()]
     [string]$VMSize = "Standard_B2MS",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMAdminUser,
-    
+
     [Parameter(Mandatory = $true)]
     [SecureString]$VMAdminPassword,
-    
+
     [Parameter()]
     [ValidatePattern('^\d{2}:\d{2}$')]
     [string]$AutoShutdownTime = "23:59",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$NotificationEmail,
-    
+
     [Parameter()]
     [bool]$CreatePublicIP = $true,
-    
+
     [Parameter()]
     [ValidateSet("20h2-evd-o365pp", "21h1-evd-o365pp", "win10-21h2-ent", "win10-22h2-ent")]
     [string]$WindowsVersion = "20h2-evd-o365pp"
 )
+    [string]$ErrorActionPreference = 'Stop'
 
-# Set error handling preference
-$ErrorActionPreference = 'Stop'
-
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colorMap = @{
+    [string]$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
-    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
 
-# Function to generate secure password
 function Generate-Password {
     param([int]$Length = 16)
-    
-    $characters = 'abcdefghkmnprstuvwxyzABCDEFGHKMNPRSTUVWXYZ23456789!@#$%&*'
-    $password = ""
+    [string]$characters = 'abcdefghkmnprstuvwxyzABCDEFGHKMNPRSTUVWXYZ23456789!@#$%&*'
+    [string]$password = ""
     for ($i = 0; $i -lt $Length; $i++) {
-        $password += $characters[(Get-Random -Maximum $characters.Length)]
+    [string]$password += $characters[(Get-Random -Maximum $characters.Length)]
     }
     return $password
 }
@@ -153,20 +144,15 @@ try {
     Write-LogMessage "VNet: $VnetName" -Level "INFO"
     Write-LogMessage "Subnet: $SubnetName" -Level "INFO"
     Write-LogMessage "Windows Version: $WindowsVersion" -Level "INFO"
-
-    # Validate Azure context
-    $context = Get-AzContext
+    [string]$context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
-    
-    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
 
-    # Define variables
-    $ResourceGroupName = "${CustomerName}_${VMName}_RG"
-    $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
-    
-    # Define tags
+    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
+    [string]$ResourceGroupName = "${CustomerName}_${VMName}_RG"
+    [string]$datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
+
     [hashtable]$Tags = @{
         "Autoshutdown"    = 'ON'
         "Createdby"       = $context.Account.Id
@@ -185,46 +171,39 @@ try {
         "WindowsVersion"  = $WindowsVersion
     }
 
-    # Create Resource Group
     Write-LogMessage "Creating resource group: $ResourceGroupName" -Level "INFO"
-    $newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
-    $resourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
+    [string]$ResourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
     Write-LogMessage "Resource group created successfully" -Level "SUCCESS"
+    [string]$ComputerName = $VMName
+    [string]$OSDiskCaching = "ReadWrite"
+    [string]$OSCreateOption = "FromImage"
+    [string]$GUID = [guid]::NewGuid()
+    [string]$OSDiskName = "${VMName}_OSDisk_1_$GUID"
+    [string]$DNSNameLabel = "${VMName}dns".ToLower()
+    [string]$NICPrefix = 'NIC1'
+    [string]$NICName = "${VMName}_${NICPrefix}".ToLower()
+    [string]$IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
+    [string]$PublicIPAddressName = "${VMName}-ip"
+    [string]$PublicIPAllocation = 'Dynamic'
+    [string]$NSGName = "${VMName}-nsg"
+    [string]$ASGName = "${VMName}_ASG1"
 
-    # Define VM configuration variables
-    $ComputerName = $VMName
-    $OSDiskCaching = "ReadWrite"
-    $OSCreateOption = "FromImage"
-    $GUID = [guid]::NewGuid()
-    $OSDiskName = "${VMName}_OSDisk_1_$GUID"
-    $DNSNameLabel = "${VMName}dns".ToLower()
-    $NICPrefix = 'NIC1'
-    $NICName = "${VMName}_${NICPrefix}".ToLower()
-    $IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
-    $PublicIPAddressName = "${VMName}-ip"
-    $PublicIPAllocation = 'Dynamic'
-    $NSGName = "${VMName}-nsg"
-    $ASGName = "${VMName}_ASG1"
-
-    # Get existing VNet
     Write-LogMessage "Retrieving existing virtual network: $VnetName" -Level "INFO"
-    $vnet = Get-AzVirtualNetwork -Name $VnetName -ErrorAction Stop
+    [string]$vnet = Get-AzVirtualNetwork -Name $VnetName -ErrorAction Stop
     Write-LogMessage "Virtual network found successfully" -Level "SUCCESS"
 
-    # Get existing subnet
     Write-LogMessage "Retrieving subnet: $SubnetName" -Level "INFO"
-    $VMsubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $SubnetName -ErrorAction Stop
+    [string]$VMsubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $SubnetName -ErrorAction Stop
     Write-LogMessage "Subnet found successfully" -Level "SUCCESS"
-
-    # Create Public IP (if requested)
-    $PIP = $null
+    [string]$PIP = $null
     if ($CreatePublicIP) {
         Write-LogMessage "Creating public IP address: $PublicIPAddressName" -Level "INFO"
-        $newAzPublicIpAddressSplat = @{
+    $NewAzPublicIpAddressSplat = @{
             Name              = $PublicIPAddressName
             DomainNameLabel   = $DNSNameLabel
             ResourceGroupName = $ResourceGroupName
@@ -232,49 +211,45 @@ try {
             AllocationMethod  = $PublicIPAllocation
             Tag               = $Tags
         }
-        $PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+    [string]$PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
         Write-LogMessage "Public IP created successfully" -Level "SUCCESS"
     }
 
-    # Get current public IP for NSG rule
     Write-LogMessage "Retrieving current public IP for security rules..." -Level "INFO"
     try {
-        $SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
-        $SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
+    [string]$SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
+    [string]$SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
         Write-LogMessage "Current public IP: $SourceAddressPrefix" -Level "INFO"
     }
     catch {
         Write-LogMessage "Could not retrieve public IP, using 0.0.0.0/0 (less secure)" -Level "WARN"
-        $SourceAddressPrefixCIDR = "0.0.0.0/0"
+    [string]$SourceAddressPrefixCIDR = "0.0.0.0/0"
     }
 
-    # Create Application Security Group
     Write-LogMessage "Creating application security group: $ASGName" -Level "INFO"
-    $newAzApplicationSecurityGroupSplat = @{
+    $NewAzApplicationSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $ASGName
         Location          = $LocationName
         Tag               = $Tags
     }
-    $ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+    [string]$ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
     Write-LogMessage "Application security group created successfully" -Level "SUCCESS"
 
-    # Create IP Configuration
     Write-LogMessage "Creating network interface IP configuration" -Level "INFO"
-    $ipConfigParams = @{
+    $IpConfigParams = @{
         Name                     = $IPConfigName
         Subnet                   = $VMSubnet
         ApplicationSecurityGroup = $ASG
         Primary                  = $true
     }
     if ($PIP) {
-        $ipConfigParams.PublicIpAddress = $PIP
+    [string]$IpConfigParams.PublicIpAddress = $PIP
     }
-    $IPConfig1 = New-AzNetworkInterfaceIpConfig @ipConfigParams
+    [string]$IPConfig1 = New-AzNetworkInterfaceIpConfig @ipConfigParams
 
-    # Create Network Security Group Rule
     Write-LogMessage "Creating network security group rule for RDP access" -Level "INFO"
-    $newAzNetworkSecurityRuleConfigSplat = @{
+    $NewAzNetworkSecurityRuleConfigSplat = @{
         Name                                = 'RDP-rule'
         Description                         = 'Allow RDP'
         Access                              = 'Allow'
@@ -286,23 +261,21 @@ try {
         DestinationPortRange                = '3389'
         DestinationApplicationSecurityGroup = $ASG
     }
-    $rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
+    [string]$rule1 = New-AzNetworkSecurityRuleConfig @newAzNetworkSecurityRuleConfigSplat
 
-    # Create Network Security Group
     Write-LogMessage "Creating network security group: $NSGName" -Level "INFO"
-    $newAzNetworkSecurityGroupSplat = @{
+    $NewAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         Name              = $NSGName
         SecurityRules     = $rule1
         Tag               = $Tags
     }
-    $NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+    [string]$NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
     Write-LogMessage "Network security group created successfully" -Level "SUCCESS"
 
-    # Create Network Interface
     Write-LogMessage "Creating network interface: $NICName" -Level "INFO"
-    $newAzNetworkInterfaceSplat = @{
+    $NewAzNetworkInterfaceSplat = @{
         Name                   = $NICName
         ResourceGroupName      = $ResourceGroupName
         Location               = $LocationName
@@ -310,69 +283,57 @@ try {
         IpConfiguration        = $IPConfig1
         Tag                    = $Tags
     }
-    $NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+    [string]$NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
     Write-LogMessage "Network interface created successfully" -Level "SUCCESS"
+    [string]$Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
 
-    # Create credential object
-    $Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
-
-    # Create VM Configuration
     Write-LogMessage "Creating VM configuration" -Level "INFO"
-    $newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName = $VMName
         VMSize = $VMSize
         Tags   = $Tags
     }
-    $VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
-
-    # Set VM Operating System
-    $setAzVMOperatingSystemSplat = @{
+    [string]$VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+    $SetAzVMOperatingSystemSplat = @{
         VM               = $VirtualMachine
         Windows          = $true
         ComputerName     = $ComputerName
         Credential       = $Credential
         ProvisionVMAgent = $true
     }
-    $VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    [string]$VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    [string]$VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
 
-    # Add Network Interface to VM
-    $VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
-
-    # Set VM Source Image
     Write-LogMessage "Configuring VM source image (Windows 10 with Office 365: $WindowsVersion)" -Level "INFO"
-    $setAzVMSourceImageSplat = @{
+    $SetAzVMSourceImageSplat = @{
         VM            = $VirtualMachine
         PublisherName = "MicrosoftWindowsDesktop"
         Offer         = "office-365"
         Skus          = $WindowsVersion
         Version       = "latest"
     }
-    $VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
-
-    # Set VM OS Disk
-    $setAzVMOSDiskSplat = @{
+    [string]$VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+    $SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
         DiskSizeInGB = 128
     }
-    $VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+    [string]$VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
 
-    # Create the VM
     Write-LogMessage "Creating virtual machine: $VMName (this may take 5-10 minutes)" -Level "INFO"
-    $newAzVMSplat = @{
+    $NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
         Tag               = $Tags
     }
-    $vmResult = New-AzVM @newAzVMSplat
+    [string]$VmResult = New-AzVM @newAzVMSplat
     Write-LogMessage "Virtual machine created successfully!" -Level "SUCCESS"
 
-    # Configure Auto-Shutdown
     Write-LogMessage "Configuring auto-shutdown for $AutoShutdownTime" -Level "INFO"
-    $setAzVMAutoShutdownSplat = @{
+    $SetAzVMAutoShutdownSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $VMName
         Enable            = $true
@@ -383,8 +344,7 @@ try {
     Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
     Write-LogMessage "Auto-shutdown configured successfully" -Level "SUCCESS"
 
-    # Display connection information
-    Write-Host ""
+    Write-Output ""
     Write-LogMessage "VM Creation Completed Successfully!" -Level "SUCCESS"
     Write-LogMessage "==================================" -Level "INFO"
     Write-LogMessage "VM Name: $VMName" -Level "INFO"
@@ -392,18 +352,18 @@ try {
     Write-LogMessage "Location: $LocationName" -Level "INFO"
     Write-LogMessage "Operating System: Windows 10 with Office 365 ($WindowsVersion)" -Level "INFO"
     Write-LogMessage "Username: $VMAdminUser" -Level "INFO"
-    
+
     if ($CreatePublicIP) {
-        $fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
+    [string]$fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
         Write-LogMessage "FQDN: $fqdn" -Level "INFO"
         Write-LogMessage "RDP Connection: mstsc /v:$fqdn" -Level "INFO"
     } else {
         Write-LogMessage "No public IP created - connect via private IP or bastion" -Level "INFO"
     }
-    
+
     Write-LogMessage "Auto-shutdown: $AutoShutdownTime Central Standard Time" -Level "INFO"
     Write-LogMessage "Notification email: $NotificationEmail" -Level "INFO"
-    Write-Host ""
+    Write-Output ""
     Write-LogMessage "Next Steps for Exchange Hybrid Migration:" -Level "INFO"
     Write-LogMessage "1. Wait 3-5 minutes for VM to fully boot and configure" -Level "INFO"
     Write-LogMessage "2. Connect via RDP using the credentials provided" -Level "INFO"
@@ -415,5 +375,4 @@ try {
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    throw
-}
+    throw`n}

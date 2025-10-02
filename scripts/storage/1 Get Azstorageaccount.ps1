@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -38,4 +38,5 @@ StorageAccountName       ResourceGroupName       PrimaryLocation SkuName      Ki
 microfgcheaprod121322330 FGCHealth_Prod-Nifi1_RG canadacentral   Standard_GRS Storage            2020-12-14 4:33:32 AM Succeeded         False
     General notes
 Get-AzStorageAccount -ErrorAction Stop
+
 

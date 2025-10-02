@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,7 +6,10 @@
     Delete VMs and optionally their resources
 
 .DESCRIPTION
-    Deletes Azure VMs 
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+    Deletes Azure VMs
 .PARAMETER ResourceGroupName
     Resource group
 .PARAMETER VmName
@@ -31,11 +34,9 @@
     .\Azure-VM-Deletion-Tool.ps1 -ResourceGroupName "RG-Test" -VmNames @("VM-Test01", "VM-Test02") -DeleteDisks -BackupFirst
     .\Azure-VM-Deletion-Tool.ps1 -ResourceGroupName "RG-Test" -VmName "VM-TestServer01" -DryRun
     WARNING: This tool permanently deletes Azure resources. Use with extreme caution.
-#>
-[CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
@@ -61,15 +62,13 @@
     [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
-# Global tracking variables
 $script:DeletionResults = @()
 $script:BackupResults = @()
-[OutputType([PSCustomObject])]
- {
+function Write-Log {
     try {
         $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -80,13 +79,11 @@ $script:BackupResults = @()
     }
 }
 function Get-VMDependencies {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name
     )
     try {
-        Write-Host "Analyzing dependencies for VM: $Name" -ForegroundColor Yellow
+        Write-Host "Analyzing dependencies for VM: $Name" -ForegroundColor Green
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
         $dependencies = @{
             VM = $vm
@@ -97,7 +94,6 @@ function Get-VMDependencies {
             AvailabilitySet = $null
             Dependencies = @()
         }
-        # Get OS Disk
         if ($vm.StorageProfile.OsDisk.ManagedDisk) {
             $dependencies.OSDisk = @{
                 Name = $vm.StorageProfile.OsDisk.Name
@@ -105,59 +101,55 @@ function Get-VMDependencies {
                 Type = "Managed"
             }
         }
-        # Get Data Disks
-        foreach ($dataDisk in $vm.StorageProfile.DataDisks) {
-            if ($dataDisk.ManagedDisk) {
+        foreach ($DataDisk in $vm.StorageProfile.DataDisks) {
+            if ($DataDisk.ManagedDisk) {
                 $dependencies.DataDisks += @{
-                    Name = $dataDisk.Name
-                    Id = $dataDisk.ManagedDisk.Id
-                    Lun = $dataDisk.Lun
+                    Name = $DataDisk.Name
+                    Id = $DataDisk.ManagedDisk.Id
+                    Lun = $DataDisk.Lun
                     Type = "Managed"
                 }
             }
         }
-        # Get Network Interfaces
-        foreach ($nicRef in $vm.NetworkProfile.NetworkInterfaces) {
+        foreach ($NicRef in $vm.NetworkProfile.NetworkInterfaces) {
             try {
-                $nic = Get-AzNetworkInterface | Where-Object { $_.Id -eq $nicRef.Id }
+                $nic = Get-AzNetworkInterface | Where-Object { $_.Id -eq $NicRef.Id }
                 if ($nic) {
-                    $nicInfo = @{
+                    $NicInfo = @{
                         Name = $nic.Name
                         Id = $nic.Id
-                        Primary = $nicRef.Primary
+                        Primary = $NicRef.Primary
                         PublicIPs = @()
                     }
-                    # Check for Public IPs
-                    foreach ($ipConfig in $nic.IpConfigurations) {
-                        if ($ipConfig.PublicIpAddress) {
-                            $pip = Get-AzPublicIpAddress | Where-Object { $_.Id -eq $ipConfig.PublicIpAddress.Id }
+                    foreach ($IpConfig in $nic.IpConfigurations) {
+                        if ($IpConfig.PublicIpAddress) {
+                            $pip = Get-AzPublicIpAddress | Where-Object { $_.Id -eq $IpConfig.PublicIpAddress.Id }
                             if ($pip) {
-                                $nicInfo.PublicIPs += @{
+                                $NicInfo.PublicIPs += @{
                                     Name = $pip.Name
                                     Id = $pip.Id
                                     IP = $pip.IpAddress
                                 }
-                                $dependencies.PublicIPs += $nicInfo.PublicIPs[-1]
+                                $dependencies.PublicIPs += $NicInfo.PublicIPs[-1]
                             }
                         }
                     }
-                    $dependencies.NetworkInterfaces += $nicInfo
-                
+                    $dependencies.NetworkInterfaces += $NicInfo
+
 } catch {
-                Write-Warning "Could not retrieve network interface: $($nicRef.Id)"
+                Write-Warning "Could not retrieve network interface: $($NicRef.Id)"
             }
         }
-        # Get Availability Set
         if ($vm.AvailabilitySetReference) {
             try {
-                $avSet = Get-AzAvailabilitySet | Where-Object { $_.Id -eq $vm.AvailabilitySetReference.Id }
-                if ($avSet) {
+                $AvSet = Get-AzAvailabilitySet | Where-Object { $_.Id -eq $vm.AvailabilitySetReference.Id }
+                if ($AvSet) {
                     $dependencies.AvailabilitySet = @{
-                        Name = $avSet.Name
-                        Id = $avSet.Id
-                        VMCount = $avSet.VirtualMachinesReferences.Count
+                        Name = $AvSet.Name
+                        Id = $AvSet.Id
+                        VMCount = $AvSet.VirtualMachinesReferences.Count
                     }
-                
+
 } catch {
                 Write-Warning "Could not retrieve availability set information"
             }
@@ -169,38 +161,36 @@ function Get-VMDependencies {
     }
 }
 function New-DiskSnapshot {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$DiskInfo,
+    [object]$DiskInfo,
         [string]$VMName
     )
     try {
-        $snapshotName = "snapshot-$VMName-$($DiskInfo.Name)-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-        Write-Host "Creating snapshot: $snapshotName" -ForegroundColor Yellow
+        $SnapshotName = "snapshot-$VMName-$($DiskInfo.Name)-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+        Write-Host "Creating snapshot: $SnapshotName" -ForegroundColor Green
         if (-not $DryRun) {
             $disk = Get-AzDisk | Where-Object { $_.Id -eq $DiskInfo.Id }
-            $snapshotConfig = New-AzSnapshotConfig -SourceUri $disk.Id -CreateOption Copy -Location $disk.Location
-            $snapshot = New-AzSnapshot -ResourceGroupName $ResourceGroupName -SnapshotName $snapshotName -Snapshot $snapshotConfig
-            Write-Host "Snapshot created: $snapshotName" -ForegroundColor Green
+            $SnapshotConfig = New-AzSnapshotConfig -SourceUri $disk.Id -CreateOption Copy -Location $disk.Location
+            $snapshot = New-AzSnapshot -ResourceGroupName $ResourceGroupName -SnapshotName $SnapshotName -Snapshot $SnapshotConfig
+            Write-Host "Snapshot created: $SnapshotName" -ForegroundColor Green
             return @{
-                Name = $snapshotName
+                Name = $SnapshotName
                 Id = $snapshot.Id
                 DiskName = $DiskInfo.Name
                 Success = $true
             }
         } else {
-            Write-Host "DRY RUN: Would create snapshot: $snapshotName" -ForegroundColor Cyan
+            Write-Host "DRY RUN: Would create snapshot: $SnapshotName" -ForegroundColor Green
             return @{
-                Name = $snapshotName
+                Name = $SnapshotName
                 DiskName = $DiskInfo.Name
                 Success = $true
                 DryRun = $true
             }
-        
+
 } catch {
         Write-Error "Failed to create snapshot for disk $($DiskInfo.Name): $_"
         return @{
-            Name = $snapshotName
+            Name = $SnapshotName
             DiskName = $DiskInfo.Name
             Success = $false
             Error = $_.Exception.Message
@@ -208,9 +198,7 @@ function New-DiskSnapshot {
     }
 }
 function Remove-VMSafely {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name
     )
     $result = @{
@@ -223,101 +211,90 @@ function Remove-VMSafely {
         DeletionSteps = @()
     }
     try {
-        Write-Host "`nProcessing VM: $Name" -ForegroundColor Cyan
+        Write-Host "`nProcessing VM: $Name" -ForegroundColor Green
         Write-Host ("=" * 60) -ForegroundColor Gray
-        # Get VM dependencies
         $dependencies = Get-VMDependencies -ResourceGroup $ResourceGroup -Name $Name
         $result.Dependencies = $dependencies
-        # Display VM information
-        Write-Host "VM Information:" -ForegroundColor Cyan
-        Write-Host "Name: $($dependencies.VM.Name)"
-        Write-Host "Location: $($dependencies.VM.Location)"
-        Write-Host "Size: $($dependencies.VM.HardwareProfile.VmSize)"
-        Write-Host "OS Disk: $($dependencies.OSDisk.Name)" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Yellow' })
-        Write-Host "Data Disks: $($dependencies.DataDisks.Count)" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Yellow' })
-        Write-Host "Network Interfaces: $($dependencies.NetworkInterfaces.Count)" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Yellow' })
-        Write-Host "Public IPs: $($dependencies.PublicIPs.Count)" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Yellow' })
-        # Create backups if requested
+        Write-Host "VM Information:" -ForegroundColor Green
+        Write-Output "Name: $($dependencies.VM.Name)"
+        Write-Output "Location: $($dependencies.VM.Location)"
+        Write-Output "Size: $($dependencies.VM.HardwareProfile.VmSize)"
+        Write-Output "OS Disk: $($dependencies.OSDisk.Name)" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Yellow' })
+        Write-Output "Data Disks: $($dependencies.DataDisks.Count)" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Yellow' })
+        Write-Output "Network Interfaces: $($dependencies.NetworkInterfaces.Count)" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Yellow' })
+        Write-Output "Public IPs: $($dependencies.PublicIPs.Count)" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Yellow' })
         if ($BackupFirst) {
-            Write-Host "`nCreating disk snapshots..." -ForegroundColor Yellow
-            # Backup OS disk
+            Write-Host "`nCreating disk snapshots..." -ForegroundColor Green
             if ($dependencies.OSDisk) {
-                $backupResult = New-DiskSnapshot -DiskInfo $dependencies.OSDisk -VMName $Name
-                $result.BackupResults += $backupResult
-                $script:BackupResults += $backupResult
+                $BackupResult = New-DiskSnapshot -DiskInfo $dependencies.OSDisk -VMName $Name
+                $result.BackupResults += $BackupResult
+                $script:BackupResults += $BackupResult
             }
-            # Backup data disks
-            foreach ($dataDisk in $dependencies.DataDisks) {
-                $backupResult = New-DiskSnapshot -DiskInfo $dataDisk -VMName $Name
-                $result.BackupResults += $backupResult
-                $script:BackupResults += $backupResult
+            foreach ($DataDisk in $dependencies.DataDisks) {
+                $BackupResult = New-DiskSnapshot -DiskInfo $DataDisk -VMName $Name
+                $result.BackupResults += $BackupResult
+                $script:BackupResults += $BackupResult
             }
         }
-        # Delete VM
-        Write-Host "`nDeleting Virtual Machine..." -ForegroundColor Red
+        Write-Host "`nDeleting Virtual Machine..." -ForegroundColor Green
         if ($PSCmdlet.ShouldProcess($Name, "Delete VM")) {
             if (-not $DryRun) {
                 Remove-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Force
                 Write-Host "VM deleted: $Name" -ForegroundColor Green
             } else {
-                Write-Host "DRY RUN: Would delete VM: $Name" -ForegroundColor Cyan
+                Write-Host "DRY RUN: Would delete VM: $Name" -ForegroundColor Green
             }
             $result.DeletionSteps += "VM: $Name"
         }
-        # Delete associated resources if requested
         if ($DeleteDisks) {
-            Write-Host "`nDeleting associated disks..." -ForegroundColor Red
-            # Delete OS disk
+            Write-Host "`nDeleting associated disks..." -ForegroundColor Green
             if ($dependencies.OSDisk) {
-                Write-Host "Deleting OS disk: $($dependencies.OSDisk.Name)" -ForegroundColor Red
+                Write-Host "Deleting OS disk: $($dependencies.OSDisk.Name)" -ForegroundColor Green
                 if ($PSCmdlet.ShouldProcess($dependencies.OSDisk.Name, "Delete OS Disk")) {
                     if (-not $DryRun) {
                         Remove-AzDisk -ResourceGroupName $ResourceGroup -DiskName $dependencies.OSDisk.Name -Force
                         Write-Host "OS disk deleted: $($dependencies.OSDisk.Name)" -ForegroundColor Green
                     } else {
-                        Write-Host "DRY RUN: Would delete OS disk: $($dependencies.OSDisk.Name)" -ForegroundColor Cyan
+                        Write-Host "DRY RUN: Would delete OS disk: $($dependencies.OSDisk.Name)" -ForegroundColor Green
                     }
                     $result.DeletionSteps += "OS Disk: $($dependencies.OSDisk.Name)"
                 }
             }
-            # Delete data disks
-            foreach ($dataDisk in $dependencies.DataDisks) {
-                Write-Host "Deleting data disk: $($dataDisk.Name)" -ForegroundColor Red
-                if ($PSCmdlet.ShouldProcess($dataDisk.Name, "Delete Data Disk")) {
+            foreach ($DataDisk in $dependencies.DataDisks) {
+                Write-Host "Deleting data disk: $($DataDisk.Name)" -ForegroundColor Green
+                if ($PSCmdlet.ShouldProcess($DataDisk.Name, "Delete Data Disk")) {
                     if (-not $DryRun) {
-                        Remove-AzDisk -ResourceGroupName $ResourceGroup -DiskName $dataDisk.Name -Force
-                        Write-Host "Data disk deleted: $($dataDisk.Name)" -ForegroundColor Green
+                        Remove-AzDisk -ResourceGroupName $ResourceGroup -DiskName $DataDisk.Name -Force
+                        Write-Host "Data disk deleted: $($DataDisk.Name)" -ForegroundColor Green
                     } else {
-                        Write-Host "DRY RUN: Would delete data disk: $($dataDisk.Name)" -ForegroundColor Cyan
+                        Write-Host "DRY RUN: Would delete data disk: $($DataDisk.Name)" -ForegroundColor Green
                     }
-                    $result.DeletionSteps += "Data Disk: $($dataDisk.Name)"
+                    $result.DeletionSteps += "Data Disk: $($DataDisk.Name)"
                 }
             }
         }
         if ($DeleteNetworkResources) {
-            Write-Host "`nDeleting network resources..." -ForegroundColor Red
-            # Delete Public IPs
+            Write-Host "`nDeleting network resources..." -ForegroundColor Green
             foreach ($pip in $dependencies.PublicIPs) {
-                Write-Host "Deleting public IP: $($pip.Name)" -ForegroundColor Red
+                Write-Host "Deleting public IP: $($pip.Name)" -ForegroundColor Green
                 if ($PSCmdlet.ShouldProcess($pip.Name, "Delete Public IP")) {
                     if (-not $DryRun) {
                         Remove-AzPublicIpAddress -ResourceGroupName $ResourceGroup -Name $pip.Name -Force
                         Write-Host "Public IP deleted: $($pip.Name)" -ForegroundColor Green
                     } else {
-                        Write-Host "DRY RUN: Would delete public IP: $($pip.Name)" -ForegroundColor Cyan
+                        Write-Host "DRY RUN: Would delete public IP: $($pip.Name)" -ForegroundColor Green
                     }
                     $result.DeletionSteps += "Public IP: $($pip.Name)"
                 }
             }
-            # Delete Network Interfaces
             foreach ($nic in $dependencies.NetworkInterfaces) {
-                Write-Host "Deleting network interface: $($nic.Name)" -ForegroundColor Red
+                Write-Host "Deleting network interface: $($nic.Name)" -ForegroundColor Green
                 if ($PSCmdlet.ShouldProcess($nic.Name, "Delete Network Interface")) {
                     if (-not $DryRun) {
                         Remove-AzNetworkInterface -ResourceGroupName $ResourceGroup -Name $nic.Name -Force
                         Write-Host "Network interface deleted: $($nic.Name)" -ForegroundColor Green
                     } else {
-                        Write-Host "DRY RUN: Would delete network interface: $($nic.Name)" -ForegroundColor Cyan
+                        Write-Host "DRY RUN: Would delete network interface: $($nic.Name)" -ForegroundColor Green
                     }
                     $result.DeletionSteps += "NIC: $($nic.Name)"
                 }
@@ -329,7 +306,7 @@ function Remove-VMSafely {
     catch {
         $result.Error = $_.Exception.Message
         $result.Success = $false
-        Write-Host "VM deletion failed: $Name - $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "VM deletion failed: $Name - $($_.Exception.Message)" -ForegroundColor Green
     }
     finally {
         $result.EndTime = Get-Date
@@ -338,8 +315,7 @@ function Remove-VMSafely {
     return $result
 }
 function New-DeletionReport {
-    [CmdletBinding(SupportsShouldProcess)]
-[object[]]$Results)
+    [object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         TotalVMs = $Results.Count
@@ -348,91 +324,84 @@ function New-DeletionReport {
         BackupsCreated = $script:BackupResults.Count
         Details = $Results
     }
-    Write-Host "`nDeletion Operation Summary" -ForegroundColor Cyan
+    Write-Host "`nDeletion Operation Summary" -ForegroundColor Green
     Write-Host ("=" * 50) -ForegroundColor Cyan
-    Write-Host "Total VMs: $($report.TotalVMs)"
+    Write-Output "Total VMs: $($report.TotalVMs)"
     Write-Host "Successful: $($report.Successful)" -ForegroundColor Green
-    Write-Host "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
+    Write-Output "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
     if ($BackupFirst) {
-        $successfulBackups = ($script:BackupResults | Where-Object { $_.Success }).Count
-        Write-Host "Backups Created: $successfulBackups/$($report.BackupsCreated)" -ForegroundColor Cyan
+        $SuccessfulBackups = ($script:BackupResults | Where-Object { $_.Success }).Count
+        Write-Host "Backups Created: $SuccessfulBackups/$($report.BackupsCreated)" -ForegroundColor Green
     }
     if ($report.Failed -gt 0) {
-        Write-Host "`nFailed Deletions:" -ForegroundColor Red
+        Write-Host "`nFailed Deletions:" -ForegroundColor Green
         $Results | Where-Object { -not $_.Success } | ForEach-Object {
-            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Red
+            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Green
         }
     }
     if ($DryRun) {
-        Write-Host "`nDRY RUN COMPLETED - No actual deletions were performed" -ForegroundColor Yellow
+        Write-Host "`nDRY RUN COMPLETED - No actual deletions were performed" -ForegroundColor Green
     }
     return $report
 }
-# Main execution
-Write-Host "`nAzure VM Deletion Tool" -ForegroundColor Red
+Write-Host "`nAzure VM Deletion Tool" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Red
-Write-Host "WARNING: This tool permanently deletes Azure resources!" -ForegroundColor Yellow
+Write-Host "WARNING: This tool permanently deletes Azure resources!" -ForegroundColor Green
 if ($DryRun) {
-    Write-Host "DRY RUN MODE - No actual deletions will be performed" -ForegroundColor Cyan
+    Write-Host "DRY RUN MODE - No actual deletions will be performed" -ForegroundColor Green
 }
-# Test Azure connection
 if (-not (Test-AzureConnection)) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
-# Prepare VM list
-$vmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
-# Safety confirmation
+$VmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
 if (-not $Force -and -not $DryRun) {
-    $vmCount = $vmList.Count
-    $vmText = if ($vmCount -eq 1) { "VM" } else { "$vmCount VMs" }
+    $VmCount = $VmList.Count
+    $VmText = if ($VmCount -eq 1) { "VM" } else { "$VmCount VMs" }
     $action = "DELETE"
-    Write-Host "`n  DESTRUCTIVE OPERATION WARNING " -ForegroundColor Red
-    Write-Host "About to $action $vmText in resource group '$ResourceGroupName':" -ForegroundColor Red
-    foreach ($vm in $vmList) {
-        Write-Host "  - $vm" -ForegroundColor White
+    Write-Host "`n  DESTRUCTIVE OPERATION WARNING " -ForegroundColor Green
+    Write-Host "About to $action $VmText in resource group '$ResourceGroupName':" -ForegroundColor Green
+    foreach ($vm in $VmList) {
+        Write-Host "  - $vm" -ForegroundColor Green
     }
-    Write-Host "`nAdditional resources that will be deleted:" -ForegroundColor Yellow
-    Write-Host "Disks: $(if ($DeleteDisks) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Green' })
-    Write-Host "Network Resources: $(if ($DeleteNetworkResources) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Green' })
-    Write-Host "Backup First: $(if ($BackupFirst) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($BackupFirst) { 'Green' } else { 'Yellow' })
-    Write-Host "`n  THIS OPERATION CANNOT BE UNDONE! " -ForegroundColor Red
+    Write-Host "`nAdditional resources that will be deleted:" -ForegroundColor Green
+    Write-Output "Disks: $(if ($DeleteDisks) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($DeleteDisks) { 'Red' } else { 'Green' })
+    Write-Output "Network Resources: $(if ($DeleteNetworkResources) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($DeleteNetworkResources) { 'Red' } else { 'Green' })
+    Write-Output "Backup First: $(if ($BackupFirst) { 'YES' } else { 'NO' })" -ForegroundColor $(if ($BackupFirst) { 'Green' } else { 'Yellow' })
+    Write-Host "`n  THIS OPERATION CANNOT BE UNDONE! " -ForegroundColor Green
     $confirmation = Read-Host "`nType 'DELETE' to confirm this destructive operation"
     if ($confirmation -ne 'DELETE') {
-        Write-Host "Operation cancelled - confirmation not provided" -ForegroundColor Yellow
+        Write-Host "Operation cancelled - confirmation not provided" -ForegroundColor Green
         exit 0
     }
 }
-# Process VMs
-Write-Host "`nStarting VM deletion operations..." -ForegroundColor Red
-foreach ($vm in $vmList) {
+Write-Host "`nStarting VM deletion operations..." -ForegroundColor Green
+foreach ($vm in $VmList) {
     try {
         $result = Remove-VMSafely -ResourceGroup $ResourceGroupName -Name $vm
         $script:DeletionResults += $result
     }
     catch {
-        $errorResult = @{
+        $ErrorResult = @{
             VMName = $vm
             StartTime = Get-Date
             EndTime = Get-Date
             Success = $false
             Error = $_.Exception.Message
         }
-        $script:DeletionResults += $errorResult
+        $script:DeletionResults += $ErrorResult
     }
 }
-# Generate report
 $report = New-DeletionReport -Results $script:DeletionResults
-# Display backup information
 if ($BackupFirst -and $script:BackupResults.Count -gt 0) {
-    Write-Host "`nBackup Snapshots Created:" -ForegroundColor Cyan
+    Write-Host "`nBackup Snapshots Created:" -ForegroundColor Green
     $script:BackupResults | Where-Object { $_.Success } | ForEach-Object {
         Write-Host "  - $($_.Name)" -ForegroundColor Green
     }
 }
-# Exit with appropriate code
-$exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
-Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
-exit $exitCode
+$ExitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
+Write-Output "`nOperation completed!" -ForegroundColor $(if ($ExitCode -eq 0) { 'Green' } else { 'Yellow' })
+exit $ExitCode
+
 
 

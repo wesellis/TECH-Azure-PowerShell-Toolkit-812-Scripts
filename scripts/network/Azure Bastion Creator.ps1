@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -10,33 +10,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -50,18 +47,18 @@ param(
     [Parameter(Mandatory)]
     [string]$Location
 )
-Write-Host "Creating Azure Bastion: $BastionName"
-$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-$BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet" -ErrorAction SilentlyContinue
+Write-Output "Creating Azure Bastion: $BastionName"
+    [string]$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    [string]$BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet" -ErrorAction SilentlyContinue
 if (-not $BastionSubnet) {
-    Write-Host "Creating AzureBastionSubnet..."
+    Write-Output "Creating AzureBastionSubnet..."
     Add-AzVirtualNetworkSubnetConfig -Name "AzureBastionSubnet" -VirtualNetwork $VNet -AddressPrefix " 10.0.1.0/24"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
-    $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-    $BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet"
+    [string]$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    [string]$BastionSubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "AzureBastionSubnet"
 }
-$BastionIpName = " $BastionName-pip";
-$params = @{
+    [string]$BastionIpName = " $BastionName-pip";
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = "Standard"
     Location = $Location
@@ -69,29 +66,26 @@ $params = @{
     ErrorAction = "Stop"
     Name = $BastionIpName
 }
-$BastionIp @params
-Write-Host "Creating Bastion host (this may take 10-15 minutes)..." ;
-$params = @{
+    [string]$BastionIp @params
+Write-Output "Creating Bastion host (this may take 10-15 minutes)..." ;
+    $params = @{
     ErrorAction = "Stop"
     PublicIpAddress = $BastionIp
     VirtualNetwork = $VNet
     ResourceGroupName = $ResourceGroupName
     Name = $BastionName
 }
-$Bastion @params
-Write-Host "Azure Bastion created successfully:"
-Write-Host "Name: $($Bastion.Name)"
-Write-Host "Location: $($Bastion.Location)"
-Write-Host "Public IP: $($BastionIp.IpAddress)"
-Write-Host "DNS Name: $($BastionIp.DnsSettings.Fqdn)"
-Write-Host " `nBastion Usage:"
-Write-Host "Connect to VMs via Azure Portal"
-Write-Host "No need for public IPs on VMs"
-Write-Host "Secure RDP/SSH access"
-Write-Host "No VPN client required"
+    [string]$Bastion @params
+Write-Output "Azure Bastion created successfully:"
+Write-Output "Name: $($Bastion.Name)"
+Write-Output "Location: $($Bastion.Location)"
+Write-Output "Public IP: $($BastionIp.IpAddress)"
+Write-Output "DNS Name: $($BastionIp.DnsSettings.Fqdn)"
+Write-Output " `nBastion Usage:"
+Write-Output "Connect to VMs via Azure Portal"
+Write-Output "No need for public IPs on VMs"
+Write-Output "Secure RDP/SSH access"
+Write-Output "No VPN client required"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

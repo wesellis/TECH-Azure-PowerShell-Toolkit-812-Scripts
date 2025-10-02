@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,33 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -64,30 +61,28 @@ param(
     [Parameter()]
     [string]$NotificationEmail
 )
-Write-Host "Creating Alert Rule: $AlertRuleName" "INFO"
+Write-Output "Creating Alert Rule: $AlertRuleName" "INFO"
 if ($NotificationEmail) {
-    $ActionGroupName = " $AlertRuleName-actiongroup"
+    [string]$ActionGroupName = " $AlertRuleName-actiongroup"
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Name = $ActionGroupName
-        Receiver = $EmailReceiver  Write-Host "Action Group created: $ActionGroupName" " INFO
+        Receiver = $EmailReceiver  Write-Output "Action Group created: $ActionGroupName" " INFO
         ShortName = "AlertAG"
         ErrorAction = "Stop"
         EmailAddress = $NotificationEmail  $ActionGroup = Set-AzActionGroup
     }
-    $EmailReceiver @params
+    [string]$EmailReceiver @params
 }
-
-$params = @{
+    $params = @{
     Threshold = $Threshold
     ErrorAction = "Stop"
     MetricName = $MetricName
     TimeAggregation = "Average"
     Operator = $Operator
 }
-$Condition @params
-
-$params = @{
+    [string]$Condition @params
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Name = $AlertRuleName
     Severity = "2"
@@ -96,10 +91,9 @@ $params = @{
     TargetResourceId = $TargetResourceId
     Condition = $Condition
 }
-$AlertRule @params
-Write-Host "Alert Rule ID: $($AlertRule.Id)" "INFO"
+    [string]$AlertRule @params
+Write-Output "Alert Rule ID: $($AlertRule.Id)" "INFO"
 if ($ActionGroup) {
-    # Associate action group with alert rule
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Name = $AlertRuleName
@@ -112,22 +106,19 @@ if ($ActionGroup) {
     }
     Add-AzMetricAlertRuleV2 @params
 }
-Write-Host "Alert Rule created successfully:" "INFO"
-Write-Host "Name: $AlertRuleName" "INFO"
-Write-Host "Metric: $MetricName" "INFO"
-Write-Host "Threshold: $Operator $Threshold" "INFO"
-Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])" "INFO"
+Write-Output "Alert Rule created successfully:" "INFO"
+Write-Output "Name: $AlertRuleName" "INFO"
+Write-Output "Metric: $MetricName" "INFO"
+Write-Output "Threshold: $Operator $Threshold" "INFO"
+Write-Output "Target Resource: $($TargetResourceId.Split('/')[-1])" "INFO"
 if ($NotificationEmail) {
-    Write-Host "Notification Email: $NotificationEmail" "INFO"
+    Write-Output "Notification Email: $NotificationEmail" "INFO"
 }
-Write-Host " `nAlert Rule Features:" "INFO"
-Write-Host "Real-time monitoring" "INFO"
-Write-Host "Configurable thresholds" "INFO"
-Write-Host "Multiple notification channels" "INFO"
-Write-Host "Auto-resolution" "INFO"
+Write-Output " `nAlert Rule Features:" "INFO"
+Write-Output "Real-time monitoring" "INFO"
+Write-Output "Configurable thresholds" "INFO"
+Write-Output "Multiple notification channels" "INFO"
+Write-Output "Auto-resolution" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

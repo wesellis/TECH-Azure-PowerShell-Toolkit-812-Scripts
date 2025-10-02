@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,12 +27,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -53,7 +50,7 @@ param(
     [Parameter()]
     [string]$NotificationEmail
 )
-Write-Host "Configuring auto-shutdown for VM: $VmName"
+Write-Output "Configuring auto-shutdown for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
 $Properties = @{
     status = "Enabled"
@@ -65,7 +62,7 @@ $Properties = @{
     targetResourceId = $VM.Id
 }
 if ($NotificationEmail) {
-    $Properties.notificationSettings = @{
+    [string]$Properties.notificationSettings = @{
         status = "Enabled"
         timeInMinutes = 30
         emailRecipient = $NotificationEmail
@@ -75,19 +72,16 @@ $params = @{
     f = "(Get-AzContext).Subscription.Id, $ResourceGroupName, $VmName)"
     ErrorAction = "Stop"
     Properties = $Properties
-    ResourceId = "(" /subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}"
+    ResourceId = "("/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/schedules/shutdown-computevm-{2}"
 }
 New-AzResource @params
-Write-Host "Auto-shutdown configured successfully:"
-Write-Host "VM: $VmName"
-Write-Host "Shutdown Time: $ShutdownTime"
-Write-Host "Time Zone: $TimeZone"
+Write-Output "Auto-shutdown configured successfully:"
+Write-Output "VM: $VmName"
+Write-Output "Shutdown Time: $ShutdownTime"
+Write-Output "Time Zone: $TimeZone"
 if ($NotificationEmail) {
-    Write-Host "Notification Email: $NotificationEmail"
+    Write-Output "Notification Email: $NotificationEmail"
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

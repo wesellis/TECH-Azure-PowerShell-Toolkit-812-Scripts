@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Call Writetestresults
@@ -9,14 +9,15 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 $ENV:SAMPLE_FOLDER = "."
 $ENV:SAMPLE_NAME = Split-Path (Resolve-Path $ENV:SAMPLE_FOLDER) -Leaf
-$ENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" # TODO
-$ENV:RESULT_BEST_PRACTICE = "FAIL"
+$ENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" $ENV:RESULT_BEST_PRACTICE = "FAIL"
 $ENV:RESULT_CREDSCAN = "PASS"
 $ENV:BUILD_REASON = "BatchedCI" # PullRequest/BatchedCI/IndividualCI/Manual
 $ENV:AGENT_JOBSTATUS = "Succeeded"
@@ -42,3 +43,6 @@ $params = @{
     StorageAccountKey = $StorageAccountKey
 }
 & @params
+
+
+

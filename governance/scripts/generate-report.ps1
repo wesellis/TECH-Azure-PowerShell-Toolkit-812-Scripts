@@ -7,30 +7,29 @@
 .DESCRIPTION
     generate report operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Generates
 
     Creates detailed reports covering resource compliance, policy assignments,
     role assignments, resource locks, and activity logs. Supports multiple
     output formats and automated scheduling.
-.PARAMETER ReportType
+.parameter ReportType
     Type of report: Compliance, Security, Inventory, Activity, Custom
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Target subscription (uses current context if not specified)
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Limit report to specific resource group
-.PARAMETER OutputFormat
+.parameter OutputFormat
     Report format: HTML, JSON, CSV, Excel
-.PARAMETER OutputPath
+.parameter OutputPath
     Custom output path for report files
-.PARAMETER TimeRange
+.parameter TimeRange
     Time range for activity reports: 1h, 6h, 24h, 7d, 30d
-.PARAMETER IncludeCharts
+.parameter IncludeCharts
     Include visual charts in HTML reports
-.PARAMETER EmailRecipients
+.parameter EmailRecipients
     Email addresses for report distribution
-.PARAMETER Compress
+.parameter Compress
     Create compressed archive of all reports
 
     .\generate-report.ps1 -ReportType Compliance -OutputFormat HTML
@@ -39,58 +38,57 @@
 
     .\generate-report.ps1 -ReportType Security -ResourceGroupName "RG-Prod" -IncludeCharts
 
-    Generate security report for production resource group with charts#>
+    Generate security report for production resource group with charts
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateSet('Compliance', 'Security', 'Inventory', 'Activity', 'Custom')]
     [string]$ReportType,
 
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
         catch { throw "Invalid subscription ID format" }
     })]
     [string]$SubscriptionId,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceGroupName,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('HTML', 'JSON', 'CSV', 'Excel')]
     [string]$OutputFormat = 'HTML',
 
-    [Parameter()]
+    [parameter()]
     [string]$OutputPath,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('1h', '6h', '24h', '7d', '30d')]
     [string]$TimeRange = '24h',
 
-    [Parameter()]
+    [parameter()]
     [switch]$IncludeCharts,
 
-    [Parameter()]
+    [parameter()]
     [string[]]$EmailRecipients,
 
-    [Parameter()]
+    [parameter()]
     [switch]$Compress
 )
+    [string]$ErrorActionPreference = 'Stop'
 
-$ErrorActionPreference = 'Stop'
-
-[OutputType([PSCustomObject])]
+[OutputType([PSCustomObject])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
-        $context = Get-AzContext
+    $context = Get-AzContext
     }
 
     if ($SubscriptionId -and $context.Subscription.Id -ne $SubscriptionId) {
-        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Yellow
+        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Green
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     }
 
@@ -98,33 +96,32 @@ $ErrorActionPreference = 'Stop'
 }
 
 function Get-ComplianceData {
-    param([string]$ResourceGroup)
+        param([string]$ResourceGroup)
 
-    Write-Host "Gathering compliance data..." -ForegroundColor Yellow
-
+    Write-Host "Gathering compliance data..." -ForegroundColor Green
     $params = @{
         Top = 5000
     }
     if ($ResourceGroup) {
-        $params['ResourceGroupName'] = $ResourceGroup
+    [string]$params['ResourceGroupName'] = $ResourceGroup
     }
 
     try {
-        $policyStates = Get-AzPolicyState @params
-        $assignments = Get-AzPolicyAssignment
+    $PolicyStates = Get-AzPolicyState @params
+    $assignments = Get-AzPolicyAssignment
 
         return @{
-            PolicyStates = $policyStates
+            PolicyStates = $PolicyStates
             Assignments = $assignments
             Summary = @{
-                TotalResources = $policyStates.Count
-                CompliantResources = ($policyStates | Where-Object IsCompliant).Count
-                NonCompliantResources = ($policyStates | Where-Object { -not $_.IsCompliant }).Count
+                TotalResources = $PolicyStates.Count
+                CompliantResources = ($PolicyStates | Where-Object IsCompliant).Count
+                NonCompliantResources = ($PolicyStates | Where-Object { -not $_.IsCompliant }).Count
                 TotalPolicies = $assignments.Count
             }
-        
+
 } catch {
-        Write-Warning "Failed to retrieve compliance data: $_"
+        write-Warning "Failed to retrieve compliance data: $_"
         return @{
             PolicyStates = @()
             Assignments = @()
@@ -139,30 +136,29 @@ function Get-ComplianceData {
 }
 
 function Get-SecurityData {
-    param([string]$ResourceGroup)
+        param([string]$ResourceGroup)
 
-    Write-Host "Gathering security data..." -ForegroundColor Yellow
+    Write-Host "Gathering security data..." -ForegroundColor Green
 
     try {
-        $params = if ($ResourceGroup) { @{ ResourceGroupName = $ResourceGroup } } else { @{} }
-
-        $roleAssignments = Get-AzRoleAssignment @params
-        $locks = Get-AzResourceLock @params
-        $nsgs = Get-AzNetworkSecurityGroup @params
+    [string]$params = if ($ResourceGroup) { @{ ResourceGroupName = $ResourceGroup } } else { @{} }
+    $RoleAssignments = Get-AzRoleAssignment @params
+    $locks = Get-AzResourceLock @params
+    $nsgs = Get-AzNetworkSecurityGroup @params
 
         return @{
-            RoleAssignments = $roleAssignments
+            RoleAssignments = $RoleAssignments
             ResourceLocks = $locks
             NetworkSecurityGroups = $nsgs
             Summary = @{
-                TotalRoleAssignments = $roleAssignments.Count
+                TotalRoleAssignments = $RoleAssignments.Count
                 TotalLocks = $locks.Count
                 TotalNSGs = $nsgs.Count
-                UnprotectedResources = 0  # Calculate based on resources without locks
+                UnprotectedResources = 0
             }
-        
+
 } catch {
-        Write-Warning "Failed to retrieve security data: $_"
+        write-Warning "Failed to retrieve security data: $_"
         return @{
             RoleAssignments = @()
             ResourceLocks = @()
@@ -178,32 +174,31 @@ function Get-SecurityData {
 }
 
 function Get-InventoryData {
-    param([string]$ResourceGroup)
+        param([string]$ResourceGroup)
 
-    Write-Host "Gathering inventory data..." -ForegroundColor Yellow
+    Write-Host "Gathering inventory data..." -ForegroundColor Green
 
     try {
-        $params = if ($ResourceGroup) { @{ ResourceGroupName = $ResourceGroup } } else { @{} }
-        $resources = Get-AzResource @params
-
-        $groupedByType = $resources | Group-Object ResourceType
-        $groupedByLocation = $resources | Group-Object Location
-        $groupedByRG = $resources | Group-Object ResourceGroupName
+    [string]$params = if ($ResourceGroup) { @{ ResourceGroupName = $ResourceGroup } } else { @{} }
+    $resources = Get-AzResource @params
+    [string]$GroupedByType = $resources | Group-Object ResourceType
+    [string]$GroupedByLocation = $resources | Group-Object Location
+    [string]$GroupedByRG = $resources | Group-Object ResourceGroupName
 
         return @{
             Resources = $resources
-            ByType = $groupedByType
-            ByLocation = $groupedByLocation
-            ByResourceGroup = $groupedByRG
+            ByType = $GroupedByType
+            ByLocation = $GroupedByLocation
+            ByResourceGroup = $GroupedByRG
             Summary = @{
                 TotalResources = $resources.Count
-                UniqueTypes = $groupedByType.Count
-                UniqueLocations = $groupedByLocation.Count
-                ResourceGroups = $groupedByRG.Count
+                UniqueTypes = $GroupedByType.Count
+                UniqueLocations = $GroupedByLocation.Count
+                ResourceGroups = $GroupedByRG.Count
             }
-        
+
 } catch {
-        Write-Warning "Failed to retrieve inventory data: $_"
+        write-Warning "Failed to retrieve inventory data: $_"
         return @{
             Resources = @()
             ByType = @()
@@ -220,14 +215,13 @@ function Get-InventoryData {
 }
 
 function Get-ActivityData {
-    param(
+        param(
         [string]$ResourceGroup,
         [string]$TimeRange
     )
 
-    Write-Host "Gathering activity data..." -ForegroundColor Yellow
-
-    $startTime = switch ($TimeRange) {
+    Write-Host "Gathering activity data..." -ForegroundColor Green
+    [string]$StartTime = switch ($TimeRange) {
         '1h' { (Get-Date).AddHours(-1) }
         '6h' { (Get-Date).AddHours(-6) }
         '24h' { (Get-Date).AddDays(-1) }
@@ -237,15 +231,14 @@ function Get-ActivityData {
     }
 
     try {
-        $params = @{
-            StartTime = $startTime
+    $params = @{
+            StartTime = $StartTime
             EndTime = Get-Date
         }
         if ($ResourceGroup) {
-            $params['ResourceGroupName'] = $ResourceGroup
+    [string]$params['ResourceGroupName'] = $ResourceGroup
         }
-
-        $activities = Get-AzActivityLog @params
+    $activities = Get-AzActivityLog @params
 
         return @{
             Activities = $activities
@@ -254,12 +247,12 @@ function Get-ActivityData {
                 ErrorEvents = ($activities | Where-Object Level -eq 'Error').Count
                 WarningEvents = ($activities | Where-Object Level -eq 'Warning').Count
                 TimeRange = $TimeRange
-                StartTime = $startTime
+                StartTime = $StartTime
                 EndTime = Get-Date
             }
-        
+
 } catch {
-        Write-Warning "Failed to retrieve activity data: $_"
+        write-Warning "Failed to retrieve activity data: $_"
         return @{
             Activities = @()
             Summary = @{
@@ -267,7 +260,7 @@ function Get-ActivityData {
                 ErrorEvents = 0
                 WarningEvents = 0
                 TimeRange = $TimeRange
-                StartTime = $startTime
+                StartTime = $StartTime
                 EndTime = Get-Date
             }
         }
@@ -275,14 +268,13 @@ function Get-ActivityData {
 }
 
 function New-HTMLReport {
-    param(
+        param(
         [hashtable]$Data,
         [string]$ReportType,
         [string]$FilePath,
         [bool]$IncludeCharts
     )
-
-    $html = @"
+    [string]$html = @"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -292,25 +284,25 @@ function New-HTMLReport {
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #0078d4, #106ebe); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+        .header { background: linear-gradient(135deg,
         .header h1 { margin: 0; font-size: 2.5em; font-weight: 300; }
         .header .subtitle { opacity: 0.9; margin-top: 10px; font-size: 1.1em; }
         .content { padding: 30px; }
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .summary-card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 20px; text-align: center; }
-        .summary-card h3 { margin: 0 0 10px 0; color: #495057; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
-        .summary-card .value { font-size: 2.5em; font-weight: bold; color: #0078d4; margin: 10px 0; }
+        .summary-card { background:
+        .summary-card h3 { margin: 0 0 10px 0; color:
+        .summary-card .value { font-size: 2.5em; font-weight: bold; color:
         .section { margin-bottom: 40px; }
-        .section h2 { color: #0078d4; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; margin-bottom: 20px; }
+        .section h2 { color:
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
-        th { background: #0078d4; color: white; padding: 12px; text-align: left; font-weight: 600; }
-        td { padding: 12px; border-bottom: 1px solid #e9ecef; }
-        tr:hover { background: #f8f9fa; }
-        .status-compliant { color: #28a745; font-weight: bold; }
-        .status-non-compliant { color: #dc3545; font-weight: bold; }
-        .status-warning { color: #ffc107; font-weight: bold; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; border-radius: 0 0 8px 8px; }
-        .chart-container { margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 6px; }
+        th { background:
+        td { padding: 12px; border-bottom: 1px solid
+        tr:hover { background:
+        .status-compliant { color:
+        .status-non-compliant { color:
+        .status-warning { color:
+        .footer { background:
+        .chart-container { margin: 20px 0; padding: 20px; background:
     </style>
 </head>
 <body>
@@ -323,10 +315,9 @@ function New-HTMLReport {
         <div class="content">
 "@
 
-    # Add summary section based on report type
     switch ($ReportType) {
         'Compliance' {
-            $html += @"
+    [string]$html += @"
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>Total Resources</h3>
@@ -348,7 +339,7 @@ function New-HTMLReport {
 "@
         }
         'Security' {
-            $html += @"
+    [string]$html += @"
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>Role Assignments</h3>
@@ -370,7 +361,7 @@ function New-HTMLReport {
 "@
         }
         'Inventory' {
-            $html += @"
+    [string]$html += @"
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>Total Resources</h3>
@@ -392,7 +383,7 @@ function New-HTMLReport {
 "@
         }
         'Activity' {
-            $html += @"
+    [string]$html += @"
             <div class="summary-grid">
                 <div class="summary-card">
                     <h3>Total Events</h3>
@@ -414,23 +405,20 @@ function New-HTMLReport {
 "@
         }
     }
-
-    $html += @"
+    [string]$html += @"
         </div>
         <div class="footer">
-            Report generated by Azure PowerShell Toolkit
         </div>
     </div>
 </body>
 </html>
 "@
-
-    $html | Out-File -FilePath $FilePath -Encoding UTF8
+    [string]$html | Out-File -FilePath $FilePath -Encoding UTF8
     Write-Host "HTML report saved: $FilePath" -ForegroundColor Green
 }
 
 function Export-ReportData {
-    param(
+        param(
         [hashtable]$Data,
         [string]$Format,
         [string]$FilePath
@@ -438,22 +426,21 @@ function Export-ReportData {
 
     switch ($Format) {
         'JSON' {
-            $Data | ConvertTo-Json -Depth 10 | Out-File -FilePath $FilePath -Encoding UTF8
+    [string]$Data | ConvertTo-Json -Depth 10 | Out-File -FilePath $FilePath -Encoding UTF8
         }
         'CSV' {
-            # Export main data as CSV (structure depends on report type)
             if ($Data.PolicyStates) {
-                $Data.PolicyStates | Export-Csv -Path $FilePath -NoTypeInformation
+    [string]$Data.PolicyStates | Export-Csv -Path $FilePath -NoTypeInformation
             } elseif ($Data.Resources) {
-                $Data.Resources | Export-Csv -Path $FilePath -NoTypeInformation
+    [string]$Data.Resources | Export-Csv -Path $FilePath -NoTypeInformation
             } elseif ($Data.Activities) {
-                $Data.Activities | Export-Csv -Path $FilePath -NoTypeInformation
+    [string]$Data.Activities | Export-Csv -Path $FilePath -NoTypeInformation
             }
         }
         'Excel' {
-            Write-Warning "Excel export requires additional modules. Saving as CSV instead."
-            $csvPath = $FilePath -replace '\.xlsx$', '.csv'
-            Export-ReportData -Data $Data -Format 'CSV' -FilePath $csvPath
+            write-Warning "Excel export requires additional modules. Saving as CSV instead."
+    [string]$CsvPath = $FilePath -replace '\.xlsx$', '.csv'
+            Export-ReportData -Data $Data -Format 'CSV' -FilePath $CsvPath
         }
     }
 
@@ -461,7 +448,7 @@ function Export-ReportData {
 }
 
 function New-ReportArchive {
-    param(
+        param(
         [string[]]$FilePaths,
         [string]$ArchivePath
     )
@@ -471,40 +458,32 @@ function New-ReportArchive {
             Compress-Archive -Path $FilePaths -DestinationPath $ArchivePath -Force
             Write-Host "Report archive created: $ArchivePath" -ForegroundColor Green
         } else {
-            Write-Warning "Compress-Archive not available. Skipping archive creation."
-        
+            write-Warning "Compress-Archive not available. Skipping archive creation."
+
 } catch {
-        Write-Warning "Failed to create archive: $_"
+        write-Warning "Failed to create archive: $_"
     }
 }
 
-# Main execution
-Write-Host "`nAzure Governance Report Generator" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
-
-$context = Test-AzureConnection
+Write-Host "`nAzure Governance Report Generator" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
+    [string]$context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
-# Set output path
 if (-not $OutputPath) {
     $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-    $OutputPath = ".\Reports\Azure_${ReportType}_Report_$timestamp"
+    [string]$OutputPath = ".\Reports\Azure_${ReportType}_Report_$timestamp"
 }
-
-# Ensure output directory exists
-$outputDir = Split-Path $OutputPath -Parent
-if ($outputDir -and -not (Test-Path $outputDir)) {
-    New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+    [string]$OutputDir = Split-Path $OutputPath -Parent
+if ($OutputDir -and -not (Test-Path $OutputDir)) {
+    New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 }
-
-# Gather data based on report type
-$reportData = switch ($ReportType) {
+    [string]$ReportData = switch ($ReportType) {
     'Compliance' { Get-ComplianceData -ResourceGroup $ResourceGroupName }
     'Security' { Get-SecurityData -ResourceGroup $ResourceGroupName }
     'Inventory' { Get-InventoryData -ResourceGroup $ResourceGroupName }
     'Activity' { Get-ActivityData -ResourceGroup $ResourceGroupName -TimeRange $TimeRange }
     'Custom' {
-        # Gather all data for custom report
         @{
             Compliance = Get-ComplianceData -ResourceGroup $ResourceGroupName
             Security = Get-SecurityData -ResourceGroup $ResourceGroupName
@@ -513,44 +492,39 @@ $reportData = switch ($ReportType) {
         }
     }
 }
-
-# Generate report files
-$reportFiles = @()
-
-# Primary report
-$primaryFile = "$OutputPath.$($OutputFormat.ToLower())"
+    [string]$ReportFiles = @()
+    [string]$PrimaryFile = "$OutputPath.$($OutputFormat.ToLower())"
 switch ($OutputFormat) {
     'HTML' {
-        New-HTMLReport -Data $reportData -ReportType $ReportType -FilePath $primaryFile -IncludeCharts $IncludeCharts
+        New-HTMLReport -Data $ReportData -ReportType $ReportType -FilePath $PrimaryFile -IncludeCharts $IncludeCharts
     }
     default {
-        Export-ReportData -Data $reportData -Format $OutputFormat -FilePath $primaryFile
+        Export-ReportData -Data $ReportData -Format $OutputFormat -FilePath $PrimaryFile
     }
 }
-$reportFiles += $primaryFile
+    [string]$ReportFiles += $PrimaryFile
 
-# Always create a JSON backup
 if ($OutputFormat -ne 'JSON') {
-    $jsonFile = "$OutputPath.json"
-    Export-ReportData -Data $reportData -Format 'JSON' -FilePath $jsonFile
-    $reportFiles += $jsonFile
+    [string]$JsonFile = "$OutputPath.json"
+    Export-ReportData -Data $ReportData -Format 'JSON' -FilePath $JsonFile
+    [string]$ReportFiles += $JsonFile
 }
 
-# Create archive if requested
 if ($Compress) {
-    $archivePath = "$OutputPath.zip"
-    New-ReportArchive -FilePaths $reportFiles -ArchivePath $archivePath
+    [string]$ArchivePath = "$OutputPath.zip"
+    New-ReportArchive -FilePaths $ReportFiles -ArchivePath $ArchivePath
 }
 
-# Email reports if recipients specified
 if ($EmailRecipients) {
-    Write-Host "`nWould email reports to: $($EmailRecipients -join ', ')" -ForegroundColor Yellow
-    Write-Host "Email functionality requires additional configuration" -ForegroundColor Yellow
+    Write-Host "`nWould email reports to: $($EmailRecipients -join ', ')" -ForegroundColor Green
+    Write-Host "Email functionality requires additional configuration" -ForegroundColor Green
 }
 
 Write-Host "`nReport generation completed!" -ForegroundColor Green
-Write-Host "Files created:" -ForegroundColor Cyan
-$reportFiles | ForEach-Object {
+Write-Host "Files created:" -ForegroundColor Green
+    [string]$ReportFiles | ForEach-Object {
     Write-Host "  - $_" -ForegroundColor Green
 }\n
+
+
 

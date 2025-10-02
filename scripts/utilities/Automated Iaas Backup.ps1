@@ -1,76 +1,138 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Resources, Az.RecoveryServices
 
-<#`n.SYNOPSIS
-    Automated Iaas Backup
+<#
+.SYNOPSIS
+    Automated IaaS VM Backup
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation runbook for automated IaaS VM Backup using Recovery Services
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-   Runbook for automated IaaS VM Backup in Azure using Backup and Site Recovery (OMS)
-   This Runbook will enable Backup on existing Azure IaaS VMs.
-   You need to provide input to the Resource Group name that contains the Backup and Site Recovery (OMS) Resourcem the name of the recovery vault,
-   Fabric type, preferred policy and the template URI where the ARM template is located. Have fun!
-$credential = Get-AutomationPSCredential -Name 'AzureCredentials'
-$subscriptionId = Get-AutomationVariable -Name 'AzureSubscriptionID'
-$OMSWorkspaceId = Get-AutomationVariable -Name 'OMSWorkspaceId'
-$OMSWorkspaceKey = Get-AutomationVariable -Name 'OMSWorkspaceKey'
-$OMSWorkspaceName = Get-AutomationVariable -Name 'OMSWorkspaceName'
-$OMSResourceGroupName = Get-AutomationVariable -Name 'OMSResourceGroupName'
-$TemplateUri='https://raw.githubusercontent.com/krnese/AzureDeploy/master/OMS/MSOMS/AzureIaaSBackup/azuredeploy.json'
-$OMSRecoveryVault = Get-AutomationVariable -Name 'OMSRecoveryVault'
-$ErrorActionPreference = 'Stop'
-Try {
-        Login-AzureRmAccount -credential $credential
-        Select-AzureRmSubscription -SubscriptionId $subscriptionId
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$SubscriptionId,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RecoveryVaultName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RecoveryVaultResourceGroupName,
+
+    [Parameter()]
+    [string]$Location,
+
+    [Parameter()]
+    [string]$PolicyName = "DefaultPolicy",
+
+    [Parameter()]
+    [string[]]$VMResourceGroupNames,
+
+    [Parameter()]
+    [pscredential]$Credential
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    # Connect to Azure
+    if ($Credential) {
+        Connect-AzAccount -Credential $Credential -ErrorAction Stop
+    } else {
+        Connect-AzAccount -Identity -ErrorAction Stop
     }
-Catch {
-        $ErrorMessage = 'Login to Azure failed.'
-        $ErrorMessage = $ErrorMessage + " `n"
-        $ErrorMessage = $ErrorMessage + 'Error: '
-        $ErrorMessage = $ErrorMessage + $_
-        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-Try {
-        $Location = Get-AzureRmRecoveryServicesVault -Name $OMSRecoveryVault -ResourceGroupName $OMSResourceGroupName | select -ExpandProperty Location
+
+    Set-AzContext -SubscriptionId $SubscriptionId -ErrorAction Stop
+    Write-Output "Successfully connected to Azure subscription: $SubscriptionId"
+}
+catch {
+    $errorMessage = "Failed to connect to Azure: $($_.Exception.Message)"
+    Write-Error -Message $errorMessage
+    throw
+}
+
+try {
+    # Get Recovery Services Vault
+    $vault = Get-AzRecoveryServicesVault -Name $RecoveryVaultName -ResourceGroupName $RecoveryVaultResourceGroupName -ErrorAction Stop
+    $vaultLocation = $vault.Location
+
+    if ($Location -and $Location -ne $vaultLocation) {
+        Write-Warning "Specified location '$Location' differs from vault location '$vaultLocation'. Using vault location."
     }
-Catch {
-        $ErrorMessage = 'Failed to retrieve the OMS Recovery Location property'
-        $ErrorMessage = $ErrorMessage + " `n"
-        $ErrorMessage = $ErrorMessage + 'Error: '
-        $ErrorMessage = $ErrorMessage + $_
-        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-Try {
-        $VMs = Get-AzureRmVM -ErrorAction Stop | Where-Object {$_.Location -eq $Location}
+    $Location = $vaultLocation
+
+    Write-Output "Retrieved Recovery Services Vault: $RecoveryVaultName in location: $Location"
+}
+catch {
+    $errorMessage = "Failed to retrieve Recovery Services Vault '$RecoveryVaultName': $($_.Exception.Message)"
+    Write-Error -Message $errorMessage
+    throw
+}
+
+try {
+    # Get VMs to backup
+    if ($VMResourceGroupNames) {
+        $vms = @()
+        foreach ($rgName in $VMResourceGroupNames) {
+            $vms += Get-AzVM -ResourceGroupName $rgName -ErrorAction Stop | Where-Object { $_.Location -eq $Location }
+        }
+    } else {
+        $vms = Get-AzVM -ErrorAction Stop | Where-Object { $_.Location -eq $Location }
     }
-Catch {
-        $ErrorMessage = 'Failed to retrieve the VMs.'
-        $ErrorMessage = $ErrorMessage + " `n"
-        $ErrorMessage = $ErrorMessage + 'Error: '
-$ErrorMessage = $ErrorMessage + $_
-        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-Try {
-        Foreach ($vm in $vms)
-        {
-            $params = @{
-                ResourceGroupName = $OMSResourceGroupName
-                vmResourceGroupName = $vm.ResourceGroupName
-                omsRecoveryResourceGroupName = $OMSResourceGroupName
-                Name = $vm.name
-                vmName = $vm.name
-                TemplateUri = $TemplateUri
-                vaultName = $OMSRecoveryVault
-                Verbose = "} }"
+
+    Write-Output "Found $($vms.Count) VMs in location '$Location' to configure for backup"
+}
+catch {
+    $errorMessage = "Failed to retrieve VMs: $($_.Exception.Message)"
+    Write-Error -Message $errorMessage
+    throw
+}
+
+try {
+    # Set vault context
+    Set-AzRecoveryServicesVaultContext -Vault $vault -ErrorAction Stop
+
+    # Get backup policy
+    $policy = Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName -ErrorAction Stop
+    Write-Output "Using backup policy: $PolicyName"
+
+    $successCount = 0
+    $failureCount = 0
+
+    foreach ($vm in $vms) {
+        try {
+            Write-Output "Configuring backup for VM: $($vm.Name)"
+
+            # Check if VM is already protected
+            $existingItem = Get-AzRecoveryServicesBackupItem -BackupManagementType AzureVM -WorkloadType AzureVM -Name $vm.Name -ErrorAction SilentlyContinue
+
+            if ($existingItem) {
+                Write-Output "VM '$($vm.Name)' is already protected. Skipping."
+                continue
             }
-            New-AzureRmResourceGroupDeployment @params
-Catch {
-$ErrorMessage = 'Failed to enable backup using ARM template.'
-        $ErrorMessage = $ErrorMessage + " `n"
-        $ErrorMessage = $ErrorMessage + 'Error: '
-$ErrorMessage = $ErrorMessage + $_
-        Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
 
+            # Enable backup protection
+            Enable-AzRecoveryServicesBackupProtection -Policy $policy -Name $vm.Name -ResourceGroupName $vm.ResourceGroupName -ErrorAction Stop
+            Write-Output "Successfully enabled backup for VM: $($vm.Name)"
+            $successCount++
+        }
+        catch {
+            Write-Warning "Failed to enable backup for VM '$($vm.Name)': $($_.Exception.Message)"
+            $failureCount++
+        }
+    }
 
+    Write-Output "Backup configuration completed. Success: $successCount, Failures: $failureCount"
+}
+catch {
+    $errorMessage = "Failed to configure VM backups: $($_.Exception.Message)"
+    Write-Error -Message $errorMessage
+    throw
+}

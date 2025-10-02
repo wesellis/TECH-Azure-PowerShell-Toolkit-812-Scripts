@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,33 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -49,28 +46,25 @@ param(
     [Parameter()]
     [string]$Sku = "Basic"
 )
-Write-Host "Creating Container Registry: $RegistryName"
-$params = @{
+Write-Output "Creating Container Registry: $RegistryName"
+    $params = @{
     ErrorAction = "Stop"
     Sku = $Sku
     ResourceGroupName = $ResourceGroupName
     Name = $RegistryName
     Location = $Location
 }
-$Registry @params
-Write-Host "Container Registry created successfully:"
-Write-Host "Name: $($Registry.Name)"
-Write-Host "Login Server: $($Registry.LoginServer)"
-Write-Host "Location: $($Registry.Location)"
-Write-Host "SKU: $($Registry.Sku.Name)"
-Write-Host "Admin Enabled: $($Registry.AdminUserEnabled)"
-$Creds = Get-AzContainerRegistryCredential -ResourceGroupName $ResourceGroupName -Name $RegistryName
-Write-Host " `nAdmin Credentials:"
-Write-Host "Username: $($Creds.Username)"
-Write-Host "Password: $($Creds.Password)"
+    [string]$Registry @params
+Write-Output "Container Registry created successfully:"
+Write-Output "Name: $($Registry.Name)"
+Write-Output "Login Server: $($Registry.LoginServer)"
+Write-Output "Location: $($Registry.Location)"
+Write-Output "SKU: $($Registry.Sku.Name)"
+Write-Output "Admin Enabled: $($Registry.AdminUserEnabled)"
+    $Creds = Get-AzContainerRegistryCredential -ResourceGroupName $ResourceGroupName -Name $RegistryName
+Write-Output " `nAdmin Credentials:"
+Write-Output "Username: $($Creds.Username)"
+Write-Output "Password: $($Creds.Password)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

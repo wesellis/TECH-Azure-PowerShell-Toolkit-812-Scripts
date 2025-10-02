@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,8 +10,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -24,9 +25,8 @@
     [Parameter()]
     [string]$Publisher = "Microsoft.Compute"
 )
-Write-Host "Managing VM extension: $ExtensionName"
+Write-Output "Managing VM extension: $ExtensionName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-# Install extension
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Publisher = $Publisher
@@ -38,9 +38,10 @@ $params = @{
     VMName = $VmName
 }
 Set-AzVMExtension @params
-Write-Host "Extension '$ExtensionName' installed successfully"
-Write-Host "VM: $VmName"
-Write-Host "Publisher: $Publisher"
-Write-Host "Type: $ExtensionType"
+Write-Output "Extension '$ExtensionName' installed successfully"
+Write-Output "VM: $VmName"
+Write-Output "Publisher: $Publisher"
+Write-Output "Type: $ExtensionType"
+
 
 

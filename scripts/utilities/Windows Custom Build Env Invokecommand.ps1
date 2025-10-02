@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Custom Build Env Invokecommand
@@ -20,7 +20,7 @@
 .PARAMETER Script
     Passed to 'cmd.exe /c' for execution after the environment for restoring packages is configured.
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoRoot,
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $Script,
@@ -41,5 +41,4 @@ try {
     SetPackagesRestoreEnvironmentAndRunScript @params
 }
 catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

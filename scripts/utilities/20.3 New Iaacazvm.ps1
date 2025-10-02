@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -9,11 +9,9 @@
 .DESCRIPTION
     Azure automation
     Wes Ellis (wes@wesellis.com)
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
 function New-IaaCAzVM -ErrorAction Stop {
     [CmdletBinding()]
@@ -43,121 +41,117 @@ function New-IaaCAzVM -ErrorAction Stop {
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$VMSize,
+    $VMSize,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$OSDiskCaching,
+    $OSDiskCaching,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$OSCreateOption,
+    $OSCreateOption,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$GUID,
+    $GUID,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$OSDiskName,
+    $OSDiskName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$ASGName,
+    $ASGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$NSGName,
+    $NSGName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$DNSNameLabel,
+    $DNSNameLabel,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$NICPrefix,
+    $NICPrefix,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$NICName,
+    $NICName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$IPConfigName,
+    $IPConfigName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$PublicIPAddressName,
+    $PublicIPAddressName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$VnetName,
+    $VnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$SubnetName,
+    $SubnetName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$PublicIPAllocation,
+    $PublicIPAllocation,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$PublisherName,
+    $PublisherName,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Offer,
+    $Offer,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Skus,
+    $Skus,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Version,
+    $Version,
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string]$DiskSizeInGB
+        $DiskSizeInGB
     )
-    #Creating the Resource Group Name
-    $newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
     New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-    #Getting the Existing VNET. We put our VMs in the same VNET as much as possible, so we do not have to create new bastions and new VPN gateways for each VM
-    $getAzVirtualNetworkSplat = @{
+    $GetAzVirtualNetworkSplat = @{
         Name = $VnetName
     }
     $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
-    #Getting the Existing Subnet
-    $getAzVirtualNetworkSubnetConfigSplat = @{
+    $GetAzVirtualNetworkSubnetConfigSplat = @{
         VirtualNetwork = $vnet
         Name           = $SubnetName
     }
     $VMsubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
-    #Creating the PublicIP for the VM
-    $newAzPublicIpAddressSplat = @{
+    $NewAzPublicIpAddressSplat = @{
         Name              = $PublicIPAddressName
         DomainNameLabel   = $DNSNameLabel
         ResourceGroupName = $ResourceGroupName
@@ -166,15 +160,14 @@ function New-IaaCAzVM -ErrorAction Stop {
         Tag               = $Tags
     }
     $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-    #Creating the Application Security Group
-    $newAzApplicationSecurityGroupSplat = @{
+    $NewAzApplicationSecurityGroupSplat = @{
         ResourceGroupName = " $ResourceGroupName"
         Name              = " $ASGName"
         Location          = " $LocationName"
         Tag               = $Tags
     }
     $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-    $newAzNetworkInterfaceIpConfigSplat = @{
+    $NewAzNetworkInterfaceIpConfigSplat = @{
         Name                     = $IPConfigName
         Subnet                   = $VMSubnet
         PublicIpAddress          = $PIP
@@ -182,15 +175,14 @@ function New-IaaCAzVM -ErrorAction Stop {
         Primary                  = $true
     }
     $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-    $newAzNetworkSecurityGroupSplat = @{
+    $NewAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         Name              = $NSGName
         Tag               = $Tags
     }
     $NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-    #Creating the NIC for the VM
-    $newAzNetworkInterfaceSplat = @{
+    $NewAzNetworkInterfaceSplat = @{
         Name                   = $NICName
         ResourceGroupName      = $ResourceGroupName
         Location               = $LocationName
@@ -199,30 +191,26 @@ function New-IaaCAzVM -ErrorAction Stop {
         Tag                    = $Tags
     }
     $NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
-    #Creating the Cred Object for the VM
     $Credential = Get-Credential -ErrorAction Stop
-    #Creating the VM Config Object for the VM
-    $newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName = $VMName
         VMSize = $VMSize
         Tags   = $Tags
     }
     $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-    #Creating the OS Object for the VM
-    $setAzVMOperatingSystemSplat = @{
+    $SetAzVMOperatingSystemSplat = @{
         VM           = $VirtualMachine
         Linux        = $true
         ComputerName = $ComputerName
         Credential   = $Credential
     }
     $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-    #Adding the NIC to the VM
-    $addAzVMNetworkInterfaceSplat = @{
+    $AddAzVMNetworkInterfaceSplat = @{
         VM = $VirtualMachine
         Id = $NIC.Id
     }
     $VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-    $setAzVMSourceImageSplat = @{
+    $SetAzVMSourceImageSplat = @{
         VM            = $VirtualMachine
         PublisherName = $PublisherName
         Offer         = $Offer
@@ -230,17 +218,15 @@ function New-IaaCAzVM -ErrorAction Stop {
         Version       = $Version
     }
     $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
-    #Setting the VM OS Disk to the VM
-    $setAzVMOSDiskSplat = @{
+    $SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
         DiskSizeInGB = $DiskSizeInGB
     }
-$VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-    #Creating the VM
-$newAzVMSplat = @{
+    $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
+    $NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
@@ -251,7 +237,4 @@ $newAzVMSplat = @{
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

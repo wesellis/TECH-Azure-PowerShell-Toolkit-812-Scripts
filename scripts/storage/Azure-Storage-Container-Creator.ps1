@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage containers
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,13 +21,15 @@
     [Parameter()]
     [string]$PublicAccess = "Off"
 )
-Write-Host "Creating storage container: $ContainerName"
+Write-Output "Creating storage container: $ContainerName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 $Container = New-AzStorageContainer -Name $ContainerName -Context $Context -Permission $PublicAccess
-Write-Host "Container created successfully:"
-Write-Host "Name: $($Container.Name)"
-Write-Host "Public Access: $PublicAccess"
-Write-Host "Storage Account: $StorageAccountName"
-Write-Host "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
+Write-Output "Container created successfully:"
+Write-Output "Name: $($Container.Name)"
+Write-Output "Public Access: $PublicAccess"
+Write-Output "Storage Account: $StorageAccountName"
+Write-Output "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
+
+
 

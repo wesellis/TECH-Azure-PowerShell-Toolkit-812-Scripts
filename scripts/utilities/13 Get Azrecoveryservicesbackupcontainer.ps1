@@ -1,7 +1,8 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
-#Requires -Module Az.Resources
-<#`n.SYNOPSIS
+
+<#
+.SYNOPSIS
     Get Azure Recovery Services backup container
 
 .DESCRIPTION
@@ -15,10 +16,20 @@
     LastModified: 2025-09-19
     Requires appropriate permissions and modules
 #>
-$CustomerName = 'CanPrintEquip'
-$VMName = 'Outlook1'
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$CustomerName = 'CanPrintEquip',
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName = 'Outlook1'
+)
+
+$ErrorActionPreference = 'Stop'
+
 $ResourceGroupName = -join ("$CustomerName" , "_Outlook" , "_RG" )
-$Vaultname = -join (" $VMName" , "ARSV1" )
+$Vaultname = -join ("$VMName" , "ARSV1" )
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $ResourceGroupName
     Name = $Vaultname
@@ -32,4 +43,3 @@ $getAzRecoveryServicesBackupContainerSplat = @{
 }
 $namedContainer = Get-AzRecoveryServicesBackupContainer @getAzRecoveryServicesBackupContainerSplat
 $namedContainer
-

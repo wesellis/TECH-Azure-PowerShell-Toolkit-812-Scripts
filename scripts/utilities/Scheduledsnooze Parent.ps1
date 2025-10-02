@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,30 +10,29 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
  Wrapper script for get all the VM's in all RG's or subscription level and then call the Start or Stop runbook
  Wrapper script for get all the VM's in all RG's or subscription level and then call the Start or Stop runbook
 .\ScheduledSnooze_Parent.ps1 -Action "Value1" -WhatIf "False"
 Version History
 v1.0   - Initial Release
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true, HelpMessage = "Enter the value for Action. Values can be either stop or start" )][String]$Action,
     [Parameter(Mandatory = $false, HelpMessage = "Enter the value for WhatIf. Values can be either true or false" )][bool]$WhatIf = $false
 )
 function ScheduleSnoozeAction ($VMObject, [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Action) {
+    $Action) {
     Write-Output "Calling the ScheduledSnooze_Child wrapper (Action = $($Action))..."
     if ($Action.ToLower() -eq 'start') {
-$params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " start" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
+    $params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " start" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
     }
     elseif ($Action.ToLower() -eq 'stop') {
-        $params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " stop" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
+    $params = @{"VMName" = " $($VMObject.Name)" ; "Action" = " stop" ; "ResourceGroupName" = " $($VMObject.ResourceGroupName)" }
     }
     Write-Output "Performing the schedule $($Action) for the VM : $($VMObject.Name)"
-    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'ScheduledSnooze_Child' -ResourceGroupName $aroResourceGroupName Parameters $params
+    $runbook = Start-AzureRmAutomationRunbook -automationAccountName $AutomationAccountName -Name 'ScheduledSnooze_Child' -ResourceGroupName $AroResourceGroupName Parameters $params
 }
 function CheckExcludeVM ($FilterVMList) {
     $AzureVM = Get-AzureRmVM -ErrorAction SilentlyContinue
@@ -43,16 +42,16 @@ function CheckExcludeVM ($FilterVMList) {
     foreach ($filtervm in $VMfilterList) {
         foreach ($vmname in $AzureVM) {
             if ($Vmname.Name.ToLower().Trim() -eq $filtervm.Tolower().Trim()) {
-                $ISexists = $true
-                $ExAzureVMList = $ExAzureVMList + $vmname
+    $ISexists = $true
+    $ExAzureVMList = $ExAzureVMList + $vmname
                 break
             }
             else {
-                $ISexists = $false
+    $ISexists = $false
             }
         }
         if ($ISexists -eq $false) {
-            $invalidvm = $invalidvm + $filtervm
+    $invalidvm = $invalidvm + $filtervm
         }
     }
     if ($null -ne $invalidvm) {
@@ -64,21 +63,20 @@ function CheckExcludeVM ($FilterVMList) {
         Write-Output "Exclude VM's validation completed..."
     }
 }
-$connectionName = "AzureRunAsConnection"
+    $ConnectionName = "AzureRunAsConnection"
 try {
-    # Get the connection "AzureRunAsConnection "
-    $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
+    $ServicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName
     "Logging in to Azure..."
     $params = @{
-        ApplicationId = $servicePrincipalConnection.ApplicationId
-        TenantId = $servicePrincipalConnection.TenantId
-        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+        ApplicationId = $ServicePrincipalConnection.ApplicationId
+        TenantId = $ServicePrincipalConnection.TenantId
+        CertificateThumbprint = $ServicePrincipalConnection.CertificateThumbprint
     }
     Add-AzureRmAccount @params
 }
 catch {
-    if (!$servicePrincipalConnection) {
-        $ErrorMessage = "Connection $connectionName not found."
+    if (!$ServicePrincipalConnection) {
+    $ErrorMessage = "Connection $ConnectionName not found."
         throw $ErrorMessage
     }
     else {
@@ -86,11 +84,11 @@ catch {
         throw $_.Exception
     }
 }
-$SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
-$ResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
-$ExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
-$automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
-$aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
+    $SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
+    $ResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
+    $ExcludeVMNames = Get-AutomationVariable -Name 'External_ExcludeVMNames'
+    $AutomationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
+    $AroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
 try {
     $Action = $Action.Trim().ToLower()
     if (!($Action -eq " start" -or $Action -eq " stop" )) {
@@ -101,45 +99,42 @@ try {
     Write-Output "Runbook Execution Started..."
     [string[]] $VMfilterList = $ExcludeVMNames -split " ,"
     [string[]] $VMRGList = $ResourceGroupNames -split " ,"
-    #Validate the Exclude List VM's and stop the execution if the list contains any invalid VM
     if ([string]::IsNullOrEmpty($ExcludeVMNames) -ne $true) {
         Write-Output "Exclude VM's added so validating the resource(s)..."
         CheckExcludeVM -FilterVMList $VMfilterList
     }
     $AzureVMListTemp = $null
     $AzureVMList = @()
-    ##Getting VM Details based on RG List or Subscription
     if ($null -ne $VMRGList) {
         foreach ($Resource in $VMRGList) {
             Write-Output "Validating the resource group name ($($Resource.Trim()))"
-            $checkRGname = Get-AzureRmResourceGroup -Name $Resource.Trim() -ev notPresent -ea 0
-            if ($null -eq $checkRGname) {
+    $CheckRGname = Get-AzureRmResourceGroup -Name $Resource.Trim() -ev notPresent -ea 0
+            if ($null -eq $CheckRGname) {
                 Write-Warning " $($Resource) is not a valid Resource Group Name. Please Verify!"
             }
             else {
                 Write-Output "Resource Group Exists..."
-                $AzureVMListTemp = Get-AzureRmVM -ResourceGroupName $Resource -ErrorAction SilentlyContinue
+    $AzureVMListTemp = Get-AzureRmVM -ResourceGroupName $Resource -ErrorAction SilentlyContinue
                 if ($null -ne $AzureVMListTemp) {
-                    $AzureVMList = $AzureVMList + $AzureVMListTemp
+    $AzureVMList = $AzureVMList + $AzureVMListTemp
                 }
             }
         }
     }
     else {
         Write-Output "Getting all the VM's from the subscription..."
-        $AzureVMList = Get-AzureRmVM -ErrorAction SilentlyContinue
+    $AzureVMList = Get-AzureRmVM -ErrorAction SilentlyContinue
     }
     $ActualAzureVMList = @()
     if ($null -ne $VMfilterList) {
         foreach ($VM in $AzureVMList) {
-            ##Checking Vm in excluded list
             if ($VMfilterList -notcontains ($($VM.Name))) {
-                $ActualAzureVMList = $ActualAzureVMList + $VM
+    $ActualAzureVMList = $ActualAzureVMList + $VM
             }
         }
     }
     else {
-$ActualAzureVMList = $AzureVMList
+    $ActualAzureVMList = $AzureVMList
     }
     Write-Output "The current action is $($Action)"
     if ($WhatIf -eq $false) {
@@ -156,8 +151,5 @@ $ActualAzureVMList = $AzureVMList
     Write-Output "Runbook Execution Completed..."
 }
 catch {
-$ex = $_.Exception
-    Write-Output $_.Exception
-}
-
-
+    $ex = $_.Exception
+    Write-Output $_.Exception`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
 #Requires -Module Az.Resources, Az.Profile, Az.PolicyInsights, Az.ManagementGroups
@@ -41,95 +41,84 @@
     - Hub-spoke network topology
     - Identity and access management structure
     - Monitoring and logging configuration
-#>
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding()]
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$TenantId,
+    $TenantId,
 
     [Parameter(Mandatory)]
     [ValidateLength(2, 6)]
     [ValidatePattern('^[A-Z]+$')]
-    [string]$ManagementGroupPrefix,
+    $ManagementGroupPrefix,
 
     [Parameter()]
     [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
-    [string]$HubSubscriptionId,
+    $HubSubscriptionId,
 
     [Parameter()]
     [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
-    [string]$IdentitySubscriptionId,
+    $IdentitySubscriptionId,
 
     [Parameter()]
     [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
-    [string]$ManagementSubscriptionId,
+    $ManagementSubscriptionId,
 
     [Parameter()]
     [ValidateSet("eastus", "eastus2", "westus", "westus2", "westus3", "centralus", "northcentralus", "southcentralus", "westcentralus", "canadacentral", "canadaeast", "brazilsouth", "northeurope", "westeurope", "uksouth", "ukwest", "francecentral", "germanywestcentral", "norwayeast", "switzerlandnorth", "swedencentral", "australiaeast", "australiasoutheast", "southeastasia", "eastasia", "japaneast", "japanwest", "koreacentral", "southafricanorth", "uaenorth")]
-    [string]$Location = "eastus",
+    $Location = "eastus",
 
     [Parameter()]
     [ValidateSet("eastus", "eastus2", "westus", "westus2", "westus3", "centralus", "northcentralus", "southcentralus", "westcentralus", "canadacentral", "canadaeast", "brazilsouth", "northeurope", "westeurope", "uksouth", "ukwest", "francecentral", "germanywestcentral", "norwayeast", "switzerlandnorth", "swedencentral", "australiaeast", "australiasoutheast", "southeastasia", "eastasia", "japaneast", "japanwest", "koreacentral", "southafricanorth", "uaenorth")]
-    [string]$SecondaryLocation = "westus2",
+    $SecondaryLocation = "westus2",
 
     [Parameter()]
     [ValidateLength(2, 20)]
     [ValidatePattern('^[A-Za-z0-9\s]+$')]
-    [string]$CompanyName = "Enterprise",
+    $CompanyName = "Enterprise",
 
     [Parameter()]
     [switch]$WhatIf
 )
 
-# Global variables for consistent naming
 $script:DeploymentTimestamp = Get-Date -Format "yyyyMMdd-HHmm"
 $script:LogFile = "LandingZone-Deployment-$script:DeploymentTimestamp.log"
 
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
-
-        [Parameter(Mandatory)]
-        [string]$Message,
+function Write-Log {
+    [Parameter(Mandatory)]
+        $Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]
-        [string]$Level = "Info"
+        $Level = "Info"
     )
 
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
+    $LogEntry = "[$timestamp] [$Level] $Message"
 
-    # Write to console with appropriate color
     switch ($Level) {
-        "Info" { Write-Information $logEntry -InformationAction Continue }
-        "Warning" { Write-Warning $logEntry }
-        "Error" { Write-Error $logEntry }
-        "Success" { Write-Host $logEntry -ForegroundColor Green }
+        "Info" { Write-Information $LogEntry -InformationAction Continue }
+        "Warning" { Write-Warning $LogEntry }
+        "Error" { Write-Error $LogEntry }
+        "Success" { Write-Output $LogEntry -ForegroundColor Green }
     }
 
-    # Write to log file
-    Add-Content -Path $script:LogFile -Value $logEntry
+    Add-Content -Path $script:LogFile -Value $LogEntry
 }
 
 function Test-Prerequisites {
     Write-LogMessage "Validating prerequisites..."
 
-    # Check PowerShell version
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         throw "PowerShell 7.0 or higher is required. Current version: $($PSVersionTable.PSVersion)"
     }
 
-    # Check Azure PowerShell modules
-    $requiredModules = @("Az.Resources", "Az.Profile", "Az.PolicyInsights", "Az.ManagementGroups")
-    foreach ($module in $requiredModules) {
+    $RequiredModules = @("Az.Resources", "Az.Profile", "Az.PolicyInsights", "Az.ManagementGroups")
+    foreach ($module in $RequiredModules) {
         if (-not (Get-Module -Name $module -ListAvailable)) {
             throw "Required module '$module' is not installed. Run: Install-Module -Name $module"
         }
     }
 
-    # Test Azure connection
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -148,7 +137,6 @@ function Test-Prerequisites {
         throw "Failed to connect to Azure: $($_.Exception.Message)"
     }
 
-    # Validate permissions
     try {
         $null = Get-AzManagementGroup -ErrorAction Stop
         Write-LogMessage "Management Group permissions validated" -Level Success
@@ -161,7 +149,7 @@ function Test-Prerequisites {
 function New-ManagementGroupHierarchy {
     Write-LogMessage "Creating management group hierarchy..."
 
-    $managementGroups = @(
+    $ManagementGroups = @(
         @{
             Name = "$ManagementGroupPrefix-Root"
             DisplayName = "$CompanyName Root"
@@ -214,11 +202,11 @@ function New-ManagementGroupHierarchy {
         }
     )
 
-    foreach ($mg in $managementGroups) {
+    foreach ($mg in $ManagementGroups) {
         try {
-            $existingMG = Get-AzManagementGroup -GroupName $mg.Name -ErrorAction SilentlyContinue
+            $ExistingMG = Get-AzManagementGroup -GroupName $mg.Name -ErrorAction SilentlyContinue
 
-            if ($existingMG) {
+            if ($ExistingMG) {
                 Write-LogMessage "Management group '$($mg.Name)' already exists" -Level Warning
                 continue
             }
@@ -228,19 +216,18 @@ function New-ManagementGroupHierarchy {
                 continue
             }
 
-            $mgParams = @{
+            $MgParams = @{
                 GroupName = $mg.Name
                 DisplayName = $mg.DisplayName
             }
 
             if ($mg.ParentId) {
-                $mgParams.ParentId = "/providers/Microsoft.Management/managementGroups/$($mg.ParentId)"
+                $MgParams.ParentId = "/providers/Microsoft.Management/managementGroups/$($mg.ParentId)"
             }
 
             $null = New-AzManagementGroup @mgParams
             Write-LogMessage "Created management group: $($mg.DisplayName)" -Level Success
 
-            # Wait for replication
             Start-Sleep -Seconds 5
         }
         catch {
@@ -253,8 +240,7 @@ function New-ManagementGroupHierarchy {
 function Set-PolicyAssignments {
     Write-LogMessage "Configuring policy assignments..."
 
-    # Core policy initiatives for Landing Zone
-    $policyAssignments = @(
+    $PolicyAssignments = @(
         @{
             Name = "Enforce-ALZ-Governance"
             DisplayName = "Enforce Azure Landing Zone Governance"
@@ -278,21 +264,21 @@ function Set-PolicyAssignments {
         }
     )
 
-    foreach ($assignment in $policyAssignments) {
+    foreach ($assignment in $PolicyAssignments) {
         try {
             if ($WhatIf) {
                 Write-LogMessage "WHATIF: Would assign policy '$($assignment.DisplayName)' to scope '$($assignment.Scope)'"
                 continue
             }
 
-            $existingAssignment = Get-AzPolicyAssignment -Name $assignment.Name -Scope $assignment.Scope -ErrorAction SilentlyContinue
+            $ExistingAssignment = Get-AzPolicyAssignment -Name $assignment.Name -Scope $assignment.Scope -ErrorAction SilentlyContinue
 
-            if ($existingAssignment) {
+            if ($ExistingAssignment) {
                 Write-LogMessage "Policy assignment '$($assignment.Name)' already exists" -Level Warning
                 continue
             }
 
-            $assignmentParams = @{
+            $AssignmentParams = @{
                 Name = $assignment.Name
                 DisplayName = $assignment.DisplayName
                 PolicySetDefinition = Get-AzPolicySetDefinition -Id $assignment.PolicyDefinitionId
@@ -307,7 +293,6 @@ function Set-PolicyAssignments {
         }
         catch {
             Write-LogMessage "Failed to assign policy '$($assignment.Name)': $($_.Exception.Message)" -Level Warning
-            # Continue with other assignments
         }
     }
 }
@@ -315,10 +300,10 @@ function Set-PolicyAssignments {
 function Move-SubscriptionsToManagementGroups {
     Write-LogMessage "Moving subscriptions to appropriate management groups..."
 
-    $subscriptionMappings = @()
+    $SubscriptionMappings = @()
 
     if ($HubSubscriptionId) {
-        $subscriptionMappings += @{
+        $SubscriptionMappings += @{
             SubscriptionId = $HubSubscriptionId
             ManagementGroup = "$ManagementGroupPrefix-Connectivity"
             Purpose = "Hub/Connectivity"
@@ -326,7 +311,7 @@ function Move-SubscriptionsToManagementGroups {
     }
 
     if ($IdentitySubscriptionId) {
-        $subscriptionMappings += @{
+        $SubscriptionMappings += @{
             SubscriptionId = $IdentitySubscriptionId
             ManagementGroup = "$ManagementGroupPrefix-Identity"
             Purpose = "Identity"
@@ -334,21 +319,20 @@ function Move-SubscriptionsToManagementGroups {
     }
 
     if ($ManagementSubscriptionId) {
-        $subscriptionMappings += @{
+        $SubscriptionMappings += @{
             SubscriptionId = $ManagementSubscriptionId
             ManagementGroup = "$ManagementGroupPrefix-Management"
             Purpose = "Management/Monitoring"
         }
     }
 
-    foreach ($mapping in $subscriptionMappings) {
+    foreach ($mapping in $SubscriptionMappings) {
         try {
             if ($WhatIf) {
                 Write-LogMessage "WHATIF: Would move subscription '$($mapping.SubscriptionId)' to management group '$($mapping.ManagementGroup)'"
                 continue
             }
 
-            # Verify subscription exists and is accessible
             $subscription = Get-AzSubscription -SubscriptionId $mapping.SubscriptionId -ErrorAction Stop
 
             $null = New-AzManagementGroupSubscription -GroupName $mapping.ManagementGroup -SubscriptionId $mapping.SubscriptionId
@@ -356,7 +340,6 @@ function Move-SubscriptionsToManagementGroups {
         }
         catch {
             Write-LogMessage "Failed to move subscription '$($mapping.SubscriptionId)': $($_.Exception.Message)" -Level Warning
-            # Continue with other subscriptions
         }
     }
 }
@@ -370,24 +353,22 @@ function New-HubNetworkInfrastructure {
     Write-LogMessage "Creating hub network infrastructure..."
 
     try {
-        # Set context to hub subscription
         $null = Set-AzContext -SubscriptionId $HubSubscriptionId
 
-        $resourceGroupName = "rg-$ManagementGroupPrefix-connectivity-$Location"
-        $vnetName = "vnet-$ManagementGroupPrefix-hub-$Location"
-        $bastionName = "bas-$ManagementGroupPrefix-hub-$Location"
-        $firewallName = "afw-$ManagementGroupPrefix-hub-$Location"
+        $ResourceGroupName = "rg-$ManagementGroupPrefix-connectivity-$Location"
+        $VnetName = "vnet-$ManagementGroupPrefix-hub-$Location"
+        $BastionName = "bas-$ManagementGroupPrefix-hub-$Location"
+        $FirewallName = "afw-$ManagementGroupPrefix-hub-$Location"
 
         if ($WhatIf) {
             Write-LogMessage "WHATIF: Would create hub network infrastructure in subscription '$HubSubscriptionId'"
             return
         }
 
-        # Create resource group
-        $rg = Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
+        $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
         if (-not $rg) {
-            $resourcegroupSplat = @{
-    Name = $resourceGroupName
+            $ResourcegroupSplat = @{
+    Name = $ResourceGroupName
     Location = $Location
     Tag = @{
 }
@@ -396,30 +377,29 @@ New-AzResourceGroup @resourcegroupSplat
                 Environment = "Production"
                 Owner = $CompanyName
             }
-            Write-LogMessage "Created resource group: $resourceGroupName" -Level Success
+            Write-LogMessage "Created resource group: $ResourceGroupName" -Level Success
         }
 
-        # Create hub virtual network
-        $existingVnet = Get-AzVirtualNetwork -ResourceGroupName $resourceGroupName -Name $vnetName -ErrorAction SilentlyContinue
-        if (-not $existingVnet) {
-            $subnetConfigs = @(
+        $ExistingVnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VnetName -ErrorAction SilentlyContinue
+        if (-not $ExistingVnet) {
+            $SubnetConfigs = @(
                 New-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -AddressPrefix "10.0.0.0/24"
                 New-AzVirtualNetworkSubnetConfig -Name "AzureFirewallSubnet" -AddressPrefix "10.0.1.0/24"
                 New-AzVirtualNetworkSubnetConfig -Name "AzureBastionSubnet" -AddressPrefix "10.0.2.0/24"
                 New-AzVirtualNetworkSubnetConfig -Name "SharedServices" -AddressPrefix "10.0.10.0/24"
             )
 
-            $virtualnetworkSplat = @{
-    Name = $vnetName
-    ResourceGroupName = $resourceGroupName
+            $VirtualnetworkSplat = @{
+    Name = $VnetName
+    ResourceGroupName = $ResourceGroupName
     Location = $Location
     AddressPrefix = "10.0.0.0/16"
-    Subnet = $subnetConfigs
+    Subnet = $SubnetConfigs
 }
 New-AzVirtualNetwork @virtualnetworkSplat
-            Write-LogMessage "Created hub virtual network: $vnetName" -Level Success
+            Write-LogMessage "Created hub virtual network: $VnetName" -Level Success
         } else {
-            Write-LogMessage "Hub virtual network already exists: $vnetName" -Level Warning
+            Write-LogMessage "Hub virtual network already exists: $VnetName" -Level Warning
         }
 
         Write-LogMessage "Hub network infrastructure setup completed" -Level Success
@@ -439,23 +419,21 @@ function New-MonitoringInfrastructure {
     Write-LogMessage "Creating monitoring infrastructure..."
 
     try {
-        # Set context to management subscription
         $null = Set-AzContext -SubscriptionId $ManagementSubscriptionId
 
-        $resourceGroupName = "rg-$ManagementGroupPrefix-management-$Location"
-        $workspaceName = "law-$ManagementGroupPrefix-$Location"
-        $automationAccountName = "aa-$ManagementGroupPrefix-$Location"
+        $ResourceGroupName = "rg-$ManagementGroupPrefix-management-$Location"
+        $WorkspaceName = "law-$ManagementGroupPrefix-$Location"
+        $AutomationAccountName = "aa-$ManagementGroupPrefix-$Location"
 
         if ($WhatIf) {
             Write-LogMessage "WHATIF: Would create monitoring infrastructure in subscription '$ManagementSubscriptionId'"
             return
         }
 
-        # Create resource group
-        $rg = Get-AzResourceGroup -Name $resourceGroupName -ErrorAction SilentlyContinue
+        $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
         if (-not $rg) {
-            $resourcegroupSplat = @{
-    Name = $resourceGroupName
+            $ResourcegroupSplat = @{
+    Name = $ResourceGroupName
     Location = $Location
     Tag = @{
 }
@@ -464,16 +442,15 @@ New-AzResourceGroup @resourcegroupSplat
                 Environment = "Production"
                 Owner = $CompanyName
             }
-            Write-LogMessage "Created resource group: $resourceGroupName" -Level Success
+            Write-LogMessage "Created resource group: $ResourceGroupName" -Level Success
         }
 
-        # Create Log Analytics workspace
-        $existingWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $resourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
-        if (-not $existingWorkspace) {
-            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $resourceGroupName -Name $workspaceName -Location $Location -Sku "PerGB2018"
-            Write-LogMessage "Created Log Analytics workspace: $workspaceName" -Level Success
+        $ExistingWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ErrorAction SilentlyContinue
+        if (-not $ExistingWorkspace) {
+            $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -Location $Location -Sku "PerGB2018"
+            Write-LogMessage "Created Log Analytics workspace: $WorkspaceName" -Level Success
         } else {
-            Write-LogMessage "Log Analytics workspace already exists: $workspaceName" -Level Warning
+            Write-LogMessage "Log Analytics workspace already exists: $WorkspaceName" -Level Warning
         }
 
         Write-LogMessage "Monitoring infrastructure setup completed" -Level Success
@@ -511,39 +488,29 @@ function Write-DeploymentSummary {
     Write-LogMessage "Log file: $script:LogFile"
 }
 
-# Main execution
 try {
     Write-LogMessage "Starting Azure Landing Zone deployment..." -Level Success
     Write-LogMessage "Deployment ID: LZ-$script:DeploymentTimestamp"
 
-    # Phase 1: Prerequisites
     Test-Prerequisites
 
-    # Phase 2: Management Groups
     New-ManagementGroupHierarchy
 
-    # Phase 3: Policy Assignments
     Set-PolicyAssignments
 
-    # Phase 4: Subscription Management
     Move-SubscriptionsToManagementGroups
 
-    # Phase 5: Hub Network (if specified)
     if ($HubSubscriptionId) {
         New-HubNetworkInfrastructure
     }
 
-    # Phase 6: Monitoring Infrastructure (if specified)
     if ($ManagementSubscriptionId) {
         New-MonitoringInfrastructure
     }
 
-    # Phase 7: Summary
     Write-DeploymentSummary
 }
 catch {
     Write-LogMessage "DEPLOYMENT FAILED: $($_.Exception.Message)" -Level Error
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
-    throw
-}
-
+    throw`n}

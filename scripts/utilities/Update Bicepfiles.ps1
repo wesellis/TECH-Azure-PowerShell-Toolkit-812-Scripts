@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Update Bicepfiles
@@ -8,15 +8,15 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$bicepSamples = Get-ChildItem -Path main.bicep -Recurse
-ForEach($s in $bicepSamples){
-    # skip files in the test folder
+$BicepSamples = Get-ChildItem -Path main.bicep -Recurse
+ForEach($s in $BicepSamples){
     if($s.FullName -notlike "*\azure-quickstart-templates\test\*" ){
         bicep build $s.FullName --outfile " $($s.DirectoryName)/azuredeploy.json"
     }
-}
+`n}

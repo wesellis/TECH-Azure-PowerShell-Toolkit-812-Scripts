@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Blobtransfer
@@ -9,7 +9,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
 	Copies a blob from one storage accout to another
 	Copies a blob from one storage accout to another
 .PARAMETER SourceImage
@@ -37,7 +36,7 @@
     Please note: None of the conditions outlined in the disclaimer above will supersede the terms and conditions contained
     within the Premier Customer Services Description.
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    [string]$ErrorActionPreference = "Stop"
 param(
 	[Parameter(Mandatory)]
 	[string]$SourceImage ,
@@ -60,13 +59,13 @@ function getBlobName
 		[Parameter(Mandatory)]
 		[string]$url
 	)
-$startIndex = 0
+    [string]$StartIndex = 0
 	for ($i=0;$i -lt 4;$i++)
 	{
-		[int]$startIndex = $url.IndexOf(" /" ,$startIndex)
-	    $startIndex++
+		[int]$StartIndex = $url.IndexOf("/" ,$StartIndex)
+    [string]$StartIndex++
 	}
-	return $url.Substring($startIndex)
+	return $url.Substring($StartIndex)
 }
 function getPathUpToContainerLevelfromUrl
 {
@@ -74,13 +73,13 @@ function getPathUpToContainerLevelfromUrl
 		[Parameter(Mandatory)]
 		[string]$url
 	)
-$startIndex = 0
+    [string]$StartIndex = 0
 	for ($i=0;$i -lt 4;$i++)
 	{
-		[int]$startIndex = $url.IndexOf(" /" ,$startIndex)
-	    $startIndex++
+		[int]$StartIndex = $url.IndexOf("/" ,$StartIndex)
+    [string]$StartIndex++
 	}
-	return $url.Substring(0,$startIndex-1)
+	return $url.Substring(0,$StartIndex-1)
 }
 function getBlobCompletionStatus
 {
@@ -89,114 +88,107 @@ function getBlobCompletionStatus
 		[string]$AzCopyLogFile
 	)
 ; -TypeName "PSObject" -Property "@{ "TotalFilesTransfered" =0; "TransferSuccessfully" =0; "TransferSkipped" =0; "TransferFailed" =0; "UserCancelled" =$false; "Success" =$false; "SummaryFound" =$false; "ErrorMessage" =[string]::Empty; "ElapsedTime" =[string]::Empty }"
-	# Parsing log file for errors
-	$azCopyOutput = Get-Content -ErrorAction Stop $AzCopyLogFile
-	for ($i=$azCopyOutput.Count-1 ;$i -ge 0; $i--)
+    [string]$AzCopyOutput = Get-Content -ErrorAction Stop $AzCopyLogFile
+	for ($i=$AzCopyOutput.Count-1 ;$i -ge 0; $i--)
 	{
-		$line = $azCopyOutput[$i]
+    [string]$line = $AzCopyOutput[$i]
 		if ($line.Contains("Transfer failed" ))
 		{
-			$resultObject.TransferFailed = $line.Split(" :" )[1].Trim()
+    [string]$ResultObject.TransferFailed = $line.Split(" :" )[1].Trim()
 		}
 		elseif ($line.Contains("Transfer skipped" ))
 		{
-			$resultObject.TransferSkipped = $line.Split(" :" )[1].Trim()
+    [string]$ResultObject.TransferSkipped = $line.Split(" :" )[1].Trim()
 		}
 		elseif ($line.Contains("Transfer successfully" ))
 		{
-			$resultObject.TransferSuccessfully = $line.Split(" :" )[1].Trim()
+    [string]$ResultObject.TransferSuccessfully = $line.Split(" :" )[1].Trim()
 		}
 		elseif ($line.Contains("Total files transferred" ))
 		{
-			$resultObject.TotalFilesTransfered = $line.Split(" :" )[1].Trim()
+    [string]$ResultObject.TotalFilesTransfered = $line.Split(" :" )[1].Trim()
 		}
 		elseif ($line.Contains("Transfer summary" ))
 		{
-			$resultObject.SummaryFound = $true
+    [string]$ResultObject.SummaryFound = $true
 		}
 		elseif ($line.Contains("User canceled this process" ) -or $line.Contains("A task was canceled" ))
 		{
-			$resultObject.UserCancelled = $true
+    [string]$ResultObject.UserCancelled = $true
 		}
 		elseif ($line.Contains("Elapsed time" ))
 		{
-			$resultObject.ElapsedTime = $line.Substring($line.IndexOf(" :" )).Trim()
+    [string]$ResultObject.ElapsedTime = $line.Substring($line.IndexOf(" :" )).Trim()
 		}
 	}
-	if (!$resultObject.SummaryFound)
+	if (!$ResultObject.SummaryFound)
 	{
-		$resultObject.Success  = $false
-		$resultObject.ErrorMessage = "Blob copy $blobName failed. AzCopy Summary information could not be located"
-		return $resultObject
+    [string]$ResultObject.Success  = $false
+    [string]$ResultObject.ErrorMessage = "Blob copy $BlobName failed. AzCopy Summary information could not be located"
+		return $ResultObject
 	}
-	if (!$resultObject.UserCancelled -and $resultObject.TransferFailed -eq 0 -and $resultObject.TotalFilesTransfered -eq 1)
+	if (!$ResultObject.UserCancelled -and $ResultObject.TransferFailed -eq 0 -and $ResultObject.TotalFilesTransfered -eq 1)
 	{
-		$resultObject.Success  = $true
+    [string]$ResultObject.Success  = $true
 	}
-	return $resultObject
+	return $ResultObject
 }
 try
 {
-	$sourceImageList = $SourceImage.Split(" ," ,[StringSplitOptions]::RemoveEmptyEntries)
-	$scriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
-	$currentScriptFolder = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-	"Current folder $currentScriptFolder" | Out-File " c:\$scriptName.txt"
-	# Downloading and installing AzCopt
-	$url = " http://aka.ms/downloadazcopy"
-	$localPath = Join-Path $currentScriptFolder "MicrosoftAzureStorageTools.msi"
-	"Downloading AzCopy from $url" | Out-File " c:\$scriptName.txt" -Append
-	if(!(Split-Path -parent $localPath) -or !(Test-Path -pathType Container (Split-Path -parent $localPath)))
+    [string]$SourceImageList = $SourceImage.Split(" ," ,[StringSplitOptions]::RemoveEmptyEntries)
+    [string]$ScriptName = [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Definition)
+    [string]$CurrentScriptFolder = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+	"Current folder $CurrentScriptFolder" | Out-File " c:\$ScriptName.txt"
+    [string]$url = " http://aka.ms/downloadazcopy"
+    [string]$LocalPath = Join-Path $CurrentScriptFolder "MicrosoftAzureStorageTools.msi"
+	"Downloading AzCopy from $url" | Out-File " c:\$ScriptName.txt" -Append
+	if(!(Split-Path -parent $LocalPath) -or !(Test-Path -pathType Container (Split-Path -parent $LocalPath)))
 	{
-		$localPath = Join-Path $pwd (Split-Path -leaf $localPath)
+    [string]$LocalPath = Join-Path $pwd (Split-Path -leaf $LocalPath)
 	}
-	"Saving file at [$localPath]" | Out-File " c:\$scriptName.txt" -Append
-	$client = new-object -ErrorAction Stop System.Net.WebClient
-	$client.DownloadFile($url, $localPath)
-	"Installing AzCopy" | Out-File " c:\$scriptName.txt" -Append
-	$azCopyInstallLogFileName = " $currentScriptFolder\azCopyInstallLog.txt"
-	Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i $localPath /log $azCopyInstallLogFileName" /qn}
-	$installLog = Get-Content -ErrorAction Stop $azCopyInstallLogFileName
-	# Pattern matching for validation
-# Pattern matching for validation
-$installFolder = ($installLog | ? {$_ -match "AZURESTORAGETOOLSFOLDER" }).Split(" =" )[1].Trim()
-	$azCopyTool = Join-Path $installFolder "AzCopy\Azcopy.exe"
-	"Azcopy Path => $AzCopyTool" | Out-File " c:\$scriptName.txt" -Append
-	"Source images URLs =>" | Out-File " c:\$scriptName.txt" -Append
-	foreach ($url in $sourceImageList)
+	"Saving file at [$LocalPath]" | Out-File " c:\$ScriptName.txt" -Append
+    [string]$client = new-object -ErrorAction Stop System.Net.WebClient
+    [string]$client.DownloadFile($url, $LocalPath)
+	"Installing AzCopy" | Out-File " c:\$ScriptName.txt" -Append
+    [string]$AzCopyInstallLogFileName = " $CurrentScriptFolder\azCopyInstallLog.txt"
+	Invoke-Command -ScriptBlock { & cmd /c " msiexec.exe /i $LocalPath /log $AzCopyInstallLogFileName"/qn}
+    [string]$InstallLog = Get-Content -ErrorAction Stop $AzCopyInstallLogFileName
+    [string]$InstallFolder = ($InstallLog | ? {$_ -match "AZURESTORAGETOOLSFOLDER" }).Split(" =" )[1].Trim()
+    [string]$AzCopyTool = Join-Path $InstallFolder "AzCopy\Azcopy.exe"
+	"Azcopy Path => $AzCopyTool" | Out-File " c:\$ScriptName.txt" -Append
+	"Source images URLs =>" | Out-File " c:\$ScriptName.txt" -Append
+	foreach ($url in $SourceImageList)
 	{
-		"    $url" | Out-File " c:\$scriptName.txt" -Append
+		"    $url" | Out-File " c:\$ScriptName.txt" -Append
 	}
-	"SourceSAKey => $SourceSAKey" | Out-File " c:\$scriptName.txt" -Append
-	"DestinationURI => $DestinationURI" | Out-File " c:\$scriptName.txt" -Append
-	"DestinationSAKey => $DestinationSAKey" | Out-File " c:\$scriptName.txt" -Append
-	# Copying blobs
-	foreach ($url in $sourceImageList)
+	"SourceSAKey => $SourceSAKey" | Out-File " c:\$ScriptName.txt" -Append
+	"DestinationURI => $DestinationURI" | Out-File " c:\$ScriptName.txt" -Append
+	"DestinationSAKey => $DestinationSAKey" | Out-File " c:\$ScriptName.txt" -Append
+	foreach ($url in $SourceImageList)
 	{
-		"Copying blob $url" | Out-File " c:\$scriptName.txt" -Append
-		$SourceURIContainer = getPathUpToContainerLevelfromUrl -url $url
-		"   SourceURIContainer = $SourceURIContainer" | Out-File " c:\$scriptName.txt" -Append
-		$blobName = getBlobName -url $url
-		"   BlobName = $blobName" | Out-File " c:\$scriptName.txt" -Append
-$azCopyLogFile = " $PSScriptRoot\azcopylog-$blobName.txt"
-		"   azCopyLogFile = $azCopyLogFile" | Out-File " c:\$scriptName.txt" -Append
-		"   Running AzCopy Tool..." | Out-File " c:\$scriptName.txt" -Append
-		& $AzCopyTool " /Source:$SourceURIContainer" , " /S" , " /Dest:$DestinationURI" , " /DestKey:$DestinationSAKey" , " /Pattern:$blobName" , " /Y" , " /V:$azCopyLogFile" , " /NC:20"
-		"   Checking blob copy status..." | Out-File " c:\$scriptName.txt" -Append
-		# Checking blob copy status
-$result = getBlobCompletionStatus -AzCopyLogFile $azCopyLogFile
+		"Copying blob $url" | Out-File " c:\$ScriptName.txt" -Append
+    [string]$SourceURIContainer = getPathUpToContainerLevelfromUrl -url $url
+		"   SourceURIContainer = $SourceURIContainer" | Out-File " c:\$ScriptName.txt" -Append
+    [string]$BlobName = getBlobName -url $url
+		"   BlobName = $BlobName" | Out-File " c:\$ScriptName.txt" -Append
+    [string]$AzCopyLogFile = " $PSScriptRoot\azcopylog-$BlobName.txt"
+		"   azCopyLogFile = $AzCopyLogFile" | Out-File " c:\$ScriptName.txt" -Append
+		"   Running AzCopy Tool..." | Out-File " c:\$ScriptName.txt" -Append
+		& $AzCopyTool "/Source:$SourceURIContainer" , "/S" , "/Dest:$DestinationURI" , "/DestKey:$DestinationSAKey" , "/Pattern:$BlobName" , "/Y" , "/V:$AzCopyLogFile" , "/NC:20"
+		"   Checking blob copy status..." | Out-File " c:\$ScriptName.txt" -Append
+    [string]$result = getBlobCompletionStatus -AzCopyLogFile $AzCopyLogFile
 		if ($result.Success)
 		{
-			"Blob $url successfuly transfered to $DestinationURI" | Out-File " c:\$scriptName.txt" -Append
-			"   Elapsed time $($result.ElapsedTime)" | Out-File " c:\$scriptName.txt" -Append
+			"Blob $url successfuly transfered to $DestinationURI" | Out-File " c:\$ScriptName.txt" -Append
+			"   Elapsed time $($result.ElapsedTime)" | Out-File " c:\$ScriptName.txt" -Append
 		}
 		else
 		{
 			throw "Blob $url copy failed to $DestinationURI, please analyze logs and retry operation."
 		}
 	}
-	"Blob copy operation completed with success." | Out-File " c:\$scriptName.txt" -Append
+	"Blob copy operation completed with success." | Out-File " c:\$ScriptName.txt" -Append
 }
 catch
 {
-	"An error ocurred: $_" | Out-File " c:\$scriptName.txt" -Append
-}
+	"An error ocurred: $_" | Out-File " c:\$ScriptName.txt" -Append`n}

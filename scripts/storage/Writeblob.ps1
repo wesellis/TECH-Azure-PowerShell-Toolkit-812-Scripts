@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,30 +10,24 @@
     Author: Wes Ellis (wes@wesellis.com)
     Version: 1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
+    [string]$ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
-    # The subcription Id to log in to
     [Parameter(Mandatory)]
     [string]
-    $SubscriptionId,
-    # The tenant Id to that contains the MSI
+    [string]$SubscriptionId,
     [Parameter(Mandatory)]
     [string]
-    $TenantId,
-    # The Resource Group Name that contains the storage account to write to
+    [string]$TenantId,
     [Parameter(Mandatory)]
     [string]
-    $ResourceGroupName,
-    # The Storage Account to write to
+    [string]$ResourceGroupName,
     [Parameter(Mandatory)]
     [string]
-    $StorageAccountName,
-    # The name of the container to write a blob to
+    [string]$StorageAccountName,
     [Parameter()]
     [string]
-    $ContainerName='msi'
+    [string]$ContainerName='msi'
 )
 try {
 if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailable))
@@ -44,15 +38,12 @@ if (!(Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue -ListAvailab
 Install-Module Az -AllowClobber -Verbose -Force
 Install-Module Az.Storage -AllowClobber -Verbose -Force
 Connect-AzAccount -Identity -Verbose
-$ContainerName=$ContainerName.ToLowerInvariant()
-$BlobName=$env:COMPUTERNAME.ToLowerInvariant();
-$FileName=[System.IO.Path]::GetTempFileName()
+    [string]$ContainerName=$ContainerName.ToLowerInvariant()
+    [string]$BlobName=$env:COMPUTERNAME.ToLowerInvariant();
+    [string]$FileName=[System.IO.Path]::GetTempFileName()
 Get-Date | Out-File $FileName
-
-$ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
+    [string]$ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
 Set-AzStorageBlobContent -Container $ContainerName -File $FileName -Blob $BlobName -Context $ctx -Force
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
+    throw`n}

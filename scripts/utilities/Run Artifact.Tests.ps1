@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Run Artifact.Tests
@@ -24,8 +24,8 @@ Describe " run-artifact.Tests" {
         Remove-Variable -ErrorAction Stop TestShouldExitWithNonZeroExitCode -Scope Global -ErrorAction SilentlyContinue
         Set-Location -Path " $env:SystemDrive\"
         Mock ____ExitOne {}
-$defaultParamsJson = @{StrParam = '`$value1=" str1" ;`$value2=''str2'''; IntParam = 4; BoolParam = $true } | ConvertTo-Json -Depth 10 -Compress
-        $script:defaultParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($defaultParamsJson)))
+$DefaultParamsJson = @{StrParam = '`$value1=" str1" ;`$value2=''str2'''; IntParam = 4; BoolParam = $true } | ConvertTo-Json -Depth 10 -Compress
+        $script:defaultParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($DefaultParamsJson)))
     }
     It "Success" {
         ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $script:defaultParams
@@ -38,9 +38,9 @@ $defaultParamsJson = @{StrParam = '`$value1=" str1" ;`$value2=''str2'''; IntPara
         Get-Location -ErrorAction Stop | Should -Be (Join-Path $PSScriptRoot " run-artifact-test" )
     }
     It "SuccessWithComplexString" {
-$inputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -Value `" --retry 7`" ; Get-Content -Path `$env:USERPROFILE\\.curlrc' } | ConvertTo-Json -Depth 10 -Compress
-        $inputParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($inputParamsJson)))
-        ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $inputParams
+$InputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -Value `" --retry 7`" ; Get-Content -Path `$env:USERPROFILE\\.curlrc' } | ConvertTo-Json -Depth 10 -Compress
+        $InputParams = $([Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($InputParamsJson)))
+        ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $InputParams
         Should -Invoke ____ExitOne -Times 0 -Exactly
         $global:TestResults | Should -Not -BeNullOrEmpty
         $global:TestResults.StrParam | Should -Be 'Set-Content -Path $env:USERPROFILE\\.curlrc -Value " --retry 7" ; Get-Content -Path $env:USERPROFILE\\.curlrc'
@@ -67,4 +67,4 @@ $inputParamsJson = @{StrParam = 'Set-Content -Path `$env:USERPROFILE\\.curlrc -V
         ____Invoke-Artifact -____ArtifactName " run-artifact-test" -____ParamsBase64 $script:defaultParams
         Should -Invoke ____ExitOne -Times 1 -Exactly
     }
-}
+`n}

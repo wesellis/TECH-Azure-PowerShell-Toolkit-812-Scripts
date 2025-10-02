@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,33 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -58,22 +55,22 @@ param(
     [Parameter()]
     [array]$MetricCategories = @("AllMetrics" )
 )
-Write-Host "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])" "INFO"
-$DiagnosticParams = @{
+Write-Output "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])" "INFO"
+    $DiagnosticParams = @{
     ResourceId = $ResourceId
     Name = $DiagnosticSettingName
 }
 if ($WorkspaceId) {
-    $DiagnosticParams.WorkspaceId = $WorkspaceId
-    Write-Host "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])" "INFO"
+    [string]$DiagnosticParams.WorkspaceId = $WorkspaceId
+    Write-Output "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])" "INFO"
 }
 if ($StorageAccountId) {
-    $DiagnosticParams.StorageAccountId = $StorageAccountId
-    Write-Host "Storage Account: $($StorageAccountId.Split('/')[-1])" "INFO"
+    [string]$DiagnosticParams.StorageAccountId = $StorageAccountId
+    Write-Output "Storage Account: $($StorageAccountId.Split('/')[-1])" "INFO"
 }
-$LogSettings = @()
+    [string]$LogSettings = @()
 foreach ($Category in $LogCategories) {
-    $LogSettings = $LogSettings + @{
+    [string]$LogSettings = $LogSettings + @{
         Category = $Category
         Enabled = $true
         RetentionPolicy = @{
@@ -82,9 +79,9 @@ foreach ($Category in $LogCategories) {
         }
     }
 }
-$MetricSettings = @()
+    [string]$MetricSettings = @()
 foreach ($Category in $MetricCategories) {
-$MetricSettings = $MetricSettings + @{
+    [string]$MetricSettings = $MetricSettings + @{
         Category = $Category
         Enabled = $true
         RetentionPolicy = @{
@@ -93,32 +90,28 @@ $MetricSettings = $MetricSettings + @{
         }
     }
 }
-$DiagnosticParams.Log = $LogSettings
-$DiagnosticParams.Metric = $MetricSettings
-
-$DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
-Write-Host "Diagnostic settings configured successfully:" "INFO"
-Write-Host "Setting ID: $($DiagnosticSetting.Id)" "INFO"
-Write-Host "Name: $DiagnosticSettingName" "INFO"
-Write-Host "Resource: $($ResourceId.Split('/')[-1])" "INFO"
-Write-Host "Log Categories: $($LogCategories -join ', ')" "INFO"
-Write-Host "Metric Categories: $($MetricCategories -join ', ')" "INFO"
-Write-Host " `nDiagnostic Data Destinations:" "INFO"
+    [string]$DiagnosticParams.Log = $LogSettings
+    [string]$DiagnosticParams.Metric = $MetricSettings
+    [string]$DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
+Write-Output "Diagnostic settings configured successfully:" "INFO"
+Write-Output "Setting ID: $($DiagnosticSetting.Id)" "INFO"
+Write-Output "Name: $DiagnosticSettingName" "INFO"
+Write-Output "Resource: $($ResourceId.Split('/')[-1])" "INFO"
+Write-Output "Log Categories: $($LogCategories -join ', ')" "INFO"
+Write-Output "Metric Categories: $($MetricCategories -join ', ')" "INFO"
+Write-Output " `nDiagnostic Data Destinations:" "INFO"
 if ($WorkspaceId) {
-    Write-Host "   Log Analytics Workspace (for queries and alerts)" "INFO"
+    Write-Output "   Log Analytics Workspace (for queries and alerts)" "INFO"
 }
 if ($StorageAccountId) {
-    Write-Host "   Storage Account (for long-term archival)" "INFO"
+    Write-Output "   Storage Account (for long-term archival)" "INFO"
 }
-Write-Host " `nDiagnostic Benefits:" "INFO"
-Write-Host "Centralized logging and monitoring" "INFO"
-Write-Host "Compliance and audit trails" "INFO"
-Write-Host "Performance troubleshooting" "INFO"
-Write-Host "Security event tracking" "INFO"
-Write-Host "Cost optimization insights" "INFO"
+Write-Output " `nDiagnostic Benefits:" "INFO"
+Write-Output "Centralized logging and monitoring" "INFO"
+Write-Output "Compliance and audit trails" "INFO"
+Write-Output "Performance troubleshooting" "INFO"
+Write-Output "Security event tracking" "INFO"
+Write-Output "Cost optimization insights" "INFO"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

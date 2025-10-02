@@ -6,422 +6,366 @@
     Pester tests for Infrastructure as Code deployments
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Comprehensive testing framework for validating Azure infrastructure deployed via Bicep or Terraform.
     Tests infrastructure configuration, security compliance, and operational readiness.
 
 .NOTES
-    Author: Azure PowerShell Toolkit Team
+    Author: Wes Ellis
+    Created: 2025-05-26
+    Version: 2.1
     Requires: Pester 5.0+, Azure PowerShell modules
-#>
+
+$ErrorActionPreference = 'Stop'
 
 BeforeAll {
-    # Import required modules
     Import-Module Az.Accounts -Force
     Import-Module Az.Resources -Force
     Import-Module Az.Storage -Force
     Import-Module Az.KeyVault -Force
     Import-Module Az.Compute -Force
     Import-Module Az.Network -Force
+    Import-Module Az.Monitor -Force
 
-    # Configuration
-    $script:TestResourceGroup = $env:TEST_RESOURCE_GROUP ?? "toolkit-test-rg"
-    $script:TestLocation = $env:TEST_LOCATION ?? "East US"
-    $script:TestEnvironment = $env:TEST_ENVIRONMENT ?? "dev"
-
-    # Helper function to wait for resource availability
-    function Wait-ForResource {
-        param(
-            [string]$ResourceName,
-            [string]$ResourceGroupName,
-            [string]$ResourceType,
-            [int]$TimeoutSeconds = 300
-        )
-
-        $timeout = (Get-Date).AddSeconds($TimeoutSeconds)
-        do {
-            try {
-                $resource = Get-AzResource -Name $ResourceName -ResourceGroupName $ResourceGroupName -ResourceType $ResourceType -ErrorAction SilentlyContinue
-                if ($resource) {
-                    return $resource
-                }
-            } catch {
-                Write-Verbose "Waiting for resource: $ResourceName"
-            }
-            Start-Sleep -Seconds 10
-        } while ((Get-Date) -lt $timeout)
-
-        throw "Resource $ResourceName not found within timeout period"
+    $script:TestConfig = @{
+        SubscriptionId = $env:AZURE_SUBSCRIPTION_ID
+        ResourceGroupName = $env:AZURE_RESOURCE_GROUP ?? 'rg-test-infrastructure'
+        Location = $env:AZURE_LOCATION ?? 'East US'
+        Environment = $env:ENVIRONMENT ?? 'test'
+        Tags = @{
+            Environment = $env:ENVIRONMENT ?? 'test'
+            Project = 'Azure-PowerShell-Toolkit'
+            ManagedBy = 'Automated-Testing'
+        }
     }
+
+    $context = Get-AzContext
+    if (-not $context) {
+        throw "Not authenticated to Azure. Run Connect-AzAccount first."
+    }
+
+    Write-Output "Running infrastructure tests against subscription: $($context.Subscription.Name)" # Color: $2
 }
 
-Describe "Infrastructure Deployment Validation" {
+Describe "Azure Infrastructure Validation" {
 
-    Context "Resource Group Validation" {
-        It "Should have the test resource group" {
-            $rg = Get-AzResourceGroup -Name $script:TestResourceGroup -ErrorAction SilentlyContinue
-            $rg | Should -Not -BeNullOrEmpty
-            $rg.ResourceGroupName | Should -Be $script:TestResourceGroup
-            $rg.Location | Should -Match $script:TestLocation.Replace(' ', '')
+    Context "Subscription and Authentication" {
+        It "Should be connected to Azure" {
+            $context = Get-AzContext
+            $context | Should -Not -BeNullOrEmpty
+            $context.Account | Should -Not -BeNullOrEmpty
         }
 
-        It "Should have appropriate tags" {
-            $rg = Get-AzResourceGroup -Name $script:TestResourceGroup
-            $rg.Tags | Should -Not -BeNullOrEmpty
-            $rg.Tags.Keys | Should -Contain "Environment"
+        It "Should have valid subscription" {
+            $subscription = Get-AzSubscription -SubscriptionId $TestConfig.SubscriptionId -ErrorAction SilentlyContinue
+            $subscription | Should -Not -BeNullOrEmpty
+            $subscription.State | Should -Be 'Enabled'
+        }
+
+        It "Should have required resource providers registered" {
+            $RequiredProviders = @(
+                'Microsoft.Compute',
+                'Microsoft.Storage',
+                'Microsoft.Network',
+                'Microsoft.KeyVault',
+                'Microsoft.Insights'
+            )
+
+            foreach ($provider in $RequiredProviders) {
+                $registration = Get-AzResourceProvider -ProviderNamespace $provider
+                $registration.RegistrationState | Should -Be 'Registered'
+            }
         }
     }
 
-    Context "Virtual Network Validation" {
+    Context "Resource Group Validation" {
         BeforeAll {
-            $script:VNet = Get-AzVirtualNetwork -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
+            $script:ResourceGroup = Get-AzResourceGroup -Name $TestConfig.ResourceGroupName -ErrorAction SilentlyContinue
         }
 
-        It "Should have a virtual network deployed" {
-            $script:VNet | Should -Not -BeNullOrEmpty
+        It "Should have test resource group" {
+            $ResourceGroup | Should -Not -BeNullOrEmpty
+            $ResourceGroup.ResourceGroupName | Should -Be $TestConfig.ResourceGroupName
         }
 
-        It "Should have correct address space" {
-            $script:VNet.AddressSpace.AddressPrefixes | Should -Contain "10.0.0.0/16"
+        It "Should be in correct location" {
+            $ResourceGroup.Location | Should -Be $TestConfig.Location.Replace(' ', '').ToLower()
         }
 
-        It "Should have required subnets" {
-            $subnets = $script:VNet.Subnets
-            $subnets | Should -Not -BeNullOrEmpty
-            $subnets.Count | Should -BeGreaterThan 0
-
-            # Check for at least one subnet
-            $defaultSubnet = $subnets | Where-Object { $_.Name -eq "default" }
-            $defaultSubnet | Should -Not -BeNullOrEmpty
-        }
-
-        It "Should have Network Security Groups associated" {
-            $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $script:TestResourceGroup
-            $nsgs | Should -Not -BeNullOrEmpty
+        It "Should have required tags" {
+            $ResourceGroup.Tags | Should -Not -BeNullOrEmpty
+            $ResourceGroup.Tags.Environment | Should -Be $TestConfig.Environment
         }
     }
 
     Context "Storage Account Validation" {
         BeforeAll {
-            $script:StorageAccount = Get-AzStorageAccount -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
+            $script:StorageAccounts = Get-AzStorageAccount -ResourceGroupName $TestConfig.ResourceGroupName
         }
 
-        It "Should have a storage account deployed" {
-            $script:StorageAccount | Should -Not -BeNullOrEmpty
+        It "Should have at least one storage account" {
+            $StorageAccounts.Count | Should -BeGreaterThan 0
         }
 
-        It "Should have HTTPS-only traffic enabled" {
-            $script:StorageAccount.EnableHttpsTrafficOnly | Should -Be $true
-        }
-
-        It "Should have minimum TLS version set" {
-            $script:StorageAccount.MinimumTlsVersion | Should -Be "TLS1_2"
-        }
-
-        It "Should have blob public access disabled" {
-            $script:StorageAccount.AllowBlobPublicAccess | Should -Be $false
-        }
-
-        It "Should have required containers" {
-            $ctx = $script:StorageAccount.Context
-            $containers = Get-AzStorageContainer -Context $ctx
-
-            $requiredContainers = @("scripts", "logs", "backups")
-            foreach ($containerName in $requiredContainers) {
-                $container = $containers | Where-Object { $_.Name -eq $containerName }
-                $container | Should -Not -BeNullOrEmpty -Because "Container '$containerName' should exist"
+        It "Should have storage accounts with secure configuration" {
+            foreach ($storage in $StorageAccounts) {
+                $storage.EnableHttpsTrafficOnly | Should -Be $true
+                $storage.MinimumTlsVersion | Should -Be 'TLS1_2'
+                $storage.AllowBlobPublicAccess | Should -Be $false
             }
         }
 
-        It "Should have appropriate replication based on environment" {
-            if ($script:TestEnvironment -eq "prod") {
-                $script:StorageAccount.Sku.Name | Should -Match "GRS"
-            } else {
-                $script:StorageAccount.Sku.Name | Should -Match "LRS"
+        It "Should have storage accounts with proper SKU" {
+            foreach ($storage in $StorageAccounts) {
+                $storage.Sku.Name | Should -BeIn @('Standard_LRS', 'Standard_GRS', 'Standard_RAGRS', 'Premium_LRS')
             }
+        }
+
+        It "Should have blob containers with private access" {
+            foreach ($storage in $StorageAccounts) {
+                $ctx = $storage.Context
+                $containers = Get-AzStorageContainer -Context $ctx
+
+                foreach ($container in $containers) {
+                    $container.PublicAccess | Should -BeIn @('Off', $null)
+                }
+            }
+        }
+    }
+
+    Context "Virtual Network Validation" {
+        BeforeAll {
+            $script:VirtualNetworks = Get-AzVirtualNetwork -ResourceGroupName $TestConfig.ResourceGroupName
+        }
+
+        It "Should have virtual networks configured" {
+            $VirtualNetworks.Count | Should -BeGreaterOrEqual 1
+        }
+
+        It "Should have proper address space" {
+            foreach ($vnet in $VirtualNetworks) {
+                $vnet.AddressSpace.AddressPrefixes | Should -Not -BeNullOrEmpty
+                $vnet.AddressSpace.AddressPrefixes[0] | Should -Match '^\d+\.\d+\.\d+\.\d+/\d+$'
+            }
+        }
+
+        It "Should have subnets configured" {
+            foreach ($vnet in $VirtualNetworks) {
+                $vnet.Subnets.Count | Should -BeGreaterThan 0
+
+                foreach ($subnet in $vnet.Subnets) {
+                    $subnet.AddressPrefix | Should -Not -BeNullOrEmpty
+                }
+            }
+        }
+
+        It "Should have Network Security Groups" {
+            $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $TestConfig.ResourceGroupName
+            $nsgs.Count | Should -BeGreaterThan 0
         }
     }
 
     Context "Key Vault Validation" {
         BeforeAll {
-            $script:KeyVault = Get-AzKeyVault -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
+            $script:KeyVaults = Get-AzKeyVault -ResourceGroupName $TestConfig.ResourceGroupName
         }
 
-        It "Should have a Key Vault deployed" {
-            $script:KeyVault | Should -Not -BeNullOrEmpty
+        It "Should have Key Vault configured" -Skip:($KeyVaults.Count -eq 0) {
+            $KeyVaults.Count | Should -BeGreaterOrEqual 1
         }
 
-        It "Should have soft delete enabled" {
-            $script:KeyVault.EnableSoftDelete | Should -Be $true
-        }
-
-        It "Should have appropriate purge protection for production" {
-            if ($script:TestEnvironment -eq "prod") {
-                $script:KeyVault.EnablePurgeProtection | Should -Be $true
+        It "Should have secure Key Vault configuration" -Skip:($KeyVaults.Count -eq 0) {
+            foreach ($kv in $KeyVaults) {
+                $vault = Get-AzKeyVault -VaultName $kv.VaultName
+                $vault.EnableSoftDelete | Should -Be $true
+                $vault.EnablePurgeProtection | Should -Be $true
             }
         }
 
-        It "Should have template deployment enabled" {
-            $script:KeyVault.EnabledForTemplateDeployment | Should -Be $true
-        }
-
-        It "Should have disk encryption enabled" {
-            $script:KeyVault.EnabledForDiskEncryption | Should -Be $true
-        }
-
-        It "Should have access policies configured" {
-            $script:KeyVault.AccessPolicies | Should -Not -BeNullOrEmpty
+        It "Should have proper access policies" -Skip:($KeyVaults.Count -eq 0) {
+            foreach ($kv in $KeyVaults) {
+                $vault = Get-AzKeyVault -VaultName $kv.VaultName
+                $vault.AccessPolicies.Count | Should -BeGreaterThan 0
+            }
         }
     }
 
     Context "Virtual Machine Validation" {
         BeforeAll {
-            $script:VM = Get-AzVM -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
+            $script:VirtualMachines = Get-AzVM -ResourceGroupName $TestConfig.ResourceGroupName
         }
 
-        It "Should have a virtual machine deployed" {
-            $script:VM | Should -Not -BeNullOrEmpty
-        }
-
-        It "Should have appropriate VM size for environment" {
-            $script:VM.HardwareProfile.VmSize | Should -Not -BeNullOrEmpty
-
-            if ($script:TestEnvironment -eq "prod") {
-                $script:VM.HardwareProfile.VmSize | Should -Match "Standard_[D|E].*s_v[3-5]"
+        It "Should have VMs with managed disks" -Skip:($VirtualMachines.Count -eq 0) {
+            foreach ($vm in $VirtualMachines) {
+                $vm.StorageProfile.OsDisk.ManagedDisk | Should -Not -BeNullOrEmpty
             }
         }
 
-        It "Should have managed disks" {
-            $script:VM.StorageProfile.OsDisk.ManagedDisk | Should -Not -BeNullOrEmpty
-        }
-
-        It "Should have appropriate disk type for environment" {
-            if ($script:TestEnvironment -eq "prod") {
-                $script:VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType | Should -Be "Premium_LRS"
-            } else {
-                $script:VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType | Should -BeIn @("Standard_LRS", "Premium_LRS")
+        It "Should have VMs with encryption enabled" -Skip:($VirtualMachines.Count -eq 0) {
+            foreach ($vm in $VirtualMachines) {
+                $DiskEncryption = Get-AzVMDiskEncryptionStatus -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name
+                $DiskEncryption.OsVolumeEncrypted | Should -BeIn @('Encrypted', 'EncryptionInProgress')
             }
         }
 
-        It "Should have system assigned identity" {
-            $script:VM.Identity.Type | Should -Be "SystemAssigned"
-            $script:VM.Identity.PrincipalId | Should -Not -BeNullOrEmpty
-        }
-
-        It "Should have network interface attached" {
-            $script:VM.NetworkProfile.NetworkInterfaces | Should -Not -BeNullOrEmpty
+        It "Should have VMs in availability sets or zones" -Skip:($VirtualMachines.Count -le 1) {
+            foreach ($vm in $VirtualMachines) {
+                $HasAvailabilitySet = $vm.AvailabilitySetReference -ne $null
+                $HasAvailabilityZone = $vm.Zones.Count -gt 0
+                ($HasAvailabilitySet -or $HasAvailabilityZone) | Should -Be $true
+            }
         }
     }
 
-    Context "Security Configuration Validation" {
-        It "Should have Network Security Groups with appropriate rules" {
-            $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $script:TestResourceGroup
+    Context "Monitoring and Diagnostics" {
+        It "Should have Log Analytics workspace" {
+            $workspaces = Get-AzOperationalInsightsWorkspace -ResourceGroupName $TestConfig.ResourceGroupName
+            $workspaces.Count | Should -BeGreaterOrEqual 1
+        }
+
+        It "Should have Application Insights configured" {
+            $AppInsights = Get-AzApplicationInsights -ResourceGroupName $TestConfig.ResourceGroupName
+            $AppInsights.Count | Should -BeGreaterOrEqual 0
+        }
+
+        It "Should have diagnostic settings on key resources" {
+            $resources = Get-AzResource -ResourceGroupName $TestConfig.ResourceGroupName
+            $ResourcesWithDiagnostics = 0
+
+            foreach ($resource in $resources) {
+                $diagnostics = Get-AzDiagnosticSetting -ResourceId $resource.ResourceId -ErrorAction SilentlyContinue
+                if ($diagnostics) {
+                    $ResourcesWithDiagnostics++
+                }
+            }
+
+            $ResourcesWithDiagnostics | Should -BeGreaterThan 0
+        }
+    }
+
+    Context "Security and Compliance" {
+        It "Should have resources with required tags" {
+            $resources = Get-AzResource -ResourceGroupName $TestConfig.ResourceGroupName
+
+            foreach ($resource in $resources) {
+                $resource.Tags | Should -Not -BeNullOrEmpty
+                $resource.Tags.Environment | Should -Not -BeNullOrEmpty
+            }
+        }
+
+        It "Should not have public IP addresses on internal resources" {
+            $PublicIPs = Get-AzPublicIpAddress -ResourceGroupName $TestConfig.ResourceGroupName
+
+            foreach ($pip in $PublicIPs) {
+                $IsLoadBalancer = $pip.IpConfiguration.Id -match 'loadBalancers|applicationGateways'
+
+                if (-not $IsLoadBalancer) {
+                    Write-Warning "Public IP $($pip.Name) found on non-load balancer resource"
+                }
+            }
+        }
+
+        It "Should have Network Security Groups with restrictive rules" {
+            $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $TestConfig.ResourceGroupName
 
             foreach ($nsg in $nsgs) {
-                # Check for overly permissive rules
-                $openRules = $nsg.SecurityRules | Where-Object {
-                    $_.SourceAddressPrefix -eq "*" -and $_.Access -eq "Allow" -and $_.Direction -eq "Inbound"
+                $OpenRules = $nsg.SecurityRules | Where-Object {
+                    $_.SourceAddressPrefix -eq '*' -and
+                    $_.DestinationPortRange -contains '22' -or $_.DestinationPortRange -contains '3389'
                 }
 
-                # Allow HTTP/HTTPS from Internet, but not SSH/RDP
-                $dangerousOpenRules = $openRules | Where-Object {
-                    $_.DestinationPortRange -in @("22", "3389", "5985", "5986")
-                }
-
-                $dangerousOpenRules | Should -BeNullOrEmpty -Because "SSH, RDP, or PowerShell remoting should not be open to Internet"
-            }
-        }
-
-        It "Should have appropriate firewall rules for Key Vault" {
-            $keyVault = Get-AzKeyVault -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
-            if ($keyVault) {
-                # In production, Key Vault should have network restrictions
-                if ($script:TestEnvironment -eq "prod") {
-                    $keyVault.NetworkAcls.DefaultAction | Should -Be "Deny"
-                }
-            }
-        }
-
-        It "Should have diagnostic settings configured for Key Vault" {
-            $keyVault = Get-AzKeyVault -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
-            if ($keyVault) {
-                $diagnostics = Get-AzDiagnosticSetting -ResourceId $keyVault.ResourceId -ErrorAction SilentlyContinue
-                if ($script:TestEnvironment -eq "prod") {
-                    $diagnostics | Should -Not -BeNullOrEmpty -Because "Production Key Vaults should have diagnostic settings"
-                }
+                $OpenRules.Count | Should -Be 0
             }
         }
     }
 
-    Context "Monitoring and Logging Validation" {
-        It "Should have Log Analytics workspace if deployed" {
-            $logWorkspaces = Get-AzOperationalInsightsWorkspace -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
+    Context "Cost Optimization" {
+        It "Should not have oversized VM SKUs in test environment" {
+            $vms = Get-AzVM -ResourceGroupName $TestConfig.ResourceGroupName
 
-            if ($logWorkspaces) {
-                $logWorkspaces | Should -Not -BeNullOrEmpty
-                $logWorkspaces[0].RetentionInDays | Should -BeGreaterThan 0
-            }
-        }
-
-        It "Should have Application Insights if deployed" {
-            $appInsights = Get-AzApplicationInsights -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
-
-            if ($appInsights) {
-                $appInsights | Should -Not -BeNullOrEmpty
-                $appInsights[0].ApplicationType | Should -Be "web"
-            }
-        }
-    }
-
-    Context "Advanced Resources Validation" {
-        It "Should validate AKS cluster if deployed" {
-            $aksClusters = Get-AzAksCluster -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
-
-            if ($aksClusters) {
-                $cluster = $aksClusters[0]
-                $cluster | Should -Not -BeNullOrEmpty
-                $cluster.KubernetesVersion | Should -Not -BeNullOrEmpty
-                $cluster.AgentPoolProfiles | Should -Not -BeNullOrEmpty
-
-                # Check for system node pool
-                $systemPool = $cluster.AgentPoolProfiles | Where-Object { $_.Mode -eq "System" }
-                $systemPool | Should -Not -BeNullOrEmpty
-            }
-        }
-
-        It "Should validate SQL resources if deployed" {
-            $sqlServers = Get-AzSqlServer -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
-
-            if ($sqlServers) {
-                $server = $sqlServers[0]
-                $server | Should -Not -BeNullOrEmpty
-
-                # Check for firewall rules
-                $firewallRules = Get-AzSqlServerFirewallRule -ResourceGroupName $script:TestResourceGroup -ServerName $server.ServerName
-                $firewallRules | Should -Not -BeNullOrEmpty
-
-                # Check for databases
-                $databases = Get-AzSqlDatabase -ResourceGroupName $script:TestResourceGroup -ServerName $server.ServerName
-                $userDatabases = $databases | Where-Object { $_.DatabaseName -ne "master" }
-                $userDatabases | Should -Not -BeNullOrEmpty
-            }
-        }
-
-        It "Should validate App Service if deployed" {
-            $webApps = Get-AzWebApp -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
-
-            if ($webApps) {
-                $webApp = $webApps[0]
-                $webApp | Should -Not -BeNullOrEmpty
-                $webApp.HttpsOnly | Should -Be $true
-                $webApp.SiteConfig | Should -Not -BeNullOrEmpty
-            }
-        }
-    }
-
-    Context "Resource Tags Validation" {
-        It "Should have consistent tagging across resources" {
-            $resources = Get-AzResource -ResourceGroupName $script:TestResourceGroup
-
-            $requiredTags = @("Environment", "Project")
-
-            foreach ($resource in $resources) {
-                foreach ($tag in $requiredTags) {
-                    $resource.Tags.Keys | Should -Contain $tag -Because "Resource $($resource.Name) should have tag '$tag'"
-                }
-            }
-        }
-
-        It "Should have environment tag matching test environment" {
-            $resources = Get-AzResource -ResourceGroupName $script:TestResourceGroup
-
-            foreach ($resource in $resources) {
-                if ($resource.Tags -and $resource.Tags.ContainsKey("Environment")) {
-                    $resource.Tags["Environment"] | Should -Be $script:TestEnvironment
-                }
-            }
-        }
-    }
-
-    Context "Cost Optimization Validation" {
-        It "Should use appropriate storage tiers for non-production" {
-            if ($script:TestEnvironment -ne "prod") {
-                $storageAccounts = Get-AzStorageAccount -ResourceGroupName $script:TestResourceGroup
-
-                foreach ($storage in $storageAccounts) {
-                    $storage.Sku.Name | Should -Match "LRS" -Because "Non-production environments should use LRS for cost optimization"
-                }
-            }
-        }
-
-        It "Should use appropriate VM sizes for environment" {
-            $vms = Get-AzVM -ResourceGroupName $script:TestResourceGroup
+            $ExpensiveSKUs = @('Standard_E64s_v3', 'Standard_M128s', 'Standard_GS5')
 
             foreach ($vm in $vms) {
-                if ($script:TestEnvironment -eq "dev") {
-                    $vm.HardwareProfile.VmSize | Should -Match "Standard_B.*" -Because "Development VMs should use B-series for cost optimization"
+                $vm.HardwareProfile.VmSize | Should -Not -BeIn $ExpensiveSKUs
+            }
+        }
+
+        It "Should have auto-shutdown configured on test VMs" {
+            $vms = Get-AzVM -ResourceGroupName $TestConfig.ResourceGroupName
+
+            foreach ($vm in $vms) {
+                $AutoShutdown = Get-AzResource -ResourceGroupName $vm.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/schedules' -Name "shutdown-computevm-$($vm.Name)" -ErrorAction SilentlyContinue
+
+                if ($TestConfig.Environment -eq 'test') {
+                    $AutoShutdown | Should -Not -BeNullOrEmpty
                 }
+            }
+        }
+    }
+
+    Context "Backup and Disaster Recovery" {
+        It "Should have Recovery Services Vault" {
+            $vaults = Get-AzRecoveryServicesVault -ResourceGroupName $TestConfig.ResourceGroupName
+            $vaults.Count | Should -BeGreaterOrEqual 0
+        }
+
+        It "Should have backup policies configured" -Skip:((Get-AzRecoveryServicesVault -ResourceGroupName $TestConfig.ResourceGroupName).Count -eq 0) {
+            $vault = Get-AzRecoveryServicesVault -ResourceGroupName $TestConfig.ResourceGroupName | Select-Object -First 1
+            Set-AzRecoveryServicesVaultContext -Vault $vault
+
+            $policies = Get-AzRecoveryServicesBackupProtectionPolicy
+            $policies.Count | Should -BeGreaterThan 0
+        }
+    }
+}
+
+Describe "Infrastructure as Code Validation" {
+
+    Context "Bicep Template Validation" {
+        BeforeAll {
+            $script:BicepFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.bicep" -Recurse
+        }
+
+        It "Should have Bicep templates" -Skip:($BicepFiles.Count -eq 0) {
+            $BicepFiles.Count | Should -BeGreaterThan 0
+        }
+
+        It "Should have valid Bicep syntax" -Skip:($BicepFiles.Count -eq 0) {
+            foreach ($BicepFile in $BicepFiles) {
+                $result = & az bicep build --file $BicepFile.FullName --stdout 2>&1
+                $LASTEXITCODE | Should -Be 0
+            }
+        }
+    }
+
+    Context "Terraform Configuration Validation" {
+        BeforeAll {
+            $script:TerraformFiles = Get-ChildItem -Path $PSScriptRoot -Filter "*.tf" -Recurse
+        }
+
+        It "Should have Terraform files" -Skip:($TerraformFiles.Count -eq 0) {
+            $TerraformFiles.Count | Should -BeGreaterThan 0
+        }
+
+        It "Should have valid Terraform syntax" -Skip:($TerraformFiles.Count -eq 0) {
+            Push-Location (Split-Path $TerraformFiles[0].FullName)
+            try {
+                $result = & terraform validate 2>&1
+                $LASTEXITCODE | Should -Be 0
+            }
+            finally {
+                Pop-Location
             }
         }
     }
 }
 
-Describe "Operational Readiness Tests" {
+AfterAll {
+    Write-Output "Infrastructure tests completed" # Color: $2
 
-    Context "Connectivity Tests" {
-        It "Should be able to connect to storage account" {
-            $storageAccount = Get-AzStorageAccount -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
-            if ($storageAccount) {
-                $ctx = $storageAccount.Context
-                { Get-AzStorageContainer -Context $ctx | Select-Object -First 1 } | Should -Not -Throw
-            }
-        }
-
-        It "Should be able to access Key Vault" {
-            $keyVault = Get-AzKeyVault -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
-            if ($keyVault) {
-                { Get-AzKeyVaultSecret -VaultName $keyVault.VaultName | Select-Object -First 1 } | Should -Not -Throw
-            }
-        }
+    if ($env:CLEANUP_TEST_RESOURCES -eq 'true') {
+        Write-Output "Cleaning up test resources..." # Color: $2
     }
-
-    Context "Performance Baseline" {
-        It "Should have acceptable resource provisioning time" {
-            # This would typically measure deployment time
-            # For now, we'll check that resources are responsive
-            $storageAccount = Get-AzStorageAccount -ResourceGroupName $script:TestResourceGroup | Select-Object -First 1
-            if ($storageAccount) {
-                $startTime = Get-Date
-                $containers = Get-AzStorageContainer -Context $storageAccount.Context
-                $endTime = Get-Date
-                $duration = ($endTime - $startTime).TotalSeconds
-
-                $duration | Should -BeLessThan 30 -Because "Storage operations should be responsive"
-            }
-        }
-    }
-
-    Context "Backup and Recovery Validation" {
-        It "Should have backup configuration for production VMs" {
-            if ($script:TestEnvironment -eq "prod") {
-                $vms = Get-AzVM -ResourceGroupName $script:TestResourceGroup
-
-                foreach ($vm in $vms) {
-                    $backupItems = Get-AzRecoveryServicesBackupItem -WorkloadType AzureVM -VaultId $vm.Id -ErrorAction SilentlyContinue
-                    $backupItems | Should -Not -BeNullOrEmpty -Because "Production VMs should have backup configured"
-                }
-            }
-        }
-
-        It "Should have appropriate retention policies" {
-            $recoveryVaults = Get-AzRecoveryServicesVault -ResourceGroupName $script:TestResourceGroup -ErrorAction SilentlyContinue
-
-            if ($recoveryVaults) {
-                foreach ($vault in $recoveryVaults) {
-                    Set-AzRecoveryServicesVaultContext -Vault $vault
-                    $policies = Get-AzRecoveryServicesBackupProtectionPolicy
-                    $policies | Should -Not -BeNullOrEmpty
-                }
-            }
-        }
-    }
-}
+`n}

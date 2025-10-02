@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,8 +10,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$VmName,
@@ -23,21 +24,18 @@
     [string]$ImageOffer = "WindowsServer",
     [string]$ImageSku = "2022-Datacenter"
 )
-Write-Host "Provisioning Virtual Machine: $VmName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "VM Size: $VmSize"
-# Create VM configuration
+Write-Output "Provisioning Virtual Machine: $VmName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "VM Size: $VmSize"
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
-# Set operating system
-$vmoperatingsystemSplat = @{
+$VmoperatingsystemSplat = @{
     VM = $VmConfig
     ComputerName = $VmName
     Credential = New-Object PSCredential($AdminUsername, $AdminPassword)
 }
 Set-AzVMOperatingSystem @vmoperatingsystemSplat
-# Set source image
-$vmsourceimageSplat = @{
+$VmsourceimageSplat = @{
     VM = $VmConfig
     PublisherName = $ImagePublisher
     Offer = $ImageOffer
@@ -45,12 +43,13 @@ $vmsourceimageSplat = @{
     Version = "latest"
 }
 Set-AzVMSourceImage @vmsourceimageSplat
-# Create the VM
-$vmSplat = @{
+$VmSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
     VM = $VmConfig
 }
 New-AzVM @vmSplat
-Write-Host "Virtual Machine $VmName provisioned successfully"
+Write-Output "Virtual Machine $VmName provisioned successfully"
+
+
 

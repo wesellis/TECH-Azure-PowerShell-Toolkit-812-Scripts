@@ -5,18 +5,14 @@
 .DESCRIPTION
     commit and push operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
-    commit and pushcom)#>
-# Commit and push the consolidated Azure Enterprise Toolkit
-Write-Host "Committing Azure Enterprise Toolkit to GitHub..."
+    commit and pushcom)
+Write-Output "Committing Azure Enterprise Toolkit to GitHub..."
 
-# Add all files
 git add .
-Write-Host "Added all files to staging"
+Write-Output "Added all files to staging"
 
-# Commit with
-$commitMessage = @"
+$CommitMessage = @"
  Azure Enterprise Toolkit - Complete Consolidation
 
  Consolidated 5 repositories into
@@ -45,15 +41,13 @@ $commitMessage = @"
 Ready for enterprise Azure administration!
 "@
 
-git commit -m $commitMessage
+git commit -m $CommitMessage
 Write-Host "Committed with
 
-# Push to GitHub
 git push
-Write-Host "Pushed to GitHub successfully!"
+Write-Output "Pushed to GitHub successfully!"
 
-Write-Host "`n Azure Enterprise Toolkit is now live on GitHub!"
-Write-Host "�� View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
-Write-Host "[*] Don't forget to star your own repository!"
+Write-Output "`n Azure Enterprise Toolkit is now live on GitHub!"
+Write-Output "�� View at: https://github.com/wesellis/Azure-Enterprise-Toolkit"
+Write-Output "[*] Don't forget to star your own repository!"
 
-#endregion\n

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,39 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-[cmdletbinding()
-try {
-    # Main script execution
-]
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-	[string]$appName = " rds-update-certificate-script" ,
-	# has to be a valid format URI; URI's not validated for single-tenant application
-	[string]$uri = "https://login.microsoft.com/rds-update-certificate-script" ,
+	$AppName = " rds-update-certificate-script" ,
+	$uri = "https://login.microsoft.com/rds-update-certificate-script" ,
 	[parameter(mandatory=$true)]
 	[Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$password,
-	[string]$vaultName
+    $password,
+	$VaultName
 )
-$app = New-AzureRmADApplication -DisplayName $appName -HomePage $uri -IdentifierUris $uri -password $pwd
-$sp = New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId
-if ($vaultName)
+    $app = New-AzureRmADApplication -DisplayName $AppName -HomePage $uri -IdentifierUris $uri -password $pwd
+    $sp = New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId
+if ($VaultName)
 {
-	set-azurermkeyvaultaccesspolicy -vaultname $vaultName -serviceprincipalname $sp.ApplicationId -permissionstosecrets get
+	set-azurermkeyvaultaccesspolicy -vaultname $VaultName -serviceprincipalname $sp.ApplicationId -permissionstosecrets get
 }
-$tenantId = (get-azurermsubscription).TenantId | select -Unique
+    $TenantId = (get-azurermsubscription).TenantId | select -Unique
 " application id:  $($app.ApplicationId)"
-" tenant id:       $tenantId"
+" tenant id:       $TenantId"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

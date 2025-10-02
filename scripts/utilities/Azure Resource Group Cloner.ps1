@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -14,48 +14,43 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$SourceResourceGroupName,
+    $SourceResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetResourceGroupName,
+    $TargetResourceGroupName,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetLocation,
+    $TargetLocation,
     [Parameter()]
     [switch]$ExportOnly,
     [Parameter()]
-    [string]$ExportPath = " .\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+    $ExportPath = " .\rg-export-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
-    $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
-    if (-not $TargetLocation) { $TargetLocation = $sourceRG.Location }
-
+    $SourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
+    if (-not $TargetLocation) { $TargetLocation = $SourceRG.Location }
     $null = Export-AzResourceGroup -ResourceGroupName $SourceResourceGroupName -Path $ExportPath
 
     if (-not $ExportOnly) {
-
-$resourcegroupSplat = @{
+    $ResourcegroupSplat = @{
     Name = $TargetResourceGroupName
     Location = $TargetLocation
-    Tag = $sourceRG.Tags
+    Tag = $SourceRG.Tags
 }
 New-AzResourceGroup @resourcegroupSplat
-
-$deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath
+    $deployment = New-AzResourceGroupDeployment -ResourceGroupName $TargetResourceGroupName -TemplateFile $ExportPath
         if ($deployment.ProvisioningState -eq "Succeeded" ) {
 
         } else {
 
         }
     }
-} catch { throw }
-
-
+} catch { throw`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Disable Write Cache Flushing
@@ -26,12 +26,11 @@
     or backpressure mechanism that avoid the cache taking large amounts of memory.
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-foreach ($diskKey in (Get-ChildItem -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\SCSI\Disk&Ven_Msft&Prod_Virtual_Disk')) {
-    Write-Output "Examining regkey: $diskKey"
-$deviceParamsKey = " $($diskKey.Name)\Device Parameters" -replace "HKEY_LOCAL_MACHINE" , "HKLM:"
-$diskParamsKey = " $deviceParamsKey\Disk"
-    Write-Output "Ensuring regkey exists: $diskParamsKey"
-    New-Item -Path $deviceParamsKey -Name Disk -Force
-    Write-Output "Setting CacheIsPowerProtected in regkey: $diskParamsKey"
-    Set-ItemProperty -Path $diskParamsKey -Name CacheIsPowerProtected -Value 1
-}
+foreach ($DiskKey in (Get-ChildItem -Path 'HKLM:\SYSTEM\CurrentControlSet\Enum\SCSI\Disk&Ven_Msft&Prod_Virtual_Disk')) {
+    Write-Output "Examining regkey: $DiskKey"
+$DeviceParamsKey = " $($DiskKey.Name)\Device Parameters" -replace "HKEY_LOCAL_MACHINE" , "HKLM:"
+$DiskParamsKey = " $DeviceParamsKey\Disk"
+    Write-Output "Ensuring regkey exists: $DiskParamsKey"
+    New-Item -Path $DeviceParamsKey -Name Disk -Force
+    Write-Output "Setting CacheIsPowerProtected in regkey: $DiskParamsKey"
+    Set-ItemProperty -Path $DiskParamsKey -Name CacheIsPowerProtected -Value 1`n}

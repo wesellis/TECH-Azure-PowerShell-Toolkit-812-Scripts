@@ -7,41 +7,40 @@
 .DESCRIPTION
     manage nsg rules operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Manages Network Security Group (NSG) rules in Azure
 
     Creates, modifies, and removes NSG security rules. Supports both inbound and outbound rules
     with
-.PARAMETER NSGName
+.parameter NSGName
     Name of the Network Security Group
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Resource group containing the NSG
-.PARAMETER Action
+.parameter Action
     Action to perform: Add, Remove, List, Update
-.PARAMETER RuleName
+.parameter RuleName
     Name of the security rule
-.PARAMETER Direction
+.parameter Direction
     Rule direction: Inbound, Outbound
-.PARAMETER Priority
+.parameter Priority
     Rule priority (100-4096)
-.PARAMETER Access
+.parameter Access
     Allow or Deny
-.PARAMETER Protocol
+.parameter Protocol
     Protocol: TCP, UDP, ICMP, *
-.PARAMETER SourceAddressPrefix
+.parameter SourceAddressPrefix
     Source address prefix or CIDR
-.PARAMETER SourcePortRange
+.parameter SourcePortRange
     Source port range (e.g., 80, 80-90, *)
-.PARAMETER DestinationAddressPrefix
+.parameter DestinationAddressPrefix
     Destination address prefix or CIDR
-.PARAMETER DestinationPortRange
+.parameter DestinationPortRange
     Destination port range
-.PARAMETER Description
+.parameter Description
     Rule description
-.PARAMETER CsvFile
+.parameter CsvFile
     CSV file for bulk rule operations
-.PARAMETER Force
+.parameter Force
     Skip confirmation prompts
 
     .\manage-nsg-rules.ps1 -NSGName "NSG-Web" -ResourceGroupName "RG-Network" -Action "Add" -RuleName "Allow-HTTP" -Direction "Inbound" -Priority 1000 -Access "Allow" -Protocol "TCP" -SourceAddressPrefix "*" -SourcePortRange "*" -DestinationAddressPrefix "*" -DestinationPortRange "80"
@@ -50,82 +49,76 @@
 
     .\manage-nsg-rules.ps1 -NSGName "NSG-Web" -ResourceGroupName "RG-Network" -Action "List"
 
-    Lists all rules in the NSG#>
+    Lists all rules in the NSG
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+[parameter(Mandatory = $true)]
     [string]$NSGName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateSet('Add', 'Remove', 'List', 'Update', 'Import')]
     [string]$Action,
 
-    [Parameter()]
+    [parameter()]
     [string]$RuleName,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Inbound', 'Outbound')]
     [string]$Direction,
 
-    [Parameter()]
+    [parameter()]
     [ValidateRange(100, 4096)]
     [int]$Priority,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Allow', 'Deny')]
     [string]$Access,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('TCP', 'UDP', 'ICMP', '*')]
     [string]$Protocol,
 
-    [Parameter()]
+    [parameter()]
     [string]$SourceAddressPrefix = '*',
 
-    [Parameter()]
+    [parameter()]
     [string]$SourcePortRange = '*',
 
-    [Parameter()]
+    [parameter()]
     [string]$DestinationAddressPrefix = '*',
 
-    [Parameter()]
+    [parameter()]
     [string]$DestinationPortRange,
 
-    [Parameter()]
+    [parameter()]
     [string]$Description,
 
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         if (Test-Path $_) { $true }
         else { throw "CSV file not found: $_" }
     })]
     [string]$CsvFile,
 
-    [Parameter()]
+    [parameter()]
     [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
 
-[OutputType([PSObject])]
- {
+function Write-Log {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
 }
 
 function Get-NetworkSecurityGroup {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Name,
+    [string]$Name,
         [string]$ResourceGroup
     )
 
@@ -133,7 +126,7 @@ function Get-NetworkSecurityGroup {
         return Get-AzNetworkSecurityGroup -Name $Name -ResourceGroupName $ResourceGroup
     }
     catch {
-        Write-Error "NSG '$Name' not found in resource group '$ResourceGroup'"
+        write-Error "NSG '$Name' not found in resource group '$ResourceGroup'"
         throw
     }
 }
@@ -145,25 +138,22 @@ function Test-RuleParameters {
         foreach ($param in $required) {
             $value = Get-Variable -Name $param -ValueOnly -ErrorAction SilentlyContinue
             if (-not $value) {
-                throw "Parameter '$param' is required for action '$Action'"
+                throw "parameter '$param' is required for action '$Action'"
             }
         }
 
-        # Check for priority conflicts
         if ($Action -eq 'Add') {
             $nsg = Get-NetworkSecurityGroup -Name $NSGName -ResourceGroup $ResourceGroupName
-            $existingRule = $nsg.SecurityRules | Where-Object { $_.Priority -eq $Priority }
-            if ($existingRule) {
-                throw "Priority $Priority is already used by rule '$($existingRule.Name)'"
+            $ExistingRule = $nsg.SecurityRules | Where-Object { $_.Priority -eq $Priority }
+            if ($ExistingRule) {
+                throw "Priority $Priority is already used by rule '$($ExistingRule.Name)'"
             }
         }
     }
 }
 
 function New-NSGRule {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$NSG,
+    [object]$NSG,
         [hashtable]$RuleParams
     )
 
@@ -190,22 +180,20 @@ function New-NSGRule {
 }
 
 function Remove-NSGRule {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$NSG,
+    [object]$NSG,
         [string]$Name
     )
 
     $rule = $NSG.SecurityRules | Where-Object { $_.Name -eq $Name }
     if (-not $rule) {
-        Write-Warning "Rule '$Name' not found in NSG"
+        write-Warning "Rule '$Name' not found in NSG"
         return
     }
 
     if (-not $Force) {
         $confirmation = Read-Host "Remove rule '$Name'? (y/N)"
         if ($confirmation -ne 'y') {
-            Write-Host "Operation cancelled" -ForegroundColor Yellow
+            Write-Host "Operation cancelled" -ForegroundColor Green
             return
         }
     }
@@ -217,34 +205,32 @@ function Remove-NSGRule {
 }
 
 function Update-NSGRule {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$NSG,
+    [object]$NSG,
         [hashtable]$RuleParams
     )
 
-    $existingRule = $NSG.SecurityRules | Where-Object { $_.Name -eq $RuleParams.RuleName }
-    if (-not $existingRule) {
-        Write-Warning "Rule '$($RuleParams.RuleName)' not found. Use Add action to create new rule."
+    $ExistingRule = $NSG.SecurityRules | Where-Object { $_.Name -eq $RuleParams.RuleName }
+    if (-not $ExistingRule) {
+        write-Warning "Rule '$($RuleParams.RuleName)' not found. Use Add action to create new rule."
         return
     }
 
     $params = @{
         Name = $RuleParams.RuleName
-        Direction = if ($RuleParams.Direction) { $RuleParams.Direction } else { $existingRule.Direction }
-        Priority = if ($RuleParams.Priority) { $RuleParams.Priority } else { $existingRule.Priority }
-        Access = if ($RuleParams.Access) { $RuleParams.Access } else { $existingRule.Access }
-        Protocol = if ($RuleParams.Protocol) { $RuleParams.Protocol } else { $existingRule.Protocol }
-        SourceAddressPrefix = if ($RuleParams.SourceAddressPrefix) { $RuleParams.SourceAddressPrefix } else { $existingRule.SourceAddressPrefix }
-        SourcePortRange = if ($RuleParams.SourcePortRange) { $RuleParams.SourcePortRange } else { $existingRule.SourcePortRange }
-        DestinationAddressPrefix = if ($RuleParams.DestinationAddressPrefix) { $RuleParams.DestinationAddressPrefix } else { $existingRule.DestinationAddressPrefix }
-        DestinationPortRange = if ($RuleParams.DestinationPortRange) { $RuleParams.DestinationPortRange } else { $existingRule.DestinationPortRange }
+        Direction = if ($RuleParams.Direction) { $RuleParams.Direction } else { $ExistingRule.Direction }
+        Priority = if ($RuleParams.Priority) { $RuleParams.Priority } else { $ExistingRule.Priority }
+        Access = if ($RuleParams.Access) { $RuleParams.Access } else { $ExistingRule.Access }
+        Protocol = if ($RuleParams.Protocol) { $RuleParams.Protocol } else { $ExistingRule.Protocol }
+        SourceAddressPrefix = if ($RuleParams.SourceAddressPrefix) { $RuleParams.SourceAddressPrefix } else { $ExistingRule.SourceAddressPrefix }
+        SourcePortRange = if ($RuleParams.SourcePortRange) { $RuleParams.SourcePortRange } else { $ExistingRule.SourcePortRange }
+        DestinationAddressPrefix = if ($RuleParams.DestinationAddressPrefix) { $RuleParams.DestinationAddressPrefix } else { $ExistingRule.DestinationAddressPrefix }
+        DestinationPortRange = if ($RuleParams.DestinationPortRange) { $RuleParams.DestinationPortRange } else { $ExistingRule.DestinationPortRange }
     }
 
     if ($RuleParams.Description) {
         $params['Description'] = $RuleParams.Description
-    } elseif ($existingRule.Description) {
-        $params['Description'] = $existingRule.Description
+    } elseif ($ExistingRule.Description) {
+        $params['Description'] = $ExistingRule.Description
     }
 
     if ($PSCmdlet.ShouldProcess($RuleParams.RuleName, "Update NSG rule")) {
@@ -254,15 +240,14 @@ function Update-NSGRule {
 }
 
 function Show-NSGRules {
-    [CmdletBinding(SupportsShouldProcess)]
-[object]$NSG)
+    [object]$NSG)
 
     if ($NSG.SecurityRules.Count -eq 0) {
-        Write-Host "No custom security rules found" -ForegroundColor Yellow
+        Write-Host "No custom security rules found" -ForegroundColor Green
         return
     }
 
-    Write-Host "`nSecurity Rules for NSG: $($NSG.Name)" -ForegroundColor Cyan
+    Write-Host "`nSecurity Rules for NSG: $($NSG.Name)" -ForegroundColor Green
 
     $rules = $NSG.SecurityRules | Sort-Object Priority | ForEach-Object {
         [PSCustomObject]@{
@@ -279,62 +264,59 @@ function Show-NSGRules {
 
     $rules | Format-Table -AutoSize
 
-    Write-Host "`nSummary:" -ForegroundColor Cyan
-    Write-Host "Total Rules: $($rules.Count)"
-    Write-Host "Inbound: $(($rules | Where-Object Direction -eq 'Inbound').Count)"
-    Write-Host "Outbound: $(($rules | Where-Object Direction -eq 'Outbound').Count)"
-    Write-Host "Allow: $(($rules | Where-Object Access -eq 'Allow').Count)"
-    Write-Host "Deny: $(($rules | Where-Object Access -eq 'Deny').Count)"
+    Write-Host "`nSummary:" -ForegroundColor Green
+    Write-Output "Total Rules: $($rules.Count)"
+    Write-Output "Inbound: $(($rules | Where-Object Direction -eq 'Inbound').Count)"
+    Write-Output "Outbound: $(($rules | Where-Object Direction -eq 'Outbound').Count)"
+    Write-Output "Allow: $(($rules | Where-Object Access -eq 'Allow').Count)"
+    Write-Output "Deny: $(($rules | Where-Object Access -eq 'Deny').Count)"
 }
 
 function Import-RulesFromCsv {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$NSG,
+    [object]$NSG,
         [string]$FilePath
     )
 
     try {
-        $csvRules = Import-Csv -Path $FilePath
-        $successCount = 0
-        $errorCount = 0
+        $CsvRules = Import-Csv -Path $FilePath
+        $SuccessCount = 0
+        $ErrorCount = 0
 
-        foreach ($csvRule in $csvRules) {
+        foreach ($CsvRule in $CsvRules) {
             try {
-                $ruleParams = @{
-                    RuleName = $csvRule.Name
-                    Direction = $csvRule.Direction
-                    Priority = [int]$csvRule.Priority
-                    Access = $csvRule.Access
-                    Protocol = $csvRule.Protocol
-                    SourceAddressPrefix = $csvRule.SourceAddressPrefix
-                    SourcePortRange = $csvRule.SourcePortRange
-                    DestinationAddressPrefix = $csvRule.DestinationAddressPrefix
-                    DestinationPortRange = $csvRule.DestinationPortRange
-                    Description = $csvRule.Description
+                $RuleParams = @{
+                    RuleName = $CsvRule.Name
+                    Direction = $CsvRule.Direction
+                    Priority = [int]$CsvRule.Priority
+                    Access = $CsvRule.Access
+                    Protocol = $CsvRule.Protocol
+                    SourceAddressPrefix = $CsvRule.SourceAddressPrefix
+                    SourcePortRange = $CsvRule.SourcePortRange
+                    DestinationAddressPrefix = $CsvRule.DestinationAddressPrefix
+                    DestinationPortRange = $CsvRule.DestinationPortRange
+                    Description = $CsvRule.Description
                 }
 
-                New-NSGRule -NSG $NSG -RuleParams $ruleParams
-                $successCount++
+                New-NSGRule -NSG $NSG -RuleParams $RuleParams
+                $SuccessCount++
             }
             catch {
-                Write-Warning "Failed to create rule '$($csvRule.Name)': $_"
-                $errorCount++
+                write-Warning "Failed to create rule '$($CsvRule.Name)': $_"
+                $ErrorCount++
             }
         }
 
-        Write-Host "`nImport Summary:" -ForegroundColor Cyan
-        Write-Host "Successful: $successCount"
-        Write-Host "Failed: $errorCount"
+        Write-Host "`nImport Summary:" -ForegroundColor Green
+        Write-Output "Successful: $SuccessCount"
+        Write-Output "Failed: $ErrorCount"
     }
     catch {
-        Write-Error "Failed to import CSV file: $_"
+        write-Error "Failed to import CSV file: $_"
     }
 }
 
-# Main execution
-Write-Host "`nNSG Rule Management" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
+Write-Host "`nNSG Rule Management" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
 
 $context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
@@ -345,7 +327,7 @@ Write-Host "Working with NSG: $($nsg.Name)" -ForegroundColor Green
 switch ($Action) {
     'Add' {
         Test-RuleParameters
-        $ruleParams = @{
+        $RuleParams = @{
             RuleName = $RuleName
             Direction = $Direction
             Priority = $Priority
@@ -357,7 +339,7 @@ switch ($Action) {
             DestinationPortRange = $DestinationPortRange
             Description = $Description
         }
-        New-NSGRule -NSG $nsg -RuleParams $ruleParams
+        New-NSGRule -NSG $nsg -RuleParams $RuleParams
     }
 
     'Remove' {
@@ -369,7 +351,7 @@ switch ($Action) {
 
     'Update' {
         Test-RuleParameters
-        $ruleParams = @{
+        $RuleParams = @{
             RuleName = $RuleName
             Direction = $Direction
             Priority = $Priority
@@ -381,7 +363,7 @@ switch ($Action) {
             DestinationPortRange = $DestinationPortRange
             Description = $Description
         }
-        Update-NSGRule -NSG $nsg -RuleParams $ruleParams
+        Update-NSGRule -NSG $nsg -RuleParams $RuleParams
     }
 
     'List' {
@@ -397,4 +379,6 @@ switch ($Action) {
 }
 
 Write-Host "`nOperation completed!" -ForegroundColor Green\n
+
+
 

@@ -1,36 +1,65 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Get recoveryservicesbackuprecoverypoint
 
 .DESCRIPTION
     Get recoveryservicesbackuprecoverypoint operation
-    Author: Wes Ellis (wes@wesellis.com)
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-    RecoveryPointId    RecoveryPointType  RecoveryPointTime      ContainerName                        ContainerType
----------------    -----------------  -----------------      -------------                        -------------
-630969556710589... CrashConsistent    2020-12-12 11:18:41 PM iaasvmcontainerv2;canprintequip_o... AzureVM
-$startDate = (Get-Date).AddDays(-7)
-$endDate = Get-Date;
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$CustomerName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName,
+
+    [Parameter()]
+    [int]$DaysBack = 7
+)
+
+$ErrorActionPreference = 'Stop'
+
+$ResourceGroupName = -join ("$CustomerName" , "_$VMName" , "_RG" )
+$Vaultname = -join ("$VMName" , "ARSV1" )
+
+$getAzRecoveryServicesVaultSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $Vaultname
+}
+$targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
+
+$getAzRecoveryServicesBackupContainerSplat = @{
+    ContainerType = "AzureVM"
+    Status = "Registered"
+    FriendlyName = $VMName
+    VaultId = $targetVault.ID
+}
+$namedContainer = Get-AzRecoveryServicesBackupContainer @getAzRecoveryServicesBackupContainerSplat
+
+$getAzRecoveryServicesBackupItemSplat = @{
+    Container = $namedContainer
+    WorkloadType = "AzureVM"
+    VaultId = $targetVault.ID
+}
+$backupitem = Get-AzRecoveryServicesBackupItem @getAzRecoveryServicesBackupItemSplat
+
+$startDate = (Get-Date).AddDays(-$DaysBack)
+$endDate = Get-Date
+
 $getAzRecoveryServicesBackupRecoveryPointSplat = @{
     Item = $backupitem
-    StartDate = $startdate.ToUniversalTime()
-    EndDate = $enddate.ToUniversalTime()
+    StartDate = $startDate.ToUniversalTime()
+    EndDate = $endDate.ToUniversalTime()
     VaultId = $targetVault.ID
 }
 $rp = Get-AzRecoveryServicesBackupRecoveryPoint -ErrorAction Stop @getAzRecoveryServicesBackupRecoveryPointSplat
 $rp
-

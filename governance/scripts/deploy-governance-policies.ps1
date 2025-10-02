@@ -6,26 +6,29 @@
     Deploys governance policies and initiatives to Azure subscriptions
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Automates the deployment of common Azure governance policies including
     tagging requirements, resource location restrictions, and security policies.
     Supports custom policy definitions and built-in policies.
-.PARAMETER ManagementGroup
+.parameter ManagementGroup
     Management group scope for policy assignment
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Subscription ID for policy assignment (uses current context if not specified)
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Resource group scope for policy assignment
-.PARAMETER PolicySetName
+.parameter PolicySetName
     Name of the policy set to deploy (Default, Security, Tagging, Location)
-.PARAMETER CustomPolicyPath
+.parameter CustomPolicyPath
     Path to custom policy definition JSON file
-.PARAMETER AssignmentName
+.parameter AssignmentName
     Name for the policy assignment
-.PARAMETER ExcludedScopes
+.parameter ExcludedScopes
     Array of resource IDs to exclude from policy assignment
-.PARAMETER EnforcementMode
+.parameter EnforcementMode
     Policy enforcement mode: Default, DoNotEnforce
-.PARAMETER WhatIf
+.parameter WhatIf
     Show what would be deployed without making changes
 
     .\deploy-governance-policies.ps1 -PolicySetName "Security" -EnforcementMode "Default"
@@ -35,59 +38,56 @@
     .\deploy-governance-policies.ps1 -CustomPolicyPath ".\custom-policy.json" -ResourceGroupName "RG-Test"
 
     Deploys custom policy to specific resource group
-.NOTES#>
+.NOTES
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding()]
-
-    [Parameter()]
+[parameter()]
     [string]$ManagementGroup,
 
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
         catch { throw "Invalid subscription ID format" }
     })]
     [string]$SubscriptionId,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceGroupName,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Default', 'Security', 'Tagging', 'Location', 'Monitoring')]
     [string]$PolicySetName = 'Default',
 
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         if (Test-Path $_) { $true }
         else { throw "Policy file not found: $_" }
     })]
     [string]$CustomPolicyPath,
 
-    [Parameter()]
+    [parameter()]
     [string]$AssignmentName,
 
-    [Parameter()]
+    [parameter()]
     [string[]]$ExcludedScopes,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Default', 'DoNotEnforce')]
     [string]$EnforcementMode = 'Default'
 )
 
 $ErrorActionPreference = 'Stop'
 
-[OutputType([string])]
+[OutputType([string])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
         $context = Get-AzContext
     }
 
     if ($SubscriptionId -and $context.Subscription.Id -ne $SubscriptionId) {
-        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Yellow
+        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Green
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     }
 
@@ -95,8 +95,7 @@ $ErrorActionPreference = 'Stop'
 }
 
 function Get-PolicyDefinitions {
-    [CmdletBinding()]
-[string]$SetName)
+    [string]$SetName)
 
     $policies = @{
         'Default' = @(
@@ -144,22 +143,20 @@ function Get-PolicyScope {
 }
 
 function New-PolicyFromFile {
-    [CmdletBinding()]
-
-        [string]$FilePath,
+    [string]$FilePath,
         [string]$Scope
     )
 
     try {
-        $policyContent = Get-Content -Path $FilePath -Raw | ConvertFrom-Json
+        $PolicyContent = Get-Content -Path $FilePath -Raw | ConvertFrom-Json
 
         $params = @{
-            Name = $policyContent.name
-            DisplayName = $policyContent.properties.displayName
-            Description = $policyContent.properties.description
-            Policy = ($policyContent.properties.policyRule | ConvertTo-Json -Depth 10)
-            Parameter = if ($policyContent.properties.parameters) {
-                ($policyContent.properties.parameters | ConvertTo-Json -Depth 10)
+            Name = $PolicyContent.name
+            DisplayName = $PolicyContent.properties.displayName
+            Description = $PolicyContent.properties.description
+            Policy = ($PolicyContent.properties.policyRule | ConvertTo-Json -Depth 10)
+            parameter = if ($PolicyContent.properties.parameters) {
+                ($PolicyContent.properties.parameters | ConvertTo-Json -Depth 10)
             } else { $null }
             ManagementGroupName = if ($ManagementGroup) { $ManagementGroup } else { $null }
             SubscriptionId = if (-not $ManagementGroup -and -not $ResourceGroupName) {
@@ -167,56 +164,53 @@ function New-PolicyFromFile {
             } else { $null }
         }
 
-        if ($PSCmdlet.ShouldProcess($policyContent.name, "Create policy definition")) {
+        if ($PSCmdlet.ShouldProcess($PolicyContent.name, "Create policy definition")) {
             $definition = New-AzPolicyDefinition @params
             Write-Host "Created policy definition: $($definition.Name)" -ForegroundColor Green
             return $definition
         }
     } catch {
-        Write-Error "Failed to create policy from file: $_"
+        write-Error "Failed to create policy from file: $_"
         throw
     }
 }
 
 function New-PolicyAssignments {
-    [CmdletBinding()]
-
-        [array]$PolicyNames,
+    [array]$PolicyNames,
         [string]$Scope,
         [string]$AssignmentName
     )
 
     $assignments = @()
 
-    foreach ($policyName in $PolicyNames) {
+    foreach ($PolicyName in $PolicyNames) {
         try {
-            # Try to find built-in policy first
-            $definition = Get-AzPolicyDefinition | Where-Object { $_.Properties.DisplayName -eq $policyName }
+            $definition = Get-AzPolicyDefinition | Where-Object { $_.Properties.DisplayName -eq $PolicyName }
 
             if (-not $definition) {
-                Write-Warning "Policy not found: $policyName"
+                write-Warning "Policy not found: $PolicyName"
                 continue
             }
 
-            $assignmentParams = @{
-                Name = "$AssignmentName-$($definition.Name)".Substring(0, [Math]::Min(64, "$AssignmentName-$($definition.Name)".Length))
-                DisplayName = "Governance: $policyName"
+            $AssignmentParams = @{
+                Name = "$AssignmentName-$($definition.Name)".Substring(0, [Math]::Min(64, "$AssignmentName-$($definition.Name)".length))
+                DisplayName = "Governance: $PolicyName"
                 Scope = $Scope
                 PolicyDefinition = $definition
                 EnforcementMode = $EnforcementMode
             }
 
             if ($ExcludedScopes) {
-                $assignmentParams['NotScope'] = $ExcludedScopes
+                $AssignmentParams['NotScope'] = $ExcludedScopes
             }
 
-            if ($PSCmdlet.ShouldProcess($policyName, "Assign policy")) {
+            if ($PSCmdlet.ShouldProcess($PolicyName, "Assign policy")) {
                 $assignment = New-AzPolicyAssignment @assignmentParams
                 $assignments += $assignment
-                Write-Host "Assigned policy: $policyName" -ForegroundColor Green
+                Write-Host "Assigned policy: $PolicyName" -ForegroundColor Green
             }
         } catch {
-            Write-Warning "Failed to assign policy '$policyName': $_"
+            write-Warning "Failed to assign policy '$PolicyName': $_"
         }
     }
 
@@ -224,36 +218,33 @@ function New-PolicyAssignments {
 }
 
 function Show-DeploymentSummary {
-    [CmdletBinding()]
-
-        [array]$Assignments,
+    [array]$Assignments,
         [string]$Scope
     )
 
-    Write-Host "`nDeployment Summary:" -ForegroundColor Cyan
-    Write-Host "Scope: $Scope"
-    Write-Host "Enforcement Mode: $EnforcementMode"
-    Write-Host "Policies Assigned: $($Assignments.Count)"
+    Write-Host "`nDeployment Summary:" -ForegroundColor Green
+    Write-Output "Scope: $Scope"
+    Write-Output "Enforcement Mode: $EnforcementMode"
+    Write-Output "Policies Assigned: $($Assignments.Count)"
 
     if ($ExcludedScopes) {
-        Write-Host "Excluded Scopes: $($ExcludedScopes.Count)"
+        Write-Output "Excluded Scopes: $($ExcludedScopes.Count)"
     }
 
-    Write-Host "`nAssigned Policies:" -ForegroundColor Cyan
+    Write-Host "`nAssigned Policies:" -ForegroundColor Green
     $Assignments | ForEach-Object {
         Write-Host "  - $($_.Properties.DisplayName)" -ForegroundColor Green
     }
 }
 
-# Main execution
-Write-Host "`nGovernance Policy Deployment" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
+Write-Host "`nGovernance Policy Deployment" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
 
 $context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
 $scope = Get-PolicyScope
-Write-Host "Target scope: $scope" -ForegroundColor Yellow
+Write-Host "Target scope: $scope" -ForegroundColor Green
 
 if (-not $AssignmentName) {
     $AssignmentName = "Governance-$(Get-Date -Format 'yyyyMMdd')"
@@ -262,36 +253,36 @@ if (-not $AssignmentName) {
 $assignments = @()
 
 if ($CustomPolicyPath) {
-    Write-Host "`nDeploying custom policy..." -ForegroundColor Yellow
-    $customDefinition = New-PolicyFromFile -FilePath $CustomPolicyPath -Scope $scope
+    Write-Host "`nDeploying custom policy..." -ForegroundColor Green
+    $CustomDefinition = New-PolicyFromFile -FilePath $CustomPolicyPath -Scope $scope
 
-    if ($customDefinition) {
-        $assignmentParams = @{
+    if ($CustomDefinition) {
+        $AssignmentParams = @{
             Name = $AssignmentName
-            DisplayName = "Custom: $($customDefinition.Properties.DisplayName)"
+            DisplayName = "Custom: $($CustomDefinition.Properties.DisplayName)"
             Scope = $scope
-            PolicyDefinition = $customDefinition
+            PolicyDefinition = $CustomDefinition
             EnforcementMode = $EnforcementMode
         }
 
         if ($ExcludedScopes) {
-            $assignmentParams['NotScope'] = $ExcludedScopes
+            $AssignmentParams['NotScope'] = $ExcludedScopes
         }
 
-        if ($PSCmdlet.ShouldProcess($customDefinition.Name, "Assign custom policy")) {
+        if ($PSCmdlet.ShouldProcess($CustomDefinition.Name, "Assign custom policy")) {
             $assignments += New-AzPolicyAssignment @assignmentParams
         }
     }
 }
 else {
-    Write-Host "`nDeploying $PolicySetName policy set..." -ForegroundColor Yellow
-    $policyNames = Get-PolicyDefinitions -SetName $PolicySetName
+    Write-Host "`nDeploying $PolicySetName policy set..." -ForegroundColor Green
+    $PolicyNames = Get-PolicyDefinitions -SetName $PolicySetName
 
-    if ($policyNames) {
-        $assignments = New-PolicyAssignments -PolicyNames $policyNames -Scope $scope -AssignmentName $AssignmentName
+    if ($PolicyNames) {
+        $assignments = New-PolicyAssignments -PolicyNames $PolicyNames -Scope $scope -AssignmentName $AssignmentName
     }
     else {
-        Write-Warning "No policies found for set: $PolicySetName"
+        write-Warning "No policies found for set: $PolicySetName"
     }
 }
 
@@ -300,6 +291,8 @@ if ($assignments.Count -gt 0) {
     Write-Host "`nPolicy deployment completed successfully!" -ForegroundColor Green
 }
 else {
-    Write-Warning "No policies were deployed"
+    write-Warning "No policies were deployed"
 }\n
+
+
 

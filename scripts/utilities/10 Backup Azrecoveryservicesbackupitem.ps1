@@ -1,7 +1,8 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Backup Azure Recovery Services backup item
 
 .DESCRIPTION
@@ -15,11 +16,23 @@
     LastModified: 2025-09-19
     Requires appropriate permissions and modules
 #>
-Use Backup-AzRecoveryServicesBackupItem to trigger a backup job. If it's the initial backup, it is a full backup. Subsequent backups take an incremental copy. The following example takes a VM backup to be retained for 60 days.
-$CustomerName = 'CanPrintEquip'
-$VMName = 'Outlook1'
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$CustomerName = 'CanPrintEquip',
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName = 'Outlook1',
+
+    [Parameter()]
+    [int]$RetentionDays = 60
+)
+
+$ErrorActionPreference = 'Stop'
+
 $ResourceGroupName = -join ("$CustomerName" , "_Outlook" , "_RG" )
-$Vaultname = -join (" $VMName" , "ARSV1" )
+$Vaultname = -join ("$VMName" , "ARSV1" )
 $targetVault = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Name $Vaultname
 $getAzRecoveryServicesBackupContainerSplat = @{
     ContainerType = "AzureVM"
@@ -34,11 +47,10 @@ $getAzRecoveryServicesBackupItemSplat = @{
     VaultId = $targetVault.ID
 }
 $item = Get-AzRecoveryServicesBackupItem @getAzRecoveryServicesBackupItemSplat
-$endDate = (Get-Date).AddDays(60).ToUniversalTime()
+$endDate = (Get-Date).AddDays($RetentionDays).ToUniversalTime()
 $backupAzRecoveryServicesBackupItemSplat = @{
     Item = $item
     VaultId = $targetVault.ID
     ExpiryDateTimeUTC = $endDate
 }
 $job = Backup-AzRecoveryServicesBackupItem @backupAzRecoveryServicesBackupItemSplat
-

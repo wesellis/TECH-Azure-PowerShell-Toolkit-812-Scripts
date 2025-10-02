@@ -1,37 +1,46 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Get recoveryservicesbackupitem
 
 .DESCRIPTION
     Get recoveryservicesbackupitem operation
-    Author: Wes Ellis (wes@wesellis.com)
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    Name                                     ContainerType        ContainerUniqueName                      WorkloadType         ProtectionStatus
-----                                     -------------        -------------------                      ------------         ----------------
-VM;iaasvmcontainerv2;canprintequip_ou... AzureVM              iaasvmcontainerv2;canprintequip_outlo... AzureVM              Healthy
-    General notes
-$CustomerName = 'CanPrintEquip'
-$VMName = 'Outlook1'
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$CustomerName = 'CanPrintEquip',
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName = 'Outlook1'
+)
+
+$ErrorActionPreference = 'Stop'
+
 $ResourceGroupName = -join ("$CustomerName" , "_Outlook" , "_RG" )
-$Vaultname = -join (" $VMName" , "ARSV1" )
+$Vaultname = -join ("$VMName" , "ARSV1" )
 $getAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $ResourceGroupName
     Name = $Vaultname
 }
 $targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
+
+$getAzRecoveryServicesBackupContainerSplat = @{
+    ContainerType = "AzureVM"
+    Status = "Registered"
+    FriendlyName = $VMName
+    VaultId = $targetVault.ID
+}
+$namedContainer = Get-AzRecoveryServicesBackupContainer @getAzRecoveryServicesBackupContainerSplat
+
 $getAzRecoveryServicesBackupItemSplat = @{
     Container = $namedContainer
     WorkloadType = "AzureVM"
@@ -39,4 +48,3 @@ $getAzRecoveryServicesBackupItemSplat = @{
 }
 $backupitem = Get-AzRecoveryServicesBackupItem -ErrorAction Stop @getAzRecoveryServicesBackupItemSplat
 $backupitem
-

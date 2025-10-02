@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,52 +9,49 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$IdentityName,
+    $IdentityName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$Location,
+    $Location,
     [Parameter()]
-    [string]$Role = "Reader" ,
+    $Role = "Reader" ,
     [Parameter()]
-    [string]$Scope
+    $Scope
 )
-Write-Host "Creating Managed Identity: $IdentityName"
+Write-Output "Creating Managed Identity: $IdentityName"
 try {
-    # Create user-assigned managed identity
-   $params = @{
+    $params = @{
        ResourceGroupName = $ResourceGroupName
-       WELog = " 1. Assign identity to Azure resources (VM, App Service, etc.)" "INFO"Write-Host " 2. Grant necessary permissions" "INFO"Write-Host " 3. Update application code to use managed identity" "INFO"Write-Host " 4. Test secure resource access"
-       Location = $Location  Write-Host "Managed Identity created successfully:" "INFO"Write-Host "Name: $($Identity.Name)" "INFO"Write-Host "Client ID: $($Identity.ClientId)" "INFO"Write-Host "Principal ID: $($Identity.PrincipalId)" "INFO"Write-Host "Resource ID: $($Identity.Id)" "INFO"Write-Host "Location: $($Identity.Location)"  # Assign role if specified if ($Role
+       WELog = " 1. Assign identity to Azure resources (VM, App Service, etc.)" "INFO"Write-Output " 2. Grant necessary permissions" "INFO"Write-Output " 3. Update application code to use managed identity" "INFO"Write-Output " 4. Test secure resource access"
+       Location = $Location  Write-Output "Managed Identity created successfully:" "INFO"Write-Output "Name: $($Identity.Name)" "INFO"Write-Output "Client ID: $($Identity.ClientId)" "INFO"Write-Output "Principal ID: $($Identity.PrincipalId)" "INFO"Write-Output "Resource ID: $($Identity.Id)" "INFO"Write-Output "Location: $($Identity.Location)"  # Assign role if specified if ($Role
        RoleDefinitionName = $Role
        ObjectId = $Identity.PrincipalId
        ErrorAction = "Stop"
@@ -63,7 +60,4 @@ try {
    }
    ; @params
 } catch {
-    Write-Error "Failed to create managed identity: $($_.Exception.Message)"
-}
-
-
+    Write-Error "Failed to create managed identity: $($_.Exception.Message)"`n}

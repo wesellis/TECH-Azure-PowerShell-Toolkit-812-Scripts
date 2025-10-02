@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Storage
 #Requires -Modules Az.Resources
 
@@ -6,6 +6,9 @@
     Provisions Azure Batch accounts with optional storage integration
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Creates Azure Batch accounts with optional auto-storage configuration.
     Supports both BatchService and UserSubscription pool allocation modes.
 .PARAMETER ResourceGroupName
@@ -22,11 +25,9 @@
     Skip confirmation
     .\Azure-BatchAccount-Provisioning-Tool.ps1 -ResourceGroupName "RG-Batch" -AccountName "mybatchaccount123" -Location "East US"
     .\Azure-BatchAccount-Provisioning-Tool.ps1 -ResourceGroupName "RG-Batch" -AccountName "mybatchaccount123" -Location "East US" -StorageAccountName "batchstorage123"
-#>
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding()]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true)]
@@ -46,21 +47,18 @@
 )
 $ErrorActionPreference = 'Stop'
 try {
-    # Test Azure connection
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
-    Write-Host "Provisioning Batch Account: $AccountName" -ForegroundColor Yellow
-    # Check if resource group exists
-    Write-Host "Validating resource group..." -ForegroundColor Yellow
+    Write-Host "Provisioning Batch Account: $AccountName" -ForegroundColor Green
+    Write-Host "Validating resource group..." -ForegroundColor Green
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         throw "Resource group '$ResourceGroupName' not found"
     }
-    # Check Batch account name availability
-    Write-Host "Checking Batch account name availability..." -ForegroundColor Yellow
+    Write-Host "Checking Batch account name availability..." -ForegroundColor Green
     try {
         $availability = Test-AzBatchAccountNameAvailability -Name $AccountName
         if (-not $availability.NameAvailable) {
@@ -71,83 +69,76 @@ try {
     catch {
         Write-Warning "Could not verify name availability: $_"
     }
-    # Handle storage account for auto-storage
-    $storageAccount = $null
+    $StorageAccount = $null
     if ($StorageAccountName) {
-        Write-Host "Configuring storage account..." -ForegroundColor Yellow
-        # Check if storage account exists
-        $storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
-        if (-not $storageAccount) {
-            Write-Host "Creating storage account for Batch..." -ForegroundColor Yellow
+        Write-Host "Configuring storage account..." -ForegroundColor Green
+        $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
+        if (-not $StorageAccount) {
+            Write-Host "Creating storage account for Batch..." -ForegroundColor Green
             if ($PSCmdlet.ShouldProcess($StorageAccountName, "Create storage account")) {
-                $storageParams = @{
+                $StorageParams = @{
                     ResourceGroupName = $ResourceGroupName
                     Name = $StorageAccountName
                     Location = $Location
                     SkuName = "Standard_LRS"
                     Kind = "StorageV2"
                 }
-                $storageAccount = New-AzStorageAccount @storageParams
-                Write-Host "Storage account created: $($storageAccount.StorageAccountName)" -ForegroundColor Green
+                $StorageAccount = New-AzStorageAccount @storageParams
+                Write-Host "Storage account created: $($StorageAccount.StorageAccountName)" -ForegroundColor Green
             }
         } else {
-            Write-Host "Using existing storage account: $($storageAccount.StorageAccountName)" -ForegroundColor Green
+            Write-Host "Using existing storage account: $($StorageAccount.StorageAccountName)" -ForegroundColor Green
         }
     }
-    # Confirmation
     if (-not $Force) {
-        Write-Host "`nBatch Account Configuration:" -ForegroundColor Cyan
-        Write-Host "Account Name: $AccountName"
-        Write-Host "Resource Group: $ResourceGroupName"
-        Write-Host "Location: $Location"
-        Write-Host "Pool Allocation Mode: $PoolAllocationMode"
+        Write-Host "`nBatch Account Configuration:" -ForegroundColor Green
+        Write-Output "Account Name: $AccountName"
+        Write-Output "Resource Group: $ResourceGroupName"
+        Write-Output "Location: $Location"
+        Write-Output "Pool Allocation Mode: $PoolAllocationMode"
         if ($StorageAccountName) {
-            Write-Host "Auto-Storage Account: $StorageAccountName"
+            Write-Output "Auto-Storage Account: $StorageAccountName"
         }
         $confirmation = Read-Host "`nCreate Batch account? (y/N)"
         if ($confirmation -ne 'y') {
-            Write-Host "Operation cancelled" -ForegroundColor Yellow
+            Write-Host "Operation cancelled" -ForegroundColor Green
             exit 0
         }
     }
-    # Create the Batch Account
-    Write-Host "`nCreating Batch account..." -ForegroundColor Yellow
+    Write-Host "`nCreating Batch account..." -ForegroundColor Green
     if ($PSCmdlet.ShouldProcess($AccountName, "Create Batch account")) {
-        $batchParams = @{
+        $BatchParams = @{
             ResourceGroupName = $ResourceGroupName
             AccountName = $AccountName
             Location = $Location
             PoolAllocationMode = $PoolAllocationMode
         }
-        if ($storageAccount) {
-            $batchParams.AutoStorageAccountId = $storageAccount.Id
+        if ($StorageAccount) {
+            $BatchParams.AutoStorageAccountId = $StorageAccount.Id
         }
-        $batchAccount = New-AzBatchAccount @batchParams
+        $BatchAccount = New-AzBatchAccount @batchParams
         Write-Host "Batch Account provisioned successfully!" -ForegroundColor Green
-        Write-Host "`nAccount Details:" -ForegroundColor Cyan
-        Write-Host "Name: $($batchAccount.AccountName)"
-        Write-Host "Account Endpoint: $($batchAccount.AccountEndpoint)"
-        Write-Host "Provisioning State: $($batchAccount.ProvisioningState)"
-        Write-Host "Pool Allocation Mode: $($batchAccount.PoolAllocationMode)"
-        Write-Host "Location: $($batchAccount.Location)"
-        if ($storageAccount) {
-            Write-Host "Auto Storage Account: $($storageAccount.StorageAccountName)" -ForegroundColor Green
+        Write-Host "`nAccount Details:" -ForegroundColor Green
+        Write-Output "Name: $($BatchAccount.AccountName)"
+        Write-Output "Account Endpoint: $($BatchAccount.AccountEndpoint)"
+        Write-Output "Provisioning State: $($BatchAccount.ProvisioningState)"
+        Write-Output "Pool Allocation Mode: $($BatchAccount.PoolAllocationMode)"
+        Write-Output "Location: $($BatchAccount.Location)"
+        if ($StorageAccount) {
+            Write-Host "Auto Storage Account: $($StorageAccount.StorageAccountName)" -ForegroundColor Green
         }
-        Write-Host "`nNext Steps:" -ForegroundColor Cyan
-        Write-Host "1. Create compute pools for your workloads"
-        Write-Host "2. Configure applications and application packages"
-        Write-Host "3. Submit jobs and tasks to the Batch service"
-        Write-Host "4. Monitor job execution through Azure Portal or CLI"
-        if (-not $storageAccount) {
-            Write-Host "5. Consider adding auto-storage for easier data management"
+        Write-Host "`nNext Steps:" -ForegroundColor Green
+        Write-Output "1. Create compute pools for your workloads"
+        Write-Output "2. Configure applications and application packages"
+        Write-Output "3. Submit jobs and tasks to the Batch service"
+        Write-Output "4. Monitor job execution through Azure Portal or CLI"
+        if (-not $StorageAccount) {
+            Write-Output "5. Consider adding auto-storage for easier data management"
         }
-        Write-Host "`nUseful Commands:" -ForegroundColor Cyan
-        Write-Host "Get account keys: Get-AzBatchAccountKey -AccountName $AccountName -ResourceGroupName $ResourceGroupName"
-        Write-Host "List pools: Get-AzBatchPool -BatchContext (Get-AzBatchAccount -AccountName $AccountName)"
-    
+        Write-Host "`nUseful Commands:" -ForegroundColor Green
+        Write-Output "Get account keys: Get-AzBatchAccountKey -AccountName $AccountName -ResourceGroupName $ResourceGroupName"
+        Write-Output "List pools: Get-AzBatchPool -BatchContext (Get-AzBatchAccount -AccountName $AccountName)"
+
 } catch {
     Write-Error "Failed to provision Batch account: $_"
-    throw
-}
-
-
+    throw`n}

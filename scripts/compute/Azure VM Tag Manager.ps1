@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,12 +27,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -47,19 +44,16 @@ param(
     [Parameter(Mandatory)]
     [hashtable]$Tags
 )
-Write-Host "Updating tags for VM: $VmName"
+Write-Output "Updating tags for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-$ExistingTags = $VM.Tags
+    [string]$ExistingTags = $VM.Tags
 if (-not $ExistingTags) {;  $ExistingTags = @{} }
 foreach ($Tag in $Tags.GetEnumerator()) {
-    $ExistingTags[$Tag.Key] = $Tag.Value
-    Write-Host "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
+    [string]$ExistingTags[$Tag.Key] = $Tag.Value
+    Write-Output "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
 }
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
-Write-Host "Tags updated successfully for VM: $VmName"
+Write-Output "Tags updated successfully for VM: $VmName"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

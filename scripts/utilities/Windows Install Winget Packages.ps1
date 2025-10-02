@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Install Winget Packages
@@ -9,7 +9,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     Installs a set of WinGet packages. Relies on windows-install-winget being executed prior to this script.
 .PARAMETER Packages
     Packages to install in the format 'package-id-1[@version-1],package-id-2[@version-2],...'.
@@ -31,97 +30,95 @@
             packages: join(winGetPackageIds, ',')
           }
         }
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $Packages,
     [Parameter(Mandatory = $false)] [bool] $IgnorePackageInstallFailures = $false
 )
 Set-StrictMode -Version Latest
-$ProgressPreference = 'SilentlyContinue'
-[OutputType([bool])]
- {
+    $ProgressPreference = 'SilentlyContinue'
+function Write-Log {
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $commandLine
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $CommandLine
     )
-    Write-Host " --- Invoking $commandLine"
-    & ([ScriptBlock]::Create($commandLine))
+    Write-Output " --- Invoking $CommandLine"
+    & ([ScriptBlock]::Create($CommandLine))
 }
 function Install-WinGet-Packages -ErrorAction Stop {
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
         [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string] $Packages,
         [Parameter(Mandatory = $false)] [bool] $IgnorePackageInstallFailures
     )
-    Write-Host " === Microsoft.DesktopAppInstaller package info: $(Get-AppxPackage -ErrorAction Stop Microsoft.DesktopAppInstaller | Out-String)"
-$winGetAppInfo = Get-Command -ErrorAction Stop " winget.exe" -ErrorAction SilentlyContinue
-    if (!$winGetAppInfo) {
+    Write-Output " === Microsoft.DesktopAppInstaller package info: $(Get-AppxPackage -ErrorAction Stop Microsoft.DesktopAppInstaller | Out-String)"
+    $WinGetAppInfo = Get-Command -ErrorAction Stop " winget.exe" -ErrorAction SilentlyContinue
+    if (!$WinGetAppInfo) {
         throw 'Could not locate winget.exe'
     }
-$winGetPath = $winGetAppInfo.Path
-    Write-Host " === Found $winGetPath ; 'winget.exe --info' output: $(Invoke-Executable " $winGetPath --info" | Out-String)"
-    $packagesArray = @($Packages -Split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-    Write-Host " === Installing $($packagesArray.Count) package(s)"
+    $WinGetPath = $WinGetAppInfo.Path
+    Write-Output " === Found $WinGetPath ; 'winget.exe --info' output: $(Invoke-Executable " $WinGetPath --info" | Out-String)"
+    $PackagesArray = @($Packages -Split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    Write-Output " === Installing $($PackagesArray.Count) package(s)"
     $script:successfullyInstalledCount = 0
-    foreach ($package in $packagesArray) {
-        Write-Host " === Installing package $package"
-        $packageInfoParts = @($package -Split '@' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-        $packageId = $packageInfoParts[0]
-        $versionArg = ''
-        if ($packageInfoParts.Count -gt 2) {
+    foreach ($package in $PackagesArray) {
+        Write-Output " === Installing package $package"
+    $PackageInfoParts = @($package -Split '@' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
+    $PackageId = $PackageInfoParts[0]
+    $VersionArg = ''
+        if ($PackageInfoParts.Count -gt 2) {
             throw "Unexpected format for package $package. Expected format is package-id[@version]"
         }
-        elseif ($packageInfoParts.Count -eq 2) {
-            $versionArg = " --version $($packageInfoParts[1])"
+        elseif ($PackageInfoParts.Count -eq 2) {
+    $VersionArg = " --version $($PackageInfoParts[1])"
         }
-$runBlock = {
-            $script:LASTEXITCODE = 0
-            Invoke-Executable " $WinGetPath install --id $packageId $versionArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force"
+    $RunBlock = {
+    $script:LASTEXITCODE = 0
+            Invoke-Executable " $WinGetPath install --id $PackageId $VersionArg --exact --disable-interactivity --silent --no-upgrade --accept-package-agreements --accept-source-agreements --verbose-logs --scope machine --force"
             if ($global:LASTEXITCODE -ne 0) {
                 throw "Failed to install $package with exit code $global:LASTEXITCODE. WinGet return codes are listed at https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md"
             }
-            $script:successfullyInstalledCount++
+    $script:successfullyInstalledCount++
         }
-        RunWithRetries -runBlock $runBlock -retryAttempts 5 -waitBeforeRetrySeconds 1 -ignoreFailure $IgnorePackageInstallFailures
+        RunWithRetries -runBlock $RunBlock -retryAttempts 5 -waitBeforeRetrySeconds 1 -ignoreFailure $IgnorePackageInstallFailures
     }
-    Write-Host " === Successfully installed $script:successfullyInstalledCount of $($packagesArray.Count) package(s)"
-    Write-Host " === Granting read and execute permissions to BUILTIN\Users on $env:ProgramFiles\WinGet\Packages"
-    Invoke-Executable " $env:SystemRoot\System32\icacls.exe "" $env:ProgramFiles\WinGet\Packages"" /t /q /grant ""BUILTIN\Users:(rx)"""
-    # Backup latest WinGet logs to allow inspection on a Dev Box VM
-$winGetLogsDir = 'C:\.tools\Setup\Logs\WinGet'
-    mkdir $winGetLogsDir -ErrorAction SilentlyContinue | Out-Null
-    Invoke-Executable " robocopy.exe /R:5 /W:5 /S $env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir $winGetLogsDir"
+    Write-Output " === Successfully installed $script:successfullyInstalledCount of $($PackagesArray.Count) package(s)"
+    Write-Output " === Granting read and execute permissions to BUILTIN\Users on $env:ProgramFiles\WinGet\Packages"
+    Invoke-Executable " $env:SystemRoot\System32\icacls.exe "" $env:ProgramFiles\WinGet\Packages""/t /q /grant ""BUILTIN\Users:(rx)"""
+    $WinGetLogsDir = 'C:\.tools\Setup\Logs\WinGet'
+    mkdir $WinGetLogsDir -ErrorAction SilentlyContinue | Out-Null
+    Invoke-Executable " robocopy.exe /R:5 /W:5 /S $env:LOCALAPPDATA\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir $WinGetLogsDir"
     & cmd.exe /c " echo Reset last exit code to 0"
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
@@ -131,6 +128,4 @@ if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
     catch {
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
-}
-
-
+`n}

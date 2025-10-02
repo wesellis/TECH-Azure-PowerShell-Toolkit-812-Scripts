@@ -1,12 +1,14 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Manage Public IPs
 
 .DESCRIPTION
     Manage Public IPs
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,7 +21,7 @@
     [Parameter()]
     [string]$Sku = "Standard"
 )
-Write-Host "Creating Public IP: $PublicIpName"
+Write-Output "Creating Public IP: $PublicIpName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
@@ -29,9 +31,11 @@ $params = @{
     Name = $PublicIpName
 }
 $PublicIp @params
-Write-Host "Public IP created successfully:"
-Write-Host "Name: $($PublicIp.Name)"
-Write-Host "IP Address: $($PublicIp.IpAddress)"
-Write-Host "Allocation: $($PublicIp.PublicIpAllocationMethod)"
-Write-Host "SKU: $($PublicIp.Sku.Name)"
+Write-Output "Public IP created successfully:"
+Write-Output "Name: $($PublicIp.Name)"
+Write-Output "IP Address: $($PublicIp.IpAddress)"
+Write-Output "Allocation: $($PublicIp.PublicIpAllocationMethod)"
+Write-Output "SKU: $($PublicIp.Sku.Name)"
+
+
 

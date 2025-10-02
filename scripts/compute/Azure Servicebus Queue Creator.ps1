@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Servicebus Queue Creator
@@ -8,20 +8,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -29,13 +25,14 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -49,7 +46,7 @@ param(
     [Parameter()]
     [int]$MaxSizeInMegabytes = 1024
 )
-Write-Host "Creating Service Bus queue: $QueueName"
+Write-Output "Creating Service Bus queue: $QueueName"
 $params = @{
     ErrorAction = "Stop"
     MaxSizeInMegabytes = $MaxSizeInMegabytes
@@ -57,13 +54,12 @@ $params = @{
     NamespaceName = $NamespaceName
     Name = $QueueName
 }
-$Queue @params
-Write-Host "Queue created successfully:"
-Write-Host "Name: $($Queue.Name)"
-Write-Host "Max Size: $($Queue.MaxSizeInMegabytes) MB"
-Write-Host "Status: $($Queue.Status)"
-Write-Host "Namespace: $NamespaceName"
+    [string]$Queue @params
+Write-Output "Queue created successfully:"
+Write-Output "Name: $($Queue.Name)"
+Write-Output "Max Size: $($Queue.MaxSizeInMegabytes) MB"
+Write-Output "Status: $($Queue.Status)"
+Write-Output "Namespace: $NamespaceName"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

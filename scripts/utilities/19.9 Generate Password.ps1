@@ -1,14 +1,16 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Generate password
 
 .DESCRIPTION
     Generate secure random password
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
 #>
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
@@ -17,45 +19,39 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-[OutputType([PSObject])]
- {
+function Get-RandomCharacters {
     param(
         [int]$length,
         [string]$characters
     )
-    $randomIndices = 1..$length | ForEach-Object { Get-Random -Maximum $characters.Length }
-    return -join $characters[$randomIndices]
+    $RandomIndices = 1..$length | ForEach-Object { Get-Random -Maximum $characters.Length }
+    return -join $characters[$RandomIndices]
 }
 
 function Scramble-String {
-    param([string]$inputString)
-    $characterArray = $inputString.ToCharArray()
-    $scrambledArray = $characterArray | Get-Random -Count $characterArray.Length
-    return (-join $scrambledArray).Replace(" ", "")
+    param([string]$InputString)
+    $CharacterArray = $InputString.ToCharArray()
+    $ScrambledArray = $CharacterArray | Get-Random -Count $CharacterArray.Length
+    return (-join $ScrambledArray).Replace(" ", "")
 }
 
-# Character sets
-$charSets = @(
+$CharSets = @(
     "abcdefghiklmnoprstuvwxyz",
     "ABCDEFGHKLMNOPRSTUVWXYZ",
     "1234567890",
     '`~!@#$%^&*()_+-={}|[]\:";<>?,.'
 )
 
-# Get characters from each set
-$lengthPerSet = [Math]::Floor($Length / 4)
-$passwordParts = foreach ($charSet in $charSets) {
-    Get-RandomCharacters -length $lengthPerSet -characters $charSet
+$LengthPerSet = [Math]::Floor($Length / 4)
+$PasswordParts = foreach ($CharSet in $CharSets) {
+    Get-RandomCharacters -length $LengthPerSet -characters $CharSet
 }
 
-# Scramble and return
-$password = Scramble-String (-join $passwordParts)
+$password = Scramble-String (-join $PasswordParts)
 
-# Ensure exact length
 if ($password.Length -lt $Length) {
-    $allChars = -join $charSets
-    $password += Get-RandomCharacters -length ($Length - $password.Length) -characters $allChars
+    $AllChars = -join $CharSets
+    $password += Get-RandomCharacters -length ($Length - $password.Length) -characters $AllChars
 }
 
 Write-Output $password.Substring(0, $Length)
-

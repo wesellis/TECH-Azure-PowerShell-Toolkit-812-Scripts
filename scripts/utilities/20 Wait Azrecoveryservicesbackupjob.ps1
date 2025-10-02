@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Wait Azrecoveryservicesbackupjob
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,3 +20,5 @@ $waitAzRecoveryServicesBackupJobSplat = @{
     Timeout = 43200
 }
 Wait-AzRecoveryServicesBackupJob @waitAzRecoveryServicesBackupJobSplat
+
+

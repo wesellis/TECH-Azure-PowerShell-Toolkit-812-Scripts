@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Module Az.Resources, Az.Profile, Az.OperationalInsights, Az.SecurityInsights
 <#`n.SYNOPSIS
@@ -55,10 +55,8 @@
     - Custom workbooks for security operations
     - Automation rules for incident response
     - Compliance-aligned configurations
-#>
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [ValidateLength(4, 63)]
@@ -114,46 +112,40 @@
     [switch]$WhatIf
 )
 
-# Global variables
 $script:DeploymentTimestamp = Get-Date -Format "yyyyMMdd-HHmm"
 $script:LogFile = "Sentinel-Deployment-$script:DeploymentTimestamp.log"
 $script:WorkspaceId = $null
 $script:SentinelResourceId = $null
 
-[OutputType([bool])]
- {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [Parameter(Mandatory)]
+function Write-Log {
+    [Parameter(Mandatory)]
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]
         [string]$Level = "Info"
     )
 
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
+    $LogEntry = "[$timestamp] [$Level] $Message"
 
     switch ($Level) {
-        "Info" { Write-Information $logEntry -InformationAction Continue }
-        "Warning" { Write-Warning $logEntry }
-        "Error" { Write-Error $logEntry }
-        "Success" { Write-Host $logEntry -ForegroundColor Green }
+        "Info" { Write-Information $LogEntry -InformationAction Continue }
+        "Warning" { Write-Warning $LogEntry }
+        "Error" { Write-Error $LogEntry }
+        "Success" { Write-Output $LogEntry -ForegroundColor Green }
     }
 
-    Add-Content -Path $script:LogFile -Value $logEntry
+    Add-Content -Path $script:LogFile -Value $LogEntry
 }
 
 function Test-Prerequisites {
     Write-LogMessage "Validating prerequisites for Sentinel deployment..."
 
-    # Check PowerShell version
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         throw "PowerShell 7.0 or higher is required. Current version: $($PSVersionTable.PSVersion)"
     }
 
-    # Check required modules
-    $requiredModules = @("Az.Resources", "Az.Profile", "Az.OperationalInsights")
-    foreach ($module in $requiredModules) {
+    $RequiredModules = @("Az.Resources", "Az.Profile", "Az.OperationalInsights")
+    foreach ($module in $RequiredModules) {
         if (-not (Get-Module -Name $module -ListAvailable)) {
             Write-LogMessage "Installing required module: $module" -Level Warning
             try {
@@ -165,7 +157,6 @@ function Test-Prerequisites {
         }
     }
 
-    # Test Azure connection
     try {
         $context = Get-AzContext
         if (-not $context) {
@@ -185,7 +176,6 @@ function Test-Prerequisites {
         throw "Failed to connect to Azure: $($_.Exception.Message)"
     }
 
-    # Validate permissions
     try {
         $null = Get-AzResourceGroup -ErrorAction Stop
         Write-LogMessage "Resource management permissions validated" -Level Success
@@ -199,24 +189,22 @@ function New-LogAnalyticsWorkspace {
     Write-LogMessage "Creating Log Analytics workspace: $WorkspaceName"
 
     try {
-        # Check if resource group exists
-        $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
-        if (-not $resourceGroup) {
+        $ResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
+        if (-not $ResourceGroup) {
             if ($WhatIf) {
                 Write-LogMessage "WHATIF: Would create resource group '$ResourceGroupName'"
             } else {
-                $resourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
+                $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
                 Write-LogMessage "Created resource group: $ResourceGroupName" -Level Success
             }
         }
 
-        # Check if workspace already exists
-        $existingWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ErrorAction SilentlyContinue
+        $ExistingWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ErrorAction SilentlyContinue
 
-        if ($existingWorkspace) {
+        if ($ExistingWorkspace) {
             Write-LogMessage "Log Analytics workspace already exists: $WorkspaceName" -Level Warning
-            $script:WorkspaceId = $existingWorkspace.CustomerId
-            return $existingWorkspace
+            $script:WorkspaceId = $ExistingWorkspace.CustomerId
+            return $ExistingWorkspace
         }
 
         if ($WhatIf) {
@@ -224,8 +212,7 @@ function New-LogAnalyticsWorkspace {
             return $null
         }
 
-        # Create workspace
-        $workspaceParams = @{
+        $WorkspaceParams = @{
             ResourceGroupName = $ResourceGroupName
             Name = $WorkspaceName
             Location = $Location
@@ -246,7 +233,6 @@ function New-LogAnalyticsWorkspace {
         Write-LogMessage "Created Log Analytics workspace: $WorkspaceName" -Level Success
         Write-LogMessage "Workspace ID: $script:WorkspaceId"
 
-        # Wait for workspace to be fully provisioned
         Write-LogMessage "Waiting for workspace provisioning to complete..."
         do {
             Start-Sleep -Seconds 30
@@ -266,8 +252,7 @@ function New-LogAnalyticsWorkspace {
 }
 
 function Enable-MicrosoftSentinel {
-    [CmdletBinding(SupportsShouldProcess)]
-[object]$Workspace)
+    [object]$Workspace)
 
     Write-LogMessage "Enabling Microsoft Sentinel on workspace: $WorkspaceName"
 
@@ -277,11 +262,9 @@ function Enable-MicrosoftSentinel {
             return
         }
 
-        # Enable Sentinel using REST API (as there's no direct PowerShell cmdlet)
-        $resourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.OperationalInsights/workspaces/$WorkspaceName"
+        $ResourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.OperationalInsights/workspaces/$WorkspaceName"
 
-        # Create Sentinel workspace resource
-        $sentinelParams = @{
+        $SentinelParams = @{
             ResourceGroupName = $ResourceGroupName
             ResourceType = "Microsoft.SecurityInsights/onboardingStates"
             ResourceName = "$WorkspaceName/default"
@@ -293,14 +276,13 @@ function Enable-MicrosoftSentinel {
             Force = $true
         }
 
-        $sentinelResource = New-AzResource @sentinelParams
-        $script:SentinelResourceId = $sentinelResource.ResourceId
+        $SentinelResource = New-AzResource @sentinelParams
+        $script:SentinelResourceId = $SentinelResource.ResourceId
 
         Write-LogMessage "Enabled Microsoft Sentinel successfully" -Level Success
     }
     catch {
         Write-LogMessage "Failed to enable Microsoft Sentinel: $($_.Exception.Message)" -Level Warning
-        # Continue deployment as Sentinel might already be enabled
     }
 }
 
@@ -323,24 +305,16 @@ function Enable-DataConnectors {
 
             switch ($connector) {
                 "AzureActiveDirectory" {
-                    # Enable Azure AD connector
                     Write-LogMessage "Enabling Azure Active Directory connector"
-                    # Implementation would include specific connector configuration
                 }
                 "AzureSecurityCenter" {
-                    # Enable ASC connector
                     Write-LogMessage "Enabling Azure Security Center connector"
-                    # Implementation would include specific connector configuration
                 }
                 "Office365" {
-                    # Enable Office 365 connector
                     Write-LogMessage "Enabling Office 365 connector"
-                    # Implementation would include specific connector configuration
                 }
                 "AzureActivity" {
-                    # Enable Azure Activity connector
                     Write-LogMessage "Enabling Azure Activity connector"
-                    # Implementation would include specific connector configuration
                 }
                 default {
                     Write-LogMessage "Data connector '$connector' configuration not implemented" -Level Warning
@@ -365,8 +339,7 @@ function Deploy-AnalyticsRules {
     Write-LogMessage "Deploying analytics rules..."
 
     try {
-        # Predefined analytics rules based on MITRE ATT&CK framework
-        $analyticsRules = @(
+        $AnalyticsRules = @(
             @{
                 Name = "Suspicious PowerShell Activity"
                 Description = "Detects suspicious PowerShell execution patterns"
@@ -407,7 +380,7 @@ AzureNetworkAnalytics_CL
             }
         )
 
-        foreach ($rule in $analyticsRules) {
+        foreach ($rule in $AnalyticsRules) {
             if ($WhatIf) {
                 Write-LogMessage "WHATIF: Would create analytics rule '$($rule.Name)'"
                 continue
@@ -415,8 +388,7 @@ AzureNetworkAnalytics_CL
 
             Write-LogMessage "Creating analytics rule: $($rule.Name)"
 
-            # Create analytics rule using ARM template or REST API
-            $ruleParams = @{
+            $RuleParams = @{
                 ResourceGroupName = $ResourceGroupName
                 ResourceType = "Microsoft.SecurityInsights/alertRules"
                 ResourceName = "$WorkspaceName/$($rule.Name -replace '\s', '')"
@@ -460,8 +432,7 @@ function New-CustomWorkbooks {
     Write-LogMessage "Creating custom security workbooks..."
 
     try {
-        # Security Operations Dashboard workbook
-        $workbookTemplate = @{
+        $WorkbookTemplate = @{
             version = "Notebook/1.0"
             items = @(
                 @{
@@ -498,8 +469,7 @@ function New-CustomWorkbooks {
             return
         }
 
-        # Create workbook
-        $workbookParams = @{
+        $WorkbookParams = @{
             ResourceGroupName = $ResourceGroupName
             ResourceType = "Microsoft.Insights/workbooks"
             ResourceName = (New-Guid).ToString()
@@ -507,7 +477,7 @@ function New-CustomWorkbooks {
             Properties = @{
                 displayName = "Sentinel Security Operations Dashboard"
                 description = "Custom security operations dashboard for Sentinel"
-                serializedData = ($workbookTemplate | ConvertTo-Json -Depth 10)
+                serializedData = ($WorkbookTemplate | ConvertTo-Json -Depth 10)
                 category = "sentinel"
                 sourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.OperationalInsights/workspaces/$WorkspaceName"
             }
@@ -532,8 +502,7 @@ function New-AutomationRules {
     Write-LogMessage "Creating automation rules for incident response..."
 
     try {
-        # Auto-assign high severity incidents
-        $automationRules = @(
+        $AutomationRules = @(
             @{
                 Name = "Auto-Assign-High-Severity"
                 Description = "Automatically assign high severity incidents to security team"
@@ -574,7 +543,7 @@ function New-AutomationRules {
             }
         )
 
-        foreach ($rule in $automationRules) {
+        foreach ($rule in $AutomationRules) {
             if ($WhatIf) {
                 Write-LogMessage "WHATIF: Would create automation rule '$($rule.Name)'"
                 continue
@@ -582,7 +551,7 @@ function New-AutomationRules {
 
             Write-LogMessage "Creating automation rule: $($rule.Name)"
 
-            $ruleParams = @{
+            $RuleParams = @{
                 ResourceGroupName = $ResourceGroupName
                 ResourceType = "Microsoft.SecurityInsights/automationRules"
                 ResourceName = "$WorkspaceName/$($rule.Name)"
@@ -627,8 +596,7 @@ function Set-ComplianceConfiguration {
         switch ($ComplianceFramework) {
             "SOC2" {
                 Write-LogMessage "Applying SOC 2 compliance configuration"
-                # Configure retention, access controls, audit trails
-                $complianceSettings = @{
+                $ComplianceSettings = @{
                     RetentionPolicy = 365
                     RequiredDataConnectors = @("AzureActiveDirectory", "AzureSecurityCenter", "SecurityEvents")
                     RequiredRules = @("AccessControlViolation", "DataExfiltration", "PrivilegedAccountActivity")
@@ -636,7 +604,7 @@ function Set-ComplianceConfiguration {
             }
             "ISO27001" {
                 Write-LogMessage "Applying ISO 27001 compliance configuration"
-                $complianceSettings = @{
+                $ComplianceSettings = @{
                     RetentionPolicy = 730
                     RequiredDataConnectors = @("AzureActiveDirectory", "AzureSecurityCenter", "Office365", "SecurityEvents")
                     RequiredRules = @("InformationSecurityIncident", "AccessManagement", "AssetManagement")
@@ -644,7 +612,7 @@ function Set-ComplianceConfiguration {
             }
             "NIST" {
                 Write-LogMessage "Applying NIST compliance configuration"
-                $complianceSettings = @{
+                $ComplianceSettings = @{
                     RetentionPolicy = 365
                     RequiredDataConnectors = @("AzureActiveDirectory", "AzureSecurityCenter", "SecurityEvents", "Syslog")
                     RequiredRules = @("CybersecurityFramework", "RiskManagement", "IncidentResponse")
@@ -652,7 +620,7 @@ function Set-ComplianceConfiguration {
             }
             "PCI-DSS" {
                 Write-LogMessage "Applying PCI DSS compliance configuration"
-                $complianceSettings = @{
+                $ComplianceSettings = @{
                     RetentionPolicy = 365
                     RequiredDataConnectors = @("AzureActiveDirectory", "SecurityEvents", "WindowsFirewall")
                     RequiredRules = @("PaymentCardDataAccess", "NetworkSecurity", "AccessControl")
@@ -720,41 +688,29 @@ function Write-DeploymentSummary {
     Write-LogMessage "Log file: $script:LogFile"
 }
 
-# Main execution
 try {
     Write-LogMessage "Starting Microsoft Sentinel deployment..." -Level Success
     Write-LogMessage "Deployment ID: Sentinel-$script:DeploymentTimestamp"
 
-    # Phase 1: Prerequisites
     Test-Prerequisites
 
-    # Phase 2: Log Analytics Workspace
     $workspace = New-LogAnalyticsWorkspace
 
-    # Phase 3: Enable Microsoft Sentinel
     Enable-MicrosoftSentinel -Workspace $workspace
 
-    # Phase 4: Data Connectors
     Enable-DataConnectors
 
-    # Phase 5: Analytics Rules
     Deploy-AnalyticsRules
 
-    # Phase 6: Custom Workbooks
     New-CustomWorkbooks
 
-    # Phase 7: Automation Rules
     New-AutomationRules
 
-    # Phase 8: Compliance Configuration
     Set-ComplianceConfiguration
 
-    # Phase 9: Summary
     Write-DeploymentSummary
 }
 catch {
     Write-LogMessage "DEPLOYMENT FAILED: $($_.Exception.Message)" -Level Error
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
-    throw
-}
-
+    throw`n}

@@ -1,111 +1,133 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Compute, Az.Network
 
-<#`n.SYNOPSIS
-    Asr Addpublicip
+<#
+.SYNOPSIS
+    ASR Add Public IP
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure Site Recovery automation runbook that creates and assigns Public IP addresses
+    for failed over VMs during disaster recovery operations
 
-    1.0
+.PARAMETER RecoveryPlanContext
+    The recovery plan context object passed by Azure Site Recovery
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Original Author: krnese@microsoft.com
+    Version: 1.0
+    Last Modified: March 20, 2017
     Requires appropriate permissions and modules
+    Add as post-action in boot up group for VMs requiring public IPs
 #>
-    .DESCRIPTION
-        This will create a Public IP address for the failed over VM(s)
-try {
-    # Main script execution
-.
-        Pre-requisites
-        All resources involved are based on Azure Resource Manager (NOT Azure Classic)
-        The following AzureRm Modules are required
-        - AzureRm.Profile
-        - AzureRm.Resources
-        - AzureRm.Compute
-        - AzureRm.Network
-        How to add the script?
-        Add the runbook as a post action in boot up group containing the VMs, where you want to assign a public IP..
-        Clean up test failover behavior
-        You must manually remove the Public IP interfaces
-    .NOTES
-        AUTHOR: krnese@microsoft.com
-        LASTEDIT: 20 March, 2017
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-        [Object]$RecoveryPlanContext
-      )
-Write-Output $RecoveryPlanContext
-if($RecoveryPlanContext.FailoverDirection -ne 'PrimaryToSecondary')
-{
-    Write-Output 'Script is ignored since Azure is not the target'
-}
-else
-{
-    $VMinfo = $RecoveryPlanContext.VmMap | Get-Member -ErrorAction Stop | Where-Object MemberType -EQ NoteProperty | select -ExpandProperty Name
-    Write-Output ("Found the following VMGuid(s): `n" + $VMInfo)
-    if ($VMInfo -is [system.array])
-    {
-        $VMinfo = $VMinfo[0]
+    [Parameter()]
+    [Object]$RecoveryPlanContext
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+    Write-Output "Recovery Plan Context received:"
+    Write-Output $RecoveryPlanContext
+
+    if ($RecoveryPlanContext.FailoverDirection -ne 'PrimaryToSecondary') {
+        Write-Output "Script is ignored since Azure is not the target"
+        return
+    }
+
+    # Extract VM information from recovery plan context
+    $vmInfo = $RecoveryPlanContext.VmMap | Get-Member |
+        Where-Object MemberType -eq NoteProperty |
+        Select-Object -ExpandProperty Name
+
+    Write-Output "Found the following VMGuid(s):"
+    Write-Output $vmInfo
+
+    if ($vmInfo -is [system.array]) {
+        $vmInfo = $vmInfo[0]
         Write-Output "Found multiple VMs in the Recovery Plan"
     }
-    else
-    {
+    else {
         Write-Output "Found only a single VM in the Recovery Plan"
     }
-    $RGName = $RecoveryPlanContext.VmMap.$VMInfo.ResourceGroupName
-    Write-OutPut ("Name of resource group: " + $RGName)
-Try
- {
-    "Logging in to Azure..."
-    $Conn = Get-AutomationConnection -Name AzureRunAsConnection
-     Add-AzureRMAccount -ServicePrincipal -Tenant $Conn.TenantID -ApplicationId $Conn.ApplicationID -CertificateThumbprint $Conn.CertificateThumbprint
-    "Selecting Azure subscription..."
-    Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
- }
-Catch
- {
-      $ErrorMessage = 'Login to Azure subscription failed.'
-      $ErrorMessage = $ErrorMessage + " `n"
-      $ErrorMessage = $ErrorMessage + 'Error: '
-      $ErrorMessage = $ErrorMessage + $_
-      Write-Error -Message $ErrorMessage -ErrorAction "Stop } # Get VMs within the Resource Group"
-Try
- {
-    $VMs = Get-AzureRmVm -ResourceGroupName $RGName
-    Write-Output ("Found the following VMs: `n " + $VMs.Name)
- }
-Catch
- {
-      $ErrorMessage = 'Failed to find any VMs in the Resource Group.'
-      $ErrorMessage = $ErrorMessage + " `n"
-      $ErrorMessage = $ErrorMessage + 'Error: '
-      $ErrorMessage = $ErrorMessage + $_
-      Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
-Try
- {
-    foreach ($VM in $VMs)
-    {
-        $ARMNic = Get-AzureRmResource -ResourceId $VM.NetworkInterfaceIDs[0]
-        $NIC = Get-AzureRmNetworkInterface -Name $ARMNic.Name -ResourceGroupName $ARMNic.ResourceGroupName
-$PIP = New-AzureRmPublicIpAddress -Name $VM.Name -ResourceGroupName $RGName -Location $VM.Location -AllocationMethod Dynamic
-        $NIC.IpConfigurations[0].PublicIpAddress = $PIP
-        Set-AzureRmNetworkInterface -NetworkInterface $NIC
-        Write-Output ("Added public IP address to the following VM: " + $VM.Name)
+
+    $resourceGroupName = $RecoveryPlanContext.VmMap.$vmInfo.ResourceGroupName
+    Write-Output "Resource Group: $resourceGroupName"
+
+    # Connect to Azure using Run As Connection
+    try {
+        Write-Output "Logging in to Azure..."
+        $connection = Get-AutomationConnection -Name "AzureRunAsConnection" -ErrorAction Stop
+
+        $connectParams = @{
+            ServicePrincipal = $true
+            TenantId = $connection.TenantID
+            ApplicationId = $connection.ApplicationID
+            CertificateThumbprint = $connection.CertificateThumbprint
+        }
+
+        Connect-AzAccount @connectParams -ErrorAction Stop
+
+        Write-Output "Setting subscription context..."
+        Set-AzContext -SubscriptionId $connection.SubscriptionID -ErrorAction Stop
     }
-    Write-Output ("Operation completed on the following VM(s): `n" + $VMs.Name)
- }
-Catch
- {
-$ErrorMessage = 'Failed to add public IP address to the VM.'
-      $ErrorMessage = $ErrorMessage + " `n"
-      $ErrorMessage = $ErrorMessage + 'Error: '
-$ErrorMessage = $ErrorMessage + $_
-      Write-Error -Message $ErrorMessage -ErrorAction "Stop }"
+    catch {
+        $errorMessage = "Login to Azure subscription failed: $_"
+        Write-Error $errorMessage
+        throw
+    }
+
+    # Get VMs within the Resource Group
+    try {
+        $vms = Get-AzVM -ResourceGroupName $resourceGroupName -ErrorAction Stop
+        Write-Output "Found the following VMs:"
+        $vms | ForEach-Object { Write-Output "  - $($_.Name)" }
+    }
+    catch {
+        $errorMessage = "Failed to find any VMs in Resource Group '$resourceGroupName': $_"
+        Write-Error $errorMessage
+        throw
+    }
+
+    # Add public IP to each VM
+    try {
+        foreach ($vm in $vms) {
+            Write-Output "Processing VM: $($vm.Name)"
+
+            # Get the primary network interface
+            $nicResourceId = $vm.NetworkProfile.NetworkInterfaces[0].Id
+            $nicResource = Get-AzResource -ResourceId $nicResourceId -ErrorAction Stop
+            $nic = Get-AzNetworkInterface -Name $nicResource.Name -ResourceGroupName $nicResource.ResourceGroupName -ErrorAction Stop
+
+            # Create public IP address
+            $pipParams = @{
+                Name = "$($vm.Name)-pip"
+                ResourceGroupName = $resourceGroupName
+                Location = $vm.Location
+                AllocationMethod = "Dynamic"
+                ErrorAction = "Stop"
+            }
+            $publicIP = New-AzPublicIpAddress @pipParams
+
+            # Associate public IP with network interface
+            $nic.IpConfigurations[0].PublicIpAddress = $publicIP
+            Set-AzNetworkInterface -NetworkInterface $nic -ErrorAction Stop
+
+            Write-Output "Successfully added public IP address to VM: $($vm.Name)"
+        }
+
+        Write-Output "`nOperation completed successfully for all VMs"
+    }
+    catch {
+        $errorMessage = "Failed to add public IP address to VM: $_"
+        Write-Error $errorMessage
+        throw
+    }
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

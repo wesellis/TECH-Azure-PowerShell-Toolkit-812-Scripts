@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -14,12 +14,13 @@ $CustomerName = 'CanPrintEquip'
 $VMName = 'Outlook1'
 $ResourceGroupName = -join (" $CustomerName" , "_Outlook" , "_RG" )
 $Vaultname = -join (" $VMName" , "ARSV1" )
-$getAzRecoveryServicesVaultSplat = @{
+$GetAzRecoveryServicesVaultSplat = @{
     ResourceGroupName = $ResourceGroupName
     Name = $Vaultname
 }
-$targetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
-$targetVault.ID
-$targetVault
+$TargetVault = Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat
+$TargetVault.ID
+$TargetVault
+
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,19 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$SubscriptionId,
+    $SubscriptionId,
     [Parameter()]
-    [string]$Location = "East US" ,
+    $Location = "East US" ,
     [Parameter()]
     [int]$WarningThreshold = 80,
     [Parameter()]
@@ -31,11 +30,10 @@ param(
     [Parameter()]
     [switch]$ExportReport,
     [Parameter()]
-    [string]$OutputPath = " .\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+    $OutputPath = " .\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
-    # Progress stepNumber 1 -TotalSteps 5 -StepName "Connection" -Status "Validating Azure connection"
     if (-not (Get-AzContext)) {
         Connect-AzAccount
         if (-not (Get-AzContext)) {
@@ -46,86 +44,76 @@ try {
     if ($SubscriptionId) {
         Set-AzContext -SubscriptionId $SubscriptionId
     }
-    # Progress stepNumber 2 -TotalSteps 5 -StepName "Usage Data" -Status "Gathering usage information"
-    # Get compute usage
-    $vmUsage = Get-AzVMUsage -Location $Location
-    # Get network usage
-    $networkUsage = Get-AzNetworkUsage -Location $Location
-    # Get storage usage
-    $storageUsage = Get-AzStorageUsage -Location $Location
-    # Progress stepNumber 3 -TotalSteps 5 -StepName "Analysis" -Status "Analyzing usage patterns"
-    $usageReport = @{
+    $VmUsage = Get-AzVMUsage -Location $Location
+    $NetworkUsage = Get-AzNetworkUsage -Location $Location
+    $StorageUsage = Get-AzStorageUsage -Location $Location
+    $UsageReport = @{
         SubscriptionId = (Get-AzContext).Subscription.Id
         SubscriptionName = (Get-AzContext).Subscription.Name
         Location = $Location
         ReportDate = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-        ComputeUsage = $vmUsage | ForEach-Object {
-            $usagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
+        ComputeUsage = $VmUsage | ForEach-Object {
+    $UsagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
             @{
                 Name = $_.Name.LocalizedValue
                 Current = $_.CurrentValue
                 Limit = $_.Limit
-                UsagePercent = $usagePercent
-                Status = if ($usagePercent -ge $CriticalThreshold) { "Critical" }
-                        elseif ($usagePercent -ge $WarningThreshold) { "Warning" }
+                UsagePercent = $UsagePercent
+                Status = if ($UsagePercent -ge $CriticalThreshold) { "Critical" }
+                        elseif ($UsagePercent -ge $WarningThreshold) { "Warning" }
                         else { "OK" }
             }
         }
-        NetworkUsage = $networkUsage | ForEach-Object {
-            $usagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
+        NetworkUsage = $NetworkUsage | ForEach-Object {
+    $UsagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
             @{
                 Name = $_.Name.LocalizedValue
                 Current = $_.CurrentValue
                 Limit = $_.Limit
-                UsagePercent = $usagePercent
-                Status = if ($usagePercent -ge $CriticalThreshold) { "Critical" }
-                        elseif ($usagePercent -ge $WarningThreshold) { "Warning" }
+                UsagePercent = $UsagePercent
+                Status = if ($UsagePercent -ge $CriticalThreshold) { "Critical" }
+                        elseif ($UsagePercent -ge $WarningThreshold) { "Warning" }
                         else { "OK" }
             }
         }
         StorageUsage = @{
-            Name = $storageUsage.Name.LocalizedValue
-            Current = $storageUsage.CurrentValue
-            Limit = $storageUsage.Limit
-            UsagePercent = if ($storageUsage.Limit -gt 0) { [math]::Round(($storageUsage.CurrentValue / $storageUsage.Limit) * 100, 2) } else { 0 }
+            Name = $StorageUsage.Name.LocalizedValue
+            Current = $StorageUsage.CurrentValue
+            Limit = $StorageUsage.Limit
+            UsagePercent = if ($StorageUsage.Limit -gt 0) { [math]::Round(($StorageUsage.CurrentValue / $StorageUsage.Limit) * 100, 2) } else { 0 }
         }
     }
-    # Progress stepNumber 4 -TotalSteps 5 -StepName "Report Generation" -Status "Generating usage report"
     if ($ExportReport) {
-        $usageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
+    $UsageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
 
     }
-    # Progress stepNumber 5 -TotalSteps 5 -StepName "Summary" -Status "Displaying results"
-    # Display critical and warning items
-$criticalItems = @()
-$warningItems = @()
-    $usageReport.ComputeUsage + $usageReport.NetworkUsage | ForEach-Object {
-        if ($_.Status -eq "Critical" ) { $criticalItems = $criticalItems + $_ }
-        elseif ($_.Status -eq "Warning" ) {;  $warningItems = $warningItems + $_ }
+    $CriticalItems = @()
+    $WarningItems = @()
+    $UsageReport.ComputeUsage + $UsageReport.NetworkUsage | ForEach-Object {
+        if ($_.Status -eq "Critical" ) { $CriticalItems = $CriticalItems + $_ }
+        elseif ($_.Status -eq "Warning" ) {;  $WarningItems = $WarningItems + $_ }
     }
-    Write-Host ""
-    Write-Host "                              SUBSCRIPTION USAGE REPORT" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Usage Summary for $($Location):" -ForegroundColor Cyan
-    Write-Host "    Critical Items: $($criticalItems.Count)" -ForegroundColor Red
-    Write-Host "    Warning Items: $($warningItems.Count)" -ForegroundColor Yellow
-    Write-Host "    Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)" -ForegroundColor White
-    if ($criticalItems.Count -gt 0) {
-        Write-Host ""
-        Write-Host "Critical Usage (>$CriticalThreshold%):" -ForegroundColor Red
-        $criticalItems | ForEach-Object {
-            Write-Host "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" -ForegroundColor White
+    Write-Output ""
+    Write-Output "                              SUBSCRIPTION USAGE REPORT" # Color: $2
+    Write-Output ""
+    Write-Output "Usage Summary for $($Location):" # Color: $2
+    Write-Output "    Critical Items: $($CriticalItems.Count)" # Color: $2
+    Write-Output "    Warning Items: $($WarningItems.Count)" # Color: $2
+    Write-Output "    Total Quotas Monitored: $($UsageReport.ComputeUsage.Count + $UsageReport.NetworkUsage.Count + 1)" # Color: $2
+    if ($CriticalItems.Count -gt 0) {
+        Write-Output ""
+        Write-Output "Critical Usage (>$CriticalThreshold%):" # Color: $2
+    $CriticalItems | ForEach-Object {
+            Write-Output "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" # Color: $2
         }
     }
-    if ($warningItems.Count -gt 0) {
-        Write-Host ""
-        Write-Host "[WARN] Warning Usage (>$WarningThreshold%):" -ForegroundColor Yellow
-        $warningItems | ForEach-Object {
-            Write-Host "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" -ForegroundColor White
+    if ($WarningItems.Count -gt 0) {
+        Write-Output ""
+        Write-Output "[WARN] Warning Usage (>$WarningThreshold%):" # Color: $2
+    $WarningItems | ForEach-Object {
+            Write-Output "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)" # Color: $2
         }
     }
-    Write-Host ""
+    Write-Output ""
 
-} catch { throw }
-
-
+} catch { throw`n}

@@ -1,10 +1,13 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
     Create VWAN
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 Create Azure Virtual WAN and optionally a hub
 .PARAMETER ResourceGroup
 Resource group name
@@ -19,8 +22,9 @@ Hub address prefix (e.g. 10.0.0.0/24)
 .EXAMPLE
 .
 ew-VirtualWAN.ps1 -ResourceGroup rg-network -Name corp-wan -Location "East US" -HubName hub-east -HubPrefix "10.0.0.0/24"
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroup,
@@ -31,17 +35,13 @@ ew-VirtualWAN.ps1 -ResourceGroup rg-network -Name corp-wan -Location "East US" -
     [string]$HubName,
     [string]$HubPrefix
 )
-# Create WAN
-Write-Host "Creating Virtual WAN $Name" -ForegroundColor Green
+Write-Output "Creating Virtual WAN $Name" # Color: $2
 $wan = New-AzVirtualWan -ResourceGroupName $ResourceGroup -Name $Name -Location $Location -VirtualWANType Standard
 if ($HubName -and $HubPrefix) {
-    Write-Host "Creating Virtual Hub $HubName" -ForegroundColor Green
+    Write-Output "Creating Virtual Hub $HubName" # Color: $2
     $hub = New-AzVirtualHub -ResourceGroupName $ResourceGroup -Name $HubName -Location $Location -VirtualWan $wan -AddressPrefix $HubPrefix
-    Write-Host "Virtual WAN and Hub created successfully" -ForegroundColor Green
+    Write-Output "Virtual WAN and Hub created successfully" # Color: $2
     return @{WAN = $wan; Hub = $hub}
 } else {
-    Write-Host "Virtual WAN created successfully" -ForegroundColor Green
-    return $wan
-}
-
-
+    Write-Output "Virtual WAN created successfully" # Color: $2
+    return $wan`n}

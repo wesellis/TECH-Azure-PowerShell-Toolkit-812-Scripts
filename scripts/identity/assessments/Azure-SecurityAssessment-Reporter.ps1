@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.KeyVault
 
@@ -6,61 +6,53 @@
     SecurityAssessment Reporter
 .DESCRIPTION
     NOTES
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Security Assessment Reporter
-# Professional Azure automation script for
-# Version: 2.0 | Enhanced for enterprise security governance
+    Author: Wes Ellis (wes@wesellis.com)
 
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter()]
     [string]$ResourceGroupName,
-    
+
     [Parameter()]
     [string]$SubscriptionId,
-    
+
     [Parameter()]
     [ValidateSet("Quick", "", "Compliance", "Custom")]
     [string]$AssessmentType = "Quick",
-    
+
     [Parameter()]
     [string]$OutputPath = ".\SecurityAssessment-$(Get-Date -Format 'yyyyMMdd-HHmmss').json",
-    
+
     [Parameter()]
     [string]$ReportFormat = "JSON",
-    
+
     [Parameter()]
     [switch]$IncludeRecommendations,
-    
+
     [Parameter()]
     [switch]$ExportToCSV,
-    
+
     [Parameter()]
     [switch]$SendToLogAnalytics,
-    
+
     [Parameter()]
     [string]$LogAnalyticsWorkspaceId
 )
 
-#region Functions
 
-# Import common functions
-# Module import removed - use #Requires instead
-
-# Professional banner
 Show-Banner -ScriptName "Azure Security Assessment Reporter" -Version "2.0" -Description "security posture analysis and compliance reporting"
 
 try {
-    # Test Azure connection and security modules
     Write-ProgressStep -StepNumber 1 -TotalSteps 10 -StepName "Security Module Validation" -Status "Validating Azure Security Center connectivity"
-    
-    $requiredModules = @('Az.Accounts', 'Az.Resources', 'Az.Security', 'Az.Monitor', 'Az.KeyVault', 'Az.Network')
-    if (-not (Test-AzureConnection -RequiredModules $requiredModules)) {
+
+    $RequiredModules = @('Az.Accounts', 'Az.Resources', 'Az.Security', 'Az.Monitor', 'Az.KeyVault', 'Az.Network')
+    if (-not (Test-AzureConnection -RequiredModules $RequiredModules)) {
         throw "Azure connection or required modules validation failed"
     }
 
-    # Initialize assessment results
-    $assessmentResults = @{
+    $AssessmentResults = @{
         AssessmentMetadata = @{
             AssessmentType = $AssessmentType
             Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
@@ -75,22 +67,20 @@ try {
         Summary = @{}
     }
 
-    # Get subscription context
     Write-ProgressStep -StepNumber 2 -TotalSteps 10 -StepName "Scope Definition" -Status "Defining assessment scope"
-    
+
     if ($SubscriptionId -and $SubscriptionId -ne (Get-AzContext).Subscription.Id) {
         Set-AzContext -SubscriptionId $SubscriptionId
     }
-    
-    $subscription = Get-AzSubscription -SubscriptionId $assessmentResults.AssessmentMetadata.SubscriptionId
-    $assessmentResults.AssessmentMetadata.SubscriptionName = $subscription.Name
-    
+
+    $subscription = Get-AzSubscription -SubscriptionId $AssessmentResults.AssessmentMetadata.SubscriptionId
+    $AssessmentResults.AssessmentMetadata.SubscriptionName = $subscription.Name
+
     Write-Log "[OK] Assessment scope: $($subscription.Name)" -Level SUCCESS
 
-    # Security Center Assessment
     Write-ProgressStep -StepNumber 3 -TotalSteps 10 -StepName "Security Center Analysis" -Status "Analyzing Security Center recommendations"
-    
-    $securityAssessments = Invoke-AzureOperation -Operation {
+
+    $SecurityAssessments = Invoke-AzureOperation -Operation {
         if ($ResourceGroupName) {
             Get-AzSecurityAssessment -ErrorAction Stop | Where-Object { $_.Id -like "*$ResourceGroupName*" }
         } else {
@@ -98,7 +88,7 @@ try {
         }
     } -OperationName "Get Security Assessments" -MaxRetries 2
 
-    foreach ($assessment in $securityAssessments) {
+    foreach ($assessment in $SecurityAssessments) {
         $finding = @{
             Type = "SecurityCenter"
             Resource = $assessment.Id.Split('/')[-3]
@@ -108,31 +98,29 @@ try {
             Description = $assessment.Status.Description
             Category = $assessment.Metadata.Category
         }
-        $assessmentResults.SecurityFindings += $finding
+        $AssessmentResults.SecurityFindings += $finding
     }
-    
-    Write-Log "[OK] Analyzed $($securityAssessments.Count) Security Center assessments" -Level SUCCESS
 
-    # Network Security Analysis
+    Write-Log "[OK] Analyzed $($SecurityAssessments.Count) Security Center assessments" -Level SUCCESS
+
     Write-ProgressStep -StepNumber 4 -TotalSteps 10 -StepName "Network Security Analysis" -Status "Analyzing network security configurations"
-    
-    $networkFindings = Invoke-AzureOperation -Operation {
+
+    $NetworkFindings = Invoke-AzureOperation -Operation {
         $nsgs = if ($ResourceGroupName) {
             Get-AzNetworkSecurityGroup -ResourceGroupName $ResourceGroupName
         } else {
             Get-AzNetworkSecurityGroup -ErrorAction Stop
         }
-        
+
         $findings = @()
         foreach ($nsg in $nsgs) {
-            # Check for overly permissive rules
-            $riskyRules = $nsg.SecurityRules | Where-Object {
-                $_.Access -eq "Allow" -and 
-                $_.SourceAddressPrefix -eq "*" -and 
+            $RiskyRules = $nsg.SecurityRules | Where-Object {
+                $_.Access -eq "Allow" -and
+                $_.SourceAddressPrefix -eq "*" -and
                 $_.DestinationPortRange -in @("22", "3389", "80", "443", "*")
             }
-            
-            foreach ($rule in $riskyRules) {
+
+            foreach ($rule in $RiskyRules) {
                 $findings += @{
                     Type = "NetworkSecurity"
                     Resource = $nsg.Name
@@ -145,26 +133,24 @@ try {
         }
         return $findings
     } -OperationName "Analyze Network Security"
-    
-    $assessmentResults.SecurityFindings += $networkFindings
+
+    $AssessmentResults.SecurityFindings += $NetworkFindings
     Write-Log "[OK] Analyzed network security configurations" -Level SUCCESS
 
-    # Key Vault Security Analysis
     Write-ProgressStep -StepNumber 5 -TotalSteps 10 -StepName "Key Vault Security" -Status "Analyzing Key Vault configurations"
-    
-    $keyVaultFindings = Invoke-AzureOperation -Operation {
-        $keyVaults = if ($ResourceGroupName) {
+
+    $KeyVaultFindings = Invoke-AzureOperation -Operation {
+        $KeyVaults = if ($ResourceGroupName) {
             Get-AzKeyVault -ResourceGroupName $ResourceGroupName
         } else {
             Get-AzKeyVault -ErrorAction Stop
         }
-        
+
         $findings = @()
-        foreach ($vault in $keyVaults) {
-            $vaultDetails = Get-AzKeyVault -VaultName $vault.VaultName
-            
-            # Check for public access
-            if ($vaultDetails.NetworkAcls.DefaultAction -eq "Allow") {
+        foreach ($vault in $KeyVaults) {
+            $VaultDetails = Get-AzKeyVault -VaultName $vault.VaultName
+
+            if ($VaultDetails.NetworkAcls.DefaultAction -eq "Allow") {
                 $findings += @{
                     Type = "KeyVault"
                     Resource = $vault.VaultName
@@ -174,9 +160,8 @@ try {
                     Recommendation = "Enable network restrictions or private endpoints"
                 }
             }
-            
-            # Check for soft delete
-            if (-not $vaultDetails.EnableSoftDelete) {
+
+            if (-not $VaultDetails.EnableSoftDelete) {
                 $findings += @{
                     Type = "KeyVault"
                     Resource = $vault.VaultName
@@ -189,20 +174,19 @@ try {
         }
         return $findings
     } -OperationName "Analyze Key Vault Security"
-    
-    $assessmentResults.SecurityFindings += $keyVaultFindings
+
+    $AssessmentResults.SecurityFindings += $KeyVaultFindings
     Write-Log "[OK] Analyzed Key Vault security configurations" -Level SUCCESS
 
-    # Resource Compliance Analysis
     Write-ProgressStep -StepNumber 6 -TotalSteps 10 -StepName "Compliance Analysis" -Status "Analyzing resource compliance"
-    
-    $complianceResults = Invoke-AzureOperation -Operation {
+
+    $ComplianceResults = Invoke-AzureOperation -Operation {
         $resources = if ($ResourceGroupName) {
             Get-AzResource -ResourceGroupName $ResourceGroupName
         } else {
             Get-AzResource -ErrorAction Stop
         }
-        
+
         $compliance = @{
             TotalResources = $resources.Count
             TaggedResources = 0
@@ -210,35 +194,30 @@ try {
             MonitoredResources = 0
             CompliantNaming = 0
         }
-        
+
         foreach ($resource in $resources) {
-            # Check tagging compliance
             if ($resource.Tags -and $resource.Tags.Count -ge 3) {
                 $compliance.TaggedResources++
             }
-            
-            # Check naming convention (basic check)
+
             if ($resource.Name -match '^[a-z]+(-[a-z0-9]+)*$') {
                 $compliance.CompliantNaming++
             }
-            
-            # Check for encryption (basic indicators)
+
             if ($resource.Kind -like "*encrypted*" -or $resource.Properties -like "*encryption*") {
                 $compliance.EncryptedResources++
             }
         }
-        
+
         return $compliance
     } -OperationName "Analyze Resource Compliance"
-    
-    $assessmentResults.ComplianceScore = $complianceResults
+
+    $AssessmentResults.ComplianceScore = $ComplianceResults
     Write-Log "[OK] Analyzed resource compliance" -Level SUCCESS
 
-    # Policy Compliance Analysis
     Write-ProgressStep -StepNumber 7 -TotalSteps 10 -StepName "Policy Analysis" -Status "Analyzing Azure Policy compliance"
-    
-    $policyStates = Invoke-AzureOperation -Operation {
-        # Get policy states (requires Az.PolicyInsights module)
+
+    $PolicyStates = Invoke-AzureOperation -Operation {
         try {
             if (Get-Module Az.PolicyInsights -ListAvailable -ErrorAction Stop) {
                 Import-Module Az.PolicyInsights
@@ -253,8 +232,8 @@ try {
             return @()
         }
     } -OperationName "Analyze Policy Compliance"
-    
-    $policyFindings = $policyStates | ForEach-Object {
+
+    $PolicyFindings = $PolicyStates | ForEach-Object {
         if ($_.ComplianceState -eq "NonCompliant") {
             @{
                 Type = "PolicyCompliance"
@@ -266,145 +245,133 @@ try {
             }
         }
     }
-    
-    $assessmentResults.SecurityFindings += $policyFindings
+
+    $AssessmentResults.SecurityFindings += $PolicyFindings
     Write-Log "[OK] Analyzed Azure Policy compliance" -Level SUCCESS
 
-    # Generate Recommendations
     Write-ProgressStep -StepNumber 8 -TotalSteps 10 -StepName "Recommendations" -Status "Generating security recommendations"
-    
+
     if ($IncludeRecommendations) {
         $recommendations = @()
-        
-        # High-priority recommendations based on findings
-        $highSeverityFindings = $assessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "High" }
-        if ($highSeverityFindings.Count -gt 0) {
+
+        $HighSeverityFindings = $AssessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "High" }
+        if ($HighSeverityFindings.Count -gt 0) {
             $recommendations += @{
                 Priority = "High"
                 Category = "Critical Security Issues"
-                Description = "Address $($highSeverityFindings.Count) critical security findings immediately"
-                ActionItems = $highSeverityFindings | ForEach-Object { $_.Issue }
+                Description = "Address $($HighSeverityFindings.Count) critical security findings immediately"
+                ActionItems = $HighSeverityFindings | ForEach-Object { $_.Issue }
             }
         }
-        
-        # Compliance recommendations
-        $complianceRate = [math]::Round(($complianceResults.TaggedResources / $complianceResults.TotalResources) * 100, 2)
-        if ($complianceRate -lt 80) {
+
+        $ComplianceRate = [math]::Round(($ComplianceResults.TaggedResources / $ComplianceResults.TotalResources) * 100, 2)
+        if ($ComplianceRate -lt 80) {
             $recommendations += @{
                 Priority = "Medium"
                 Category = "Governance"
-                Description = "Improve resource tagging compliance (currently $complianceRate%)"
+                Description = "Improve resource tagging compliance (currently $ComplianceRate%)"
                 ActionItems = @("Implement tagging policies", "Audit untagged resources", "Establish tagging standards")
             }
         }
-        
-        $assessmentResults.Recommendations = $recommendations
+
+        $AssessmentResults.Recommendations = $recommendations
     }
 
-    # Calculate Security Score
     Write-ProgressStep -StepNumber 9 -TotalSteps 10 -StepName "Security Scoring" -Status "Calculating overall security score"
-    
-    $securityScore = @{
+
+    $SecurityScore = @{
         OverallScore = 0
         MaxPossibleScore = 100
         CategoryScores = @{}
     }
-    
-    # Calculate scores based on findings
-    $criticalIssues = ($assessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "High" }).Count
-    $mediumIssues = ($assessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "Medium" }).Count
-    $lowIssues = ($assessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "Low" }).Count
-    
-    # Simple scoring algorithm
-    $scoreDeduction = ($criticalIssues * 20) + ($mediumIssues * 10) + ($lowIssues * 5)
-    $securityScore.OverallScore = [math]::Max(0, 100 - $scoreDeduction)
-    
-    $securityScore.CategoryScores = @{
-        NetworkSecurity = [math]::Max(0, 100 - (($networkFindings | Where-Object { $_.Severity -eq "High" }).Count * 25))
-        IdentityAndAccess = [math]::Max(0, 100 - (($keyVaultFindings | Where-Object { $_.Severity -eq "High" }).Count * 25))
-        DataProtection = $complianceResults.EncryptedResources / $complianceResults.TotalResources * 100
-        Governance = $complianceRate
-    }
-    
-    $assessmentResults.Summary = @{
-        SecurityScore = $securityScore
-        TotalFindings = $assessmentResults.SecurityFindings.Count
-        CriticalFindings = $criticalIssues
-        MediumFindings = $mediumIssues
-        LowFindings = $lowIssues
-        ComplianceRate = $complianceRate
+
+    $CriticalIssues = ($AssessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "High" }).Count
+    $MediumIssues = ($AssessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "Medium" }).Count
+    $LowIssues = ($AssessmentResults.SecurityFindings | Where-Object { $_.Severity -eq "Low" }).Count
+
+    $ScoreDeduction = ($CriticalIssues * 20) + ($MediumIssues * 10) + ($LowIssues * 5)
+    $SecurityScore.OverallScore = [math]::Max(0, 100 - $ScoreDeduction)
+
+    $SecurityScore.CategoryScores = @{
+        NetworkSecurity = [math]::Max(0, 100 - (($NetworkFindings | Where-Object { $_.Severity -eq "High" }).Count * 25))
+        IdentityAndAccess = [math]::Max(0, 100 - (($KeyVaultFindings | Where-Object { $_.Severity -eq "High" }).Count * 25))
+        DataProtection = $ComplianceResults.EncryptedResources / $ComplianceResults.TotalResources * 100
+        Governance = $ComplianceRate
     }
 
-    # Export Results
-    Write-ProgressStep -StepNumber 10 -TotalSteps 10 -StepName "Export Results" -Status "Exporting assessment results"
-    
-    # JSON Export
-    $assessmentResults | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-    Write-Log "[OK] Assessment results exported to: $OutputPath" -Level SUCCESS
-    
-    # CSV Export if requested
-    if ($ExportToCSV) {
-        $csvPath = $OutputPath.Replace('.json', '.csv')
-        $assessmentResults.SecurityFindings | Export-Csv -Path $csvPath -NoTypeInformation -Force
-        Write-Log "[OK] Findings exported to CSV: $csvPath" -Level SUCCESS
+    $AssessmentResults.Summary = @{
+        SecurityScore = $SecurityScore
+        TotalFindings = $AssessmentResults.SecurityFindings.Count
+        CriticalFindings = $CriticalIssues
+        MediumFindings = $MediumIssues
+        LowFindings = $LowIssues
+        ComplianceRate = $ComplianceRate
     }
-    
-    # Log Analytics Export if requested
+
+    Write-ProgressStep -StepNumber 10 -TotalSteps 10 -StepName "Export Results" -Status "Exporting assessment results"
+
+    $AssessmentResults | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
+    Write-Log "[OK] Assessment results exported to: $OutputPath" -Level SUCCESS
+
+    if ($ExportToCSV) {
+        $CsvPath = $OutputPath.Replace('.json', '.csv')
+        $AssessmentResults.SecurityFindings | Export-Csv -Path $CsvPath -NoTypeInformation -Force
+        Write-Log "[OK] Findings exported to CSV: $CsvPath" -Level SUCCESS
+    }
+
     if ($SendToLogAnalytics -and $LogAnalyticsWorkspaceId) {
         try {
-            # Send to Log Analytics (requires custom implementation)
             Write-Log "Log Analytics integration would be implemented here" -Level INFO
         } catch {
             Write-Log "Failed to send to Log Analytics: $($_.Exception.Message)" -Level WARN
         }
     }
 
-    # Display Summary
-    Write-Host ""
-    Write-Host ""
-    Write-Host "                              SECURITY ASSESSMENT COMPLETED"  
-    Write-Host ""
-    Write-Host ""
-    Write-Host "Security Score: $($securityScore.OverallScore)/100" -ForegroundColor $(if ($securityScore.OverallScore -ge 80) { "Green" } elseif ($securityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
-    Write-Host ""
-    Write-Host "Assessment Summary:"
-    Write-Host "    Total Resources: $($complianceResults.TotalResources)"
-    Write-Host "    Security Findings: $($assessmentResults.Summary.TotalFindings)"
-    Write-Host "    Critical Issues: $($assessmentResults.Summary.CriticalFindings)"
-    Write-Host "    Medium Issues: $($assessmentResults.Summary.MediumFindings)"
-    Write-Host "    Low Issues: $($assessmentResults.Summary.LowFindings)"
-    Write-Host "    Compliance Rate: $($assessmentResults.Summary.ComplianceRate)%"
-    Write-Host ""
-    Write-Host "�� Output Files:"
-    Write-Host "    JSON Report: $OutputPath"
+    Write-Output ""
+    Write-Output ""
+    Write-Output "                              SECURITY ASSESSMENT COMPLETED"
+    Write-Output ""
+    Write-Output ""
+    Write-Output "Security Score: $($SecurityScore.OverallScore)/100" -ForegroundColor $(if ($SecurityScore.OverallScore -ge 80) { "Green" } elseif ($SecurityScore.OverallScore -ge 60) { "Yellow" } else { "Red" })
+    Write-Output ""
+    Write-Output "Assessment Summary:"
+    Write-Output "    Total Resources: $($ComplianceResults.TotalResources)"
+    Write-Output "    Security Findings: $($AssessmentResults.Summary.TotalFindings)"
+    Write-Output "    Critical Issues: $($AssessmentResults.Summary.CriticalFindings)"
+    Write-Output "    Medium Issues: $($AssessmentResults.Summary.MediumFindings)"
+    Write-Output "    Low Issues: $($AssessmentResults.Summary.LowFindings)"
+    Write-Output "    Compliance Rate: $($AssessmentResults.Summary.ComplianceRate)%"
+    Write-Output ""
+    Write-Output "�� Output Files:"
+    Write-Output "    JSON Report: $OutputPath"
     if ($ExportToCSV) {
-        Write-Host "    CSV Export: $csvPath"
+        Write-Output "    CSV Export: $CsvPath"
     }
-    Write-Host ""
-    
-    if ($assessmentResults.Summary.CriticalFindings -gt 0) {
-        Write-Host "[WARN]  ATTENTION: $($assessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
-        Write-Host ""
+    Write-Output ""
+
+    if ($AssessmentResults.Summary.CriticalFindings -gt 0) {
+        Write-Output "[WARN]  ATTENTION: $($AssessmentResults.Summary.CriticalFindings) critical security issues require immediate attention!"
+        Write-Output ""
     }
 
     Write-Log "Security assessment completed successfully!" -Level SUCCESS
 
 } catch {
     Write-Log "Security assessment failed: $($_.Exception.Message)" -Level ERROR -Exception $_.Exception
-    
-    Write-Host ""
-    Write-Host "Troubleshooting Tips:"
-    Write-Host "    Verify Security Center is enabled on the subscription"
-    Write-Host "    Check permissions for Security Reader role"
-    Write-Host "    Ensure Az.Security module is installed and updated"
-    Write-Host "    Validate subscription and resource group access"
-    Write-Host ""
-    
+
+    Write-Output ""
+    Write-Output "Troubleshooting Tips:"
+    Write-Output "    Verify Security Center is enabled on the subscription"
+    Write-Output "    Check permissions for Security Reader role"
+    Write-Output "    Ensure Az.Security module is installed and updated"
+    Write-Output "    Validate subscription and resource group access"
+    Write-Output ""
+
     throw
 }
 
 Write-Progress -Activity "Security Assessment" -Completed
 Write-Log "Script execution completed at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -Level INFO
 
-#endregion
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,7 +10,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,20 +19,11 @@ function FunctionName {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function FunctionName {
-    #region func-Set-AzVMOSDisk -ErrorAction Stop
-    #Setting the VM OS Disk to the VM
-$setAzVMOSDiskSplat = @{
+$SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
-        # VhdUri = $OSDiskUri
-        # SourceImageUri = $SourceImageUri
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
-        # Windows = $true
         DiskSizeInGB = '128'
     }
-$VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-    #endRegion func Set-AzVMOSDisk -ErrorAction Stop
-}
-
-
+$VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat`n}

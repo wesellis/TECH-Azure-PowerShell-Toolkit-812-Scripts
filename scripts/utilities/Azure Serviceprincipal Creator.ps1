@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,58 +9,52 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$DisplayName,
+    $DisplayName,
     [Parameter()]
-    [string]$Role = "Contributor" ,
+    $Role = "Contributor" ,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Scope,
+    $Scope,
     [Parameter()]
     [int]$PasswordValidityMonths = 12
 )
-Write-Host "Creating Service Principal: $DisplayName"
+Write-Output "Creating Service Principal: $DisplayName"
 try {
-    # Create service principal with password
-   $params = @{
+    $params = @{
        WELog = "  Connect-AzAccount"
        DisplayName = $DisplayName
        TenantId = $((Get-AzContext).Tenant.Id)
        ApplicationId = $($ServicePrincipal.ApplicationId)
        CertificateThumbprint = "[thumbprint]'" "INFO"
-       Scope = $Scope  Write-Host "Service Principal created successfully:" "INFO"Write-Host "Display Name: $($ServicePrincipal.DisplayName)" "INFO"Write-Host "Application ID: $($ServicePrincipal.ApplicationId)" "INFO"Write-Host "Object ID: $($ServicePrincipal.Id)"Write-Host "Service Principal Names: $($ServicePrincipal.ServicePrincipalNames
+       Scope = $Scope  Write-Output "Service Principal created successfully:" "INFO"Write-Output "Display Name: $($ServicePrincipal.DisplayName)" "INFO"Write-Output "Application ID: $($ServicePrincipal.ApplicationId)" "INFO"Write-Output "Object ID: $($ServicePrincipal.Id)"Write-Host "Service Principal Names: $($ServicePrincipal.ServicePrincipalNames
        ErrorAction = "Stop"
        Role = $Role
    }
    ; @params
 } catch {
-    Write-Error "Failed to create service principal: $($_.Exception.Message)"
-}
-
-
+    Write-Error "Failed to create service principal: $($_.Exception.Message)"`n}

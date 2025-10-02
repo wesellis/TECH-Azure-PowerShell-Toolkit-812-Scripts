@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Call Copybadges
@@ -9,13 +9,14 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 Import-Module "$PSScriptRoot/../ci-scripts/Local.psm1" -force
-$StorageAccountName = " azureqsbicep" # TODO
-$StorageAccountKey = " $ENV:STORAGE_ACCOUNT_KEY"
+$StorageAccountName = " azureqsbicep" $StorageAccountKey = " $ENV:STORAGE_ACCOUNT_KEY"
 if (($StorageAccountKey -eq "" ) -or ($null -eq $StorageAccountKey)) {
     Write-Error "Missing StorageAccountKey"
     return
@@ -25,9 +26,9 @@ $ENV:BUILD_SOURCEVERSIONMESSAGE = "Add francecentral in azAppInsightsLocationMap
 $ENV:BUILD_REPOSITORY_NAME = "Azure/azure-quickstart-templates"
 $ENV:BUILD_REPOSITORY_LOCALPATH = Get-SampleRootPath -ErrorAction Stop
 $ENV:BUILD_SOURCESDIRECTORY = Get-SampleRootPath -ErrorAction Stop
-$getSampleFolderHost
-Write-Output $getSampleFolderHost
-$vars = Find-VarsFromWriteHostOutput $getSampleFolderHost
+$GetSampleFolderHost
+Write-Output $GetSampleFolderHost
+$vars = Find-VarsFromWriteHostOutput $GetSampleFolderHost
 $SampleName = $vars["SAMPLE_NAME" ]
 $script = " $PSScriptRoot/../ci-scripts/Copy-Badges"
 $params = @{
@@ -38,3 +39,6 @@ $params = @{
     TableName = "QuickStartsMetadataService"
 }
 & @params
+
+
+

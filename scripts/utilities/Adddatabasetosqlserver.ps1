@@ -1,78 +1,90 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules SqlServer
 
-<#`n.SYNOPSIS
-    Adddatabasetosqlserver
+<#
+.SYNOPSIS
+    Add database to SQL Server
 
 .DESCRIPTION
-    Azure automation
+    Add/restore database to SQL Server automation script
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+#>
+
 [CmdletBinding()]
 param(
-    [string]
-    $userName,
-	[string]
-	$password
-)
-if ((Get-Command -ErrorAction Stop Install-PackageProvider -ErrorAction Ignore) -eq $null)
-{
-	# Load the latest SQL PowerShell Provider
-	(Get-Module -ListAvailable "SQLPS | Sort-Object" -Property "Version)[0] | Import-Module;"
-}
-else
-{
-	# Conflicts with SqlServer module
-	Remove-Module -Name SQLPS -ErrorAction Ignore;
-	if ((Get-Module -ListAvailable SqlServer) -eq $null)
-	{
-		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-		Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null;
-		Install-Module -Name SqlServer -Force -AllowClobber | Out-Null;
-	}
-	# Load the latest SQL PowerShell Provider
-	Import-Module -Name SqlServer;
-}
-$params = @{
-    QueryTimeout = "0"
-    ServerInstance = "."
-    Query = " restore filelistonly from disk='$($pwd)\AdventureWorks2016.bak'" ;"
-    Password = $password
-    UserName = $username
-}
-$fileList @params
-$relocateFiles = @();
-foreach ($nextBackupFile in $fileList)
-{
-    # Move the file to the default data directory of the default instance
-    $nextBackupFileName = Split-Path -Path ($nextBackupFile.PhysicalName) -Leaf;
-    $relocateFiles -ErrorAction "Stop Microsoft.SqlServer.Management.Smo.RelocateFile( $nextBackupFile.LogicalName, "$env:temp\$($nextBackupFileName)" );"
-}
-$securePassword = Read-Host -Prompt "Enter secure value" -AsSecureString;
-$credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ($username,
+    [Parameter(Mandatory = $true)]
+    [string]$UserName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Password,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ServerInstance = ".",
+
+    [Parameter(Mandatory = $true)]
+    [string]$BackupFilePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DatabaseName,
+
     [Parameter()]
-    $securePassword)
-$params = @{
-    RelocateFile = $relocateFiles
-    Database = "SampleDatabase"
-    ServerInstance = "."
-    Credential = $credentials;
-    BackupFile = " $pwd\AdventureWorks2016.bak"
+    [string]$RelocateDirectory = $env:temp
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    # Import SQL Server module
+    if (Get-Module -ListAvailable SqlServer) {
+        Import-Module -Name SqlServer
+    }
+    else {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+        Install-Module -Name SqlServer -Force -AllowClobber | Out-Null
+        Import-Module -Name SqlServer
+    }
+
+    # Create credentials
+    $securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
+    $credentials = New-Object System.Management.Automation.PSCredential($UserName, $securePassword)
+
+    # Get file list from backup
+    $fileListParams = @{
+        QueryTimeout = 0
+        ServerInstance = $ServerInstance
+        Query = "RESTORE FILELISTONLY FROM DISK='$BackupFilePath'"
+        Credential = $credentials
+    }
+
+    $fileList = Invoke-Sqlcmd @fileListParams
+
+    # Create relocate files array
+    $relocateFiles = @()
+    foreach ($backupFile in $fileList) {
+        $fileName = Split-Path -Path $backupFile.PhysicalName -Leaf
+        $relocateFiles += New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($backupFile.LogicalName, "$RelocateDirectory\$fileName")
+    }
+
+    # Restore database
+    $restoreParams = @{
+        RelocateFile = $relocateFiles
+        Database = $DatabaseName
+        ServerInstance = $ServerInstance
+        Credential = $credentials
+        BackupFile = $BackupFilePath
+        ReplaceDatabase = $true
+    }
+
+    Restore-SqlDatabase @restoreParams
+    Write-Output "Database '$DatabaseName' restored successfully from '$BackupFilePath'"
 }
-Restore-SqlDatabase @params
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

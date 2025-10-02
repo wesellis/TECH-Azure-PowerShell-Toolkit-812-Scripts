@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Container Lab
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -18,3 +20,5 @@ Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Set-ExecutionPolicy -ErrorAction Stop Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object -ErrorAction Stop System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 choco install docker-desktop -y
 choco install git vscode -y
+
+

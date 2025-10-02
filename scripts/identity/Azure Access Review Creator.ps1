@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Access Review Creator
@@ -8,18 +8,14 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
-[OutputType([bool])]
- {
-    [CmdletBinding()]
-param(
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+function Write-Log {
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -27,12 +23,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -49,41 +46,36 @@ param(
     [Parameter()]
     [array]$ReviewerEmails = @()
 )
-Write-Host "Creating Access Review: $ReviewName"
+Write-Output "Creating Access Review: $ReviewName"
 try {
-    # Check if Microsoft.Graph.Identity.Governance module is available
     if (-not (Get-Module -ListAvailable -Name Microsoft.Graph.Identity.Governance)) {
         Write-Warning "Microsoft.Graph.Identity.Governance module is required for full functionality"
-        Write-Host "Install with: Install-Module Microsoft.Graph.Identity.Governance"
+        Write-Output "Install with: Install-Module Microsoft.Graph.Identity.Governance"
     }
-    # Connect to Microsoft Graph
     Connect-MgGraph -Scopes "AccessReview.ReadWrite.All"
-    Write-Host "Connected to Microsoft Graph"
-    # Get group information
-    $Group = Get-MgGroup -GroupId $GroupId
+    Write-Output "Connected to Microsoft Graph"
+$Group = Get-MgGroup -GroupId $GroupId
     if (-not $Group) {
         Write-Error "Group not found: $GroupId"
         return
     }
-    Write-Host "Access Review Configuration:"
-    Write-Host "Review Name: $ReviewName"
-    Write-Host "Description: $Description"
-    Write-Host "Target Group: $($Group.DisplayName)"
-    Write-Host "Duration: $DurationInDays days"
-    Write-Host "Reviewer Type: $ReviewerType"
-    # Calculate review dates
-    $StartDate = Get-Date -ErrorAction Stop
-    $EndDate = $StartDate.AddDays($DurationInDays)
-    Write-Host "Start Date: $($StartDate.ToString('yyyy-MM-dd'))"
-    Write-Host "End Date: $($EndDate.ToString('yyyy-MM-dd'))"
-    # Access review template
+    Write-Output "Access Review Configuration:"
+    Write-Output "Review Name: $ReviewName"
+    Write-Output "Description: $Description"
+    Write-Output "Target Group: $($Group.DisplayName)"
+    Write-Output "Duration: $DurationInDays days"
+    Write-Output "Reviewer Type: $ReviewerType"
+$StartDate = Get-Date -ErrorAction Stop
+    [string]$EndDate = $StartDate.AddDays($DurationInDays)
+    Write-Output "Start Date: $($StartDate.ToString('yyyy-MM-dd'))"
+    Write-Output "End Date: $($EndDate.ToString('yyyy-MM-dd'))"
 $AccessReviewTemplate = @{
         displayName = $ReviewName
         description = $Description
         startDate = $StartDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
         endDate = $EndDate.ToString(" yyyy-MM-ddTHH:mm:ss.fffK" )
         scope = @{
-            query = " /groups/$GroupId/members"
+            query = "/groups/$GroupId/members"
             queryType = "MicrosoftGraph"
         }
         reviewers = @()
@@ -96,11 +88,10 @@ $AccessReviewTemplate = @{
             recurrenceType = " onetime"
         }
     }
-    # Configure reviewers
     switch ($ReviewerType) {
         "GroupOwners" {
-            $AccessReviewTemplate.reviewers += @{
-                query = " /groups/$GroupId/owners"
+    [string]$AccessReviewTemplate.reviewers += @{
+                query = "/groups/$GroupId/owners"
                 queryType = "MicrosoftGraph"
             }
         }
@@ -109,8 +100,8 @@ $AccessReviewTemplate = @{
                 try {
 $User = Get-MgUser -Filter " userPrincipalName eq '$Email'"
                     if ($User) {
-                        $AccessReviewTemplate.reviewers += @{
-                            query = " /users/$($User.Id)"
+    [string]$AccessReviewTemplate.reviewers += @{
+                            query = "/users/$($User.Id)"
                             queryType = "MicrosoftGraph"
                         }
                     }
@@ -120,48 +111,45 @@ $User = Get-MgUser -Filter " userPrincipalName eq '$Email'"
             }
         }
         "SelfReview" {
-            $AccessReviewTemplate.reviewers += @{
-                query = " /users"
+    [string]$AccessReviewTemplate.reviewers += @{
+                query = "/users"
                 queryType = "MicrosoftGraph"
                 queryRoot = " decisions"
             }
         }
     }
-    Write-Host " `n[WARN] IMPORTANT NOTES:"
-    Write-Host "Access reviews require Azure AD Premium P2"
-    Write-Host "Reviewers will receive email notifications"
-    Write-Host "Configure auto-apply based on your needs"
-    Write-Host "Monitor review progress and follow up"
-    Write-Host " `nAccess Review Benefits:"
-    Write-Host "Periodic access certification"
-    Write-Host "Compliance with governance policies"
-    Write-Host "Automated access cleanup"
-    Write-Host "Audit trail of access decisions"
-    Write-Host "Risk reduction through regular reviews"
-    Write-Host " `nReview Process:"
-    Write-Host " 1. Reviewers receive notification emails"
-    Write-Host " 2. Review access for each member"
-    Write-Host " 3. Approve or deny continued access"
-    Write-Host " 4. Provide justification for decisions"
-    Write-Host " 5. System applies decisions (if auto-apply enabled)"
-    Write-Host " `nBest Practices:"
-    Write-Host "Schedule regular recurring reviews"
-    Write-Host "Use appropriate reviewers (managers, group owners)"
-    Write-Host "Enable recommendations for guidance"
-    Write-Host "Set reasonable review periods (1-4 weeks)"
-    Write-Host "Follow up on incomplete reviews"
-    Write-Host " `nManual Creation Steps:"
-    Write-Host " 1. Azure Portal > Azure Active Directory"
-    Write-Host " 2. Identity Governance > Access Reviews"
-    Write-Host " 3. New Access Review"
-    Write-Host " 4. Configure scope, reviewers, and settings"
-    Write-Host " 5. Start the review"
-    Write-Host " `n Access review template prepared"
-    Write-Host "Use Azure Portal to create the actual review for safety"
-    Write-Host "Reviewers will be notified via email when review starts"
+    Write-Output " `n[WARN] IMPORTANT NOTES:"
+    Write-Output "Access reviews require Azure AD Premium P2"
+    Write-Output "Reviewers will receive email notifications"
+    Write-Output "Configure auto-apply based on your needs"
+    Write-Output "Monitor review progress and follow up"
+    Write-Output " `nAccess Review Benefits:"
+    Write-Output "Periodic access certification"
+    Write-Output "Compliance with governance policies"
+    Write-Output "Automated access cleanup"
+    Write-Output "Audit trail of access decisions"
+    Write-Output "Risk reduction through regular reviews"
+    Write-Output " `nReview Process:"
+    Write-Output " 1. Reviewers receive notification emails"
+    Write-Output " 2. Review access for each member"
+    Write-Output " 3. Approve or deny continued access"
+    Write-Output " 4. Provide justification for decisions"
+    Write-Output " 5. System applies decisions (if auto-apply enabled)"
+    Write-Output " `nBest Practices:"
+    Write-Output "Schedule regular recurring reviews"
+    Write-Output "Use appropriate reviewers (managers, group owners)"
+    Write-Output "Enable recommendations for guidance"
+    Write-Output "Set reasonable review periods (1-4 weeks)"
+    Write-Output "Follow up on incomplete reviews"
+    Write-Output " `nManual Creation Steps:"
+    Write-Output " 1. Azure Portal > Azure Active Directory"
+    Write-Output " 2. Identity Governance > Access Reviews"
+    Write-Output " 3. New Access Review"
+    Write-Output " 4. Configure scope, reviewers, and settings"
+    Write-Output " 5. Start the review"
+    Write-Output " `n Access review template prepared"
+    Write-Output "Use Azure Portal to create the actual review for safety"
+    Write-Output "Reviewers will be notified via email when review starts"
 } catch {
     Write-Error "Access review creation failed: $($_.Exception.Message)"
-    Write-Host "Tip: Use Azure Portal for creating Access Reviews"
-}
-
-
+    Write-Output "Tip: Use Azure Portal for creating Access Reviews"`n}

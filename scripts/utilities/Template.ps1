@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,6 +10,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -41,11 +43,12 @@ $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
     "Subscription ID"   = " fef973de-017d-49f7-9098-1f644064f90d"
     "Tenant ID"         = " e09d9473-1a06-4717-98c1-528067eab3a4"
 }
-$newAzResourceGroupSplat = @{
+$NewAzResourceGroupSplat = @{
     Name = $ResourceGroupName
     Location = $LocationName
     Tag = $Tags
 }
 New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
+
 
 

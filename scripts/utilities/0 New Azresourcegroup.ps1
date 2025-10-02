@@ -1,31 +1,38 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
-    New Azresourcegroup
+<#
+.SYNOPSIS
+    Creates a new Azure Resource Group
 
 .DESCRIPTION
-    New Azresourcegroup operation
-    Author: Wes Ellis (wes@wesellis.com)
+    This script creates a new Azure Resource Group in the specified location.
+    Requires appropriate Azure permissions and the Az.Resources module.
 
-    1.0
-    Requires appropriate permissions and modules
+.PARAMETER Name
+    The name of the resource group to create
+
+.PARAMETER Location
+    The Azure region where the resource group will be created
+
+.EXAMPLE
+    PS C:\> New-AzResourceGroup -Name 'FGC_Prod_FileStorage_RG' -Location "CanadaCentral"
+    Creates a new resource group named 'FGC_Prod_FileStorage_RG' in Canada Central
+
+.AUTHOR
+    Wes Ellis (wes@wesellis.com)
 #>
-$ErrorActionPreference = "Stop" ;
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-ResourceGroupName : InspireAV_UniFi_RG
-Location          : canadacentral
-ProvisioningState : Succeeded
-Tags              :
-ResourceId        : /subscriptions/408a6c03-bd25-471b-ae84-cf82b3dff420/resourceGroups/InspireAV_UniFi_RG
-    General notes
-New-AzResourceGroup -Name 'FGC_Prod_FileStorage_RG' -Location "CanadaCentral"
 
+param(
+    [Parameter(Mandatory = $true)]
+    $Name,
+
+    [Parameter(Mandatory = $true)]
+    $Location
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+# Create the Azure Resource Group
+New-AzResourceGroup -Name $Name -Location $Location

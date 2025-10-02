@@ -1,51 +1,84 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Create Subscriptionalias
+<#
+.SYNOPSIS
+    Create Subscription Alias
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation script to create a subscription via an alias.
+    This script creates a subscription via the Microsoft.Subscription/aliases resource.
+    The user running the script must be authenticated and have permission to create the subscription at the specified billing scope.
+    The script is designed for Enterprise Agreement accounts.
 
-    1.0
+.PARAMETER AliasName
+    The alias name for the subscription
+
+.PARAMETER DisplayName
+    The display name for the subscription (defaults to AliasName)
+
+.PARAMETER WorkLoad
+    The workload type for the subscription (DevTest or Production)
+
+.PARAMETER BillingAccount
+    The billing account identifier
+
+.PARAMETER EnrollmentAccount
+    The enrollment account identifier
+
+.NOTES
+    Version: 1.0
+    Author: Wes Ellis (wes@wesellis.com)
     Requires appropriate permissions and modules
 #>
-    .Synopsis
-        This script will create a subscription via an alias.
-    .Description
-        This script will create a subscription via the Microsoft.Subscription/aliases resource.  The user running the script
-        must be authenticated and have permission to create the subscription at the specified billing scope.
-        The script can be used for an Enterprise Agreement account, for other agreements the script will need to be modified.
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+
 [CmdletBinding()]
 param(
-    [string] [Parameter(Mandatory = $true)]$aliasName,
-    [string] $displayName = $aliasName,
-    [string] [ValidateSet("DevTest" , "Production" )]$workLoad = "DevTest" ,
-    [string] [Parameter(Mandatory = $true)]$billingAccount,
-    [string] [Parameter(Mandatory = $true)]$enrollmentAccount
-    )
-$body = @{
-    properties = @{
-        workload     = $workLoad
-        displayName  = $displayName
-        billingScope = " /providers/Microsoft.Billing/billingAccounts/$billingAccount/enrollmentAccounts/$enrollmentAccount"
+    [Parameter(Mandatory = $true, HelpMessage = 'The alias name for the subscription')]
+    [string]$AliasName,
+
+    [Parameter(Mandatory = $false, HelpMessage = 'The display name for the subscription')]
+    [string]$DisplayName = $AliasName,
+
+    [Parameter(Mandatory = $false, HelpMessage = 'The workload type for the subscription')]
+    [ValidateSet("DevTest", "Production")]
+    [string]$WorkLoad = "DevTest",
+
+    [Parameter(Mandatory = $true, HelpMessage = 'The billing account identifier')]
+    [string]$BillingAccount,
+
+    [Parameter(Mandatory = $true, HelpMessage = 'The enrollment account identifier')]
+    [string]$EnrollmentAccount
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+    Write-Output "Creating subscription alias: $AliasName"
+
+    $body = @{
+        properties = @{
+            workload     = $WorkLoad
+            displayName  = $DisplayName
+            billingScope = "/providers/Microsoft.Billing/billingAccounts/$BillingAccount/enrollmentAccounts/$EnrollmentAccount"
+        }
     }
+
+    $uri = "/providers/Microsoft.Subscription/aliases/$($AliasName)?api-version=2020-09-01"
+    $BodyJSON = $body | ConvertTo-Json -Compress -Depth 30
+
+    Write-Output "Initiating subscription creation..."
+    Invoke-AzRestMethod -Method "PUT" -Path $uri -Payload $BodyJSON
+
+    do {
+        Start-Sleep 5
+        $status = (Invoke-AzRestMethod -Method "GET" -path $uri -Verbose).Content | ConvertFrom-Json
+        Write-Output "Provisioning State: $($status.properties.provisioningState)"
+    } while ($status.properties.provisioningState -eq "Running" -or $status.properties.provisioningState -eq "Accepted")
+
+    Write-Output "Subscription creation completed."
+    $status | ConvertTo-Json -Depth 30
 }
-$uri = " /providers/Microsoft.Subscription/aliases/$($aliasName)?api-version=2020-09-01"
-$bodyJSON = $body | ConvertTo-Json -Compress -Depth 30
-Invoke-AzRestMethod -Method "PUT" -Path $uri -Payload $bodyJSON
-do {
-    Start-Sleep 5
-$status = (Invoke-AzRestMethod -Method "GET" -path $uri -Verbose).Content | ConvertFrom-Json
-    Write-Host $status.properties.provisioningState
-} while ($status.properties.provisioningState -eq "Running" -or $status.properties.provisioningState -eq "Accepted" )
-$status | ConvertTo-Json -Depth 30
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }

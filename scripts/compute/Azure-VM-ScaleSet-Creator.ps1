@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 
 <#`n.SYNOPSIS
@@ -9,8 +9,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -23,8 +24,7 @@
     [Parameter()]
     [int]$InstanceCount = 2
 )
-Write-Host "Creating VM Scale Set: $ScaleSetName"
-# Create scale set configuration
+Write-Output "Creating VM Scale Set: $ScaleSetName"
 $params = @{
     ErrorAction = "Stop"
     SkuCapacity = $InstanceCount
@@ -33,7 +33,6 @@ $params = @{
     Location = $Location
 }
 $VmssConfig @params
-# Add network profile
 $params = @{
     CreatePublicIPAddress = $false
     IPConfigurationName = "internal"
@@ -42,7 +41,6 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $VmssConfig @params
-# Set OS profile
 $params = @{
     ComputerNamePrefix = "vmss"
     ErrorAction = "Stop"
@@ -50,7 +48,6 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $VmssConfig @params
-# Set storage profile
 $params = @{
     ImageReferenceOffer = "WindowsServer"
     ImageReferenceSku = "2022-Datacenter"
@@ -61,7 +58,6 @@ $params = @{
     ImageReferencePublisher = "MicrosoftWindowsServer"
 }
 $VmssConfig @params
-# Create the scale set
 $params = @{
     ErrorAction = "Stop"
     ResourceGroupName = $ResourceGroupName
@@ -69,10 +65,11 @@ $params = @{
     VirtualMachineScaleSet = $VmssConfig
 }
 $Vmss @params
-Write-Host "VM Scale Set created successfully:"
-Write-Host "Name: $($Vmss.Name)"
-Write-Host "Location: $($Vmss.Location)"
-Write-Host "VM Size: $VmSize"
-Write-Host "Instance Count: $InstanceCount"
+Write-Output "VM Scale Set created successfully:"
+Write-Output "Name: $($Vmss.Name)"
+Write-Output "Location: $($Vmss.Location)"
+Write-Output "VM Size: $VmSize"
+Write-Output "Instance Count: $InstanceCount"
+
 
 

@@ -1,50 +1,80 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Prereqs
+<#
+.SYNOPSIS
+    Check Prerequisites
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    This script checks to see if there are prerequisites and sets the flag to deploy them.
+    It also determines which template format to use (Bicep or JSON).
 
-    1.0
+.PARAMETER SampleFolder
+    Path to the sample folder to check
+
+.PARAMETER PrereqTemplateFilenameBicep
+    Name of the prerequisite Bicep template file
+
+.PARAMETER PrereqTemplateFilenameJson
+    Name of the prerequisite JSON template file
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    This script will check to see if there are prereqs and set the flag to deploy them
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+
 [CmdletBinding()]
 param(
     [Parameter()]
-    $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER,
+
     [Parameter()]
-    $prereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+    [string]$PrereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+
     [Parameter()]
-    $prereqTemplateFilenameJson = $ENV:PREREQ_TEMPLATE_FILENAME_JSON
+    [string]$PrereqTemplateFilenameJson = $ENV:PREREQ_TEMPLATE_FILENAME_JSON
 )
-$deployPrereqs = Test-Path " $sampleFolder\prereqs\"
-Write-Host " ##vso[task.setvariable variable=deploy.prereqs]$deployPrereqs"
-$bicepPrereqTemplateFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameBicep"
-$jsonPrereqTemplateFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameJson"
-Write-Host "Checking for bicep: $bicepPrereqTemplateFullPath"
-Write-Host "Checking for JSON: $jsonPrereqTemplateFullPath"
-if(Test-Path -Path $bicepPrereqTemplateFullPath){
-    Write-Host "Using bicep..."
-$prereqTemplateFullPath = $bicepPrereqTemplateFullPath
-}else{
-    Write-Host "Using JSON..."
-$prereqTemplateFullPath = $jsonPrereqTemplateFullPath
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    if ([string]::IsNullOrWhiteSpace($SampleFolder)) {
+        throw "SampleFolder parameter is required"
+    }
+
+    Write-Verbose "Checking for prerequisites in: $SampleFolder"
+
+    $DeployPrereqs = Test-Path "$SampleFolder\prereqs\"
+    Write-Output "##vso[task.setvariable variable=deploy.prereqs]$DeployPrereqs"
+
+    if ($DeployPrereqs) {
+        $BicepPrereqTemplateFullPath = "$SampleFolder\prereqs\$PrereqTemplateFilenameBicep"
+        $JsonPrereqTemplateFullPath = "$SampleFolder\prereqs\$PrereqTemplateFilenameJson"
+
+        Write-Output "Checking for bicep: $BicepPrereqTemplateFullPath"
+        Write-Output "Checking for JSON: $JsonPrereqTemplateFullPath"
+
+        if (Test-Path -Path $BicepPrereqTemplateFullPath) {
+            Write-Output "Using bicep template..."
+            $PrereqTemplateFullPath = $BicepPrereqTemplateFullPath
+            Write-Verbose "Bicep prerequisite template found"
+        } else {
+            Write-Output "Using JSON template..."
+            $PrereqTemplateFullPath = $JsonPrereqTemplateFullPath
+            Write-Verbose "Using JSON prerequisite template"
+        }
+
+        Write-Output "Using prereq template: $PrereqTemplateFullPath"
+        Write-Output "##vso[task.setvariable variable=prereq.template.fullpath]$PrereqTemplateFullPath"
+    } else {
+        Write-Output "No prerequisites folder found"
+        Write-Verbose "Prerequisites not required for this sample"
+    }
+
+    Write-Verbose "Prerequisites check completed successfully"
 }
-Write-Output "Using prereq template: $prereqTemplateFullPath"
-if ($deployPrereqs) {
-    Write-Host " ##vso[task.setvariable variable=prereq.template.fullpath]$prereqTemplateFullPath"
-}
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

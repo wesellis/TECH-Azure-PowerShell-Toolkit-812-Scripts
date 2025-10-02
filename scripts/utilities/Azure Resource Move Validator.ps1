@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -14,44 +14,42 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$SourceResourceGroupName,
+    $SourceResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetResourceGroupName,
+    $TargetResourceGroupName,
     [Parameter()]
     [string[]]$ResourceNames,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$TargetSubscriptionId,
+    $TargetSubscriptionId,
     [Parameter()]
     [switch]$ValidateOnly
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
-    $sourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
+    $SourceRG = Get-AzResourceGroup -Name $SourceResourceGroupName
     $resources = if ($ResourceNames) {
-        $ResourceNames | ForEach-Object { Get-AzResource -ResourceGroupName $SourceResourceGroupName -Name $_ }
+    $ResourceNames | ForEach-Object { Get-AzResource -ResourceGroupName $SourceResourceGroupName -Name $_ }
     } else {
         Get-AzResource -ResourceGroupName $SourceResourceGroupName
     }
-    Write-Host "Validating move for $($resources.Count) resources..." -ForegroundColor Cyan
-$targetResourceId = " /subscriptions/$(if($TargetSubscriptionId){$TargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$TargetResourceGroupName"
-$validation = Invoke-AzResourceAction -ResourceId $sourceRG.ResourceId -Action " validateMoveResources" -Parameters @{
+    Write-Output "Validating move for $($resources.Count) resources..." # Color: $2
+    $TargetResourceId = "/subscriptions/$(if($TargetSubscriptionId){$TargetSubscriptionId}else{(Get-AzContext).Subscription.Id})/resourceGroups/$TargetResourceGroupName"
+    $validation = Invoke-AzResourceAction -ResourceId $SourceRG.ResourceId -Action " validateMoveResources" -Parameters @{
         resources = $resources.ResourceId
-        targetResourceGroup = $targetResourceId
+        targetResourceGroup = $TargetResourceId
     } -Force
     if ($validation) {
-        Write-Host "All resources can be moved successfully!" -ForegroundColor Green
+        Write-Output "All resources can be moved successfully!" # Color: $2
     } else {
-        Write-Host "Some resources cannot be moved. Check Azure portal for details." -ForegroundColor Red
+        Write-Output "Some resources cannot be moved. Check Azure portal for details." # Color: $2
     }
-} catch { throw }
-
-
+} catch { throw`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Win Slave
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -22,3 +24,5 @@ wget -outFile sonar.zip https://binaries.sonarsource.com/Distribution/sonar-scan
 Expand-Archive -Path sonar.zip -DestinationPath .
 Ren -path sonar-scanner-cli-4.2.0.1873-windows -NewName sonar
 del sonar.zip
+
+

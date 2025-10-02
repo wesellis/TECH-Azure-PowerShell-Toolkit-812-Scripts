@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,94 +6,90 @@
 
 .DESCRIPTION
     Manage App Gateway
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$GatewayName
 )
-Write-Host "Monitoring Application Gateway: $GatewayName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "============================================"
-# Get Application Gateway details
+Write-Output "Monitoring Application Gateway: $GatewayName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "============================================"
 $AppGateway = Get-AzApplicationGateway -ResourceGroupName $ResourceGroupName -Name $GatewayName
-Write-Host "Application Gateway Information:"
-Write-Host "Name: $($AppGateway.Name)"
-Write-Host "Location: $($AppGateway.Location)"
-Write-Host "Provisioning State: $($AppGateway.ProvisioningState)"
-Write-Host "Operational State: $($AppGateway.OperationalState)"
-Write-Host "SKU: $($AppGateway.Sku.Name) (Tier: $($AppGateway.Sku.Tier))"
-Write-Host "Capacity: $($AppGateway.Sku.Capacity)"
-# Frontend configurations
-Write-Host "`nFrontend Configurations:"
+Write-Output "Application Gateway Information:"
+Write-Output "Name: $($AppGateway.Name)"
+Write-Output "Location: $($AppGateway.Location)"
+Write-Output "Provisioning State: $($AppGateway.ProvisioningState)"
+Write-Output "Operational State: $($AppGateway.OperationalState)"
+Write-Output "SKU: $($AppGateway.Sku.Name) (Tier: $($AppGateway.Sku.Tier))"
+Write-Output "Capacity: $($AppGateway.Sku.Capacity)"
+Write-Output "`nFrontend Configurations:"
 foreach ($Frontend in $AppGateway.FrontendIPConfigurations) {
-    Write-Host "  - Name: $($Frontend.Name)"
+    Write-Output "  - Name: $($Frontend.Name)"
     if ($Frontend.PublicIPAddress) {
         $PublicIP = Get-AzPublicIpAddress -ResourceId $Frontend.PublicIPAddress.Id
-        Write-Host "    Public IP: $($PublicIP.IpAddress)"
+        Write-Output "    Public IP: $($PublicIP.IpAddress)"
     }
     if ($Frontend.PrivateIPAddress) {
-        Write-Host "    Private IP: $($Frontend.PrivateIPAddress)"
+        Write-Output "    Private IP: $($Frontend.PrivateIPAddress)"
     }
 }
-# Backend address pools
-Write-Host "`nBackend Address Pools:"
+Write-Output "`nBackend Address Pools:"
 foreach ($BackendPool in $AppGateway.BackendAddressPools) {
-    Write-Host "  - Pool: $($BackendPool.Name)"
-    Write-Host "    Backend Addresses: $($BackendPool.BackendAddresses.Count)"
+    Write-Output "  - Pool: $($BackendPool.Name)"
+    Write-Output "    Backend Addresses: $($BackendPool.BackendAddresses.Count)"
     foreach ($Address in $BackendPool.BackendAddresses) {
         if ($Address.IpAddress) {
-            Write-Host "      IP: $($Address.IpAddress)"
+            Write-Output "      IP: $($Address.IpAddress)"
         }
         if ($Address.Fqdn) {
-            Write-Host "      FQDN: $($Address.Fqdn)"
+            Write-Output "      FQDN: $($Address.Fqdn)"
         }
     }
 }
-# HTTP listeners
-Write-Host "`nHTTP Listeners:"
+Write-Output "`nHTTP Listeners:"
 foreach ($Listener in $AppGateway.HttpListeners) {
-    Write-Host "  - Listener: $($Listener.Name)"
-    Write-Host "    Protocol: $($Listener.Protocol)"
-    Write-Host "    Port: $($Listener.FrontendPort.Port)"
+    Write-Output "  - Listener: $($Listener.Name)"
+    Write-Output "    Protocol: $($Listener.Protocol)"
+    Write-Output "    Port: $($Listener.FrontendPort.Port)"
     if ($Listener.HostName) {
-        Write-Host "    Host Name: $($Listener.HostName)"
+        Write-Output "    Host Name: $($Listener.HostName)"
     }
 }
-# Request routing rules
-Write-Host "`nRequest Routing Rules:"
+Write-Output "`nRequest Routing Rules:"
 foreach ($Rule in $AppGateway.RequestRoutingRules) {
-    Write-Host "  - Rule: $($Rule.Name)"
-    Write-Host "    Type: $($Rule.RuleType)"
-    Write-Host "    Priority: $($Rule.Priority)"
+    Write-Output "  - Rule: $($Rule.Name)"
+    Write-Output "    Type: $($Rule.RuleType)"
+    Write-Output "    Priority: $($Rule.Priority)"
 }
-# Backend HTTP settings
-Write-Host "`nBackend HTTP Settings:"
+Write-Output "`nBackend HTTP Settings:"
 foreach ($Settings in $AppGateway.BackendHttpSettingsCollection) {
-    Write-Host "  - Settings: $($Settings.Name)"
-    Write-Host "    Protocol: $($Settings.Protocol)"
-    Write-Host "    Port: $($Settings.Port)"
-    Write-Host "    Timeout: $($Settings.RequestTimeout) seconds"
-    Write-Host "    Cookie Affinity: $($Settings.CookieBasedAffinity)"
+    Write-Output "  - Settings: $($Settings.Name)"
+    Write-Output "    Protocol: $($Settings.Protocol)"
+    Write-Output "    Port: $($Settings.Port)"
+    Write-Output "    Timeout: $($Settings.RequestTimeout) seconds"
+    Write-Output "    Cookie Affinity: $($Settings.CookieBasedAffinity)"
 }
-# Health probes
 if ($AppGateway.Probes.Count -gt 0) {
-    Write-Host "`nHealth Probes:"
+    Write-Output "`nHealth Probes:"
     foreach ($Probe in $AppGateway.Probes) {
-        Write-Host "  - Probe: $($Probe.Name)"
-        Write-Host "    Protocol: $($Probe.Protocol)"
-        Write-Host "    Path: $($Probe.Path)"
-        Write-Host "    Interval: $($Probe.Interval) seconds"
-        Write-Host "    Timeout: $($Probe.Timeout) seconds"
+        Write-Output "  - Probe: $($Probe.Name)"
+        Write-Output "    Protocol: $($Probe.Protocol)"
+        Write-Output "    Path: $($Probe.Path)"
+        Write-Output "    Interval: $($Probe.Interval) seconds"
+        Write-Output "    Timeout: $($Probe.Timeout) seconds"
     }
 }
-# SSL certificates
 if ($AppGateway.SslCertificates.Count -gt 0) {
-    Write-Host "`nSSL Certificates:"
+    Write-Output "`nSSL Certificates:"
     foreach ($Cert in $AppGateway.SslCertificates) {
-        Write-Host "  - Certificate: $($Cert.Name)"
-        Write-Host "    Key Vault Secret ID: $($Cert.KeyVaultSecretId)"
+        Write-Output "  - Certificate: $($Cert.Name)"
+        Write-Output "    Key Vault Secret ID: $($Cert.KeyVaultSecretId)"
     }
 }
-Write-Host "`nApplication Gateway monitoring completed at $(Get-Date)"
+Write-Output "`nApplication Gateway monitoring completed at $(Get-Date)"
+
+
 

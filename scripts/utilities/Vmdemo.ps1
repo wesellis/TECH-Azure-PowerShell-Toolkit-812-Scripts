@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Vmdemo
@@ -8,21 +8,18 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 Configuration vmDemo
 {
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
-	[string]$NodeName = 'localhost'
+	$NodeName = 'localhost'
 )
 Import-DscResource -ModuleName ComputerManagementDsc, cChoco, xStorage, xPSDesiredStateConfiguration
 Node $NodeName
@@ -114,5 +111,4 @@ Node $NodeName
 vmDemo
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

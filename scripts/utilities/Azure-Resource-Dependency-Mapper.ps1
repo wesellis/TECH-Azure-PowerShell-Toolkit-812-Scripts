@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -7,53 +7,51 @@
 
 .DESCRIPTION
     Map resource dependencies
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Resource Dependency Mapper
-# Map dependencies between Azure resources
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter()]
     [switch]$ExportDiagram,
     [Parameter()]
-    [string]$OutputPath = ".\resource-dependencies.json"
+    $OutputPath = ".\resource-dependencies.json"
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     $resources = Get-AzResource -ResourceGroupName $ResourceGroupName
     $dependencies = @()
     foreach ($resource in $resources) {
-        $dependsOn = @()
-        # Check for common dependency patterns
+        $DependsOn = @()
         switch ($resource.ResourceType) {
             "Microsoft.Compute/virtualMachines" {
                 $vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $resource.Name
-                $dependsOn += $vm.NetworkProfile.NetworkInterfaces.Id
-                $dependsOn += $vm.StorageProfile.OsDisk.ManagedDisk.Id
+                $DependsOn += $vm.NetworkProfile.NetworkInterfaces.Id
+                $DependsOn += $vm.StorageProfile.OsDisk.ManagedDisk.Id
             }
             "Microsoft.Network/networkInterfaces" {
                 $nic = Get-AzNetworkInterface -ResourceGroupName $ResourceGroupName -Name $resource.Name
-                $dependsOn += $nic.IpConfigurations.Subnet.Id
+                $DependsOn += $nic.IpConfigurations.Subnet.Id
                 if ($nic.IpConfigurations.PublicIpAddress) {
-                    $dependsOn += $nic.IpConfigurations.PublicIpAddress.Id
+                    $DependsOn += $nic.IpConfigurations.PublicIpAddress.Id
                 }
             }
         }
-        if ($dependsOn.Count -gt 0) {
+        if ($DependsOn.Count -gt 0) {
             $dependencies += [PSCustomObject]@{
                 ResourceName = $resource.Name
                 ResourceType = $resource.ResourceType
-                DependsOn = $dependsOn
+                DependsOn = $DependsOn
             }
         }
     }
-    Write-Host "Resource Dependencies Found: $($dependencies.Count)"
+    Write-Output "Resource Dependencies Found: $($dependencies.Count)"
     $dependencies | Format-Table ResourceName, ResourceType
     if ($ExportDiagram) {
         $dependencies | ConvertTo-Json -Depth 3 | Out-File -FilePath $OutputPath
-        
-    }
-} catch { throw }
 
+    }
+} catch { throw`n}

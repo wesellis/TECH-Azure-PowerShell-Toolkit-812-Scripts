@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azvm Windows Param
@@ -6,7 +6,6 @@
 .DESCRIPTION
     Azure automation
     Wes Ellis (wes@wesellis.com)
-#>
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 $Helpers2 = " $PsScriptRoot\Helpers\"
@@ -74,22 +73,17 @@ $NewIaaCAzVMWindowsSplat = @{
     CustomerName             = $CustomerName
     VMName                   = $VMName
     ResourceGroupName        = $ResourceGroupName
-    #Creating the Tag Hashtable for the VM
     datetime                 = $datetime
     Tags                     = $Tags
-    ##VM
     ComputerName             = $ComputerName
     VMSize                   = $VMSize
     OSDiskCaching            = $OSDiskCaching
     OSCreateOption           = $OSCreateOption
     GUID                     = $GUID
     OSDiskName               = $OSDiskName
-    #ASG
     ASGName                  = $ASGName
-    #Defining the NSG name
     NSGName                  = $NSGName
-    ## Networking
-    DNSNameLabel             = $DNSNameLabel   # mydnsname.westus.cloudapp.azure.com
+    DNSNameLabel             = $DNSNameLabel
     NICPrefix                = $NICPrefix
     NICName                  = $NICName
     IPConfigName             = $IPConfigName
@@ -100,28 +94,23 @@ $NewIaaCAzVMWindowsSplat = @{
     SubnetAddressPrefix      = $SubnetAddressPrefix
     VnetAddressPrefix        = $VnetAddressPrefix
     SourceAddressPrefix      = $SourceAddressPrefixCIDR
-    # SourceAddressPrefixCIDR  = $SourceAddressPrefixCIDR
-    ##Operating System
     PublisherName            = $PublisherName
     Offer                    = $Offer
     Skus                     = $Skus
     Version                  = $Version
-    ##Disk
     DiskSizeInGB             = $DiskSizeInGB
-    ##Extensions
     ExtensionName            = $ExtensionName
     ExtensionPublisher       = $ExtensionPublisher
     ExtensionType            = $ExtensionType
     TypeHandlerVersion       = $TypeHandlerVersion
-    #RBAC
     secretLength             = $secretLength
     UsersGroupName           = $UsersGroupName
     AdminsGroupName          = $AdminsGroupName
     RoleDefinitionNameUsers  = $RoleDefinitionNameUsers
     RoleDefinitionNameAdmins = $RoleDefinitionNameAdmins
-    #AutoShutdown
     Time                     = $Time
     TimeZone                 = $TimeZone
     Email                    = $Email
 }
 New-IaaCAzVMWindows -ErrorAction Stop @NewIaaCAzVMWindowsSplat
+

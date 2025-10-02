@@ -1,4 +1,14 @@
-#Requires -Version 7.0
+<#
+.SYNOPSIS
+    Storagepool
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+#>
+
+#Requires -Version 7.4
+$ErrorActionPreference = 'Stop'
+
     Storagepool
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -19,16 +29,13 @@ $MachineName)
 		TestScript = {
 			Test-Path H:\
 		}
-		GetScript = { <#`n.SYNOPSIS
+		GetScript = { <
     PowerShell script
 .DESCRIPTION
     PowerShell operation
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
-This must return a hash table #> }          }
+This must return a hash table
   }
-}
-
-
+`n}

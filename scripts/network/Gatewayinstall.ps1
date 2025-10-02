@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Gatewayinstall
@@ -8,24 +8,23 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    [string]$ErrorActionPreference = "Stop"
 param(
  [string]
- $gatewayKey
+    [string]$GatewayKey
 )
-$logLoc = " $env:SystemDrive\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\"
-if (! (Test-Path($logLoc)))
+    [string]$LogLoc = " $env:SystemDrive\WindowsAzure\Logs\Plugins\Microsoft.Compute.CustomScriptExtension\"
+if (! (Test-Path($LogLoc)))
 {
-    New-Item -path $logLoc -type directory -Force
+    New-Item -path $LogLoc -type directory -Force
 }
-$logPath = " $logLoc\tracelog.log"
-"Start to excute gatewayInstall.ps1. `n" | Out-File $logPath
+    [string]$LogPath = " $LogLoc\tracelog.log"
+"Start to excute gatewayInstall.ps1. `n" | Out-File $LogPath
 [OutputType([string])]
 ()
 {
@@ -39,67 +38,66 @@ function Throw-Error([string] $msg)
 	}
 	catch
 	{
-		$stack = $_.ScriptStackTrace
+    [string]$stack = $_.ScriptStackTrace
 		Trace-Log "DMDTTP is failed: $msg`nStack:`n$stack"
 	}
 	throw $msg
 }
 function Trace-Log([string] $msg)
 {
-    $now = Now-Value
+    [string]$now = Now-Value
     try
     {
-        " ${now} $msg`n" | Out-File $logPath -Append
+        " ${now} $msg`n" | Out-File $LogPath -Append
     }
     catch
     {
-        #ignore any exception during trace
     }
 }
 function Run-Process([string] $process, [string] $arguments)
 {
 	Write-Verbose "Run-Process: $process $arguments"
-	$errorFile = " $env:tmp\tmp$pid.err"
-	$outFile = " $env:tmp\tmp$pid.out"
-	"" | Out-File $outFile
-	"" | Out-File $errorFile
-	$errVariable = ""
+    [string]$ErrorFile = " $env:tmp\tmp$pid.err"
+    [string]$OutFile = " $env:tmp\tmp$pid.out"
+	"" | Out-File $OutFile
+	"" | Out-File $ErrorFile
+    [string]$ErrVariable = ""
 	if ([string]::IsNullOrEmpty($arguments))
 	{
-		$params = @{
-		    Path = $errorFile
+    $params = @{
+		    Path = $ErrorFile
 		    ArgumentList = $arguments
-		    ErrorVariable = "errVariable }  $errContent = [string] (Get-Content"
+		    ErrorVariable = "errVariable }  $ErrContent = [string] (Get-Content"
 		    Delimiter = " !!!DoesNotExist!!!" )"
 		    FilePath = $process
-		    RedirectStandardOutput = $outFile
-		    RedirectStandardError = $errorFile
+		    RedirectStandardOutput = $OutFile
+		    RedirectStandardError = $ErrorFile
 		}
-		$proc @params
-$outContent = [string] (Get-Content -Path $outFile -Delimiter " !!!DoesNotExist!!!" )
-	Remove-Item -ErrorAction Stop $errorFil -Forcee -Force
-	Remove-Item -ErrorAction Stop $outFil -Forcee -Force
-	if($proc.ExitCode -ne 0 -or $errVariable -ne "" )
+    [string]$proc @params
+    [string]$OutContent = [string] (Get-Content -Path $OutFile -Delimiter " !!!DoesNotExist!!!" )
+	Remove-Item -ErrorAction Stop $ErrorFil -Forcee -Force
+	Remove-Item -ErrorAction Stop $OutFil -Forcee -Force
+	if($proc.ExitCode -ne 0 -or $ErrVariable -ne "" )
 	{
-		Throw-Error "Failed to run process: exitCode=$($proc.ExitCode), errVariable=$errVariable, errContent=$errContent, outContent=$outContent."
+		Throw-Error "Failed to run process: exitCode=$($proc.ExitCode), errVariable=$ErrVariable, errContent=$ErrContent, outContent=$OutContent."
 	}
-	Trace-Log "Run-Process: ExitCode=$($proc.ExitCode), output=$outContent"
-	if ([string]::IsNullOrEmpty($outContent))
+	Trace-Log "Run-Process: ExitCode=$($proc.ExitCode), output=$OutContent"
+	if ([string]::IsNullOrEmpty($OutContent))
 	{
-		return $outContent
+		return $OutContent
 	}
-	return $outContent.Trim()
+	return $OutContent.Trim()
 }
-function Download-Gateway([string] $url, [string] $gwPath)
+function Download-Gateway([string] $url, [string] $GwPath)
 {
     try
     {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $client = New-Object -ErrorAction Stop System.Net.WebClient
-        $client.DownloadFile($url,
+    [string]$client = New-Object -ErrorAction Stop System.Net.WebClient
+    [string]$client.DownloadFile($url,
     [Parameter()]
-    $gwPath)
-        Trace-Log "Download gateway successfully. Gateway loc: $gwPath"
+    [string]$GwPath)
+        Trace-Log "Download gateway successfully. Gateway loc: $GwPath"
     }
     catch
     {
@@ -108,61 +106,62 @@ function Download-Gateway([string] $url, [string] $gwPath)
         throw
     }
 }
-function Install-Gateway([string] $gwPath)
+function Install-Gateway([string] $GwPath)
 {
-	if ([string]::IsNullOrEmpty($gwPath))
+	if ([string]::IsNullOrEmpty($GwPath))
     {
 		Throw-Error "Gateway path is not specified"
     }
-	if (!(Test-Path -Path $gwPath))
+	if (!(Test-Path -Path $GwPath))
 	{
-		Throw-Error "Invalid gateway path: $gwPath"
+		Throw-Error "Invalid gateway path: $GwPath"
 	}
 	Trace-Log "Start Gateway installation"
-	Run-Process " msiexec.exe" " /i gateway.msi INSTALLTYPE=AzureTemplate /quiet /norestart"
+	Run-Process " msiexec.exe" "/i gateway.msi INSTALLTYPE=AzureTemplate /quiet /norestart"
 	Start-Sleep -Seconds 30
 	Trace-Log "Installation of gateway is successful"
 }
-function Get-RegistryProperty([string] $keyPath, [string] $property)
+function Get-RegistryProperty([string] $KeyPath, [string] $property)
 {
-	Trace-Log "Get-RegistryProperty: Get $property from $keyPath"
-	if (! (Test-Path $keyPath))
+	Trace-Log "Get-RegistryProperty: Get $property from $KeyPath"
+	if (! (Test-Path $KeyPath))
 	{
-		Trace-Log "Get-RegistryProperty: $keyPath does not exist"
+		Trace-Log "Get-RegistryProperty: $KeyPath does not exist"
 	}
-	$keyReg = Get-Item -ErrorAction Stop $keyPath
-	if (! ($keyReg.Property -contains $property))
+    [string]$KeyReg = Get-Item -ErrorAction Stop $KeyPath
+	if (! ($KeyReg.Property -contains $property))
 	{
 		Trace-Log "Get-RegistryProperty: $property does not exist"
 		return ""
 	}
-	return $keyReg.GetValue($property)
+	return $KeyReg.GetValue($property)
 }
 function Get-InstalledFilePath()
 {
-	$filePath = Get-RegistryProperty -ErrorAction Stop " hklm:\Software\Microsoft\DataTransfer\DataManagementGateway\ConfigurationManager" "DiacmdPath"
-	if ([string]::IsNullOrEmpty($filePath))
+    [string]$FilePath = Get-RegistryProperty -ErrorAction Stop " hklm:\Software\Microsoft\DataTransfer\DataManagementGateway\ConfigurationManager" "DiacmdPath"
+	if ([string]::IsNullOrEmpty($FilePath))
 	{
 		Throw-Error "Get-InstalledFilePath: Cannot find installed File Path"
 	}
-    Trace-Log "Gateway installation file: $filePath"
-	return $filePath
+    Trace-Log "Gateway installation file: $FilePath"
+	return $FilePath
 }
-function Register-Gateway([string] $instanceKey)
+function Register-Gateway([string] $InstanceKey)
 {
     Trace-Log "Register Agent"
-	$filePath = Get-InstalledFilePath -ErrorAction Stop
-	Run-Process $filePath " -era 8060"
-	Run-Process $filePath " -k $instanceKey"
+    [string]$FilePath = Get-InstalledFilePath -ErrorAction Stop
+	Run-Process $FilePath " -era 8060"
+	Run-Process $FilePath " -k $InstanceKey"
     Trace-Log "Agent registration is successful!"
 }
-Trace-Log "Log file: $logLoc";
-$uri = "https://go.microsoft.com/fwlink/?linkid=839822"
+Trace-Log "Log file: $LogLoc";
+    [string]$uri = "https://go.microsoft.com/fwlink/?linkid=839822"
 Trace-Log "Gateway download fw link: $uri" ;
-$gwPath= " $PWD\gateway.msi"
-Trace-Log "Gateway download location: $gwPath"
-Download-Gateway $uri $gwPath
-Install-Gateway $gwPath
-Register-Gateway $gatewayKey
+    [string]$GwPath= " $PWD\gateway.msi"
+Trace-Log "Gateway download location: $GwPath"
+Download-Gateway $uri $GwPath
+Install-Gateway $GwPath
+Register-Gateway $GatewayKey
+
 
 

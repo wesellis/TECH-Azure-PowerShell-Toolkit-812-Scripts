@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,6 +6,9 @@
     Azure Virtual Machine restart and management tool
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
      VM restart tool with  health checks, dependency validation,
     graceful shutdown options, and monitoring capabilities. Supports batch operations,
     scheduled restarts, and integration with maintenance workflows.
@@ -51,11 +54,9 @@
     - Batch operations
     - Maintenance window enforcement
     -  logging and notifications
-#>
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
+param(
+[Parameter(Mandatory = $true, ParameterSetName = 'Single')]
+)
     [Parameter(Mandatory = $true, ParameterSetName = 'Batch')]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
@@ -93,15 +94,13 @@
     [switch]$DryRun
 )
 $ErrorActionPreference = 'Stop'
-# Global variables for tracking
 $script:RestartResults = @()
 $script:StartTime = Get-Date
-[OutputType([bool])]
- {
+function Write-Log {
     try {
         $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -112,105 +111,92 @@ $script:StartTime = Get-Date
     }
 }
 function Test-MaintenanceWindow {
-    [CmdletBinding(SupportsShouldProcess)]
-[string]$Window)
+    [string]$Window)
     if (-not $Window) {
         return $true
     }
     try {
         $parts = $Window -split '-'
-        $startTime = [DateTime]::ParseExact($parts[0], 'HH:mm', $null)
-        $endTime = [DateTime]::ParseExact($parts[1], 'HH:mm', $null)
-        $currentTime = Get-Date
-        $currentTimeOnly = [DateTime]::ParseExact($currentTime.ToString('HH:mm'), 'HH:mm', $null)
-        # Handle overnight maintenance windows
-        if ($endTime -lt $startTime) {
-            return ($currentTimeOnly -ge $startTime -or $currentTimeOnly -le $endTime)
+        $StartTime = [DateTime]::ParseExact($parts[0], 'HH:mm', $null)
+        $EndTime = [DateTime]::ParseExact($parts[1], 'HH:mm', $null)
+        $CurrentTime = Get-Date
+        $CurrentTimeOnly = [DateTime]::ParseExact($CurrentTime.ToString('HH:mm'), 'HH:mm', $null)
+        if ($EndTime -lt $StartTime) {
+            return ($CurrentTimeOnly -ge $StartTime -or $CurrentTimeOnly -le $EndTime)
         }
         else {
-            return ($currentTimeOnly -ge $startTime -and $currentTimeOnly -le $endTime)
-        
+            return ($CurrentTimeOnly -ge $StartTime -and $CurrentTimeOnly -le $EndTime)
+
 } catch {
         Write-Warning "Invalid maintenance window format: $Window. Proceeding with restart."
         return $true
     }
 }
 function Get-VMDetails {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name
     )
     try {
         Write-Verbose "Retrieving VM details for: $Name"
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
-        $vmDetails = @{
+        $VmDetails = @{
             VM = $vm
             PowerState = ($vm.Statuses | Where-Object { $_.Code -like "PowerState/*" }).DisplayStatus
             ProvisioningState = ($vm.Statuses | Where-Object { $_.Code -like "ProvisioningState/*" }).DisplayStatus
             BootDiagnostics = $vm.DiagnosticsProfile.BootDiagnostics.Enabled
             VMAgent = ($vm.Statuses | Where-Object { $_.Code -like "VMAgent/*" }).DisplayStatus
         }
-        return $vmDetails
+        return $VmDetails
     }
     catch {
         throw "Failed to retrieve VM details for $Name : $_"
     }
 }
 function Test-VMHealth {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$VMDetails,
+    [object]$VMDetails,
         [string]$Phase
     )
-    Write-Host "Performing $Phase health check..." -ForegroundColor Yellow
-    $healthStatus = @{
+    Write-Host "Performing $Phase health check..." -ForegroundColor Green
+    $HealthStatus = @{
         Healthy = $true
         Issues = @()
         Warnings = @()
     }
-    # Check power state
     if ($VMDetails.PowerState -notin @("VM running", "VM stopped", "VM deallocated")) {
-        $healthStatus.Issues += "VM is in unexpected power state: $($VMDetails.PowerState)"
-        $healthStatus.Healthy = $false
+        $HealthStatus.Issues += "VM is in unexpected power state: $($VMDetails.PowerState)"
+        $HealthStatus.Healthy = $false
     }
-    # Check provisioning state
     if ($VMDetails.ProvisioningState -ne "Provisioning succeeded") {
-        $healthStatus.Warnings += "VM provisioning state: $($VMDetails.ProvisioningState)"
+        $HealthStatus.Warnings += "VM provisioning state: $($VMDetails.ProvisioningState)"
     }
-    # Check VM agent status
     if ($VMDetails.VMAgent -and $VMDetails.VMAgent -notlike "*Ready*") {
-        $healthStatus.Warnings += "VM Agent status: $($VMDetails.VMAgent)"
+        $HealthStatus.Warnings += "VM Agent status: $($VMDetails.VMAgent)"
     }
-    # For post-restart checks, verify VM is running
     if ($Phase -eq "post-restart" -and $VMDetails.PowerState -ne "VM running") {
-        $healthStatus.Issues += "VM failed to start properly: $($VMDetails.PowerState)"
-        $healthStatus.Healthy = $false
+        $HealthStatus.Issues += "VM failed to start properly: $($VMDetails.PowerState)"
+        $HealthStatus.Healthy = $false
     }
-    # Display results
-    if ($healthStatus.Healthy) {
+    if ($HealthStatus.Healthy) {
         Write-Host "Health check passed" -ForegroundColor Green
     }
     else {
-        Write-Host "Health check failed" -ForegroundColor Red
-        foreach ($issue in $healthStatus.Issues) {
-            Write-Host "ERROR: $issue" -ForegroundColor Red
+        Write-Host "Health check failed" -ForegroundColor Green
+        foreach ($issue in $HealthStatus.Issues) {
+            Write-Host "ERROR: $issue" -ForegroundColor Green
         }
     }
-    if ($healthStatus.Warnings.Count -gt 0) {
-        foreach ($warning in $healthStatus.Warnings) {
-            Write-Host "WARNING: $warning" -ForegroundColor Yellow
+    if ($HealthStatus.Warnings.Count -gt 0) {
+        foreach ($warning in $HealthStatus.Warnings) {
+            Write-Host "WARNING: $warning" -ForegroundColor Green
         }
     }
-    return $healthStatus
+    return $HealthStatus
 }
 function Test-VMDependencies {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$VMName
     )
-    Write-Host "Checking VM dependencies..." -ForegroundColor Yellow
+    Write-Host "Checking VM dependencies..." -ForegroundColor Green
     try {
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $VMName
         $dependencies = @{
@@ -219,19 +205,17 @@ function Test-VMDependencies {
             LoadBalancers = @()
             AvailabilitySet = $null
         }
-        # Check network interfaces
-        foreach ($nicRef in $vm.NetworkProfile.NetworkInterfaces) {
-            $nicId = $nicRef.Id
-            $nic = Get-AzNetworkInterface | Where-Object { $_.Id -eq $nicId }
+        foreach ($NicRef in $vm.NetworkProfile.NetworkInterfaces) {
+            $NicId = $NicRef.Id
+            $nic = Get-AzNetworkInterface | Where-Object { $_.Id -eq $NicId }
             if ($nic) {
                 $dependencies.NetworkInterfaces += @{
                     Name = $nic.Name
                     State = $nic.ProvisioningState
                 }
-                # Check public IPs
-                foreach ($ipConfig in $nic.IpConfigurations) {
-                    if ($ipConfig.PublicIpAddress) {
-                        $pip = Get-AzPublicIpAddress | Where-Object { $_.Id -eq $ipConfig.PublicIpAddress.Id }
+                foreach ($IpConfig in $nic.IpConfigurations) {
+                    if ($IpConfig.PublicIpAddress) {
+                        $pip = Get-AzPublicIpAddress | Where-Object { $_.Id -eq $IpConfig.PublicIpAddress.Id }
                         if ($pip) {
                             $dependencies.PublicIPs += @{
                                 Name = $pip.Name
@@ -243,13 +227,12 @@ function Test-VMDependencies {
                 }
             }
         }
-        # Check availability set
         if ($vm.AvailabilitySetReference) {
-            $avSet = Get-AzAvailabilitySet | Where-Object { $_.Id -eq $vm.AvailabilitySetReference.Id }
-            if ($avSet) {
+            $AvSet = Get-AzAvailabilitySet | Where-Object { $_.Id -eq $vm.AvailabilitySetReference.Id }
+            if ($AvSet) {
                 $dependencies.AvailabilitySet = @{
-                    Name = $avSet.Name
-                    VMCount = $avSet.VirtualMachinesReferences.Count
+                    Name = $AvSet.Name
+                    VMCount = $AvSet.VirtualMachinesReferences.Count
                 }
             }
         }
@@ -262,33 +245,27 @@ function Test-VMDependencies {
     }
 }
 function Invoke-VMShutdown {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$VMName,
         [bool]$Graceful
     )
     if ($Graceful) {
-        Write-Host "Initiating graceful shutdown..." -ForegroundColor Yellow
+        Write-Host "Initiating graceful shutdown..." -ForegroundColor Green
         try {
-            # This would require custom script extension or VM agent commands
-            # For now, we'll use the standard stop operation
-            Write-Host "Graceful shutdown requested (using standard stop operation)" -ForegroundColor Cyan
+            Write-Host "Graceful shutdown requested (using standard stop operation)" -ForegroundColor Green
         }
         catch {
             Write-Warning "Graceful shutdown failed, falling back to standard stop"
         }
     }
-    Write-Host "Stopping VM: $VMName" -ForegroundColor Yellow
+    Write-Host "Stopping VM: $VMName" -ForegroundColor Green
     if ($PSCmdlet.ShouldProcess($VMName, "Stop VM")) {
         Stop-AzVM -ResourceGroupName $ResourceGroup -Name $VMName -Force
         Write-Host "VM stopped successfully" -ForegroundColor Green
     }
 }
 function Start-VMRestart {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$VMName,
         [bool]$UseShutdown
     )
@@ -296,13 +273,13 @@ function Start-VMRestart {
         if ($UseShutdown) {
             Invoke-VMShutdown -ResourceGroup $ResourceGroup -VMName $VMName -Graceful $GracefulShutdown
             Start-Sleep -Seconds 5
-            Write-Host "Starting VM: $VMName" -ForegroundColor Yellow
+            Write-Host "Starting VM: $VMName" -ForegroundColor Green
             if ($PSCmdlet.ShouldProcess($VMName, "Start VM")) {
                 Start-AzVM -ResourceGroupName $ResourceGroup -Name $VMName
             }
         }
         else {
-            Write-Host "Restarting VM: $VMName" -ForegroundColor Yellow
+            Write-Host "Restarting VM: $VMName" -ForegroundColor Green
             if ($PSCmdlet.ShouldProcess($VMName, "Restart VM")) {
                 Restart-AzVM -ResourceGroupName $ResourceGroup -Name $VMName
             }
@@ -315,25 +292,23 @@ function Start-VMRestart {
     }
 }
 function Wait-ForVMState {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$VMName,
         [string]$TargetState,
         [int]$TimeoutMinutes
     )
     $timeout = (Get-Date).AddMinutes($TimeoutMinutes)
-    $lastState = ""
-    Write-Host "Waiting for VM to reach state: $TargetState (timeout: $TimeoutMinutes minutes)" -ForegroundColor Yellow
+    $LastState = ""
+    Write-Host "Waiting for VM to reach state: $TargetState (timeout: $TimeoutMinutes minutes)" -ForegroundColor Green
     do {
         try {
-            $vmDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
-            $currentState = $vmDetails.PowerState
-            if ($currentState -ne $lastState) {
-                Write-Host "Current state: $currentState" -ForegroundColor Cyan
-                $lastState = $currentState
+            $VmDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
+            $CurrentState = $VmDetails.PowerState
+            if ($CurrentState -ne $LastState) {
+                Write-Host "Current state: $CurrentState" -ForegroundColor Green
+                $LastState = $CurrentState
             }
-            if ($currentState -eq $TargetState) {
+            if ($CurrentState -eq $TargetState) {
                 Write-Host "VM reached target state: $TargetState" -ForegroundColor Green
                 return $true
             }
@@ -348,18 +323,16 @@ function Wait-ForVMState {
     return $false
 }
 function Invoke-CustomScript {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ScriptPath,
+    [string]$ScriptPath,
         [string]$Phase,
         [string]$VMName
     )
     if (-not $ScriptPath) {
         return
     }
-    Write-Host "Executing $Phase script: $ScriptPath" -ForegroundColor Yellow
+    Write-Host "Executing $Phase script: $ScriptPath" -ForegroundColor Green
     try {
-        $scriptContent = Get-Content $ScriptPath -Raw
+        $ScriptContent = Get-Content $ScriptPath -Raw
         $result = & $ScriptPath -VMName $VMName -ResourceGroupName $ResourceGroupName
         Write-Host " $Phase script completed successfully" -ForegroundColor Green
         return $result
@@ -370,28 +343,20 @@ function Invoke-CustomScript {
     }
 }
 function Send-RestartNotification {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$EmailAddress,
+    [string]$EmailAddress,
         [object[]]$Results
     )
     if (-not $EmailAddress) {
         return
     }
-    $successCount = ($Results | Where-Object { $_.Success }).Count
-    $totalCount = $Results.Count
+    $SuccessCount = ($Results | Where-Object { $_.Success }).Count
+    $TotalCount = $Results.Count
     $duration = ((Get-Date) - $script:StartTime).TotalMinutes
-    Write-Host "Notification would be sent to: $EmailAddress" -ForegroundColor Yellow
-    Write-Host "Summary: $successCount/$totalCount VMs restarted successfully in $([math]::Round($duration, 1)) minutes" -ForegroundColor Cyan
-    # In a real implementation, this would use:
-    # - Send-MailMessage (if SMTP configured)
-    # - Azure Logic Apps
-    # - Microsoft Graph API
-    # - Azure Monitor Action Groups
+    Write-Host "Notification would be sent to: $EmailAddress" -ForegroundColor Green
+    Write-Host "Summary: $SuccessCount/$TotalCount VMs restarted successfully in $([math]::Round($duration, 1)) minutes" -ForegroundColor Green
 }
 function New-RestartReport {
-    [CmdletBinding(SupportsShouldProcess)]
-[object[]]$Results)
+    [object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         Duration = ((Get-Date) - $script:StartTime)
@@ -400,24 +365,22 @@ function New-RestartReport {
         Failed = ($Results | Where-Object { -not $_.Success }).Count
         Details = $Results
     }
-    Write-Host "`nRestart Operation Summary" -ForegroundColor Cyan
+    Write-Host "`nRestart Operation Summary" -ForegroundColor Green
     Write-Host ("=" * 50) -ForegroundColor Cyan
-    Write-Host "Total VMs: $($report.TotalVMs)"
+    Write-Output "Total VMs: $($report.TotalVMs)"
     Write-Host "Successful: $($report.Successful)" -ForegroundColor Green
-    Write-Host "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
-    Write-Host "Duration: $([math]::Round($report.Duration.TotalMinutes, 1)) minutes"
+    Write-Output "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
+    Write-Output "Duration: $([math]::Round($report.Duration.TotalMinutes, 1)) minutes"
     if ($report.Failed -gt 0) {
-        Write-Host "`nFailed VMs:" -ForegroundColor Red
+        Write-Host "`nFailed VMs:" -ForegroundColor Green
         $Results | Where-Object { -not $_.Success } | ForEach-Object {
-            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Red
+            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Green
         }
     }
     return $report
 }
 function Restart-AzureVM {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$VMName
     )
     $result = @{
@@ -428,51 +391,43 @@ function Restart-AzureVM {
         HealthCheck = $null
     }
     try {
-        Write-Host "`nProcessing VM: $VMName" -ForegroundColor Cyan
+        Write-Host "`nProcessing VM: $VMName" -ForegroundColor Green
         Write-Host ("=" * 40) -ForegroundColor Gray
-        # Get VM details
-        $vmDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
-        Write-Host "VM Information:" -ForegroundColor Cyan
-        Write-Host "Current State: $($vmDetails.PowerState)"
-        Write-Host "Provisioning State: $($vmDetails.ProvisioningState)"
-        Write-Host "VM Agent: $($vmDetails.VMAgent)"
-        # Check if VM is in restartable state
-        if ($vmDetails.PowerState -notin @("VM running", "VM stopped")) {
-            throw "VM is in state '$($vmDetails.PowerState)' which is not suitable for restart"
+        $VmDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
+        Write-Host "VM Information:" -ForegroundColor Green
+        Write-Output "Current State: $($VmDetails.PowerState)"
+        Write-Output "Provisioning State: $($VmDetails.ProvisioningState)"
+        Write-Output "VM Agent: $($VmDetails.VMAgent)"
+        if ($VmDetails.PowerState -notin @("VM running", "VM stopped")) {
+            throw "VM is in state '$($VmDetails.PowerState)' which is not suitable for restart"
         }
-        # Pre-restart health check
         if ($HealthCheck) {
-            $preHealth = Test-VMHealth -VMDetails $vmDetails -Phase "pre-restart"
-            if (-not $preHealth.Healthy -and -not $Force) {
+            $PreHealth = Test-VMHealth -VMDetails $VmDetails -Phase "pre-restart"
+            if (-not $PreHealth.Healthy -and -not $Force) {
                 throw "Pre-restart health check failed. Use -Force to override."
             }
         }
-        # Check dependencies
         if ($CheckDependencies) {
             $dependencies = Test-VMDependencies -ResourceGroup $ResourceGroup -VMName $VMName
         }
-        # Run pre-restart script
         if ($PreRestartScript) {
             Invoke-CustomScript -ScriptPath $PreRestartScript -Phase "pre-restart" -VMName $VMName
         }
-        # Perform restart
         if ($DryRun) {
-            Write-Host "DRY RUN: Would restart VM $VMName" -ForegroundColor Yellow
+            Write-Host "DRY RUN: Would restart VM $VMName" -ForegroundColor Green
             $result.Success = $true
         }
         else {
-            $restartSuccess = Start-VMRestart -ResourceGroup $ResourceGroup -VMName $VMName -UseShutdown $GracefulShutdown
-            if ($restartSuccess -and $Wait) {
+            $RestartSuccess = Start-VMRestart -ResourceGroup $ResourceGroup -VMName $VMName -UseShutdown $GracefulShutdown
+            if ($RestartSuccess -and $Wait) {
                 $success = Wait-ForVMState -ResourceGroup $ResourceGroup -VMName $VMName -TargetState "VM running" -TimeoutMinutes $TimeoutMinutes
                 if ($success) {
-                    # Post-restart health check
                     if ($HealthCheck) {
-                        Start-Sleep -Seconds 30  # Allow time for VM to fully initialize
-                        $postVMDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
-                        $postHealth = Test-VMHealth -VMDetails $postVMDetails -Phase "post-restart"
-                        $result.HealthCheck = $postHealth
+                        Start-Sleep -Seconds 30
+                        $PostVMDetails = Get-VMDetails -ResourceGroup $ResourceGroup -Name $VMName
+                        $PostHealth = Test-VMHealth -VMDetails $PostVMDetails -Phase "post-restart"
+                        $result.HealthCheck = $PostHealth
                     }
-                    # Run post-restart script
                     if ($PostRestartScript) {
                         Invoke-CustomScript -ScriptPath $PostRestartScript -Phase "post-restart" -VMName $VMName
                     }
@@ -483,15 +438,15 @@ function Restart-AzureVM {
                     throw "VM restart operation timed out"
                 }
             }
-            elseif ($restartSuccess) {
+            elseif ($RestartSuccess) {
                 $result.Success = $true
                 Write-Host "VM restart initiated successfully" -ForegroundColor Green
             }
-        
+
 } catch {
         $result.Error = $_.Exception.Message
         $result.Success = $false
-        Write-Host "VM restart failed: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "VM restart failed: $($_.Exception.Message)" -ForegroundColor Green
     }
     finally {
         $result.EndTime = Get-Date
@@ -499,63 +454,55 @@ function Restart-AzureVM {
     }
     return $result
 }
-# Main execution
-Write-Host "`nAzure VM Restart Tool" -ForegroundColor Cyan
+Write-Host "`nAzure VM Restart Tool" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
-# Test Azure connection
 if (-not (Test-AzureConnection)) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
-# Check maintenance window
 if ($MaintenanceWindow -and -not (Test-MaintenanceWindow -Window $MaintenanceWindow)) {
-    Write-Host "Outside maintenance window ($MaintenanceWindow). Restart cancelled." -ForegroundColor Yellow
+    Write-Host "Outside maintenance window ($MaintenanceWindow). Restart cancelled." -ForegroundColor Green
     exit 0
 }
-# Prepare VM list
-$vmList = if ($PSCmdlet.ParameterSetName -eq 'Batch') { $VMNames } else { @($VMName) }
-# Confirmation
+$VmList = if ($PSCmdlet.ParameterSetName -eq 'Batch') { $VMNames } else { @($VMName) }
 if (-not $Force -and -not $DryRun) {
     $action = if ($DryRun) { "simulate restart of" } else { "restart" }
-    $vmCount = $vmList.Count
-    $vmText = if ($vmCount -eq 1) { "VM" } else { "$vmCount VMs" }
-    Write-Host "`nAbout to $action $vmText in resource group '$ResourceGroupName':" -ForegroundColor Yellow
-    foreach ($vm in $vmList) {
-        Write-Host "  - $vm" -ForegroundColor White
+    $VmCount = $VmList.Count
+    $VmText = if ($VmCount -eq 1) { "VM" } else { "$VmCount VMs" }
+    Write-Host "`nAbout to $action $VmText in resource group '$ResourceGroupName':" -ForegroundColor Green
+    foreach ($vm in $VmList) {
+        Write-Host "  - $vm" -ForegroundColor Green
     }
     $confirmation = Read-Host "`nContinue? (y/N)"
     if ($confirmation -ne 'y') {
-        Write-Host "Operation cancelled" -ForegroundColor Yellow
+        Write-Host "Operation cancelled" -ForegroundColor Green
         exit 0
     }
 }
-# Process VMs
-Write-Host "`nStarting VM restart operations..." -ForegroundColor Yellow
-foreach ($vm in $vmList) {
+Write-Host "`nStarting VM restart operations..." -ForegroundColor Green
+foreach ($vm in $VmList) {
     try {
         $result = Restart-AzureVM -ResourceGroup $ResourceGroupName -VMName $vm
         $script:RestartResults += $result
     }
     catch {
-        $errorResult = @{
+        $ErrorResult = @{
             VMName = $vm
             StartTime = Get-Date
             EndTime = Get-Date
             Success = $false
             Error = $_.Exception.Message
         }
-        $script:RestartResults += $errorResult
+        $script:RestartResults += $ErrorResult
     }
 }
-# Generate report
 $report = New-RestartReport -Results $script:RestartResults
-# Send notifications
 if ($NotificationEmail) {
     Send-RestartNotification -EmailAddress $NotificationEmail -Results $script:RestartResults
 }
-# Exit with appropriate code
-$exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
-Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
-exit $exitCode
+$ExitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
+Write-Output "`nOperation completed!" -ForegroundColor $(if ($ExitCode -eq 0) { 'Green' } else { 'Yellow' })
+exit $ExitCode
+
 
 

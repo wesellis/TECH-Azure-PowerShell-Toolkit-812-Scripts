@@ -1,4 +1,6 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+$ErrorActionPreference = 'Stop'
+
     Windowsiisserverconfig
     Azure automation
     Wes Ellis (wes@wesellis.com)
@@ -12,7 +14,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 PSScriptInfo
 .VERSION 0.2.0
 .GUID a38fa39f-f93d-4cf4-9e08-fa8f880e6187
@@ -27,9 +28,8 @@ PSScriptInfo
 .REQUIREDSCRIPTS
 .EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
-https://github.com/Microsoft/WindowsIISServerConfig/blob/master/README.md#releasenotes
+https://github.com/Microsoft/WindowsIISServerConfig/blob/master/README.md
 .PRIVATEDATA 2016-Datacenter-Server-Core
-#>
  PowerShell Desired State Configuration for deploying and configuring IIS Servers
 configuration WindowsIISServerConfig
 {
@@ -40,7 +40,6 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
         Ensure  = 'Present'
         Name    = 'Web-Server'
     }
-    # IIS Site Default Values
     xWebSiteDefaults SiteDefaults
     {
         ApplyTo                 = 'Machine'
@@ -51,7 +50,6 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
         AllowSubDirConfig       = 'true'
         DependsOn               = '[WindowsFeature]WebServer'
     }
-    # IIS App Pool Default Values
     xWebAppPoolDefaults PoolDefaults
     {
        ApplyTo               = 'Machine'
@@ -59,4 +57,4 @@ Import-DscResource -ModuleName 'PSDesiredStateConfiguration'
        IdentityType          = 'ApplicationPoolIdentity'
        DependsOn             = '[WindowsFeature]WebServer'
     }
-}
+`n}

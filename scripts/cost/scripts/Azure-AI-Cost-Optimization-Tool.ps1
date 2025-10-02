@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -47,87 +47,76 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)Requires: PowerShell 5.1+, Azure PowerShell modules
-#>
 
 [CmdletBinding()]
 param(
     [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName,
-    
+
     [Parameter(ValueFromPipeline)]`n    [string]$SubscriptionId,
-    
+
     [Parameter(Mandatory)]
     [ValidateSet('Analyze', 'Optimize', 'Forecast', 'Report', 'Alert', 'Recommend', 'Monitor')]
     [string]$Action,
-    
+
     [Parameter()]
     [ValidateSet('ThisMonth', 'LastMonth', 'Last3Months', 'Last6Months', 'LastYear', 'Custom')]
     [string]$TimeFrame = 'LastMonth',
-    
+
     [Parameter()]
     [DateTime]$StartDate,
-    
+
     [Parameter()]
     [DateTime]$EndDate,
-    
+
     [Parameter()]
     [ValidateRange(0, [decimal]::MaxValue)]
     [decimal]$CostThreshold = 1000,
-    
+
     [Parameter()]
     [switch]$EnableAIInsights,
-    
+
     [Parameter()]
     [switch]$EnablePredictiveAnalytics,
-    
+
     [Parameter()]
     [switch]$EnableAutomatedRecommendations,
-    
+
     [Parameter()]
     [ValidateSet('Console', 'JSON', 'CSV', 'Excel', 'PowerBI')]
     [string]$OutputFormat = 'Console',
-    
+
     [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = '.\CostReports',
-    
+
     [Parameter()]
     [switch]$EnableSlackNotifications,
-    
+
     [Parameter(ValueFromPipeline)]`n    [string]$SlackWebhookUrl,
-    
+
     [Parameter()]
     [switch]$EnableEmailNotifications,
-    
+
     [Parameter()]
     [string[]]$EmailRecipients = @(),
-    
+
     [Parameter()]
     [hashtable]$Tags = @{}
 )
+    [string]$ErrorActionPreference = 'Stop'
+    [string]$ProgressPreference = 'SilentlyContinue'
 
-#region Initialize-Configuration
-$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
-
-# Import required modules
 try {
                     Write-Host "[SUCCESS] Successfully imported required Azure modules" -ForegroundColor Green
 } catch {
     Write-Error "[ERROR] Failed to import required modules: $($_.Exception.Message)"
     throw
 }
+    [string]$script:CostData = @()
+    [string]$script:ResourceData = @()
+    [string]$script:Recommendations = @()
+    [string]$script:Insights = @()
 
-# Global variables for cost data
-$script:CostData = @()
-$script:ResourceData = @()
-$script:Recommendations = @()
-$script:Insights = @()
 
-#endregion
-
-#region Functions
-
-[OutputType([PSCustomObject])]
- {
-    [CmdletBinding()]
+function Write-Log {
     param(
         [Parameter(Mandatory)]
         [string]$Message,
@@ -136,45 +125,42 @@ $script:Insights = @()
         [ValidateSet('Info', 'Warning', 'Error', 'Success', 'AI')]
         [string]$Level = 'Info'
     )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colors = @{
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$colors = @{
         Info = "White"
-        Warning = "Yellow" 
+        Warning = "Yellow"
         Error = "Red"
         Success = "Green"
         AI = "Cyan"
     }
-    
-    Write-Host "[$timestamp] $Message" -ForegroundColor $colors[$Level]
+
+    Write-Output "[$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 
 function Get-DateRange {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [string]$TimeFrame
     )
-    
-    $endDate = Get-Date -ErrorAction Stop
-    
+$EndDate = Get-Date -ErrorAction Stop
+
     switch ($TimeFrame) {
         "ThisMonth" {
-            $startDate = Get-Date -Day 1
+$StartDate = Get-Date -Day 1
         }
         "LastMonth" {
-            $startDate = (Get-Date -Day 1).AddMonths(-1)
-            $endDate = (Get-Date -Day 1).AddDays(-1)
+    [string]$StartDate = (Get-Date -Day 1).AddMonths(-1)
+    [string]$EndDate = (Get-Date -Day 1).AddDays(-1)
         }
         "Last3Months" {
-            $startDate = (Get-Date -Day 1).AddMonths(-3)
+    [string]$StartDate = (Get-Date -Day 1).AddMonths(-3)
         }
         "Last6Months" {
-            $startDate = (Get-Date -Day 1).AddMonths(-6)
+    [string]$StartDate = (Get-Date -Day 1).AddMonths(-6)
         }
         "LastYear" {
-            $startDate = (Get-Date -Day 1 -Month 1).AddYears(-1)
-            $endDate = (Get-Date -Day 1 -Month 1).AddDays(-1)
+    [string]$StartDate = (Get-Date -Day 1 -Month 1).AddYears(-1)
+    [string]$EndDate = (Get-Date -Day 1 -Month 1).AddDays(-1)
         }
         "Custom" {
             if ($StartDate -and $EndDate) {
@@ -187,15 +173,14 @@ function Get-DateRange {
             }
         }
     }
-    
+
     return @{
-        StartDate = $startDate
-        EndDate = $endDate
+        StartDate = $StartDate
+        EndDate = $EndDate
     }
 }
 
 function Get-CostData {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [DateTime]$StartDate,
@@ -203,12 +188,10 @@ function Get-CostData {
         [Parameter(Mandatory)]
         [DateTime]$EndDate
     )
-    
+
     try {
         Write-EnhancedLog "Retrieving cost data from $($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))..." "Info"
-        
-        # Get subscription level cost data
-        $costParams = @{
+$CostParams = @{
             Scope = "/subscriptions/$SubscriptionId"
             TimeFrame = "Custom"
             From = $StartDate
@@ -217,42 +200,35 @@ function Get-CostData {
             Metric = "ActualCost"
             GroupBy = @("ResourceGroupName", "ResourceType", "ResourceLocation")
         }
-        
-        $costData = Get-AzCostManagementQueryResult -ErrorAction Stop @costParams
-        
-        # Get resource usage data
-        $resources = Get-AzResource -ErrorAction Stop
+$CostData = Get-AzCostManagementQueryResult -ErrorAction Stop @costParams
+$resources = Get-AzResource -ErrorAction Stop
         if ($ResourceGroupName) {
-            $resources = $resources | Where-Object { $_.ResourceGroupName -eq $ResourceGroupName }
+    [string]$resources = $resources | Where-Object { $_.ResourceGroupName -eq $ResourceGroupName }
         }
-        
-        # Combine cost and resource data
-        $enrichedData = @()
-        foreach ($cost in $costData.Row) {
-            $resourceInfo = $resources | Where-Object { 
-                $_.ResourceGroupName -eq $cost[3] -and 
-                $_.ResourceType -eq $cost[4] 
+    [string]$EnrichedData = @()
+        foreach ($cost in $CostData.Row) {
+    [string]$ResourceInfo = $resources | Where-Object {
+    [string]$_.ResourceGroupName -eq $cost[3] -and
+    [string]$_.ResourceType -eq $cost[4]
             } | Select-Object -First 1
-            
-            $enrichedData += [PSCustomObject]@{
+    [string]$EnrichedData += [PSCustomObject]@{
                 Date = [DateTime]$cost[0]
                 Cost = [decimal]$cost[1]
                 Currency = $cost[2]
                 ResourceGroup = $cost[3]
                 ResourceType = $cost[4]
                 Location = $cost[5]
-                ResourceName = if ($resourceInfo) { $resourceInfo.Name } else { "Unknown" }
-                ResourceId = if ($resourceInfo) { $resourceInfo.ResourceId } else { $null }
-                Tags = if ($resourceInfo) { $resourceInfo.Tags } else { @{} }
+                ResourceName = if ($ResourceInfo) { $ResourceInfo.Name } else { "Unknown" }
+                ResourceId = if ($ResourceInfo) { $ResourceInfo.ResourceId } else { $null }
+                Tags = if ($ResourceInfo) { $ResourceInfo.Tags } else { @{} }
             }
         }
-        
-        $script:CostData = $enrichedData
-        $script:ResourceData = $resources
-        
-        Write-EnhancedLog "Successfully retrieved cost data for $($enrichedData.Count) items" "Success"
-        return $enrichedData
-        
+    [string]$script:CostData = $EnrichedData
+    [string]$script:ResourceData = $resources
+
+        Write-EnhancedLog "Successfully retrieved cost data for $($EnrichedData.Count) items" "Success"
+        return $EnrichedData
+
     } catch {
         Write-EnhancedLog "Failed to retrieve cost data: $($_.Exception.Message)" "Error"
         throw
@@ -260,118 +236,95 @@ function Get-CostData {
 }
 
 function Invoke-AICostAnalysis {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [array]$CostData
     )
-    
+
     try {
         Write-EnhancedLog "[AI] Performing AI-powered cost analysis..." "AI"
-        
-        # Cost trend analysis
-        $dailyCosts = $CostData | Group-Object { $_.Date.ToString("yyyy-MM-dd") } | ForEach-Object {
+    [string]$DailyCosts = $CostData | Group-Object { $_.Date.ToString("yyyy-MM-dd") } | ForEach-Object {
             [PSCustomObject]@{
                 Date = [DateTime]$_.Name
                 TotalCost = ($_.Group | Measure-Object Cost -Sum).Sum
             }
         } | Sort-Object Date
-        
-        # Calculate trends
-        $avgDailyCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
-        $maxDailyCost = ($dailyCosts | Measure-Object TotalCost -Maximum).Maximum
-        $minDailyCost = ($dailyCosts | Measure-Object TotalCost -Minimum).Minimum
-        $costVariance = ($dailyCosts | Measure-Object TotalCost -StandardDeviation).StandardDeviation
-        
-        # Identify cost anomalies using statistical analysis
-        $anomalies = $dailyCosts | Where-Object { 
-            [Math]::Abs($_.TotalCost - $avgDailyCost) -gt (2 * $costVariance) 
+    [string]$AvgDailyCost = ($DailyCosts | Measure-Object TotalCost -Average).Average
+    [string]$MaxDailyCost = ($DailyCosts | Measure-Object TotalCost -Maximum).Maximum
+    [string]$MinDailyCost = ($DailyCosts | Measure-Object TotalCost -Minimum).Minimum
+    [string]$CostVariance = ($DailyCosts | Measure-Object TotalCost -StandardDeviation).StandardDeviation
+    [string]$anomalies = $DailyCosts | Where-Object {
+            [Math]::Abs($_.TotalCost - $AvgDailyCost) -gt (2 * $CostVariance)
         }
-        
-        # Resource cost distribution analysis
-        $resourceTypeCosts = $CostData | Group-Object ResourceType | ForEach-Object {
+    [string]$ResourceTypeCosts = $CostData | Group-Object ResourceType | ForEach-Object {
             [PSCustomObject]@{
                 ResourceType = $_.Name
                 TotalCost = ($_.Group | Measure-Object Cost -Sum).Sum
                 ResourceCount = $_.Count
                 AvgCostPerResource = ($_.Group | Measure-Object Cost -Average).Average
-                Percentage = 0  # Will be calculated below
+                Percentage = 0
             }
         } | Sort-Object TotalCost -Descending
-        
-        $totalCost = ($resourceTypeCosts | Measure-Object TotalCost -Sum).Sum
-        $resourceTypeCosts | ForEach-Object { $_.Percentage = [Math]::Round(($_.TotalCost / $totalCost) * 100, 2) }
-        
-        # Geographic cost distribution
-        $locationCosts = $CostData | Group-Object Location | ForEach-Object {
+    [string]$TotalCost = ($ResourceTypeCosts | Measure-Object TotalCost -Sum).Sum
+    [string]$ResourceTypeCosts | ForEach-Object { $_.Percentage = [Math]::Round(($_.TotalCost / $TotalCost) * 100, 2) }
+    [string]$LocationCosts = $CostData | Group-Object Location | ForEach-Object {
             [PSCustomObject]@{
                 Location = $_.Name
                 TotalCost = ($_.Group | Measure-Object Cost -Sum).Sum
                 Percentage = 0
             }
         } | Sort-Object TotalCost -Descending
-        
-        $locationCosts | ForEach-Object { $_.Percentage = [Math]::Round(($_.TotalCost / $totalCost) * 100, 2) }
-        
-        # Generate AI insights
-        $insights = @()
-        
-        # Cost trend insights
+    [string]$LocationCosts | ForEach-Object { $_.Percentage = [Math]::Round(($_.TotalCost / $TotalCost) * 100, 2) }
+    [string]$insights = @()
+
         if ($anomalies.Count -gt 0) {
-            $insights += "[ALERT] Cost Anomaly Detection: Found $($anomalies.Count) days with unusual spending patterns"
+    [string]$insights += "[ALERT] Cost Anomaly Detection: Found $($anomalies.Count) days with unusual spending patterns"
             foreach ($anomaly in $anomalies) {
-                $insights += "   - $($anomaly.Date.ToString('yyyy-MM-dd')): $($anomaly.TotalCost.ToString('C2')) ($(if ($anomaly.TotalCost -gt $avgDailyCost) { '+' })$([Math]::Round((($anomaly.TotalCost - $avgDailyCost) / $avgDailyCost) * 100, 1))% from average)"
+    [string]$insights += "   - $($anomaly.Date.ToString('yyyy-MM-dd')): $($anomaly.TotalCost.ToString('C2')) ($(if ($anomaly.TotalCost -gt $AvgDailyCost) { '+' })$([Math]::Round((($anomaly.TotalCost - $AvgDailyCost) / $AvgDailyCost) * 100, 1))% from average)"
             }
         }
-        
-        # Resource optimization insights
-        $topCostResources = $resourceTypeCosts | Select-Object -First 5
-        $insights += "Top Cost Drivers:"
-        foreach ($resource in $topCostResources) {
-            $insights += "   - $($resource.ResourceType): $($resource.TotalCost.ToString('C2')) ($($resource.Percentage)% of total cost)"
+    [string]$TopCostResources = $ResourceTypeCosts | Select-Object -First 5
+    [string]$insights += "Top Cost Drivers:"
+        foreach ($resource in $TopCostResources) {
+    [string]$insights += "   - $($resource.ResourceType): $($resource.TotalCost.ToString('C2')) ($($resource.Percentage)% of total cost)"
         }
-        
-        # Cost efficiency insights
-        $highVarianceResources = $resourceTypeCosts | Where-Object { $_.AvgCostPerResource -gt ($avgDailyCost * 0.1) }
-        if ($highVarianceResources) {
-            $insights += "[!] High-Cost Resource Types (Optimization Candidates):"
-            foreach ($resource in $highVarianceResources) {
-                $insights += "   - $($resource.ResourceType): Avg $($resource.AvgCostPerResource.ToString('C2')) per resource"
+    [string]$HighVarianceResources = $ResourceTypeCosts | Where-Object { $_.AvgCostPerResource -gt ($AvgDailyCost * 0.1) }
+        if ($HighVarianceResources) {
+    [string]$insights += "[!] High-Cost Resource Types (Optimization Candidates):"
+            foreach ($resource in $HighVarianceResources) {
+    [string]$insights += "   - $($resource.ResourceType): Avg $($resource.AvgCostPerResource.ToString('C2')) per resource"
             }
         }
-        
-        # Geographic cost insights
-        if ($locationCosts.Count -gt 1) {
-            $mostExpensiveLocation = $locationCosts | Select-Object -First 1
-            $insights += "[LOCATION] Geographic Cost Distribution:"
-            $insights += "   - Most expensive region: $($mostExpensiveLocation.Location) ($($mostExpensiveLocation.Percentage)% of total cost)"
-            
-            if ($locationCosts.Count -gt 3) {
-                $insights += "   - Consider consolidating resources in fewer regions for potential cost savings"
+
+        if ($LocationCosts.Count -gt 1) {
+    [string]$MostExpensiveLocation = $LocationCosts | Select-Object -First 1
+    [string]$insights += "[LOCATION] Geographic Cost Distribution:"
+    [string]$insights += "   - Most expensive region: $($MostExpensiveLocation.Location) ($($MostExpensiveLocation.Percentage)% of total cost)"
+
+            if ($LocationCosts.Count -gt 3) {
+    [string]$insights += "   - Consider consolidating resources in fewer regions for potential cost savings"
             }
         }
-        
-        $script:Insights = $insights
-        
-        $analysisResult = @{
+    [string]$script:Insights = $insights
+$AnalysisResult = @{
             Summary = @{
-                TotalCost = $totalCost
-                AverageDailyCost = $avgDailyCost
-                MaxDailyCost = $maxDailyCost
-                MinDailyCost = $minDailyCost
-                CostVariance = $costVariance
+                TotalCost = $TotalCost
+                AverageDailyCost = $AvgDailyCost
+                MaxDailyCost = $MaxDailyCost
+                MinDailyCost = $MinDailyCost
+                CostVariance = $CostVariance
                 AnomalyCount = $anomalies.Count
             }
-            Trends = $dailyCosts
+            Trends = $DailyCosts
             Anomalies = $anomalies
-            ResourceDistribution = $resourceTypeCosts
-            LocationDistribution = $locationCosts
+            ResourceDistribution = $ResourceTypeCosts
+            LocationDistribution = $LocationCosts
             Insights = $insights
         }
-        
+
         Write-EnhancedLog "AI analysis completed - Generated $($insights.Count) insights" "AI"
-        return $analysisResult
-        
+        return $AnalysisResult
+
     } catch {
         Write-EnhancedLog "Failed to perform AI analysis: $($_.Exception.Message)" "Error"
         throw
@@ -379,7 +332,6 @@ function Invoke-AICostAnalysis {
 }
 
 function New-CostForecast {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [array]$HistoricalData,
@@ -387,78 +339,65 @@ function New-CostForecast {
         [Parameter()]
         [int]$ForecastDays = 30
     )
-    
+
     try {
         Write-EnhancedLog "[FORECAST] Generating cost forecast for next $ForecastDays days..." "AI"
-        
-        # Prepare time series data
-        $dailyCosts = $HistoricalData | Group-Object { $_.Date.ToString("yyyy-MM-dd") } | ForEach-Object {
+    [string]$DailyCosts = $HistoricalData | Group-Object { $_.Date.ToString("yyyy-MM-dd") } | ForEach-Object {
             [PSCustomObject]@{
                 Date = [DateTime]$_.Name
                 Cost = ($_.Group | Measure-Object Cost -Sum).Sum
                 DayIndex = ([DateTime]$_.Name - $HistoricalData[0].Date).Days
             }
         } | Sort-Object Date
-        
-        # Simple linear regression for trend
-        $n = $dailyCosts.Count
-        $sumX = ($dailyCosts | Measure-Object DayIndex -Sum).Sum
-        $sumY = ($dailyCosts | Measure-Object Cost -Sum).Sum
-        $sumXY = ($dailyCosts | ForEach-Object { $_.DayIndex * $_.Cost } | Measure-Object -Sum).Sum
-        $sumX2 = ($dailyCosts | ForEach-Object { $_.DayIndex * $_.DayIndex } | Measure-Object -Sum).Sum
-        
-        $slope = ($n * $sumXY - $sumX * $sumY) / ($n * $sumX2 - $sumX * $sumX)
-        $intercept = ($sumY - $slope * $sumX) / $n
-        
-        # Generate forecast
-        $lastDate = $dailyCosts[-1].Date
-        $lastIndex = $dailyCosts[-1].DayIndex
-        
-        $forecast = @()
+
+        $n = $DailyCosts.Count
+    [string]$SumX = ($DailyCosts | Measure-Object DayIndex -Sum).Sum
+    [string]$SumY = ($DailyCosts | Measure-Object Cost -Sum).Sum
+    [string]$SumXY = ($DailyCosts | ForEach-Object { $_.DayIndex * $_.Cost } | Measure-Object -Sum).Sum
+    [string]$SumX2 = ($DailyCosts | ForEach-Object { $_.DayIndex * $_.DayIndex } | Measure-Object -Sum).Sum
+    [string]$slope = ($n * $SumXY - $SumX * $SumY) / ($n * $SumX2 - $SumX * $SumX)
+    [string]$intercept = ($SumY - $slope * $SumX) / $n
+    [string]$LastDate = $DailyCosts[-1].Date
+    [string]$LastIndex = $DailyCosts[-1].DayIndex
+    [string]$forecast = @()
         for ($i = 1; $i -le $ForecastDays; $i++) {
-            $forecastDate = $lastDate.AddDays($i)
-            $forecastIndex = $lastIndex + $i
-            $predictedCost = $intercept + $slope * $forecastIndex
-            
-            # Add seasonal adjustment (simple weekly pattern)
-            $dayOfWeek = $forecastDate.DayOfWeek
-            $seasonalMultiplier = switch ($dayOfWeek) {
+    [string]$ForecastDate = $LastDate.AddDays($i)
+    [string]$ForecastIndex = $LastIndex + $i
+    [string]$PredictedCost = $intercept + $slope * $ForecastIndex
+    [string]$DayOfWeek = $ForecastDate.DayOfWeek
+    [string]$SeasonalMultiplier = switch ($DayOfWeek) {
                 "Saturday" { 0.7 }
                 "Sunday" { 0.6 }
                 default { 1.0 }
             }
-            
-            $adjustedCost = $predictedCost * $seasonalMultiplier
-            
-            $forecast += [PSCustomObject]@{
-                Date = $forecastDate
-                PredictedCost = [Math]::Max(0, $adjustedCost)
-                Confidence = [Math]::Max(0.5, 1 - ($i / $ForecastDays) * 0.5)  # Decreasing confidence over time
+    [string]$AdjustedCost = $PredictedCost * $SeasonalMultiplier
+    [string]$forecast += [PSCustomObject]@{
+                Date = $ForecastDate
+                PredictedCost = [Math]::Max(0, $AdjustedCost)
+                Confidence = [Math]::Max(0.5, 1 - ($i / $ForecastDays) * 0.5)
                 TrendDirection = if ($slope -gt 0) { "Increasing" } elseif ($slope -lt 0) { "Decreasing" } else { "Stable" }
             }
         }
-        
-        # Calculate forecast summary
-        $forecastSummary = @{
+$ForecastSummary = @{
             PeriodTotal = ($forecast | Measure-Object PredictedCost -Sum).Sum
             DailyAverage = ($forecast | Measure-Object PredictedCost -Average).Average
             TrendSlope = $slope
             TrendDirection = if ($slope -gt 0) { "Increasing" } elseif ($slope -lt 0) { "Decreasing" } else { "Stable" }
             ConfidenceLevel = ($forecast | Measure-Object Confidence -Average).Average
         }
-        
-        Write-EnhancedLog "Forecast generated: $($forecastSummary.PeriodTotal.ToString('C2')) projected for next $ForecastDays days" "AI"
-        
+
+        Write-EnhancedLog "Forecast generated: $($ForecastSummary.PeriodTotal.ToString('C2')) projected for next $ForecastDays days" "AI"
+
         return @{
             Forecast = $forecast
-            Summary = $forecastSummary
+            Summary = $ForecastSummary
             Trend = @{
                 Slope = $slope
                 Intercept = $intercept
-                Direction = $forecastSummary.TrendDirection
+                Direction = $ForecastSummary.TrendDirection
             }
         }
-        
+
     } catch {
         Write-EnhancedLog "Failed to generate cost forecast: $($_.Exception.Message)" "Error"
         throw
@@ -466,35 +405,29 @@ function New-CostForecast {
 }
 
 function New-OptimizationRecommendations {
-    [CmdletBinding()]
     param()
 
     try {
         Write-EnhancedLog "Generating automated optimization recommendations..." "AI"
-        
-        $recommendations = @()
-        
-        # Analyze unused resources
-        $unusedResources = $script:ResourceData | Where-Object {
-            $resourceCost = $script:CostData | Where-Object { $_.ResourceId -eq $_.ResourceId }
-            -not $resourceCost -or ($resourceCost | Measure-Object Cost -Sum).Sum -lt 1
+    [string]$recommendations = @()
+    [string]$UnusedResources = $script:ResourceData | Where-Object {
+    [string]$ResourceCost = $script:CostData | Where-Object { $_.ResourceId -eq $_.ResourceId }
+            -not $ResourceCost -or ($ResourceCost | Measure-Object Cost -Sum).Sum -lt 1
         }
-        
-        if ($unusedResources.Count -gt 0) {
-            $recommendations += [PSCustomObject]@{
+
+        if ($UnusedResources.Count -gt 0) {
+    [string]$recommendations += [PSCustomObject]@{
                 Type = "Remove Unused Resources"
                 Priority = "High"
                 PotentialSavings = "Unknown"
-                Description = "Found $($unusedResources.Count) resources with no or minimal cost activity"
+                Description = "Found $($UnusedResources.Count) resources with no or minimal cost activity"
                 Action = "Review and consider decommissioning unused resources"
-                Resources = $unusedResources.Name -join ", "
+                Resources = $UnusedResources.Name -join ", "
             }
         }
-        
-        # Analyze oversized VMs
-        $vmResources = $script:ResourceData | Where-Object { $_.ResourceType -like "*virtualMachines*" }
-        if ($vmResources.Count -gt 0) {
-            $recommendations += [PSCustomObject]@{
+    [string]$VmResources = $script:ResourceData | Where-Object { $_.ResourceType -like "*virtualMachines*" }
+        if ($VmResources.Count -gt 0) {
+    [string]$recommendations += [PSCustomObject]@{
                 Type = "VM Right-Sizing"
                 Priority = "Medium"
                 PotentialSavings = "15-30%"
@@ -503,11 +436,9 @@ function New-OptimizationRecommendations {
                 Resources = "All Virtual Machines"
             }
         }
-        
-        # Analyze storage optimization
-        $storageResources = $script:ResourceData | Where-Object { $_.ResourceType -like "*storage*" }
-        if ($storageResources.Count -gt 0) {
-            $recommendations += [PSCustomObject]@{
+    [string]$StorageResources = $script:ResourceData | Where-Object { $_.ResourceType -like "*storage*" }
+        if ($StorageResources.Count -gt 0) {
+    [string]$recommendations += [PSCustomObject]@{
                 Type = "Storage Tier Optimization"
                 Priority = "Medium"
                 PotentialSavings = "20-40%"
@@ -516,11 +447,9 @@ function New-OptimizationRecommendations {
                 Resources = "Storage Accounts"
             }
         }
-        
-        # Analyze reserved instances opportunities
-        $computeCost = ($script:CostData | Where-Object { $_.ResourceType -like "*Compute*" } | Measure-Object Cost -Sum).Sum
-        if ($computeCost -gt 500) {
-            $recommendations += [PSCustomObject]@{
+    [string]$ComputeCost = ($script:CostData | Where-Object { $_.ResourceType -like "*Compute*" } | Measure-Object Cost -Sum).Sum
+        if ($ComputeCost -gt 500) {
+    [string]$recommendations += [PSCustomObject]@{
                 Type = "Reserved Instances"
                 Priority = "High"
                 PotentialSavings = "30-60%"
@@ -529,9 +458,7 @@ function New-OptimizationRecommendations {
                 Resources = "Compute Resources"
             }
         }
-        
-        # Analyze spot instance opportunities
-        $recommendations += [PSCustomObject]@{
+    [string]$recommendations += [PSCustomObject]@{
             Type = "Spot Instances"
             Priority = "Low"
             PotentialSavings = "60-90%"
@@ -539,31 +466,28 @@ function New-OptimizationRecommendations {
             Action = "Identify workloads suitable for spot instances"
             Resources = "Development/Testing VMs"
         }
-        
-        # Analyze resource group consolidation
-        $resourceGroups = $script:CostData | Group-Object ResourceGroup
-        if ($resourceGroups.Count -gt 10) {
-            $lowCostRGs = $resourceGroups | Where-Object { 
-                ($_.Group | Measure-Object Cost -Sum).Sum -lt 50 
+    [string]$ResourceGroups = $script:CostData | Group-Object ResourceGroup
+        if ($ResourceGroups.Count -gt 10) {
+    [string]$LowCostRGs = $ResourceGroups | Where-Object {
+                ($_.Group | Measure-Object Cost -Sum).Sum -lt 50
             }
-            
-            if ($lowCostRGs.Count -gt 0) {
-                $recommendations += [PSCustomObject]@{
+
+            if ($LowCostRGs.Count -gt 0) {
+    [string]$recommendations += [PSCustomObject]@{
                     Type = "Resource Group Consolidation"
                     Priority = "Low"
                     PotentialSavings = "5-10%"
-                    Description = "Found $($lowCostRGs.Count) resource groups with low cost - consider consolidation"
+                    Description = "Found $($LowCostRGs.Count) resource groups with low cost - consider consolidation"
                     Action = "Review and consolidate low-cost resource groups"
-                    Resources = ($lowCostRGs.Name -join ", ")
+                    Resources = ($LowCostRGs.Name -join ", ")
                 }
             }
         }
-        
-        $script:Recommendations = $recommendations
-        
+    [string]$script:Recommendations = $recommendations
+
         Write-EnhancedLog "Generated $($recommendations.Count) optimization recommendations" "AI"
         return $recommendations
-        
+
     } catch {
         Write-EnhancedLog "Failed to generate recommendations: $($_.Exception.Message)" "Error"
         throw
@@ -571,7 +495,6 @@ function New-OptimizationRecommendations {
 }
 
 function New-CostReport {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [object]$Analysis,
@@ -582,11 +505,10 @@ function New-CostReport {
         [Parameter()]
         [array]$Recommendations
     )
-    
+
     try {
         Write-EnhancedLog "[REPORT] Generating
-        
-        $report = @{
+$report = @{
             Metadata = @{
                 GeneratedDate = Get-Date -ErrorAction Stop
                 TimeFrame = $TimeFrame
@@ -611,58 +533,50 @@ function New-CostReport {
                 Locations = ($script:ResourceData | Group-Object Location).Count
             }
         }
-        
-        # Save report based on output format
-        $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-        
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+
         switch ($OutputFormat) {
             "JSON" {
-                $outputFile = "$OutputPath\cost-report-$timestamp.json"
-                $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFile -Encoding UTF8
-                Write-EnhancedLog "Report saved to: $outputFile" "Success"
+    [string]$OutputFile = "$OutputPath\cost-report-$timestamp.json"
+    [string]$report | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputFile -Encoding UTF8
+                Write-EnhancedLog "Report saved to: $OutputFile" "Success"
             }
             "CSV" {
-                # Create summary CSV
-                $summaryFile = "$OutputPath\cost-summary-$timestamp.csv"
-                $Analysis.ResourceDistribution | Export-Csv -Path $summaryFile -NoTypeInformation
-                
-                # Create recommendations CSV
-                $recFile = "$OutputPath\cost-recommendations-$timestamp.csv"
-                $Recommendations | Export-Csv -Path $recFile -NoTypeInformation
-                
+    [string]$SummaryFile = "$OutputPath\cost-summary-$timestamp.csv"
+    [string]$Analysis.ResourceDistribution | Export-Csv -Path $SummaryFile -NoTypeInformation
+    [string]$RecFile = "$OutputPath\cost-recommendations-$timestamp.csv"
+    [string]$Recommendations | Export-Csv -Path $RecFile -NoTypeInformation
+
                 Write-EnhancedLog "CSV reports saved to: $OutputPath" "Success"
             }
             "Excel" {
-                # This would require ImportExcel module
                 Write-EnhancedLog "Excel output requires ImportExcel module - saving as JSON instead" "Warning"
-                $outputFile = "$OutputPath\cost-report-$timestamp.json"
-                $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFile -Encoding UTF8
+    [string]$OutputFile = "$OutputPath\cost-report-$timestamp.json"
+    [string]$report | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputFile -Encoding UTF8
             }
             "PowerBI" {
-                # Create Power BI compatible JSON
-                $pbiFile = "$OutputPath\cost-data-powerbi-$timestamp.json"
-                $pbiData = @{
+    [string]$PbiFile = "$OutputPath\cost-data-powerbi-$timestamp.json"
+$PbiData = @{
                     CostData = $script:CostData
                     Analysis = $Analysis
                     Recommendations = $Recommendations
                 }
-                $pbiData | ConvertTo-Json -Depth 10 | Out-File -FilePath $pbiFile -Encoding UTF8
-                Write-EnhancedLog "Power BI data saved to: $pbiFile" "Success"
+    [string]$PbiData | ConvertTo-Json -Depth 10 | Out-File -FilePath $PbiFile -Encoding UTF8
+                Write-EnhancedLog "Power BI data saved to: $PbiFile" "Success"
             }
             "Console" {
-                # Display summary in console
                 Write-EnhancedLog "=== COST ANALYSIS REPORT ===" "Success"
                 Write-EnhancedLog "Total Cost: $($Analysis.Summary.TotalCost.ToString('C2'))" "Info"
                 Write-EnhancedLog "Daily Average: $($Analysis.Summary.AverageDailyCost.ToString('C2'))" "Info"
                 Write-EnhancedLog "Anomalies Detected: $($Analysis.Summary.AnomalyCount)" "Info"
-                
+
                 if ($script:Insights.Count -gt 0) {
                     Write-EnhancedLog "`n=== AI INSIGHTS ===" "AI"
                     foreach ($insight in $script:Insights) {
                         Write-EnhancedLog $insight "AI"
                     }
                 }
-                
+
                 if ($Recommendations.Count -gt 0) {
                     Write-EnhancedLog "`n=== OPTIMIZATION RECOMMENDATIONS ===" "Success"
                     foreach ($rec in $Recommendations) {
@@ -672,9 +586,9 @@ function New-CostReport {
                 }
             }
         }
-        
+
         return $report
-        
+
     } catch {
         Write-EnhancedLog "Failed to generate report: $($_.Exception.Message)" "Error"
         throw
@@ -682,7 +596,6 @@ function New-CostReport {
 }
 
 function Send-CostAlerts {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
         [object]$Analysis,
@@ -690,20 +603,19 @@ function Send-CostAlerts {
         [Parameter(Mandatory)]
         [decimal]$Threshold
     )
-    
+
     try {
-        $totalCost = $Analysis.Summary.TotalCost
-        
-        if ($totalCost -gt $Threshold) {
-            Write-EnhancedLog "[ALERT] Cost threshold exceeded: $($totalCost.ToString('C2')) > $($Threshold.ToString('C2'))" "Warning"
-            
-            $alertMessage = @"
+    [string]$TotalCost = $Analysis.Summary.TotalCost
+
+        if ($TotalCost -gt $Threshold) {
+            Write-EnhancedLog "[ALERT] Cost threshold exceeded: $($TotalCost.ToString('C2')) > $($Threshold.ToString('C2'))" "Warning"
+    [string]$AlertMessage = @"
 [ALERT] Azure Cost Alert [ALERT]
 
 Subscription: $SubscriptionId
-Current Period Cost: $($totalCost.ToString('C2'))
+Current Period Cost: $($TotalCost.ToString('C2'))
 Threshold: $($Threshold.ToString('C2'))
-Overage: $($totalCost - $Threshold).ToString('C2') ($([Math]::Round((($totalCost - $Threshold) / $Threshold) * 100, 1))%)
+Overage: $($TotalCost - $Threshold).ToString('C2') ($([Math]::Round((($TotalCost - $Threshold) / $Threshold) * 100, 1))%)
 
 Top Cost Drivers:
 $($Analysis.ResourceDistribution | Select-Object -First 3 | ForEach-Object { "- $($_.ResourceType): $($_.TotalCost.ToString('C2'))" } | Out-String)
@@ -713,152 +625,138 @@ $($script:Recommendations | Where-Object { $_.Priority -eq "High" } | ForEach-Ob
 
 Generated: $(Get-Date)
 "@
-            
-            # Send Slack notification
+
             if ($EnableSlackNotifications -and $SlackWebhookUrl) {
                 try {
-                    $slackPayload = @{
+$SlackPayload = @{
                         text = "Azure Cost Alert"
                         attachments = @(
                             @{
                                 color = "danger"
                                 title = "Cost Threshold Exceeded"
-                                text = $alertMessage
+                                text = $AlertMessage
                                 footer = "Azure Cost Management Tool"
                                 ts = [int][double]::Parse((Get-Date -UFormat %s))
                             }
                         )
                     } | ConvertTo-Json -Depth 4
-                    
-                    Invoke-RestMethod -Uri $SlackWebhookUrl -Method Post -Body $slackPayload -ContentType "application/json"
+
+                    Invoke-RestMethod -Uri $SlackWebhookUrl -Method Post -Body $SlackPayload -ContentType "application/json"
                     Write-EnhancedLog "Slack notification sent successfully" "Success"
                 } catch {
                     Write-EnhancedLog "Failed to send Slack notification: $($_.Exception.Message)" "Error"
                 }
             }
-            
-            # Send email notification
+
             if ($EnableEmailNotifications -and $EmailRecipients.Count -gt 0) {
                 Write-EnhancedLog "Email notification functionality would be implemented here" "Info"
-                # Implementation would depend on available email service (SendGrid, etc.)
             }
         } else {
-            Write-EnhancedLog "Cost is within threshold: $($totalCost.ToString('C2')) �� $($Threshold.ToString('C2'))" "Success"
+            Write-EnhancedLog "Cost is within threshold: $($TotalCost.ToString('C2')) �� $($Threshold.ToString('C2'))" "Success"
         }
-        
+
     } catch {
         Write-EnhancedLog "Failed to send cost alerts: $($_.Exception.Message)" "Error"
     }
 }
 
-#region Main-Execution
 try {
     Write-EnhancedLog "Starting Azure AI-Powered Cost Optimization Tool" "Info"
     Write-EnhancedLog "Action: $Action" "Info"
     Write-EnhancedLog "Time Frame: $TimeFrame" "Info"
-    
-    # Ensure output directory exists
+
     if (-not (Test-Path $OutputPath)) {
         New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
     }
-    
-    # Get current subscription if not provided
+
     if (-not $SubscriptionId) {
-        $context = Get-AzContext -ErrorAction Stop
-        $SubscriptionId = $context.Subscription.Id
+$context = Get-AzContext -ErrorAction Stop
+    [string]$SubscriptionId = $context.Subscription.Id
         Write-EnhancedLog "Using current subscription: $SubscriptionId" "Info"
     }
-    
-    # Calculate date range
+
     if ($TimeFrame -eq "Custom") {
-        $dateRange = Get-DateRange -TimeFrame $TimeFrame
+$DateRange = Get-DateRange -TimeFrame $TimeFrame
     } else {
-        $dateRange = Get-DateRange -TimeFrame $TimeFrame
+$DateRange = Get-DateRange -TimeFrame $TimeFrame
     }
-    
-    Write-EnhancedLog "Analysis period: $($dateRange.StartDate.ToString('yyyy-MM-dd')) to $($dateRange.EndDate.ToString('yyyy-MM-dd'))" "Info"
-    
-    # Get cost data
-    $costData = Get-CostData -StartDate $dateRange.StartDate -EndDate $dateRange.EndDate
-    
+
+    Write-EnhancedLog "Analysis period: $($DateRange.StartDate.ToString('yyyy-MM-dd')) to $($DateRange.EndDate.ToString('yyyy-MM-dd'))" "Info"
+$CostData = Get-CostData -StartDate $DateRange.StartDate -EndDate $DateRange.EndDate
+
     switch ($Action) {
         "Analyze" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
-            
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
+
             if ($EnablePredictiveAnalytics) {
-                $forecast = New-CostForecast -HistoricalData $costData
+$forecast = New-CostForecast -HistoricalData $CostData
             }
-            
-            $report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations @()
+$report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations @()
         }
-        
+
         "Optimize" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
-            
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
+$recommendations = New-OptimizationRecommendations -ErrorAction Stop
+
             if ($EnablePredictiveAnalytics) {
-                $forecast = New-CostForecast -HistoricalData $costData
+$forecast = New-CostForecast -HistoricalData $CostData
             }
-            
-            $report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations $recommendations
+$report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations $recommendations
         }
-        
+
         "Forecast" {
             if (-not $EnablePredictiveAnalytics) {
-                $EnablePredictiveAnalytics = $true
+    [string]$EnablePredictiveAnalytics = $true
             }
-            
-            $analysis = Invoke-AICostAnalysis -CostData $costData
-            $forecast = New-CostForecast -HistoricalData $costData -ForecastDays 90
-            
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
+$forecast = New-CostForecast -HistoricalData $CostData -ForecastDays 90
+
             Write-EnhancedLog " 90-Day Cost Forecast:" "AI"
             Write-EnhancedLog "Projected Total: $($forecast.Summary.PeriodTotal.ToString('C2'))" "AI"
             Write-EnhancedLog "Daily Average: $($forecast.Summary.DailyAverage.ToString('C2'))" "AI"
             Write-EnhancedLog "Trend: $($forecast.Summary.TrendDirection)" "AI"
         }
-        
+
         "Recommend" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
-            
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
+$recommendations = New-OptimizationRecommendations -ErrorAction Stop
+
             Write-EnhancedLog "Top Optimization Recommendations:" "AI"
-            $recommendations | Sort-Object { 
-                switch ($_.Priority) { 
-                    "High" { 1 } 
-                    "Medium" { 2 } 
-                    "Low" { 3 } 
-                } 
+    [string]$recommendations | Sort-Object {
+                switch ($_.Priority) {
+                    "High" { 1 }
+                    "Medium" { 2 }
+                    "Low" { 3 }
+                }
             } | ForEach-Object {
                 Write-EnhancedLog "$($_.Type) ($($_.Priority)) - $($_.PotentialSavings) savings" "AI"
                 Write-EnhancedLog "  Action: $($_.Action)" "Info"
             }
         }
-        
+
         "Alert" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
             Send-CostAlerts -Analysis $analysis -Threshold $CostThreshold
         }
-        
+
         "Report" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
-            $recommendations = New-OptimizationRecommendations -ErrorAction Stop
-            
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
+$recommendations = New-OptimizationRecommendations -ErrorAction Stop
+
             if ($EnablePredictiveAnalytics) {
-                $forecast = New-CostForecast -HistoricalData $costData
+$forecast = New-CostForecast -HistoricalData $CostData
             }
-            
-            $report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations $recommendations
+$report = New-CostReport -Analysis $analysis -Forecast $forecast -Recommendations $recommendations
         }
-        
+
         "Monitor" {
-            $analysis = Invoke-AICostAnalysis -CostData $costData
+    [string]$analysis = Invoke-AICostAnalysis -CostData $CostData
             Send-CostAlerts -Analysis $analysis -Threshold $CostThreshold
-            
-            # This would typically run as a scheduled job
+
             Write-EnhancedLog "Monitoring mode - would run continuously in production" "Info"
         }
     }
-    
+
     Write-EnhancedLog "[SUCCESS] Azure AI-Powered Cost Optimization Tool completed successfully" "Success"
 
 } catch {
@@ -866,8 +764,4 @@ try {
     throw
 }
 finally {
-    Write-Verbose "Azure AI Cost Optimization Tool execution completed"
-}
-
-#endregion
-
+    Write-Verbose "Azure AI Cost Optimization Tool execution completed"`n}

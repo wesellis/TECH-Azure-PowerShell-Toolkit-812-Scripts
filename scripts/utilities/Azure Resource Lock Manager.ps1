@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,40 +9,38 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateSet("Create" , "List" , "Remove" , "Audit" )]
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Action,
+    $Action,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceName,
+    $ResourceName,
     [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$LockName,
+    $LockName,
     [Parameter()]
     [ValidateSet("ReadOnly" , "Delete" )]
-    [string]$LockLevel = "Delete",
+    $LockLevel = "Delete",
     [Parameter()]
-    [string]$LockNotes = "Lock created via script" ,
+    $LockNotes = "Lock created via script" ,
     [Parameter()]
     [switch]$Force
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
-    # Progress stepNumber 1 -TotalSteps 3 -StepName "Connection" -Status "Validating Azure connection"
     if (-not (Get-AzContext)) {
         Connect-AzAccount
         if (-not (Get-AzContext)) {
@@ -50,12 +48,11 @@ try {
         }
     }
     }
-    # Progress stepNumber 2 -TotalSteps 3 -StepName "Lock Operation" -Status "Executing $Action"
     switch ($Action) {
         "Create" {
             if (-not $LockName) { $LockName = "AutoLock-$(Get-Date -Format 'yyyyMMdd')" }
             if ($ResourceName) {
-                $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
+    $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $ResourceName
                 New-AzResourceLock -LockName $LockName -LockLevel $LockLevel -ResourceId $resource.ResourceId -LockNotes $LockNotes
 
             } elseif ($ResourceGroupName) {
@@ -68,12 +65,12 @@ try {
         }
         "List" {
             if ($ResourceGroupName) {
-                $locks = Get-AzResourceLock -ResourceGroupName $ResourceGroupName
+    $locks = Get-AzResourceLock -ResourceGroupName $ResourceGroupName
             } else {
-                $locks = Get-AzResourceLock -ErrorAction Stop
+    $locks = Get-AzResourceLock -ErrorAction Stop
             }
-            Write-Host "Found $($locks.Count) resource locks:" -ForegroundColor Cyan
-            $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
+            Write-Output "Found $($locks.Count) resource locks:" # Color: $2
+    $locks | Format-Table Name, LockLevel, ResourceGroupName, ResourceName
         }
         "Remove" {
             if ($LockName) {
@@ -86,23 +83,20 @@ try {
             }
         }
         "Audit" {
-$allLocks = Get-AzResourceLock -ErrorAction Stop
-$lockReport = $allLocks | Group-Object LockLevel | ForEach-Object {
+    $AllLocks = Get-AzResourceLock -ErrorAction Stop
+    $LockReport = $AllLocks | Group-Object LockLevel | ForEach-Object {
                 @{
                     LockLevel = $_.Name
                     Count = $_.Count
                     Resources = $_.Group | Select-Object Name, ResourceGroupName, ResourceName
                 }
             }
-            Write-Host "Lock Audit Summary:" -ForegroundColor Cyan
-            Write-Host "Total Locks: $($allLocks.Count)" -ForegroundColor White
-            $lockReport | ForEach-Object {
-                Write-Host " $($_.LockLevel) Locks: $($_.Count)" -ForegroundColor Yellow
+            Write-Output "Lock Audit Summary:" # Color: $2
+            Write-Output "Total Locks: $($AllLocks.Count)" # Color: $2
+    $LockReport | ForEach-Object {
+                Write-Output " $($_.LockLevel) Locks: $($_.Count)" # Color: $2
             }
         }
     }
-    # Progress stepNumber 3 -TotalSteps 3 -StepName "Complete" -Status "Operation complete"
 
-} catch { throw }
-
-
+} catch { throw`n}

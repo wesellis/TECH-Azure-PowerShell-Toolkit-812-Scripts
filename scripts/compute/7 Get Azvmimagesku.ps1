@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -138,5 +138,4 @@ premium-ubuntu-xenial        test-ubuntu-premium-offer-0002        Canonical    
     General notes
 Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Get-AzVMImageSku -ErrorAction Stop | Get-Member -ErrorAction Stop
 Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Get-AzVMImageSku -ErrorAction Stop
-Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'MicrosoftWindowsDesktop' | Get-AzVMImageSku -ErrorAction Stop | Where-Object {$_.Offer -eq 'windows-10-20h2-vhd-client-office-prod-stage'}
-
+Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'MicrosoftWindowsDesktop' | Get-AzVMImageSku -ErrorAction Stop | Where-Object {$_.Offer -eq 'windows-10-20h2-vhd-client-office-prod-stage'`n}

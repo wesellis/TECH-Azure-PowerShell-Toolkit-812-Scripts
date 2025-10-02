@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Npm Global
@@ -14,30 +14,29 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$packages,
+    $packages,
     [Parameter()]
-    [bool]$addToPath=$true
+    [bool]$AddToPath=$true
 )
 try {
-$packageArray = $packages.split(" ," )
-$npmPrefix = "C:
+    $PackageArray = $packages.split(" ," )
+    $NpmPrefix = "C:
 pm"
-    npm config set prefix $npmPrefix
-    for ($i = 0; $i -lt $packageArray.count; $i++) {
-        $package = $packageArray[$i].trim()
-        Write-Host "Installing $package globally"
+    npm config set prefix $NpmPrefix
+    for ($i = 0; $i -lt $PackageArray.count; $i++) {
+    $package = $PackageArray[$i].trim()
+        Write-Output "Installing $package globally"
         npm install -g $package
-        Write-Host "Installation complete"
+        Write-Output "Installation complete"
     }
-    if ($addToPath) {
-        Write-Host "Adding npm prefix to PATH"
-	[Environment]::SetEnvironmentVariable("PATH" , $env:Path + " ;$npmPrefix" , "Machine" )
-        Write-Host " npm prefix added to PATH"
+    if ($AddToPath) {
+        Write-Output "Adding npm prefix to PATH"
+	[Environment]::SetEnvironmentVariable("PATH" , $env:Path + " ;$NpmPrefix" , "Machine" )
+        Write-Output " npm prefix added to PATH"
     }
 } catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

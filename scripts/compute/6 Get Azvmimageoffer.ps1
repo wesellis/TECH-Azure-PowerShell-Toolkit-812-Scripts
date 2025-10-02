@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -61,4 +61,5 @@ Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'canonical-test'
 Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'MicrosoftWindowsDesktop'
 Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'Canonical' | Where-Object {$_.Offer -eq 'UbuntuServer'} | Select-Object *;
 $ImageOfferID = Get-AzVMImageOffer -location 'CanadaCentral' -PublisherName 'OpenLogic' | Where-Object {$_.Offer -eq 'CentOS'} | Select-Object *
+
 

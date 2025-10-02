@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Setup User Tasks
@@ -14,14 +14,13 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 try {
-$setupScriptsDir = $PSScriptRoot
-    Write-Host " === Register the command to run when user logs in for the very first time"
-$runKey = "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce"
-    reg.exe add $runKey /f /v "DevBoxImageTemplates" /t "REG_EXPAND_SZ" /d " powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo -WindowStyle Minimized $setupScriptsDir\runonce-user-tasks.ps1"
-    reg.exe query $runKey /s
+$SetupScriptsDir = $PSScriptRoot
+    Write-Output " === Register the command to run when user logs in for the very first time"
+$RunKey = "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce"
+    reg.exe add $RunKey /f /v "DevBoxImageTemplates"/t "REG_EXPAND_SZ"/d " powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo -WindowStyle Minimized $SetupScriptsDir\runonce-user-tasks.ps1"
+    reg.exe query $RunKey /s
 }
 catch {
-    Write-Host "[WARN] Unhandled exception:"
+    Write-Output "[WARN] Unhandled exception:"
     Write-Information -Object $_
-    Write-Information -Object $_.ScriptStackTrace
-}
+    Write-Information -Object $_.ScriptStackTrace`n}

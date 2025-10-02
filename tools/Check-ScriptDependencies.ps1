@@ -5,35 +5,31 @@
 .DESCRIPTION
     Check ScriptDependencies operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
-    Check ScriptDependenciescom)#>
-# Check-ScriptDependencies.ps1
-# Analyzes and validates script dependencies across the repository
+    Check ScriptDependenciescom)
 [CmdletBinding()]
 
     [Parameter()]
     [string]$ScriptPath,
-    
+
     [Parameter()]
     [string]$RepositoryPath = (Split-Path $PSScriptRoot -Parent),
-    
+
     [switch]$InstallMissing,
     [switch]$GenerateReport,
     [switch]$CheckVersions,
     [switch]$ValidateAzureModules
 )
 
-#region Functions-class DependencyAnalyzer {
     [hashtable]$Dependencies = @{}
     [hashtable]$MissingDependencies = @{}
     [hashtable]$VersionConflicts = @{}
     [array]$Scripts = @()
-    
+
     [void] AnalyzeScript([string]$Path) {
-        $scriptName = [System.IO.Path]::GetFileName($Path)
+        $ScriptName = [System.IO.Path]::GetFileName($Path)
         $content = Get-Content $Path -Raw
-        
+
         $deps = @{
             Modules = @()
             Scripts = @()
@@ -42,19 +38,18 @@
             AzureResources = @()
             ExternalTools = @()
         }
-        
-        # Extract PowerShell module dependencies
-        $modulePattern = '#Requires\s+-Module[s]?\s+(.+)'
-        $importPattern = 'Import-Module\s+([^\s;]+)'
-        
-        $content | Select-String -Pattern $modulePattern -AllMatches | ForEach-Object {
+
+        $ModulePattern = '#Requires\s+-Module[s]?\s+(.+)'
+        $ImportPattern = 'Import-Module\s+([^\s;]+)'
+
+        $content | Select-String -Pattern $ModulePattern -AllMatches | ForEach-Object {
             $_.Matches | ForEach-Object {
                 $modules = $_.Groups[1].Value -split ','
                 $deps.Modules += $modules | ForEach-Object { $_.Trim() }
             }
         }
-        
-        $content | Select-String -Pattern $importPattern -AllMatches | ForEach-Object {
+
+        $content | Select-String -Pattern $ImportPattern -AllMatches | ForEach-Object {
             $_.Matches | ForEach-Object {
                 $module = $_.Groups[1].Value.Trim('"', "'")
                 if ($module -notmatch '^\$' -and $module -notmatch 'Join-Path') {
@@ -62,21 +57,18 @@
                 }
             }
         }
-        
-        # Extract script dependencies (dot-sourcing)
-        $scriptPattern = '\.\s+([^\s]+\.ps1)'
-        $content | Select-String -Pattern $scriptPattern -AllMatches | ForEach-Object {
+
+        $ScriptPattern = '\.\s+([^\s]+\.ps1)'
+        $content | Select-String -Pattern $ScriptPattern -AllMatches | ForEach-Object {
             $_.Matches | ForEach-Object {
                 $deps.Scripts += $_.Groups[1].Value
             }
         }
-        
-        # Extract Azure cmdlet usage
-        $azureCmdlets = $content | Select-String -Pattern '(Get|Set|New|Remove|Update|Start|Stop|Restart)-Az\w+' -AllMatches
-        $deps.AzureResources = $azureCmdlets.Matches.Value | Select-Object -Unique
-        
-        # Extract external tool dependencies
-        $toolPatterns = @(
+
+        $AzureCmdlets = $content | Select-String -Pattern '(Get|Set|New|Remove|Update|Start|Stop|Restart)-Az\w+' -AllMatches
+        $deps.AzureResources = $AzureCmdlets.Matches.Value | Select-Object -Unique
+
+        $ToolPatterns = @(
             'git\s+',
             'docker\s+',
             'kubectl\s+',
@@ -86,27 +78,27 @@
             'npm\s+',
             'python\s+'
         )
-        
-        foreach ($pattern in $toolPatterns) {
+
+        foreach ($pattern in $ToolPatterns) {
             if ($content -match $pattern) {
                 $tool = $pattern.Trim('\s+', ' ')
                 $deps.ExternalTools += $tool
             }
         }
-        
-        $this.Dependencies[$scriptName] = $deps
+
+        $this.Dependencies[$ScriptName] = $deps
     }
-    
+
     [hashtable] CheckInstalledModules() {
         $results = @{
             Installed = @()
             Missing = @()
             VersionInfo = @{}
         }
-        
-        $allModules = $this.Dependencies.Values.Modules | Select-Object -Unique
-        
-        foreach ($module in $allModules) {
+
+        $AllModules = $this.Dependencies.Values.Modules | Select-Object -Unique
+
+        foreach ($module in $AllModules) {
             $installed = Get-Module -ListAvailable -Name $module -ErrorAction SilentlyContinue
             if ($installed) {
                 $results.Installed += $module
@@ -115,119 +107,114 @@
                 $results.Missing += $module
             }
         }
-        
+
         return $results
     }
-    
+
     [void] GenerateDependencyGraph() {
-        $mermaidGraph = @"
+        $MermaidGraph = @"
 graph TD
     subgraph "Script Dependencies"
 "@
-        
+
         foreach ($script in $this.Dependencies.Keys) {
             $deps = $this.Dependencies[$script]
-            $scriptId = $script -replace '[^a-zA-Z0-9]', ''
-            
+            $ScriptId = $script -replace '[^a-zA-Z0-9]', ''
+
             foreach ($module in $deps.Modules) {
-                $moduleId = $module -replace '[^a-zA-Z0-9]', ''
-                $mermaidGraph += "`n    $scriptId --> $moduleId[Module: $module]"
+                $ModuleId = $module -replace '[^a-zA-Z0-9]', ''
+                $MermaidGraph += "`n    $ScriptId --> $ModuleId[Module: $module]"
             }
-            
-            foreach ($depScript in $deps.Scripts) {
-                $depScriptId = $depScript -replace '[^a-zA-Z0-9]', ''
-                $mermaidGraph += "`n    $scriptId --> $depScriptId[Script: $depScript]"
+
+            foreach ($DepScript in $deps.Scripts) {
+                $DepScriptId = $DepScript -replace '[^a-zA-Z0-9]', ''
+                $MermaidGraph += "`n    $ScriptId --> $DepScriptId[Script: $DepScript]"
             }
         }
-        
-        $mermaidGraph += "`n    end"
-        
-        $graphPath = Join-Path $RepositoryPath "dependency-graph.md"
+
+        $MermaidGraph += "`n    end"
+
+        $GraphPath = Join-Path $RepositoryPath "dependency-graph.md"
         @"
-# Dependency Graph
 
 ``````mermaid
-$mermaidGraph
+$MermaidGraph
 ``````
-"@ | Out-File $graphPath -Encoding UTF8
+"@ | Out-File $GraphPath -Encoding UTF8
     }
-    
+
     [string] GenerateReport() {
         $report = @"
-# Script Dependency Analysis Report
 Generated: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 
-## Summary
 - Total Scripts Analyzed: $($this.Dependencies.Count)
 - Unique Module Dependencies: $(($this.Dependencies.Values.Modules | Select-Object -Unique).Count)
 - Unique Script Dependencies: $(($this.Dependencies.Values.Scripts | Select-Object -Unique).Count)
 - External Tools Required: $(($this.Dependencies.Values.ExternalTools | Select-Object -Unique).Count)
 
-## Module Dependencies
 "@
-        
-        $moduleUsage = @{}
+
+        $ModuleUsage = @{}
         foreach ($script in $this.Dependencies.Keys) {
             foreach ($module in $this.Dependencies[$script].Modules) {
-                if (-not $moduleUsage.ContainsKey($module)) {
-                    $moduleUsage[$module] = @()
+                if (-not $ModuleUsage.ContainsKey($module)) {
+                    $ModuleUsage[$module] = @()
                 }
-                $moduleUsage[$module] += $script
+                $ModuleUsage[$module] += $script
             }
         }
-        
-        foreach ($module in ($moduleUsage.Keys | Sort-Object)) {
+
+        foreach ($module in ($ModuleUsage.Keys | Sort-Object)) {
             $report += "`n### $module`n"
-            $report += "Used by $($moduleUsage[$module].Count) script(s):`n"
-            foreach ($script in $moduleUsage[$module]) {
+            $report += "Used by $($ModuleUsage[$module].Count) script(s):`n"
+            foreach ($script in $ModuleUsage[$module]) {
                 $report += "- $script`n"
             }
         }
-        
+
         $report += "`n## Installation Status`n"
-        $installStatus = $this.CheckInstalledModules()
-        
+        $InstallStatus = $this.CheckInstalledModules()
+
         $report += "`n### Installed Modules`n"
-        foreach ($module in $installStatus.Installed) {
-            $version = $installStatus.VersionInfo[$module]
+        foreach ($module in $InstallStatus.Installed) {
+            $version = $InstallStatus.VersionInfo[$module]
             $report += "-  $module (v$version)`n"
         }
-        
+
         $report += "`n### Missing Modules`n"
-        foreach ($module in $installStatus.Missing) {
+        foreach ($module in $InstallStatus.Missing) {
             $report += "-  $module`n"
         }
-        
-        if ($installStatus.Missing.Count -gt 0) {
+
+        if ($InstallStatus.Missing.Count -gt 0) {
             $report += "`n### Installation Commands`n"
             $report += "``````powershell`n"
-            foreach ($module in $installStatus.Missing) {
+            foreach ($module in $InstallStatus.Missing) {
                 $report += "Install-Module -Name $module -Force -AllowClobber`n"
             }
             $report += "```````n"
         }
-        
+
         return $report
     }
 }
 
-# Main execution
 $analyzer = [DependencyAnalyzer]::new()
 
-Write-Host "Starting dependency analysis..." -ForegroundColor Cyan
+Write-Output "Starting dependency analysis..." # Color: $2
 
 if ($ScriptPath) {
     if (Test-Path $ScriptPath) {
-        Write-Host "Analyzing single script: $ScriptPath" -ForegroundColor Yellow
+        Write-Output "Analyzing single script: $ScriptPath" # Color: $2
         $analyzer.AnalyzeScript($ScriptPath)
     } else {
         Write-Error "Script not found: $ScriptPath"
         return
     }
 } else {
-    Write-Host "Analyzing all scripts in repository..." -ForegroundColor Yellow
+    Write-Output "Analyzing all scripts in repository..." # Color: $2
     $scripts = Get-ChildItem -Path (Join-Path $RepositoryPath "automation-scripts") -Filter "*.ps1" -Recurse
-    
+
     $progress = 0
     foreach ($script in $scripts) {
         $progress++
@@ -236,52 +223,52 @@ if ($ScriptPath) {
     }
 }
 
-Write-Host "`nChecking installed modules..." -ForegroundColor Green
-$installStatus = $analyzer.CheckInstalledModules()
+Write-Output "`nChecking installed modules..." # Color: $2
+$InstallStatus = $analyzer.CheckInstalledModules()
 
-Write-Host "Installed: $($installStatus.Installed.Count) modules" -ForegroundColor Green
-Write-Host "Missing: $($installStatus.Missing.Count) modules" -ForegroundColor $(if ($installStatus.Missing.Count -gt 0) { "Red" } else { "Green" })
+Write-Output "Installed: $($InstallStatus.Installed.Count) modules" # Color: $2
+Write-Output "Missing: $($InstallStatus.Missing.Count) modules" -ForegroundColor $(if ($InstallStatus.Missing.Count -gt 0) { "Red" } else { "Green" })
 
-if ($InstallMissing -and $installStatus.Missing.Count -gt 0) {
-    Write-Host "`nInstalling missing modules..." -ForegroundColor Yellow
-    foreach ($module in $installStatus.Missing) {
+if ($InstallMissing -and $InstallStatus.Missing.Count -gt 0) {
+    Write-Output "`nInstalling missing modules..." # Color: $2
+    foreach ($module in $InstallStatus.Missing) {
         try {
-            Write-Host "Installing $module..." -NoNewline
+            Write-Output "Installing $module..." -NoNewline
             Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser -ErrorAction Stop
-            Write-Host " " -ForegroundColor Green
+            Write-Output " " # Color: $2
         } catch {
-            Write-Host "Failed: $_" -ForegroundColor Red
+            Write-Output "Failed: $_" # Color: $2
         }
     }
 }
 
 if ($GenerateReport) {
-    $reportPath = Join-Path $RepositoryPath "DEPENDENCY-REPORT.md"
+    $ReportPath = Join-Path $RepositoryPath "DEPENDENCY-REPORT.md"
     $report = $analyzer.GenerateReport()
-    $report | Out-File $reportPath -Encoding UTF8
-    Write-Host "`nDependency report saved to: $reportPath" -ForegroundColor Green
-    
+    $report | Out-File $ReportPath -Encoding UTF8
+    Write-Output "`nDependency report saved to: $ReportPath" # Color: $2
+
     $analyzer.GenerateDependencyGraph()
-    Write-Host "Dependency graph saved to: $(Join-Path $RepositoryPath 'dependency-graph.md')" -ForegroundColor Green
+    Write-Output "Dependency graph saved to: $(Join-Path $RepositoryPath 'dependency-graph.md')" # Color: $2
 }
 
 if ($ValidateAzureModules) {
-    Write-Host "`nValidating Azure module versions..." -ForegroundColor Cyan
-    $azModules = $installStatus.Installed | Where-Object { $_ -like "Az.*" }
-    
-    foreach ($module in $azModules) {
+    Write-Output "`nValidating Azure module versions..." # Color: $2
+    $AzModules = $InstallStatus.Installed | Where-Object { $_ -like "Az.*" }
+
+    foreach ($module in $AzModules) {
         $current = Get-Module -ListAvailable -Name $module | Select-Object -First 1
         $latest = Find-Module -Name $module -ErrorAction SilentlyContinue
-        
+
         if ($latest -and $current.Version -lt $latest.Version) {
-            Write-Host "$module : Current v$($current.Version) -> Available v$($latest.Version)" -ForegroundColor Yellow
+            Write-Output "$module : Current v$($current.Version) -> Available v$($latest.Version)" # Color: $2
         } else {
-            Write-Host "$module : v$($current.Version) (latest)" -ForegroundColor Green
+            Write-Output "$module : v$($current.Version) (latest)" # Color: $2
         }
     }
 }
 
-Write-Host "`nDependency analysis complete!" -ForegroundColor Cyan
+Write-Output "`nDependency analysis complete!" # Color: $2
 
-#endregion\n
+
 

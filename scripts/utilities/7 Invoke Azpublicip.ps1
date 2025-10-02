@@ -1,85 +1,67 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Network
 
-<#`n.SYNOPSIS
-    Invoke Azpublicip
+<#
+.SYNOPSIS
+    Create Azure public IP address
 
 .DESCRIPTION
-    Invoke Azpublicip operation
-    Author: Wes Ellis (wes@wesellis.com)
+    Create Azure public IP address operation
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Name,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Location,
+
+    [Parameter()]
+    [ValidateSet('Static', 'Dynamic')]
+    [string]$AllocationMethod = 'Static',
+
+    [Parameter()]
+    [ValidateSet('Basic', 'Standard')]
+    [string]$Sku = 'Standard',
+
+    [Parameter()]
+    [ValidateSet('IPv4', 'IPv6')]
+    [string]$IpAddressVersion = 'IPv4',
+
+    [Parameter()]
+    [hashtable]$Tags
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-[CmdletBinding()]
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
-function Write-Host {
-    param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-param(
-        # [Parameter(ValueFromPipelineByPropertyName)]
-        # $newAzResourceGroupSplat
-        [Parameter(ValueFromPipeline)]
-        $newAzPublicIpAddressSplat
-    )
-    begin {
-    }
-    process {
-        try {
-$PublicIPConfig = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-        }
-        catch {
-            Write-Error 'An Error happened when .. script execution will be halted'
-            #region CatchAll-Write-Host "A Terminating Error (Exception) happened" -ForegroundColor Magenta
-            Write-Host "Displaying the Catch Statement ErrorCode" -ForegroundColor Yellow
-            $PSItem
-            Write-Host $PSItem.ScriptStackTrace -ForegroundColor Red
-$ErrorMessage_1 = $_.Exception.Message
-            Write-Host $ErrorMessage_1  -ForegroundColor Red
-            Write-Output "Ran into an issue: $PSItem"
-            Write-Host "Ran into an issue: $PSItem"
-            throw "Ran into an issue: $PSItem"
-            throw "I am the catch"
-            throw "Ran into an issue: $PSItem"
-            $PSItem | Write-Information -ForegroundColor
-            $PSItem | Select-Object *
-            $PSCmdlet.ThrowTerminatingError($PSitem)
-            throw
-            throw "Something went wrong"
-            Write-Log $PSItem.ToString()
-            #EndRegion CatchAll
-            Exit
-        }
-        finally {
-        }
-    }
-    end {
-        return $PublicIPConfig
-    }
-}
 
+try {
+    $newAzPublicIpAddressSplat = @{
+        Name = $Name
+        ResourceGroupName = $ResourceGroupName
+        Location = $Location
+        AllocationMethod = $AllocationMethod
+        Sku = $Sku
+        IpAddressVersion = $IpAddressVersion
+    }
+
+    if ($Tags) {
+        $newAzPublicIpAddressSplat.Tag = $Tags
+    }
+
+    $publicIPConfig = New-AzPublicIpAddress @newAzPublicIpAddressSplat -ErrorAction Stop
+    return $publicIPConfig
+}
+catch {
+    Write-Error "Failed to create public IP address: $($_.Exception.Message)"
+    throw
+}

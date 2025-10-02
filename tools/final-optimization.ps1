@@ -5,18 +5,14 @@
 .DESCRIPTION
     final optimization operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
-    final optimizationcom)#>
-# Final optimization push for Azure Enterprise Toolkit
-Write-Host "Adding final optimizations for perfect GitHub setup..."
+    final optimizationcom)
+Write-Output "Adding final optimizations for perfect GitHub setup..."
 
-# Add all new files
 git add .
-Write-Host "Added all optimization files"
+Write-Output "Added all optimization files"
 
-# Commit with
-$commitMessage = @"
+$CommitMessage = @"
  Perfect GitHub Optimization - Complete Setup
 
  Added Professional GitHub Pages Website:
@@ -45,16 +41,14 @@ $commitMessage = @"
  Azure Enterprise Toolkit is now perfectly optimized for GitHub!
 "@
 
-git commit -m $commitMessage
-Write-Host "Committed optimization improvements"
+git commit -m $CommitMessage
+Write-Output "Committed optimization improvements"
 
-# Push to GitHub
 git push
-Write-Host "Pushed final optimizations to GitHub!"
+Write-Output "Pushed final optimizations to GitHub!"
 
-Write-Host "`n Azure Enterprise Toolkit is now PERFECTLY optimized!"
-Write-Host "�� GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit"
-Write-Host "�� GitHub Actions will automate testing and deployment"
+Write-Output "`n Azure Enterprise Toolkit is now PERFECTLY optimized!"
+Write-Output "�� GitHub Pages will be live at: https://wesellis.github.io/Azure-Enterprise-Toolkit"
+Write-Output "�� GitHub Actions will automate testing and deployment"
 Write-Host "[*] Repository is now
 
-#endregion\n

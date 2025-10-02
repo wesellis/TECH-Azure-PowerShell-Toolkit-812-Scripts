@@ -1,36 +1,69 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Network
 
-<#`n.SYNOPSIS
-    Invoke Azpublicipaddress
+<#
+.SYNOPSIS
+    Invoke Azure Public IP Address creation
 
 .DESCRIPTION
-    Azure automation
+    Creates a new Azure Public IP Address with specified configuration
 
+.PARAMETER PublicIPAddressName
+    Name of the public IP address
 
+.PARAMETER DNSNameLabel
+    DNS name label for the public IP
+
+.PARAMETER ResourceGroupName
+    Name of the resource group
+
+.PARAMETER LocationName
+    Azure location name
+
+.PARAMETER Tags
+    Hash table of tags to apply
+
+.EXAMPLE
+    Invoke-AzPublicIpAddress -PublicIPAddressName "MyPIP" -DNSNameLabel "mydns" -ResourceGroupName "MyRG" -LocationName "East US"
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
 #>
-    Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
 [CmdletBinding()]
-function Invoke-AzPublicIpAddress {
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$PublicIPAddressName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$DNSNameLabel,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$LocationName,
+
+    [Parameter(Mandatory = $false)]
+    [hashtable]$Tags = @{}
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
 function Invoke-AzPublicIpAddress {
- #region func-New-AzPublicIpAddress -ErrorAction Stop
-$newAzPublicIpAddressSplat = @{
-    Name              = $PublicIPAddressName
-    DomainNameLabel   = $DNSNameLabel
-    ResourceGroupName = $ResourceGroupName
-    Location          = $LocationName
-    # AllocationMethod  = 'Dynamic'
-    AllocationMethod  = 'Static'
-    # IpTag             = $ipTag
-    Tag               = $Tags
-};
-$PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
+    $NewAzPublicIpAddressSplat = @{
+        Name              = $PublicIPAddressName
+        DomainNameLabel   = $DNSNameLabel
+        ResourceGroupName = $ResourceGroupName
+        Location          = $LocationName
+        AllocationMethod  = 'Static'
+        Tag               = $Tags
+    }
+    $PIP = New-AzPublicIpAddress -ErrorAction Stop @NewAzPublicIpAddressSplat
+    return $PIP
 }
 
-
+# Execute the function
+Invoke-AzPublicIpAddress

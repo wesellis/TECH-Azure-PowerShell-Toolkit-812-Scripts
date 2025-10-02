@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Storage
@@ -13,9 +13,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Analyzes Azure environment for Zero Trust Network compliance and provides  recommendations.
     This  tool performs a  Zero Trust Network assessment across your Azure environment,
     analyzing network segmentation, identity-based access, encryption, and micro-segmentation strategies.
@@ -32,7 +31,6 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     Author: Wesley Ellis
     Date: June 2024    Requires: Az.Network, Az.Security, Az.Monitor modules
 [CmdletBinding(SupportsShouldProcess=$true)]
-[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -44,15 +42,15 @@ param(
     [ValidateSet("Summary" , " " , "Executive" )]
     [string]$DetailLevel = " "
 )
-$requiredModules = @('Az.Network', 'Az.Security', 'Az.Monitor', 'Az.Resources')
-foreach ($module in $requiredModules) {
+    [string]$RequiredModules = @('Az.Network', 'Az.Security', 'Az.Monitor', 'Az.Resources')
+foreach ($module in $RequiredModules) {
     if (!(Get-Module -ListAvailable -Name $module)) {
         Write-Error "Module $module is not installed. Please install it using: Install-Module -Name $module"
         throw
     }
     Import-Module $module -ErrorAction Stop
 }
-$assessmentResults = @{
+    $AssessmentResults = @{
     SubscriptionId = ""
     AssessmentDate = Get-Date -ErrorAction Stop
     OverallScore = 0
@@ -65,13 +63,12 @@ $assessmentResults = @{
     NSGCompliance = @()
     Recommendations = @()
 }
-[OutputType([PSObject])]
- {
-    Write-Host "Analyzing network segmentation..." -ForegroundColor Yellow
-    $vnets = Get-AzVirtualNetwork -ErrorAction Stop
-    $segmentationIssues = @()
+function Write-Log {
+    Write-Output "Analyzing network segmentation..." # Color: $2
+    [string]$vnets = Get-AzVirtualNetwork -ErrorAction Stop
+    [string]$SegmentationIssues = @()
     foreach ($vnet in $vnets) {
-        $vnetAnalysis = @{
+    $VnetAnalysis = @{
             VNetName = $vnet.Name
             ResourceGroup = $vnet.ResourceGroupName
             AddressSpace = $vnet.AddressSpace.AddressPrefixes -join " , "
@@ -79,45 +76,41 @@ $assessmentResults = @{
             Issues = @()
             Score = 100
         }
-        # Check for proper subnet segmentation
         if ($vnet.Subnets.Count -lt 3) {
-            $vnetAnalysis.Issues += "Insufficient subnet segmentation (recommended: separate subnets for web, app, data tiers)"
-            $vnetAnalysis.Score -= 20
+    [string]$VnetAnalysis.Issues += "Insufficient subnet segmentation (recommended: separate subnets for web, app, data tiers)"
+    [string]$VnetAnalysis.Score -= 20
         }
-        # Check for subnet NSG associations
         foreach ($subnet in $vnet.Subnets) {
-            $subnetInfo = @{
+    $SubnetInfo = @{
                 Name = $subnet.Name
                 AddressPrefix = $subnet.AddressPrefix
                 HasNSG = $null -ne $subnet.NetworkSecurityGroup
                 HasRouteTable = $null -ne $subnet.RouteTable
             }
-            if (!$subnetInfo.HasNSG -and $subnet.Name -ne "AzureFirewallSubnet" ) {
-                $vnetAnalysis.Issues += "Subnet '$($subnet.Name)' lacks NSG association"
-                $vnetAnalysis.Score -= 10
+            if (!$SubnetInfo.HasNSG -and $subnet.Name -ne "AzureFirewallSubnet" ) {
+    [string]$VnetAnalysis.Issues += "Subnet '$($subnet.Name)' lacks NSG association"
+    [string]$VnetAnalysis.Score -= 10
             }
-            $vnetAnalysis.Subnets += $subnetInfo
+    [string]$VnetAnalysis.Subnets += $SubnetInfo
         }
-        # Check for VNet peering security
         if ($vnet.VirtualNetworkPeerings.Count -gt 0) {
             foreach ($peering in $vnet.VirtualNetworkPeerings) {
                 if ($peering.AllowForwardedTraffic) {
-                    $vnetAnalysis.Issues += "Peering '$($peering.Name)' allows forwarded traffic (security risk)"
-                    $vnetAnalysis.Score -= 15
+    [string]$VnetAnalysis.Issues += "Peering '$($peering.Name)' allows forwarded traffic (security risk)"
+    [string]$VnetAnalysis.Score -= 15
                 }
             }
         }
-        $segmentationIssues = $segmentationIssues + $vnetAnalysis
+    [string]$SegmentationIssues = $SegmentationIssues + $VnetAnalysis
     }
-    return $segmentationIssues
+    return $SegmentationIssues
 }
 function Test-IdentityPerimeter {
-    Write-Host "Analyzing identity perimeter security..." -ForegroundColor Yellow
-    $identityIssues = @()
-    # Check for Service Endpoints vs Private Endpoints usage
-    $storageAccounts = Get-AzStorageAccount -ErrorAction Stop
-    foreach ($storage in $storageAccounts) {
-        $storageAnalysis = @{
+    Write-Output "Analyzing identity perimeter security..." # Color: $2
+    [string]$IdentityIssues = @()
+    [string]$StorageAccounts = Get-AzStorageAccount -ErrorAction Stop
+    foreach ($storage in $StorageAccounts) {
+    $StorageAnalysis = @{
             ResourceName = $storage.StorageAccountName
             ResourceType = "Storage Account"
             NetworkRuleSet = $storage.NetworkRuleSet
@@ -125,106 +118,101 @@ function Test-IdentityPerimeter {
             Score = 100
         }
         if ($storage.NetworkRuleSet.DefaultAction -eq "Allow" ) {
-            $storageAnalysis.Issues += "Public network access allowed (should use Private Endpoints)"
-            $storageAnalysis.Score -= 30
+    [string]$StorageAnalysis.Issues += "Public network access allowed (should use Private Endpoints)"
+    [string]$StorageAnalysis.Score -= 30
         }
         if ($storage.NetworkRuleSet.VirtualNetworkRules.Count -eq 0 -and
-            $storage.PrivateEndpointConnections.Count -eq 0) {
-            $storageAnalysis.Issues += "No network restrictions configured"
-            $storageAnalysis.Score -= 40
+    [string]$storage.PrivateEndpointConnections.Count -eq 0) {
+    [string]$StorageAnalysis.Issues += "No network restrictions configured"
+    [string]$StorageAnalysis.Score -= 40
         }
-        $identityIssues = $identityIssues + $storageAnalysis
+    [string]$IdentityIssues = $IdentityIssues + $StorageAnalysis
     }
-    # Check SQL Servers
-    $sqlServers = Get-AzSqlServer -ErrorAction Stop
-    foreach ($sql in $sqlServers) {
-        $sqlAnalysis = @{
+    [string]$SqlServers = Get-AzSqlServer -ErrorAction Stop
+    foreach ($sql in $SqlServers) {
+    $SqlAnalysis = @{
             ResourceName = $sql.ServerName
             ResourceType = "SQL Server"
             Issues = @()
             Score = 100
         }
-        $firewallRules = Get-AzSqlServerFirewallRule -ServerName $sql.ServerName -ResourceGroupName $sql.ResourceGroupName
-        foreach ($rule in $firewallRules) {
+    [string]$FirewallRules = Get-AzSqlServerFirewallRule -ServerName $sql.ServerName -ResourceGroupName $sql.ResourceGroupName
+        foreach ($rule in $FirewallRules) {
             if ($rule.StartIpAddress -eq " 0.0.0.0" -and $rule.EndIpAddress -eq " 255.255.255.255" ) {
-                $sqlAnalysis.Issues += "Firewall rule allows all IP addresses"
-                $sqlAnalysis.Score -= 50
+    [string]$SqlAnalysis.Issues += "Firewall rule allows all IP addresses"
+    [string]$SqlAnalysis.Score -= 50
             }
         }
-        $identityIssues = $identityIssues + $sqlAnalysis
+    [string]$IdentityIssues = $IdentityIssues + $SqlAnalysis
     }
-    return $identityIssues
+    return $IdentityIssues
 }
 function Test-EncryptionCompliance {
-    Write-Host "Analyzing encryption compliance..." -ForegroundColor Yellow
-    $encryptionIssues = @()
-    # Check VM disk encryption
-    $vms = Get-AzVM -ErrorAction Stop
+    Write-Output "Analyzing encryption compliance..." # Color: $2
+    [string]$EncryptionIssues = @()
+    [string]$vms = Get-AzVM -ErrorAction Stop
     foreach ($vm in $vms) {
-        $vmAnalysis = @{
+    $VmAnalysis = @{
             ResourceName = $vm.Name
             ResourceType = "Virtual Machine"
             Issues = @()
             Score = 100
         }
-        $diskEncryptionStatus = Get-AzVMDiskEncryptionStatus -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name
-        if ($diskEncryptionStatus.OsVolumeEncrypted -ne "Encrypted" ) {
-            $vmAnalysis.Issues += "OS disk not encrypted"
-            $vmAnalysis.Score -= 30
+    [string]$DiskEncryptionStatus = Get-AzVMDiskEncryptionStatus -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name
+        if ($DiskEncryptionStatus.OsVolumeEncrypted -ne "Encrypted" ) {
+    [string]$VmAnalysis.Issues += "OS disk not encrypted"
+    [string]$VmAnalysis.Score -= 30
         }
-        if ($diskEncryptionStatus.DataVolumesEncrypted -ne "Encrypted" -and $vm.StorageProfile.DataDisks.Count -gt 0) {
-            $vmAnalysis.Issues += "Data disks not encrypted"
-            $vmAnalysis.Score -= 30
+        if ($DiskEncryptionStatus.DataVolumesEncrypted -ne "Encrypted" -and $vm.StorageProfile.DataDisks.Count -gt 0) {
+    [string]$VmAnalysis.Issues += "Data disks not encrypted"
+    [string]$VmAnalysis.Score -= 30
         }
-        $encryptionIssues = $encryptionIssues + $vmAnalysis
+    [string]$EncryptionIssues = $EncryptionIssues + $VmAnalysis
     }
-    return $encryptionIssues
+    return $EncryptionIssues
 }
 function Test-MicroSegmentation {
-    Write-Host "Analyzing micro-segmentation implementation..." -ForegroundColor Yellow
-    $microSegmentationIssues = @()
-    $nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
+    Write-Output "Analyzing micro-segmentation implementation..." # Color: $2
+    [string]$MicroSegmentationIssues = @()
+    [string]$nsgs = Get-AzNetworkSecurityGroup -ErrorAction Stop
     foreach ($nsg in $nsgs) {
-        $nsgAnalysis = @{
+    $NsgAnalysis = @{
             NSGName = $nsg.Name
             ResourceGroup = $nsg.ResourceGroupName
             Rules = @()
             Issues = @()
             Score = 100
         }
-        # Check for overly permissive rules
         foreach ($rule in $nsg.SecurityRules) {
             if ($rule.SourceAddressPrefix -eq " *" -and $rule.Access -eq "Allow" ) {
-                $nsgAnalysis.Issues += "Rule '$($rule.Name)' allows traffic from any source"
-                $nsgAnalysis.Score -= 15
+    [string]$NsgAnalysis.Issues += "Rule '$($rule.Name)' allows traffic from any source"
+    [string]$NsgAnalysis.Score -= 15
             }
             if ($rule.DestinationPortRange -eq " *" -and $rule.Access -eq "Allow" ) {
-                $nsgAnalysis.Issues += "Rule '$($rule.Name)' allows traffic to any port"
-                $nsgAnalysis.Score -= 15
+    [string]$NsgAnalysis.Issues += "Rule '$($rule.Name)' allows traffic to any port"
+    [string]$NsgAnalysis.Score -= 15
             }
         }
-        # Check for application-specific segmentation
         if ($nsg.SecurityRules.Count -lt 3) {
-            $nsgAnalysis.Issues += "Insufficient micro-segmentation rules (less than 3 rules)"
-            $nsgAnalysis.Score -= 20
+    [string]$NsgAnalysis.Issues += "Insufficient micro-segmentation rules (less than 3 rules)"
+    [string]$NsgAnalysis.Score -= 20
         }
-        $microSegmentationIssues = $microSegmentationIssues + $nsgAnalysis
+    [string]$MicroSegmentationIssues = $MicroSegmentationIssues + $NsgAnalysis
     }
-    return $microSegmentationIssues
+    return $MicroSegmentationIssues
 }
 function Generate-RemediationScripts {
-    [CmdletBinding()]
-param($AssessmentResults)
-    Write-Host "Generating remediation scripts..." -ForegroundColor Green
-    $remediationScript = @"
+    param($AssessmentResults)
+    Write-Output "Generating remediation scripts..." # Color: $2
+    [string]$RemediationScript = @"
 " @
     foreach ($vnet in $AssessmentResults.NetworkSegmentation) {
         if ($vnet.Issues.Count -gt 0) {
-            $remediationScript = $remediationScript + @"
+    [string]$RemediationScript = $RemediationScript + @"
 " @
             foreach ($subnet in $vnet.Subnets) {
                 if (!$subnet.HasNSG) {
-                    $remediationScript = $remediationScript + @"
+    [string]$RemediationScript = $RemediationScript + @"
 `$nsg = New-AzNetworkSecurityGroup -Name " nsg-$($subnet.Name)" -ResourceGroupName " $($vnet.ResourceGroup)" -Location "East US"
 `$vnet = Get-AzVirtualNetwork -Name " $($vnet.VNetName)" -ResourceGroupName " $($vnet.ResourceGroup)"
 Set-AzVirtualNetworkSubnetConfig -Name " $($subnet.Name)" -VirtualNetwork `$vnet -AddressPrefix " $($subnet.AddressPrefix)" -NetworkSecurityGroup `$nsg
@@ -234,32 +222,32 @@ Set-AzVirtualNetworkSubnetConfig -Name " $($subnet.Name)" -VirtualNetwork `$vnet
             }
         }
     }
-    # Add more remediation sections...
-    return $remediationScript
+    return $RemediationScript
 }
 function Generate-HTMLReport {
-    [CmdletBinding()];
+    ;
+[CmdletBinding(SupportsShouldProcess=$true)]
 param($AssessmentResults)
-$html = @"
+    [string]$html = @"
 <!DOCTYPE html>
 <html>
 <head>
     <title>Zero Trust Network Assessment Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
-        .header { background-color: #0078d4; color: white; padding: 20px; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color:
+        .header { background-color:
         .summary { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .score { font-size: 48px; font-weight: bold; }
-        .score.high { color: #107c10; }
-        .score.medium { color: #ff8c00; }
-        .score.low { color: #d83b01; }
+        .score.high { color:
+        .score.medium { color:
+        .score.low { color:
         .section { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .issue { background-color: #fff4ce; padding: 10px; margin: 5px 0; border-left: 4px solid #ff8c00; }
-        .critical { border-left-color: #d83b01; background-color: #fde7e9; }
+        .issue { background-color:
+        .critical { border-left-color:
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f0f0f0; }
-        .recommendation { background-color: #e7f3ff; padding: 10px; margin: 5px 0; border-left: 4px solid #0078d4; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid
+        th { background-color:
+        .recommendation { background-color:
     </style>
 </head>
 <body>
@@ -280,10 +268,8 @@ $html = @"
         )</p>
     </div>
 " @
-    # Add  sections
     if ($DetailLevel -ne "Executive" ) {
-        # Network Segmentation Section
-        $html = $html + @"
+    [string]$html = $html + @"
     <div class=" section" >
         <h2>Network Segmentation Analysis</h2>
         <table>
@@ -296,7 +282,7 @@ $html = @"
             </tr>
 " @
         foreach ($vnet in $AssessmentResults.NetworkSegmentation) {
-            $html = $html + @"
+    [string]$html = $html + @"
             <tr>
                 <td>$($vnet.VNetName)</td>
                 <td>$($vnet.AddressSpace)</td>
@@ -306,14 +292,14 @@ $html = @"
             </tr>
 " @
         }
-        $html = $html + " </table></div>"
+    [string]$html = $html + " </table></div>"
     }
-    $html = $html + @"
+    [string]$html = $html + @"
     <div class=" section" >
         <h2>Recommendations</h2>
 " @
     foreach ($rec in $AssessmentResults.Recommendations) {
-        $html = $html + @"
+    [string]$html = $html + @"
         <div class=" recommendation" >
             <strong>$($rec.Title)</strong>
             <p>$($rec.Description)</p>
@@ -321,7 +307,7 @@ $html = @"
         </div>
 " @
     }
-    $html = $html + @"
+    [string]$html = $html + @"
     </div>
 </body>
 </html>
@@ -329,34 +315,30 @@ $html = @"
     return $html
 }
 try {
-    # Connect to Azure if needed
-    $context = Get-AzContext -ErrorAction Stop
+    [string]$context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Output "Connecting to Azure..." # Color: $2
         Connect-AzAccount
     }
     if ($SubscriptionId) {
         Set-AzContext -SubscriptionId $SubscriptionId
     }
-    $assessmentResults.SubscriptionId = (Get-AzContext).Subscription.Id
-    # Run assessments
-    $assessmentResults.NetworkSegmentation = Test-NetworkSegmentation
-    $assessmentResults.IdentityPerimeter = Test-IdentityPerimeter
-    $assessmentResults.EncryptionStatus = Test-EncryptionCompliance
-    $assessmentResults.MicroSegmentation = Test-MicroSegmentation
-    # Calculate overall score
-    $totalScore = 0
-    $componentCount = 0
-    foreach ($component in @($assessmentResults.NetworkSegmentation, $assessmentResults.IdentityPerimeter,
-                            $assessmentResults.EncryptionStatus, $assessmentResults.MicroSegmentation)) {
+    [string]$AssessmentResults.SubscriptionId = (Get-AzContext).Subscription.Id
+    [string]$AssessmentResults.NetworkSegmentation = Test-NetworkSegmentation
+    [string]$AssessmentResults.IdentityPerimeter = Test-IdentityPerimeter
+    [string]$AssessmentResults.EncryptionStatus = Test-EncryptionCompliance
+    [string]$AssessmentResults.MicroSegmentation = Test-MicroSegmentation
+    [string]$TotalScore = 0
+    [string]$ComponentCount = 0
+    foreach ($component in @($AssessmentResults.NetworkSegmentation, $AssessmentResults.IdentityPerimeter,
+    [string]$AssessmentResults.EncryptionStatus, $AssessmentResults.MicroSegmentation)) {
         foreach ($item in $component) {
-            $totalScore = $totalScore + $item.Score
-            $componentCount++
+    [string]$TotalScore = $TotalScore + $item.Score
+    [string]$ComponentCount++
         }
     }
-    $assessmentResults.OverallScore = [math]::Round($totalScore / $componentCount)
-    # Generate recommendations
-    $assessmentResults.Recommendations = @(
+    [string]$AssessmentResults.OverallScore = [math]::Round($TotalScore / $ComponentCount)
+    [string]$AssessmentResults.Recommendations = @(
         @{
             Title = "Implement Private Endpoints"
             Description = "Replace Service Endpoints with Private Endpoints for PaaS services to ensure traffic stays within your VNet"
@@ -376,26 +358,21 @@ try {
             Impact = "Security"
         }
     )
-    # Generate report
-    $htmlReport = Generate-HTMLReport -AssessmentResults $assessmentResults
-    $htmlReport | Out-File -FilePath $OutputPath -Encoding UTF8
-    Write-Host " `nAssessment completed successfully!" -ForegroundColor Green
-    Write-Host "Overall Zero Trust Score: $($assessmentResults.OverallScore)%" -ForegroundColor $(
-        if ($assessmentResults.OverallScore -ge 80) { "Green" }
-        elseif ($assessmentResults.OverallScore -ge 60) { "Yellow" }
+    [string]$HtmlReport = Generate-HTMLReport -AssessmentResults $AssessmentResults
+    [string]$HtmlReport | Out-File -FilePath $OutputPath -Encoding UTF8
+    Write-Output " `nAssessment completed successfully!" # Color: $2
+    Write-Output "Overall Zero Trust Score: $($AssessmentResults.OverallScore)%" -ForegroundColor $(
+        if ($AssessmentResults.OverallScore -ge 80) { "Green" }
+        elseif ($AssessmentResults.OverallScore -ge 60) { "Yellow" }
         else { "Red" }
     )
-    Write-Host "Report saved to: $OutputPath" -ForegroundColor Cyan
-    # Generate remediation scripts if requested
+    Write-Output "Report saved to: $OutputPath" # Color: $2
     if ($IncludeRemediation) {
-$remediationPath = $OutputPath -replace " \.html$" , " -remediation.ps1"
-$remediationScript = Generate-RemediationScripts -AssessmentResults $assessmentResults
-        $remediationScript | Out-File -FilePath $remediationPath -Encoding UTF8
-        Write-Host "Remediation script saved to: $remediationPath" -ForegroundColor Cyan
+    [string]$RemediationPath = $OutputPath -replace " \.html$" , " -remediation.ps1"
+    [string]$RemediationScript = Generate-RemediationScripts -AssessmentResults $AssessmentResults
+    [string]$RemediationScript | Out-File -FilePath $RemediationPath -Encoding UTF8
+        Write-Output "Remediation script saved to: $RemediationPath" # Color: $2
     }
 } catch {
     Write-Error "An error occurred during assessment: $_"
-    throw
-}
-
-
+    throw`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -63,100 +63,92 @@
     .\Create-SplunkVM.ps1 -CustomerName "CanadaComputing" -VMName "Splunk01" -LocationName "CanadaCentral" -VMAdminUser "splunkadmin" -SSHPublicKey "ssh-rsa AAAAB3..." -NotificationEmail "admin@company.com"
 
 .EXAMPLE
-    $securePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
-    .\Create-SplunkVM.ps1 -CustomerName "MonitoringCorp" -VMName "SplunkForwarder" -LocationName "EastUS" -VMAdminUser "ubuntu" -VMAdminPassword $securePassword -AuthenticationType "Password" -NotificationEmail "ops@monitoringcorp.com"
-#>
+    [string]$SecurePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
+    .\Create-SplunkVM.ps1 -CustomerName "MonitoringCorp" -VMName "SplunkForwarder" -LocationName "EastUS" -VMAdminUser "ubuntu" -VMAdminPassword $SecurePassword -AuthenticationType "Password" -NotificationEmail "ops@monitoringcorp.com"
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$CustomerName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$LocationName,
-    
+
     [Parameter()]
     [string]$VMSize = "Standard_D2ds_v4",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMAdminUser,
-    
+
     [Parameter()]
     [SecureString]$VMAdminPassword,
-    
+
     [Parameter()]
     [string]$SSHPublicKey,
-    
+
     [Parameter()]
     [ValidateSet("Password", "SSH")]
     [string]$AuthenticationType = "SSH",
-    
+
     [Parameter()]
     [ValidatePattern('^\d{2}:\d{2}$')]
     [string]$AutoShutdownTime = "23:59",
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$NotificationEmail,
-    
+
     [Parameter()]
     [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$')]
     [string]$VnetAddressPrefix = "10.0.0.0/16",
-    
+
     [Parameter()]
     [ValidatePattern('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$')]
     [string]$SubnetAddressPrefix = "10.0.0.0/24",
-    
+
     [Parameter()]
     [ValidateSet("18_04-lts-gen2", "20_04-lts-gen2", "22_04-lts-gen2")]
     [string]$UbuntuVersion = "20_04-lts-gen2",
-    
+
     [Parameter()]
     [ValidateSet("Dev", "Test", "Staging", "Production")]
     [string]$Environment = "Dev",
-    
+
     [Parameter()]
     [ValidateRange(30, 1024)]
     [int]$DiskSizeGB = 64
 )
+    [string]$ErrorActionPreference = "Stop"
 
-# Set error handling preference
-$ErrorActionPreference = "Stop"
-
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colorMap = @{
+    $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
-    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
 
 try {
-    # Validate authentication parameters
     if ($AuthenticationType -eq "SSH" -and [string]::IsNullOrEmpty($SSHPublicKey)) {
         throw "SSH public key is required when using SSH authentication"
     }
@@ -172,20 +164,15 @@ try {
     Write-LogMessage "Ubuntu Version: $UbuntuVersion" -Level "INFO"
     Write-LogMessage "Authentication: $AuthenticationType" -Level "INFO"
     Write-LogMessage "Environment: $Environment" -Level "INFO"
-
-    # Validate Azure context
     $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
-    
-    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
 
-    # Define variables
-    $ResourceGroupName = "${CustomerName}_${VMName}_RG"
-    $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
-    
-    # Define tags
+    Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
+    [string]$ResourceGroupName = "${CustomerName}_${VMName}_RG"
+    [string]$datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
+
     [hashtable]$Tags = @{
         "Autoshutdown"    = 'ON'
         "Createdby"       = $context.Account.Id
@@ -206,44 +193,38 @@ try {
         "UbuntuVersion"   = $UbuntuVersion
     }
 
-    # Create Resource Group
     Write-LogMessage "Creating resource group: $ResourceGroupName" -Level "INFO"
-    $newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
-    $resourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
+    [string]$ResourceGroup = New-AzResourceGroup @newAzResourceGroupSplat
     Write-LogMessage "Resource group created successfully" -Level "SUCCESS"
+    [string]$ComputerName = $VMName
+    [string]$OSDiskCaching = "ReadWrite"
+    [string]$OSCreateOption = "FromImage"
+    [string]$GUID = [guid]::NewGuid()
+    [string]$OSDiskName = "${VMName}_OSDisk_1_$GUID"
+    [string]$DNSNameLabel = "${VMName}dns".ToLower()
+    [string]$NetworkName = "${VMName}_group-vnet"
+    [string]$NICPrefix = 'NIC1'
+    [string]$NICName = "${VMName}_${NICPrefix}".ToLower()
+    [string]$IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
+    [string]$PublicIPAddressName = "${VMName}-ip"
+    [string]$SubnetName = "${VMName}-subnet"
+    [string]$NSGName = "${VMName}-nsg"
+    [string]$ASGName = "${VMName}_ASG1"
 
-    # Define network configuration variables
-    $ComputerName = $VMName
-    $OSDiskCaching = "ReadWrite"
-    $OSCreateOption = "FromImage"
-    $GUID = [guid]::NewGuid()
-    $OSDiskName = "${VMName}_OSDisk_1_$GUID"
-    $DNSNameLabel = "${VMName}dns".ToLower()
-    $NetworkName = "${VMName}_group-vnet"
-    $NICPrefix = 'NIC1'
-    $NICName = "${VMName}_${NICPrefix}".ToLower()
-    $IPConfigName = "${VMName}${NICName}_IPConfig1".ToLower()
-    $PublicIPAddressName = "${VMName}-ip"
-    $SubnetName = "${VMName}-subnet"
-    $NSGName = "${VMName}-nsg"
-    $ASGName = "${VMName}_ASG1"
-
-    # Create Virtual Network and Subnet
     Write-LogMessage "Creating virtual network: $NetworkName" -Level "INFO"
     Write-LogMessage "VNet Address Prefix: $VnetAddressPrefix" -Level "INFO"
     Write-LogMessage "Subnet Address Prefix: $SubnetAddressPrefix" -Level "INFO"
-    
-    $newAzVirtualNetworkSubnetConfigSplat = @{
+    $NewAzVirtualNetworkSubnetConfigSplat = @{
         Name          = $SubnetName
         AddressPrefix = $SubnetAddressPrefix
     }
-    $SingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
-
-    $newAzVirtualNetworkSplat = @{
+    [string]$SingleSubnet = New-AzVirtualNetworkSubnetConfig @newAzVirtualNetworkSubnetConfigSplat
+    $NewAzVirtualNetworkSplat = @{
         Name              = $NetworkName
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
@@ -251,12 +232,11 @@ try {
         Subnet            = $SingleSubnet
         Tag               = $Tags
     }
-    $Vnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
+    [string]$Vnet = New-AzVirtualNetwork @newAzVirtualNetworkSplat
     Write-LogMessage "Virtual network created successfully" -Level "SUCCESS"
 
-    # Create Public IP
     Write-LogMessage "Creating static public IP address: $PublicIPAddressName" -Level "INFO"
-    $newAzPublicIpAddressSplat = @{
+    $NewAzPublicIpAddressSplat = @{
         Name              = $PublicIPAddressName
         DomainNameLabel   = $DNSNameLabel
         ResourceGroupName = $ResourceGroupName
@@ -264,73 +244,59 @@ try {
         AllocationMethod  = 'Static'
         Tag               = $Tags
     }
-    $PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
+    [string]$PIP = New-AzPublicIpAddress @newAzPublicIpAddressSplat
     Write-LogMessage "Public IP created successfully" -Level "SUCCESS"
 
-    # Get current public IP for NSG rule
     Write-LogMessage "Retrieving current public IP for security rules..." -Level "INFO"
     try {
-        $SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
-        $SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
+    [string]$SourceAddressPrefix = (Invoke-WebRequest -Uri "http://ifconfig.me/ip" -TimeoutSec 10).Content.Trim()
+    [string]$SourceAddressPrefixCIDR = "${SourceAddressPrefix}/32"
         Write-LogMessage "Current public IP: $SourceAddressPrefix" -Level "INFO"
     }
     catch {
         Write-LogMessage "Could not retrieve public IP, using 0.0.0.0/0 (less secure)" -Level "WARN"
-        $SourceAddressPrefixCIDR = "0.0.0.0/0"
+    [string]$SourceAddressPrefixCIDR = "0.0.0.0/0"
     }
 
-    # Create Application Security Group
     Write-LogMessage "Creating application security group: $ASGName" -Level "INFO"
-    $newAzApplicationSecurityGroupSplat = @{
+    $NewAzApplicationSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $ASGName
         Location          = $LocationName
         Tag               = $Tags
     }
-    $ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
+    [string]$ASG = New-AzApplicationSecurityGroup @newAzApplicationSecurityGroupSplat
     Write-LogMessage "Application security group created successfully" -Level "SUCCESS"
-
-    # Get subnet configuration
     $Subnet = Get-AzVirtualNetworkSubnetConfig -Name $SubnetName -VirtualNetwork $Vnet
 
-    # Create IP Configuration
     Write-LogMessage "Creating network interface IP configuration" -Level "INFO"
-    $newAzNetworkInterfaceIpConfigSplat = @{
+    $NewAzNetworkInterfaceIpConfigSplat = @{
         Name                     = $IPConfigName
         Subnet                   = $Subnet
         PublicIpAddress          = $PIP
         ApplicationSecurityGroup = $ASG
         Primary                  = $true
     }
-    $IPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
+    [string]$IPConfig1 = New-AzNetworkInterfaceIpConfig @newAzNetworkInterfaceIpConfigSplat
 
-    # Create Network Security Group Rules
     Write-LogMessage "Creating network security group rules" -Level "INFO"
-    
-    # SSH Rule
-    $sshRule = New-AzNetworkSecurityRuleConfig -Name 'SSH-rule' -Description 'Allow SSH' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 100 -SourceAddressPrefix $SourceAddressPrefixCIDR -SourcePortRange '*' -DestinationPortRange '22' -DestinationApplicationSecurityGroup $ASG
-    
-    # Splunk Web Rule (port 8000)
-    $splunkWebRule = New-AzNetworkSecurityRuleConfig -Name 'Splunk-Web-rule' -Description 'Allow Splunk Web' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 110 -SourceAddressPrefix $SourceAddressPrefixCIDR -SourcePortRange '*' -DestinationPortRange '8000' -DestinationApplicationSecurityGroup $ASG
-    
-    # Splunk Forwarder Rule (port 9997)
-    $splunkForwarderRule = New-AzNetworkSecurityRuleConfig -Name 'Splunk-Forwarder-rule' -Description 'Allow Splunk Forwarder' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 120 -SourceAddressPrefix $SubnetAddressPrefix -SourcePortRange '*' -DestinationPortRange '9997' -DestinationApplicationSecurityGroup $ASG
+    [string]$SshRule = New-AzNetworkSecurityRuleConfig -Name 'SSH-rule' -Description 'Allow SSH' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 100 -SourceAddressPrefix $SourceAddressPrefixCIDR -SourcePortRange '*' -DestinationPortRange '22' -DestinationApplicationSecurityGroup $ASG
+    [string]$SplunkWebRule = New-AzNetworkSecurityRuleConfig -Name 'Splunk-Web-rule' -Description 'Allow Splunk Web' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 110 -SourceAddressPrefix $SourceAddressPrefixCIDR -SourcePortRange '*' -DestinationPortRange '8000' -DestinationApplicationSecurityGroup $ASG
+    [string]$SplunkForwarderRule = New-AzNetworkSecurityRuleConfig -Name 'Splunk-Forwarder-rule' -Description 'Allow Splunk Forwarder' -Access 'Allow' -Protocol 'Tcp' -Direction 'Inbound' -Priority 120 -SourceAddressPrefix $SubnetAddressPrefix -SourcePortRange '*' -DestinationPortRange '9997' -DestinationApplicationSecurityGroup $ASG
 
-    # Create Network Security Group
     Write-LogMessage "Creating network security group: $NSGName" -Level "INFO"
-    $newAzNetworkSecurityGroupSplat = @{
+    $NewAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         Name              = $NSGName
-        SecurityRules     = $sshRule, $splunkWebRule, $splunkForwarderRule
+        SecurityRules     = $SshRule, $SplunkWebRule, $SplunkForwarderRule
         Tag               = $Tags
     }
-    $NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
+    [string]$NSG = New-AzNetworkSecurityGroup @newAzNetworkSecurityGroupSplat
     Write-LogMessage "Network security group created with SSH, Splunk Web (8000), and Forwarder (9997) rules" -Level "SUCCESS"
 
-    # Create Network Interface
     Write-LogMessage "Creating network interface: $NICName" -Level "INFO"
-    $newAzNetworkInterfaceSplat = @{
+    $NewAzNetworkInterfaceSplat = @{
         Name                   = $NICName
         ResourceGroupName      = $ResourceGroupName
         Location               = $LocationName
@@ -338,32 +304,28 @@ try {
         IpConfiguration        = $IPConfig1
         Tag                    = $Tags
     }
-    $NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
+    [string]$NIC = New-AzNetworkInterface @newAzNetworkInterfaceSplat
     Write-LogMessage "Network interface created successfully" -Level "SUCCESS"
 
-    # Create credential object based on authentication type
     if ($AuthenticationType -eq "Password") {
-        $Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
+    [string]$Credential = New-Object PSCredential ($VMAdminUser, $VMAdminPassword)
         Write-LogMessage "Using password authentication" -Level "INFO"
     } else {
-        # For SSH, we still need a credential object but the password won't be used
-        $dummyPassword = ConvertTo-SecureString "NotUsed" -AsPlainText -Force
-        $Credential = New-Object PSCredential ($VMAdminUser, $dummyPassword)
+    [string]$DummyPassword = ConvertTo-SecureString "NotUsed" -AsPlainText -Force
+    [string]$Credential = New-Object PSCredential ($VMAdminUser, $DummyPassword)
         Write-LogMessage "Using SSH key authentication" -Level "INFO"
     }
 
-    # Create VM Configuration
     Write-LogMessage "Creating VM configuration" -Level "INFO"
-    $newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName = $VMName
         VMSize = $VMSize
         Tags   = $Tags
     }
-    $VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
+    [string]$VirtualMachine = New-AzVMConfig @newAzVMConfigSplat
 
-    # Set VM Operating System
     if ($AuthenticationType -eq "SSH") {
-        $setAzVMOperatingSystemSplat = @{
+    $SetAzVMOperatingSystemSplat = @{
             VM           = $VirtualMachine
             Linux        = $true
             ComputerName = $ComputerName
@@ -371,60 +333,52 @@ try {
             DisablePasswordAuthentication = $true
         }
     } else {
-        $setAzVMOperatingSystemSplat = @{
+    $SetAzVMOperatingSystemSplat = @{
             VM           = $VirtualMachine
             Linux        = $true
             ComputerName = $ComputerName
             Credential   = $Credential
         }
     }
-    $VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
+    [string]$VirtualMachine = Set-AzVMOperatingSystem @setAzVMOperatingSystemSplat
 
-    # Add SSH key if using SSH authentication
     if ($AuthenticationType -eq "SSH") {
         Write-LogMessage "Adding SSH public key for authentication" -Level "INFO"
-        $sshKeyPath = "/home/$VMAdminUser/.ssh/authorized_keys"
-        $VirtualMachine = Add-AzVMSshPublicKey -VM $VirtualMachine -KeyData $SSHPublicKey -Path $sshKeyPath
+    [string]$SshKeyPath = "/home/$VMAdminUser/.ssh/authorized_keys"
+    [string]$VirtualMachine = Add-AzVMSshPublicKey -VM $VirtualMachine -KeyData $SSHPublicKey -Path $SshKeyPath
     }
+    [string]$VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
 
-    # Add Network Interface to VM
-    $VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
-
-    # Set VM Source Image
     Write-LogMessage "Configuring VM source image (Ubuntu $UbuntuVersion)" -Level "INFO"
-    $setAzVMSourceImageSplat = @{
+    $SetAzVMSourceImageSplat = @{
         VM            = $VirtualMachine
         PublisherName = "Canonical"
         Offer         = "0001-com-ubuntu-server-focal"
         Skus          = $UbuntuVersion
         Version       = "latest"
     }
-    $VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
-
-    # Set VM OS Disk
-    $setAzVMOSDiskSplat = @{
+    [string]$VirtualMachine = Set-AzVMSourceImage @setAzVMSourceImageSplat
+    $SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
         DiskSizeInGB = $DiskSizeGB
     }
-    $VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
+    [string]$VirtualMachine = Set-AzVMOSDisk @setAzVMOSDiskSplat
 
-    # Create the VM
     Write-LogMessage "Creating virtual machine: $VMName (this may take 5-10 minutes)" -Level "INFO"
-    $newAzVMSplat = @{
+    $NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
         Tag               = $Tags
     }
-    $vmResult = New-AzVM @newAzVMSplat
+    [string]$VmResult = New-AzVM @newAzVMSplat
     Write-LogMessage "Virtual machine created successfully!" -Level "SUCCESS"
 
-    # Configure Auto-Shutdown
     Write-LogMessage "Configuring auto-shutdown for $AutoShutdownTime" -Level "INFO"
-    $setAzVMAutoShutdownSplat = @{
+    $SetAzVMAutoShutdownSplat = @{
         ResourceGroupName = $ResourceGroupName
         Name              = $VMName
         Enable            = $true
@@ -435,8 +389,7 @@ try {
     Set-AzVMAutoShutdown @setAzVMAutoShutdownSplat
     Write-LogMessage "Auto-shutdown configured successfully" -Level "SUCCESS"
 
-    # Display connection information
-    Write-Host ""
+    Write-Output ""
     Write-LogMessage "VM Creation Completed Successfully!" -Level "SUCCESS"
     Write-LogMessage "==================================" -Level "INFO"
     Write-LogMessage "VM Name: $VMName" -Level "INFO"
@@ -447,30 +400,29 @@ try {
     Write-LogMessage "Username: $VMAdminUser" -Level "INFO"
     Write-LogMessage "Authentication: $AuthenticationType" -Level "INFO"
     Write-LogMessage "Disk Size: ${DiskSizeGB}GB" -Level "INFO"
-    
-    $fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
+    [string]$fqdn = "${DNSNameLabel}.${LocationName}.cloudapp.azure.com"
     Write-LogMessage "FQDN: $fqdn" -Level "INFO"
     Write-LogMessage "Public IP: Static allocation" -Level "INFO"
-    
+
     if ($AuthenticationType -eq "SSH") {
         Write-LogMessage "SSH Connection: ssh $VMAdminUser@$fqdn" -Level "INFO"
     } else {
         Write-LogMessage "SSH Connection: ssh $VMAdminUser@$fqdn (password authentication)" -Level "INFO"
     }
-    
+
     Write-LogMessage "Virtual Network: $NetworkName" -Level "INFO"
     Write-LogMessage "VNet Address Space: $VnetAddressPrefix" -Level "INFO"
     Write-LogMessage "Subnet: $SubnetName ($SubnetAddressPrefix)" -Level "INFO"
     Write-LogMessage "Auto-shutdown: $AutoShutdownTime Central Standard Time" -Level "INFO"
     Write-LogMessage "Notification email: $NotificationEmail" -Level "INFO"
-    
-    Write-Host ""
+
+    Write-Output ""
     Write-LogMessage "Network Security Rules:" -Level "INFO"
     Write-LogMessage "  SSH (22): Allowed from $SourceAddressPrefixCIDR" -Level "INFO"
     Write-LogMessage "  Splunk Web (8000): Allowed from $SourceAddressPrefixCIDR" -Level "INFO"
     Write-LogMessage "  Splunk Forwarder (9997): Allowed from subnet ($SubnetAddressPrefix)" -Level "INFO"
-    
-    Write-Host ""
+
+    Write-Output ""
     Write-LogMessage "Next Steps for Splunk Configuration:" -Level "INFO"
     Write-LogMessage "1. Wait 2-3 minutes for VM to fully boot" -Level "INFO"
     Write-LogMessage "2. Connect via SSH using the connection details above" -Level "INFO"
@@ -484,5 +436,4 @@ try {
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    throw
-}
+    throw`n}

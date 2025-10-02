@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Api Management Creator
@@ -8,34 +8,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -55,9 +52,9 @@ param(
     [Parameter()]
     [string]$Sku = "Developer"
 )
-Write-Host "Creating API Management service: $ServiceName"
-Write-Host "This process may take 30-45 minutes..."
-$params = @{
+Write-Output "Creating API Management service: $ServiceName"
+Write-Output "This process may take 30-45 minutes..."
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
     Organization = $Organization
@@ -66,27 +63,26 @@ $params = @{
     ErrorAction = "Stop"
     Name = $ServiceName
 }
-$ApiManagement @params
-Write-Host "API Management service created successfully:"
-Write-Host "Name: $($ApiManagement.Name)"
-Write-Host "Location: $($ApiManagement.Location)"
-Write-Host "SKU: $($ApiManagement.Sku)"
-Write-Host "Gateway URL: $($ApiManagement.GatewayUrl)"
-Write-Host "Portal URL: $($ApiManagement.PortalUrl)"
-Write-Host "Management URL: $($ApiManagement.ManagementApiUrl)"
-Write-Host " `nAPI Management Features:"
-Write-Host "API Gateway functionality"
-Write-Host "Developer portal"
-Write-Host "API versioning and documentation"
-Write-Host "Rate limiting and quotas"
-Write-Host "Authentication and authorization"
-Write-Host "Analytics and monitoring"
-Write-Host " `nNext Steps:"
-Write-Host " 1. Configure APIs and operations"
-Write-Host " 2. Set up authentication policies"
-Write-Host " 3. Configure rate limiting"
-Write-Host " 4. Customize developer portal"
+    [string]$ApiManagement @params
+Write-Output "API Management service created successfully:"
+Write-Output "Name: $($ApiManagement.Name)"
+Write-Output "Location: $($ApiManagement.Location)"
+Write-Output "SKU: $($ApiManagement.Sku)"
+Write-Output "Gateway URL: $($ApiManagement.GatewayUrl)"
+Write-Output "Portal URL: $($ApiManagement.PortalUrl)"
+Write-Output "Management URL: $($ApiManagement.ManagementApiUrl)"
+Write-Output " `nAPI Management Features:"
+Write-Output "API Gateway functionality"
+Write-Output "Developer portal"
+Write-Output "API versioning and documentation"
+Write-Output "Rate limiting and quotas"
+Write-Output "Authentication and authorization"
+Write-Output "Analytics and monitoring"
+Write-Output " `nNext Steps:"
+Write-Output " 1. Configure APIs and operations"
+Write-Output " 2. Set up authentication policies"
+Write-Output " 3. Configure rate limiting"
+Write-Output " 4. Customize developer portal"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

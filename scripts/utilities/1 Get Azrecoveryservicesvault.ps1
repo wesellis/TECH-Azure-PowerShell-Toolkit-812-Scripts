@@ -1,34 +1,51 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.RecoveryServices
 
-<#`n.SYNOPSIS
-    Get recoveryservicesvault
+<#
+.SYNOPSIS
+    Gets Azure Recovery Services vaults
 
 .DESCRIPTION
-    Get recoveryservicesvault operation
-    Author: Wes Ellis (wes@wesellis.com)
+    This script retrieves information about Azure Recovery Services vaults in the current
+    subscription or a specific resource group.
 
-    1.0
-    Requires appropriate permissions and modules
+.PARAMETER ResourceGroupName
+    Optional. The name of the resource group to filter vaults
+
+.PARAMETER VaultName
+    Optional. The name of a specific vault to retrieve
+
+.EXAMPLE
+    PS C:\> Get-AzRecoveryServicesVault
+    Gets all Recovery Services vaults in the current subscription
+
+.EXAMPLE
+    PS C:\> Get-AzRecoveryServicesVault -ResourceGroupName "CanPrintEquip_Outlook_RG"
+    Gets all Recovery Services vaults in the specified resource group
+
+.AUTHOR
+    Wes Ellis (wes@wesellis.com)
 #>
-$ErrorActionPreference = "Stop" ;
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-    Name              : Outlook1ARSV1
-ID                : /subscriptions/408a6c03-bd25-471b-ae84-cf82b3dff420/resourceGroups/CanPrintEquip_Outlook_RG/providers/Microsoft.RecoveryServi
-                    ces/vaults/Outlook1ARSV1
-Type              : Microsoft.RecoveryServices/vaults
-Location          : canadacentral
-ResourceGroupName : CanPrintEquip_Outlook_RG
-SubscriptionId    : 408a6c03-bd25-471b-ae84-cf82b3dff420
-Properties        : Microsoft.Azure.Commands.RecoveryServices.ARSVaultProperties
-Get-AzRecoveryServicesVault -ErrorAction Stop
 
+param(
+    [Parameter(Mandatory = $false)]
+    $ResourceGroupName,
+
+    [Parameter(Mandatory = $false)]
+    $VaultName
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+# Get Recovery Services vaults based on parameters
+if ($VaultName -and $ResourceGroupName) {
+    Write-Host "Getting Recovery Services vault '$VaultName' in resource group '$ResourceGroupName'..." -ForegroundColor Green
+    Get-AzRecoveryServicesVault -Name $VaultName -ResourceGroupName $ResourceGroupName -ErrorAction Stop
+} elseif ($ResourceGroupName) {
+    Write-Host "Getting Recovery Services vaults in resource group '$ResourceGroupName'..." -ForegroundColor Green
+    Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -ErrorAction Stop
+} else {
+    Write-Host "Getting all Recovery Services vaults in subscription..." -ForegroundColor Green
+    Get-AzRecoveryServicesVault -ErrorAction Stop
+}

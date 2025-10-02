@@ -1,201 +1,290 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Automation, Az.Resources
 
-<#`n.SYNOPSIS
-    Autoupdateworker
+<#
+.SYNOPSIS
+    AutoUpdate Worker
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation runbook for automatically updating Azure Resource Optimization (ARO)
+    Toolkit components including runbooks, variables, and schedules
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
- AutoUpdate worker Module for ARO Toolkit future releases
- AutoUpdate worker Module for ARO Toolkit future releases
-.\AutoUpdateWorker.ps1
-Version History
-v1.0   - <dev> - Initial Release
-$connectionName = "AzureRunAsConnection"
-try
-{
-    # Get the connection "AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-    "Logging in to Azure..."
-    $params = @{
+
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [string]$ConnectionName = "AzureRunAsConnection"
+)
+
+$ErrorActionPreference = 'Stop'
+
+try {
+    # Connect to Azure using Run As Connection
+    $servicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName -ErrorAction Stop
+    Write-Output "Logging in to Azure..."
+
+    $connectParams = @{
+        ServicePrincipal = $true
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
         CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
     }
-    Add-AzureRmAccount @params
+
+    Connect-AzAccount @connectParams -ErrorAction Stop
+    Write-Output "Successfully connected to Azure"
 }
-catch
-{
-    if (!$servicePrincipalConnection)
-    {
-        $ErrorMessage = "Connection $connectionName not found."
-        throw $ErrorMessage
-    } else{
-        Write-Error -Message $_.Exception
-        throw $_.Exception
+catch {
+    if (!$servicePrincipalConnection) {
+        $errorMessage = "Connection '$ConnectionName' not found."
+        Write-Error -Message $errorMessage
+        throw $errorMessage
+    } else {
+        Write-Error -Message $_.Exception.Message
+        throw
     }
 }
-try
-{
+
+try {
     Write-Output "AutoUpdate Worker execution starts..."
-    #Local Variables
-    $GithubRootPath = "https://raw.githubusercontent.com/Microsoft/MSITARM"
-    $GithubBranch = " azure-resource-optimization-toolkit"
-    $ScriptPath = " azure-resource-optimization-toolkit/nestedtemplates"
-    $FileName = "Automation.json"
-    $GithubFullPath = " $($GithubRootPath)/$($GithubBranch)/$($ScriptPath)/$($FileName)"
-    #[System.Reflection.Assembly]::LoadWithPartialName("System.Web.Extensions" )
-    $WebClient = New-Object -ErrorAction Stop System.Net.WebClient
-    Write-Output "Download the $($FileName) template from GitHub..."
-    $WebClient.DownloadFile($($GithubFullPath)," $PSScriptRoot\$($FileName)" )
-    $jsonContent=Get-Content -ErrorAction Stop " $PSScriptRoot\$($FileName)"
-    Write-Output "Deserialize the JSON..."
-    $serializer = New-Object -ErrorAction Stop System.Web.Script.Serialization.JavaScriptSerializer
-    $jsonData = $serializer.DeserializeObject($jsonContent)
-    #Get the Automation Account tags to read the version
+
+    # GitHub repository configuration
+    $githubRootPath = "https://raw.githubusercontent.com/Microsoft/MSITARM"
+    $githubBranch = "azure-resource-optimization-toolkit"
+    $scriptPath = "azure-resource-optimization-toolkit/nestedtemplates"
+    $fileName = "Automation.json"
+    $githubFullPath = "$githubRootPath/$githubBranch/$scriptPath/$fileName"
+
+    # Download template from GitHub
+    $webClient = New-Object System.Net.WebClient
+    Write-Output "Downloading the $fileName template from GitHub..."
+    $localFilePath = Join-Path $PSScriptRoot $fileName
+    $webClient.DownloadFile($githubFullPath, $localFilePath)
+
+    # Parse JSON content
+    $jsonContent = Get-Content -Path $localFilePath -Raw -ErrorAction Stop
+    Write-Output "Deserializing the JSON..."
+    $jsonData = ConvertFrom-Json -InputObject $jsonContent
+
+    # Get Automation Account details
     Write-Output "Reading the Automation Account details..."
-    $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
-    $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
-    $AutomationAccountDetails = Get-AzureRmAutomationAccount -Name $automationAccountName -ResourceGroupName $aroResourceGroupName
-    $CurrentVersion = $AutomationAccountDetails.Tags.Values
-    $UpdateVersion = $jsonData.variables.AROToolkitVersion
+    $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName' -ErrorAction Stop
+    $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName' -ErrorAction Stop
+
+    $automationAccountDetails = Get-AzAutomationAccount -Name $automationAccountName -ResourceGroupName $aroResourceGroupName -ErrorAction Stop
+    $currentVersion = $automationAccountDetails.Tags.Values
+    $updateVersion = $jsonData.variables.AROToolkitVersion
+
+    # Check for version updates
     Write-Output "Checking the ARO Toolkit version..."
-    $CurrentVersionCompare = New-Object -ErrorAction Stop System.Version($CurrentVersion)
-    $UpdateVersionCompare = New-Object -ErrorAction Stop System.Version($UpdateVersion)
-    $VersionDiff = $UpdateVersionCompare.CompareTo($CurrentVersionCompare)
-    if(  $VersionDiff -gt 0)
-    {
-        Write-Output "Current version is: $($CurrentVersion)"
-        Write-Output "New version $($UpdatedVersion) is available and hence performing the upgrade..."
-        #Prepare the Current variable object
-        #---------Read all the input variables---------------
-        Write-Output " ======================================"
+    $currentVersionCompare = New-Object System.Version($currentVersion)
+    $updateVersionCompare = New-Object System.Version($updateVersion)
+    $versionDiff = $updateVersionCompare.CompareTo($currentVersionCompare)
+
+    if ($versionDiff -gt 0) {
+        Write-Output "Current version is: $currentVersion"
+        Write-Output "New version $updateVersion is available and performing the upgrade..."
+        Write-Output "======================================"
         Write-Output "Checking for asset variable updates..."
-        Write-Output " ======================================"
-        $ExistingVariables = Get-AzureRmAutomationVariable -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName | Select-Object Name
-        $ExistingVariables = $ExistingVariables | Foreach {" $($_.Name)" } | Sort-Object Name
-        $NewVariables=$jsonData.variables.Keys | Where-Object { $_.Trim() -match "Internal" -or $_ -match "External" } | Sort-Object
-        $DiffVariables = Compare-Object -ReferenceObject $NewVariables -DifferenceObject $ExistingVariables | ?{$_.sideIndicator -eq " <=" }| Select InputObject
-        if($null -ne $DiffVariables)
-        {
+        Write-Output "======================================"
+
+        # Check for new variables
+        $existingVariables = Get-AzAutomationVariable -AutomationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName |
+            Select-Object -ExpandProperty Name |
+            Sort-Object
+
+        $newVariables = $jsonData.variables.PSObject.Properties.Name |
+            Where-Object { $_ -match "Internal" -or $_ -match "External" } |
+            Sort-Object
+
+        $diffVariables = Compare-Object -ReferenceObject $newVariables -DifferenceObject $existingVariables |
+            Where-Object { $_.SideIndicator -eq '<=' } |
+            Select-Object -ExpandProperty InputObject
+
+        if ($null -ne $diffVariables) {
             Write-Output "New asset variables found and creating now..."
-            Write-Output $DiffVariables
-            #Create all the new variables
-            $newResourceVariables = $jsonData.resources | foreach{$_.resources}
-            foreach ($difv in $DiffVariables)
-            {
-                foreach($newvar in $newResourceVariables)
-                {
-                    if(($newvar.name -like " *$($difv.InputObject)*" -eq $true) -and ($newvar.type -eq " variables" ))
-                    {
-                        [string[]] $rvarPropValArray = $newvar.properties.value.Split(" ," )
-                        if($rvarPropValArray.get(1) -ne $null -and $rvarPropValArray.get(1).Contains('" ') -ne "True" )
-                        {
-                            [string];  $rvarPropVal = $rvarPropValArray.get(1).Replace(" '" ,"" )
+            Write-Output $diffVariables
+
+            $newResourceVariables = $jsonData.resources | ForEach-Object { $_.resources }
+
+            foreach ($difv in $diffVariables) {
+                foreach ($newvar in $newResourceVariables) {
+                    if (($newvar.name -like "*$difv*") -and ($newvar.type -eq "variables")) {
+                        [string[]]$rvarPropValArray = $newvar.properties.value.Split(",")
+
+                        if ($rvarPropValArray.Count -gt 1 -and -not $rvarPropValArray[1].Contains('"')) {
+                            [string]$rvarPropVal = $rvarPropValArray[1].Replace("'", "")
                         }
-                        else
-                        {
-$rvarPropVal = ""
+                        else {
+                            $rvarPropVal = ""
                         }
-                        New-AzureRmAutomationVariable -Name $difv.InputObject.Trim() -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Encrypted $False -Value $rvarPropVal.Trim()
-                        break;
+
+                        $variableParams = @{
+                            Name = $difv.Trim()
+                            AutomationAccountName = $automationAccountName
+                            ResourceGroupName = $aroResourceGroupName
+                            Encrypted = $false
+                            Value = $rvarPropVal.Trim()
+                        }
+
+                        New-AzAutomationVariable @variableParams -ErrorAction Stop
+                        break
                     }
                 }
             }
         }
-        else
-        {
+        else {
             Write-Output "No updates needed for asset variables..."
         }
-        Write-Output " ================================="
+
+        Write-Output "================================="
         Write-Output "Checking for Runbooks updates..."
-        Write-Output " ================================="
-        #Find the delta runbooks to create/update
-        $runbooks=$jsonData.variables.runbooks.Values
-        $Runbooktable = [ordered]@{}
-        foreach($runb in $runbooks)
-        {
-            #ignore the bootstrap and AROToolkit_AutoUpdate runboooks
-            if($runb.name -notlike " *Bootstrap*" )
-            {
-                [string[]] $runbookScriptUri = $runb.scriptUri -split " ,"
-                $Runbooktable.Add($runb.name,$runbookScriptUri.get(1).Replace(" )]" ,"" ).Replace(" '" ,"" ))
-                $currentRunbook = Get-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $runb.name -ErrorAction SilentlyContinue
-                #check if this is new runbook or existing
-                if($null -ne $currentRunbook)
-                {
+        Write-Output "================================="
+
+        $runbooks = $jsonData.variables.runbooks.Values
+        $runbookTable = [ordered]@{}
+
+        foreach ($runb in $runbooks) {
+            if ($runb.name -notlike "*Bootstrap*") {
+                [string[]]$runbookScriptUri = $runb.scriptUri -split ","
+                $cleanUri = $runbookScriptUri[1].Replace(")]", "").Replace("'", "")
+                $runbookTable.Add($runb.name, $cleanUri)
+
+                $currentRunbook = Get-AzAutomationRunbook -AutomationAccountName $automationAccountName `
+                    -ResourceGroupName $aroResourceGroupName `
+                    -Name $runb.name `
+                    -ErrorAction SilentlyContinue
+
+                if ($null -ne $currentRunbook) {
                     $currentRBversion = $currentRunbook.Tags.Values
-                    $NewVersion = $runb.version
-                    $CVrbCompare = New-Object -ErrorAction Stop System.Version($currentRBversion)
-                    $NVrbCompare = New-Object -ErrorAction Stop System.Version($NewVersion)
-                    $VersionDiffRB = $NVrbCompare.CompareTo($CVrbCompare)
-                    if($VersionDiffRB -gt 0)
-                    {
-                        $RunbookDownloadPath = " $($GitHubRootPath)/$($GitHubBranch)/azure-resource-optimization-toolkit$($Runbooktable[$runb.name])"
+                    $newVersion = $runb.version
+                    $cvrbCompare = New-Object System.Version($currentRBversion)
+                    $nvrbCompare = New-Object System.Version($newVersion)
+                    $versionDiffRB = $nvrbCompare.CompareTo($cvrbCompare)
+
+                    if ($versionDiffRB -gt 0) {
+                        $runbookDownloadPath = "$githubRootPath/$githubBranch/azure-resource-optimization-toolkit$($runbookTable[$runb.name])"
                         Write-Output "Updates needed for $($runb.name)..."
-                        #Now download the runbook and do the update
                         Write-Output "Downloading the updated PowerShell script from GitHub..."
-                        $WebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
-                        $WebClientRB.DownloadFile($($RunbookDownloadPath)," $PSScriptRoot\$($runb.name).ps1" )
-                        $RunbookScriptPath = " $PSScriptRoot\$($runb.name).ps1"
+
+                        $webClientRB = New-Object System.Net.WebClient
+                        $localRunbookPath = Join-Path $PSScriptRoot "$($runb.name).ps1"
+                        $webClientRB.DownloadFile($runbookDownloadPath, $localRunbookPath)
+
                         Write-Output "Updating the Runbook content..."
-                        Import-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Path $RunbookScriptPath -Name $runb.name -Tags @{version=$NewVersion} -Force -Type PowerShell
+                        $importParams = @{
+                            AutomationAccountName = $automationAccountName
+                            ResourceGroupName = $aroResourceGroupName
+                            Path = $localRunbookPath
+                            Name = $runb.name
+                            Tags = @{version = $newVersion}
+                            Force = $true
+                            Type = "PowerShell"
+                        }
+                        Import-AzAutomationRunbook @importParams -ErrorAction Stop
+
                         Write-Output "Publishing the Runbook $($runb.name)..."
-                        Publish-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $runb.name
+                        Publish-AzAutomationRunbook -AutomationAccountName $automationAccountName `
+                            -ResourceGroupName $aroResourceGroupName `
+                            -Name $runb.name `
+                            -ErrorAction Stop
                     }
                 }
-                else
-                {
-                    $RunbookDownloadPath = " $($GitHubRootPath)/$($GitHubBranch)/azure-resource-optimization-toolkit$($Runbooktable[$runb.name])"
+                else {
+                    $runbookDownloadPath = "$githubRootPath/$githubBranch/azure-resource-optimization-toolkit$($runbookTable[$runb.name])"
                     Write-Output "New Runbook $($runb.name) found..."
-                    #New Runbook. So download and create it
                     Write-Output "Downloading the PowerShell script from GitHub..."
-                    $WebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
-                    $WebClientRB.DownloadFile($($RunbookDownloadPath)," $PSScriptRoot\$($runb.name).ps1" )
-                    $RunbookScriptPath = " $PSScriptRoot\$($runb.name).ps1"
-                    $NewVersion = $runb.version
+
+                    $webClientRB = New-Object System.Net.WebClient
+                    $localRunbookPath = Join-Path $PSScriptRoot "$($runb.name).ps1"
+                    $webClientRB.DownloadFile($runbookDownloadPath, $localRunbookPath)
+
+                    $newVersion = $runb.version
                     Write-Output "Creating the Runbook in the Automation Account..."
-                    New-AzureRmAutomationRunbook -Name $runb.name -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Type PowerShell -Description "New Runbook"
-                    Import-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Path $RunbookScriptPath -Name $runb.name -Force -Type PowerShell -Tags @{version=$NewVersion}
+
+                    New-AzAutomationRunbook -Name $runb.name `
+                        -AutomationAccountName $automationAccountName `
+                        -ResourceGroupName $aroResourceGroupName `
+                        -Type PowerShell `
+                        -Description "New Runbook" `
+                        -ErrorAction Stop
+
+                    $importParams = @{
+                        AutomationAccountName = $automationAccountName
+                        ResourceGroupName = $aroResourceGroupName
+                        Path = $localRunbookPath
+                        Name = $runb.name
+                        Force = $true
+                        Type = "PowerShell"
+                        Tags = @{version = $newVersion}
+                    }
+                    Import-AzAutomationRunbook @importParams -ErrorAction Stop
+
                     Write-Output "Publishing the new Runbook $($runb.name)..."
-                    Publish-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $runb.name
+                    Publish-AzAutomationRunbook -AutomationAccountName $automationAccountName `
+                        -ResourceGroupName $aroResourceGroupName `
+                        -Name $runb.name `
+                        -ErrorAction Stop
                 }
             }
         }
-        Write-Output " ============================="
+
+        Write-Output "============================="
         Write-Output "Checking for new schedule..."
-        Write-Output " ============================="
-        #just run the bootstrap_main runbook to create the schedules
-        $Bootstrap_MainRunbook = "Bootstrap_Main"
-        $RunbookDownloadPath = " $($GitHubRootPath)/$($GitHubBranch)/demos/azure-resource-optimization-toolkit/scripts/Bootstrap_Main.ps1"
+        Write-Output "============================="
+
+        $bootstrapMainRunbook = "Bootstrap_Main"
+        $runbookDownloadPath = "$githubRootPath/$githubBranch/demos/azure-resource-optimization-toolkit/scripts/Bootstrap_Main.ps1"
         Write-Output "Downloading the Bootstrap_Main PowerShell script from GitHub..."
-$WebClientRB = New-Object -ErrorAction Stop System.Net.WebClient
-        $WebClientRB.DownloadFile($($RunbookDownloadPath)," $PSScriptRoot\$($Bootstrap_MainRunbook).ps1" )
-$RunbookScriptPath = " $PSScriptRoot\Bootstrap_Main.ps1"
+
+        $webClientRB = New-Object System.Net.WebClient
+        $localBootstrapPath = Join-Path $PSScriptRoot "$bootstrapMainRunbook.ps1"
+        $webClientRB.DownloadFile($runbookDownloadPath, $localBootstrapPath)
+
         Write-Output "Creating the Runbook in the Automation Account..."
-        New-AzureRmAutomationRunbook -Name $Bootstrap_MainRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Type PowerShell -Description "New Runbook"
-        Import-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Path $RunbookScriptPath -Name $Bootstrap_MainRunbook -Force -Type PowerShell
+        New-AzAutomationRunbook -Name $bootstrapMainRunbook `
+            -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $aroResourceGroupName `
+            -Type PowerShell `
+            -Description "Bootstrap Main Runbook" `
+            -ErrorAction Stop
+
+        Import-AzAutomationRunbook -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $aroResourceGroupName `
+            -Path $localBootstrapPath `
+            -Name $bootstrapMainRunbook `
+            -Force `
+            -Type PowerShell `
+            -ErrorAction Stop
+
         Write-Output "Publishing the Bootstrap_Main Runbook..."
-        Publish-AzureRmAutomationRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Name $Bootstrap_MainRunbook
-        Start-AzureRmAutomationRunbook -Name $Bootstrap_MainRunbook -automationAccountName $automationAccountName -ResourceGroupName $aroResourceGroupName -Wait
-        #Update the Automation Account version tag to latest version
-        Set-AzureRmAutomationAccount -Name $automationAccountName -ResourceGroupName $aroResourceGroupName -Tags @{AROToolkitVersion=$UpdateVersion}
-    }
-    elseif($VersionDiff -le 0)
-    {
-        Write-Output "You are having the latest version of ARO Toolkit and hence no update needed..."
-    }
-    Write-Output "AutoUpdate worker execution completed..."
-}
-catch
-{
-    Write-Output "Error Occurred in the AutoUpdate worker runbook..."
-    Write-Output $_.Exception
-}
+        Publish-AzAutomationRunbook -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $aroResourceGroupName `
+            -Name $bootstrapMainRunbook `
+            -ErrorAction Stop
 
+        Start-AzAutomationRunbook -Name $bootstrapMainRunbook `
+            -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $aroResourceGroupName `
+            -Wait `
+            -ErrorAction Stop
 
+        Set-AzAutomationAccount -Name $automationAccountName `
+            -ResourceGroupName $aroResourceGroupName `
+            -Tags @{AROToolkitVersion = $updateVersion} `
+            -ErrorAction Stop
+    }
+    elseif ($versionDiff -le 0) {
+        Write-Output "You have the latest version of ARO Toolkit - no update needed"
+    }
+
+    Write-Output "AutoUpdate worker execution completed"
+}
+catch {
+    Write-Error "Error occurred in the AutoUpdate worker runbook: $($_.Exception.Message)"
+    throw
+}

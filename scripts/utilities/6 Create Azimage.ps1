@@ -1,43 +1,66 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
-<#`n.SYNOPSIS
-    Create Azimage
+<#
+.SYNOPSIS
+    Create Azure image
 
 .DESCRIPTION
-    Create Azimage operation
+    Create Azure image operation from a virtual machine
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Author: Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$VMName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Location,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ImageName,
+
+    [Parameter()]
+    [ValidateSet('Generalized', 'Specialized')]
+    [string]$OsState = 'Generalized',
+
+    [Parameter()]
+    [ValidateSet('Windows', 'Linux')]
+    [string]$OsType = 'Windows'
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-$vmName = "FGC-CR08NW2-MIG"
-$rgName = "FGC_AVD_RG1"
-$location = " canadacentral"
-$imageName = "FGC-CR08NW2-AVD-Nerdio-image-v1"
-$vm = Get-AzVm -Name $vmName -ResourceGroupName $rgName
+
+$vm = Get-AzVm -Name $VMName -ResourceGroupName $ResourceGroupName -ErrorAction Stop
 $diskID = $vm.StorageProfile.OsDisk.ManagedDisk.Id
-$imageConfig = New-AzImageConfig -Location $location
+$imageConfig = New-AzImageConfig -Location $Location
+
 $setAzImageOsDiskSplat = @{
     Image = $imageConfig
-    OsState = 'Generalized'
-    # OsState = 'Specialized'
-    OsType = 'Windows'
-    # ManagedDiskId = $disk.Id
+    OsState = $OsState
+    OsType = $OsType
     ManagedDiskId = $diskID
 }
-$imageConfig = Set-AzImageOsDisk -ErrorAction Stop @setAzImageOsDiskSplat
+
+$imageConfig = Set-AzImageOsDisk @setAzImageOsDiskSplat -ErrorAction Stop
+
 $newAzImageSplat = @{
-    ImageName = $imageName
-    ResourceGroupName = $rgName
+    ImageName = $ImageName
+    ResourceGroupName = $ResourceGroupName
     Image = $imageConfig
 }
-$image = New-AzImage -ErrorAction Stop @newAzImageSplat
+
+$image = New-AzImage @newAzImageSplat -ErrorAction Stop
+$image
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,34 +6,32 @@
 
 .DESCRIPTION
     Manage Function Apps
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AppName
 )
-Write-Host "Monitoring Function App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "============================================"
-# Get Function App details
+Write-Output "Monitoring Function App: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "============================================"
 $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
-Write-Host "Function App Information:"
-Write-Host "Name: $($FunctionApp.Name)"
-Write-Host "State: $($FunctionApp.State)"
-Write-Host "Location: $($FunctionApp.Location)"
-Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Host "Kind: $($FunctionApp.Kind)"
-Write-Host "App Service Plan: $($FunctionApp.AppServicePlan)"
-# Runtime information
-Write-Host "`nRuntime Configuration:"
-Write-Host "Runtime: $($FunctionApp.Runtime)"
-Write-Host "Runtime Version: $($FunctionApp.RuntimeVersion)"
-Write-Host "OS Type: $($FunctionApp.OSType)"
-# Get app settings (without revealing sensitive values)
+Write-Output "Function App Information:"
+Write-Output "Name: $($FunctionApp.Name)"
+Write-Output "State: $($FunctionApp.State)"
+Write-Output "Location: $($FunctionApp.Location)"
+Write-Output "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Output "Kind: $($FunctionApp.Kind)"
+Write-Output "App Service Plan: $($FunctionApp.AppServicePlan)"
+Write-Output "`nRuntime Configuration:"
+Write-Output "Runtime: $($FunctionApp.Runtime)"
+Write-Output "Runtime Version: $($FunctionApp.RuntimeVersion)"
+Write-Output "OS Type: $($FunctionApp.OSType)"
 $AppSettings = $FunctionApp.ApplicationSettings
 if ($AppSettings) {
-    Write-Host "`nApplication Settings: $($AppSettings.Count) configured"
-    # List non-sensitive setting keys
+    Write-Output "`nApplication Settings: $($AppSettings.Count) configured"
     $SafeSettings = $AppSettings.Keys | Where-Object {
         $_ -notlike "*KEY*" -and
         $_ -notlike "*SECRET*" -and
@@ -41,18 +39,17 @@ if ($AppSettings) {
         $_ -notlike "*CONNECTION*"
     }
     if ($SafeSettings) {
-        Write-Host "Non-sensitive settings: $($SafeSettings -join ', ')"
+        Write-Output "Non-sensitive settings: $($SafeSettings -join ', ')"
     }
 }
-# Check if HTTPS only is enabled
-Write-Host "`nSecurity:"
-Write-Host "HTTPS Only: $($FunctionApp.HttpsOnly)"
-# Get function count (if accessible)
+Write-Output "`nSecurity:"
+Write-Output "HTTPS Only: $($FunctionApp.HttpsOnly)"
 try {
-    # Note: This would require additional permissions and might not always be accessible
-    Write-Host "`nFunctions: Use Azure Portal or Azure CLI for  function metrics"
+    Write-Output "`nFunctions: Use Azure Portal or Azure CLI for  function metrics"
 } catch {
-    Write-Host "`nFunctions: Unable to enumerate (check permissions)"
+    Write-Output "`nFunctions: Unable to enumerate (check permissions)"
 }
-Write-Host "`nFunction App monitoring completed at $(Get-Date)"
+Write-Output "`nFunction App monitoring completed at $(Get-Date)"
+
+
 

@@ -1,82 +1,104 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Azure Role Assignment Manager
 
 .DESCRIPTION
-    Azure automation
+    Azure automation for managing role assignments
 
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+.NOTES
+    Version: 1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+#>
+
 [CmdletBinding()]
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
-param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$PrincipalId,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$RoleDefinitionName,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$Scope,
+
     [Parameter()]
     [string]$PrincipalType = "User"
 )
-Write-Host "Managing role assignment:"
-Write-Host "Principal ID: $PrincipalId"
-Write-Host "Role: $RoleDefinitionName"
-Write-Host "Scope: $Scope"
-Write-Host "Type: $PrincipalType"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+function Write-Log {
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
+    }
+    $LogEntry = "$timestamp [Role-Manager] [$Level] $Message"
+    Write-Host $LogEntry -ForegroundColor $ColorMap[$Level]
+}
+
 try {
-    # Check if assignment already exists
-$ExistingAssignment = Get-AzRoleAssignment -ObjectId $PrincipalId -RoleDefinitionName $RoleDefinitionName -Scope $Scope -ErrorAction SilentlyContinue
+    Write-Log "Managing role assignment:" "INFO"
+    Write-Log "Principal ID: $PrincipalId" "INFO"
+    Write-Log "Role: $RoleDefinitionName" "INFO"
+    Write-Log "Scope: $Scope" "INFO"
+    Write-Log "Type: $PrincipalType" "INFO"
+
+    # Check for existing assignment
+    $ExistingAssignment = Get-AzRoleAssignment -ObjectId $PrincipalId -RoleDefinitionName $RoleDefinitionName -Scope $Scope -ErrorAction SilentlyContinue
+
     if ($ExistingAssignment) {
-        Write-Host "[WARN] Role assignment already exists"
-        Write-Host "Assignment ID: $($ExistingAssignment.RoleAssignmentId)"
+        Write-Log "Role assignment already exists" "WARN"
+        Write-Log "Assignment ID: $($ExistingAssignment.RoleAssignmentId)" "INFO"
         return
     }
-    # Create new role assignment
-   $params = @{
-       ErrorAction = "Stop"
-       RoleDefinitionName = $RoleDefinitionName
-       ObjectId = $PrincipalId
-       Scope = $Scope  Write-Host "Role assignment created successfully:" "INFO"Write-Host "Assignment ID: $($Assignment.RoleAssignmentId)" "INFO"Write-Host "Principal Name: $($Assignment.DisplayName)" "INFO"Write-Host "Role: $($Assignment.RoleDefinitionName)"Write-Host "Scope: $($Assignment.Scope)" " INFO
-   }
-   ; @params
+
+    # Create role assignment
+    $params = @{
+        ErrorAction = "Stop"
+        RoleDefinitionName = $RoleDefinitionName
+        ObjectId = $PrincipalId
+        Scope = $Scope
+    }
+
+    $Assignment = New-AzRoleAssignment @params
+
+    Write-Log "Role assignment created successfully:" "SUCCESS"
+    Write-Log "Assignment ID: $($Assignment.RoleAssignmentId)" "INFO"
+    Write-Log "Principal Name: $($Assignment.DisplayName)" "INFO"
+    Write-Log "Role: $($Assignment.RoleDefinitionName)" "INFO"
+    Write-Log "Scope: $($Assignment.Scope)" "INFO"
+
+    Write-Log "`nCommon Azure Roles:" "INFO"
+    Write-Log "  Owner - Full access including access management" "INFO"
+    Write-Log "  Contributor - Full access except access management" "INFO"
+    Write-Log "  Reader - Read-only access" "INFO"
+    Write-Log "  User Access Administrator - Manage user access" "INFO"
+    Write-Log "  Security Administrator - Security permissions" "INFO"
+    Write-Log "  Backup Contributor - Backup management" "INFO"
+
 } catch {
     Write-Error "Failed to create role assignment: $($_.Exception.Message)"
+    throw
 }
-Write-Host " `nCommon Azure Roles:"
-Write-Host "Owner - Full access including access management"
-Write-Host "Contributor - Full access except access management"
-Write-Host "Reader - Read-only access"
-Write-Host "User Access Administrator - Manage user access"
-Write-Host "Security Administrator - Security permissions"
-Write-Host "Backup Contributor - Backup management"
-
-

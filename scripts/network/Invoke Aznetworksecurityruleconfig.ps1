@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,7 +9,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,11 +19,8 @@ function Invoke-AzNetworkSecurityRuleConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzNetworkSecurityRuleConfig {
-    #region func-New-AzNetworkSecurityRuleConfig;
-$newAzNetworkSecurityRuleConfigSplat = @{
-    # Name = 'rdp-rule'
+$NewAzNetworkSecurityRuleConfigSplat = @{
     Name                                = 'RDP-rule'
-    # Description = "Allow RDP"
     Description                         = 'Allow RDP'
     Access                              = 'Allow'
     Protocol                            = 'Tcp'
@@ -35,7 +31,4 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     DestinationPortRange                = '3389'
     DestinationApplicationSecurityGroup = $ASG
 };
-$rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat
-}
-
-
+$rule1 = New-AzNetworkSecurityRuleConfig -ErrorAction Stop @newAzNetworkSecurityRuleConfigSplat`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,9 +10,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
   Azure Automation runbook that stops of all VMs in the specified Azure subscription or resource group
   This Azure runbook connects to Azure and stops all VMs in an Azure subscription or resource group.
   You can attach a schedule to this runbook to run it at a specific time. Note that this runbook does not stop
@@ -28,27 +27,25 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
    LASTEDIT: Sept 6, 2016
 [CmdletBinding()]
 param(
-    [Parameter(ValueFromPipeline)]`n    [string]$automationConnectionName = 'AzureRunAsConnection',
+    [Parameter(ValueFromPipeline)]`n    $AutomationConnectionName = 'AzureRunAsConnection',
     [Parameter()]
     [String] $ResourceGroupName
 )
 try
 {
-    # Get the connection "AzureRunAsConnection "
-    $servicePrincipalConnection = Get-AutomationConnection -Name $automationConnectionName
-    # Log into Azure
+    $ServicePrincipalConnection = Get-AutomationConnection -Name $AutomationConnectionName
     $params = @{
-        ApplicationId = $servicePrincipalConnection.ApplicationId
-        TenantId = $servicePrincipalConnection.TenantId
-        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
+        ApplicationId = $ServicePrincipalConnection.ApplicationId
+        TenantId = $ServicePrincipalConnection.TenantId
+        CertificateThumbprint = $ServicePrincipalConnection.CertificateThumbprint
     }
     $login @params
 }
 catch
 {
-    if (!$servicePrincipalConnection)
+    if (!$ServicePrincipalConnection)
     {
-        $ErrorMessage = "Connection $connectionName not found."
+    $ErrorMessage = "Connection $ConnectionName not found."
         throw $ErrorMessage
     } else{
         Write-Error -Message $_.Exception
@@ -58,30 +55,28 @@ catch
 write-output "Logged in as $($login.Context.Account.id) to subscriptionID $($login.Context.Subscription.SubscriptionId)."
 if ($ResourceGroupName)
 {
-	$VMs = Get-AzureRmVM -ResourceGroupName $ResourceGroupName
+    $VMs = Get-AzureRmVM -ResourceGroupName $ResourceGroupName
 }
 else
 {
-	$VMs = Get-AzureRmVM -ErrorAction Stop
+    $VMs = Get-AzureRmVM -ErrorAction Stop
 }
 foreach ($VM in $VMs)
 {
-	$vmName = $vm.Name
+    $VmName = $vm.Name
     $ResourceGroupName = $vm.resourceGroupName
-$status = ((Get-AzureRmVm -ResourceGroupName $ResourceGroupName -Name $vmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
+    $status = ((Get-AzureRmVm -ResourceGroupName $ResourceGroupName -Name $VmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
     if($status -ne 'VM deallocated')
     {
-$stopRtn = Stop-AzureRMVM -Name $VMName -ResourceGroupName $resourceGroupName -force -ea SilentlyContinue
+    $StopRtn = Stop-AzureRMVM -Name $VMName -ResourceGroupName $ResourceGroupName -force -ea SilentlyContinue
 		if (-not($StopRtn))
 		{
-			# The VM failed to stop, so send notice
         	Write-Output ($VMName + " failed to stop" )
         	Write-Error ($VMName + " failed to stop. Error was:" ) -ErrorAction Continue
 			Write-Error (ConvertTo-Json $StopRtn.Error) -ErrorAction Continue
 		}
 		else
 		{
-			# The VM stopped, so send notice
 			Write-Output ($VMName + " has been stopped" )
 		}
 	}
@@ -89,6 +84,4 @@ $stopRtn = Stop-AzureRMVM -Name $VMName -ResourceGroupName $resourceGroupName -f
 	{
 		Write-Output ($VMName + " is already stopped" )
 	}
-}
-
-
+`n}

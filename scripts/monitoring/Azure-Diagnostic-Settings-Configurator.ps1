@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceId,
@@ -22,22 +24,19 @@
     [Parameter()]
     [array]$MetricCategories = @("AllMetrics")
 )
-Write-Host "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])"
-# Build diagnostic setting parameters
+Write-Output "Configuring diagnostic settings for resource: $($ResourceId.Split('/')[-1])"
 $DiagnosticParams = @{
     ResourceId = $ResourceId
     Name = $DiagnosticSettingName
 }
-# Configure destinations
 if ($WorkspaceId) {
     $DiagnosticParams.WorkspaceId = $WorkspaceId
-    Write-Host "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])"
+    Write-Output "Log Analytics Workspace: $($WorkspaceId.Split('/')[-1])"
 }
 if ($StorageAccountId) {
     $DiagnosticParams.StorageAccountId = $StorageAccountId
-    Write-Host "Storage Account: $($StorageAccountId.Split('/')[-1])"
+    Write-Output "Storage Account: $($StorageAccountId.Split('/')[-1])"
 }
-# Configure log categories
 $LogSettings = @()
 foreach ($Category in $LogCategories) {
     $LogSettings += @{
@@ -49,7 +48,6 @@ foreach ($Category in $LogCategories) {
         }
     }
 }
-# Configure metric categories
 $MetricSettings = @()
 foreach ($Category in $MetricCategories) {
     $MetricSettings += @{
@@ -63,25 +61,26 @@ foreach ($Category in $MetricCategories) {
 }
 $DiagnosticParams.Log = $LogSettings
 $DiagnosticParams.Metric = $MetricSettings
-# Create diagnostic setting
 $DiagnosticSetting = Set-AzDiagnosticSetting -ErrorAction Stop @DiagnosticParams
-Write-Host "Diagnostic settings configured successfully:"
-Write-Host "Setting ID: $($DiagnosticSetting.Id)"
-Write-Host "Name: $DiagnosticSettingName"
-Write-Host "Resource: $($ResourceId.Split('/')[-1])"
-Write-Host "Log Categories: $($LogCategories -join ', ')"
-Write-Host "Metric Categories: $($MetricCategories -join ', ')"
-Write-Host "`nDiagnostic Data Destinations:"
+Write-Output "Diagnostic settings configured successfully:"
+Write-Output "Setting ID: $($DiagnosticSetting.Id)"
+Write-Output "Name: $DiagnosticSettingName"
+Write-Output "Resource: $($ResourceId.Split('/')[-1])"
+Write-Output "Log Categories: $($LogCategories -join ', ')"
+Write-Output "Metric Categories: $($MetricCategories -join ', ')"
+Write-Output "`nDiagnostic Data Destinations:"
 if ($WorkspaceId) {
-    Write-Host "   Log Analytics Workspace (for queries and alerts)"
+    Write-Output "   Log Analytics Workspace (for queries and alerts)"
 }
 if ($StorageAccountId) {
-    Write-Host "   Storage Account (for long-term archival)"
+    Write-Output "   Storage Account (for long-term archival)"
 }
-Write-Host "`nDiagnostic Benefits:"
-Write-Host "Centralized logging and monitoring"
-Write-Host "Compliance and audit trails"
-Write-Host "Performance troubleshooting"
-Write-Host "Security event tracking"
-Write-Host "Cost optimization insights"
+Write-Output "`nDiagnostic Benefits:"
+Write-Output "Centralized logging and monitoring"
+Write-Output "Compliance and audit trails"
+Write-Output "Performance troubleshooting"
+Write-Output "Security event tracking"
+Write-Output "Cost optimization insights"
+
+
 

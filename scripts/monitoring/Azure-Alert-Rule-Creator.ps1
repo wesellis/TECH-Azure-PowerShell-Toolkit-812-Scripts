@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -24,8 +26,7 @@
     [Parameter()]
     [string]$NotificationEmail
 )
-Write-Host "Creating Alert Rule: $AlertRuleName"
-# Create action group if email is provided
+Write-Output "Creating Alert Rule: $AlertRuleName"
 if ($NotificationEmail) {
     $ActionGroupName = "$AlertRuleName-actiongroup"
     $params = @{
@@ -38,7 +39,6 @@ if ($NotificationEmail) {
     }
     $EmailReceiver @params
 }
-# Create alert rule condition
 $params = @{
     Threshold = $Threshold
     ErrorAction = "Stop"
@@ -47,7 +47,6 @@ $params = @{
     Operator = $Operator
 }
 $Condition @params
-# Create alert rule
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Name = $AlertRuleName
@@ -58,9 +57,8 @@ $params = @{
     Condition = $Condition
 }
 $AlertRule @params
-Write-Host "Alert Rule ID: $($AlertRule.Id)"
+Write-Output "Alert Rule ID: $($AlertRule.Id)"
 if ($ActionGroup) {
-    # Associate action group with alert rule
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Name = $AlertRuleName
@@ -73,17 +71,19 @@ if ($ActionGroup) {
     }
     Add-AzMetricAlertRuleV2 @params
 }
-Write-Host "Alert Rule created successfully:"
-Write-Host "Name: $AlertRuleName"
-Write-Host "Metric: $MetricName"
-Write-Host "Threshold: $Operator $Threshold"
-Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])"
+Write-Output "Alert Rule created successfully:"
+Write-Output "Name: $AlertRuleName"
+Write-Output "Metric: $MetricName"
+Write-Output "Threshold: $Operator $Threshold"
+Write-Output "Target Resource: $($TargetResourceId.Split('/')[-1])"
 if ($NotificationEmail) {
-    Write-Host "Notification Email: $NotificationEmail"
+    Write-Output "Notification Email: $NotificationEmail"
 }
-Write-Host "`nAlert Rule Features:"
-Write-Host "Real-time monitoring"
-Write-Host "Configurable thresholds"
-Write-Host "Multiple notification channels"
-Write-Host "Auto-resolution"
+Write-Output "`nAlert Rule Features:"
+Write-Output "Real-time monitoring"
+Write-Output "Configurable thresholds"
+Write-Output "Multiple notification channels"
+Write-Output "Auto-resolution"
+
+
 

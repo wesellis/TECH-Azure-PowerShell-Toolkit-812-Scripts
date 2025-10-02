@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Create Devenv Shortcut
@@ -9,7 +9,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     Create a shortcut to a dev repo.
     Add enlistment shortcut to the desktop.
 .PARAMETER RepoRoot
@@ -46,7 +45,7 @@
       }
     }
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoRoot,
     [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][String] $RepoKind,
@@ -57,21 +56,20 @@ param(
     [Parameter(Mandatory = $false)][String] $DesktopShortcutHost = "Console"
 )
 Set-StrictMode -Version Latest
-function New-Shortcut($invokecommandScriptPath, $shortcutName, $shortcutTargetPath, $shortcutArguments, $shortcutIcon, $shortcutRunAsAdmin) {
-    & $invokecommandScriptPath -ShortcutName $shortcutName -ShortcutTargetPath $shortcutTargetPath -ShortcutArguments $shortcutArguments -ShortcutIcon $shortcutIcon -EnableRunAsAdmin $shortcutRunAsAdmin
+function New-Shortcut($InvokecommandScriptPath, $ShortcutName, $ShortcutTargetPath, $ShortcutArguments, $ShortcutIcon, $ShortcutRunAsAdmin) {
+    & $InvokecommandScriptPath -ShortcutName $ShortcutName -ShortcutTargetPath $ShortcutTargetPath -ShortcutArguments $ShortcutArguments -ShortcutIcon $ShortcutIcon -EnableRunAsAdmin $ShortcutRunAsAdmin
 }
 function RunScriptCreatehortcut($RepoRoot, $RepoKind, $DesktopShortcutScriptPath, $ShortcutRunAsAdmin, $DesktopShortcutIconPath, $DesktopShortcutName, $DesktopShortcutHost) {
-    # Check RepoKind
     if ([string]::IsNullOrEmpty($DesktopShortcutScriptPath)) {
         if ($RepoKind -eq 'MSBuild') {
             Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-msbuild-utils.psm1')
-            $DesktopShortcutScriptPath = $(Get-LatestVisualStudioDeveloperEnvironmentScriptPath)
+    $DesktopShortcutScriptPath = $(Get-LatestVisualStudioDeveloperEnvironmentScriptPath)
         }
         elseif ($RepoKind -eq 'Custom') {
-            Write-Host "No value provided for DesktopShortcutScriptPath"
+            Write-Output "No value provided for DesktopShortcutScriptPath"
         }
         elseif ($RepoKind -eq 'Data') {
-            Write-Host "No value provided for DesktopShortcutScriptPath"
+            Write-Output "No value provided for DesktopShortcutScriptPath"
         }
         else {
             throw "Unknown repo kind $RepoKind"
@@ -83,64 +81,60 @@ function RunScriptCreatehortcut($RepoRoot, $RepoKind, $DesktopShortcutScriptPath
         }
     }
     if (![string]::IsNullOrEmpty($DesktopShortcutScriptPath)) {
-        # If the path is relative then calculate the full path
         if (!([System.IO.Path]::IsPathRooted($DesktopShortcutScriptPath))) {
-$DesktopShortcutScriptPath = " $RepoRoot\$DesktopShortcutScriptPath"
+    $DesktopShortcutScriptPath = " $RepoRoot\$DesktopShortcutScriptPath"
         }
     }
-    Write-Host "Getting ready to create shortcut for $RepoKind repo $RepoRoot with script path $DesktopShortcutScriptPath run as admin $ShortcutRunAsAdmin"
-$ShortcutIcon = '';
-    # Calculate the full path if the icon path is relative
+    Write-Output "Getting ready to create shortcut for $RepoKind repo $RepoRoot with script path $DesktopShortcutScriptPath run as admin $ShortcutRunAsAdmin"
+    $ShortcutIcon = '';
     if ($DesktopShortcutIconPath -and ([System.IO.Path]::IsPathRooted($DesktopShortcutIconPath) -eq $false)) {
-        $ShortcutIcon = Join-Path -Path $RepoRoot -ChildPath $DesktopShortcutIconPath
+    $ShortcutIcon = Join-Path -Path $RepoRoot -ChildPath $DesktopShortcutIconPath
     }
     else {
-$ShortcutIcon = $DesktopShortcutIconPath
+    $ShortcutIcon = $DesktopShortcutIconPath
     }
     [String];  $ShortcutName = '';
     if ($DesktopShortcutName) {
-        $ShortcutName = $DesktopShortcutName
+    $ShortcutName = $DesktopShortcutName
     }
     else {
-$ShortcutName = $RepoRoot.Split(" \" ) | Where-Object { $_ -ne '' } | Select-Object -Last 1;
+    $ShortcutName = $RepoRoot.Split(" \" ) | Where-Object { $_ -ne '' } | Select-Object -Last 1;
     }
-    [String] $shortcutTargetPath = '';
-    [String] $shortcutArguments = '';
-    # Check script file extension
-    $isTerminalHost = ![string]::IsNullOrEmpty($DesktopShortcutHost) -and ($DesktopShortcutHost -eq "Terminal" )
+    [String] $ShortcutTargetPath = '';
+    [String] $ShortcutArguments = '';
+    $IsTerminalHost = ![string]::IsNullOrEmpty($DesktopShortcutHost) -and ($DesktopShortcutHost -eq "Terminal" )
     if ([string]::IsNullOrEmpty($DesktopShortcutScriptPath)) {
-        $shortcutTargetPath = $env:ComSpec
-        $shortcutArguments = " /k cd /d $RepoRoot"
+    $ShortcutTargetPath = $env:ComSpec
+    $ShortcutArguments = "/k cd /d $RepoRoot"
     }
     elseif (($DesktopShortcutScriptPath -Like " *.cmd" ) -or ($DesktopShortcutScriptPath -Like " *.bat" )) {
-        $shortcutTargetPath = $env:ComSpec
-        if (!$isTerminalHost) {
-            $shortcutArguments = " /k cd /d $RepoRoot&"" $DesktopShortcutScriptPath"""
+    $ShortcutTargetPath = $env:ComSpec
+        if (!$IsTerminalHost) {
+    $ShortcutArguments = "/k cd /d $RepoRoot&"" $DesktopShortcutScriptPath"""
         }
         else {
-            # Weird but seems like the only combination of quotes that works whether the path has spaces or not
-            $shortcutArguments = " /k "" cd /d $RepoRoot&"" $DesktopShortcutScriptPath"""""""
+    $ShortcutArguments = "/k "" cd /d $RepoRoot&"" $DesktopShortcutScriptPath"""""""
         }
     }
     elseif ($DesktopShortcutScriptPath -Like " *.ps1" ) {
-        $shortcutTargetPath = " powershell.exe"
-        $shortcutArguments = " -NoExit -File "" $DesktopShortcutScriptPath"""
+    $ShortcutTargetPath = " powershell.exe"
+    $ShortcutArguments = " -NoExit -File "" $DesktopShortcutScriptPath"""
     }
     else {
         throw "Unknown enviroment to create desktop shortcut with given script path: $DesktopShortcutScriptPath"
     }
-    if ($isTerminalHost) {
-        $shortcutArguments = $shortcutTargetPath + " " + $shortcutArguments
-$shortcutTargetPath = " %LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe"
+    if ($IsTerminalHost) {
+    $ShortcutArguments = $ShortcutTargetPath + " " + $ShortcutArguments
+    $ShortcutTargetPath = " %LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe"
     }
-    Write-Host "Creating shortcut with Target path: $shortcutTargetPath and Arguments: $shortcutArguments "
-$invokecommandScriptPath = (Join-Path $(Split-Path -Parent $PSScriptRoot) 'windows-create-shortcut/windows-create-shortcut.ps1')
-    New-Shortcut -ErrorAction Stop $invokecommandScriptPath $ShortcutName $ShortcutTargetPath $shortcutArguments $ShortcutIcon $ShortcutRunAsAdmin
-    Write-Host "Sucessfully created shortcut with $invokecommandScriptPath"
+    Write-Output "Creating shortcut with Target path: $ShortcutTargetPath and Arguments: $ShortcutArguments "
+    $InvokecommandScriptPath = (Join-Path $(Split-Path -Parent $PSScriptRoot) 'windows-create-shortcut/windows-create-shortcut.ps1')
+    New-Shortcut -ErrorAction Stop $InvokecommandScriptPath $ShortcutName $ShortcutTargetPath $ShortcutArguments $ShortcutIcon $ShortcutRunAsAdmin
+    Write-Output "Sucessfully created shortcut with $InvokecommandScriptPath"
 }
 if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
-        $params = @{
+    $params = @{
             DesktopShortcutName = $DesktopShortcutName
             DesktopShortcutScriptPath = $DesktopShortcutScriptPath
             RepoKind = $RepoKind
@@ -149,5 +143,4 @@ if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
             ShortcutRunAsAdmin = $ShortcutRunAsAdmin
             DesktopShortcutIconPath = $DesktopShortcutIconPath
         }
-        RunScriptCreatehortcut @params
-}
+        RunScriptCreatehortcut @params`n}

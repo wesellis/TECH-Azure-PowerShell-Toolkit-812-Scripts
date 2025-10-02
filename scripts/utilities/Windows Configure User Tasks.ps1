@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Configure User Tasks
@@ -9,54 +9,51 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     Configures a set of tasks that will run when a user logs into a VM.
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $false)][string] $FirstLogonTasksBase64
 )
 Set-StrictMode -Version Latest
 function GetTaskID {
-[OutputType([bool])]
- {
-    [CmdletBinding()]
-param(
+function Write-Log {
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
-        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][PSObject] $taskObj
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][PSObject] $TaskObj
     )
-    # By default use task's name as its ID which means that only a single (last) instance of such task will be executed on when user logs on
-    $taskId = $taskObj.Task
-    if ($taskObj.PSobject.Properties.Name -contains 'UniqueID') {
-        $taskId = $taskObj.UniqueID
+    $TaskId = $TaskObj.Task
+    if ($TaskObj.PSobject.Properties.Name -contains 'UniqueID') {
+    $TaskId = $TaskObj.UniqueID
     }
-    return $taskId
+    return $TaskId
 }
 try {
-    $setupDir = " c:\.tools\Setup"
-    $setupScriptsDir = " $setupDir\Scripts"
-    $logsDir = " $setupDir\Logs"
-    if (Test-Path -Path $setupScriptsDir) {
-        Write-Host " === To avoid scripts versioning issues remove $setupScriptsDir in case it was created by the base image build"
-        Remove-Item -ErrorAction Stop $setupScriptsDi -Forcer -Force -Recurse -Force -ErrorAction SilentlyContinue
+    $SetupDir = " c:\.tools\Setup"
+    $SetupScriptsDir = " $SetupDir\Scripts"
+    $LogsDir = " $SetupDir\Logs"
+    if (Test-Path -Path $SetupScriptsDir) {
+        Write-Output " === To avoid scripts versioning issues remove $SetupScriptsDir in case it was created by the base image build"
+        Remove-Item -ErrorAction Stop $SetupScriptsDi -Forcer -Force -Recurse -Force -ErrorAction SilentlyContinue
     }
-    Write-Host " === Create $setupScriptsDir before copying scripts there"
-    mkdir $setupScriptsDir -Force
-    mkdir $logsDir -Force
-    Write-Host " === Copy setup scripts to $setupScriptsDir"
+    Write-Output " === Create $SetupScriptsDir before copying scripts there"
+    mkdir $SetupScriptsDir -Force
+    mkdir $LogsDir -Force
+    Write-Output " === Copy setup scripts to $SetupScriptsDir"
     @(
     (Join-Path $PSScriptRoot 'customization-utils.psm1')
     (Join-Path $PSScriptRoot 'setup-user-tasks.ps1')
@@ -64,52 +61,42 @@ try {
     (Join-Path $PSScriptRoot 'runonce-user-tasks.ps1')
     (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-retry-utils.psm1')
     (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-run-program.psm1')
-    ) | ForEach-Object { Copy-Item $_ $setupScriptsDir -Force }
-    Copy-Item " $PSScriptRoot\FirstLogonTasks" " $setupScriptsDir\FirstLogonTasks" -Recurse -Force -Exclude '*.Tests.ps1'
-    Get-ChildItem -Recurse -File -Path $setupScriptsDir | Select-Object -First 100
-    # Hook the event invoked when Azure VM starts for the first time
-    # - https://matt.kotsenas.com/posts/azure-setupcomplete2
-    # - https://learn.microsoft.com/en-us/dynamics-nav/setupcomplete2.cmd-file-example
-    # - https://learn.microsoft.com/en-us/previous-versions/dynamicsnav-2018-developer/How-to--Create-a-Microsoft-Azure-Virtual-Machine-Operating-System-Image-for-Microsoft-Dynamics-NAV
-    Write-Host " === Configure Azure VM first startup event"
-    $vmStartupScriptsDir = 'C:\Windows\OEM'
-    $vmStartupScript = " $vmStartupScriptsDir\SetupComplete2.cmd"
-    $vmOrigStartupScript = " $vmStartupScriptsDir\SetupComplete2FromOrigBaseImage.cmd"
-    # If the base image for this VM was not created by Dev Box image templates then preserve the original SetupComplete2.cmd
-    if ((!(Test-Path -Path $vmOrigStartupScript)) -and (Test-Path -Path $vmStartupScript) ) {
-        Write-Host " === Save SetupComplete2.cmd from the original base image to $vmOrigStartupScript"
-        Move-Item $vmStartupScript $vmOrigStartupScript
+    ) | ForEach-Object { Copy-Item $_ $SetupScriptsDir -Force }
+    Copy-Item " $PSScriptRoot\FirstLogonTasks" " $SetupScriptsDir\FirstLogonTasks" -Recurse -Force -Exclude '*.Tests.ps1'
+    Get-ChildItem -Recurse -File -Path $SetupScriptsDir | Select-Object -First 100
+    Write-Output " === Configure Azure VM first startup event"
+    $VmStartupScriptsDir = 'C:\Windows\OEM'
+    $VmStartupScript = " $VmStartupScriptsDir\SetupComplete2.cmd"
+    $VmOrigStartupScript = " $VmStartupScriptsDir\SetupComplete2FromOrigBaseImage.cmd"
+    if ((!(Test-Path -Path $VmOrigStartupScript)) -and (Test-Path -Path $VmStartupScript) ) {
+        Write-Output " === Save SetupComplete2.cmd from the original base image to $VmOrigStartupScript"
+        Move-Item $VmStartupScript $VmOrigStartupScript
     }
-    mkdir $vmStartupScriptsDir -ErrorAction SilentlyContinue
-    Copy-Item (Join-Path $PSScriptRoot 'SetupComplete2.cmd') $vmStartupScriptsDir -Force
-    $firstLogonTasksFile = " $setupDir\FirstLogonTasks.json"
+    mkdir $VmStartupScriptsDir -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $PSScriptRoot 'SetupComplete2.cmd') $VmStartupScriptsDir -Force
+    $FirstLogonTasksFile = " $SetupDir\FirstLogonTasks.json"
     if (!([string]::IsNullOrWhiteSpace($FirstLogonTasksBase64))) {
-        $firstLogonTasks = [Text.Encoding]::ASCII.GetString([Convert]::FromBase64String($FirstLogonTasksBase64)) | ConvertFrom-Json
-        $baseImageLogonTasks = @()
-        if (Test-Path -Path $firstLogonTasksFile -PathType Leaf) {
-            Write-Host " === Found following logon tasks configured for the base image in $firstLogonTasksFile"
-            Get-Content -ErrorAction Stop $firstLogonTasksFile
-            $baseImageLogonTasks = Get-Content -ErrorAction Stop $firstLogonTasksFile -Raw | ConvertFrom-Json
+    $FirstLogonTasks = [Text.Encoding]::ASCII.GetString([Convert]::FromBase64String($FirstLogonTasksBase64)) | ConvertFrom-Json
+    $BaseImageLogonTasks = @()
+        if (Test-Path -Path $FirstLogonTasksFile -PathType Leaf) {
+            Write-Output " === Found following logon tasks configured for the base image in $FirstLogonTasksFile"
+            Get-Content -ErrorAction Stop $FirstLogonTasksFile
+    $BaseImageLogonTasks = Get-Content -ErrorAction Stop $FirstLogonTasksFile -Raw | ConvertFrom-Json
         }
-        # Only keep unique tasks that were configured for the base image
-        $uniqueBaseImageLogonTasks = @()
-        foreach ($baseImageLogonTask in $baseImageLogonTasks) {
-            $baseImageTaskID = GetTaskID $baseImageLogonTask
-            if ($null -eq ($firstLogonTasks | Where-Object { (GetTaskID $_) -eq $baseImageTaskID })) {
-$uniqueBaseImageLogonTasks = $uniqueBaseImageLogonTasks + $baseImageLogonTask
+    $UniqueBaseImageLogonTasks = @()
+        foreach ($BaseImageLogonTask in $BaseImageLogonTasks) {
+    $BaseImageTaskID = GetTaskID $BaseImageLogonTask
+            if ($null -eq ($FirstLogonTasks | Where-Object { (GetTaskID $_) -eq $BaseImageTaskID })) {
+    $UniqueBaseImageLogonTasks = $UniqueBaseImageLogonTasks + $BaseImageLogonTask
             }
             else {
-                Write-Host " == Skipped base image task $($baseImageLogonTask | ConvertTo-Json -Depth 10)"
+                Write-Output " == Skipped base image task $($BaseImageLogonTask | ConvertTo-Json -Depth 10)"
             }
         }
-$firstLogonTasks = $uniqueBaseImageLogonTasks + $firstLogonTasks
-        # Always use -Depth with ConvertTo-Json to preserve object structure (otherwise arrays fo example are turned into space separated strings)
-        $firstLogonTasks | ConvertTo-Json -Depth 10 | Out-File -FilePath $firstLogonTasksFile
-        Write-Host " === Saved following tasks to run on user first logon to $firstLogonTasksFile"
-        Get-Content -ErrorAction Stop $firstLogonTasksFile
+    $FirstLogonTasks = $UniqueBaseImageLogonTasks + $FirstLogonTasks
+    $FirstLogonTasks | ConvertTo-Json -Depth 10 | Out-File -FilePath $FirstLogonTasksFile
+        Write-Output " === Saved following tasks to run on user first logon to $FirstLogonTasksFile"
+        Get-Content -ErrorAction Stop $FirstLogonTasksFile
 
 } catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
-
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

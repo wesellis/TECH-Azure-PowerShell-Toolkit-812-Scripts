@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Install Visualstudiocode Extension
@@ -9,7 +9,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     Installs a Visual Studio Code extension
     Installs the provided Visual Studio Code extension by id or name to the given installation of VS Code
 .PARAMETER ExtensionId
@@ -32,7 +31,7 @@
       }
     }
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $false)] [String] $ExtensionId,
     [Parameter(Mandatory = $false)] [String] $ExtensionName,
@@ -45,122 +44,120 @@ param(
 Set-StrictMode -Version Latest
 [OutputType([bool])]
  (
-    [Parameter(Mandatory = $false)] [String] $extensionId = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionName = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVsixPath = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVersion = $null) {
-    $paramCount = 0
-    if (-not [string]::IsNullOrWhiteSpace($extensionId)) { $paramCount++ }
-    if (-not [string]::IsNullOrWhiteSpace($extensionName)) { $paramCount++ }
-    if (-not [string]::IsNullOrWhiteSpace($extensionVsixPath)) { $paramCount++ }
-    if ($paramCount -ne 1) {
+    [Parameter(Mandatory = $false)] [String] $ExtensionId = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionName = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVsixPath = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVersion = $null) {
+    $ParamCount = 0
+    if (-not [string]::IsNullOrWhiteSpace($ExtensionId)) { $ParamCount++ }
+    if (-not [string]::IsNullOrWhiteSpace($ExtensionName)) { $ParamCount++ }
+    if (-not [string]::IsNullOrWhiteSpace($ExtensionVsixPath)) { $ParamCount++ }
+    if ($ParamCount -ne 1) {
         Write-Error "You must provide either an ExtensionId, ExtensionName, or ExtensionVsixPath (but not more than one). You can find the ExtensionName in the URL of the Marketplace extension. Example: If the extension URL is https://marketplace.visualstudio.com/items?itemName=GitHub.copilot then you would use `GitHub.copilot`."
     }
-    if ((-not [string]::IsNullOrWhiteSpace($extensionVsixPath)) -and (-not [string]::IsNullOrWhiteSpace($extensionVersion))) {
+    if ((-not [string]::IsNullOrWhiteSpace($ExtensionVsixPath)) -and (-not [string]::IsNullOrWhiteSpace($ExtensionVersion))) {
         Write-Error "You cannot specify an ExtensionVersion when installing from a direct VSIX URL or path."
     }
 }
 function Import-ExtensionToLocalPath (
-    [Parameter(Mandatory = $false)] [String] $extensionId = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionName = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVsixPath = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVersion = $null,
-    [Parameter(Mandatory = $true)] [String] $downloadLocation,
-    [Parameter(Mandatory = $false)] [Bool] $downloadPreRelease) {
-    # Process direct URLs and local path references to extensions
-    if (-not [string]::IsNullOrWhiteSpace($extensionVsixPath)) {
-        Write-Host "ExtensionVsixPath: $extensionVsixPath"
-        if ($extensionVsixPath -match '^https://') {
+    [Parameter(Mandatory = $false)] [String] $ExtensionId = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionName = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVsixPath = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVersion = $null,
+    [Parameter(Mandatory = $true)] [String] $DownloadLocation,
+    [Parameter(Mandatory = $false)] [Bool] $DownloadPreRelease) {
+    if (-not [string]::IsNullOrWhiteSpace($ExtensionVsixPath)) {
+        Write-Output "ExtensionVsixPath: $ExtensionVsixPath"
+        if ($ExtensionVsixPath -match '^https://') {
             try {
-                $fileName = [System.IO.Path]::GetFileName($extensionVsixPath)
-                if (-not $fileName.EndsWith(" .vsix" )) {
-                    $fileName = $fileName + " .vsix"
+    $FileName = [System.IO.Path]::GetFileName($ExtensionVsixPath)
+                if (-not $FileName.EndsWith(" .vsix" )) {
+    $FileName = $FileName + " .vsix"
                 }
-                $savedPath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), $fileName)
-                Import-RemoteVisualStudioPackageToPath -VsixUrl $extensionVsixPath -LocalFilePath $savedPath
-                Copy-Item -Path $savedPath -Destination $downloadLocation
+    $SavedPath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), $FileName)
+                Import-RemoteVisualStudioPackageToPath -VsixUrl $ExtensionVsixPath -LocalFilePath $SavedPath
+                Copy-Item -Path $SavedPath -Destination $DownloadLocation
             }
             catch {
-                Write-Error "Failed to download the VSIX file from: $extensionVsixPath. $_"
+                Write-Error "Failed to download the VSIX file from: $ExtensionVsixPath. $_"
             }
         }
-        elseif (-Not (Test-Path $extensionVsixPath)) {
-            Write-Error "The specified file path does not exist: $extensionVsixPath."
+        elseif (-Not (Test-Path $ExtensionVsixPath)) {
+            Write-Error "The specified file path does not exist: $ExtensionVsixPath."
         }
         else {
-            Write-Host "Copying VSIX from local path: $extensionVsixPath"
-            Copy-Item -Path $extensionVsixPath -Destination $downloadLocation
-            Write-Host "Copied VSIX to: $downloadLocation"
+            Write-Output "Copying VSIX from local path: $ExtensionVsixPath"
+            Copy-Item -Path $ExtensionVsixPath -Destination $DownloadLocation
+            Write-Output "Copied VSIX to: $DownloadLocation"
         }
     }
-    # Process extension name
-    elseif (-not [string]::IsNullOrWhiteSpace($extensionName)) {
-        Write-Host "ExtensionName: $extensionName"
-        $params = @{
-            DownloadPreRelease = $downloadPreRelease }
-            DownloadLocation = $downloadLocation
-            ExtensionReference = $extensionId
-            VersionNumber = $extensionVersion
+    elseif (-not [string]::IsNullOrWhiteSpace($ExtensionName)) {
+        Write-Output "ExtensionName: $ExtensionName"
+    $params = @{
+            DownloadPreRelease = $DownloadPreRelease }
+            DownloadLocation = $DownloadLocation
+            ExtensionReference = $ExtensionId
+            VersionNumber = $ExtensionVersion
             DownloadDependencies = $true
         }
         Get-VisualStudioExtension @params
 }
 function Resolve-VisualStudioCodeBootstrapPath (
-    [Parameter(Mandatory = $false)] [String] $visualStudioCodeInstallPath = $null,
-    [Parameter(Mandatory = $false)] [bool] $installInsiders = $false) {
-    if ([string]::IsNullOrWhiteSpace($visualStudioCodeInstallPath)) {
-        if ($installInsiders) {
-            $visualStudioCodeInstallPath = " %ProgramFiles%\Microsoft VS Code Insiders"
+    [Parameter(Mandatory = $false)] [String] $VisualStudioCodeInstallPath = $null,
+    [Parameter(Mandatory = $false)] [bool] $InstallInsiders = $false) {
+    if ([string]::IsNullOrWhiteSpace($VisualStudioCodeInstallPath)) {
+        if ($InstallInsiders) {
+    $VisualStudioCodeInstallPath = " %ProgramFiles%\Microsoft VS Code Insiders"
         }
         else {
-            $visualStudioCodeInstallPath = " %ProgramFiles%\Microsoft VS Code"
+    $VisualStudioCodeInstallPath = " %ProgramFiles%\Microsoft VS Code"
         }
     }
-    $visualStudioCodeInstallPath = [System.Environment]::ExpandEnvironmentVariables($visualStudioCodeInstallPath)
-    if (-not (Test-Path $visualStudioCodeInstallPath)) {
+    $VisualStudioCodeInstallPath = [System.Environment]::ExpandEnvironmentVariables($VisualStudioCodeInstallPath)
+    if (-not (Test-Path $VisualStudioCodeInstallPath)) {
         Write-Error "Visual Studio Code install path was not found at $VisualStudioCodeInstallPath. Ensure the windows-vscodeinstall artifact is executed before this or manually define the install path via the property VisualStudioCodeInstallPath"
     }
-    return Join-Path -Path $visualStudioCodeInstallPath -ChildPath " bootstrap\extensions"
+    return Join-Path -Path $VisualStudioCodeInstallPath -ChildPath " bootstrap\extensions"
 }
 function Main (
-    [Parameter(Mandatory = $false)] [String] $extensionId = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionName = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVsixPath = $null,
-    [Parameter(Mandatory = $false)] [String] $extensionVersion = $null,
-    [Parameter(Mandatory = $false)] [String] $visualStudioCodeInstallPath = $null,
-    [Parameter(Mandatory = $false)] [bool] $installInsiders = $false,
-    [Parameter(Mandatory = $false)] [bool];  $emitAllInstalledExtensions = $false) {
+    [Parameter(Mandatory = $false)] [String] $ExtensionId = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionName = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVsixPath = $null,
+    [Parameter(Mandatory = $false)] [String] $ExtensionVersion = $null,
+    [Parameter(Mandatory = $false)] [String] $VisualStudioCodeInstallPath = $null,
+    [Parameter(Mandatory = $false)] [bool] $InstallInsiders = $false,
+    [Parameter(Mandatory = $false)] [bool];  $EmitAllInstalledExtensions = $false) {
     $params = @{
-        extensionName = $extensionName
-        extensionVersion = $extensionVersion
-        extensionId = $extensionId
-        extensionVsixPath = $extensionVsixPath
+        extensionName = $ExtensionName
+        extensionVersion = $ExtensionVersion
+        extensionId = $ExtensionId
+        extensionVsixPath = $ExtensionVsixPath
     }
     Confirm-UserRequest @params
-$vsCodeGlobalExtensionsPath = Resolve-VisualStudioCodeBootstrapPath
-    if (-not (Test-Path $vsCodeGlobalExtensionsPath)) {
-        New-Item -ErrorAction Stop $vsCodeGlobalExtensionsPath -ItemType Directory -ErrorAction 'SilentlyContinue' | Out-Null
-        if (-not (Test-Path $vsCodeGlobalExtensionsPath)) {
-            Write-Error "The folder $vsCodeGlobalExtensionsPath could not be created. Please ensure you are running as admin."
+    $VsCodeGlobalExtensionsPath = Resolve-VisualStudioCodeBootstrapPath
+    if (-not (Test-Path $VsCodeGlobalExtensionsPath)) {
+        New-Item -ErrorAction Stop $VsCodeGlobalExtensionsPath -ItemType Directory -ErrorAction 'SilentlyContinue' | Out-Null
+        if (-not (Test-Path $VsCodeGlobalExtensionsPath)) {
+            Write-Error "The folder $VsCodeGlobalExtensionsPath could not be created. Please ensure you are running as admin."
         }
     }
     $params = @{
-        downloadPreRelease = $installInsiders
-        extensionVsixPath = $extensionVsixPath
-        extensionId = $extensionId
-        downloadLocation = $vsCodeGlobalExtensionsPath
-        extensionVersion = $extensionVersion
-        extensionName = $extensionName
+        downloadPreRelease = $InstallInsiders
+        extensionVsixPath = $ExtensionVsixPath
+        extensionId = $ExtensionId
+        downloadLocation = $VsCodeGlobalExtensionsPath
+        extensionVersion = $ExtensionVersion
+        extensionName = $ExtensionName
     }
     Import-ExtensionToLocalPath @params
-    if ($emitAllInstalledExtensions) {
-        Write-Host "All extensions in the bootstrap directory:"
-        Get-ChildItem -Path $vsCodeGlobalExtensionsPath -File
+    if ($EmitAllInstalledExtensions) {
+        Write-Output "All extensions in the bootstrap directory:"
+        Get-ChildItem -Path $VsCodeGlobalExtensionsPath -File
     }
 }
 try {
     if (-not ((Test-Path variable:global:IsUnderTest) -and $global:IsUnderTest)) {
-        $params = @{
+    $params = @{
             extensionVsixPath = $ExtensionVsixPath
             extensionId = $ExtensionId
             emitAllInstalledExtensions = $EmitAllInstalledExtensions }
@@ -172,7 +169,4 @@ try {
         Main @params
 }
 catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
-
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

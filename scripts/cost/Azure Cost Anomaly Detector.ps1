@@ -1,7 +1,7 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#.SYNOPSIS
     Azure Cost Anomaly Detector
 
 .DESCRIPTION
@@ -9,13 +9,12 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter()]
@@ -38,29 +37,24 @@ try {
     }
     }
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
-    $startDate = (Get-Date).AddDays(-$DaysBack).ToString('yyyy-MM-dd')
-    $endDate = (Get-Date).ToString('yyyy-MM-dd')
-    # Get usage data
-    $usageData = Get-AzConsumptionUsageDetail -StartDate $startDate -EndDate $endDate
-    # Group by day and calculate daily costs
-    $dailyCosts = $usageData | Group-Object {($_.Date).ToString('yyyy-MM-dd')} | ForEach-Object {
+    [string]$StartDate = (Get-Date).AddDays(-$DaysBack).ToString('yyyy-MM-dd')
+    [string]$EndDate = (Get-Date).ToString('yyyy-MM-dd')
+$UsageData = Get-AzConsumptionUsageDetail -StartDate $StartDate -EndDate $EndDate
+    [string]$DailyCosts = $UsageData | Group-Object {($_.Date).ToString('yyyy-MM-dd')} | ForEach-Object {
         [PSCustomObject]@{
             Date = $_.Name
             TotalCost = ($_.Group | Measure-Object PretaxCost -Sum).Sum
         }
     } | Sort-Object Date
-    # Calculate average and detect anomalies
-$avgCost = ($dailyCosts | Measure-Object TotalCost -Average).Average
-$anomalies = $dailyCosts | Where-Object { $_.TotalCost -gt ($avgCost * $AnomalyThreshold) }
-    Write-Host "Cost Anomaly Analysis:" -ForegroundColor Cyan
-    Write-Host "Analysis Period: $startDate to $endDate" -ForegroundColor White
+    [string]$AvgCost = ($DailyCosts | Measure-Object TotalCost -Average).Average
+    [string]$anomalies = $DailyCosts | Where-Object { $_.TotalCost -gt ($AvgCost * $AnomalyThreshold) }
+    Write-Host "Cost Anomaly Analysis:" -ForegroundColor Green
+    Write-Host "Analysis Period: $StartDate to $EndDate" -ForegroundColor Green
     Write-Host "Average Daily Cost: $${avgCost:F2}" -ForegroundColor Green
-    Write-Host "Anomaly Threshold: $${($avgCost * $AnomalyThreshold):F2}" -ForegroundColor Yellow
-    Write-Host "Anomalies Detected: $($anomalies.Count)" -ForegroundColor Red
+    Write-Host "Anomaly Threshold: $${($AvgCost * $AnomalyThreshold):F2}" -ForegroundColor Green
+    Write-Host "Anomalies Detected: $($anomalies.Count)" -ForegroundColor Green
     if ($anomalies.Count -gt 0) {
-        Write-Host " `nAnomalous Days:" -ForegroundColor Red
-        $anomalies | Format-Table Date, @{Name="Cost" ;Expression={" $" + " {0:F2}" -f $_.TotalCost}}
+        Write-Host " `nAnomalous Days:" -ForegroundColor Green
+    [string]$anomalies | Format-Table Date, @{Name="Cost" ;Expression={" $" + " {0:F2}" -f $_.TotalCost}}
     }
-} catch { throw }
-
-
+} catch { throw`n}

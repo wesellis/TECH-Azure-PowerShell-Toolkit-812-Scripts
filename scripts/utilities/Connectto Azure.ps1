@@ -1,47 +1,95 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Connectto Azure
+<#
+.SYNOPSIS
+    Connect to Azure
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script for authenticating to Azure using service principal credentials.
+    Use this script at the start of a pipeline to install the Az cmdlets and authenticate
+    a machine's PowerShell sessions to Azure using the provided service principal.
+
+.PARAMETER AppId
+    The Application ID of the Azure service principal
+
+.PARAMETER Secret
+    The secret/password for the Azure service principal
+
+.PARAMETER TenantId
+    The Azure tenant ID
+
+.PARAMETER SubscriptionId
+    The Azure subscription ID to connect to
+
+.PARAMETER Environment
+    The Azure environment (default: AzureCloud)
+
+.PARAMETER InstallAzModule
+    Switch to install the Az PowerShell module
+
+.PARAMETER ModuleVersion
+    Specific version of the Az module to install
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
+.NOTES
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-Use this script at the start of a pipeline to install the Az cmdlets and authenticate a machine's PowerShell sessions to Azure using the provided service principal
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+
 [CmdletBinding()]
 param(
-    [string][Parameter(mandatory=$true)] $appId,
-    [string][Parameter(mandatory=$true)] $secret,
-    [string][Parameter(mandatory=$true)] $tenantId,
-    [string][Parameter(mandatory=$true)] $subscriptionId,
-    [string] $Environment = "AzureCloud" ,
-    [switch] $InstallAzModule,
-    [string] $ModuleVersion
+    [Parameter(Mandatory=$true)]
+    [string]$AppId,
+
+    [Parameter(Mandatory=$true)]
+    [string]$Secret,
+
+    [Parameter(Mandatory=$true)]
+    [string]$TenantId,
+
+    [Parameter(Mandatory=$true)]
+    [string]$SubscriptionId,
+
+    [string]$Environment = "AzureCloud",
+
+    [switch]$InstallAzModule,
+
+    [string]$ModuleVersion
 )
-if ($InstallAzModule){
-    Set-PSRepository -InstallationPolicy Trusted -Name PSGallery -verbose
-$VersionParam = @{}
-    if($null -ne $ModuleVersion){
-        $VersionParam.Add("RequiredVersion" , "$ModuleVersion" )
+
+$ErrorActionPreference = "Stop"
+
+try {
+    if ($InstallAzModule) {
+        Write-Output "Installing Az PowerShell module..."
+        Set-PSRepository -InstallationPolicy Trusted -Name PSGallery -Verbose
+
+        $VersionParam = @{}
+        if (-not [string]::IsNullOrEmpty($ModuleVersion)) {
+            $VersionParam.Add("RequiredVersion", $ModuleVersion)
+        }
+
+        Install-Module -Name Az -AllowClobber -Verbose @VersionParam
+        Install-Module -Name AzTable -AllowClobber -Verbose
     }
-    Install-Module -Name Az -AllowClobber -verbose @VersionParam
-    Install-Module -Name AzTable -AllowClobber -verbose # need this for updating the deployment status table
+
+    # Create secure credential object
+    $SecureSecret = ConvertTo-SecureString -String $Secret -AsPlainText -Force
+    $PSCredential = New-Object System.Management.Automation.PSCredential($AppId, $SecureSecret)
+
+    Write-Output "App ID     : $AppId"
+    Write-Output "Sub ID     : $SubscriptionId"
+    Write-Output "Tenant ID  : $TenantId"
+    Write-Output "Environment: $Environment"
+
+    # Connect to Azure
+    Connect-AzAccount -ServicePrincipal -Credential $PSCredential -TenantId $TenantId -Subscription $SubscriptionId -Environment $Environment -Verbose
+
+    Write-Output "Successfully connected to Azure"
 }
-$pscredential = New-Object -ErrorAction Stop System.Management.Automation.PSCredential($appId, (Read-Host -Prompt "Enter secure value" -AsSecureString))
-Write-Host " app Id     : $appId"
-Write-Host " sub Id     : $subscriptionId"
-Write-Host " tenant Id  : $tenantId"
-Write-Host " environment: $Environment"
-Connect-AzAccount -ServicePrincipal -Credential $pscredential -TenantId $tenantId -Subscription $subscriptionId -Environment $Environment -Verbose
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }

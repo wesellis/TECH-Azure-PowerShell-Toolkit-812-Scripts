@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Create Refs
@@ -9,7 +9,6 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
     Create ReFS or Dev Drive "x" drive volume.
     Create ReFS or Dev Drive " x" drive volume. If " x" volume already exists then delete it before creating " x" .
 .PARAMETER DevBoxRefsDrive (optional)
@@ -28,81 +27,77 @@
       }
     }
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [string] $DevBoxRefsDrive = "Q" ,
     [int] $OsDriveMinSizeGB = 160,
     [bool] $IsDevDrive = $false
 )
 Set-StrictMode -Version latest
-Write-Host " `nSTART: $(Get-Date -Format u)"
+Write-Output " `nSTART: $(Get-Date -Format u)"
 function FindOrCreateReFSOrDevDriveVolume([string] $DevBoxRefsDrive, [int] $OsDriveMinSizeGB, [bool] $IsDevDrive, [string] $TempDir) {
-    Write-Host " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
-    # Check whether Dev Drive volume already exists, i.e. has already been created in the base image.
-    $firstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq "ReFS" } | Select-Object -First 1)
-    if ($firstReFSVolume) {
-        $fromDriveLetterOrNull = $firstReFSVolume.DriveLetter
-        if ($DevBoxRefsDrive -eq $fromDriveLetterOrNull) {
-            Write-Host "Code drive letter ${DevBoxRefsDrive} already matches the first ReFS/Dev Drive volume."
+    Write-Output " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
+    $FirstReFSVolume = (Get-Volume -ErrorAction Stop | Where-Object { $_.FileSystemType -eq "ReFS" } | Select-Object -First 1)
+    if ($FirstReFSVolume) {
+    $FromDriveLetterOrNull = $FirstReFSVolume.DriveLetter
+        if ($DevBoxRefsDrive -eq $FromDriveLetterOrNull) {
+            Write-Output "Code drive letter ${DevBoxRefsDrive} already matches the first ReFS/Dev Drive volume."
         }
         else {
-            Write-Host "Assigning code drive letter to $DevBoxRefsDrive"
-            $firstReFSVolume | Get-Partition -ErrorAction Stop | Set-Partition -NewDriveLetter $DevBoxRefsDrive
+            Write-Output "Assigning code drive letter to $DevBoxRefsDrive"
+    $FirstReFSVolume | Get-Partition -ErrorAction Stop | Set-Partition -NewDriveLetter $DevBoxRefsDrive
         }
-        Write-Host " `nDone with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
-        # This will mount the drive and open a handle to it which is important to get the drive ready.
-        Write-Host "Checking dir contents of ${DevBoxRefsDrive}: drive"
+        Write-Output " `nDone with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
+        Write-Output "Checking dir contents of ${DevBoxRefsDrive}: drive"
         Get-ChildItem -ErrorAction Stop ${DevBoxRefsDrive}:
         return
     }
-    $cSizeGB = (Get-Volume -ErrorAction Stop C).Size / 1024 / 1024 / 1024
-    $targetReFSSizeGB = [math]::Floor($cSizeGB - $OsDriveMinSizeGB)
-    $diffGB = $cSizeGB - $targetReFSSizeGB
-    Write-Host "Target ReFS size $targetReFSSizeGB GB, current C: size $cSizeGB GB"
-    # Sanity checks
-    if ($diffGB -lt 50) {
-        throw "ReFS/Dev Drive target size $targetReFSSizeGB GB would leave less than 50 GB free on drive C: which is not enough for Windows and apps. Drive C: size $cSizeGB GB"
+    $CSizeGB = (Get-Volume -ErrorAction Stop C).Size / 1024 / 1024 / 1024
+    $TargetReFSSizeGB = [math]::Floor($CSizeGB - $OsDriveMinSizeGB)
+    $DiffGB = $CSizeGB - $TargetReFSSizeGB
+    Write-Output "Target ReFS size $TargetReFSSizeGB GB, current C: size $CSizeGB GB"
+    if ($DiffGB -lt 50) {
+        throw "ReFS/Dev Drive target size $TargetReFSSizeGB GB would leave less than 50 GB free on drive C: which is not enough for Windows and apps. Drive C: size $CSizeGB GB"
     }
-    if ($targetReFSSizeGB -lt 20) {
-        throw "ReFS/Dev Drive target size $targetReFSSizeGB GB is below the min size 20 GB. Drive C: size $cSizeGB GB"
+    if ($TargetReFSSizeGB -lt 20) {
+        throw "ReFS/Dev Drive target size $TargetReFSSizeGB GB is below the min size 20 GB. Drive C: size $CSizeGB GB"
     }
-    $targetReFSSizeMB = $targetReFSSizeGB * 1024
+    $TargetReFSSizeMB = $TargetReFSSizeGB * 1024
     if ((Get-PSDrive).Name -match " ^" + $DevBoxRefsDrive + " $" ) {
-        $DiskPartDeleteScriptPath = $TempDir + " /CreateReFSDelExistingVolume.txt"
-        $rmcmd = "SELECT DISK 0 `r`n SELECT VOLUME=$DevBoxRefsDrive `r`n DELETE VOLUME OVERRIDE"
-        $rmcmd | Set-Content -Path $DiskPartDeleteScriptPath
-        Write-Host "Delete existing $DevBoxRefsDrive `r`n $rmcmd"
+    $DiskPartDeleteScriptPath = $TempDir + "/CreateReFSDelExistingVolume.txt"
+    $rmcmd = "SELECT DISK 0 `r`n SELECT VOLUME=$DevBoxRefsDrive `r`n DELETE VOLUME OVERRIDE"
+    $rmcmd | Set-Content -Path $DiskPartDeleteScriptPath
+        Write-Output "Delete existing $DevBoxRefsDrive `r`n $rmcmd"
         diskpart /s $DiskPartDeleteScriptPath
-        $exitCode = $LASTEXITCODE
-        if ($exitCode -eq 0) {
-            Write-Host "Successfully deleted existing $DevBoxRefsDrive volume"
+    $ExitCode = $LASTEXITCODE
+        if ($ExitCode -eq 0) {
+            Write-Output "Successfully deleted existing $DevBoxRefsDrive volume"
         }
         else {
-            Write-Error "[ERROR] Delete volume diskpart command failed with exit code: $exitCode" -ErrorAction Stop
+            Write-Error "[ERROR] Delete volume diskpart command failed with exit code: $ExitCode" -ErrorAction Stop
         }
     }
-    # https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/shrink
-    $DiskPartScriptPath = $TempDir + " /CreateReFSFromExistingVolume.txt"
-    $cmd = "SELECT VOLUME C: `r`n SHRINK desired = $targetReFSSizeMB minimum = $targetReFSSizeMB `r`n CREATE PARTITION PRIMARY `r`n ASSIGN LETTER=$DevBoxRefsDrive `r`n"
+    $DiskPartScriptPath = $TempDir + "/CreateReFSFromExistingVolume.txt"
+    $cmd = "SELECT VOLUME C: `r`n SHRINK desired = $TargetReFSSizeMB minimum = $TargetReFSSizeMB `r`n CREATE PARTITION PRIMARY `r`n ASSIGN LETTER=$DevBoxRefsDrive `r`n"
     $cmd | Set-Content -Path $DiskPartScriptPath
-    Write-Host "Creating $DevBoxRefsDrive ReFS volume: diskpart:`r`n $cmd"
+    Write-Output "Creating $DevBoxRefsDrive ReFS volume: diskpart:`r`n $cmd"
     diskpart /s $DiskPartScriptPath
-    $exitCode = $LASTEXITCODE
-    if ($exitCode -eq 0) {
-        Write-Host "Successfully created ReFS $DevBoxRefsDrive volume"
+    $ExitCode = $LASTEXITCODE
+    if ($ExitCode -eq 0) {
+        Write-Output "Successfully created ReFS $DevBoxRefsDrive volume"
     }
     else {
-        Write-Error "[ERROR] ReFS volume creation command failed with exit code: $exitCode" -ErrorAction Stop
+        Write-Error "[ERROR] ReFS volume creation command failed with exit code: $ExitCode" -ErrorAction Stop
     }
     $DevBoxDriveWithColon = " ${DevBoxRefsDrive}:"
     $DevDriveParam = ""
     $DriveLabel = "ReFS"
     if ($IsDevDrive) {
-$DevDriveParam = " /DevDrv"
-$DriveLabel = "DevDrive"
+    $DevDriveParam = "/DevDrv"
+    $DriveLabel = "DevDrive"
     }
     Run-Program format " $DevBoxDriveWithColon /q /y /FS:ReFS $DevDriveParam /V:$DriveLabel" -RetryAttempts 1
-    Write-Host "Successfully formatted ReFS $DevBoxRefsDrive volume. Final volume list:"
+    Write-Output "Successfully formatted ReFS $DevBoxRefsDrive volume. Final volume list:"
     Get-Volume -ErrorAction Stop | Out-String
 }
 if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
@@ -111,6 +106,4 @@ if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest
     } catch {
         Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
     }
-}
-
-
+`n}

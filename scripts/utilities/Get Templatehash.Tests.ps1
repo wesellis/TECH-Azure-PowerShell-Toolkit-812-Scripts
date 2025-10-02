@@ -1,54 +1,57 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Get Templatehash.Tests
+<#
+.SYNOPSIS
+    Get Template Hash Tests
+
 .DESCRIPTION
-    Azure automation
-
+    Pester tests for Get-TemplateHash Azure automation script
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
 Describe "Get-TemplateHash" {
     BeforeAll {
         $ErrorActionPreference = 'Stop'
-        $dataFolder = " $(Split-Path $PSCommandPath -Parent)/data/get-template-hash-tests"
+        $DataFolder = "$(Split-Path $PSCommandPath -Parent)/data/get-template-hash-tests"
         function Get-TemplateHash(
-            [string][Parameter(Mandatory = $true)] $templateFilePath,
+            [Parameter(Mandatory = $true)]
+            [string]$TemplateFilePath,
+
             [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$bearerToken,
-            [switch]$removeGeneratorMetadata
+            [ValidateNotNullOrEmpty()]
+            $BearerToken,
+
+            [switch]$RemoveGeneratorMetadata
         ) {
-            $cmdlet = " $(Split-Path $PSCommandPath -Parent)/../ci-scripts/Get-TemplateHash.ps1" .Replace('.Tests.ps1', '.ps1')
-            . $cmdlet $templateFilePath $bearerToken -RemoveGeneratorMetadata:$removeGeneratorMetadata
+            $cmdlet = "$(Split-Path $PSCommandPath -Parent)/../ci-scripts/Get-TemplateHash.ps1".Replace('.Tests.ps1', '.ps1')
+            . $cmdlet $TemplateFilePath $BearerToken -RemoveGeneratorMetadata:$RemoveGeneratorMetadata
         }
     }
+
     It 'Correctly removes metadata from all nested deployments before hashing' {
-        # hash with and without metadata should be the same
-        $hash1 = Get-TemplateHash -ErrorAction Stop " $dataFolder/ModularTemplateWithMetadata.json" -RemoveGeneratorMetadata
-        $hash2 = Get-TemplateHash -ErrorAction Stop " $dataFolder/ModularTemplateWithoutMetadata.json" -RemoveGeneratorMetadata
+        $hash1 = Get-TemplateHash -ErrorAction Stop "$DataFolder/ModularTemplateWithMetadata.json" -RemoveGeneratorMetadata
+        $hash2 = Get-TemplateHash -ErrorAction Stop "$DataFolder/ModularTemplateWithoutMetadata.json" -RemoveGeneratorMetadata
         $hash1 | Should -Be $hash2
     }
+
     It 'Correctly removes metadata before hashing' {
-        # hash with and without metadata should be the same
-        $hash1 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
-        $hash2 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithoutMetadata.json" -RemoveGeneratorMetadata
+        $hash1 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
+        $hash2 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithoutMetadata.json" -RemoveGeneratorMetadata
         $hash1 | Should -Be $hash2
     }
+
     It 'Shows a hash difference between bicep versions if not using RemoveGeneratorMetadata' {
-        # hash with and without metadata should be the same
-        $hash1 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadata.json"
-        $hash2 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithoutMetadata.json"
+        $hash1 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithMetadata.json"
+        $hash2 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithoutMetadata.json"
         $hash1 | Should -Not -Be $hash2
     }
+
     It 'Shows hash difference when files differ outside of generator metadata' {
-        # hash with and without metadata should be the same
-$hash1 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
-$hash2 = Get-TemplateHash -ErrorAction Stop " $dataFolder/TemplateWithMetadataWithChanges.json" -RemoveGeneratorMetadata
+        $hash1 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithMetadata.json" -RemoveGeneratorMetadata
+        $hash2 = Get-TemplateHash -ErrorAction Stop "$DataFolder/TemplateWithMetadataWithChanges.json" -RemoveGeneratorMetadata
         $hash1 | Should -Not -Be $hash2
     }
 }

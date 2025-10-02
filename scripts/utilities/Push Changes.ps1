@@ -1,68 +1,128 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Push Changes
+<#
+.SYNOPSIS
+    Push Changes to Git Repository
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script to commit and push changes to a Git repository.
+    Typically used in CI/CD pipelines to update Azure quickstart templates.
 
+.PARAMETER SampleFolder
+    Folder containing the sample (defaults to environment variable SAMPLE_FOLDER)
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
+.PARAMETER SampleName
+    Name of the sample being updated (defaults to environment variable SAMPLE_NAME)
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+.NOTES
+    Version: 1.0
+    Requires Git to be installed and configured
+    Used in Azure Quickstart Templates pipeline
+#>
+
 [CmdletBinding()]
 param(
-    [string] $SampleFolder = $ENV:SAMPLE_FOLDER, # this is the path to the sample
-    [string] $SampleName = $ENV:SAMPLE_NAME # the name of the sample or folder path from the root of the repo e.g. " sample-type/sample-name"
+    [Parameter(Mandatory = $false)]
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER,
+
+    [Parameter(Mandatory = $false)]
+    [string]$SampleName = $ENV:SAMPLE_NAME
 )
-$gitStatus = $(git status)
-Write-Output "Found Git Status of: `n $gitStatus"
-git diff
-git config core.autocrlf
-Write-Output " ^^^^ autocrlf"
-if($gitStatus -like " *Changes not staged for commit:*" -or
-   $gitStatus -like " *Untracked files:*" ){
-    Write-Output " found changes in $gitStatus"
-    git config --worktree user.email " azure-quickstart-templates@noreply.github.com"
-    git config --worktree user.name "Azure Quickstarts Pipeline"
-    Write-Output " checkout branch..."
-    git checkout " master"
-    Write-Output " checking git status..."
-    git status
-    Write-Output "Committing changes..."
-    # not sure we want to always add the PR# to the message but we're using it during testing so we can test multiple runs of the pipeline without another PR merge
-    # also add the files that were committed to the msg
-    $msg = " for ($SampleName)"
-    if($gitStatus -like " *azuredeploy.json*" ){
-        $files = " azuredeploy.json"
+
+$ErrorActionPreference = "Stop"
+
+try {
+    # Get current Git status
+    $GitStatus = git status 2>&1 | Out-String
+    Write-Output "Found Git Status of:`n$GitStatus"
+
+    # Show differences
+    git diff
+
+    # Check autocrlf setting
+    $autocrlf = git config core.autocrlf
+    Write-Output "Git autocrlf setting: $autocrlf"
+
+    # Check if there are changes to commit
+    if ($GitStatus -like "*Changes not staged for commit:*" -or
+        $GitStatus -like "*Untracked files:*") {
+
+        Write-Output "Found changes to commit"
+
+        # Configure Git user
+        git config --worktree user.email "azure-quickstart-templates@noreply.github.com"
+        git config --worktree user.name "Azure Quickstarts Pipeline"
+
+        Write-Output "Checking out master branch..."
+        git checkout "master"
+
+        Write-Output "Checking git status..."
+        git status
+
+        # Build commit message
+        $msg = "Update for ($SampleName)"
+        $files = @()
+
+        if ($GitStatus -like "*azuredeploy.json*") {
+            $files += "azuredeploy.json"
+        }
+
+        if ($GitStatus -like "*readme.md*" -or $GitStatus -like "*README.md*") {
+            $files += "README.md"
+        }
+
+        if ($files.Count -gt 0) {
+            $filesStr = $files -join " and "
+            $msg = "Update $filesStr for ($SampleName) ***NO_CI***"
+        }
+        else {
+            $msg = "Update files for ($SampleName) ***NO_CI***"
+        }
+
+        Write-Output "Committing changes with message: $msg"
+
+        # Stage and commit changes
+        git add -A -v
+        git commit -v -a -m $msg
+
+        Write-Output "Status after commit..."
+        git status
+
+        Write-Output "Pulling latest changes from origin..."
+        git pull --no-edit origin "master"
+
+        # Amend commit message to maintain single commit
+        git commit --amend -m $msg
+
+        Write-Output "Pushing changes to origin..."
+        git push origin "master"
+
+        Write-Output "Status after push..."
+        git status
+
+        Write-Output "Changes successfully pushed to repository"
     }
-    if($gitStatus -like " *readme.md*" ){
-$files = $files + "README.md"
+    else {
+        Write-Output "No changes detected to commit"
     }
-$msg = " update $files $msg ***NO_CI***" # add ***NO_CI*** so this commit doesn't trigger CI
-    git add -A -v # for when we add azuredeploy.json for main.bicep samples
-    git commit -v -a -m $msg
-    Write-Output "Status after commit..."
-    git status
-    Write-Output "Pushing..."
-    # this triggers the copy badges PR, which will fail every time (we shouldn't trigger it if at all possible) - or run them together
-    # TODO ? if multiple pipelines run at the same time, one push will fail since the branch is out of date
-    # we need to -f force push or pull first to remedy that, but for now we're batching changes in the CI trigger to account for it
-    git pull --no-edit origin " master" # pull in the case where other merging has happened since checkout
-    git commit --amend -m $msg # add the msg we want so the PR# is not lost
-    git push origin " master"
-    Write-Output "Status after push..."
-    git status
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
+
+    # Try to show git status for debugging
+    try {
+        $errorStatus = git status 2>&1 | Out-String
+        Write-Error "Current git status: $errorStatus"
+    }
+    catch {
+        Write-Error "Could not get git status"
+    }
+
     throw
 }
+
+# Example usage:
+# .\Push Changes.ps1 -SampleFolder "101-vm-simple-windows" -SampleName "Simple Windows VM"

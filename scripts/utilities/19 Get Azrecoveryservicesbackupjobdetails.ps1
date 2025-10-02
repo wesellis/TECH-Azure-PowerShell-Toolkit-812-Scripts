@@ -1,67 +1,70 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Get recoveryservicesbackupjobdetails
 
 .DESCRIPTION
     Get recoveryservicesbackupjobdetails operation
-    Author: Wes Ellis (wes@wesellis.com)
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-VmVersion            : Compute
-IsCancellable        : False
-IsRetriable          : False
-ErrorDetails         :
-ActivityId           : 143fe923-d37f-4c59-ac7f-8d0882cfabc8
-JobId                : 064ee552-fb05-4d1c-a2c3-80051f40b533
-Operation            : Restore
-Status               : Completed
-WorkloadName         : outlook1
-StartTime            : 2020-12-13 1:17:35 AM
-EndTime              : 2020-12-13 1:20:41 AM
-Duration             : 00:03:06.3374736
-BackupManagementType : AzureVM
-DynamicErrorMessage  :
-Properties           : {[Job Type, Recover disks], [Target Storage Account Name, outlook1restoredsa], [Recovery point time , 12/12/2020
-                       11:18:41 PM], [Config Blob Name, config-outlook1-064ee552-fb05-4d1c-a2c3-80051f40b533.json]...}
-SubTasks             : {Transfer data from vault}
-VmVersion            : Compute
-IsCancellable        : False
-IsRetriable          : False
-ErrorDetails         :
-ActivityId           : 143fe923-d37f-4c59-ac7f-8d0882cfabc8
-JobId                : 064ee552-fb05-4d1c-a2c3-80051f40b533
-Operation            : Restore
-Status               : Completed
-WorkloadName         : outlook1
-StartTime            : 2020-12-13 1:17:35 AM
-EndTime              : 2020-12-13 1:20:41 AM
-Duration             : 00:03:06.3374736
-BackupManagementType : AzureVM
-    General notes
-$getAzRecoveryServicesBackupJobSplat = @{
-    # Job = $restorejob
-    # JobId = '064ee552-fb05-4d1c-a2c3-80051f40b533'
-    VaultId = $targetVault.ID
-    Status = 'Completed'
-    From = (Get-Date).AddDays(-30).ToUniversalTime()
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$CustomerName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName,
+
+    [Parameter()]
+    [string]$JobId,
+
+    [Parameter()]
+    [int]$DaysBack = 30,
+
+    [Parameter()]
+    [ValidateSet('InProgress', 'Completed', 'Failed', 'CompletedWithWarnings', 'Cancelled')]
+    [string]$Status = 'Completed'
+)
+
+$ErrorActionPreference = 'Stop'
+
+$ResourceGroupName = -join ("$CustomerName" , "_$VMName" , "_RG" )
+$Vaultname = -join ("$VMName" , "ARSV1" )
+
+$getAzRecoveryServicesVaultSplat = @{
+    ResourceGroupName = $ResourceGroupName
+    Name = $Vaultname
 }
-$restorejob = Get-AzRecoveryServicesBackupJob -ErrorAction Stop @getAzRecoveryServicesBackupJobSplat | Where-Object {$_.JobId -eq '064ee552-fb05-4d1c-a2c3-80051f40b533'}
+$targetVault = Get-AzRecoveryServicesVault @getAzRecoveryServicesVaultSplat
+
+$getAzRecoveryServicesBackupJobSplat = @{
+    VaultId = $targetVault.ID
+    Status = $Status
+    From = (Get-Date).AddDays(-$DaysBack).ToUniversalTime()
+}
+$jobs = Get-AzRecoveryServicesBackupJob -ErrorAction Stop @getAzRecoveryServicesBackupJobSplat
+
+if ($JobId) {
+    $restorejob = $jobs | Where-Object {$_.JobId -eq $JobId}
+} else {
+    $restorejob = $jobs | Select-Object -First 1
+}
+
+if ($null -eq $restorejob) {
+    Write-Error "No jobs found matching the criteria"
+    return
+}
+
 $getAzRecoveryServicesBackupJobDetailsSplat = @{
     Job = $restorejob
     VaultId = $targetVault.ID
-};
+}
 $details = Get-AzRecoveryServicesBackupJobDetail -ErrorAction Stop @getAzRecoveryServicesBackupJobDetailsSplat
 $details | Format-List
-

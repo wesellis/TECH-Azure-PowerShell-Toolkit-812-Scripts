@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage storage
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -17,26 +19,27 @@
     [Parameter(Mandatory)]
     [string]$TableName
 )
-Write-Host "Creating Table Storage: $TableName"
+Write-Output "Creating Table Storage: $TableName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 $Table = New-AzStorageTable -Name $TableName -Context $Context
-Write-Host "Table Storage created successfully:"
-Write-Host "Name: $($Table.Name)"
-Write-Host "Storage Account: $StorageAccountName"
-Write-Host "Context: $($Context.StorageAccountName)"
-# Get connection info
+Write-Output "Table Storage created successfully:"
+Write-Output "Name: $($Table.Name)"
+Write-Output "Storage Account: $StorageAccountName"
+Write-Output "Context: $($Context.StorageAccountName)"
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Key = $Keys[0].Value
-Write-Host "`nConnection Information:"
-Write-Host "Table Endpoint: https://$StorageAccountName.table.core.windows.net/"
-Write-Host "Table Name: $TableName"
-Write-Host "Access Key: $($Key.Substring(0,8))..."
-Write-Host "`nConnection String:"
-Write-Host "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$Key;TableEndpoint=https://$StorageAccountName.table.core.windows.net/;"
-Write-Host "`nTable Storage Features:"
-Write-Host "NoSQL key-value store"
-Write-Host "Partition and row key structure"
-Write-Host "Automatic scaling"
-Write-Host "REST API access"
+Write-Output "`nConnection Information:"
+Write-Output "Table Endpoint: https://$StorageAccountName.table.core.windows.net/"
+Write-Output "Table Name: $TableName"
+Write-Output "Access Key: $($Key.Substring(0,8))..."
+Write-Output "`nConnection String:"
+Write-Output "DefaultEndpointsProtocol=https;AccountName=$StorageAccountName;AccountKey=$Key;TableEndpoint=https://$StorageAccountName.table.core.windows.net/;"
+Write-Output "`nTable Storage Features:"
+Write-Output "NoSQL key-value store"
+Write-Output "Partition and row key structure"
+Write-Output "Automatic scaling"
+Write-Output "REST API access"
+
+
 

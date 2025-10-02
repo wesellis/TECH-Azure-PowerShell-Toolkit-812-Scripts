@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Keyvault Provisioning Tool
@@ -8,34 +8,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -51,24 +48,23 @@ param(
     [bool]$EnabledForTemplateDeployment = $true,
     [bool]$EnabledForDiskEncryption = $true
 )
-Write-Host "Provisioning Key Vault: $VaultName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
-$params = @{
+Write-Output "Provisioning Key Vault: $VaultName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "SKU: $SkuName"
+    $params = @{
     Sku = $SkuName
     ErrorAction = "Stop"
     VaultName = $VaultName
     ResourceGroupName = $ResourceGroupName
     Location = $Location
 }
-$KeyVault @params
-Write-Host "Key Vault $VaultName provisioned successfully"
-Write-Host "Vault URI: $($KeyVault.VaultUri)"
-Write-Host "Enabled for Deployment: $EnabledForDeployment"
-Write-Host "Enabled for Template Deployment: $EnabledForTemplateDeployment"
-Write-Host "Enabled for Disk Encryption: $EnabledForDiskEncryption"
+    [string]$KeyVault @params
+Write-Output "Key Vault $VaultName provisioned successfully"
+Write-Output "Vault URI: $($KeyVault.VaultUri)"
+Write-Output "Enabled for Deployment: $EnabledForDeployment"
+Write-Output "Enabled for Template Deployment: $EnabledForTemplateDeployment"
+Write-Output "Enabled for Disk Encryption: $EnabledForDiskEncryption"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

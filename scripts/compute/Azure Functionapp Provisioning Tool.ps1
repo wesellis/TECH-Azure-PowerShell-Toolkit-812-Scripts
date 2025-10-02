@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Functionapp Provisioning Tool
@@ -8,34 +8,31 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -53,12 +50,12 @@ param(
     [string]$RuntimeVersion = " 7.2" ,
     [string]$StorageAccountName
 )
-Write-Host "Provisioning Function App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "App Service Plan: $PlanName"
-Write-Host "Location: $Location"
-Write-Host "Runtime: $Runtime $RuntimeVersion"
-$params = @{
+Write-Output "Provisioning Function App: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "App Service Plan: $PlanName"
+Write-Output "Location: $Location"
+Write-Output "Runtime: $Runtime $RuntimeVersion"
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Name = $AppName
     RuntimeVersion = $RuntimeVersion
@@ -67,14 +64,13 @@ $params = @{
     Location = $Location
     ErrorAction = "Stop"
 }
-$FunctionApp @params
+    [string]$FunctionApp @params
 if ($StorageAccountName) {
-    Write-Host "Storage Account: $StorageAccountName"
+    Write-Output "Storage Account: $StorageAccountName"
 }
-Write-Host "Function App $AppName provisioned successfully"
-Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Host "State: $($FunctionApp.State)"
+Write-Output "Function App $AppName provisioned successfully"
+Write-Output "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Output "State: $($FunctionApp.State)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

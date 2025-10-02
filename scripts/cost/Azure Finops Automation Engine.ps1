@@ -1,9 +1,9 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Storage
 
-<#`n.SYNOPSIS
+<#.SYNOPSIS
     Azure Finops Automation Engine
 
 .DESCRIPTION
@@ -12,9 +12,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Enterprise FinOps automation engine with AI-powered cost optimization and automated remediation.
     This  tool implements a complete FinOps (Financial Operations) framework for Azure environments.
     It uses machine learning to identify cost optimization opportunities, predict future spending,
@@ -33,7 +32,6 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     Author: Wesley Ellis
     Date: June 2024    Requires: Az.Billing, Az.CostManagement, Az.Monitor modules
 [CmdletBinding(SupportsShouldProcess=$true)]
-[CmdletBinding()]
 param(
     [Parameter()]
     [string[]]$SubscriptionId,
@@ -48,8 +46,8 @@ param(
     [switch]$AutoShutdownNonProd,
     [Parameter(ValueFromPipeline)]`n    [string]$OutputPath = " .\FinOps-Report-$(Get-Date -Format 'yyyyMMdd-HHmmss').html"
 )
-$requiredModules = @('Az.Billing', 'Az.CostManagement', 'Az.Monitor', 'Az.Resources', 'Az.Compute')
-foreach ($module in $requiredModules) {
+    [string]$RequiredModules = @('Az.Billing', 'Az.CostManagement', 'Az.Monitor', 'Az.Resources', 'Az.Compute')
+foreach ($module in $RequiredModules) {
     if (!(Get-Module -ListAvailable -Name $module)) {
         Write-Error "Module $module is not installed. Please install it using: Install-Module -Name $module"
         throw
@@ -62,24 +60,23 @@ class FinOpsEngine {
     [decimal]$TotalSavings
     [array]$Predictions
     FinOpsEngine() {
-        $this.CostData = @{}
-        $this.OptimizationOpportunities = @{}
-        $this.TotalSavings = 0
-        $this.Predictions = @()
+    [string]$this.CostData = @{}
+    [string]$this.OptimizationOpportunities = @{}
+    [string]$this.TotalSavings = 0
+    [string]$this.Predictions = @()
     }
     [void]AnalyzeCosts([Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId) {
-        Write-Host "Analyzing costs for subscription: $SubscriptionId" -ForegroundColor Yellow
-        # Get cost data for last 30 days
-        $endDate = Get-Date -ErrorAction Stop
-        $startDate = $endDate.AddDays(-30)
-        $query = @{
+        Write-Host "Analyzing costs for subscription: $SubscriptionId" -ForegroundColor Green
+$EndDate = Get-Date -ErrorAction Stop
+    [string]$StartDate = $EndDate.AddDays(-30)
+$query = @{
             type = "Usage"
             timeframe = "Custom"
             timePeriod = @{
-                from = $startDate.ToString(" yyyy-MM-dd" )
-                to = $endDate.ToString(" yyyy-MM-dd" )
+                from = $StartDate.ToString(" yyyy-MM-dd" )
+                to = $EndDate.ToString(" yyyy-MM-dd" )
             }
             dataset = @{
                 granularity = "Daily"
@@ -101,8 +98,7 @@ class FinOpsEngine {
                 )
             }
         }
-        # Store cost analysis results
-        $this.CostData[$SubscriptionId] = @{
+    [string]$this.CostData[$SubscriptionId] = @{
             TotalCost = 0
             ResourceGroups = @{}
             Services = @{}
@@ -112,7 +108,7 @@ class FinOpsEngine {
     [hashtable]IdentifyOptimizations([Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId) {
-        $optimizations = @{
+$optimizations = @{
             UnusedResources = $this.FindUnusedResources($SubscriptionId)
             RightSizing = $this.AnalyzeRightSizing($SubscriptionId)
             ReservedInstances = $this.RecommendReservedInstances($SubscriptionId)
@@ -125,12 +121,11 @@ class FinOpsEngine {
     [array]FindUnusedResources([Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId) {
-        $unusedResources = @()
-        # Check for unused disks
-        $disks = Get-AzDisk -ErrorAction Stop
+    [string]$UnusedResources = @()
+$disks = Get-AzDisk -ErrorAction Stop
         foreach ($disk in $disks) {
             if ($disk.DiskState -eq "Unattached" ) {
-                $unusedResources = $unusedResources + @{
+    [string]$UnusedResources = $UnusedResources + @{
                     Type = "Disk"
                     Name = $disk.Name
                     ResourceGroup = $disk.ResourceGroupName
@@ -140,11 +135,10 @@ class FinOpsEngine {
                 }
             }
         }
-        # Check for unused public IPs
-        $publicIps = Get-AzPublicIpAddress -ErrorAction Stop
-        foreach ($ip in $publicIps) {
+$PublicIps = Get-AzPublicIpAddress -ErrorAction Stop
+        foreach ($ip in $PublicIps) {
             if (!$ip.IpConfiguration) {
-                $unusedResources = $unusedResources + @{
+    [string]$UnusedResources = $UnusedResources + @{
                     Type = "PublicIP"
                     Name = $ip.Name
                     ResourceGroup = $ip.ResourceGroupName
@@ -153,69 +147,65 @@ class FinOpsEngine {
                 }
             }
         }
-        # Check for stopped VMs still incurring compute charges
-        $vms = Get-AzVM -Status
+$vms = Get-AzVM -Status
         foreach ($vm in $vms) {
             if ($vm.PowerState -eq "VM stopped" -and $vm.StatusCode -ne "Stopped (deallocated)" ) {
-                $unusedResources = $unusedResources + @{
+    [string]$UnusedResources = $UnusedResources + @{
                     Type = "VM"
                     Name = $vm.Name
                     ResourceGroup = $vm.ResourceGroupName
                     Size = $vm.HardwareProfile.VmSize
-                    MonthlyCost = 100 # Estimated
+                    MonthlyCost = 100
                     Action = "Deallocate stopped VM"
                 }
             }
         }
-        return $unusedResources
+        return $UnusedResources
     }
     [array]AnalyzeRightSizing([Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$SubscriptionId) {
-        $rightSizingRecommendations = @()
-        # Analyze VM performance metrics
-        $vms = Get-AzVM -ErrorAction Stop
+    [string]$RightSizingRecommendations = @()
+$vms = Get-AzVM -ErrorAction Stop
         foreach ($vm in $vms) {
-            # Get CPU metrics for last 7 days
-            $endTime = Get-Date -ErrorAction Stop
-            $startTime = $endTime.AddDays(-7)
-            $params = @{
+$EndTime = Get-Date -ErrorAction Stop
+    [string]$StartTime = $EndTime.AddDays(-7)
+$params = @{
                 or = $gw.BackendAddressPools[0].BackendAddresses.Count
-                Maximum = "5)  $predictions = $predictions + @{ Date = $predictedDate PredictedCost = [math]::Round($predictedCost, 2) Confidence = 0.85 } }  return $predictions }"
-                ne = "Production" ) { $storageOptimizations = $storageOptimizations + @{ Type = "Storage" Name = $storage.StorageAccountName ResourceGroup = $storage.ResourceGroupName CurrentRedundancy = $storage.Sku.Name RecommendedRedundancy = "Standard_LRS" Action = "Reduce redundancy for non-production storage" EstimatedSavings = 50 } } }  return $storageOptimizations }  [array]OptimizeNetworking([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $networkOptimizations = @()  # Check for unused Application Gateways $appGateways = Get-AzApplicationGateway"
-                ge = "3) { $riRecommendations = $riRecommendations + @{ Type = "ReservedInstance" VMSize = $group.Name Count = $group.Count Term = " 1 Year"EstimatedSavings = 40 # Percentage Action = " Purchase Reserved Instances" } } }  return $riRecommendations }  [array]IdentifyAutoShutdownCandidates([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $shutdownCandidates = @()  $vms = Get-AzVM"
+                Maximum = "5)  $predictions = $predictions + @{ Date = $PredictedDate PredictedCost = [math]::Round($PredictedCost, 2) Confidence = 0.85 } }  return $predictions }"
+                ne = "Production" ) { $StorageOptimizations = $StorageOptimizations + @{ Type = "Storage" Name = $storage.StorageAccountName ResourceGroup = $storage.ResourceGroupName CurrentRedundancy = $storage.Sku.Name RecommendedRedundancy = "Standard_LRS" Action = "Reduce redundancy for non-production storage" EstimatedSavings = 50 } } }  return $StorageOptimizations }  [array]OptimizeNetworking([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $NetworkOptimizations = @()                  ge = "3) { $RiRecommendations = $RiRecommendations + @{ Type = "ReservedInstance" VMSize = $group.Name Count = $group.Count Term = " 1 Year"EstimatedSavings = 40 # Percentage Action = " Purchase Reserved Instances" } } }  return $RiRecommendations }  [array]IdentifyAutoShutdownCandidates([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $ShutdownCandidates = @()  $vms = Get-AzVM"
                 TimeGrain = "01:00:00"
-                le = $DaysAhead; $i++) { $predictedDate = $currentDate.AddDays($i) $predictedCost = 100 + ($i * 2) + (Get-Random
-                lt = "20) { $currentSize = $vm.HardwareProfile.VmSize $recommendedSize = $this.GetSmallerVMSize($currentSize)  if ($recommendedSize) { $rightSizingRecommendations = $rightSizingRecommendations + @{ Type = "VM" Name = $vm.Name ResourceGroup = $vm.ResourceGroupName CurrentSize = $currentSize RecommendedSize = $recommendedSize AvgCPU = [math]::Round($avgCpu, 2) EstimatedSavings = 30 # Percentage Action = "Resize VM to smaller SKU" } } } } }  return $rightSizingRecommendations }  [string]GetSmallerVMSize([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$currentSize) { $sizeMap = @{ "Standard_D4s_v3" = "Standard_D2s_v3" "Standard_D8s_v3" = "Standard_D4s_v3" "Standard_D16s_v3" = "Standard_D8s_v3" "Standard_E4s_v3" = "Standard_E2s_v3" "Standard_E8s_v3" = "Standard_E4s_v3" }  return $sizeMap[$currentSize] }  [array]RecommendReservedInstances([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $riRecommendations = @()  # Analyze steady-state workloads $vms = Get-AzVM"
+                le = $DaysAhead; $i++) { $PredictedDate = $CurrentDate.AddDays($i) $PredictedCost = 100 + ($i * 2) + (Get-Random
+                lt = "20) { $CurrentSize = $vm.HardwareProfile.VmSize $RecommendedSize = $this.GetSmallerVMSize($CurrentSize)  if ($RecommendedSize) { $RightSizingRecommendations = $RightSizingRecommendations + @{ Type = "VM" Name = $vm.Name ResourceGroup = $vm.ResourceGroupName CurrentSize = $CurrentSize RecommendedSize = $RecommendedSize AvgCPU = [math]::Round($AvgCpu, 2) EstimatedSavings = 30 # Percentage Action = "Resize VM to smaller SKU" } } } } }  return $RightSizingRecommendations }  [string]GetSmallerVMSize([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$CurrentSize) { $SizeMap = @{ "Standard_D4s_v3" = "Standard_D2s_v3" "Standard_D8s_v3" = "Standard_D4s_v3" "Standard_D16s_v3" = "Standard_D8s_v3" "Standard_E4s_v3" = "Standard_E2s_v3" "Standard_E8s_v3" = "Standard_E4s_v3" }  return $SizeMap[$CurrentSize] }  [array]RecommendReservedInstances([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $RiRecommendations = @()  # Analyze steady-state workloads $vms = Get-AzVM"
                 AggregationType = "Average"
                 ResourceId = $vm.Id
                 MetricName = "Percentage CPU"
                 WarningAction = "SilentlyContinue  if ($metrics"
                 ResourceGroupName = $optimization.ResourceGroup
-                EndTime = $endTime
+                EndTime = $EndTime
                 match = "GRS"
                 and = $storage.Tags.Environment
                 AccountName = $storage.StorageAccountName
                 eq = "Deallocate stopped VM" ) { Stop-AzVM"
-                Property = "{ $_.HardwareProfile.VmSize }  foreach ($group in $vmsBySize) { if ($group.Count"
+                Property = "{ $_.HardwareProfile.VmSize }  foreach ($group in $VmsBySize) { if ($group.Count"
                 DiskName = $optimization.Name
-                StartTime = $startTime
-                shutdown = "schedule" } } }  return $shutdownCandidates }  [array]OptimizeStorage([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $storageOptimizations = @()  # Analyze storage accounts $storageAccounts = Get-AzStorageAccount"
+                StartTime = $StartTime
+                shutdown = "schedule" } } }  return $ShutdownCandidates }  [array]OptimizeStorage([Parameter()] [ValidateNotNullOrEmpty()] [Parameter()] [ValidateNotNullOrEmpty()] [string]$SubscriptionId) { $StorageOptimizations = @()  # Analyze storage accounts $StorageAccounts = Get-AzStorageAccount"
                 ErrorAction = "Stop  for ($i = 1; $i"
-                Force = "Write-Host "Deallocated VM: $($optimization.Name)"
+                Force = "Write-Output "Deallocated VM: $($optimization.Name)"
                 Name = $optimization.Name
-                ForegroundColor = "Green } } } }  $this.TotalSavings += $optimization.MonthlyCost ?? 0 } } }  [array]PredictCosts([int]$DaysAhead) { # Simple linear regression for cost prediction # In a real implementation, this would use Azure ML or more sophisticated algorithms  ;  $predictions = @() ;  $currentDate = Get-Date"
+                ForegroundColor = "Green } } } }  $this.TotalSavings += $optimization.MonthlyCost ?? 0 } } }  [array]PredictCosts([int]$DaysAhead) { # Simple linear regression for cost prediction # In a real implementation, this would use Azure ML or more sophisticated algorithms  ;  $predictions = @() ;  $CurrentDate = Get-Date"
             }
-            $metrics @params
+    [string]$metrics @params
 }
-[OutputType([PSObject])]
- {
-    [CmdletBinding()];
+function Write-Log {
+    ;
+[CmdletBinding(SupportsShouldProcess=$true)]
 param(
         [FinOpsEngine]$Engine,
         [hashtable]$Optimizations
     )
-$html = @"
+    [string]$html = @"
 <!DOCTYPE html>
 <html>
 <head>
@@ -223,29 +213,29 @@ $html = @"
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header { background: linear-gradient(135deg,
         .header h1 { margin: 0 0 10px 0; font-size: 36px; }
         .header p { margin: 0; opacity: 0.9; }
         .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .card h3 { margin: 0 0 15px 0; color: #323130; font-size: 18px; }
-        .card .value { font-size: 36px; font-weight: bold; color: #0078d4; }
-        .card .subtitle { color: #605e5c; font-size: 14px; margin-top: 5px; }
+        .card h3 { margin: 0 0 15px 0; color:
+        .card .value { font-size: 36px; font-weight: bold; color:
+        .card .subtitle { color:
         .section { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .section h2 { margin: 0 0 20px 0; color: #323130; border-bottom: 2px solid #edebe9; padding-bottom: 10px; }
+        .section h2 { margin: 0 0 20px 0; color:
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edebe9; }
-        th { background-color: #f3f2f1; font-weight: 600; color: #323130; }
-        tr:hover { background-color: #faf9f8; }
-        .savings { color: #107c10; font-weight: bold; }
-        .action { background-color: #e1f5fe; color: #0078d4; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .chart { height: 300px; background: #f3f2f1; border-radius: 8px; margin: 20px 0; display: flex; align-items: center; justify-content: center; color: #605e5c; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid
+        th { background-color:
+        tr:hover { background-color:
+        .savings { color:
+        .action { background-color:
+        .chart { height: 300px; background:
         .optimization-type { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .type-unused { background-color: #fde7e9; color: #a80000; }
-        .type-rightsizing { background-color: #e7f3ff; color: #0078d4; }
-        .type-reserved { background-color: #f3e7fd; color: #5c2d91; }
-        .type-shutdown { background-color: #fff4ce; color: #835c00; }
-        .footer { text-align: center; color: #605e5c; margin-top: 40px; padding: 20px; }
+        .type-unused { background-color:
+        .type-rightsizing { background-color:
+        .type-reserved { background-color:
+        .type-shutdown { background-color:
+        .footer { text-align: center; color:
     </style>
     <script src=" https://cdn.jsdelivr.net/npm/chart.js" ></script>
 </head>
@@ -275,16 +265,15 @@ $html = @"
             <div class=" card" >
                 <h3>Automation Status</h3>
                 <div class=" value" style=" color: $(if ($OptimizationMode -eq 'AutoRemediate') { '#107c10' } else { '#ff8c00' })" >
-                    $OptimizationMode
+    [string]$OptimizationMode
                 </div>
                 <div class=" subtitle" >Current mode</div>
             </div>
         </div>
 " @
-    # Add optimization sections
     foreach ($category in $Optimizations.Keys) {
         if ($Optimizations[$category].Count -gt 0) {
-            $html = $html + @"
+    [string]$html = $html + @"
         <div class=" section" >
             <h2>$category Optimizations</h2>
             <table>
@@ -300,14 +289,14 @@ $html = @"
                 <tbody>
 " @
             foreach ($item in $Optimizations[$category]) {
-$savings = if ($item.MonthlyCost) { " `$$($item.MonthlyCost)" }
+    [string]$savings = if ($item.MonthlyCost) { " `$$($item.MonthlyCost)" }
                           elseif ($item.EstimatedSavings) { " $($item.EstimatedSavings)%" }
                           else { "TBD" }
-$details = if ($item.Size) { $item.Size }
+    [string]$details = if ($item.Size) { $item.Size }
                           elseif ($item.CurrentSize) { " $($item.CurrentSize) -> $($item.RecommendedSize)" }
                           elseif ($item.Schedule) { $item.Schedule }
                           else { " -" }
-                $html = $html + @"
+    [string]$html = $html + @"
                     <tr>
                         <td>$($item.Name)</td>
                         <td><span class=" optimization-type type-$(($item.Type -replace '\s', '').ToLower())" >$($item.Type)</span></td>
@@ -317,16 +306,15 @@ $details = if ($item.Size) { $item.Size }
                     </tr>
 " @
             }
-            $html = $html + @"
+    [string]$html = $html + @"
                 </tbody>
             </table>
         </div>
 " @
         }
     }
-    # Add ML predictions section if enabled
     if ($EnableMLPredictions) {
-$html = $html + @"
+    [string]$html = $html + @"
         <div class=" section" >
             <h2>Cost Predictions (Next 30 Days)</h2>
             <div class=" chart" >
@@ -338,7 +326,7 @@ $html = $html + @"
         </div>
 " @
     }
-    $html = $html + @"
+    [string]$html = $html + @"
         <div class=" footer" >
             <p>Azure FinOps Automation Engine v1.0 | Enterprise Cost Optimization</p>
         </div>
@@ -355,91 +343,74 @@ $html = $html + @"
     return $html
 }
 try {
-    Write-Host "Azure FinOps Automation Engine v1.0" -ForegroundColor Cyan
-    Write-Host " ===================================" -ForegroundColor Cyan
-    # Connect to Azure if needed
-    $context = Get-AzContext -ErrorAction Stop
+    Write-Host "Azure FinOps Automation Engine v1.0" -ForegroundColor Green
+    Write-Host " ===================================" -ForegroundColor Green
+$context = Get-AzContext -ErrorAction Stop
     if (!$context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
-    # Get subscriptions to analyze
     if (!$SubscriptionId) {
-        $subscriptions = Get-AzSubscription -ErrorAction Stop | Where-Object { $_.State -eq "Enabled" }
-        $SubscriptionId = $subscriptions.Id
+$subscriptions = Get-AzSubscription -ErrorAction Stop | Where-Object { $_.State -eq "Enabled" }
+    [string]$SubscriptionId = $subscriptions.Id
     }
-    # Initialize FinOps engine
-    $engine = [FinOpsEngine]::new()
-    $allOptimizations = @{}
-    foreach ($subId in $SubscriptionId) {
-        Write-Host " `nAnalyzing subscription: $subId" -ForegroundColor Yellow
-        Set-AzContext -SubscriptionId $subId | Out-Null
-        # Analyze costs
-        $engine.AnalyzeCosts($subId)
-        # Identify optimizations
-        $optimizations = $engine.IdentifyOptimizations($subId)
-        # Merge optimizations
+    [string]$engine = [FinOpsEngine]::new()
+$AllOptimizations = @{}
+    foreach ($SubId in $SubscriptionId) {
+        Write-Host " `nAnalyzing subscription: $SubId" -ForegroundColor Green
+        Set-AzContext -SubscriptionId $SubId | Out-Null
+    [string]$engine.AnalyzeCosts($SubId)
+    [string]$optimizations = $engine.IdentifyOptimizations($SubId)
         foreach ($key in $optimizations.Keys) {
-            if (!$allOptimizations.ContainsKey($key)) {
-                $allOptimizations[$key] = @()
+            if (!$AllOptimizations.ContainsKey($key)) {
+    [string]$AllOptimizations[$key] = @()
             }
-            $allOptimizations[$key] += $optimizations[$key]
+    [string]$AllOptimizations[$key] += $optimizations[$key]
         }
     }
-    # Display summary
     Write-Host " `n=== FinOps Analysis Summary ===" -ForegroundColor Green
-    foreach ($category in $allOptimizations.Keys) {
-        $count = $allOptimizations[$category].Count
+    foreach ($category in $AllOptimizations.Keys) {
+    [string]$count = $AllOptimizations[$category].Count
         if ($count -gt 0) {
-            Write-Host " $category : $count opportunities found" -ForegroundColor Yellow
+            Write-Host " $category : $count opportunities found" -ForegroundColor Green
         }
     }
-    # Calculate total potential savings
-    foreach ($category in $allOptimizations.Values) {
+    foreach ($category in $AllOptimizations.Values) {
         foreach ($item in $category) {
             if ($item.MonthlyCost) {
-                $engine.TotalSavings += $item.MonthlyCost
+    [string]$engine.TotalSavings += $item.MonthlyCost
             }
         }
     }
     Write-Host " `nTotal Potential Monthly Savings: `$$([math]::Round($engine.TotalSavings, 2))" -ForegroundColor Green
     Write-Host "Annual Savings Potential: `$$([math]::Round($engine.TotalSavings * 12, 2))" -ForegroundColor Green
-    # Generate predictions if enabled
     if ($EnableMLPredictions) {
-        Write-Host " `nGenerating cost predictions..." -ForegroundColor Yellow
-        $engine.Predictions = $engine.PredictCosts(30)
+        Write-Host " `nGenerating cost predictions..." -ForegroundColor Green
+    [string]$engine.Predictions = $engine.PredictCosts(30)
     }
-    # Implement optimizations based on mode
     if ($OptimizationMode -eq "AutoRemediate" ) {
-        Write-Host " `n=== Auto-Remediation Mode ===" -ForegroundColor Red
-$response = Read-Host "Are you sure you want to automatically implement optimizations? (yes/no)"
+        Write-Host " `n=== Auto-Remediation Mode ===" -ForegroundColor Green
+    [string]$response = Read-Host "Are you sure you want to automatically implement optimizations? (yes/no)"
         if ($response -eq "yes" ) {
-            $engine.ImplementOptimizations($allOptimizations)
+    [string]$engine.ImplementOptimizations($AllOptimizations)
             Write-Host " `nOptimizations implemented successfully!" -ForegroundColor Green
         } else {
-            Write-Host "Auto-remediation cancelled." -ForegroundColor Yellow
+            Write-Host "Auto-remediation cancelled." -ForegroundColor Green
         }
     }
-    # Auto-shutdown configuration
     if ($AutoShutdownNonProd) {
-        Write-Host " `nConfiguring auto-shutdown for non-production resources..." -ForegroundColor Yellow
-        foreach ($candidate in $allOptimizations["AutoShutdown" ]) {
-            Write-Host "Configuring shutdown for: $($candidate.Name)" -ForegroundColor Cyan
-            # Implementation would go here
+        Write-Host " `nConfiguring auto-shutdown for non-production resources..." -ForegroundColor Green
+        foreach ($candidate in $AllOptimizations["AutoShutdown" ]) {
+            Write-Host "Configuring shutdown for: $($candidate.Name)" -ForegroundColor Green
         }
     }
-    # Generate report
-$report = Generate-FinOpsReport -Engine $engine -Optimizations $allOptimizations
-    $report | Out-File -FilePath $OutputPath -Encoding UTF8
+    [string]$report = Generate-FinOpsReport -Engine $engine -Optimizations $AllOptimizations
+    [string]$report | Out-File -FilePath $OutputPath -Encoding UTF8
     Write-Host " `nFinOps report generated: $OutputPath" -ForegroundColor Green
-    # Cost threshold alert
     if ($engine.TotalSavings -gt $CostThreshold) {
-        Write-Host " `n[WARN]  ALERT: Potential savings exceed threshold of `$$CostThreshold!" -ForegroundColor Red
-        Write-Host "Immediate action recommended to reduce costs." -ForegroundColor Red
+        Write-Host " `n[WARN]  ALERT: Potential savings exceed threshold of `$$CostThreshold!" -ForegroundColor Green
+        Write-Host "Immediate action recommended to reduce costs." -ForegroundColor Green
     }
 } catch {
     Write-Error "An error occurred: $_"
-    throw
-}
-
-
+    throw`n}

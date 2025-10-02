@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -11,7 +11,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -82,9 +81,7 @@ $newAzPublicIpAddressSplat = @{
     DomainNameLabel   = $DNSNameLabel
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
-    # AllocationMethod  = 'Dynamic'
     AllocationMethod  = 'Static'
-    # IpTag             = $ipTag
     Tag               = $Tags
 }
 $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
@@ -106,17 +103,13 @@ $Subnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetwor
 $newAzNetworkInterfaceIpConfigSplat = @{
     Name                     = $IPConfigName
     Subnet                   = $Subnet
-    # Subnet                   = $Vnet.Subnets[0].Id
-    # PublicIpAddress          = $PIP.ID
     PublicIpAddress          = $PIP
     ApplicationSecurityGroup = $ASG
     Primary                  = $true
 }
 $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
 $newAzNetworkSecurityRuleConfigSplat = @{
-    # Name = 'rdp-rule'
     Name                                = 'RDP-rule'
-    # Description = "Allow RDP"
     Description                         = 'Allow RDP'
     Access                              = 'Allow'
     Protocol                            = 'Tcp'
@@ -124,10 +117,6 @@ $newAzNetworkSecurityRuleConfigSplat = @{
     Priority                            = 100
     SourceAddressPrefix                 = $SourceAddressPrefixCIDR
     SourcePortRange                     = '*'
-    # DestinationAddressPrefix = '*'
-    # DestinationAddressPrefix = $DestinationAddressPrefixCIDR #this will throw an error due to {Microsoft.Azure.Commands.Network.Models.PSPublicIpAddress/32} work on it some time to fix
-    # DestinationAddressPrefix = '*'
-    # DestinationPortRange = 3389
     DestinationPortRange                = '3389'
     DestinationApplicationSecurityGroup = $ASG
 }
@@ -136,7 +125,6 @@ $newAzNetworkSecurityGroupSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location          = $LocationName
     Name              = $NSGName
-    # SecurityRules     = $rule1, $rule2
     SecurityRules     = $rule1
     Tag               = $Tags
 }
@@ -145,10 +133,7 @@ $newAzNetworkInterfaceSplat = @{
     Name                   = $NICName
     ResourceGroupName      = $ResourceGroupName
     Location               = $LocationName
-    # SubnetId                 = $Vnet.Subnets[0].Id
-    # PublicIpAddressId        = $PIP.Id
     NetworkSecurityGroupId = $NSG.Id
-    # ApplicationSecurityGroup = $ASG
     IpConfiguration        = $IPConfig1
     Tag                    = $Tags
 }
@@ -167,11 +152,9 @@ $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
 $setAzVMOperatingSystemSplat = @{
     VM               = $VirtualMachine
     Windows          = $true
-    # Linux        = $true
     ComputerName     = $ComputerName
     Credential       = $Credential
     ProvisionVMAgent = $true
-    # EnableAutoUpdate = $true
 }
 $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
 $addAzVMNetworkInterfaceSplat = @{
@@ -181,34 +164,18 @@ $addAzVMNetworkInterfaceSplat = @{
 $VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
 $setAzVMSourceImageSplat = @{
     VM             = $VirtualMachine
-    # PublisherName = "Canonical"
-    # Offer         = " 0001-com-ubuntu-server-focal"
-    # Skus          = " 20_04-lts-gen2"
-    # Version       = " latest"
-    # publisherName = "MicrosoftWindowsDesktop"
-    # offer         = " office-365"
-    # Skus          = " 20h2-evd-o365pp"
-    # version       = " latest"
     publisherName = "MicrosoftWindowsServer"
     offer         = "WindowsServer"
     Skus          = " 2019-datacenter-gensecond"
     version       = " latest"
-    #Operating System
-    # publisherName = "MicrosoftWindowsDesktop"
-    # offer = " office-365"
-    # Skus = " 20h2-evd-o365pp"
-    # version = " latest"
     Caching = 'ReadWrite'
 }
 $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
 $setAzVMOSDiskSplat = @{
     VM           = $VirtualMachine
     Name         = $OSDiskName
-    # VhdUri = $OSDiskUri
-    # SourceImageUri = $SourceImageUri
     Caching      = $OSDiskCaching
     CreateOption = $OSCreateOption
-    # Windows = $true
     DiskSizeInGB = '128'
 }
 $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
@@ -228,7 +195,6 @@ $setAzVMExtensionSplat = @{
     Publisher          = "Microsoft.Azure.ActiveDirectory"
     ExtensionType      = "AADLoginForWindows"
     TypeHandlerVersion = " 1.0"
-    # SettingString = $SettingsString
 }
 Set-AzVMExtension -ErrorAction Stop @setAzVMExtensionSplat
 $UsersGroupName = "Azure VM - Standard User"
@@ -240,13 +206,10 @@ $ObjectID = (Get-AzADGroup -SearchString $AdminsGroupName).ID
 $vmtype = (Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName).Type
 New-AzRoleAssignment -ObjectId $ObjectID -RoleDefinitionName 'Virtual Machine Administrator Login' -ResourceGroupName $ResourceGroupName -ResourceName $VMName -ResourceType $vmtype
 $setAzVMAutoShutdownSplat = @{
-    # ResourceGroupName = 'RG-WE-001'
     ResourceGroupName = $ResourceGroupName
-    # Name              = 'MYVM001'
     Name              = $VMName
     Enable            = $true
     Time              = '23:59'
-    # TimeZone = "W. Europe Standard Time"
     TimeZone          = "Central Standard Time"
     Email             = " abdullah@canadacomputing.ca"
 }

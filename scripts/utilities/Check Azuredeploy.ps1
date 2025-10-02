@@ -1,25 +1,47 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Azuredeploy
+<#
+.SYNOPSIS
+    Check Azure Deploy configuration
 
 .DESCRIPTION
-    Azure automation
+    Checks for missing azuredeploy.json files in Bicep project directories
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-$bicep = Get-ChildItem -Path "main.bicep" -Recurse
-foreach($b in $bicep){
-$path = $b.FullName | Split-Path -Parent
-    #Write-Host "Checking $($b.FullName)..."
-    if(!(Test-Path " $path\azuredeploy.json" )){
-        if($($b.fullname) -notlike " *ci-tests*" ){
-            Write-Error " $($b.FullName) is missing azuredeploy.json"
+#>
+
+[CmdletBinding()]
+param()
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    Write-Verbose "Searching for main.bicep files"
+    $bicep = Get-ChildItem -Path "main.bicep" -Recurse
+
+    Write-Verbose "Found $($bicep.Count) Bicep files to check"
+
+    foreach ($b in $bicep) {
+        $path = $b.FullName | Split-Path -Parent
+
+        if (!(Test-Path "$path\azuredeploy.json")) {
+            if ($($b.fullname) -notlike "*ci-tests*") {
+                Write-Error "$($b.FullName) is missing azuredeploy.json"
+            } else {
+                Write-Verbose "Skipping CI test file: $($b.FullName)"
+            }
+        } else {
+            Write-Verbose "Found azuredeploy.json for: $($b.FullName)"
         }
     }
+
+    Write-Output "Azure deploy check completed successfully"
+}
+catch {
+    Write-Error "Failed to check Azure deploy configuration: $($_.Exception.Message)"
+    throw
 }

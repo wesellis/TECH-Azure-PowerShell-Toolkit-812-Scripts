@@ -1,38 +1,38 @@
+#Requires -Version 7.0
 <#
 .SYNOPSIS\s*\n\s*(.+?)(?=\n\s*\.|$)') {
                 $this.Metadata.Synopsis = $Matches[1].Trim()
             }
-            
-            if ($helpBlock -match '\.DESCRIPTION\s*\n\s*(.+?)(?=\n\s*\.|$)') {
+
+            if ($HelpBlock -match '\.DESCRIPTION\s*\n\s*(.+?)(?=\n\s*\.|$)') {
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
                 $this.Metadata.Description = $Matches[1].Trim()
-#>
             }
-            
-            if ($helpBlock -match '\.NOTES\s*\n\s*(.+?)(?=\n\s*\.|$)') {
+
+            if ($HelpBlock -match '\.NOTES\s*\n\s*(.+?)(?=\n\s*\.|$)') {
                 $this.Metadata.Notes = $Matches[1].Trim()
             }
-            
-            # Extract examples
-            $exampleMatches = [regex]::Matches($helpBlock, '\.EXAMPLE\s*\n\s*(.+?)(?=\n\s*\.|$)')
-            foreach ($match in $exampleMatches) {
+
+            $ExampleMatches = [regex]::Matches($HelpBlock, '\.EXAMPLE\s*\n\s*(.+?)(?=\n\s*\.|$)')
+            foreach ($match in $ExampleMatches) {
                 $this.Metadata.Examples += $match.Groups[1].Value.Trim()
             }
         }
-        
-        # Extract metadata from comments
+
         if ($this.Content -match '# Author:\s*(.+)') {
             $this.Metadata.Author = $Matches[1].Trim()
         }
-        
+
         if ($this.Content -match '# Version:\s*(.+)') {
             $this.Metadata.Version = $Matches[1].Trim()
         }
-        
-        # Extract parameters from AST
-        $paramBlock = $this.AST.ParamBlock
-        if ($paramBlock) {
-            foreach ($param in $paramBlock.Parameters) {
-                $paramInfo = @{
+
+        $ParamBlock = $this.AST.ParamBlock
+        if ($ParamBlock) {
+            foreach ($param in $ParamBlock.Parameters) {
+                $ParamInfo = @{
                     Name = $param.Name.VariablePath.UserPath
                     Type = if ($param.StaticType) { $param.StaticType.Name } else { "Object" }
                     Mandatory = $false
@@ -40,73 +40,67 @@
                     Description = ""
                     ValidateSet = @()
                 }
-                
+
                 foreach ($attribute in $param.Attributes) {
                     if ($attribute.TypeName.Name -eq "Parameter") {
                         foreach ($arg in $attribute.NamedArguments) {
                             if ($arg.ArgumentName -eq "Mandatory") {
-                                $paramInfo.Mandatory = $arg.Argument.Value
+                                $ParamInfo.Mandatory = $arg.Argument.Value
                             }
                         }
                     }
                     elseif ($attribute.TypeName.Name -eq "ValidateSet") {
-                        $paramInfo.ValidateSet = $attribute.PositionalArguments | ForEach-Object { $_.Value }
+                        $ParamInfo.ValidateSet = $attribute.PositionalArguments | ForEach-Object { $_.Value }
                     }
                 }
-                
+
                 if ($param.DefaultValue) {
-                    $paramInfo.DefaultValue = $param.DefaultValue.Extent.Text
+                    $ParamInfo.DefaultValue = $param.DefaultValue.Extent.Text
                 }
-                
-                $this.Metadata.Parameters += $paramInfo
+
+                $this.Metadata.Parameters += $ParamInfo
             }
         }
-        
-        # Extract required modules
-        $moduleMatches = [regex]::Matches($this.Content, '#Requires -Module[s]?\s+(.+)')
-        foreach ($match in $moduleMatches) {
+
+        $ModuleMatches = [regex]::Matches($this.Content, '#Requires -Module[s]?\s+(.+)')
+        foreach ($match in $ModuleMatches) {
             $this.Metadata.RequiredModules += $match.Groups[1].Value.Split(',') | ForEach-Object { $_.Trim() }
         }
     }
-    
+
     [string] GenerateMarkdown() {
         $md = @"
-# $($this.Metadata.Name)
 
 $($this.Metadata.Synopsis)
 
-## Description
 
 $($this.Metadata.Description)
 
-#>
-## Parameters
 
 | Parameter | Type | Mandatory | Default | Description |
 |-----------|------|-----------|---------|-------------|
 "@
-        
+
         foreach ($param in $this.Metadata.Parameters) {
             $mandatory = if ($param.Mandatory) { "Yes" } else { "No" }
             $default = if ($param.DefaultValue) { "``$($param.DefaultValue)``" } else { "-" }
             $md += "`n| ``-$($param.Name)`` | $($param.Type) | $mandatory | $default | $($param.Description) |"
-            
-#>
+
             if ($param.ValidateSet.Count -gt 0) {
                 $md += "`n| | Valid values: $($param.ValidateSet -join ', ') | | | |"
             }
         }
-        
+
         if ($this.Metadata.Examples.Count -gt 0) {
             $md += "`n`n## Examples`n"
-            $exampleNum = 1
+            $ExampleNum = 1
             foreach ($example in $this.Metadata.Examples) {
-                $md += "`n### Example $exampleNum`n"
+                $md += "`n### Example $ExampleNum`n"
                 $md += "``````powershell`n$example`n```````n"
-                $exampleNum++
+                $ExampleNum++
             }
         }
-        
+
         if ($this.Metadata.RequiredModules.Count -gt 0) {
             $md += "`n## Requirements`n"
             $md += "`n### Required Modules`n"
@@ -114,20 +108,20 @@ $($this.Metadata.Description)
                 $md += "- $module`n"
             }
         }
-        
+
         if ($this.Metadata.Notes) {
             $md += "`n## Notes`n"
             $md += "$($this.Metadata.Notes)`n"
         }
-        
+
         $md += "`n## Metadata`n"
         $md += "- **Author**: $($this.Metadata.Author)`n"
         $md += "- **Version**: $($this.Metadata.Version)`n"
         $md += "- **Last Modified**: $(Get-Date -Format 'yyyy-MM-dd')`n"
-        
+
         return $md
     }
-    
+
     [string] GenerateHTML() {
         $html = @"
 <!DOCTYPE html>
@@ -138,25 +132,24 @@ $($this.Metadata.Description)
     <title>$($this.Metadata.Name) - Documentation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
-        h1 { color: #0078d4; border-bottom: 2px solid #0078d4; padding-bottom: 10px; }
-        h2 { color: #333; margin-top: 30px; }
+        h1 { color:
+        h2 { color:
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th { background: #f0f0f0; padding: 10px; text-align: left; border: 1px solid #ddd; }
-        td { padding: 10px; border: 1px solid #ddd; }
-        code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', 'Monaco', monospace; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
-        .metadata { background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
-        .param-required { color: #d73a49; font-weight: bold; }
+        th { background:
+        td { padding: 10px; border: 1px solid
+        code { background:
+        pre { background:
+        .metadata { background:
+        .param-required { color:
     </style>
 </head>
 <body>
     <h1>$($this.Metadata.Name)</h1>
     <p><strong>$($this.Metadata.Synopsis)</strong></p>
-    
+
     <h2>Description</h2>
     <p>$($this.Metadata.Description)</p>
-    
-#>
+
     <h2>Parameters</h2>
     <table>
         <thead>
@@ -170,7 +163,7 @@ $($this.Metadata.Description)
         </thead>
         <tbody>
 "@
-        
+
         foreach ($param in $this.Metadata.Parameters) {
             $required = if ($param.Mandatory) { "<span class='param-required'>Yes</span>" } else { "No" }
             $default = if ($param.DefaultValue) { "<code>$($param.DefaultValue)</code>" } else { "-" }
@@ -182,25 +175,24 @@ $($this.Metadata.Description)
                 <td>$default</td>
                 <td>$($param.Description)</td>
             </tr>
-#>
 "@
         }
-        
+
         $html += @"
         </tbody>
     </table>
 "@
-        
+
         if ($this.Metadata.Examples.Count -gt 0) {
             $html += "<h2>Examples</h2>"
-            $exampleNum = 1
+            $ExampleNum = 1
             foreach ($example in $this.Metadata.Examples) {
-                $html += "<h3>Example $exampleNum</h3>"
+                $html += "<h3>Example $ExampleNum</h3>"
                 $html += "<pre><code>$example</code></pre>"
-                $exampleNum++
+                $ExampleNum++
             }
         }
-        
+
         $html += @"
     <div class="metadata">
         <h2>Metadata</h2>
@@ -213,113 +205,103 @@ $($this.Metadata.Description)
 </body>
 </html>
 "@
-        
+
         return $html
     }
-    
+
     [void] GenerateExamples() {
         if ($this.Metadata.Examples.Count -eq 0) {
-            # Auto-generate basic examples based on parameters
-            $basicExample = ".$($this.Metadata.Name)"
-            
+            $BasicExample = ".$($this.Metadata.Name)"
+
             foreach ($param in $this.Metadata.Parameters | Where-Object { $_.Mandatory }) {
-                $basicExample += " -$($param.Name) <$($param.Type)>"
+                $BasicExample += " -$($param.Name) <$($param.Type)>"
             }
-            
-            $this.Metadata.Examples += $basicExample
+
+            $this.Metadata.Examples += $BasicExample
         }
     }
 }
 
-[OutputType([bool])]
- {
+function Write-Log {
     [CmdletBinding()]
 [string]$FolderPath)
-    
+
     $scripts = Get-ChildItem -Path $FolderPath -Filter "*.ps1" -File
-    $readmeContent = @"
-# $(Split-Path $FolderPath -Leaf) Scripts
+    $ReadmeContent = @"
 
 This folder contains $($scripts.Count) PowerShell scripts for Azure automation.
 
-## Scripts
 
 | Script | Description | Parameters |
 |--------|-------------|------------|
 "@
-    
+
     foreach ($script in $scripts) {
         $generator = [DocumentationGenerator]::new($script.FullName)
         $params = ($generator.Metadata.Parameters | ForEach-Object { $_.Name }) -join ", "
-        $readmeContent += "`n| [$($script.Name)](./$($script.Name).md) | $($generator.Metadata.Synopsis) | $params |"
-        
-        # Generate individual script documentation
-        $scriptDoc = $generator.GenerateMarkdown()
-        $scriptDocPath = Join-Path $FolderPath "$($script.BaseName).md"
-        $scriptDoc | Out-File $scriptDocPath -Encoding UTF8
+        $ReadmeContent += "`n| [$($script.Name)](./$($script.Name).md) | $($generator.Metadata.Synopsis) | $params |"
+
+        $ScriptDoc = $generator.GenerateMarkdown()
+        $ScriptDocPath = Join-Path $FolderPath "$($script.BaseName).md"
+        $ScriptDoc | Out-File $ScriptDocPath -Encoding UTF8
     }
-    
-    $readmePath = Join-Path $FolderPath "README.md"
-    $readmeContent | Out-File $readmePath -Encoding UTF8
-    
-    return $readmePath
+
+    $ReadmePath = Join-Path $FolderPath "README.md"
+    $ReadmeContent | Out-File $ReadmePath -Encoding UTF8
+
+    return $ReadmePath
 }
 
-# Main execution
 if ($ScriptPath) {
     if (Test-Path $ScriptPath -PathType Container) {
-        Write-Host "Generating documentation for folder: $ScriptPath" -ForegroundColor Cyan
-        $readmePath = Generate-FolderDocumentation -FolderPath $ScriptPath
-        Write-Host "Folder documentation generated: $readmePath" -ForegroundColor Green
+        Write-Output "Generating documentation for folder: $ScriptPath" # Color: $2
+        $ReadmePath = Generate-FolderDocumentation -FolderPath $ScriptPath
+        Write-Output "Folder documentation generated: $ReadmePath" # Color: $2
     } else {
-        Write-Host "Generating documentation for script: $ScriptPath" -ForegroundColor Cyan
+        Write-Output "Generating documentation for script: $ScriptPath" # Color: $2
         $generator = [DocumentationGenerator]::new($ScriptPath)
-        
+
         if ($IncludeExamples) {
             $generator.GenerateExamples()
         }
-        
+
         if (-not $OutputPath) {
             $OutputPath = [System.IO.Path]::ChangeExtension($ScriptPath, ".md")
         }
-        
+
         switch ($Format) {
             "Markdown" {
                 $doc = $generator.GenerateMarkdown()
                 $doc | Out-File $OutputPath -Encoding UTF8
-                Write-Host "Markdown documentation generated: $OutputPath" -ForegroundColor Green
+                Write-Output "Markdown documentation generated: $OutputPath" # Color: $2
             }
             "HTML" {
                 $doc = $generator.GenerateHTML()
-                $htmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
-                $doc | Out-File $htmlPath -Encoding UTF8
-                Write-Host "HTML documentation generated: $htmlPath" -ForegroundColor Green
+                $HtmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
+                $doc | Out-File $HtmlPath -Encoding UTF8
+                Write-Output "HTML documentation generated: $HtmlPath" # Color: $2
             }
             "All" {
-                $mdDoc = $generator.GenerateMarkdown()
-                $mdDoc | Out-File $OutputPath -Encoding UTF8
-                Write-Host "Markdown documentation generated: $OutputPath" -ForegroundColor Green
-                
-                $htmlDoc = $generator.GenerateHTML()
-                $htmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
-                $htmlDoc | Out-File $htmlPath -Encoding UTF8
-                Write-Host "HTML documentation generated: $htmlPath" -ForegroundColor Green
+                $MdDoc = $generator.GenerateMarkdown()
+                $MdDoc | Out-File $OutputPath -Encoding UTF8
+                Write-Output "Markdown documentation generated: $OutputPath" # Color: $2
+
+                $HtmlDoc = $generator.GenerateHTML()
+                $HtmlPath = [System.IO.Path]::ChangeExtension($OutputPath, ".html")
+                $HtmlDoc | Out-File $HtmlPath -Encoding UTF8
+                Write-Output "HTML documentation generated: $HtmlPath" # Color: $2
             }
         }
     }
 } else {
-    Write-Host "Generating documentation for entire repository..." -ForegroundColor Cyan
-    $repoPath = Split-Path $PSScriptRoot -Parent
-    $scriptsPath = Join-Path $repoPath "automation-scripts"
-    
-    $folders = Get-ChildItem -Path $scriptsPath -Directory
+    Write-Output "Generating documentation for entire repository..." # Color: $2
+    $RepoPath = Split-Path $PSScriptRoot -Parent
+    $ScriptsPath = Join-Path $RepoPath "automation-scripts"
+
+    $folders = Get-ChildItem -Path $ScriptsPath -Directory
     foreach ($folder in $folders) {
-        Write-Host "Processing $($folder.Name)..." -ForegroundColor Yellow
+        Write-Output "Processing $($folder.Name)..." # Color: $2
         Generate-FolderDocumentation -FolderPath $folder.FullName
     }
-    
-    Write-Host "Repository documentation complete!" -ForegroundColor Green
-}
 
-#endregion
-
+    Write-Output "Repository documentation complete!" # Color: $2`n}

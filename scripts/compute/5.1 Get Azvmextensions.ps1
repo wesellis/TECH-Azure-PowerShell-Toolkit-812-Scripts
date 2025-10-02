@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -12,7 +12,6 @@
     Azure location
 .EXAMPLE
     Get-AzVmImagePublisher -Location "CanadaCentral" | Get-AzVMExtensionImageType | Get-AzVMExtensionImage
-#>
 [CmdletBinding()]
 
     [Parameter(Mandatory)]
@@ -21,9 +20,9 @@
 
 $ErrorActionPreference = "Stop"
 
-# Get all VM extensions for the location
 Get-AzVmImagePublisher -Location $Location |
     Get-AzVMExtensionImageType |
     Get-AzVMExtensionImage |
     Select-Object PublisherName, Type, Version
+
 

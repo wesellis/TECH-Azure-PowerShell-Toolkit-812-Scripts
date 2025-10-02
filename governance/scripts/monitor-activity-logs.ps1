@@ -7,36 +7,35 @@
 .DESCRIPTION
     monitor activity logs operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Monitors Azure Activity Logs for specific events and security incidents
 
     Queries Azure Activity Logs for administrative activities, security events,
     and resource changes. Supports filtering by time range, resource groups,
     and specific operations with alert capabilities.
-.PARAMETER StartTime
+.parameter StartTime
     Start time for log query (default: 24 hours ago)
-.PARAMETER EndTime
+.parameter EndTime
     End time for log query (default: now)
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Filter by specific resource group
-.PARAMETER ResourceName
+.parameter ResourceName
     Filter by specific resource name
-.PARAMETER OperationName
+.parameter OperationName
     Filter by specific operation (e.g., Microsoft.Compute/virtualMachines/write)
-.PARAMETER Level
+.parameter Level
     Log level filter: Critical, Error, Warning, Informational, Verbose
-.PARAMETER Status
+.parameter Status
     Operation status: Started, Succeeded, Failed
-.PARAMETER ExportPath
+.parameter ExportPath
     Path to export results (CSV format)
-.PARAMETER AlertEmail
+.parameter AlertEmail
     Email address for critical event alerts
-.PARAMETER ShowSummary
+.parameter ShowSummary
     Display summary statistics
-.PARAMETER ContinuousMonitoring
+.parameter ContinuousMonitoring
     Enable continuous monitoring mode
-.PARAMETER MonitoringInterval
+.parameter MonitoringInterval
     Interval in seconds for continuous monitoring (default: 300)
 
     .\monitor-activity-logs.ps1 -StartTime (Get-Date).AddHours(-1) -Level "Error"
@@ -45,105 +44,98 @@
 
     .\monitor-activity-logs.ps1 -ResourceGroupName "RG-Production" -ShowSummary
 
-    Monitor production resource group with summary#>
+    Monitor production resource group with summary
 
 [CmdletBinding()]
 param(
-    [Parameter()]
+    [parameter()]
     [DateTime]$StartTime = (Get-Date).AddDays(-1),
 
-    [Parameter()]
+    [parameter()]
     [DateTime]$EndTime = (Get-Date),
 
-    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName,
+    [parameter(ValueFromPipeline)]`n    [string]$ResourceGroupName,
 
-    [Parameter(ValueFromPipeline)]`n    [string]$ResourceName,
+    [parameter(ValueFromPipeline)]`n    [string]$ResourceName,
 
-    [Parameter(ValueFromPipeline)]`n    [string]$OperationName,
+    [parameter(ValueFromPipeline)]`n    [string]$OperationName,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Critical', 'Error', 'Warning', 'Informational', 'Verbose')]
     [string]$Level,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Started', 'Succeeded', 'Failed')]
     [string]$Status,
 
-    [Parameter(ValueFromPipeline)]`n    [string]$ExportPath,
+    [parameter(ValueFromPipeline)]`n    [string]$ExportPath,
 
-    [Parameter(ValueFromPipeline)]`n    [string]$AlertEmail,
+    [parameter(ValueFromPipeline)]`n    [string]$AlertEmail,
 
-    [Parameter()]
+    [parameter()]
     [switch]$ShowSummary,
 
-    [Parameter()]
+    [parameter()]
     [switch]$ContinuousMonitoring,
 
-    [Parameter()]
+    [parameter()]
     [ValidateRange(60, 3600)]
     [int]$MonitoringInterval = 300
 )
+    [string]$ErrorActionPreference = 'Stop'
 
-$ErrorActionPreference = 'Stop'
-
-[OutputType([PSObject])]
- {
+function Write-Log {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
 }
 
 function Get-ActivityLogs {
-    param(
+        param(
         [DateTime]$Start,
         [DateTime]$End,
         [hashtable]$Filters
     )
 
     try {
-        Write-Host "Querying activity logs from $($Start.ToString('yyyy-MM-dd HH:mm')) to $($End.ToString('yyyy-MM-dd HH:mm'))..." -ForegroundColor Yellow
-
-        $params = @{
+        Write-Host "Querying activity logs from $($Start.ToString('yyyy-MM-dd HH:mm')) to $($End.ToString('yyyy-MM-dd HH:mm'))..." -ForegroundColor Green
+    $params = @{
             StartTime = $Start
             EndTime = $End
         }
 
-        # Add filters if specified
         if ($Filters.ResourceGroupName) {
-            $params['ResourceGroupName'] = $Filters.ResourceGroupName
+    [string]$params['ResourceGroupName'] = $Filters.ResourceGroupName
         }
         if ($Filters.ResourceName) {
-            $params['ResourceName'] = $Filters.ResourceName
+    [string]$params['ResourceName'] = $Filters.ResourceName
         }
         if ($Filters.OperationName) {
-            $params['OperationName'] = $Filters.OperationName
+    [string]$params['OperationName'] = $Filters.OperationName
         }
+    $logs = Get-AzActivityLog @params
 
-        $logs = Get-AzActivityLog @params
-
-        # Apply additional filters
         if ($Filters.Level) {
-            $logs = $logs | Where-Object { $_.Level -eq $Filters.Level }
+    [string]$logs = $logs | Where-Object { $_.Level -eq $Filters.Level }
         }
         if ($Filters.Status) {
-            $logs = $logs | Where-Object { $_.Status -eq $Filters.Status }
+    [string]$logs = $logs | Where-Object { $_.Status -eq $Filters.Status }
         }
 
         return $logs | Sort-Object EventTimestamp -Descending
     }
     catch {
-        Write-Error "Failed to retrieve activity logs: $_"
+        write-Error "Failed to retrieve activity logs: $_"
         return @()
     }
 }
 
 function Get-CriticalEvents {
-    param([array]$Logs)
-
-    $criticalPatterns = @(
+        param([array]$Logs)
+    [string]$CriticalPatterns = @(
         '*delete*',
         '*remove*',
         '*security*',
@@ -153,99 +145,91 @@ function Get-CriticalEvents {
         '*lock*',
         '*backup*'
     )
-
-    $criticalEvents = @()
+    [string]$CriticalEvents = @()
 
     foreach ($log in $Logs) {
-        foreach ($pattern in $criticalPatterns) {
+        foreach ($pattern in $CriticalPatterns) {
             if ($log.OperationName.Value -like $pattern -or
-                $log.ResourceType.Value -like $pattern) {
-                $criticalEvents += $log
+    [string]$log.ResourceType.Value -like $pattern) {
+    [string]$CriticalEvents += $log
                 break
             }
         }
 
-        # Check for failed critical operations
         if ($log.Status.Value -eq 'Failed' -and
-            $log.Level -in @('Error', 'Critical')) {
-            $criticalEvents += $log
+    [string]$log.Level -in @('Error', 'Critical')) {
+    [string]$CriticalEvents += $log
         }
     }
 
-    return $criticalEvents | Sort-Object EventTimestamp -Descending
+    return $CriticalEvents | Sort-Object EventTimestamp -Descending
 }
 
 function Show-LogSummary {
-    param([array]$Logs)
+        param([array]$Logs)
 
     if ($Logs.Count -eq 0) {
-        Write-Host "No activity logs found for the specified criteria" -ForegroundColor Yellow
+        Write-Host "No activity logs found for the specified criteria" -ForegroundColor Green
         return
     }
 
-    Write-Host "`nActivity Log Summary" -ForegroundColor Cyan
-    Write-Host ("=" * 50) -ForegroundColor Cyan
+    Write-Host "`nActivity Log Summary" -ForegroundColor Green
+    write-Host ("=" * 50) -ForegroundColor Cyan
 
-    # Overall statistics
-    Write-Host "Total Events: $($Logs.Count)"
-    Write-Host "Time Range: $($Logs[-1].EventTimestamp.ToString('yyyy-MM-dd HH:mm')) to $($Logs[0].EventTimestamp.ToString('yyyy-MM-dd HH:mm'))"
+    Write-Output "Total Events: $($Logs.Count)"
+    Write-Output "Time Range: $($Logs[-1].EventTimestamp.ToString('yyyy-MM-dd HH:mm')) to $($Logs[0].EventTimestamp.ToString('yyyy-MM-dd HH:mm'))"
 
-    # By level
-    Write-Host "`nBy Level:" -ForegroundColor Cyan
-    $Logs | Group-Object Level | Sort-Object Count -Descending | ForEach-Object {
-        $color = switch ($_.Name) {
+    Write-Host "`nBy Level:" -ForegroundColor Green
+    [string]$Logs | Group-Object Level | Sort-Object Count -Descending | ForEach-Object {
+    [string]$color = switch ($_.Name) {
             'Critical' { 'Red' }
             'Error' { 'Red' }
             'Warning' { 'Yellow' }
             default { 'White' }
         }
-        Write-Host "  $($_.Name): $($_.Count)" -ForegroundColor $color
+        Write-Output "  $($_.Name): $($_.Count)" -ForegroundColor $color
     }
 
-    # By status
-    Write-Host "`nBy Status:" -ForegroundColor Cyan
-    $Logs | Group-Object { $_.Status.Value } | Sort-Object Count -Descending | ForEach-Object {
-        $color = switch ($_.Name) {
+    Write-Host "`nBy Status:" -ForegroundColor Green
+    [string]$Logs | Group-Object { $_.Status.Value } | Sort-Object Count -Descending | ForEach-Object {
+    [string]$color = switch ($_.Name) {
             'Failed' { 'Red' }
             'Succeeded' { 'Green' }
             default { 'White' }
         }
-        Write-Host "  $($_.Name): $($_.Count)" -ForegroundColor $color
+        Write-Output "  $($_.Name): $($_.Count)" -ForegroundColor $color
     }
 
-    # Top operations
-    Write-Host "`nTop Operations:" -ForegroundColor Cyan
-    $Logs | Group-Object { $_.OperationName.Value } |
+    Write-Host "`nTop Operations:" -ForegroundColor Green
+    [string]$Logs | Group-Object { $_.OperationName.Value } |
         Sort-Object Count -Descending |
         Select-Object -First 5 |
         ForEach-Object {
-            Write-Host "  $($_.Name): $($_.Count)"
+            Write-Output "  $($_.Name): $($_.Count)"
         }
 
-    # Resource groups
     if ($Logs | Where-Object { $_.ResourceGroupName }) {
-        Write-Host "`nResource Groups:" -ForegroundColor Cyan
-        $Logs | Where-Object { $_.ResourceGroupName } |
+        Write-Host "`nResource Groups:" -ForegroundColor Green
+    [string]$Logs | Where-Object { $_.ResourceGroupName } |
             Group-Object ResourceGroupName |
             Sort-Object Count -Descending |
             Select-Object -First 5 |
             ForEach-Object {
-                Write-Host "  $($_.Name): $($_.Count)"
+                Write-Output "  $($_.Name): $($_.Count)"
             }
     }
 }
 
 function Show-DetailedLogs {
-    param([array]$Logs)
+        param([array]$Logs)
 
     if ($Logs.Count -eq 0) {
         return
     }
 
-    Write-Host "`nDetailed Activity Logs" -ForegroundColor Cyan
-    Write-Host ("=" * 50) -ForegroundColor Cyan
-
-    $displayLogs = $Logs | Select-Object -First 20 | ForEach-Object {
+    Write-Host "`nDetailed Activity Logs" -ForegroundColor Green
+    write-Host ("=" * 50) -ForegroundColor Cyan
+    [string]$DisplayLogs = $Logs | Select-Object -First 20 | ForEach-Object {
         [PSCustomObject]@{
             Time = $_.EventTimestamp.ToString('MM-dd HH:mm')
             Level = $_.Level
@@ -256,16 +240,15 @@ function Show-DetailedLogs {
             Caller = $_.Caller
         }
     }
-
-    $displayLogs | Format-Table -AutoSize
+    [string]$DisplayLogs | Format-Table -AutoSize
 
     if ($Logs.Count -gt 20) {
-        Write-Host "... and $($Logs.Count - 20) more events" -ForegroundColor Yellow
+        Write-Host "... and $($Logs.Count - 20) more events" -ForegroundColor Green
     }
 }
 
 function Send-AlertEmail {
-    param(
+        param(
         [array]$CriticalEvents,
         [string]$EmailAddress
     )
@@ -275,32 +258,29 @@ function Send-AlertEmail {
     }
 
     try {
-        # This would require additional email configuration
-        # For now, just display what would be sent
-        Write-Host "`nWould send alert email to: $EmailAddress" -ForegroundColor Yellow
-        Write-Host "Critical events detected: $($CriticalEvents.Count)" -ForegroundColor Red
+        Write-Host "`nWould send alert email to: $EmailAddress" -ForegroundColor Green
+        Write-Host "Critical events detected: $($CriticalEvents.Count)" -ForegroundColor Green
+    [string]$CriticalEvents | Select-Object -First 5 | ForEach-Object {
+            Write-Host "  - $($_.EventTimestamp): $($_.OperationName.Value)" -ForegroundColor Green
 
-        $CriticalEvents | Select-Object -First 5 | ForEach-Object {
-            Write-Host "  - $($_.EventTimestamp): $($_.OperationName.Value)" -ForegroundColor Red
-        
 } catch {
-        Write-Warning "Failed to send alert email: $_"
+        write-Warning "Failed to send alert email: $_"
     }
 }
 
 function Export-LogsToCSV {
-    param(
+        param(
         [array]$Logs,
         [string]$Path
     )
 
     if ($Logs.Count -eq 0) {
-        Write-Warning "No logs to export"
+        write-Warning "No logs to export"
         return
     }
 
     try {
-        $exportData = $Logs | ForEach-Object {
+    [string]$ExportData = $Logs | ForEach-Object {
             [PSCustomObject]@{
                 EventTimestamp = $_.EventTimestamp
                 Level = $_.Level
@@ -314,67 +294,59 @@ function Export-LogsToCSV {
                 CorrelationId = $_.CorrelationId
             }
         }
-
-        $exportData | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
+    [string]$ExportData | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
         Write-Host "Exported $($Logs.Count) events to: $Path" -ForegroundColor Green
     }
     catch {
-        Write-Error "Failed to export logs: $_"
+        write-Error "Failed to export logs: $_"
     }
 }
 
 function Start-ContinuousMonitoring {
-    param(
+        param(
         [hashtable]$Filters,
         [int]$Interval,
         [string]$Email
     )
 
-    Write-Host "`nStarting continuous monitoring (interval: $Interval seconds)" -ForegroundColor Cyan
-    Write-Host "Press Ctrl+C to stop monitoring" -ForegroundColor Yellow
-
-    $lastCheckTime = Get-Date
+    Write-Host "`nStarting continuous monitoring (interval: $Interval seconds)" -ForegroundColor Green
+    Write-Host "Press Ctrl+C to stop monitoring" -ForegroundColor Green
+    $LastCheckTime = Get-Date
 
     while ($true) {
         try {
-            $currentTime = Get-Date
-            $logs = Get-ActivityLogs -Start $lastCheckTime -End $currentTime -Filters $Filters
+    $CurrentTime = Get-Date
+    $logs = Get-ActivityLogs -Start $LastCheckTime -End $CurrentTime -Filters $Filters
 
             if ($logs.Count -gt 0) {
-                Write-Host "`n[$($currentTime.ToString('HH:mm:ss'))] Found $($logs.Count) new events" -ForegroundColor Green
-
-                $criticalEvents = Get-CriticalEvents -Logs $logs
-                if ($criticalEvents.Count -gt 0) {
-                    Write-Host "CRITICAL: $($criticalEvents.Count) critical events detected!" -ForegroundColor Red
-                    $criticalEvents | Select-Object -First 3 | ForEach-Object {
-                        Write-Host "  - $($_.EventTimestamp.ToString('HH:mm')): $($_.OperationName.Value)" -ForegroundColor Red
+                Write-Host "`n[$($CurrentTime.ToString('HH:mm:ss'))] Found $($logs.Count) new events" -ForegroundColor Green
+    $CriticalEvents = Get-CriticalEvents -Logs $logs
+                if ($CriticalEvents.Count -gt 0) {
+                    Write-Host "CRITICAL: $($CriticalEvents.Count) critical events detected!" -ForegroundColor Green
+    [string]$CriticalEvents | Select-Object -First 3 | ForEach-Object {
+                        Write-Host "  - $($_.EventTimestamp.ToString('HH:mm')): $($_.OperationName.Value)" -ForegroundColor Green
                     }
 
                     if ($Email) {
-                        Send-AlertEmail -CriticalEvents $criticalEvents -EmailAddress $Email
+                        Send-AlertEmail -CriticalEvents $CriticalEvents -EmailAddress $Email
                     }
                 }
             }
-
-            $lastCheckTime = $currentTime
+    [string]$LastCheckTime = $CurrentTime
             Start-Sleep -Seconds $Interval
         }
         catch {
-            Write-Warning "Monitoring error: $_"
+            write-Warning "Monitoring error: $_"
             Start-Sleep -Seconds 60
         }
     }
 }
 
-# Main execution
-Write-Host "`nAzure Activity Log Monitor" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
-
-$context = Test-AzureConnection
+Write-Host "`nAzure Activity Log Monitor" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
+    [string]$context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
-
-# Prepare filters
-$filters = @{}
+    $filters = @{}
 if ($ResourceGroupName) { $filters['ResourceGroupName'] = $ResourceGroupName }
 if ($ResourceName) { $filters['ResourceName'] = $ResourceName }
 if ($OperationName) { $filters['OperationName'] = $OperationName }
@@ -385,42 +357,38 @@ if ($ContinuousMonitoring) {
     Start-ContinuousMonitoring -Filters $filters -Interval $MonitoringInterval -Email $AlertEmail
 }
 else {
-    # Single query mode
     $logs = Get-ActivityLogs -Start $StartTime -End $EndTime -Filters $filters
 
     if ($logs.Count -eq 0) {
-        Write-Host "No activity logs found for the specified criteria" -ForegroundColor Yellow
+        Write-Host "No activity logs found for the specified criteria" -ForegroundColor Green
         exit 0
     }
 
     Write-Host "Retrieved $($logs.Count) activity log entries" -ForegroundColor Green
-
-    # Check for critical events
-    $criticalEvents = Get-CriticalEvents -Logs $logs
-    if ($criticalEvents.Count -gt 0) {
-        Write-Host "`nCRITICAL EVENTS DETECTED: $($criticalEvents.Count)" -ForegroundColor Red
-        $criticalEvents | Select-Object -First 5 | ForEach-Object {
-            Write-Host "  - $($_.EventTimestamp): $($_.OperationName.Value)" -ForegroundColor Red
+    $CriticalEvents = Get-CriticalEvents -Logs $logs
+    if ($CriticalEvents.Count -gt 0) {
+        Write-Host "`nCRITICAL EVENTS DETECTED: $($CriticalEvents.Count)" -ForegroundColor Green
+    [string]$CriticalEvents | Select-Object -First 5 | ForEach-Object {
+            Write-Host "  - $($_.EventTimestamp): $($_.OperationName.Value)" -ForegroundColor Green
         }
 
         if ($AlertEmail) {
-            Send-AlertEmail -CriticalEvents $criticalEvents -EmailAddress $AlertEmail
+            Send-AlertEmail -CriticalEvents $CriticalEvents -EmailAddress $AlertEmail
         }
     }
 
-    # Show summary if requested
     if ($ShowSummary) {
         Show-LogSummary -Logs $logs
     }
 
-    # Show detailed logs
     Show-DetailedLogs -Logs $logs
 
-    # Export if requested
     if ($ExportPath) {
         Export-LogsToCSV -Logs $logs -Path $ExportPath
     }
 
     Write-Host "`nMonitoring completed!" -ForegroundColor Green
 }\n
+
+
 

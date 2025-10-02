@@ -1,10 +1,13 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
     Creates Azure Container Registry with configuration options
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Creates an Azure Container Registry with specified SKU and configuration.
     Optionally enables admin user and retrieves credentials.
 .PARAMETER ResourceGroupName
@@ -20,11 +23,9 @@
 .PARAMETER ShowCredentials
     Display admin credentials after creation
     .\Azure-ContainerRegistry-Creator.ps1 -ResourceGroupName "RG-Containers" -RegistryName "myregistry123" -Location "East US"
-#>
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding()]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true)]
@@ -43,31 +44,28 @@
 )
 $ErrorActionPreference = 'Stop'
 try {
-    # Test Azure connection
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
-    # Check if registry name is available
-    Write-Host "Checking registry name availability..." -ForegroundColor Yellow
+    Write-Host "Checking registry name availability..." -ForegroundColor Green
     try {
-        $availabilityResult = Test-AzContainerRegistryNameAvailability -Name $RegistryName
-        if (-not $availabilityResult.NameAvailable) {
-            throw "Registry name '$RegistryName' is not available: $($availabilityResult.Reason)"
+        $AvailabilityResult = Test-AzContainerRegistryNameAvailability -Name $RegistryName
+        if (-not $AvailabilityResult.NameAvailable) {
+            throw "Registry name '$RegistryName' is not available: $($AvailabilityResult.Reason)"
         }
         Write-Host "Registry name is available" -ForegroundColor Green
     }
     catch {
         Write-Warning "Could not check name availability: $_"
     }
-    # Check if resource group exists
-    Write-Host "Validating resource group..." -ForegroundColor Yellow
+    Write-Host "Validating resource group..." -ForegroundColor Green
     $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         throw "Resource group '$ResourceGroupName' not found"
     }
-    Write-Host "Creating Container Registry: $RegistryName" -ForegroundColor Yellow
+    Write-Host "Creating Container Registry: $RegistryName" -ForegroundColor Green
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Name = $RegistryName
@@ -80,37 +78,33 @@ try {
     if ($PSCmdlet.ShouldProcess($RegistryName, "Create Container Registry")) {
         $Registry = New-AzContainerRegistry @params
         Write-Host "Container Registry created successfully!" -ForegroundColor Green
-        Write-Host "Registry Details:" -ForegroundColor Cyan
-        Write-Host "Name: $($Registry.Name)"
-        Write-Host "Login Server: $($Registry.LoginServer)"
-        Write-Host "Location: $($Registry.Location)"
-        Write-Host "SKU: $($Registry.Sku.Name)"
-        Write-Host "Admin Enabled: $($Registry.AdminUserEnabled)"
-        # Get admin credentials if enabled and requested
+        Write-Host "Registry Details:" -ForegroundColor Green
+        Write-Output "Name: $($Registry.Name)"
+        Write-Output "Login Server: $($Registry.LoginServer)"
+        Write-Output "Location: $($Registry.Location)"
+        Write-Output "SKU: $($Registry.Sku.Name)"
+        Write-Output "Admin Enabled: $($Registry.AdminUserEnabled)"
         if ($Registry.AdminUserEnabled -and $ShowCredentials) {
-            Write-Host "`nRetrieving admin credentials..." -ForegroundColor Yellow
+            Write-Host "`nRetrieving admin credentials..." -ForegroundColor Green
             try {
                 $Creds = Get-AzContainerRegistryCredential -ResourceGroupName $ResourceGroupName -Name $RegistryName
-                Write-Host "Admin Credentials:" -ForegroundColor Cyan
-                Write-Host "Username: $($Creds.Username)"
-                Write-Host "Password: $($Creds.Password)" -ForegroundColor Yellow
-                Write-Host "Password2: $($Creds.Password2)" -ForegroundColor Yellow
+                Write-Host "Admin Credentials:" -ForegroundColor Green
+                Write-Output "Username: $($Creds.Username)"
+                Write-Host "Password: $($Creds.Password)" -ForegroundColor Green
+                Write-Host "Password2: $($Creds.Password2)" -ForegroundColor Green
             }
             catch {
                 Write-Warning "Could not retrieve admin credentials: $_"
             }
         }
         elseif (-not $Registry.AdminUserEnabled -and $ShowCredentials) {
-            Write-Host "Note: Admin user is not enabled. Use -EnableAdminUser to enable admin credentials." -ForegroundColor Yellow
+            Write-Host "Note: Admin user is not enabled. Use -EnableAdminUser to enable admin credentials." -ForegroundColor Green
         }
-        Write-Host "`nNext Steps:" -ForegroundColor Cyan
-        Write-Host "1. Docker login: docker login $($Registry.LoginServer)"
-        Write-Host "2. Tag images: docker tag myimage:latest $($Registry.LoginServer)/myimage:latest"
-        Write-Host "3. Push images: docker push $($Registry.LoginServer)/myimage:latest"
-    
+        Write-Host "`nNext Steps:" -ForegroundColor Green
+        Write-Output "1. Docker login: docker login $($Registry.LoginServer)"
+        Write-Output "2. Tag images: docker tag myimage:latest $($Registry.LoginServer)/myimage:latest"
+        Write-Output "3. Push images: docker push $($Registry.LoginServer)/myimage:latest"
+
 } catch {
     Write-Error "Failed to create container registry: $_"
-    throw
-}
-
-
+    throw`n}

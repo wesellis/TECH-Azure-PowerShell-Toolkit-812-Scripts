@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,33 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -56,28 +53,28 @@ param(
     [hashtable]$EnvironmentVariables = @{},
     [string]$RestartPolicy = "Always"
 )
-Write-Host "Provisioning Container Instance: $ContainerGroupName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Container Image: $Image"
-Write-Host "OS Type: $OsType"
-Write-Host "CPU: $Cpu cores"
-Write-Host "Memory: $Memory GB"
-Write-Host "Ports: $($Ports -join ', ')"
-Write-Host "Restart Policy: $RestartPolicy"
-$PortObjects = @()
+Write-Output "Provisioning Container Instance: $ContainerGroupName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "Container Image: $Image"
+Write-Output "OS Type: $OsType"
+Write-Output "CPU: $Cpu cores"
+Write-Output "Memory: $Memory GB"
+Write-Output "Ports: $($Ports -join ', ')"
+Write-Output "Restart Policy: $RestartPolicy"
+    [string]$PortObjects = @()
 foreach ($Port in $Ports) {
-    $PortObjects = $PortObjects + New-AzContainerInstancePortObject -Port $Port -Protocol TCP
+    [string]$PortObjects = $PortObjects + New-AzContainerInstancePortObject -Port $Port -Protocol TCP
 }
-$EnvVarObjects = @()
+    [string]$EnvVarObjects = @()
 if ($EnvironmentVariables.Count -gt 0) {
-    Write-Host " `nEnvironment Variables:"
+    Write-Output " `nEnvironment Variables:"
     foreach ($EnvVar in $EnvironmentVariables.GetEnumerator()) {
-        Write-Host "  $($EnvVar.Key): $($EnvVar.Value)"
-        $EnvVarObjects = $EnvVarObjects + New-AzContainerInstanceEnvironmentVariableObject -Name $EnvVar.Key -Value $EnvVar.Value
+        Write-Output "  $($EnvVar.Key): $($EnvVar.Value)"
+    [string]$EnvVarObjects = $EnvVarObjects + New-AzContainerInstanceEnvironmentVariableObject -Name $EnvVar.Key -Value $EnvVar.Value
     }
 }
-$params = @{
+    $params = @{
     RequestMemoryInGb = $Memory
     Name = $ContainerGroupName
     Port = $PortObjects
@@ -85,12 +82,12 @@ $params = @{
     Image = $Image
     ErrorAction = "Stop"
 }
-$Container @params
+    [string]$Container @params
 if ($EnvVarObjects.Count -gt 0) {
-    $Container.EnvironmentVariable = $EnvVarObjects
+    [string]$Container.EnvironmentVariable = $EnvVarObjects
 }
-Write-Host " `nCreating Container Instance..." ;
-$params = @{
+Write-Output " `nCreating Container Instance..." ;
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     RestartPolicy = $RestartPolicy
     Location = $Location
@@ -100,27 +97,24 @@ $params = @{
     ErrorAction = "Stop"
     Name = $ContainerGroupName
 }
-$ContainerGroup @params
-Write-Host " `nContainer Instance $ContainerGroupName provisioned successfully"
-Write-Host "Public IP Address: $($ContainerGroup.IpAddress)"
-Write-Host "FQDN: $($ContainerGroup.Fqdn)"
-Write-Host "Provisioning State: $($ContainerGroup.ProvisioningState)"
-Write-Host " `nContainer Status:"
+    [string]$ContainerGroup @params
+Write-Output " `nContainer Instance $ContainerGroupName provisioned successfully"
+Write-Output "Public IP Address: $($ContainerGroup.IpAddress)"
+Write-Output "FQDN: $($ContainerGroup.Fqdn)"
+Write-Output "Provisioning State: $($ContainerGroup.ProvisioningState)"
+Write-Output " `nContainer Status:"
 foreach ($ContainerStatus in $ContainerGroup.Container) {
-    Write-Host "Container: $($ContainerStatus.Name)"
-    Write-Host "State: $($ContainerStatus.InstanceView.CurrentState.State)"
-    Write-Host "Restart Count: $($ContainerStatus.InstanceView.RestartCount)"
+    Write-Output "Container: $($ContainerStatus.Name)"
+    Write-Output "State: $($ContainerStatus.InstanceView.CurrentState.State)"
+    Write-Output "Restart Count: $($ContainerStatus.InstanceView.RestartCount)"
 }
 if ($ContainerGroup.IpAddress -and $Ports) {
-    Write-Host " `nAccess URLs:"
+    Write-Output " `nAccess URLs:"
     foreach ($Port in $Ports) {
-        Write-Host "  http://$($ContainerGroup.IpAddress):$Port"
+        Write-Output "  http://$($ContainerGroup.IpAddress):$Port"
     }
 }
-Write-Host " `nContainer Instance provisioning completed at $(Get-Date)"
+Write-Output " `nContainer Instance provisioning completed at $(Get-Date)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

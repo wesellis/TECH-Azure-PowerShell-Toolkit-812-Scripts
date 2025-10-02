@@ -1,43 +1,121 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
-#Requires -Modules Az.Compute
-#Requires -Modules Az.Storage
+#Requires -Version 7.4
+#Requires -Modules Az.Resources, Az.Compute, Az.Storage, Az.Billing
 
-<#`n.SYNOPSIS
-    Analyze cost optimization
+<#
+.SYNOPSIS
+    Analyze cost optimization opportunities in Azure
 
 .DESCRIPTION
-    Analyze cost optimization
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Cost Optimization Analyzer with AI Recommendations
-[CmdletBinding()]
+    Comprehensive Azure cost analysis and optimization tool that identifies
+    underutilized resources, provides recommendations, and generates detailed reports
 
-    [Parameter()][string]$SubscriptionId,
-    [Parameter()][string]$ResourceGroupName,
-    [Parameter()][int]$AnalysisDays = 30,
-    [Parameter()][string]$ExportPath = "cost-analysis-$(Get-Date -Format 'yyyyMMdd').json",
-    [Parameter()][decimal]$BudgetThreshold = 1000,
-    [Parameter()][switch]$IncludeRecommendations,
-    [Parameter()][switch]$GenerateReport
+.PARAMETER SubscriptionId
+    Azure subscription ID to analyze
+
+.PARAMETER ResourceGroupName
+    Specific resource group to analyze (optional)
+
+.PARAMETER AnalysisDays
+    Number of days to analyze (default 30)
+
+.PARAMETER ExportPath
+    Path to export the analysis results
+
+.PARAMETER BudgetThreshold
+    Budget threshold for recommendations
+
+.PARAMETER IncludeRecommendations
+    Include detailed recommendations in the analysis
+
+.PARAMETER GenerateReport
+    Generate HTML report
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
+    Requires appropriate permissions and modules
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter()]
+    [string]$SubscriptionId,
+
+    [Parameter()]
+    [string]$ResourceGroupName,
+
+    [Parameter()]
+    [ValidateRange(1, 365)]
+    [int]$AnalysisDays = 30,
+
+    [Parameter()]
+    [string]$ExportPath = "cost-analysis-$(Get-Date -Format 'yyyyMMdd').json",
+
+    [Parameter()]
+    [ValidateRange(0, [decimal]::MaxValue)]
+    [decimal]$BudgetThreshold = 1000,
+
+    [Parameter()]
+    [switch]$IncludeRecommendations,
+
+    [Parameter()]
+    [switch]$GenerateReport
 )
-$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath ".." -AdditionalChildPath "modules" -AdditionalChildPath "AzureAutomationCommon"
-if (Test-Path $modulePath) { try {
-    if (-not (Get-AzContext)) { throw "Not connected to Azure" }
-        # Set subscription context if specified
-    if ($SubscriptionId) {
-        Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+function Write-ColorOutput {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter()]
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $colorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
     }
-    $context = Get-AzContext -ErrorAction Stop
-    
-    # Get cost data
-    $startDate = (Get-Date).AddDays(-$AnalysisDays)
-    $endDate = Get-Date -ErrorAction Stop
-    $costData = @{
+
+    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $colorMap[$Level]
+}
+
+try {
+    Write-ColorOutput "Azure Cost Optimization Analyzer - Starting" -Level INFO
+    Write-Host "============================================" -ForegroundColor DarkGray
+
+    # Connect to Azure if needed
+    $context = Get-AzContext -ErrorAction SilentlyContinue
+    if (-not $context) {
+        Write-ColorOutput "Connecting to Azure..." -Level INFO
+        Connect-AzAccount
+        $context = Get-AzContext
+    }
+
+    if ($SubscriptionId) {
+        Write-ColorOutput "Setting subscription: $SubscriptionId" -Level INFO
+        Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+        $context = Get-AzContext
+    }
+
+    Write-ColorOutput "Analyzing subscription: $($context.Subscription.Name)" -Level INFO
+
+    # Initialize cost data structure
+    $StartDate = (Get-Date).AddDays(-$AnalysisDays)
+    $EndDate = Get-Date
+
+    $CostData = @{
         SubscriptionId = $context.Subscription.Id
         SubscriptionName = $context.Subscription.Name
         AnalysisPeriod = @{
-            StartDate = $startDate
-            EndDate = $endDate
+            StartDate = $StartDate.ToString("yyyy-MM-dd")
+            EndDate = $EndDate.ToString("yyyy-MM-dd")
             Days = $AnalysisDays
         }
         TotalCost = 0
@@ -47,272 +125,230 @@ if (Test-Path $modulePath) { try {
         Recommendations = @()
         Insights = @{}
     }
-        # Analyze resources
+
+    # Get resources
+    Write-ColorOutput "Retrieving resources..." -Level INFO
     $resources = if ($ResourceGroupName) {
         Get-AzResource -ResourceGroupName $ResourceGroupName
     } else {
-        Get-AzResource -ErrorAction Stop
+        Get-AzResource
     }
-    
-    # Group resources by various dimensions
-    $rgGroups = $resources | Group-Object ResourceGroupName
-    $typeGroups = $resources | Group-Object ResourceType
-    $locationGroups = $resources | Group-Object Location
-    foreach ($rg in $rgGroups) {
-        $costData.ResourceGroups[$rg.Name] = @{
+
+    Write-ColorOutput "Found $($resources.Count) resources" -Level INFO
+
+    # Group resources for analysis
+    $RgGroups = $resources | Group-Object ResourceGroupName
+    $TypeGroups = $resources | Group-Object ResourceType
+    $LocationGroups = $resources | Group-Object Location
+
+    # Analyze resource groups
+    foreach ($rg in $RgGroups) {
+        $CostData.ResourceGroups[$rg.Name] = @{
             ResourceCount = $rg.Count
-            Resources = $rg.Group
+            Resources = $rg.Group | Select-Object Name, ResourceType
             EstimatedMonthlyCost = 0
         }
     }
-    foreach ($type in $typeGroups) {
-        $costData.ResourceTypes[$type.Name] = @{
+
+    # Analyze resource types
+    foreach ($type in $TypeGroups) {
+        $CostData.ResourceTypes[$type.Name] = @{
             Count = $type.Count
-            Resources = $type.Group
+            Resources = $type.Group | Select-Object Name, ResourceGroupName
             EstimatedMonthlyCost = 0
         }
     }
-    Write-Progress -Activity "Cost Analysis" -Status "Analyzing virtual machines..." -PercentComplete 30
-    # Detailed VM analysis
+
+    # Analyze VMs for optimization opportunities
+    Write-ColorOutput "Analyzing virtual machines..." -Level INFO
     $vms = $resources | Where-Object { $_.ResourceType -eq "Microsoft.Compute/virtualMachines" }
-    $vmAnalysis = @()
+    $VmAnalysis = @()
+
     foreach ($vm in $vms) {
         try {
-            $vmDetails = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
-            $vmConfig = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name
-            $powerState = ($vmDetails.Statuses | Where-Object { $_.Code -like "PowerState/*" }).DisplayStatus
-            $vmSize = $vmConfig.HardwareProfile.VmSize
-            # Estimate monthly cost (simplified calculation)
-            $sizeCosts = @{
-                "Standard_B1s" = 10; "Standard_B2s" = 40; "Standard_B4ms" = 80
-                "Standard_D2s_v3" = 100; "Standard_D4s_v3" = 200; "Standard_D8s_v3" = 400
+            $VmDetails = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
+            $VmConfig = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name
+
+            $PowerState = ($VmDetails.Statuses | Where-Object { $_.Code -like "PowerState/*" }).DisplayStatus
+            $VmSize = $VmConfig.HardwareProfile.VmSize
+
+            # Simple cost estimation (in real scenario, would use Pricing API)
+            $SizeCosts = @{
+                "Standard_B1s" = 10
+                "Standard_B2s" = 40
+                "Standard_B4ms" = 80
+                "Standard_D2s_v3" = 100
+                "Standard_D4s_v3" = 200
+                "Standard_D8s_v3" = 400
+                "Standard_D16s_v3" = 800
             }
-            $estimatedMonthlyCost = $sizeCosts[$vmSize] ?? 50
+
+            $EstimatedMonthlyCost = if ($SizeCosts.ContainsKey($VmSize)) {
+                $SizeCosts[$VmSize]
+            } else {
+                50  # Default estimate
+            }
+
             $analysis = @{
                 Name = $vm.Name
                 ResourceGroup = $vm.ResourceGroupName
-                Size = $vmSize
-                PowerState = $powerState
-                EstimatedMonthlyCost = $estimatedMonthlyCost
+                Size = $VmSize
+                PowerState = $PowerState
+                EstimatedMonthlyCost = $EstimatedMonthlyCost
                 Recommendations = @()
             }
+
             # Generate recommendations
-            if ($powerState -eq "VM deallocated") {
-                $analysis.Recommendations += "Consider deleting this VM if not needed (saves $$estimatedMonthlyCost/month)"
+            if ($IncludeRecommendations) {
+                if ($PowerState -eq "VM deallocated") {
+                    $analysis.Recommendations += "Consider deleting this VM if not needed (saves `$$EstimatedMonthlyCost/month)"
+                }
+
+                if ($VmSize -like "*D8s*" -or $VmSize -like "*D16s*") {
+                    $analysis.Recommendations += "Large VM detected - verify if this size is necessary"
+                }
+
+                if ($PowerState -eq "VM running" -and $VmSize -notlike "*_v3" -and $VmSize -notlike "*_v4" -and $VmSize -notlike "*_v5") {
+                    $analysis.Recommendations += "Consider upgrading to newer VM generation for better price/performance"
+                }
             }
-            if ($vmSize -like "*D8s*" -or $vmSize -like "*D16s*") {
-                $analysis.Recommendations += "Large VM detected - verify if this size is necessary"
-            }
-            $vmAnalysis += $analysis
-            $costData.TotalCost += $estimatedMonthlyCost
-        } catch {
-            
+
+            $VmAnalysis += $analysis
+            $CostData.TotalCost += $EstimatedMonthlyCost
+        }
+        catch {
+            Write-Verbose "Failed to analyze VM $($vm.Name): $_"
         }
     }
-        # Storage account analysis
+
+    $CostData.Insights["VirtualMachines"] = $VmAnalysis
+
+    # Analyze storage accounts
+    Write-ColorOutput "Analyzing storage accounts..." -Level INFO
     $storageAccounts = $resources | Where-Object { $_.ResourceType -eq "Microsoft.Storage/storageAccounts" }
-    $storageAnalysis = @()
+    $StorageAnalysis = @()
+
     foreach ($storage in $storageAccounts) {
         try {
-            $storageDetails = Get-AzStorageAccount -ResourceGroupName $storage.ResourceGroupName -Name $storage.Name
+            $storageAccount = Get-AzStorageAccount -ResourceGroupName $storage.ResourceGroupName -Name $storage.Name
+
             $analysis = @{
                 Name = $storage.Name
                 ResourceGroup = $storage.ResourceGroupName
-                Tier = $storageDetails.Sku.Tier
-                Kind = $storageDetails.Kind
+                Sku = $storageAccount.Sku.Name
+                Kind = $storageAccount.Kind
+                AccessTier = $storageAccount.AccessTier
                 Recommendations = @()
             }
-            if ($storageDetails.Sku.Tier -eq "Premium" -and $storageDetails.Kind -eq "StorageV2") {
-                $analysis.Recommendations += "Premium storage detected - ensure high performance is required"
+
+            if ($IncludeRecommendations) {
+                if ($storageAccount.Sku.Name -eq "Standard_GRS" -or $storageAccount.Sku.Name -eq "Standard_RAGRS") {
+                    $analysis.Recommendations += "Consider using LRS if geo-redundancy is not required"
+                }
+
+                if ($storageAccount.AccessTier -eq "Hot" -and $storageAccount.Kind -eq "StorageV2") {
+                    $analysis.Recommendations += "Review if Cool tier would be more cost-effective for infrequently accessed data"
+                }
             }
-            $storageAnalysis += $analysis
-        } catch {
-            
+
+            $StorageAnalysis += $analysis
+        }
+        catch {
+            Write-Verbose "Failed to analyze storage account $($storage.Name): $_"
         }
     }
-    Write-Progress -Activity "Cost Analysis" -Status "Generating optimization recommendations..." -PercentComplete 65
+
+    $CostData.Insights["StorageAccounts"] = $StorageAnalysis
+
+    # Generate recommendations summary
     if ($IncludeRecommendations) {
-        # Generate
-        $recommendations = @()
-        # VM Recommendations
-        $deallocatedVMs = $vmAnalysis | Where-Object { $_.PowerState -eq "VM deallocated" }
-        if ($deallocatedVMs.Count -gt 0) {
-            $potentialSavings = ($deallocatedVMs | Measure-Object EstimatedMonthlyCost -Sum).Sum
-            $recommendations += @{
-                Type = "VM Cleanup"
-                Priority = "High"
-                Description = "Remove $($deallocatedVMs.Count) deallocated VMs"
-                PotentialSavings = $potentialSavings
-                Action = "Delete unused virtual machines"
-            }
+        Write-ColorOutput "Generating recommendations..." -Level INFO
+
+        # VM recommendations
+        $deallocatedVMs = $VmAnalysis | Where-Object { $_.PowerState -eq "VM deallocated" }
+        if ($deallocatedVMs) {
+            $potentialSavings = ($deallocatedVMs | Measure-Object -Property EstimatedMonthlyCost -Sum).Sum
+            $CostData.Recommendations += "Delete $($deallocatedVMs.Count) deallocated VMs to save `$$potentialSavings/month"
         }
-        # Resource Group Consolidation
-        $smallRGs = $costData.ResourceGroups.GetEnumerator() | Where-Object { $_.Value.ResourceCount -lt 3 }
-        if ($smallRGs.Count -gt 3) {
-            $recommendations += @{
-                Type = "Resource Organization"
-                Priority = "Medium"
-                Description = "Consolidate $($smallRGs.Count) resource groups with few resources"
-                PotentialSavings = 0
-                Action = "Merge small resource groups to reduce management overhead"
-            }
+
+        # Oversized VMs
+        $largeVMs = $VmAnalysis | Where-Object { $_.Size -like "*D16s*" -or $_.Size -like "*D32s*" }
+        if ($largeVMs) {
+            $CostData.Recommendations += "Review $($largeVMs.Count) large VMs for right-sizing opportunities"
         }
-        # Budget Alert
-        if ($costData.TotalCost -gt $BudgetThreshold) {
-            $recommendations += @{
-                Type = "Budget Alert"
-                Priority = "High"
-                Description = "Monthly costs ($$($costData.TotalCost)) exceed budget threshold ($$BudgetThreshold)"
-                PotentialSavings = $costData.TotalCost - $BudgetThreshold
-                Action = "Review and optimize high-cost resources"
-            }
-        }
-        $costData.Recommendations = $recommendations
-    }
-        # Generate insights
-    $costData.Insights = @{
-        TopCostResourceGroups = ($costData.ResourceGroups.GetEnumerator() | Sort-Object { $_.Value.ResourceCount } -Descending | Select-Object -First 5).Name
-        MostCommonResourceTypes = ($costData.ResourceTypes.GetEnumerator() | Sort-Object { $_.Value.Count } -Descending | Select-Object -First 5).Name
-        ResourceDistribution = @{
-            TotalResources = $resources.Count
-            ResourceGroups = $costData.ResourceGroups.Count
-            UniqueResourceTypes = $costData.ResourceTypes.Count
-            Locations = $locationGroups.Count
-        }
-        CostBreakdown = @{
-            EstimatedMonthlyCost = $costData.TotalCost
-            AveragePerResource = [math]::Round($costData.TotalCost / $resources.Count, 2)
-            VirtualMachines = $vmAnalysis.Count
-            StorageAccounts = $storageAnalysis.Count
+
+        # Storage recommendations
+        $grsStorage = $StorageAnalysis | Where-Object { $_.Sku -like "*GRS*" }
+        if ($grsStorage) {
+            $CostData.Recommendations += "Review $($grsStorage.Count) geo-redundant storage accounts"
         }
     }
-    Write-Progress -Activity "Cost Analysis" -Status "Exporting results..." -PercentComplete 85
-    # Export analysis results
-    try {
-        $costData | ConvertTo-Json -Depth 10 | Set-Content -Path $ExportPath -Encoding UTF8
-        
+
+    # Display results
+    Write-Host "`nCost Analysis Summary:" -ForegroundColor Cyan
+    Write-Host "=====================" -ForegroundColor DarkGray
+    Write-Host "Subscription: $($CostData.SubscriptionName)"
+    Write-Host "Analysis Period: $($CostData.AnalysisPeriod.Days) days"
+    Write-Host "Total Resources: $($resources.Count)"
+    Write-Host "Resource Groups: $($RgGroups.Count)"
+    Write-Host "Estimated Monthly Cost: `$$($CostData.TotalCost)"
+
+    if ($CostData.TotalCost -gt $BudgetThreshold) {
+        Write-Warning "Monthly cost exceeds budget threshold of `$$BudgetThreshold"
     }
-    catch {
-        
-        throw
+
+    # Display top resource types
+    Write-Host "`nTop Resource Types:" -ForegroundColor Cyan
+    $TypeGroups | Sort-Object Count -Descending | Select-Object -First 5 | ForEach-Object {
+        Write-Host "  $($_.Name): $($_.Count)"
     }
+
+    # Display recommendations
+    if ($CostData.Recommendations.Count -gt 0) {
+        Write-Host "`nRecommendations:" -ForegroundColor Yellow
+        foreach ($recommendation in $CostData.Recommendations) {
+            Write-Host "  • $recommendation"
+        }
+    }
+
+    # Export results
+    $CostData | ConvertTo-Json -Depth 10 | Out-File -FilePath $ExportPath -Encoding UTF8
+    Write-ColorOutput "Results exported to: $ExportPath" -Level SUCCESS
+
+    # Generate HTML report if requested
     if ($GenerateReport) {
-        # Generate HTML report
-        $reportPath = $ExportPath.Replace('.json', '.html')
+        $reportPath = $ExportPath -replace '\.json$', '.html'
         $htmlReport = @"
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Azure Cost Analysis Report</title>
+    <title>Azure Cost Optimization Report</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f5f5f5; }
-        .header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .metric { display: inline-block; margin: 10px; padding: 15px; background: #e3f2fd; border-radius: 8px; text-align: center; }
-        .metric-value { font-size: 24px; font-weight: bold; color: #1976d2; }
-        .metric-label { font-size: 12px; color: #666; }
-        .recommendation { padding: 10px; margin: 5px 0; border-left: 4px solid #ff9800; background: #fff3e0; }
-        .high-priority { border-left-color: #f44336; background: #ffebee; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #f5f5f5; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #0078d4; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #0078d4; color: white; }
+        .recommendation { background-color: #fff4ce; padding: 10px; margin: 10px 0; border-left: 4px solid #ffb900; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Azure Cost Analysis Report</h1>
-        <p>Subscription: $($costData.SubscriptionName) | Period: $AnalysisDays days</p>
-    </div>
-    <div class="card">
-        <h2>Cost Overview</h2>
-        <div class="metric">
-            <div class="metric-value">$$($costData.TotalCost)</div>
-            <div class="metric-label">Estimated Monthly</div>
-        </div>
-        <div class="metric">
-            <div class="metric-value">$($resources.Count)</div>
-            <div class="metric-label">Total Resources</div>
-        </div>
-        <div class="metric">
-            <div class="metric-value">$($costData.ResourceGroups.Count)</div>
-            <div class="metric-label">Resource Groups</div>
-        </div>
-        <div class="metric">
-            <div class="metric-value">$($vmAnalysis.Count)</div>
-            <div class="metric-label">Virtual Machines</div>
-        </div>
-    </div>
-    <div class="card">
-        <h2>Optimization Recommendations</h2>
-        $(if ($costData.Recommendations.Count -gt 0) {
-            $costData.Recommendations | ForEach-Object {
-                $priorityClass = if ($_.Priority -eq "High") { "high-priority" } else { "" }
-                "<div class='recommendation $priorityClass'><strong>$($_.Type)</strong> - $($_.Description) $(if ($_.PotentialSavings -gt 0) { "(Save: $$($_.PotentialSavings)/month)" })</div>"
-            }
-        } else {
-            "<p>No optimization recommendations at this time.</p>"
-        })
-    </div>
-    <div class="card">
-        <h2>Key Insights</h2>
-        <ul>
-            <li>Average cost per resource: $$($costData.Insights.CostBreakdown.AveragePerResource)</li>
-            <li>Most common resource type: $($costData.Insights.MostCommonResourceTypes[0])</li>
-            <li>Largest resource group: $($costData.Insights.TopCostResourceGroups[0])</li>
-        </ul>
-    </div>
-    <div class="card">
-        <h2>Virtual Machine Analysis</h2>
-        <table>
-            <tr><th>Name</th><th>Size</th><th>State</th><th>Est. Monthly Cost</th></tr>
-            $(foreach ($vm in $vmAnalysis) {
-                "<tr><td>$($vm.Name)</td><td>$($vm.Size)</td><td>$($vm.PowerState)</td><td>$$($vm.EstimatedMonthlyCost)</td></tr>"
-            })
-        </table>
-    </div>
-    <footer style="text-align: center; margin-top: 40px; color: #666;">
-        <p>Generated by Azure Automation Scripts | $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
-    </footer>
+    <h1>Azure Cost Optimization Report</h1>
+    <p>Generated: $(Get-Date)</p>
+    <p>Subscription: $($CostData.SubscriptionName)</p>
+    <p>Analysis Period: $($CostData.AnalysisPeriod.Days) days</p>
+    <p>Total Resources: $($resources.Count)</p>
+    <p>Estimated Monthly Cost: `$$($CostData.TotalCost)</p>
 </body>
 </html>
 "@
-        $htmlReport | Set-Content -Path $reportPath
-        
+        $htmlReport | Out-File -FilePath $reportPath -Encoding UTF8
+        Write-ColorOutput "HTML report generated: $reportPath" -Level SUCCESS
     }
-        # Display analysis summary
-    Write-Host ""
-    Write-Host "Cost Analysis Results" -ForegroundColor Green
-    Write-Host "=====================" -ForegroundColor Green
-    Write-Host "Estimated Monthly Cost: $($costData.TotalCost.ToString('C'))" -ForegroundColor White
-    Write-Host "Resources Analyzed: $($resources.Count)" -ForegroundColor White
-    Write-Host "Resource Groups: $($costData.ResourceGroups.Count)" -ForegroundColor White
-    Write-Host "Virtual Machines: $($vmAnalysis.Count)" -ForegroundColor White
-    Write-Host "Storage Accounts: $($storageAnalysis.Count)" -ForegroundColor White
-    Write-Host "Recommendations: $($costData.Recommendations.Count)" -ForegroundColor White
-    if ($costData.Recommendations.Count -gt 0) {
-        $totalSavings = ($costData.Recommendations | Measure-Object PotentialSavings -Sum).Sum
-        if ($totalSavings -gt 0) {
-            Write-Host "Potential Monthly Savings: $($totalSavings.ToString('C'))" -ForegroundColor Yellow
-        }
-        Write-Host ""
-        Write-Host "Top Recommendations:" -ForegroundColor Cyan
-        foreach ($rec in ($costData.Recommendations | Sort-Object { if ($_.Priority -eq 'High') { 1 } elseif ($_.Priority -eq 'Medium') { 2 } else { 3 } } | Select-Object -First 3)) {
-            $priority = "[$($rec.Priority.ToUpper())]"
-            Write-Host "  $priority $($rec.Description)" -ForegroundColor Gray
-        }
-    }
-    Write-Host ""
-    
-} catch {
-        Write-Host ""
-    Write-Host "Troubleshooting Tips:" -ForegroundColor Yellow
-    Write-Host "- Verify Azure PowerShell modules are installed" -ForegroundColor Gray
-    Write-Host "- Check Azure authentication and permissions" -ForegroundColor Gray
-    Write-Host "- Ensure subscription access and Cost Management reader role" -ForegroundColor Gray
-    Write-Host "- Validate resource group name if specified" -ForegroundColor Gray
-    Write-Host ""
-    throw
-} finally {
-    Write-Host "Script completed" -ForegroundColor Green
-}
 
+    Write-ColorOutput "`nCost analysis completed successfully!" -Level SUCCESS
+}
+catch {
+    Write-ColorOutput "Cost analysis failed: $($_.Exception.Message)" -Level ERROR
+    throw
+}

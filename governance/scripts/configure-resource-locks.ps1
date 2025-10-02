@@ -7,29 +7,28 @@
 .DESCRIPTION
     configure resource locks operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Manages resource locks to prevent accidental deletion or modification
 
     Creates, removes, and audits resource locks at various scopes.
     Supports CanNotDelete and ReadOnly lock levels.
-.PARAMETER Action
+.parameter Action
     Action to perform: Apply, Remove, List
-.PARAMETER LockLevel
+.parameter LockLevel
     Type of lock: CanNotDelete, ReadOnly
-.PARAMETER LockName
+.parameter LockName
     Name for the lock (auto-generates if not specified)
-.PARAMETER Scope
+.parameter Scope
     Resource scope for the lock (resource, resource group, or subscription)
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Target resource group
-.PARAMETER ResourceName
+.parameter ResourceName
     Specific resource to lock
-.PARAMETER ResourceType
+.parameter ResourceType
     Type of the resource when locking specific resource
-.PARAMETER Notes
+.parameter Notes
     Notes/reason for the lock
-.PARAMETER Force
+.parameter Force
     Skip confirmation prompts
 
     .\configure-resource-locks.ps1 -Action Apply -ResourceGroupName "RG-Production" -LockLevel CanNotDelete
@@ -40,49 +39,45 @@
 
     Lists all locks in resource group
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+[parameter(Mandatory = $true)]
     [ValidateSet('Apply', 'Remove', 'List')]
     [string]$Action,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('CanNotDelete', 'ReadOnly')]
     [string]$LockLevel = 'CanNotDelete',
 
-    [Parameter()]
+    [parameter()]
     [string]$LockName,
 
-    [Parameter()]
+    [parameter()]
     [string]$Scope,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceGroupName,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceName,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceType,
 
-    [Parameter()]
+    [parameter()]
     [string]$Notes = "Protected by policy",
 
-    [Parameter()]
+    [parameter()]
     [switch]$Force
 )
 
-# Error handling
 $ErrorActionPreference = 'Stop'
 
-[OutputType([string])]
+[OutputType([string])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
@@ -93,49 +88,41 @@ function Get-LockScope {
         return $Scope
     }
     elseif ($ResourceName -and $ResourceType -and $ResourceGroupName) {
-        # Specific resource
         $resource = Get-AzResource -Name $ResourceName -ResourceGroupName $ResourceGroupName -ResourceType $ResourceType
         return $resource.ResourceId
     }
     elseif ($ResourceGroupName) {
-        # Resource group level
         $rg = Get-AzResourceGroup -Name $ResourceGroupName
         return $rg.ResourceId
     }
     else {
-        # Subscription level
         $context = Get-AzContext
         return "/subscriptions/$($context.Subscription.Id)"
     }
 }
 
 function Apply-ResourceLock {
-    [CmdletBinding(SupportsShouldProcess)]
-$Scope, $Name, $Level, $Notes)
+    $Scope, $Name, $Level, $Notes)
 
     if (-not $Name) {
         $Name = "$Level-$(Get-Date -Format 'yyyyMMdd')"
     }
 
-    $lockParams = @{
+    $LockParams = @{
         LockName = $Name
         LockLevel = $Level
         Notes = $Notes
         Force = $true
     }
 
-    # Determine scope type and apply appropriate parameters
     if ($Scope -match '/resourceGroups/[^/]+/providers/') {
-        # Resource level lock
-        $lockParams['ResourceName'] = $ResourceName
-        $lockParams['ResourceType'] = $ResourceType
-        $lockParams['ResourceGroupName'] = $ResourceGroupName
+        $LockParams['ResourceName'] = $ResourceName
+        $LockParams['ResourceType'] = $ResourceType
+        $LockParams['ResourceGroupName'] = $ResourceGroupName
     }
     elseif ($Scope -match '/resourceGroups/[^/]+$') {
-        # Resource group level lock
-        $lockParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+        $LockParams['ResourceGroupName'] = $Scope.Split('/')[-1]
     }
-    # else subscription level, no additional params needed
 
     if ($PSCmdlet.ShouldProcess($Scope, "Apply $Level lock")) {
         try {
@@ -145,7 +132,7 @@ $Scope, $Name, $Level, $Notes)
         }
         catch {
             if ($_.Exception.Message -match 'already exists') {
-                Write-Warning "Lock already exists at this scope"
+                write-Warning "Lock already exists at this scope"
             }
             else {
                 throw
@@ -155,8 +142,7 @@ $Scope, $Name, $Level, $Notes)
 }
 
 function Remove-ResourceLock {
-    [CmdletBinding(SupportsShouldProcess)]
-$LockId)
+    $LockId)
 
     $lock = Get-AzResourceLock -LockId $LockId
 
@@ -167,8 +153,7 @@ $LockId)
 }
 
 function Get-ResourceLocks {
-    [CmdletBinding(SupportsShouldProcess)]
-$Scope)
+    $Scope)
 
     $locks = if ($ResourceGroupName) {
         Get-AzResourceLock -ResourceGroupName $ResourceGroupName
@@ -189,25 +174,24 @@ $Scope)
     }
 }
 
-# Main execution
-Write-Host "`nResource Lock Management" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
+Write-Host "`nResource Lock Management" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
 
 $context = Test-Connection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
 switch ($Action) {
     'Apply' {
-        $lockScope = Get-LockScope
-        Write-Host "Applying $LockLevel lock to: $lockScope" -ForegroundColor Yellow
+        $LockScope = Get-LockScope
+        Write-Host "Applying $LockLevel lock to: $LockScope" -ForegroundColor Green
 
-        $result = Apply-ResourceLock -Scope $lockScope -Name $LockName -Level $LockLevel -Notes $Notes
+        $result = Apply-ResourceLock -Scope $LockScope -Name $LockName -Level $LockLevel -Notes $Notes
 
         if ($result) {
-            Write-Host "`nLock Details:" -ForegroundColor Cyan
-            Write-Host "Name: $($result.Name)"
-            Write-Host "Level: $($result.Properties.level)"
-            Write-Host "Notes: $($result.Properties.notes)"
+            Write-Host "`nLock Details:" -ForegroundColor Green
+            Write-Output "Name: $($result.Name)"
+            Write-Output "Level: $($result.Properties.level)"
+            Write-Output "Notes: $($result.Properties.notes)"
         }
     }
 
@@ -215,12 +199,12 @@ switch ($Action) {
         $locks = Get-ResourceLocks
 
         if ($locks.Count -eq 0) {
-            Write-Warning "No locks found"
+            write-Warning "No locks found"
             return
         }
 
         if (-not $Force) {
-            Write-Host "`nExisting Locks:" -ForegroundColor Yellow
+            Write-Host "`nExisting Locks:" -ForegroundColor Green
             $locks | Format-Table -AutoSize
 
             $confirmation = Read-Host "`nEnter lock name to remove (or 'all' for all locks)"
@@ -231,12 +215,12 @@ switch ($Action) {
                 }
             }
             else {
-                $targetLock = $locks | Where-Object { $_.Name -eq $confirmation }
-                if ($targetLock) {
-                    Remove-ResourceLock -LockId $targetLock.Id
+                $TargetLock = $locks | Where-Object { $_.Name -eq $confirmation }
+                if ($TargetLock) {
+                    Remove-ResourceLock -LockId $TargetLock.Id
                 }
                 else {
-                    Write-Warning "Lock not found: $confirmation"
+                    write-Warning "Lock not found: $confirmation"
                 }
             }
         }
@@ -251,17 +235,19 @@ switch ($Action) {
         $locks = Get-ResourceLocks
 
         if ($locks.Count -eq 0) {
-            Write-Host "No locks found" -ForegroundColor Yellow
+            Write-Host "No locks found" -ForegroundColor Green
         }
         else {
-            Write-Host "`nResource Locks:" -ForegroundColor Cyan
+            Write-Host "`nResource Locks:" -ForegroundColor Green
             $locks | Format-Table -AutoSize
 
-            Write-Host "`nSummary:" -ForegroundColor Cyan
-            Write-Host "Total Locks: $($locks.Count)"
-            Write-Host "CanNotDelete: $(($locks | Where-Object Level -eq 'CanNotDelete').Count)"
-            Write-Host "ReadOnly: $(($locks | Where-Object Level -eq 'ReadOnly').Count)"
+            Write-Host "`nSummary:" -ForegroundColor Green
+            Write-Output "Total Locks: $($locks.Count)"
+            Write-Output "CanNotDelete: $(($locks | Where-Object Level -eq 'CanNotDelete').Count)"
+            Write-Output "ReadOnly: $(($locks | Where-Object Level -eq 'ReadOnly').Count)"
         }
     }
 }\n
+
+
 

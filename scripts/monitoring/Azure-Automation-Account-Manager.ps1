@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,18 +6,21 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AccountName
 )
-# Get automation account details
 $AutomationAccount = Get-AzAutomationAccount -ResourceGroupName $ResourceGroupName -Name $AccountName
-Write-Host "Automation Account: $($AutomationAccount.AutomationAccountName)"
-Write-Host "Resource Group: $($AutomationAccount.ResourceGroupName)"
-Write-Host "Location: $($AutomationAccount.Location)"
-Write-Host "State: $($AutomationAccount.State)"
-Write-Host "Creation Time: $($AutomationAccount.CreationTime)"
-Write-Host "Last Modified: $($AutomationAccount.LastModifiedTime)"
+Write-Output "Automation Account: $($AutomationAccount.AutomationAccountName)"
+Write-Output "Resource Group: $($AutomationAccount.ResourceGroupName)"
+Write-Output "Location: $($AutomationAccount.Location)"
+Write-Output "State: $($AutomationAccount.State)"
+Write-Output "Creation Time: $($AutomationAccount.CreationTime)"
+Write-Output "Last Modified: $($AutomationAccount.LastModifiedTime)"
+
+
 

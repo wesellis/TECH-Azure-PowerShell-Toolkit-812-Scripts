@@ -1,7 +1,7 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#.SYNOPSIS
     Azure Resourcegroup Cost Calculator
 
 .DESCRIPTION
@@ -9,20 +9,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -30,22 +26,23 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string]$ResourceGroupName
 )
-Write-Host "Calculating estimated costs for Resource Group: $ResourceGroupName"
+Write-Output "Calculating estimated costs for Resource Group: $ResourceGroupName"
 $Resources = Get-AzResource -ResourceGroupName $ResourceGroupName
-$TotalEstimatedCost = 0
-$CostBreakdown = @()
+    [string]$TotalEstimatedCost = 0
+    [string]$CostBreakdown = @()
 foreach ($Resource in $Resources) {
-    $EstimatedMonthlyCost = 0
+    [string]$EstimatedMonthlyCost = 0
     switch ($Resource.ResourceType) {
         "Microsoft.Compute/virtualMachines" { $EstimatedMonthlyCost = 73.00 }
         "Microsoft.Storage/storageAccounts" { $EstimatedMonthlyCost = 25.00 }
@@ -54,22 +51,19 @@ foreach ($Resource in $Resources) {
         "Microsoft.ContainerInstance/containerGroups" {;  $EstimatedMonthlyCost = 50.00 }
         default {;  $EstimatedMonthlyCost = 10.00 }
     }
-    $CostBreakdown = $CostBreakdown + [PSCustomObject]@{
+    [string]$CostBreakdown = $CostBreakdown + [PSCustomObject]@{
         ResourceName = $Resource.Name
         ResourceType = $Resource.ResourceType
         EstimatedMonthlyCost = $EstimatedMonthlyCost
     }
-$TotalEstimatedCost = $TotalEstimatedCost + $EstimatedMonthlyCost
+    [string]$TotalEstimatedCost = $TotalEstimatedCost + $EstimatedMonthlyCost
 }
-Write-Host " `nCost Breakdown:"
+Write-Output " `nCost Breakdown:"
 foreach ($Item in $CostBreakdown) {
-    Write-Host "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
+    Write-Output "  $($Item.ResourceName): $($Item.EstimatedMonthlyCost) USD/month"
 }
-Write-Host " `nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
-Write-Host "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
+Write-Output " `nTotal Estimated Monthly Cost: $TotalEstimatedCost USD"
+Write-Output "Total Estimated Annual Cost: $($TotalEstimatedCost * 12) USD"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

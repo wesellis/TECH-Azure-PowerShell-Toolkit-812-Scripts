@@ -1,15 +1,24 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+<#
+.SYNOPSIS
+    Setup BudgetAlerts
 
-<#`n.SYNOPSIS
-        Validates Azure connection and permissions
-    #>
+.DESCRIPTION
+    Azure PowerShell automation script
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+#>
+
+#Requires -Version 7.4
+#Requires -Modules Az.Resources
+    [string]$ErrorActionPreference = 'Stop'
+
     try {
-        $context = Get-AzContext -ErrorAction Stop
+$context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             throw "Not connected to Azure. Please run Connect-AzAccount first."
         }
-        
+
         Write-Log "Connected to Azure as: $($context.Account.Id)"
         Write-Log "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
         return $context
@@ -20,44 +29,34 @@
     }
 }
 
-[OutputType([PSCustomObject])]
- {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Determines the appropriate scope for the budget
-    #>
+function Write-Log {
     param(
         [string]$Subscription,
         [string]$ResourceGroupName
     )
-    
+
     if ($ResourceGroupName) {
-        $scope = "/subscriptions/$Subscription/resourceGroups/$ResourceGroupName"
+    [string]$scope = "/subscriptions/$Subscription/resourceGroups/$ResourceGroupName"
         Write-Log "Budget scope: Resource Group ($ResourceGroupName)"
     }
     else {
-        $scope = "/subscriptions/$Subscription"
+    [string]$scope = "/subscriptions/$Subscription"
         Write-Log "Budget scope: Subscription ($Subscription)"
     }
-    
+
     return $scope
 }
 
 function New-BudgetAlerts {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Creates budget alert notifications
-    #>
     param(
         [int[]]$Thresholds,
         [string[]]$EmailAddresses
     )
-    
-    $notifications = @{}
-    
+$notifications = @{}
+
     foreach ($threshold in $Thresholds) {
-        $notificationKey = "Alert$threshold"
-        $notifications[$notificationKey] = @{
+    [string]$NotificationKey = "Alert$threshold"
+    [string]$notifications[$NotificationKey] = @{
             enabled = $true
             operator = "GreaterThan"
             threshold = $threshold
@@ -65,18 +64,14 @@ function New-BudgetAlerts {
             contactRoles = @("Owner", "Contributor")
             thresholdType = "Actual"
         }
-        
+
         Write-Log "Created alert notification for $threshold% threshold"
     }
-    
+
     return $notifications
 }
 
 function New-AzureBudget {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Creates or updates an Azure budget with alerts
-    #>
     param(
         [string]$Name,
         [string]$Scope,
@@ -87,12 +82,10 @@ function New-AzureBudget {
         [string]$DepartmentTag,
         [string]$CostCenterTag
     )
-    
+
     Write-Log "Creating Azure budget: $Name"
     Write-Log "Amount: $($Amount.ToString('C')) | Period: $($Start.ToString('yyyy-MM-dd')) to $($End.ToString('yyyy-MM-dd'))"
-    
-    # Prepare budget object
-    $budgetParams = @{
+$BudgetParams = @{
         Name = $Name
         Scope = $Scope
         Amount = $Amount
@@ -103,40 +96,37 @@ function New-AzureBudget {
         }
         Notification = $Notifications
     }
-    
-    # Add filters if department or cost center specified
+
     if ($DepartmentTag -or $CostCenterTag) {
-        $filters = @{
+$filters = @{
             Tags = @{}
         }
-        
+
         if ($DepartmentTag) {
-            $filters.Tags["Department"] = @($DepartmentTag)
+    [string]$filters.Tags["Department"] = @($DepartmentTag)
             Write-Log "Added department filter: $DepartmentTag"
         }
-        
+
         if ($CostCenterTag) {
-            $filters.Tags["CostCenter"] = @($CostCenterTag)
+    [string]$filters.Tags["CostCenter"] = @($CostCenterTag)
             Write-Log "Added cost center filter: $CostCenterTag"
         }
-        
-        $budgetParams.Filter = $filters
+    [string]$BudgetParams.Filter = $filters
     }
-    
+
     try {
-        # Check if budget already exists
-        $existingBudget = Get-AzConsumptionBudget -Name $Name -Scope $Scope -ErrorAction SilentlyContinue
-        
-        if ($existingBudget) {
+$ExistingBudget = Get-AzConsumptionBudget -Name $Name -Scope $Scope -ErrorAction SilentlyContinue
+
+        if ($ExistingBudget) {
             Write-Log "Budget '$Name' already exists. Updating with new configuration."
-            $budget = Set-AzConsumptionBudget -ErrorAction Stop @budgetParams
+    [string]$budget = Set-AzConsumptionBudget -ErrorAction Stop @budgetParams
             Write-Log "Budget updated successfully"
         }
         else {
-            $budget = New-AzConsumptionBudget -ErrorAction Stop @budgetParams
+$budget = New-AzConsumptionBudget -ErrorAction Stop @budgetParams
             Write-Log "Budget created successfully"
         }
-        
+
         return $budget
     }
     catch {
@@ -146,49 +136,39 @@ function New-AzureBudget {
 }
 
 function Test-BudgetConfiguration {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Validates budget configuration and sends test notification
-    #>
     param(
         [object]$Budget,
         [string[]]$TestRecipients
     )
-    
+
     Write-Log "Testing budget configuration and notifications"
-    
+
     try {
-        # Get current month's spending for comparison
-        $currentSpend = Get-AzConsumptionUsageDetail -StartDate $StartDate -EndDate (Get-Date) -Scope $Budget.Scope |
+$CurrentSpend = Get-AzConsumptionUsageDetail -StartDate $StartDate -EndDate (Get-Date) -Scope $Budget.Scope |
             Measure-Object -Property PretaxCost -Sum | Select-Object -ExpandProperty Sum
-        
-        if (-not $currentSpend) { $currentSpend = 0 }
-        
-        $utilizationPercent = [math]::Round(($currentSpend / $BudgetAmount) * 100, 2)
-        
-        Write-Log "Current spending: $($currentSpend.ToString('C')) (${utilizationPercent}% of budget)"
-        
-        # Determine alert status
-        $alertStatus = "Good"
-        $maxThreshold = ($AlertThreshold | Measure-Object -Maximum).Maximum
-        
-        if ($utilizationPercent -ge $maxThreshold) {
-            $alertStatus = "Critical"
+
+        if (-not $CurrentSpend) { $CurrentSpend = 0 }
+    [string]$UtilizationPercent = [math]::Round(($CurrentSpend / $BudgetAmount) * 100, 2)
+
+        Write-Log "Current spending: $($CurrentSpend.ToString('C')) (${utilizationPercent}% of budget)"
+    [string]$AlertStatus = "Good"
+    [string]$MaxThreshold = ($AlertThreshold | Measure-Object -Maximum).Maximum
+
+        if ($UtilizationPercent -ge $MaxThreshold) {
+    [string]$AlertStatus = "Critical"
         }
-        elseif ($utilizationPercent -ge ($AlertThreshold | Sort-Object -Descending | Select-Object -First 2 | Select-Object -Last 1)) {
-            $alertStatus = "Warning"
+        elseif ($UtilizationPercent -ge ($AlertThreshold | Sort-Object -Descending | Select-Object -First 2 | Select-Object -Last 1)) {
+    [string]$AlertStatus = "Warning"
         }
-        
-        # Send test notification
-        $subject = "Azure Budget Alert Test - $($Budget.Name)"
-        $body = @"
+    [string]$subject = "Azure Budget Alert Test - $($Budget.Name)"
+    [string]$body = @"
 Azure Budget Configuration Test
 
 Budget Name: $($Budget.Name)
 Budget Amount: $($BudgetAmount.ToString('C'))
-Current Spending: $($currentSpend.ToString('C'))
+Current Spending: $($CurrentSpend.ToString('C'))
 Utilization: ${utilizationPercent}%
-Status: $alertStatus
+Status: $AlertStatus
 
 Alert Thresholds: $($AlertThreshold -join '%, ')%
 Recipients: $($TestRecipients -join ', ')
@@ -212,15 +192,13 @@ Best regards,
 Azure Cost Management System
 "@
 
-        # Note: Azure handles actual budget notifications automatically
-        # This is just a test to verify email addresses work
         Write-Log "Budget test completed. Current utilization: ${utilizationPercent}%"
-        
+
         return @{
-            CurrentSpend = $currentSpend
-            UtilizationPercent = $utilizationPercent
-            AlertStatus = $alertStatus
-        
+            CurrentSpend = $CurrentSpend
+            UtilizationPercent = $UtilizationPercent
+            AlertStatus = $AlertStatus
+
 } catch {
         Write-Log "Budget test failed: $($_.Exception.Message)" -Level "WARNING"
         return $null
@@ -228,73 +206,63 @@ Azure Cost Management System
 }
 
 function Show-BudgetSummary {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Displays a summary of the created budget configuration
-    #>
     param(
         [object]$Budget,
         [hashtable]$TestResults
     )
-    
-    Write-Host "`n$('=' * 60)" -ForegroundColor Cyan
-    Write-Host "BUDGET ALERT SETUP SUMMARY" -ForegroundColor White
-    Write-Host "$('=' * 60)" -ForegroundColor Cyan
-    
-    Write-Host "Budget Name: " -NoNewline -ForegroundColor White
-    Write-Host $Budget.Name -ForegroundColor Green
-    
-    Write-Host "Budget Amount: " -NoNewline -ForegroundColor White
-    Write-Host $BudgetAmount.ToString('C') -ForegroundColor Green
-    
-    Write-Host "Scope: " -NoNewline -ForegroundColor White
-    Write-Host $Budget.Scope -ForegroundColor Gray
-    
-    Write-Host "Time Period: " -NoNewline -ForegroundColor White
-    Write-Host "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Gray
-    
-    Write-Host "Alert Thresholds: " -NoNewline -ForegroundColor White
-    Write-Host "$(($AlertThreshold -join '%, '))%" -ForegroundColor Yellow
-    
-    Write-Host "Recipients: " -NoNewline -ForegroundColor White
+
+    Write-Host "`n$('=' * 60)" -ForegroundColor Green
+    Write-Host "BUDGET ALERT SETUP SUMMARY" -ForegroundColor Green
+    Write-Host "$('=' * 60)" -ForegroundColor Green
+
+    Write-Output "Budget Name: " -NoNewline -ForegroundColor White
+    Write-Output $Budget.Name -ForegroundColor Green
+
+    Write-Output "Budget Amount: " -NoNewline -ForegroundColor White
+    Write-Output $BudgetAmount.ToString('C') -ForegroundColor Green
+
+    Write-Output "Scope: " -NoNewline -ForegroundColor White
+    Write-Output $Budget.Scope -ForegroundColor Gray
+
+    Write-Output "Time Period: " -NoNewline -ForegroundColor White
+    Write-Host "$($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green
+
+    Write-Output "Alert Thresholds: " -NoNewline -ForegroundColor White
+    Write-Host "$(($AlertThreshold -join '%, '))%" -ForegroundColor Green
+
+    Write-Output "Recipients: " -NoNewline -ForegroundColor White
     Write-Host ($Recipients -join ", ") -ForegroundColor Gray
-    
+
     if ($TestResults) {
-        Write-Host "`nCurrent Status:" -ForegroundColor White
-        Write-Host "Current Spending: " -NoNewline -ForegroundColor White
-        Write-Host $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
-        
-        Write-Host "Budget Utilization: " -NoNewline -ForegroundColor White
-        Write-Host "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
-        
-        Write-Host "Alert Status: " -NoNewline -ForegroundColor White
-        Write-Host $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+        Write-Host "`nCurrent Status:" -ForegroundColor Green
+        Write-Output "Current Spending: " -NoNewline -ForegroundColor White
+        Write-Output $TestResults.CurrentSpend.ToString('C') -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+
+        Write-Output "Budget Utilization: " -NoNewline -ForegroundColor White
+        Write-Output "$($TestResults.UtilizationPercent)%" -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
+
+        Write-Output "Alert Status: " -NoNewline -ForegroundColor White
+        Write-Output $TestResults.AlertStatus -ForegroundColor $(if ($TestResults.AlertStatus -eq "Critical") { "Red" } elseif ($TestResults.AlertStatus -eq "Warning") { "Yellow" } else { "Green" })
     }
-    
-    Write-Host "`nNext Steps:" -ForegroundColor White
-    Write-Host "- Monitor budget in Azure Portal (Cost Management + Billing)" -ForegroundColor Gray
-    Write-Host "- Check email alerts when thresholds are reached" -ForegroundColor Gray
-    Write-Host "- Review and adjust budget amounts as needed" -ForegroundColor Gray
-    Write-Host "- Set up additional budgets for other scopes if required" -ForegroundColor Gray
-    
+
+    Write-Host "`nNext Steps:" -ForegroundColor Green
+    Write-Host "- Monitor budget in Azure Portal (Cost Management + Billing)" -ForegroundColor Green
+    Write-Host "- Check email alerts when thresholds are reached" -ForegroundColor Green
+    Write-Host "- Review and adjust budget amounts as needed" -ForegroundColor Green
+    Write-Host "- Set up additional budgets for other scopes if required" -ForegroundColor Green
+
     Write-Host "`nBudget alert setup completed successfully!" -ForegroundColor Green
 }
 
-#endregion
 
-#region Main-Execution
 try {
     Write-Log "Starting Azure budget alerts setup"
-    
-    # Validate Azure connection and get context
-    $context = Test-AzureConnection
-    
-    # Set subscription if not provided
+    [string]$context = Test-AzureConnection
+
     if (-not $SubscriptionId) {
-        $SubscriptionId = $context.Subscription.Id
+    [string]$SubscriptionId = $context.Subscription.Id
     }
-    
-    # Validate subscription access
+
     try {
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
         Write-Log "Using subscription: $SubscriptionId"
@@ -302,53 +270,39 @@ try {
     catch {
         throw "Cannot access subscription $SubscriptionId. Please check your permissions."
     }
-    
-    # Generate budget name if not provided
+
     if (-not $BudgetName) {
-        $scopePrefix = if ($ResourceGroup) { "RG-$ResourceGroup" } else { "Sub" }
-        $departmentSuffix = if ($Department) { "-$Department" } else { "" }
-        $BudgetName = "$scopePrefix-Budget$departmentSuffix-$(Get-Date -Format 'yyyyMM')"
+    [string]$ScopePrefix = if ($ResourceGroup) { "RG-$ResourceGroup" } else { "Sub" }
+    [string]$DepartmentSuffix = if ($Department) { "-$Department" } else { "" }
+    [string]$BudgetName = "$ScopePrefix-Budget$DepartmentSuffix-$(Get-Date -Format 'yyyyMM')"
     }
-    
+
     Write-Log "Budget name: $BudgetName"
-    
-    # Set end date if not provided (1 year from start)
+
     if (-not $EndDate) {
-        $EndDate = $StartDate.AddYears(1)
+    [string]$EndDate = $StartDate.AddYears(1)
     }
-    
-    # Validate date range
+
     if ($StartDate -ge $EndDate) {
         throw "Start date must be before end date"
     }
-    
-    # Validate budget amount
+
     if ($BudgetAmount -le 0) {
         throw "Budget amount must be greater than zero"
     }
-    
-    # Validate alert thresholds
+
     foreach ($threshold in $AlertThreshold) {
         if ($threshold -le 0 -or $threshold -gt 100) {
             throw "Alert thresholds must be between 1 and 100 percent"
         }
     }
-    
-    # Get budget scope
-    $scope = Get-BudgetScope -Subscription $SubscriptionId -ResourceGroupName $ResourceGroup
-    
-    # Create notification configurations
-    $notifications = New-BudgetAlerts -Thresholds $AlertThreshold -EmailAddresses $Recipients
-    
-    # Create the budget
-    $budget = New-AzureBudget -Name $BudgetName -Scope $scope -Amount $BudgetAmount -Start $StartDate -End $EndDate -Notifications $notifications -DepartmentTag $Department -CostCenterTag $CostCenter
-    
-    # Test the configuration
-    $testResults = Test-BudgetConfiguration -Budget $budget -TestRecipients $Recipients
-    
-    # Display summary
-    Show-BudgetSummary -Budget $budget -TestResults $testResults
-    
+$scope = Get-BudgetScope -Subscription $SubscriptionId -ResourceGroupName $ResourceGroup
+$notifications = New-BudgetAlerts -Thresholds $AlertThreshold -EmailAddresses $Recipients
+$budget = New-AzureBudget -Name $BudgetName -Scope $scope -Amount $BudgetAmount -Start $StartDate -End $EndDate -Notifications $notifications -DepartmentTag $Department -CostCenterTag $CostCenter
+    [string]$TestResults = Test-BudgetConfiguration -Budget $budget -TestRecipients $Recipients
+
+    Show-BudgetSummary -Budget $budget -TestResults $TestResults
+
     Write-Log "Budget alerts setup completed successfully" -Level "SUCCESS"
 }
 catch {
@@ -357,8 +311,4 @@ catch {
     throw
 }
 finally {
-    Write-Log "Script execution completed"
-}
-
-#endregion
-
+    Write-Log "Script execution completed"`n}

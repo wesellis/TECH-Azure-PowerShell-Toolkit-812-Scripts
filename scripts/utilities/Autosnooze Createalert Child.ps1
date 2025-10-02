@@ -1,161 +1,222 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Monitor, Az.Compute
 
-<#`n.SYNOPSIS
-    Autosnooze Createalert Child
+<#
+.SYNOPSIS
+    AutoSnooze Create Alert Child
 
 .DESCRIPTION
-    Azure automation
+    Azure automation child runbook for creating or disabling AutoSnooze alerts for individual VMs
 
+.PARAMETER VMObject
+    The VM object to process
 
+.PARAMETER AlertAction
+    Action to perform - Create or Disable
+
+.PARAMETER WebhookUri
+    Webhook URI for alert notifications
+
+.PARAMETER Threshold
+    CPU threshold for alert
+
+.PARAMETER MetricName
+    Metric to monitor (default: Percentage CPU)
+
+.PARAMETER TimeWindow
+    Time window for metric evaluation
+
+.PARAMETER Condition
+    Condition operator (LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual)
+
+.PARAMETER TimeAggregationOperator
+    Time aggregation operator (Average, Minimum, Maximum, Total)
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-[CmdletBinding()]
-$ErrorActionPreference = "Stop"
-param(
-        $VMObject,
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$AlertAction,
-        [string]$WebhookUri
-    )
-[OutputType([PSObject])]
+#>
 
-{
-    param ([string] $OldAlertName ,
-     [string] $VMName)
-    [string[]] $AlertSplit = $OldAlertName -split " -"
-    [int] $Number =$AlertSplit[$AlertSplit.Length-1]
-    $Number++
-    $Newalertname = "Alert-$($VMName)-$Number"
-    return $Newalertname
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [object]$VMObject,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Create', 'Disable')]
+    [string]$AlertAction,
+
+    [Parameter()]
+    [string]$WebhookUri,
+
+    [Parameter()]
+    [int]$Threshold = 5,
+
+    [Parameter()]
+    [string]$MetricName = "Percentage CPU",
+
+    [Parameter()]
+    [timespan]$TimeWindow = [timespan]::FromMinutes(30),
+
+    [Parameter()]
+    [ValidateSet('LessThan', 'LessThanOrEqual', 'GreaterThan', 'GreaterThanOrEqual')]
+    [string]$Condition = 'LessThan',
+
+    [Parameter()]
+    [ValidateSet('Average', 'Minimum', 'Maximum', 'Total')]
+    [string]$TimeAggregationOperator = 'Average',
+
+    [Parameter()]
+    [string]$Description = "AutoSnooze alert for VM shutdown based on CPU usage",
+
+    [Parameter()]
+    [string]$ConnectionName = "AzureRunAsConnection"
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+function Get-NextAlertName {
+    param(
+        [string]$OldAlertName,
+        [string]$VMName
+    )
+
+    if ($OldAlertName -match "Alert-.*-(\d+)$") {
+        $number = [int]$matches[1] + 1
+        return "Alert-$VMName-$number"
+    }
+    return "Alert-$VMName-1"
 }
-$connectionName = "AzureRunAsConnection"
-try
-{
-    # Get the connection "AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-    "Logging in to Azure..."
-    $params = @{
+
+try {
+    # Connect to Azure using Run As Connection
+    $servicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName -ErrorAction Stop
+    Write-Output "Logging in to Azure using service principal..."
+
+    $connectParams = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
         CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
     }
-    Add-AzureRmAccount @params
+
+    Connect-AzAccount -ServicePrincipal @connectParams -ErrorAction Stop
+    Write-Output "Successfully connected to Azure"
 }
-catch
-{
-    if (!$servicePrincipalConnection)
-    {
-        $ErrorMessage = "Connection $connectionName not found."
-        throw $ErrorMessage
-    } else{
-        Write-Error -Message $_.Exception
-        throw $_.Exception
+catch {
+    if (!$servicePrincipalConnection) {
+        $errorMessage = "Connection '$ConnectionName' not found."
+        Write-Error -Message $errorMessage
+        throw $errorMessage
+    } else {
+        Write-Error -Message "Failed to connect to Azure: $($_.Exception.Message)"
+        throw
     }
 }
-$SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
-$threshold = Get-AutomationVariable -Name 'External_AutoSnooze_Threshold'
-$metricName = Get-AutomationVariable -Name 'External_AutoSnooze_MetricName'
-$timeWindow = Get-AutomationVariable -Name 'External_AutoSnooze_TimeWindow'
-$condition = Get-AutomationVariable -Name 'External_AutoSnooze_Condition' # Other valid values are LessThanOrEqual, GreaterThan, GreaterThanOrEqual
-$description = Get-AutomationVariable -Name 'External_AutoSnooze_Description'
-$timeAggregationOperator = Get-AutomationVariable -Name 'External_AutoSnooze_TimeAggregationOperator'
-$webhookUri = Get-AutomationVariable -Name 'Internal_AutoSnooze_WebhookUri'
-try
-{
-    $ResourceGroupName =$VMObject.ResourceGroupName
-    $Location = $VMObject.Location
-    $VMState = (Get-AzureRmVM -ResourceGroupName $VMObject.ResourceGroupName -Name $VMObject.Name -Status -ErrorAction SilentlyContinue).Statuses.Code[1]
-    Write-Output "Processing VM ($($VMObject.Name))"
-    Write-Output "Current VM state is ($($VMState))"
-    $actionWebhook = New-AzureRmAlertRuleWebhook -ServiceUri $WebhookUri
-    $resourceId = " /subscriptions/$($SubId)/resourceGroups/$ResourceGroupName/providers/Microsoft.Compute/virtualMachines/$($VMObject.Name.Trim())"
-    $NewAlertName ="Alert-$($VMObject.Name)-1"
-    if($AlertAction -eq "Disable" )
-    {
-        $ExVMAlerts = Get-AzureRmAlertRule -ResourceGroup $VMObject.ResourceGroupName -Output -ErrorAction SilentlyContinue
-                 if($null -ne $ExVMAlerts)
-                    {
-                        Write-Output "Checking for any previous alert(s)..."
-                        #Alerts exists so disable alert
-                        foreach($Alert in $ExVMAlerts)
-                        {
-                            if($Alert.Name.ToLower().Contains($($VMObject.Name.ToLower().Trim())))
-                            {
-                                Write-Output "Previous alert ($($Alert.Name)) found and disabling now..."
-                                 $params = @{
-                                     TargetResourceId = $resourceId
-                                     Description = $description
-                                     Location = $Alert.Location
-                                     Threshold = $threshold
-                                     Actions = $actionWebhook
-                                     ResourceGroup = $ResourceGroupName
-                                     WindowSize = $timeWindow
-                                     Operator = $condition
-                                     MetricName = $metricName
-                                     TimeAggregationOperator = $timeAggregationOperator
-                                     Name = $Alert.Name
-                                 }
-                                 Add-AzureRmMetricAlertRule @params
-                                        Write-Output "Alert ($($Alert.Name)) Disabled for VM $($VMObject.Name)"
-                            }
-                        }
-                    }
+
+try {
+    $resourceGroupName = $VMObject.ResourceGroupName
+    $location = $VMObject.Location
+    $vmName = $VMObject.Name.Trim()
+
+    # Get current VM state
+    $vm = Get-AzVM -ResourceGroupName $resourceGroupName -Name $vmName -Status -ErrorAction SilentlyContinue
+    $vmState = $vm.Statuses | Where-Object { $_.Code -like "PowerState/*" } | Select-Object -ExpandProperty Code
+
+    Write-Output "Processing VM: $vmName"
+    Write-Output "Current VM state: $vmState"
+
+    # Build resource ID for the VM
+    $subscription = (Get-AzContext).Subscription.Id
+    $resourceId = "/subscriptions/$subscription/resourceGroups/$resourceGroupName/providers/Microsoft.Compute/virtualMachines/$vmName"
+
+    if ($AlertAction -eq "Disable") {
+        Write-Output "Disabling alerts for VM: $vmName"
+
+        # Get existing alerts
+        $existingAlerts = Get-AzMetricAlertRuleV2 -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like "*$vmName*" }
+
+        foreach ($alert in $existingAlerts) {
+            Write-Output "Disabling alert: $($alert.Name)"
+            $alert.Enabled = $false
+            Set-AzMetricAlertRuleV2 -InputObject $alert -ErrorAction Stop
+            Write-Output "Alert '$($alert.Name)' disabled for VM: $vmName"
+        }
     }
-    elseif($AlertAction -eq Create" )
-    {
-        #Getting ResourcegroupName and Location based on VM
-                        if ($VMState -eq 'PowerState/running')
-                        {
-                            try
-                            {
-                                $VMAlerts = Get-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Output -ErrorAction SilentlyContinue
-                                #Check if alerts exists and take action
-                                if($null -ne $VMAlerts)
-                                {
-                                    Write-Output "Checking for any previous alert(s)..."
-                                    #Alerts exists so delete and re-create the new alert
-                                    foreach($Alert in $VMAlerts)
-                                    {
-                                        if($Alert.Name.ToLower().Contains($($VMObject.Name.ToLower().Trim())))
-                                        {
-                                            Write-Output "Previous alert ($($Alert.Name)) found and deleting now..."
-                                            #Remove the old alert
-                                            Remove-AzureRmAlertRule -Name $Alert.Name -ResourceGroup $ResourceGroupName
-                                            #Wait for few seconds to make sure it processed
-                                            Do
-                                            {
-                                               #Start-Sleep 10
-$GetAlert=Get-AzureRmAlertRule -ResourceGroup $ResourceGroupName -Name $Alert.Name -Output -ErrorAction SilentlyContinue
-                                            }
-                                            while($null -ne $GetAlert)
-                                            Write-Output "Generating a new alert with unique name..."
-                                            #Now generate new unique alert name
-$NewAlertName = Generate-AlertName -OldAlertName $Alert.Name -VMName $VMObject.Name
-                                        }
-                                     }
-                                }
-                                 #Alert does not exist, so create new alert
-                                 Write-Output $NewAlertName
-                                 Write-Output "Adding a new alert to the VM..."
-                                 $params = @{
-                                     TargetResourceId = $resourceId
-                                     Description = $description   Write-Output  "Alert Created for VM $($VMObject.Name.Trim())" } catch { Write-Output "Error Occurred" Write-Output $_.Exception }  } else { Write-Output " $($VM.Name) is De-allocated" } } } catch { Write-Output "Error Occurred" Write-Output $_.Exception }
-                                     Location = $location
-                                     Threshold = $threshold
-                                     Actions = $actionWebhook
-                                     ResourceGroup = $ResourceGroupName
-                                     WindowSize = $timeWindow
-                                     Operator = $condition
-                                     MetricName = $metricName
-                                     TimeAggregationOperator = $timeAggregationOperator
-                                     Name = $NewAlertName
-                                 }
-                                 Add-AzureRmMetricAlertRule @params
+    elseif ($AlertAction -eq "Create") {
+        if ($vmState -eq 'PowerState/running') {
+            Write-Output "Creating alert for running VM: $vmName"
 
+            # Remove existing alerts for this VM
+            $existingAlerts = Get-AzMetricAlertRuleV2 -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -like "*$vmName*" }
 
+            $alertName = "Alert-$vmName-1"
+
+            foreach ($alert in $existingAlerts) {
+                Write-Output "Removing existing alert: $($alert.Name)"
+                Remove-AzMetricAlertRuleV2 -Name $alert.Name -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
+                $alertName = Get-NextAlertName -OldAlertName $alert.Name -VMName $vmName
+            }
+
+            Write-Output "Creating new alert: $alertName"
+
+            # Create metric criteria
+            $criteria = New-AzMetricAlertRuleV2Criteria -MetricName $MetricName `
+                -DimensionSelection @() `
+                -Operator $Condition `
+                -Threshold $Threshold `
+                -TimeAggregation $TimeAggregationOperator
+
+            # Create action group if webhook is provided
+            $actionGroups = @()
+            if ($WebhookUri) {
+                $actionGroupName = "AG-$vmName"
+                $actionGroupShortName = "AG$(($vmName -replace '[^a-zA-Z0-9]', '').Substring(0, [Math]::Min(10, ($vmName -replace '[^a-zA-Z0-9]', '').Length)))"
+
+                $webhookReceiver = New-AzActionGroupWebhookReceiverObject -Name "AutoSnooze" -ServiceUri $WebhookUri
+
+                $actionGroup = Set-AzActionGroup -Name $actionGroupName `
+                    -ResourceGroupName $resourceGroupName `
+                    -ShortName $actionGroupShortName `
+                    -WebhookReceiver $webhookReceiver `
+                    -Location "Global" `
+                    -ErrorAction SilentlyContinue
+
+                if (!$actionGroup) {
+                    $actionGroup = New-AzActionGroup -Name $actionGroupName `
+                        -ResourceGroupName $resourceGroupName `
+                        -ShortName $actionGroupShortName `
+                        -WebhookReceiver $webhookReceiver `
+                        -Location "Global" `
+                        -ErrorAction Stop
+                }
+
+                $actionGroups = @($actionGroup.Id)
+            }
+
+            # Create the alert rule
+            Add-AzMetricAlertRuleV2 -Name $alertName `
+                -ResourceGroupName $resourceGroupName `
+                -TargetResourceId $resourceId `
+                -Description $Description `
+                -Severity 3 `
+                -WindowSize $TimeWindow `
+                -Frequency ([timespan]::FromMinutes(5)) `
+                -Criteria $criteria `
+                -ActionGroupId $actionGroups `
+                -ErrorAction Stop
+
+            Write-Output "Alert '$alertName' created for VM: $vmName"
+        }
+        else {
+            Write-Output "VM '$vmName' is not running (state: $vmState). Skipping alert creation."
+        }
+    }
+}
+catch {
+    Write-Error "Error processing VM '$($VMObject.Name)': $($_.Exception.Message)"
+    throw
+}

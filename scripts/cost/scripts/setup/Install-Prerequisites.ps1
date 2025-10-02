@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -8,7 +8,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Installs all prerequisites for the Azure Cost Management Dashboard
 
@@ -28,7 +27,7 @@
 
     Force reinstalls all modules including development tools
 
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 
 [CmdletBinding()]
 param(
@@ -38,16 +37,10 @@ param(
     [Parameter()]
     [switch]$Force
 )
-
-#region Initialize-Configuration
-$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
-
-# Check if running as administrator
-$script:isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-
-# Required modules
-$script:requiredModules = @(
+    [string]$ErrorActionPreference = 'Stop'
+    [string]$ProgressPreference = 'SilentlyContinue'
+    [string]$script:isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    [string]$script:requiredModules = @(
     @{ Name = "Az"; Description = "Azure PowerShell module" },
     @{ Name = "Az.Accounts"; Description = "Azure authentication" },
     @{ Name = "Az.CostManagement"; Description = "Azure Cost Management APIs" },
@@ -55,21 +48,14 @@ $script:requiredModules = @(
     @{ Name = "ImportExcel"; Description = "Excel file generation" },
     @{ Name = "PSWriteHTML"; Description = "HTML report generation" }
 )
-
-# Optional development modules
-$script:devModules = @(
+    [string]$script:devModules = @(
     @{ Name = "Pester"; Description = "PowerShell testing framework" },
     @{ Name = "PSScriptAnalyzer"; Description = "PowerShell code analysis" },
     @{ Name = "platyPS"; Description = "Documentation generation" }
 )
 
-#endregion
 
-#region Functions
-
-[OutputType([PSObject])]
- {
-    [CmdletBinding()]
+function Write-Log {
     param(
         [Parameter(Mandatory)]
         [string]$ModuleName,
@@ -80,54 +66,49 @@ $script:devModules = @(
         [Parameter()]
         [switch]$ForceInstall
     )
-    
-    Write-Host "Checking module: $ModuleName ($Description)"
-    
-    $existingModule = Get-Module -Name $ModuleName -ListAvailable
-    
-    if ($existingModule -and -not $ForceInstall) {
-        Write-Host "  [OK] $ModuleName already installed (version $($existingModule[0].Version))"
+
+    Write-Output "Checking module: $ModuleName ($Description)"
+$ExistingModule = Get-Module -Name $ModuleName -ListAvailable
+
+    if ($ExistingModule -and -not $ForceInstall) {
+        Write-Output "  [OK] $ModuleName already installed (version $($ExistingModule[0].Version))"
         return
     }
-    
+
     try {
-        Write-Host "  -> Installing $ModuleName..."
-        
-        $installParams = @{
+        Write-Output "  -> Installing $ModuleName..."
+$InstallParams = @{
             Name = $ModuleName
             Repository = "PSGallery"
             Force = $true
             AllowClobber = $true
             ErrorAction = "Stop"
         }
-        
+
         if ($script:isAdmin) {
-            $installParams.Scope = "AllUsers"
+    [string]$InstallParams.Scope = "AllUsers"
         } else {
-            $installParams.Scope = "CurrentUser"
+    [string]$InstallParams.Scope = "CurrentUser"
         }
-        
+
         Install-Module @installParams
-        Write-Host "  [OK] $ModuleName installed successfully"
+        Write-Output "  [OK] $ModuleName installed successfully"
     }
     catch {
         Write-Error "  [FAIL] Failed to install $ModuleName`: $($_.Exception.Message)"
     }
 }
 
-#endregion
 
-#region Main-Execution
 try {
-    Write-Host "Azure Cost Management Dashboard - Prerequisites Installer" -ForegroundColor White
-    Write-Host "============================================================" -ForegroundColor White
+    Write-Host "Azure Cost Management Dashboard - Prerequisites Installer" -ForegroundColor Green
+    Write-Host "============================================================" -ForegroundColor Green
 
     if (-not $script:isAdmin) {
         Write-Warning "For best results, run this script as Administrator to install modules for all users."
     }
 
-    # Update PowerShellGet first
-    Write-Host "`nUpdating PowerShellGet..." -ForegroundColor Cyan
+    Write-Host "`nUpdating PowerShellGet..." -ForegroundColor Green
     try {
         Install-Module PowerShellGet -Force -AllowClobber -ErrorAction Stop
         Write-Host "    [OK] PowerShellGet updated" -ForegroundColor Green
@@ -136,43 +117,38 @@ try {
         Write-Warning "Failed to update PowerShellGet: $($_.Exception.Message)"
     }
 
-    # Install required modules
-    Write-Host "`nInstalling required modules..." -ForegroundColor Cyan
+    Write-Host "`nInstalling required modules..." -ForegroundColor Green
     foreach ($module in $script:requiredModules) {
     Install-ModuleIfMissing -ModuleName $module.Name -Description $module.Description -ForceInstall:$Force
 }
 
-    # Install development modules if requested
     if ($IncludeDevTools) {
-        Write-Host "`nInstalling development modules..." -ForegroundColor Cyan
+        Write-Host "`nInstalling development modules..." -ForegroundColor Green
         foreach ($module in $script:devModules) {
         Install-ModuleIfMissing -ModuleName $module.Name -Description $module.Description -ForceInstall:$Force
     }
 }
 
-    # Verify installations
-    Write-Host "`nVerifying installations..." -ForegroundColor Cyan
-    $allModules = $script:requiredModules
+    Write-Host "`nVerifying installations..." -ForegroundColor Green
+    [string]$AllModules = $script:requiredModules
     if ($IncludeDevTools) {
-        $allModules += $script:devModules
+    [string]$AllModules += $script:devModules
     }
-
-    $installationResults = @()
-    foreach ($module in $allModules) {
-        $installed = Get-Module -Name $module.Name -ListAvailable
+    [string]$InstallationResults = @()
+    foreach ($module in $AllModules) {
+$installed = Get-Module -Name $module.Name -ListAvailable
         if ($installed) {
             Write-Host "    [OK] $($module.Name) - Version $($installed[0].Version)" -ForegroundColor Green
-            $installationResults += @{ Module = $module.Name; Status = "Installed"; Version = $installed[0].Version }
+    [string]$InstallationResults += @{ Module = $module.Name; Status = "Installed"; Version = $installed[0].Version }
         }
         else {
-            Write-Host "    [FAIL] $($module.Name) - Not found" -ForegroundColor Red
-            $installationResults += @{ Module = $module.Name; Status = "Failed"; Version = "N/A" }
+            Write-Host "    [FAIL] $($module.Name) - Not found" -ForegroundColor Green
+    [string]$InstallationResults += @{ Module = $module.Name; Status = "Failed"; Version = "N/A" }
         }
     }
 
-    # Create directories if they don't exist
-    Write-Host "`nCreating directory structure..." -ForegroundColor Cyan
-    $directories = @(
+    Write-Host "`nCreating directory structure..." -ForegroundColor Green
+    [string]$directories = @(
         "config",
         "logs",
         "data\exports",
@@ -190,9 +166,8 @@ try {
         }
     }
 
-    # Create sample configuration
-    Write-Host "`nCreating sample configuration..." -ForegroundColor Cyan
-    $sampleConfig = @{
+    Write-Host "`nCreating sample configuration..." -ForegroundColor Green
+$SampleConfig = @{
     azure = @{
         subscriptionId = "your-subscription-id"
         tenantId = "your-tenant-id"
@@ -215,55 +190,47 @@ try {
         exportPath = "data\exports"
     }
 }
-
-    $configPath = "config\sample-config.json"
-    if (-not (Test-Path $configPath)) {
-        $sampleConfig | ConvertTo-Json -Depth 5 | Out-File -FilePath $configPath -Encoding UTF8
-        Write-Host "    [OK] Created sample configuration: $configPath" -ForegroundColor Green
+    [string]$ConfigPath = "config\sample-config.json"
+    if (-not (Test-Path $ConfigPath)) {
+    [string]$SampleConfig | ConvertTo-Json -Depth 5 | Out-File -FilePath $ConfigPath -Encoding UTF8
+        Write-Host "    [OK] Created sample configuration: $ConfigPath" -ForegroundColor Green
     }
     else {
-        Write-Host "    [OK] Sample configuration exists: $configPath" -ForegroundColor Green
+        Write-Host "    [OK] Sample configuration exists: $ConfigPath" -ForegroundColor Green
     }
 
-    # Summary
-    Write-Host "`n$('=' * 60)" -ForegroundColor Cyan
-    Write-Host "INSTALLATION SUMMARY" -ForegroundColor White
-    Write-Host "$('=' * 60)" -ForegroundColor Cyan
+    Write-Host "`n$('=' * 60)" -ForegroundColor Green
+    Write-Host "INSTALLATION SUMMARY" -ForegroundColor Green
+    Write-Host "$('=' * 60)" -ForegroundColor Green
+    [string]$SuccessCount = ($InstallationResults | Where-Object { $_.Status -eq "Installed" }).Count
+    [string]$TotalCount = $InstallationResults.Count
 
-    $successCount = ($installationResults | Where-Object { $_.Status -eq "Installed" }).Count
-    $totalCount = $installationResults.Count
+    Write-Output "Modules installed: $SuccessCount/$TotalCount" -ForegroundColor $(if ($SuccessCount -eq $TotalCount) { "Green" } else { "Yellow" })
 
-    Write-Host "Modules installed: $successCount/$totalCount" -ForegroundColor $(if ($successCount -eq $totalCount) { "Green" } else { "Yellow" })
-
-    foreach ($result in $installationResults) {
-        $color = if ($result.Status -eq "Installed") { "Green" } else { "Red" }
-        Write-Host "  $($result.Module): $($result.Status) $($result.Version)" -ForegroundColor $color
+    foreach ($result in $InstallationResults) {
+    [string]$color = if ($result.Status -eq "Installed") { "Green" } else { "Red" }
+        Write-Output "  $($result.Module): $($result.Status) $($result.Version)" -ForegroundColor $color
     }
 
-    if ($successCount -eq $totalCount) {
+    if ($SuccessCount -eq $TotalCount) {
         Write-Host "`nInstallation completed successfully!" -ForegroundColor Green
-        Write-Host "`nNext steps:" -ForegroundColor White
-        Write-Host "1. Copy config\sample-config.json to config\config.json and update with your details" -ForegroundColor Gray
-        Write-Host "2. Run Connect-AzAccount to authenticate to Azure" -ForegroundColor Gray
-        Write-Host "3. Test the installation with: .\scripts\data-collection\Get-AzureCostData.ps1 -Days 7" -ForegroundColor Gray
-        Write-Host "4. Check the Installation Guide in docs\Installation-Guide.md for detailed setup" -ForegroundColor Gray
+        Write-Host "`nNext steps:" -ForegroundColor Green
+        Write-Host "1. Copy config\sample-config.json to config\config.json and update with your details" -ForegroundColor Green
+        Write-Host "2. Run Connect-AzAccount to authenticate to Azure" -ForegroundColor Green
+        Write-Host "3. Test the installation with: .\scripts\data-collection\Get-AzureCostData.ps1 -Days 7" -ForegroundColor Green
+        Write-Host "4. Check the Installation Guide in docs\Installation-Guide.md for detailed setup" -ForegroundColor Green
     }
     else {
-        Write-Host "`n[WARN] Installation completed with warnings. Please review failed modules above." -ForegroundColor Yellow
-        Write-Host "You may need to install failed modules manually or run this script as Administrator." -ForegroundColor Yellow
+        Write-Host "`n[WARN] Installation completed with warnings. Please review failed modules above." -ForegroundColor Green
+        Write-Host "You may need to install failed modules manually or run this script as Administrator." -ForegroundColor Green
     }
 
-    Write-Host "`n[SUPPORT] wes@wesellis.com" -ForegroundColor Cyan
-    Write-Host "[DOCS] https://github.com/wesellis/Azure-Cost-Management-Dashboard" -ForegroundColor Cyan
+    Write-Host "`n[SUPPORT] wes@wesellis.com" -ForegroundColor Green
+    Write-Host "[DOCS] https://github.com/wesellis/Azure-Cost-Management-Dashboard" -ForegroundColor Green
 }
 catch {
     Write-Error "Installation failed: $($_.Exception.Message)"
     throw
 }
 finally {
-    Write-Verbose "Installation script completed"
-}
-
-#endregion
-
-
+    Write-Verbose "Installation script completed"`n}

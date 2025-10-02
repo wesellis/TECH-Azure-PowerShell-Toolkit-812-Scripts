@@ -1,39 +1,54 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.RecoveryServices
 
-<#`n.SYNOPSIS
-    New Azrecoveryservicesbackupprotectionpolicy
+<#
+.SYNOPSIS
+    Create new Azure Recovery Services backup protection policy
 
 .DESCRIPTION
-    New Azrecoveryservicesbackupprotectionpolicy operation
-    Author: Wes Ellis (wes@wesellis.com)
+    Create new Azure Recovery Services backup protection policy operation
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-    A backup protection policy is associated with at least one retention policy. A retention policy defines how long a recovery point is kept before it's deleted.
-Use Get-AzRecoveryServicesBackupRetentionPolicyObject -ErrorAction Stop to view the default retention policy.
-Similarly you can use Get-AzRecoveryServicesBackupSchedulePolicyObject -ErrorAction Stop to obtain the default schedule policy.
-The New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop cmdlet creates a PowerShell object that holds backup policy information.
-The schedule and retention policy objects are used as inputs to the New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop cmdlet.
-$RetPol = Get-AzRecoveryServicesBackupRetentionPolicyObject -WorkloadType 'AzureVM'
-$RetPol.DailySchedule.DurationCountInDays = '365';
-$SchPol = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType 'AzureVM'
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$PolicyName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$VaultName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter()]
+    [ValidateSet('AzureVM', 'WindowsServer', 'AzureFiles', 'MSSQL')]
+    [string]$WorkloadType = 'AzureVM',
+
+    [Parameter()]
+    [int]$DailyRetentionDays = 30
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+$targetVault = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Name $VaultName -ErrorAction Stop
+
+$retentionPolicy = Get-AzRecoveryServicesBackupRetentionPolicyObject -WorkloadType $WorkloadType -ErrorAction Stop
+$retentionPolicy.DailySchedule.DurationCountInDays = $DailyRetentionDays
+
+$schedulePolicy = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType $WorkloadType -ErrorAction Stop
+
 $newAzRecoveryServicesBackupProtectionPolicySplat = @{
-    Name = "NewPolicy"
-    WorkloadType = 'AzureVM'
-    RetentionPolicy = $RetPol
-    SchedulePolicy = $SchPol
+    Name = $PolicyName
+    WorkloadType = $WorkloadType
+    RetentionPolicy = $retentionPolicy
+    SchedulePolicy = $schedulePolicy
     VaultId = $targetVault.ID
 }
-New-AzRecoveryServicesBackupProtectionPolicy -ErrorAction Stop @newAzRecoveryServicesBackupProtectionPolicySplat
 
+New-AzRecoveryServicesBackupProtectionPolicy @newAzRecoveryServicesBackupProtectionPolicySplat -ErrorAction Stop

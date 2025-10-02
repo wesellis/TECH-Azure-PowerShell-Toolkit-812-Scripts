@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -37,4 +37,5 @@ $getAzRecoveryServicesVaultSplat = @{
     Name = $Vaultname
 }
 Get-AzRecoveryServicesVault -ErrorAction Stop @getAzRecoveryServicesVaultSplat | Set-AzRecoveryServicesVaultContext -ErrorAction Stop
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -7,31 +7,31 @@
 
 .DESCRIPTION
     Test network connectivity
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Network Connectivity Tester
-# Test network connectivity between Azure resources
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
-    [string]$SourceVMName,
+    $SourceVMName,
     [Parameter(Mandatory)]
-    [string]$TargetAddress,
+    $TargetAddress,
     [Parameter()]
     [int]$Port = 80,
     [Parameter()]
-    [string]$ResourceGroupName
+    $ResourceGroupName
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
-    if (-not (Get-AzContext)) { 
+    if (-not (Get-AzContext)) {
         Connect-AzAccount
         if (-not (Get-AzContext)) {
             throw "Azure connection validation failed"
         }
     }
     $vm = Get-AzVM -Name $SourceVMName -ResourceGroupName $ResourceGroupName
-    $networkWatcher = Get-AzNetworkWatcher -Location $vm.Location
-    $connectivityTest = @{
+    $NetworkWatcher = Get-AzNetworkWatcher -Location $vm.Location
+    $ConnectivityTest = @{
         Source = @{
             ResourceId = $vm.Id
         }
@@ -40,14 +40,13 @@ try {
             Port = $Port
         }
     }
-    
-    $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
-    Write-Host "Connectivity Test Results:"
-    Write-Host "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
-    Write-Host "Average Latency: $($result.AvgLatencyInMs) ms"
-    Write-Host "Min Latency: $($result.MinLatencyInMs) ms"
-    Write-Host "Max Latency: $($result.MaxLatencyInMs) ms"
-    Write-Host "Probes Sent: $($result.ProbesSent)"
-    Write-Host "Probes Failed: $($result.ProbesFailed)"
-} catch { throw }
 
+    $result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $NetworkWatcher @connectivityTest
+    Write-Output "Connectivity Test Results:"
+    Write-Output "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable"){"Green"}else{"Red"})
+    Write-Output "Average Latency: $($result.AvgLatencyInMs) ms"
+    Write-Output "Min Latency: $($result.MinLatencyInMs) ms"
+    Write-Output "Max Latency: $($result.MaxLatencyInMs) ms"
+    Write-Output "Probes Sent: $($result.ProbesSent)"
+    Write-Output "Probes Failed: $($result.ProbesFailed)"
+} catch { throw`n}

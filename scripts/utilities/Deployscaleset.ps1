@@ -1,133 +1,229 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Resources, Az.Storage, Az.Compute, Az.Network
 
-<#`n.SYNOPSIS
-    Deployscaleset
+<#
+.SYNOPSIS
+    Deploy Scale Set
 
 .DESCRIPTION
-    Azure automation
-
-
+    Azure automation script for deploying Virtual Machine Scale Sets with custom images
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+
+.PARAMETER Location
+    Azure region for deployment
+
+.PARAMETER ResourceGroupName
+    Name of the resource group
+
+.PARAMETER CustomImageStorageAccountName
+    Source storage account name for custom image
+
+.PARAMETER CustomImageContainer
+    Source container name for custom image
+
+.PARAMETER CustomImageBlobName
+    Source blob name for custom image
+
+.PARAMETER NewStorageAccountName
+    Name for the new storage account
+
+.PARAMETER NewStorageAccountType
+    Type of the new storage account
+
+.PARAMETER NewImageContainer
+    New container name for image
+
+.PARAMETER NewImageBlobName
+    New blob name for image
+
+.PARAMETER RepoUri
+    Repository URI for templates
+
+.PARAMETER StorageAccountTemplate
+    Storage account template path
+
+.PARAMETER ScaleSetName
+    Name for the scale set
+
+.PARAMETER ScaleSetInstanceCount
+    Number of instances in scale set
+
+.PARAMETER ScaleSetVMSize
+    VM size for scale set instances
+
+.PARAMETER ScaleSetDNSPrefix
+    DNS prefix for scale set
+
+.PARAMETER ScaleSetVMCredentials
+    Credentials for scale set VMs
+
+.PARAMETER ScaleSetTemplate
+    Scale set template path
+
+.EXAMPLE
+    .\Deployscaleset.ps1 -Location "East US" -ResourceGroupName "MyRG" -NewStorageAccountName "mystorageaccount" -NewStorageAccountType "Standard_LRS" -ScaleSetName "MyScaleSet" -ScaleSetVMSize "Standard_B2s" -ScaleSetDNSPrefix "myscaleset"
+
+.NOTES
+    Deploys VM Scale Sets with custom images
+    Uses modern Az PowerShell modules
+#>
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$location,
+    [string]$Location,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$resourceGroupName,
-    [string]$customImageStorageAccountName='sdaviesarmne',
-    [string]$customImageContainer='images',
-    [string]$customImageBlobName='IISBase-osDisk.vhd',
+    [string]$ResourceGroupName,
+
+    [string]$CustomImageStorageAccountName = 'sdaviesarmne',
+
+    [string]$CustomImageContainer = 'images',
+
+    [string]$CustomImageBlobName = 'IISBase-osDisk.vhd',
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$newStorageAccountName,
+    [string]$NewStorageAccountName,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$newStorageAccountType,
-    [string]$newImageContainer='images',
-    [string]$newImageBlobName='IISBase-osDisk.vhd',
-    [string]$repoUri='https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vmss-windows-customimage/',
-    [string]$storageAccountTemplate='templates/storageaccount.json',
+    [string]$NewStorageAccountType,
+
+    [string]$NewImageContainer = 'images',
+
+    [string]$NewImageBlobName = 'IISBase-osDisk.vhd',
+
+    [string]$RepoUri = 'https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.compute/vmss-windows-customimage/',
+
+    [string]$StorageAccountTemplate = 'templates/storageaccount.json',
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$scaleSetName,
-    [int]$scaleSetInstanceCount=2,
+    [string]$ScaleSetName,
+
+    [int]$ScaleSetInstanceCount = 2,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$scaleSetVMSize,
+    [string]$ScaleSetVMSize,
+
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$scaleSetDNSPrefix,
-    [PSCredential]$scaleSetVMCredentials=(Get-Credential -Message 'Enter Credentials for new scale set VMs'),
-    [string]$scaleSetTemplate='azuredeploy.json'
+    [string]$ScaleSetDNSPrefix,
+
+    [PSCredential]$ScaleSetVMCredentials = (Get-Credential -Message 'Enter Credentials for new scale set VMs'),
+
+    [string]$ScaleSetTemplate = 'azuredeploy.json'
 )
-function WE-Switch-AzureResourceManagement
-{
-    if ($switchMode)
-    {
-        Switch-AzureMode AzureResourceManager -WarningAction SilentlyContinue
+
+$ErrorActionPreference = "Stop"
+
+try {
+    # Create resource group
+    $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
+    if (-not $resourceGroup) {
+        Write-Output "Creating resource group: $ResourceGroupName"
+        New-AzResourceGroup -ResourceGroupName $ResourceGroupName -Location $Location -Force
     }
-}
-function WE-Switch-AzureServiceManagement
-{
-    if ($switchMode)
-    {
-        Switch-AzureMode AzureServiceManagement -WarningAction SilentlyContinue
-    }
-}
-Import-Module -Name Azure
-$azureModule=Get-Module -Name Azure
-if ($azureModule)
-{
-    if ($azureModule.Version.Major -eq 0)
-    {
-        $switchMode=$true
-        Switch-AzureResourceManagement
-    }
-    else
-    {
-        $switchMode=$false
-        # TODO - Deal with Azure PS v1
-        throw 'Azure PS v1 or greater not supported'
-    }
-}
-else
-{
-    throw 'Azure Module not available'
-}
-try
-{
-     # Create a new Resource Group
-    New-AzureResourceGroup -ResourceGroupName $resourceGroupName -Location $location -Force
-    # Test names for validity
-    $newStorageAccountName=$newStorageAccountName.ToLowerInvariant()
-    if (-not (Get-AzureStorageAccount -ResourceGroupName $resourceGroupName -Name $newStorageAccountName -ErrorAction SilentlyContinue))
-    {
-        if (Test-AzureName -Storage -Name $newStorageAccountName -ErrorAction Stop)
-        {
-            throw "Storage Account Name in use "
+
+    # Validate storage account name
+    $NewStorageAccountName = $NewStorageAccountName.ToLowerInvariant()
+    $existingAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $NewStorageAccountName -ErrorAction SilentlyContinue
+    if (-not $existingAccount) {
+        $nameAvailability = Get-AzStorageAccountNameAvailability -Name $NewStorageAccountName
+        if (-not $nameAvailability.NameAvailable) {
+            throw "Storage Account Name in use: $($nameAvailability.Reason)"
         }
     }
-$scaleSetDNSPrefix=$scaleSetDNSPrefix.ToLowerInvariant()
-    if (-not (Get-AzurePublicIpAddress -ErrorAction Stop  -ResourceGroupName $resourceGroupName|where Location -eq $location).DnsSettings.DomainNameLabel -eq  $scaleSetDNSPrefix)
-    {
-        if (-not (Test-AzureDnsAvailability -DomainQualifiedName $scaleSetDNSPrefix -Location $location -ErrorAction Stop))
-        {
-            throw "Scale Set DNS Name in use "
+
+    # Validate DNS prefix
+    $ScaleSetDNSPrefix = $ScaleSetDNSPrefix.ToLowerInvariant()
+    $existingPublicIPs = Get-AzPublicIpAddress -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
+    $dnsInUse = $existingPublicIPs | Where-Object {
+        $_.Location -eq $Location -and $_.DnsSettings.DomainNameLabel -eq $ScaleSetDNSPrefix
+    }
+
+    if (-not $dnsInUse) {
+        # Check DNS availability (Note: Test-AzDnsAvailability is deprecated, using alternative approach)
+        try {
+            $dnsCheck = Resolve-DnsName "$ScaleSetDNSPrefix.$Location.cloudapp.azure.com" -ErrorAction SilentlyContinue
+            if ($dnsCheck) {
+                throw "Scale Set DNS Name in use"
+            }
+        }
+        catch {
+            # DNS name is available if resolution fails
         }
     }
-    # Create a new Storage Account for the image
-$parameters=@{" location" =" $location" ;" newStorageAccountName" =" $newStorageAccountName" ;" storageAccountType" =" $newStorageAccountType" }
-    $templateUri=" $repoUri$storageAccountTemplate"
-    New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createstorageaccount'
-    # Copy the blob from the source to the new storage account
-    $destkey=(Get-AzureStorageAccountKey -Name $newStorageAccountName -ResourceGroupName $resourceGroupName).Key1
-    Switch-AzureServiceManagement
-    $destcontext= New-AzureStorageContext -StorageAccountName $newStorageAccountName -StorageAccountKey $destkey -Protocol Https
-    $srccontext= New-AzureStorageContext -StorageAccountName $customImageStorageAccountName -Anonymous -Protocol Https
-    $destcontainer=Get-AzureStorageContainer -Context $destcontext -Name $newImageContainer -ErrorAction SilentlyContinue
-    if ($null -eq $destcontainer){
-	    New-AzureStorageContainer -Context $destcontext -Name $newImageContainer
+
+    # Deploy storage account
+    Write-Output "Deploying storage account: $NewStorageAccountName"
+    $storageParameters = @{
+        "location" = $Location
+        "newStorageAccountName" = $NewStorageAccountName
+        "storageAccountType" = $NewStorageAccountType
     }
-    Get-AzureStorageBlob -Container $customImageContainer -Context $srccontext -Blob $customImageBlobName|Start-CopyAzureStorageBlob -DestContext $destContext -DestContainer $newImageContainer -DestBlob $newImageBlobName -ErrorVariable $copyerror -ErrorAction Continue|Get-AzureStorageBlobCopyState -WaitForComplete
-    # Deploy the scale set using the new custom image as the target
-$sourceImageVhdUri=(Get-AzureStorageBlob -Container $newImageContainer -Context $destContext -Blob $newImageBlobName).ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
-    Switch-AzureResourceManagement
-$parameters=@{" vmSSName" =" $scaleSetName" ;" instanceCount" =$scaleSetInstanceCount;" vmSize" =" $scaleSetVMSize" ;" dnsNamePrefix" =" $scaleSetDNSPrefix" ;" adminUsername" =$scaleSetVMCredentials.UserName;" adminPassword" =$scaleSetVMCredentials.GetNetworkCredential().Password;" location" =" $location" ;" sourceImageVhdUri" =" $sourceImageVhdUri" }
-    $templateUri=" $repoUri$scaleSetTemplate"
-    New-AzureResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -TemplateParameterObject $parameters -Name 'createscaleset'
-}
-catch
-{
-    Write-Error $_
-}
+    $TemplateUri = "$RepoUri$StorageAccountTemplate"
+    New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateUri -TemplateParameterObject $storageParameters -Name 'createstorageaccount'
 
+    # Get storage account key
+    $storageAccount = Get-AzStorageAccount -Name $NewStorageAccountName -ResourceGroupName $ResourceGroupName
+    $destKey = (Get-AzStorageAccountKey -Name $NewStorageAccountName -ResourceGroupName $ResourceGroupName)[0].Value
 
+    # Create storage contexts
+    $destContext = New-AzStorageContext -StorageAccountName $NewStorageAccountName -StorageAccountKey $destKey
+    $srcContext = New-AzStorageContext -StorageAccountName $CustomImageStorageAccountName -Anonymous
+
+    # Create destination container if it doesn't exist
+    $destContainer = Get-AzStorageContainer -Context $destContext -Name $NewImageContainer -ErrorAction SilentlyContinue
+    if ($null -eq $destContainer) {
+        Write-Output "Creating storage container: $NewImageContainer"
+        New-AzStorageContainer -Context $destContext -Name $NewImageContainer -Permission Off
+    }
+
+    # Copy blob from source to destination
+    Write-Output "Copying custom image blob..."
+    $copyBlob = Get-AzStorageBlob -Container $CustomImageContainer -Context $srcContext -Blob $CustomImageBlobName |
+        Start-AzStorageBlobCopy -DestContext $destContext -DestContainer $NewImageContainer -DestBlob $NewImageBlobName
+
+    # Wait for copy to complete
+    do {
+        Start-Sleep -Seconds 10
+        $copyStatus = $copyBlob | Get-AzStorageBlobCopyState
+        Write-Output "Copy status: $($copyStatus.Status)"
+    } while ($copyStatus.Status -eq "Pending")
+
+    if ($copyStatus.Status -ne "Success") {
+        throw "Blob copy failed with status: $($copyStatus.Status)"
+    }
+
+    # Get source image VHD URI
+    $sourceImageBlob = Get-AzStorageBlob -Container $NewImageContainer -Context $destContext -Blob $NewImageBlobName
+    $SourceImageVhdUri = $sourceImageBlob.ICloudBlob.StorageUri.PrimaryUri.AbsoluteUri
+
+    # Deploy scale set
+    Write-Output "Deploying scale set: $ScaleSetName"
+    $scaleSetParameters = @{
+        "vmSSName" = $ScaleSetName
+        "instanceCount" = $ScaleSetInstanceCount
+        "vmSize" = $ScaleSetVMSize
+        "dnsNamePrefix" = $ScaleSetDNSPrefix
+        "adminUsername" = $ScaleSetVMCredentials.UserName
+        "adminPassword" = $ScaleSetVMCredentials.GetNetworkCredential().Password
+        "location" = $Location
+        "sourceImageVhdUri" = $SourceImageVhdUri
+    }
+    $TemplateUri = "$RepoUri$ScaleSetTemplate"
+    New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateUri $TemplateUri -TemplateParameterObject $scaleSetParameters -Name 'createscaleset'
+
+    Write-Output "Scale set deployment completed successfully."
+}
+catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

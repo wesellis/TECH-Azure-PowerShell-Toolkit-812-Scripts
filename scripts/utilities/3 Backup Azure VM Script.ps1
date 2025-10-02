@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -12,20 +12,17 @@
     Version: 1.0
     LastModified: 2025-09-19
     Requires appropriate permissions and modules
-#>
 
-[CmdletBinding()]
-[OutputType([bool])]
- {
+function Write-Log {
 function Write-Host {
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
 $colorMap = @{
@@ -34,41 +31,36 @@ $colorMap = @{
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
+[CmdletBinding()]
 param(
         [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$VMName,
+    $VMName,
         [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
         [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$VaultName,
+    $VaultName,
         [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string]$VaultResourceGroup,
+    $VaultResourceGroup,
         [Parameter(Mandatory = $false)]
         [int]$RetentionDays = 30
     )
     try {
-        # Ensure Az.RecoveryServices module is imported
         if (-not (Get-Module -Name Az.RecoveryServices -ListAvailable)) {
             Write-Host "Installing Az.RecoveryServices module..." -ForegroundColor Yellow
             Install-Module -Name Az.RecoveryServices -Force -AllowClobber
         }
         Import-Module -Name Az.RecoveryServices
-        # Get VM details
         Write-Host "Verifying VM existence..." -ForegroundColor Yellow
         $vm = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName
-        # Get Recovery Services Vault
         Write-Host "Accessing Recovery Services Vault..." -ForegroundColor Yellow
         $vault = Get-AzRecoveryServicesVault -ResourceGroupName $VaultResourceGroup -Name $VaultName
-        # Set vault context
         Set-AzRecoveryServicesVaultContext -Vault $vault
-        # Start backup job
         Write-Host "Initiating backup job..." -ForegroundColor Yellow
         $backupJob = Start-AzRecoveryServicesAsrBackupNow -Name $VMName
-        # Create backup details object
         $backupDetails = [PSCustomObject]@{
             VMName = $VMName
             ResourceGroup = $ResourceGroupName
@@ -78,15 +70,12 @@ param(
             Status = $backupJob.Status
             RetentionDays = $RetentionDays
         }
-        # Generate HTML report
         New-HTML -FilePath " .\VMBackupReport.html" -ShowHTML {
             New-HTMLTable -DataTable @($backupDetails) -Title "VM Backup Operation Report" {
                 New-HTMLTableHeader -Title "VM Backup - $(Get-Date -Format 'yyyy-MM-dd HH:mm')" -BackgroundColor '#007bff' -Color '#ffffff'
             }
         }
-        # Export CSV report
         $backupDetails | Export-Csv -Path " .\VMBackupReport.csv" -NoTypeInformation
-        # Monitor backup progress
         Write-Host "Monitoring backup progress..." -ForegroundColor Yellow
         while ($backupJob.Status -eq "InProgress") {
             $backupJob = Get-AzRecoveryServicesBackupJob -Job $backupJob
@@ -102,7 +91,6 @@ param(
 }
 try {
     Write-Host "Starting Azure VM backup process..." -ForegroundColor Cyan
-    # Backup parameters for ArcGisS1
 $backupParams = @{
         VMName = 'ArcGisS1'
         ResourceGroupName = 'anteausa'
@@ -112,7 +100,6 @@ $backupParams = @{
     }
     Write-Host " `nInitiating backup with following parameters:" -ForegroundColor Yellow
     $backupParams | Format-Table -AutoSize
-    # Create backup
     Write-Host " `nCreating backup..." -ForegroundColor Yellow
 $backup = New-AzureVMBackup @backupParams
     Write-Host " `nBackup operation completed!" -ForegroundColor Green
@@ -123,4 +110,7 @@ catch {
     Write-Host "Error during backup process: $_" -ForegroundColor Red
     throw
 }
+
+
+
 

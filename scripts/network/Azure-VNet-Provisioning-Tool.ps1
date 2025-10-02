@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage VNets
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$VnetName,
@@ -17,15 +19,13 @@
     [string]$SubnetName = "default",
     [string]$SubnetPrefix
 )
-Write-Host "Provisioning Virtual Network: $VnetName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Address Prefix: $AddressPrefix"
-# Create subnet configuration if specified
+Write-Output "Provisioning Virtual Network: $VnetName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "Address Prefix: $AddressPrefix"
 if ($SubnetPrefix) {
     $SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix $SubnetPrefix
-    Write-Host "Subnet: $SubnetName ($SubnetPrefix)"
-    # Create virtual network with subnet
+    Write-Output "Subnet: $SubnetName ($SubnetPrefix)"
     $params = @{
         ResourceGroupName = $ResourceGroupName
         Location = $Location
@@ -35,7 +35,6 @@ if ($SubnetPrefix) {
     }
     $VNet = New-AzVirtualNetwork @params
 } else {
-    # Create virtual network without subnet
     $params = @{
         AddressPrefix = $AddressPrefix
         ResourceGroupName = $ResourceGroupName
@@ -44,6 +43,8 @@ if ($SubnetPrefix) {
     }
     $VNet = New-AzVirtualNetwork @params
 }
-Write-Host "Virtual Network $VnetName provisioned successfully"
-Write-Host "VNet ID: $($VNet.Id)"
+Write-Output "Virtual Network $VnetName provisioned successfully"
+Write-Output "VNet ID: $($VNet.Id)"
+
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations and operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -16,24 +18,26 @@
     [Parameter()]
     [hashtable]$Tags = @{}
 )
-Write-Host "Creating Resource Group: $ResourceGroupName"
+Write-Output "Creating Resource Group: $ResourceGroupName"
 if ($Tags.Count -gt 0) {
-    $resourcegroupSplat = @{
+    $ResourcegroupSplat = @{
     Name = $ResourceGroupName
     Location = $Location
     Tag = $Tags
 }
 New-AzResourceGroup @resourcegroupSplat
-    Write-Host "Tags applied:"
+    Write-Output "Tags applied:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Host "  $($Tag.Key): $($Tag.Value)"
+        Write-Output "  $($Tag.Key): $($Tag.Value)"
     }
 } else {
     $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 }
-Write-Host "Resource Group created successfully:"
-Write-Host "Name: $($ResourceGroup.ResourceGroupName)"
-Write-Host "Location: $($ResourceGroup.Location)"
-Write-Host "Provisioning State: $($ResourceGroup.ProvisioningState)"
-Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
+Write-Output "Resource Group created successfully:"
+Write-Output "Name: $($ResourceGroup.ResourceGroupName)"
+Write-Output "Location: $($ResourceGroup.Location)"
+Write-Output "Provisioning State: $($ResourceGroup.ProvisioningState)"
+Write-Output "Resource ID: $($ResourceGroup.ResourceId)"
+
+
 

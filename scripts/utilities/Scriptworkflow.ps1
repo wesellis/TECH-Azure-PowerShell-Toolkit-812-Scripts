@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Scriptworkflow
@@ -8,7 +8,8 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -122,41 +123,30 @@ else
 }
 if($Config -eq "Standalone" )
 {
-    #Install CM and Config
     $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallAndUpdateSCCM.ps1"
     . $ScriptFile $DomainFullName $CM $CMUser $Role $ProvisionToolPath
-    #Install DP
     $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallDP.ps1"
     . $ScriptFile $DomainFullName $DPMPName $Role $ProvisionToolPath
-    #Install MP
     $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallMP.ps1"
     . $ScriptFile $DomainFullName $DPMPName $Role $ProvisionToolPath
-    #Install Client
     $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallClient.ps1"
     . $ScriptFile $DomainFullName $CMUser $ClientName $DPMPName $Role $ProvisionToolPath
 }
 else {
     if($CurrentRole -eq "CS" )
     {
-        #Install CM and Config
         $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallCSForHierarchy.ps1"
         . $ScriptFile $DomainFullName $CM $CMUser $Role $ProvisionToolPath $LogFolder $PSName $PSRole
     }
     elseif($CurrentRole -eq "PS" )
     {
-        #Install CM and Config
         $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallPSForHierarchy.ps1"
         . $ScriptFile $DomainFullName $CM $CMUser $Role $ProvisionToolPath $CSName $CSRole $LogFolder
-        #Install DP
         $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallDP.ps1"
         . $ScriptFile $DomainFullName $DPMPName $Role $ProvisionToolPath
-        #Install MP
 $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallMP.ps1"
         . $ScriptFile $DomainFullName $DPMPName $Role $ProvisionToolPath
-        #Install Client
 $ScriptFile = Join-Path -Path $ProvisionToolPath -ChildPath "InstallClient.ps1"
         . $ScriptFile $DomainFullName $CMUser $ClientName $DPMPName $Role $ProvisionToolPath
     }
-}
-
-
+`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations and operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$PolicyDefinitionId,
@@ -22,44 +24,44 @@
     [Parameter()]
     [string]$EnforcementMode = "Default"
 )
-Write-Host "Creating Policy Assignment: $AssignmentName"
-# Prepare assignment parameters
+Write-Output "Creating Policy Assignment: $AssignmentName"
 if ($Description) {
     $AssignmentParams.Description = $Description
 }
 if ($Parameters.Count -gt 0) {
     $AssignmentParams.PolicyParameterObject = $Parameters
 }
-# Create policy assignment
 $Assignment = New-AzPolicyAssignment -ErrorAction Stop @AssignmentParams
-Write-Host "Policy Assignment created successfully:"
-Write-Host "Name: $($Assignment.Name)"
-Write-Host "Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
-Write-Host "Scope: $Scope"
-Write-Host "Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
+Write-Output "Policy Assignment created successfully:"
+Write-Output "Name: $($Assignment.Name)"
+Write-Output "Policy: $($Assignment.Properties.PolicyDefinitionId.Split('/')[-1])"
+Write-Output "Scope: $Scope"
+Write-Output "Enforcement Mode: $($Assignment.Properties.EnforcementMode)"
 if ($Description) {
-    Write-Host "Description: $Description"
+    Write-Output "Description: $Description"
 }
 if ($Parameters.Count -gt 0) {
-    Write-Host "`nPolicy Parameters:"
+    Write-Output "`nPolicy Parameters:"
     foreach ($Param in $Parameters.GetEnumerator()) {
-        Write-Host "  $($Param.Key): $($Param.Value)"
+        Write-Output "  $($Param.Key): $($Param.Value)"
     }
 }
-Write-Host "`nPolicy Assignment Benefits:"
-Write-Host "Automated compliance enforcement"
-Write-Host "Consistent governance across resources"
-Write-Host "Audit and reporting capabilities"
-Write-Host "Cost and security optimization"
-Write-Host "`nCommon Policy Types:"
-Write-Host "Resource tagging requirements"
-Write-Host "Location restrictions"
-Write-Host "SKU limitations"
-Write-Host "Security configurations"
-Write-Host "Naming conventions"
-Write-Host "`nNext Steps:"
-Write-Host "1. Monitor compliance status"
-Write-Host "2. Review policy effects"
-Write-Host "3. Adjust parameters if needed"
-Write-Host "4. Create exemptions if required"
+Write-Output "`nPolicy Assignment Benefits:"
+Write-Output "Automated compliance enforcement"
+Write-Output "Consistent governance across resources"
+Write-Output "Audit and reporting capabilities"
+Write-Output "Cost and security optimization"
+Write-Output "`nCommon Policy Types:"
+Write-Output "Resource tagging requirements"
+Write-Output "Location restrictions"
+Write-Output "SKU limitations"
+Write-Output "Security configurations"
+Write-Output "Naming conventions"
+Write-Output "`nNext Steps:"
+Write-Output "1. Monitor compliance status"
+Write-Output "2. Review policy effects"
+Write-Output "3. Adjust parameters if needed"
+Write-Output "4. Create exemptions if required"
+
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,12 +27,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -50,18 +47,15 @@ param(
     [Parameter()]
     [string]$PublicAccess = "Off"
 )
-Write-Host "Creating storage container: $ContainerName"
+Write-Output "Creating storage container: $ContainerName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName;
-$Context = $StorageAccount.Context
+    [string]$Context = $StorageAccount.Context
 $Container = New-AzStorageContainer -Name $ContainerName -Context $Context -Permission $PublicAccess
-Write-Host "Container created successfully:"
-Write-Host "Name: $($Container.Name)"
-Write-Host "Public Access: $PublicAccess"
-Write-Host "Storage Account: $StorageAccountName"
-Write-Host "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
+Write-Output "Container created successfully:"
+Write-Output "Name: $($Container.Name)"
+Write-Output "Public Access: $PublicAccess"
+Write-Output "Storage Account: $StorageAccountName"
+Write-Output "URL: $($Container.CloudBlobContainer.StorageUri.PrimaryUri)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

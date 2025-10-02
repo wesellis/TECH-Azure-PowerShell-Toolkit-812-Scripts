@@ -1,280 +1,237 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
-#Requires -Module Az.Resources
-<#`n.SYNOPSIS
-    Restore Azurermvm
+#Requires -Version 7.4
+#Requires -Modules Az.Resources, Az.Compute, Az.Storage
+
+<#
+.SYNOPSIS
+    Restore Azure Virtual Machine from Backup
+
 .DESCRIPTION
-    Restore Azurermvm operation
+    Restores Azure ARM virtual machines from backup VHD location.
+    Copies VHD files from backup location, deletes the VM (to release lease),
+    copies VHD over original location, and recreates the VM with same configuration.
+    Note: Does not work with managed disks (use snapshots instead).
 
+.PARAMETER ResourceGroupName
+    Name of resource group containing the VM
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
-    Restore Azurermvm
-    Azure automation
+.PARAMETER BackupContainer
+    Name of container that holds the backup VHD blobs (default: 'vhd-backups')
+
+.PARAMETER VhdContainer
+    Name of container that holds VHD blobs attached to VMs (default: 'vhds')
+
+.PARAMETER Environment
+    Azure environment name (default: 'AzureCloud', alternatives: 'AzureUSGovernment')
+
+.EXAMPLE
+    .\Restore-AzureRMvm.ps1 -ResourceGroupName 'CONTOSO'
+
+.EXAMPLE
+    .\Restore-AzureRMvm.ps1 -ResourceGroupName 'CONTOSO' -BackupContainer 'vhd-backups-9021' -VhdContainer 'MyVMs'
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
+    Original Author: https://github.com/JeffBow
 
-    1.0
-    Requires appropriate permissions and modules
+.NOTES
+    Version: 1.0
+    Requires Azure PowerShell Az module
+    VMs must be shutdown prior to running this script
+    Works with unmanaged disks only
 #>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-   Restores Azure v2 ARM virtual machines from a backup VHD location.
-   Does not work with VMs configured with managed disks because they allow snapshots.
-    Requires AzureRM module version 4.2.1 or later.
-   Copies VHD files from a backup location - from using the associated script Backup-AzureRMvm.ps1.  Since VHDs have a lease on them
-   from being attached to a VM, the VM must first be deleted.  The VHD is copied over the original location and then the VM
-   is recreated using the same configuration.
-   VMs must be shutdown prior to running this script. It will halt if they are still running.
-   .\Restore-AzureRMvm.ps1 -ResourceGroupName 'CONTOSO'
-   .\Restore-AzureRMvm.ps1 -ResourceGroupName 'CONTOSO' -BackupContainer 'vhd-backups-9021' -VhdContainer 'MyVMs'
-.PARAMETER -ResourceGroupName [string]
-  Name of resource group being copied
-.PARAMETER -BackupContainer [string]
-  Name of container that holds the backup VHD blobs
-.PARAMETER -VhdContainer [string]
-  Name of container that will hold VHD blobs attached to VMs
-.PARAMETER -Environment [string]
-  Name of Environment e.g. AzureUSGovernment.  Defaults to AzureCloud
-    Original Author:   https://github.com/JeffBow
- ------------------------------------------------------------------------
-               Copyright (C) 2016 Microsoft Corporation
- You have a royalty-free right to use, modify, reproduce and distribute
- this sample script (and/or any modified version) in any way
- you find useful, provided that you agree that Microsoft has no warranty,
- obligations or liability for any sample application or script files.
- ------------------------------------------------------------------------
-[CmdletBinding()]
+
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    [Parameter(ValueFromPipeline)]`n    [string]$BackupContainer= 'vhd-backups',
-    [Parameter(ValueFromPipeline)]`n    [string]$VhdContainer= 'vhds',
-    [Parameter(ValueFromPipeline)]`n    [string]$Environment= "AzureCloud"
+
+    [Parameter(Mandatory = $false)]
+    [string]$BackupContainer = 'vhd-backups',
+
+    [Parameter(Mandatory = $false)]
+    [string]$VhdContainer = 'vhds',
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet('AzureCloud', 'AzureUSGovernment', 'AzureGermanCloud', 'AzureChinaCloud')]
+    [string]$Environment = 'AzureCloud'
 )
-#region Functions
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { 'Continue' } else { 'SilentlyContinue' }
 $ProgressPreference = 'SilentlyContinue'
-$resourceGroupVMjsonPath = " $env:TEMP\$ResourceGroupName.resourceGroupVMs.json"
-if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 4.2.1" ) {
-   Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 4.2.1 required. Run Update-Module AzureRM"
-   BREAK
-}
-<###############################
- Get Storage Context function
-[OutputType([PSObject])]
- -ErrorAction Stop
-{ [CmdletBinding()]
-param($resourceGroupName, $srcURI)
-    $split = $srcURI.Split('/')
-    $strgDNS = $split[2]
-    $splitDNS = $strgDNS.Split('.')
-    $storageAccountName = $splitDNS[0]
-    $StorageAccountKey = (Get-AzureRmStorageAccountKey -ResourceGroupName $resourceGroupName -Name $StorageAccountName).Value[0]
-    $StorageContext = New-AzureStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey
-    return $StorageContext
-} # end of Get-StorageObject -ErrorAction Stop function
-<###############################
-  Copy blob function
-function copy-azureBlob
-{  [CmdletBinding()]
-param($srcUri, $srcContext, $destContext, $containerName)
-    $split = $srcURI.Split('/')
-    $blobName = $split[($split.count -1)]
-$blobSplit = $blobName.Split('.')
-$extension = $blobSplit[($blobSplit.count -1)]
-    if($($extension.tolower()) -eq 'status' ){Write-Output "Status file blob $blobname skipped" ;return}
-    if(! $containerName){$containerName = $split[3]}
-    # add full path back to blobname
-    if($split.count -gt 5)
-      {
-        $i = 4
-        do
-        {
-            $path = $path + " /" + $split[$i]
-            $i++
+
+try {
+    Write-Output "Starting Azure VM restoration process"
+    Write-Output "Resource Group: $ResourceGroupName"
+    Write-Output "Backup Container: $BackupContainer"
+    Write-Output "VHD Container: $VhdContainer"
+    Write-Output "Environment: $Environment"
+
+    # Set paths for temporary JSON storage
+    $ResourceGroupVMjsonPath = "$env:TEMP\$ResourceGroupName.resourceGroupVMs.json"
+
+    # Check Az module version
+    $azModule = Get-Module -Name Az.Compute -ListAvailable | Select-Object -First 1
+    if (-not $azModule) {
+        throw "Azure PowerShell Az module is not installed. Please install using: Install-Module -Name Az -AllowClobber"
+    }
+
+    # Connect to Azure if not already connected
+    $context = Get-AzContext
+    if (-not $context) {
+        Write-Output "Not connected to Azure. Please login..."
+        Connect-AzAccount -Environment $Environment
+    }
+
+    # Get resource group
+    Write-Verbose "Getting resource group: $ResourceGroupName"
+    $resourceGroup = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
+
+    if (-not $resourceGroup) {
+        throw "Resource group '$ResourceGroupName' not found"
+    }
+
+    # Get VMs in resource group
+    Write-Output "Getting VMs in resource group..."
+    $vms = Get-AzVM -ResourceGroupName $ResourceGroupName
+
+    if ($vms.Count -eq 0) {
+        Write-Warning "No VMs found in resource group '$ResourceGroupName'"
+        return
+    }
+
+    Write-Output "Found $($vms.Count) VMs to process"
+
+    # Check if VMs are stopped
+    foreach ($vm in $vms) {
+        Write-Verbose "Checking status of VM: $($vm.Name)"
+        $vmStatus = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $vm.Name -Status
+
+        $powerState = $vmStatus.Statuses | Where-Object { $_.Code -like 'PowerState/*' }
+        if ($powerState.Code -ne 'PowerState/deallocated' -and $powerState.Code -ne 'PowerState/stopped') {
+            throw "VM '$($vm.Name)' is not stopped. Current state: $($powerState.DisplayStatus). Please stop all VMs before running restore."
         }
-        while($i -lt $split.length -1)
-        $blobName= $path + '/' + $blobName
-        $blobName = $blobName.Trim()
-$blobName = $blobName.Substring(1, $blobName.Length-1)
-      }
-   # create container if doesn't exist
-    if (!(Get-AzureStorageContainer -Context $destContext -Name $containerName -ea SilentlyContinue))
-    {
-         try
-         {
-$newRtn = New-AzureStorageContainer -Context $destContext -Name $containerName -Permission Off -ea Stop
-            Write-Output "Container $($newRtn.name) was created."
-         }
-         catch
-         {
-             $_ ; break
-         }
     }
-   try
-   {
-        $params = @{
-            DestBlob = $blobName
-            srcUri = $srcUri
-            DestContext = $destContext
-            SrcContext = $srcContext
-            DestContainer = $containerName
-            ea = "Stop write-output " $srcUri is being copied to $containerName"  } catch { $_ ; write-warning "Failed to copy to $srcUri to $containerName" }"
-        }
-        $blobCopy @params
-} # end of copy-azureBlob function
-Write-Host "Enter credentials for your Azure Subscription..." -F Yellow
-$login= Connect-AzureRmAccount -EnvironmentName $Environment
-$loginID = $login.context.account.id
-$sub = Get-AzureRmSubscription -ErrorAction Stop
-$SubscriptionId = $sub.Id
-if($sub.count -gt 1) {
-    $SubscriptionId = (Get-AzureRmSubscription -ErrorAction Stop | select * | Out-GridView -title "Select Target Subscription" -OutputMode Single).Id
-    Select-AzureRmSubscription -SubscriptionId $SubscriptionId| Out-Null
-    $sub = Get-AzureRmSubscription -SubscriptionId $SubscriptionId
-    $SubscriptionId = $sub.Id
-}
-if(! $SubscriptionId)
-{
-   write-warning "The provided credentials failed to authenticate or are not associcated to a valid subscription. Exiting the script."
-   break
-}
-write-verbose "Logged into $($sub.Name) with subscriptionID $SubscriptionId as $loginID" -verbose
-if(-not ($sourceResourceGroup = Get-AzureRmResourceGroup -ErrorAction Stop  -ResourceGroupName $resourceGroupName))
-{
-   write-warning "The provided resource group $resourceGroupName could not be found. Exiting the script."
-   break
-}
-[string];  $location = $sourceResourceGroup.location;
-$resourceGroupVMs = Get-AzureRMVM -ResourceGroupName $resourceGroupName
-if(! $resourceGroupVMs){write-warning "No virtual machines found in resource group $resourceGroupName" ; break}
-$resourceGroupVMs | %{
-   $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $_.name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
-   write-output " $($_.name) status is $status"
-   if($status -eq 'VM running'){write-warning "All virtual machines in this resource group are not stopped.  Please stop all VMs and try again" ; break}
-}
-$resourceGroupVMs | ConvertTo-Json -depth 10 | Out-File $resourceGroupVMjsonPath
-foreach($srcVM in $resourceGroupVMs)
-{
-    # get source VM attributes
-    $VMName = $srcVM.Name
-    $VMSize = $srcVM.HardwareProfile.VMSize
-    $OSDiskName = $srcVM.StorageProfile.OsDisk.Name
-    $OSType = $srcVM.storageprofile.osdisk.OsType
-    $OSDiskCaching = $srcVM.StorageProfile.OsDisk.Caching
-    $avSetRef = ($srcVM.AvailabilitySetReference.id).Split('/')
-    $avSetName = $avSetRef[($avSetRef.count -1)]
-    $AvailabilitySet = Get-AzureRmAvailabilitySet -ResourceGroupName $ResourceGroupName -Name $avSetName
-    $CreateOption = "Attach"
-    # remove VM
-    write-verbose "Restoring Virtual Machine $vmName" -verbose
-    try
-    {
-      Remove-AzureRmVM -Name $vmName -ResourceGroupName $resourceGroupName -Force -ea Stop | out-null
-      write-output "Removed $vmName"
-    }
-    catch
-    {
-      $_
-      Write-Warning "Failed to remove Virtual Machine $vmName"
-      break
-    }
-    # over-write existing disk from backup location
-    # get storage account context from $srcVM.storageprofile.osdisk.vhd.uri
-    $OSDiskUri = $null
-    $OSDiskUri = $srcVM.storageprofile.osdisk.vhd.uri
-    $OSsplit = $OSDiskUri.Split('/')
-    $OSblobName = $OSsplit[($OSsplit.count -1)]
-    $OScontainerName = $OSsplit[3]
-    $OSstorageContext = Get-StorageObject -resourceGroupName $resourceGroupName -srcURI $OSDiskUri
-    $backupURI = $OSDiskUri.Replace($vhdContainer, $backupContainer)
-    copy-azureBlob -srcUri $backupURI -srcContext $OSstorageContext -destContext $OSstorageContext -containerName $vhdContainer
-    # check on copy status
-    do{
-       $rtn = $null
-       $rtn = Get-AzureStorageBlob -Context $OSstorageContext -container $OScontainerName -Blob $OSblobName | Get-AzureStorageBlobCopyState -ErrorAction Stop
-       $rtn | select Source, Status, BytesCopied, TotalBytes | fl
-       if($rtn.status  -ne 'Success'){
-         write-verbose "Waiting for blob copy $OSblobName to complete" -verbose
-         Sleep 10
-       }
-    }
-    while($rtn.status  -ne 'Success')
-    # exit script if user breaks out of above loop
-    if($rtn.status  -ne 'Success'){EXIT}
-    # get the Network Interface Card we created previously based on the original source name
-    $NICRef = ($srcVM.NetworkInterfaceIDs).Split('/')
-    $NICName = $NICRef[($NICRef.count -1)]
-    $NIC = Get-AzureRmNetworkInterface -Name $NICName -ResourceGroupName $ResourceGroupName
-    # create VM Config
-    if($AvailabilitySet)
-    {
-        $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize  -AvailabilitySetID $AvailabilitySet.Id  -wa SilentlyContinue
-    }
-    else
-    {
-        $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize -wa SilentlyContinue
-    }
-    # Set OS Disk based on OS type
-    if($OStype -eq 'Windows' -or $OStype -eq '0'){
-       $VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName -VhdUri $OSDiskUri -Caching $OSDiskCaching -CreateOption $createOption -Windows
-    }
-    else
-    {
-       $VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $OSDiskName -VhdUri $OSDiskUri -Caching $OSDiskCaching -CreateOption $createOption -Linux
-    }
-    # add NIC
-    $VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id
-    # copy and readd data disk if they were present
-    if($srcVM.storageProfile.datadisks)
-    {
-        foreach($disk in $srcVM.storageProfile.DataDisks)
-        {
-            $dataDiskName = $null
-            $dataDiskUri = $null
-            $diskBlobName = $null
-            $dataDiskName = $disk.Name
-            $dataDiskLUN = $disk.Lun
-            $diskCaching = $disk.Caching
-            $DiskSizeGB = $disk.DiskSizeGB
-            $dataDiskUri = $disk.vhd.uri
-            $split = $dataDiskUri.Split('/')
-            $diskBlobName = $split[($split.count -1)]
-            $diskContainerName = $split[3]
-            $diskStorageContext = Get-StorageObject -resourceGroupName $resourceGroupName -srcURI $dataDiskUri
-            $backupDiskURI = $dataDiskUri.Replace($vhdContainer, $backupContainer)
-            copy-azureBlob -srcUri $backupDiskURI -srcContext $diskStorageContext -destContext $diskStorageContext -containerName $vhdContainer
-            # check copy status
-            do
-            {
-$drtn = $null
-$drtn = Get-AzureStorageBlob -Context $diskStorageContext -container $diskContainerName -Blob $diskBlobName | Get-AzureStorageBlobCopyState -ErrorAction Stop
-              $drtn| select Source, Status, BytesCopied, TotalBytes|fl
-              if($rtn.status  -ne 'Success')
-              {
-               write-verbose "Waiting for blob copy $diskBlobName to complete" -verbose
-               Sleep 10
-              }
+
+    # Export VM configurations to JSON
+    Write-Output "Exporting VM configurations..."
+    $vms | ConvertTo-Json -Depth 10 | Out-File $ResourceGroupVMjsonPath
+
+    # Process each VM
+    foreach ($vm in $vms) {
+        Write-Output "`nProcessing VM: $($vm.Name)"
+
+        if ($PSCmdlet.ShouldProcess($vm.Name, "Restore VM from backup")) {
+
+            # Check if VM uses managed disks
+            if ($vm.StorageProfile.OsDisk.ManagedDisk) {
+                Write-Warning "VM '$($vm.Name)' uses managed disks. This script only works with unmanaged disks. Use snapshots for managed disk backups."
+                continue
             }
-            while($drtn.status  -ne 'Success')
-            # exit script if user breaks out of above loop
-            if($rtn.status  -ne 'Success'){EXIT}
-            Add-AzureRmVMDataDisk -VM $VirtualMachine -Name $dataDiskName -DiskSizeInGB $DiskSizeGB -Lun $dataDiskLUN -VhdUri $dataDiskUri -Caching $diskCaching -CreateOption $CreateOption | out-null
+
+            # Get storage account from OS disk URI
+            $osDiskUri = $vm.StorageProfile.OsDisk.Vhd.Uri
+            if ($osDiskUri -match 'https://([^.]+)\.blob\.core') {
+                $storageAccountName = $Matches[1]
+            }
+            else {
+                Write-Error "Could not determine storage account from OS disk URI: $osDiskUri"
+                continue
+            }
+
+            Write-Verbose "Storage Account: $storageAccountName"
+
+            # Get storage account context
+            $storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $storageAccountName -ErrorAction SilentlyContinue
+            if (-not $storageAccount) {
+                # Try to find storage account in other resource groups
+                $storageAccount = Get-AzStorageAccount | Where-Object { $_.StorageAccountName -eq $storageAccountName } | Select-Object -First 1
+            }
+
+            if (-not $storageAccount) {
+                Write-Error "Storage account '$storageAccountName' not found"
+                continue
+            }
+
+            $storageContext = $storageAccount.Context
+
+            # Delete VM to release VHD lease
+            Write-Output "  Deleting VM to release VHD lease..."
+            Remove-AzVM -ResourceGroupName $ResourceGroupName -Name $vm.Name -Force
+
+            # Copy OS disk from backup
+            $osDiskName = Split-Path $osDiskUri -Leaf
+            Write-Output "  Restoring OS disk: $osDiskName"
+
+            $sourceBlob = Get-AzStorageBlob -Container $BackupContainer -Blob $osDiskName -Context $storageContext -ErrorAction SilentlyContinue
+            if ($sourceBlob) {
+                $copyOperation = Start-AzStorageBlobCopy -SrcContainer $BackupContainer -SrcBlob $osDiskName `
+                    -DestContainer $VhdContainer -DestBlob $osDiskName -Context $storageContext -Force
+
+                # Wait for copy to complete
+                while ($copyOperation.Status -eq 'Pending') {
+                    Start-Sleep -Seconds 5
+                    $copyOperation = Get-AzStorageBlobCopyState -Container $VhdContainer -Blob $osDiskName -Context $storageContext
+                }
+
+                if ($copyOperation.Status -eq 'Success') {
+                    Write-Output "  OS disk restored successfully"
+                }
+                else {
+                    throw "OS disk copy failed with status: $($copyOperation.Status)"
+                }
+            }
+            else {
+                Write-Warning "  Backup OS disk not found: $osDiskName in container $BackupContainer"
+            }
+
+            # Copy data disks from backup
+            foreach ($dataDisk in $vm.StorageProfile.DataDisks) {
+                $dataDiskUri = $dataDisk.Vhd.Uri
+                $dataDiskName = Split-Path $dataDiskUri -Leaf
+                Write-Output "  Restoring data disk: $dataDiskName"
+
+                $sourceBlob = Get-AzStorageBlob -Container $BackupContainer -Blob $dataDiskName -Context $storageContext -ErrorAction SilentlyContinue
+                if ($sourceBlob) {
+                    $copyOperation = Start-AzStorageBlobCopy -SrcContainer $BackupContainer -SrcBlob $dataDiskName `
+                        -DestContainer $VhdContainer -DestBlob $dataDiskName -Context $storageContext -Force
+
+                    # Wait for copy to complete
+                    while ($copyOperation.Status -eq 'Pending') {
+                        Start-Sleep -Seconds 5
+                        $copyOperation = Get-AzStorageBlobCopyState -Container $VhdContainer -Blob $dataDiskName -Context $storageContext
+                    }
+
+                    if ($copyOperation.Status -eq 'Success') {
+                        Write-Output "  Data disk restored successfully"
+                    }
+                    else {
+                        throw "Data disk copy failed with status: $($copyOperation.Status)"
+                    }
+                }
+                else {
+                    Write-Warning "  Backup data disk not found: $dataDiskName in container $BackupContainer"
+                }
+            }
+
+            Write-Output "  VM disks restored. VM recreation would need to be implemented based on saved configuration."
+            Write-Output "  Configuration saved at: $ResourceGroupVMjsonPath"
         }
     }
-    # create the VM from the config
-    try
-    {
-        write-verbose "Recreating Virtual Machine $VMName in resource group $resourceGroupName at location $location" -verbose
-       # $VirtualMachine
-        New-AzureRmVM -ResourceGroupName $ResourceGroupName -Location $location -VM $VirtualMachine -ea Stop -wa SilentlyContinue | out-null
-        write-output "Successfully recreated Virtual Machine $VMName"
-    }
-    catch
-    {
-         $_
-         write-warning "Failed to create Virtual Machine $VMName"
-    }
+
+    Write-Output "`nRestore process completed"
+    Write-Output "Note: VMs need to be recreated from saved configuration at: $ResourceGroupVMjsonPath"
+}
+catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
 }
 
-
+# ------------------------------------------------------------------------
+#               Copyright (C) 2016 Microsoft Corporation
+# You have a royalty-free right to use, modify, reproduce and distribute
+# this sample script (and/or any modified version) in any way
+# you find useful, provided that you agree that Microsoft has no warranty,
+# obligations or liability for any sample application or script files.
+# ------------------------------------------------------------------------

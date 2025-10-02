@@ -5,27 +5,21 @@
 .DESCRIPTION
     github download operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
-    github downloadcom)#>
-# GitHub Repository Downloader
-# Downloads/updates all Wesley's repositories from GitHub
-# Usage: Run this script to get the latest versions of all repositories
+    github downloadcom)
 
-Write-Host "=== GitHub Repository Downloader ==="
-Write-Host "Downloading/updating all repositories from github.com/wesellis"
+Write-Output "=== GitHub Repository Downloader ==="
+Write-Output "Downloading/updating all repositories from github.com/wesellis"
 
-$githubUsername = "wesellis"
-$baseDir = "A:\GITHUB"
-Set-Location -ErrorAction Stop $baseDir
+$GithubUsername = "wesellis"
+$BaseDir = "A:\GITHUB"
+Set-Location -ErrorAction Stop $BaseDir
 
-# Add Git to PATH
 $env:PATH += ";C:\Program Files\Git\bin"
 
-# All repositories
 $repositories = @(
     "epic-games-tool",
-    "epic-manifest-updater", 
+    "epic-manifest-updater",
     "wesellis",
     "CBR-to-CBZ-Converter",
     "Azure-DevOps-Pipeline-Templates",
@@ -48,46 +42,45 @@ $downloaded = 0
 $failed = 0
 
 foreach ($repo in $repositories) {
-    $repoUrl = "https://github.com/$githubUsername/$repo.git"
-    $localPath = Join-Path $baseDir $repo
-    
-    if (Test-Path $localPath) {
-        Write-Host "Updating $repo..."
+    $RepoUrl = "https://github.com/$GithubUsername/$repo.git"
+    $LocalPath = Join-Path $BaseDir $repo
+
+    if (Test-Path $LocalPath) {
+        Write-Output "Updating $repo..."
         try {
-            Set-Location -ErrorAction Stop $localPath
+            Set-Location -ErrorAction Stop $LocalPath
             git pull --quiet
-            Set-Location -ErrorAction Stop $baseDir
-            Write-Host "Updated successfully"
+            Set-Location -ErrorAction Stop $BaseDir
+            Write-Output "Updated successfully"
             $updated++
         } catch {
-            Write-Host "Update failed"
-            Set-Location -ErrorAction Stop $baseDir
+            Write-Output "Update failed"
+            Set-Location -ErrorAction Stop $BaseDir
             $failed++
         }
     } else {
-        Write-Host "Downloading $repo..."
+        Write-Output "Downloading $repo..."
         try {
-            git clone $repoUrl --quiet
-            if (Test-Path $localPath) {
-                Write-Host "Downloaded successfully"
+            git clone $RepoUrl --quiet
+            if (Test-Path $LocalPath) {
+                Write-Output "Downloaded successfully"
                 $downloaded++
             } else {
-                Write-Host "Download failed"
+                Write-Output "Download failed"
                 $failed++
             }
         } catch {
-            Write-Host "Download failed"
+            Write-Output "Download failed"
             $failed++
         }
     }
 }
 
-Write-Host "`n=== RESULTS ==="
-Write-Host "Updated: $updated repositories"
-Write-Host "Downloaded: $downloaded repositories"
-Write-Host "Failed: $failed repositories"
-Write-Host "Total: $($repositories.Count) repositories"
+Write-Output "`n=== RESULTS ==="
+Write-Output "Updated: $updated repositories"
+Write-Output "Downloaded: $downloaded repositories"
+Write-Output "Failed: $failed repositories"
+Write-Output "Total: $($repositories.Count) repositories"
 
-Write-Host "`nAll repositories are now up to date!"
+Write-Output "`nAll repositories are now up to date!"
 
-#endregion\n

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Invoke Azvmnetworkinterface
@@ -8,7 +8,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -19,12 +18,8 @@ function Invoke-AzVMNetworkInterface {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVMNetworkInterface {
-    #Region func Add-AzVMNetworkInterface
-    #Adding the NIC to the VM
-$addAzVMNetworkInterfaceSplat = @{
+$AddAzVMNetworkInterfaceSplat = @{
         VM = $VirtualMachine
         Id = $NIC.Id
     }
-$VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-    #endRegion func Add-AzVMNetworkInterface
-}
+$VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat`n}

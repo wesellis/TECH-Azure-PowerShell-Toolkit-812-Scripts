@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,12 +27,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -56,18 +53,18 @@ param(
     [string]$ImageOffer = "WindowsServer" ,
     [string]$ImageSku = " 2022-Datacenter"
 )
-Write-Host "Provisioning Virtual Machine: $VmName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "VM Size: $VmSize"
+Write-Output "Provisioning Virtual Machine: $VmName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "VM Size: $VmSize"
 $VmConfig = New-AzVMConfig -VMName $VmName -VMSize $VmSize
-$vmoperatingsystemSplat = @{
+$VmoperatingsystemSplat = @{
     VM = $VmConfig
     ComputerName = $VmName
     ErrorAction = Stop PSCredential($AdminUsername, $AdminPassword))
 }
 Set-AzVMOperatingSystem @vmoperatingsystemSplat
-$vmsourceimageSplat = @{
+$VmsourceimageSplat = @{
     VM = $VmConfig
     PublisherName = $ImagePublisher
     Offer = $ImageOffer
@@ -75,16 +72,13 @@ $vmsourceimageSplat = @{
     Version = " latest"
 }
 Set-AzVMSourceImage @vmsourceimageSplat
-$vmSplat = @{
+$VmSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
     VM = $VmConfig
 }
 New-AzVM @vmSplat
-Write-Host "Virtual Machine $VmName provisioned successfully"
+Write-Output "Virtual Machine $VmName provisioned successfully"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

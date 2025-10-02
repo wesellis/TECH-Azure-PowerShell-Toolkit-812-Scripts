@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Vscodeinstall
@@ -14,24 +14,24 @@
     1.0
     Requires appropriate permissions and modules
 
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
+[CmdletBinding()]
 param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [bool] $InstallInsiders = $false
 )
@@ -39,28 +39,27 @@ Set-StrictMode -Version Latest
 function Install-VSCode {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     if ($InstallInsiders) {
-        $VSCodeURL = 'https://update.code.visualstudio.com/latest/win32-x64/insider'
+    $VSCodeURL = 'https://update.code.visualstudio.com/latest/win32-x64/insider'
     }
     else {
-        $VSCodeURL = 'https://update.code.visualstudio.com/latest/win32-x64/stable'
+    $VSCodeURL = 'https://update.code.visualstudio.com/latest/win32-x64/stable'
     }
-    Write-Host "Downloading from $VSCodeURL"
+    Write-Output "Downloading from $VSCodeURL"
     $VScodeInstaller = Join-Path $env:TEMP 'VSCodeSetup-x64.exe'
     Invoke-WebRequest -Uri $VSCodeURL -UseBasicParsing -OutFile $VScodeInstaller
-    Write-Host "Installing VS Code"
+    Write-Output "Installing VS Code"
     $arguments = @('/VERYSILENT', '/NORESTART', '/MERGETASKS=!runcode')
-$installerExitCode = (Start-Process -FilePath $VScodeInstaller -ArgumentList $arguments -Wait -Verbose -Passthru).ExitCode
-    if ($installerExitCode -ne 0) {
-        throw "Failed with exit code $installerExitCode"
+    $InstallerExitCode = (Start-Process -FilePath $VScodeInstaller -ArgumentList $arguments -Wait -Verbose -Passthru).ExitCode
+    if ($InstallerExitCode -ne 0) {
+        throw "Failed with exit code $InstallerExitCode"
     }
-$shortCutPath = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk'
-    if (Test-Path $shortCutPath) {
-        Copy-Item -Path $shortCutPath -Destination C:\Users\Public\Desktop
+    $ShortCutPath = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code.lnk'
+    if (Test-Path $ShortCutPath) {
+        Copy-Item -Path $ShortCutPath -Destination C:\Users\Public\Desktop
     }
 }
 try {
     Install-VSCode
 }
 catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

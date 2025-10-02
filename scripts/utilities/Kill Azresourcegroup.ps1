@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
 
@@ -11,207 +11,186 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
 This script attempts to remove a resource group by first removing all the things that prevent removing resource groups
 - Locks, backup protection, geo-pairing, etc.
 It is a living script as we keep finding more cases... if you find one please add it.
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
     [string][Parameter(mandatory = $true)] $ResourceGroupName
 )
-Write-Host "Kill: $resourceGroupName"
+Write-Output "Kill: $ResourceGroupName"
 if ((Get-AzContext).Environment.Name -eq "AzureUSGovernment" ) {
-    Write-Host "Running in FF..."
+    Write-Output "Running in FF..."
     $deployment = Get-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName
     $ops = Get-AzResourceGroupDeploymentOperation -ResourceGroupName $ResourceGroupName -DeploymentName $deployment.DeploymentName
     foreach ($op in $ops) {
         if ($op.TargetResource -like " */Microsoft.Scheduler/jobCollections/*" ) {
-            Write-Host "Found operation with target resource: $($op.TargetResource)"
+            Write-Output "Found operation with target resource: $($op.TargetResource)"
             exit
         }
     }
 }
-$subscriptionId = $(Get-AzContext).Subscription.Id
+    $SubscriptionId = $(Get-AzContext).Subscription.Id
 Get-AzResourceLock -ResourceGroupName $ResourceGroupName -Verbose | Remove-AzResourceLock -Force -verbose
-$vaults = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Verbose
+    $vaults = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Verbose
 foreach ($vault in $vaults) {
-    Write-Host "Recovery Services Vaults..."
+    Write-Output "Recovery Services Vaults..."
     & " $PSScriptRoot\Kill-AzRecoveryServicesVault.ps1" -ResourceGroup $ResourceGroupName -VaultName $vault.Name
 }
-$oms = Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.OperationsManagement/solutions"
+    $oms = Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.OperationsManagement/solutions"
 foreach($o in $oms){
-    # need to invoke REST to get the properties body
     $r = Invoke-AzRestMethod -Method "GET" -Path " $($o.id)?api-version=2015-11-01-preview" -Verbose
-    $responseBody = $r.Content | ConvertFrom-JSon -Depth 30
+    $ResponseBody = $r.Content | ConvertFrom-JSon -Depth 30
     $body = @{}
     $properties = @{}
-    $properties['workSpaceResourceId'] = $responseBody.properties.workSpaceResourceId # tranfer the workspaceID
+    $properties['workSpaceResourceId'] = $ResponseBody.properties.workSpaceResourceId # tranfer the workspaceID
     $properties['containedResources'] = @() # empty out arrays
     $properties['referencedResources'] = @()
-    $plan = $responseBody.plan
+    $plan = $ResponseBody.plan
     $body['plan'] = $plan # transfer the plan
     $body['properties'] = $properties
-    $body['location'] = $responseBody.location # transfer the location
-    $jsonBody = $body | ConvertTo-Json -Depth 30
-    # Write-Host $jsonBody
-    # re-PUT the resource with the empty properties body (arrays)
-    Invoke-AzRestMethod -Method "PUT" -Path " $($o.id)?api-version=2015-11-01-preview" -Payload $jsonBody -Verbose
+    $body['location'] = $ResponseBody.location # transfer the location
+    $JsonBody = $body | ConvertTo-Json -Depth 30
+    Invoke-AzRestMethod -Method "PUT" -Path " $($o.id)?api-version=2015-11-01-preview" -Payload $JsonBody -Verbose
 }
 if ($(Get-Module -ListAvailable Az.DataProtection) -eq $null) {
-    Write-Host "Installing Az.DataProtection module..."
-    Install-Module Az.DataProtection -Force -AllowClobber #| Out-Null # this is way too noisy for some reason
+    Write-Output "Installing Az.DataProtection module..."
+    Install-Module Az.DataProtection -Force -AllowClobber
 }
-$vaults = Get-AzDataProtectionBackupVault -ResourceGroupName $ResourceGroupName #-Verbose
+    $vaults = Get-AzDataProtectionBackupVault -ResourceGroupName $ResourceGroupName
 foreach ($vault in $vaults) {
-    Write-Host "Data Protection Vault: $($vault.name)"
-    $backupInstances = Get-AzDataProtectionBackupInstance -ResourceGroupName $ResourceGroupName -VaultName $vault.Name
-    foreach ($bi in $backupInstances) {
-        Write-Host "Removing Backup Instance: $($bi.name)"
+    Write-Output "Data Protection Vault: $($vault.name)"
+    $BackupInstances = Get-AzDataProtectionBackupInstance -ResourceGroupName $ResourceGroupName -VaultName $vault.Name
+    foreach ($bi in $BackupInstances) {
+        Write-Output "Removing Backup Instance: $($bi.name)"
         Remove-AzDataProtectionBackupInstance -ResourceGroupName $ResourceGroupName -VaultName $vault.Name -Name $bi.Name
     }
-    $backupPolicies = Get-AzDataProtectionBackupPolicy -ResourceGroupName $ResourceGroupName -VaultName $vault.Name
-    foreach ($bp in $backupPolicies) {
-        Write-Host "Removing backup policy: $($bp.name)"
+    $BackupPolicies = Get-AzDataProtectionBackupPolicy -ResourceGroupName $ResourceGroupName -VaultName $vault.Name
+    foreach ($bp in $BackupPolicies) {
+        Write-Output "Removing backup policy: $($bp.name)"
         Remove-AzDataProtectionBackupPolicy -ResourceGroupName $ResourceGroupName -VaultName $vault.name -Name $bp.Name
     }
 }
-$eventHubs = Get-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -Verbose  #-Name $VaultName
-foreach ($eventHub in $eventHubs) {
-    $drConfig = Get-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $eventHub.Name -Verbose
-    $drConfig
-    if ($drConfig) {
-        if ($drConfig.Role.ToString() -eq "Primary" ) {
-            #there is a partner namespace, break the pair before removing
-            Write-Host "EventHubs Break Pairing... (primary)"
-            Set-AzEventHubGeoDRConfigurationBreakPair -ResourceGroupName $ResourceGroupName -Namespace $eventHub.Name -Name $drConfig.Name
+    $EventHubs = Get-AzEventHubNamespace -ResourceGroupName $ResourceGroupName -Verbose
+foreach ($EventHub in $EventHubs) {
+    $DrConfig = Get-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $EventHub.Name -Verbose
+    $DrConfig
+    if ($DrConfig) {
+        if ($DrConfig.Role.ToString() -eq "Primary" ) {
+            Write-Output "EventHubs Break Pairing... (primary)"
+            Set-AzEventHubGeoDRConfigurationBreakPair -ResourceGroupName $ResourceGroupName -Namespace $EventHub.Name -Name $DrConfig.Name
         }
     }
 }
-foreach ($eventHub in $eventHubs) {
-    Write-Host "EventHubs remove DR config..."
-    $drConfig = Get-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $eventHub.Name -Verbose
-    #### DEBUG THIS: I think this can only be done on primary?  So need to handle the error - once config is removed resource can be deleted by job
-    Remove-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $eventHub.Name $drConfig.Name -Verbose
+foreach ($EventHub in $EventHubs) {
+    Write-Output "EventHubs remove DR config..."
+    $DrConfig = Get-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $EventHub.Name -Verbose
+    Remove-AzEventHubGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $EventHub.Name $DrConfig.Name -Verbose
 }
-$serviceBusNamespaces = Get-AzServiceBusNamespace -ResourceGroupName $ResourceGroupName -Verbose
-foreach ($s in $serviceBusNamespaces) {
-    Write-Host "ServiceBus Break pairing..."
-    $drConfig = Get-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name
-    $drConfig
-    if ($drConfig) {
-        if ($drConfig.Role.ToString() -eq "Primary" ) {
-            #there is a partner namespace, break the pair before removing
-            Write-Host "ServiceBus Break pairing... (primary)"
-            Set-AzServiceBusGeoDRConfigurationBreakPair -ResourceGroupName $ResourceGroupName -Namespace $s.Name -Name $drConfig.Name
+    $ServiceBusNamespaces = Get-AzServiceBusNamespace -ResourceGroupName $ResourceGroupName -Verbose
+foreach ($s in $ServiceBusNamespaces) {
+    Write-Output "ServiceBus Break pairing..."
+    $DrConfig = Get-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name
+    $DrConfig
+    if ($DrConfig) {
+        if ($DrConfig.Role.ToString() -eq "Primary" ) {
+            Write-Output "ServiceBus Break pairing... (primary)"
+            Set-AzServiceBusGeoDRConfigurationBreakPair -ResourceGroupName $ResourceGroupName -Namespace $s.Name -Name $DrConfig.Name
         }
     }
 }
-foreach ($s in $serviceBusNamespaces) {
-    $drConfig = Get-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name
-    if ($drConfig) {
-        Write-Host "Service Bus remove DR config..."
-        Remove-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name -Name $drConfig.Name -Verbose
+foreach ($s in $ServiceBusNamespaces) {
+    $DrConfig = Get-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name
+    if ($DrConfig) {
+        Write-Output "Service Bus remove DR config..."
+        Remove-AzServiceBusGeoDRConfiguration -ResourceGroupName $ResourceGroupName -Namespace $s.Name -Name $DrConfig.Name -Verbose
     }
-    # ??? Remove-AzureRmServiceBusNamespace -ResourceGroupName $ResourceGroupName -Name $s.Name -Verbose
 }
-foreach ($s in $serviceBusNamespaces) {
-    # set ErrorAction on this since it throws if there is no config (unlike the other cmdlets)
-    $migrationConfig = Get-AzServiceBusMigration -ResourceGroupName $ResourceGroupName -Name $s.Name -ErrorAction SilentlyContinue
-    if ($migrationConfig) {
-        Write-Host "Service Bus remove migration..."
+foreach ($s in $ServiceBusNamespaces) {
+    $MigrationConfig = Get-AzServiceBusMigration -ResourceGroupName $ResourceGroupName -Name $s.Name -ErrorAction SilentlyContinue
+    if ($MigrationConfig) {
+        Write-Output "Service Bus remove migration..."
         Remove-AzServiceBusMigration -ResourceGroupName $ResourceGroupName -Name $s.Name -Verbose
     }
 }
-#>
-$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $rg -Name $vnetName
-$subnets = Get-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet
+    $vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $rg -Name $VnetName
+    $subnets = Get-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet
 foreach($subnet in $subnets){
     Remove-AzureRMResource -ResourceId " $($subnet.id)/providers/Microsoft.ContainerInstance/serviceAssociationLinks/default" -Force
 }
-$webapps = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Verbose
+    $webapps = Get-AzWebApp -ResourceGroupName $ResourceGroupName -Verbose
 foreach ($w in $webapps) {
-    Write-Host "WebApp: $($w.Name)"
+    Write-Output "WebApp: $($w.Name)"
     $slots = Get-AzWebAppSlot -ResourceGroupName $ResourceGroupName -Name $w.Name -Verbose
     foreach ($s in $slots) {
-        $slotName = $($s.Name).Split('/')[1]
-        # assumption is that there can only be one vnetConfig but it returns an array so maybe not
-        $r = Invoke-AzRestMethod -Method "GET" -Path " /subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/slots/$slotName/virtualNetworkConnections?api-version=2020-10-01"
-        Write-Host "Slot: $slotName / $($r.StatusCode)"
+    $SlotName = $($s.Name).Split('/')[1]
+        $r = Invoke-AzRestMethod -Method "GET" -Path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/slots/$SlotName/virtualNetworkConnections?api-version=2020-10-01"
+        Write-Output "Slot: $SlotName / $($r.StatusCode)"
         if ($r.StatusCode -eq '200') {
-            # The URI for remove is not the same as the GET URI
-            $r | Out-String
-            Invoke-AzRestMethod -Method "DELETE" -Path " /subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/slots/$slotName/networkConfig/virtualNetwork?api-version=2020-10-01" -Verbose
+    $r | Out-String
+            Invoke-AzRestMethod -Method "DELETE" -Path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/slots/$SlotName/networkConfig/virtualNetwork?api-version=2020-10-01" -Verbose
         }
     }
-    # now remove the config on the webapp itself
-    $r = Invoke-AzRestMethod -Method "GET" -Path " /subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/virtualNetworkConnections?api-version=2020-10-01"
-    Write-Host "Prod Slot: $($r.StatusCode)"
+    $r = Invoke-AzRestMethod -Method "GET" -Path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/virtualNetworkConnections?api-version=2020-10-01"
+    Write-Output "Prod Slot: $($r.StatusCode)"
     if ($r.StatusCode -eq '200') {
-        # The URI for remove is not the same as the GET URI
-        $r | Out-String
-        Invoke-AzRestMethod -Method "DELETE" -Path " /subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/networkConfig/virtualNetwork?api-version=2020-10-01" -Verbose
+    $r | Out-String
+        Invoke-AzRestMethod -Method "DELETE" -Path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Web/sites/$($w.name)/networkConfig/virtualNetwork?api-version=2020-10-01" -Verbose
     }
 }
-$redisCaches = Get-AzRedisCache -ResourceGroupName $ResourceGroupName -Verbose
-foreach ($r in $redisCaches) {
-    Write-Host "Redis..."
+    $RedisCaches = Get-AzRedisCache -ResourceGroupName $ResourceGroupName -Verbose
+foreach ($r in $RedisCaches) {
+    Write-Output "Redis..."
     $link = Get-AzRedisCacheLink -Name $r.Name
     if ($link) {
-        Write-Host "Remove Redis Link..."
-        $link | Remove-AzRedisCacheLink -Verbose
+        Write-Output "Remove Redis Link..."
+    $link | Remove-AzRedisCacheLink -Verbose
     }
 }
-$vnets = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Verbose
+    $vnets = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Verbose
 foreach ($vnet in $vnets) {
-    Write-Host "Vnet Delegation..."
+    Write-Output "Vnet Delegation..."
     foreach ($subnet in $vnet.Subnets) {
-        $delegations = Get-AzDelegation -Subnet $subnet -Verbose
+    $delegations = Get-AzDelegation -Subnet $subnet -Verbose
         foreach ($d in $delegations) {
             Write-Output "Removing VNet Delegation: $($d.name)"
             Remove-AzDelegation -Name $d.Name -Subnet $subnet -Verbose
         }
     }
 }
-$vHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Verbose
-foreach ($h in $vHubs) {
-    # see if there is are any ipConfigurations on the hub
-    Write-Host "Checking for ipConfigurations in vhub: $($h.name)"
-    $r = Invoke-AzRestMethod -Method "GET" -path " /subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Network/virtualHubs/$($h.name)/ipConfigurations?api-version=2020-11-01"
+    $VHubs = Get-AzVirtualHub -ResourceGroupName $ResourceGroupName -Verbose
+foreach ($h in $VHubs) {
+    Write-Output "Checking for ipConfigurations in vhub: $($h.name)"
+    $r = Invoke-AzRestMethod -Method "GET" -path "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Network/virtualHubs/$($h.name)/ipConfigurations?api-version=2020-11-01"
     $r | Out-String
-    $ipConfigs = $($r.Content | ConvertFrom-Json -Depth 50).Value
-    $ipConfigs | Out-String
-    foreach ($config in $ipConfigs) {
-        Write-Host "Attempting to remove: $($config.name)"
+    $IpConfigs = $($r.Content | ConvertFrom-Json -Depth 50).Value
+    $IpConfigs | Out-String
+    foreach ($config in $IpConfigs) {
+        Write-Output "Attempting to remove: $($config.name)"
         $r = Invoke-AzRestMethod -Method DELETE -Path " $($config.id)?api-version=2020-11-01"
-        $r | Out-String
+    $r | Out-String
         if ($r.StatusCode -like " 20*" ) {
             do {
                 Start-Sleep 60 -Verbose
                 $r = Invoke-AzRestMethod -Method GET -Path " $($config.id)?api-version=2020-11-01"
-                $r | Out-String
-                # wait until the delete is finished and GET returns 404
+    $r | Out-String
             } until ($r.StatusCode -eq " 404" )
         }
     }
 }
-$privateLinks = Get-AzPrivateLinkService -ResourceGroupName $ResourceGroupName
-foreach ($pl in $privateLinks) {
-    Write-Host "Checking Private Links for endpoint connections..."
-$connections = Get-AzPrivateEndpointConnection -ResourceGroupName $ResourceGroupName -ServiceName $pl.Name
+    $PrivateLinks = Get-AzPrivateLinkService -ResourceGroupName $ResourceGroupName
+foreach ($pl in $PrivateLinks) {
+    Write-Output "Checking Private Links for endpoint connections..."
+    $connections = Get-AzPrivateEndpointConnection -ResourceGroupName $ResourceGroupName -ServiceName $pl.Name
     foreach ($c in $connections) {
-        Write-Host "Removing PrivateLink Endpoint Connection: $($c.name)"
+        Write-Output "Removing PrivateLink Endpoint Connection: $($c.name)"
         Remove-AzPrivateEndpointConnection -ResourceGroupName $ResourceGroupName -ServiceName $pl.Name -Name $c.Name -Force
     }
 }
 Remove-AzResourceGroup -Force -Verbose -Name $ResourceGroupName
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

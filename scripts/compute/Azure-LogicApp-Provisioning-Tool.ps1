@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage Logic Apps
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AppName,
@@ -16,30 +18,26 @@
     [string]$PlanSku = "WS1",
     [hashtable]$Tags = @{}
 )
-Write-Host "Provisioning Logic App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-# Check if App Service Plan is provided, create if needed
+Write-Output "Provisioning Logic App: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
 if ($PlanName) {
-    Write-Host "App Service Plan: $PlanName"
-    # Check if plan exists
+    Write-Output "App Service Plan: $PlanName"
     $Plan = Get-AzAppServicePlan -ResourceGroupName $ResourceGroupName -Name $PlanName -ErrorAction SilentlyContinue
     if (-not $Plan) {
-        Write-Host "Creating App Service Plan for Logic App..."
+        Write-Output "Creating App Service Plan for Logic App..."
         $params = @{
             ResourceGroupName = $ResourceGroupName
             Tier = "WorkflowStandard"
-            WorkerSize = "WS1"  Write-Host "App Service Plan created: $($Plan.Name)" } else { Write-Host "Using existing App Service Plan: $($Plan.Name)" }"
+            WorkerSize = "WS1"  Write-Output "App Service Plan created: $($Plan.Name)" } else { Write-Output "Using existing App Service Plan: $($Plan.Name)" }"
             Location = $Location
             ErrorAction = "Stop"
             Name = $PlanName
         }
         $Plan @params
 }
-# Create the Logic App
-Write-Host "`nCreating Logic App..."
+Write-Output "`nCreating Logic App..."
 if ($PlanName) {
-    # Logic App with dedicated plan (Standard tier)
     $params = @{
         AppServicePlan = $PlanName
         ErrorAction = "Stop"
@@ -49,7 +47,6 @@ if ($PlanName) {
     }
     $LogicApp @params
 } else {
-    # Consumption-based Logic App
     $params = @{
         ErrorAction = "Stop"
         ResourceGroupName = $ResourceGroupName
@@ -58,43 +55,44 @@ if ($PlanName) {
     }
     $LogicApp @params
 }
-# Apply tags if provided
 if ($Tags.Count -gt 0) {
-    Write-Host "`nApplying tags:"
+    Write-Output "`nApplying tags:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Host "  $($Tag.Key): $($Tag.Value)"
+        Write-Output "  $($Tag.Key): $($Tag.Value)"
     }
     Set-AzResource -ResourceId $LogicApp.Id -Tag $Tags -Force
 }
-Write-Host "`nLogic App $AppName provisioned successfully"
-Write-Host "Logic App ID: $($LogicApp.Id)"
-Write-Host "State: $($LogicApp.State)"
-Write-Host "Definition: $($LogicApp.Definition)"
+Write-Output "`nLogic App $AppName provisioned successfully"
+Write-Output "Logic App ID: $($LogicApp.Id)"
+Write-Output "State: $($LogicApp.State)"
+Write-Output "Definition: $($LogicApp.Definition)"
 if ($PlanName) {
-    Write-Host "Plan Type: Standard (Dedicated)"
-    Write-Host "Plan Name: $PlanName"
+    Write-Output "Plan Type: Standard (Dedicated)"
+    Write-Output "Plan Name: $PlanName"
 } else {
-    Write-Host "Plan Type: Consumption"
+    Write-Output "Plan Type: Consumption"
 }
-Write-Host "`nLogic App Designer:"
-Write-Host "Portal URL: https://portal.azure.com/#@/resource$($LogicApp.Id)/designer"
-Write-Host "`nNext Steps:"
-Write-Host "1. Open Logic App Designer in Azure Portal"
-Write-Host "2. Add triggers (HTTP, Schedule, Event Grid, etc.)"
-Write-Host "3. Add actions (Send email, call APIs, data operations)"
-Write-Host "4. Configure connectors for external services"
-Write-Host "5. Test and enable the Logic App workflow"
-Write-Host "`nCommon Triggers:"
-Write-Host "   HTTP Request (webhook)"
-Write-Host "   Recurrence (scheduled)"
-Write-Host "   Event Grid events"
-Write-Host "   Service Bus messages"
-Write-Host "   File system changes"
-Write-Host "`nCommon Actions:"
-Write-Host "   HTTP requests to APIs"
-Write-Host "   Send emails (Office 365, Outlook)"
-Write-Host "   Database operations (SQL, Cosmos DB)"
-Write-Host "   File operations (SharePoint, OneDrive)"
-Write-Host "   Conditional logic and loops"
-Write-Host "`nLogic App provisioning completed at $(Get-Date)"
+Write-Output "`nLogic App Designer:"
+Write-Output "Portal URL: https://portal.azure.com/#@/resource$($LogicApp.Id)/designer"
+Write-Output "`nNext Steps:"
+Write-Output "1. Open Logic App Designer in Azure Portal"
+Write-Output "2. Add triggers (HTTP, Schedule, Event Grid, etc.)"
+Write-Output "3. Add actions (Send email, call APIs, data operations)"
+Write-Output "4. Configure connectors for external services"
+Write-Output "5. Test and enable the Logic App workflow"
+Write-Output "`nCommon Triggers:"
+Write-Output "   HTTP Request (webhook)"
+Write-Output "   Recurrence (scheduled)"
+Write-Output "   Event Grid events"
+Write-Output "   Service Bus messages"
+Write-Output "   File system changes"
+Write-Output "`nCommon Actions:"
+Write-Output "   HTTP requests to APIs"
+Write-Output "   Send emails (Office 365, Outlook)"
+Write-Output "   Database operations (SQL, Cosmos DB)"
+Write-Output "   File operations (SharePoint, OneDrive)"
+Write-Output "   Conditional logic and loops"
+Write-Output "`nLogic App provisioning completed at $(Get-Date)"
+
+
 

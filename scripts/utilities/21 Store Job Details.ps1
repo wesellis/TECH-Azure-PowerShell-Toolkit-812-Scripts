@@ -1,29 +1,52 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules Az.RecoveryServices
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Store Job Details
 
 .DESCRIPTION
     Store Job Details operation
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Author: Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-$properties = $details.properties
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [PSObject]$JobDetails
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-$properties = $details.properties
+
+$properties = $JobDetails.properties
 $properties
-$storageAccountName = $properties["Target Storage Account Name" ]
-$storageAccountName
-$containerName = $properties["Config Blob Container Name" ]
-$containerName
-$templateBlobURI = $properties["Template Blob Uri" ]
-$templateBlobURI
-$Templatename = $templateBlobURI -split (" /" );
-$Templatename = $Templatename[4]
-$Templatename
+
+if ($properties.ContainsKey("Target Storage Account Name")) {
+    $storageAccountName = $properties["Target Storage Account Name"]
+    $storageAccountName
+}
+
+if ($properties.ContainsKey("Config Blob Container Name")) {
+    $containerName = $properties["Config Blob Container Name"]
+    $containerName
+}
+
+if ($properties.ContainsKey("Template Blob Uri")) {
+    $templateBlobURI = $properties["Template Blob Uri"]
+    $templateBlobURI
+    $Templatename = $templateBlobURI -split "/"
+    $Templatename = $Templatename[4]
+    $Templatename
+}
+
+[PSCustomObject]@{
+    StorageAccountName = $storageAccountName
+    ContainerName = $containerName
+    TemplateBlobURI = $templateBlobURI
+    TemplateName = $Templatename
+}

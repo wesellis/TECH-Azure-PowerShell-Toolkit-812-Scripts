@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Test Localsample
@@ -9,13 +9,11 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
 This script runs some validation on an Azure QuickStarts sample locally so that simple errors can be caught before
 a PR is submitted.
 Prerequesites:
 1)
 try {
-    # Main script execution
 Install bicep
     - Make sure it's on the path, or set environment variable BICEP_PATH to point to the executable
 2) Install the Azure TTK (https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/test-toolkit)
@@ -26,140 +24,138 @@ Usage:
      or
    ../test/test-localsample.sh (Mac/Linux)
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
-    [string][Parameter(Mandatory = $true)][AllowEmptyString()] $SampleFolder, # this is the path to the sample
+    [string][Parameter(Mandatory = $true)][AllowEmptyString()] $SampleFolder,
     [string] $StorageAccountName = $ENV:STORAGE_ACCOUNT_NAME ? $ENV:STORAGE_ACCOUNT_NAME : " azurequickstartsservice" ,
     [string] $CloudEnvironment = "AzureCloud" , # AzureCloud/AzureUSGovernment
     [string] $TtkFolder = $ENV:TTK_FOLDER,
     [string] $BicepPath = $ENV:BICEP_PATH ? $ENV:BICEP_PATH : " bicep" ,
-    [switch] $Fix # If true, fixes will be made if possible
+    [switch] $Fix
 )
-$SampleFolder = $SampleFolder -eq "" ? " ." : $SampleFolder
-$PreviousErrorPreference = $ErrorActionPreference
-$Error.Clear()
+    $SampleFolder = $SampleFolder -eq "" ? " ." : $SampleFolder
+    $PreviousErrorPreference = $ErrorActionPreference
+    $Error.Clear()
 Import-Module " $PSScriptRoot/Local.psm1" -force
-$ResolvedSampleFolder = Resolve-Path $SampleFolder
+    $ResolvedSampleFolder = Resolve-Path $SampleFolder
 if (!$ResolvedSampleFolder) {
     throw "Could not resolve folder $SampleFolder"
 }
-$SampleFolder = $ResolvedSampleFolder
-$SampleName = SampleNameFromFolderPath $SampleFolder
+    $SampleFolder = $ResolvedSampleFolder
+    $SampleName = SampleNameFromFolderPath $SampleFolder
 if (!(Test-Path (Join-Path $SampleFolder " metadata.json" ))) {
     $ErrorActionPreference = $PreviousErrorPreference
     Write-Error "Test-LocalSample must be run from within a sample folder. This folder contains no metadata.json file."
     return
 }
-Write-Host "Running local validation on sample $SampleName in folder $SampleFolder"
-Write-Host "Checking bicep support in the sample"
-$checkLanguageHostOutput -MainTemplateFilenameBicep " main.bicep" 6>&1" -SampleFolder $SampleFolder
-Write-Output $checkLanguageHostOutput
-$vars = Find-VarsFromWriteHostOutput $checkLanguageHostOutput
-$bicepSupported = $vars["BICEP_SUPPORTED" ] -eq 'true'
-$bicepVersion = $vars["BICEP_VERSION" ]
-$mainTemplateFilenameJson = $vars["MAINTEMPLATE_FILENAME_JSON" ]
-Assert-NotEmptyOrNull $mainTemplateFilenameJson " mainTemplateFilenameJson"
-Write-Host "Validating deployment file"
-$params = @{
+Write-Output "Running local validation on sample $SampleName in folder $SampleFolder"
+Write-Output "Checking bicep support in the sample"
+    $CheckLanguageHostOutput -MainTemplateFilenameBicep " main.bicep" 6>&1" -SampleFolder $SampleFolder
+Write-Output $CheckLanguageHostOutput
+    $vars = Find-VarsFromWriteHostOutput $CheckLanguageHostOutput
+    $BicepSupported = $vars["BICEP_SUPPORTED" ] -eq 'true'
+    $BicepVersion = $vars["BICEP_VERSION" ]
+    $MainTemplateFilenameJson = $vars["MAINTEMPLATE_FILENAME_JSON" ]
+Assert-NotEmptyOrNull $MainTemplateFilenameJson " mainTemplateFilenameJson"
+Write-Output "Validating deployment file"
+    $params = @{
     SampleFolder = $SampleFolder
-    MainTemplateFilenameJson = $mainTemplateFilenameJson
+    MainTemplateFilenameJson = $MainTemplateFilenameJson
     BicepVersion = " (current)"
     BicepPath = $BicepPath
     BuildReason = "PullRequest"
     MainTemplateFilenameBicep = " main.bicep"
 }
-$buildHostOutput @params
-Write-Output $buildHostOutput
-$vars = Find-VarsFromWriteHostOutput $buildHostOutput
-$mainTemplateDeploymentFilename = $vars["MAINTEMPLATE_DEPLOYMENT_FILENAME" ]
-Assert-NotEmptyOrNull $mainTemplateDeploymentFilename " mainTemplateDeploymentFilename"
-$CompiledJsonFilename = $vars["COMPILED_JSON_FILENAME" ] # $null if not bicep sample
-$labelBicepWarnings = $vars["LABEL_BICEP_WARNINGS" ] -eq "TRUE"
-Write-Host "Validating metadata.json"
-$metadataHostOutput =
-$params = @{
+    $BuildHostOutput @params
+Write-Output $BuildHostOutput
+    $vars = Find-VarsFromWriteHostOutput $BuildHostOutput
+    $MainTemplateDeploymentFilename = $vars["MAINTEMPLATE_DEPLOYMENT_FILENAME" ]
+Assert-NotEmptyOrNull $MainTemplateDeploymentFilename " mainTemplateDeploymentFilename"
+    $CompiledJsonFilename = $vars["COMPILED_JSON_FILENAME" ] # $null if not bicep sample
+    $LabelBicepWarnings = $vars["LABEL_BICEP_WARNINGS" ] -eq "TRUE"
+Write-Output "Validating metadata.json"
+    $MetadataHostOutput =
+    $params = @{
     BuildReason = "PullRequest" 6>&1"
     SampleFolder = $SampleFolder
     CloudEnvironment = $CloudEnvironment
 }
 & @params
-Write-Output $metadataHostOutput
-$vars = Find-VarsFromWriteHostOutput $metadataHostOutput
-$supportedEnvironmentsJson = $vars["SUPPORTED_ENVIRONMENTS" ]
-Assert-NotEmptyOrNull $supportedEnvironmentsJson " supportedEnvironmentsJson"
-Write-Host "Validating README.md"
-$validateReadMeHostOutput =
-$params = @{
+Write-Output $MetadataHostOutput
+    $vars = Find-VarsFromWriteHostOutput $MetadataHostOutput
+    $SupportedEnvironmentsJson = $vars["SUPPORTED_ENVIRONMENTS" ]
+Assert-NotEmptyOrNull $SupportedEnvironmentsJson " supportedEnvironmentsJson"
+Write-Output "Validating README.md"
+    $ValidateReadMeHostOutput =
+    $params = @{
     SampleName = $SampleName
-    supportedEnvironmentsJson = $supportedEnvironmentsJson
+    supportedEnvironmentsJson = $SupportedEnvironmentsJson
     StorageAccountName = $StorageAccountName
     SampleFolder = $SampleFolder
     ReadMeFileName = "README.md"
 }
 & @params
-Write-Output $validateReadMeHostOutput
-$vars = Find-VarsFromWriteHostOutput $validateReadMeHostOutput
-$resultReadMe = $vars["RESULT_README" ] # will be null if fails
-$fixedReadme = $vars["FIXED_README" ] -eq "TRUE"
+Write-Output $ValidateReadMeHostOutput
+    $vars = Find-VarsFromWriteHostOutput $ValidateReadMeHostOutput
+    $ResultReadMe = $vars["RESULT_README" ] # will be null if fails
+    $FixedReadme = $vars["FIXED_README" ] -eq "TRUE"
 if (!$TtkFolder) {
-    # Check if the TTK is in a local repo as a sibling to this repo
     $TtkFolder = " $PSScriptRoot/../../../arm-ttk"
     if (test-path $TtkFolder) {
-        $TtkFolder = Resolve-Path $TtkFolder
+    $TtkFolder = Resolve-Path $TtkFolder
     }
     else {
-        $ErrorActionPreference = $PreviousErrorPreference
+    $ErrorActionPreference = $PreviousErrorPreference
         Write-Error "Could not find the ARM TTK. Please install from https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/test-toolkit and set environment variable TTK_FOLDER to the installation folder location."
         Return
     }
 }
-Write-Host "Validating JSON best practices (using ARM TTK)"
-$validateBPOutput =
-$params = @{
+Write-Output "Validating JSON best practices (using ARM TTK)"
+    $ValidateBPOutput =
+    $params = @{
     ttkFolder = $TtkFolder 6>&1
     SampleFolder = $SampleFolder
-    MainTemplateDeploymentFilename = $mainTemplateDeploymentFilename
+    MainTemplateDeploymentFilename = $MainTemplateDeploymentFilename
 }
 & @params
-Write-Output $validateBPOutput
-$vars = Find-VarsFromWriteHostOutput $validateBPOutput
-Write-Host "Checking for miscellaneous labels"
-$miscLabelsHostOutput =
+Write-Output $ValidateBPOutput
+    $vars = Find-VarsFromWriteHostOutput $ValidateBPOutput
+Write-Output "Checking for miscellaneous labels"
+    $MiscLabelsHostOutput =
 & -SampleName $SampleName 6>&1
-Write-Output $miscLabelsHostOutput
-$vars = Find-VarsFromWriteHostOutput $miscLabelsHostOutput
-$isRootSample = $vars["ISROOTSAMPLE" ] -eq " true"
-$sampleHasUpperCase = $vars["SampleHasUpperCase" ] -eq " true"
-$isPortalSample = $vars["IsPortalSample" ] -eq " true"
+Write-Output $MiscLabelsHostOutput
+    $vars = Find-VarsFromWriteHostOutput $MiscLabelsHostOutput
+    $IsRootSample = $vars["ISROOTSAMPLE" ] -eq " true"
+    $SampleHasUpperCase = $vars["SampleHasUpperCase" ] -eq " true"
+    $IsPortalSample = $vars["IsPortalSample" ] -eq " true"
 if ($null -ne $CompiledJsonFilename -and (Test-Path $CompiledJsonFilename)) {
     Remove-Item -ErrorAction Stop $CompiledJsonFilenam -Forcee -Force
 }
-Write-Host "Validation complete."
-$fixesMade = $fixedReadme
-if ($fixedReadme) {
+Write-Output "Validation complete."
+    $FixesMade = $FixedReadme
+if ($FixedReadme) {
     Write-Warning "A fix has been made in the README. See details above."
 }
 if ($error) {
     Write-Error " *** ERRORS HAVE BEEN FOUND. SEE DETAILS ABOVE ***"
 }
 else {
-    if (!$fixesMade) {
-        Write-Host "No errors found."
+    if (!$FixesMade) {
+        Write-Output "No errors found."
     }
 }
-if ($labelBicepWarnings) {
+if ($LabelBicepWarnings) {
     Write-Warning "LABEL: bicep warnings"
 }
-if ($isRootSample) {
+if ($IsRootSample) {
     Write-Warning "LABEL: ROOT"
 }
-if ($sampleHasUpperCase) {
+if ($SampleHasUpperCase) {
     Write-Warning "LABEL: UPPERCASE"
 }
-if ($isPortalSample) {
+if ($IsPortalSample) {
     Write-Warning "LABEL: PORTAL SAMPLE"
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

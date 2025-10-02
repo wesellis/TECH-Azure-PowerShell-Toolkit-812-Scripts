@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Resources
 
@@ -15,11 +15,9 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Get-ARMVM -ErrorAction Stop {
-    [CmdletBinding()]
     param(
         [Parameter(ValueFromPipeline)]`n    [String]$RGNAME,
         [String]$VMNAME
@@ -28,16 +26,16 @@ function Get-ARMVM -ErrorAction Stop {
     }
     process {
         try {
-            $RGs = Get-AzResourceGroup -ErrorAction Stop
+$RGs = Get-AzResourceGroup -ErrorAction Stop
             foreach ($RG in $RGs) {
                 if ($RG.ResourceGroupName -eq $RGNAME) {
-                    $VMs = Get-AzVM -ResourceGroupName $RG.ResourceGroupName
+$VMs = Get-AzVM -ResourceGroupName $RG.ResourceGroupName
                     foreach ($VM in $VMs) {
                         if ($VM.name -eq $VMNAME ) {
-                            $VMDetail = Get-AzVM -ResourceGroupName $RG.ResourceGroupName -Name $VM.Name -Status
-$RGN = $VMDetail.ResourceGroupName
+$VMDetail = Get-AzVM -ResourceGroupName $RG.ResourceGroupName -Name $VM.Name -Status
+    [string]$RGN = $VMDetail.ResourceGroupName
                             foreach ($VMStatus in $VMDetail.Statuses) {
-$VMStatusDetail = $VMStatus.DisplayStatus
+    [string]$VMStatusDetail = $VMStatus.DisplayStatus
                             }
                             Write-Output "Resource Group: $RGN" , ("VM Name: " + $VM.Name), "Status: $VMStatusDetail" `n
                         }
@@ -55,5 +53,6 @@ $VMStatusDetail = $VMStatus.DisplayStatus
     }
 }
 Get-ARMVM -RGNAME "CCI_PS_AUTOMATION_RG" -VMName "PSAutomation1"
+
 
 

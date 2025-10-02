@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,17 +10,20 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$rgName = "TrafficManagerWebAppExample"
+$RgName = "TrafficManagerWebAppExample"
 Login-AzureRmAccount
-$scriptDir = Split-Path $MyInvocation.MyCommand.Path
-New-AzureRmResourceGroup -Location " northeurope" -Name $rgName
-New-AzureRmResourceGroupDeployment -Verbose -Force -ResourceGroupName $rgName -TemplateFile " $scriptDir\azuredeploy.json" -TemplateParameterFile " $scriptDir\azuredeploy.parameters.json"
-$x = Get-AzureRmTrafficManagerProfile -ResourceGroupName $rgName
+$ScriptDir = Split-Path $MyInvocation.MyCommand.Path
+New-AzureRmResourceGroup -Location " northeurope" -Name $RgName
+New-AzureRmResourceGroupDeployment -Verbose -Force -ResourceGroupName $RgName -TemplateFile " $ScriptDir\azuredeploy.json" -TemplateParameterFile " $ScriptDir\azuredeploy.parameters.json"
+$x = Get-AzureRmTrafficManagerProfile -ResourceGroupName $RgName
 $x
 $x.Endpoints
+
 
 

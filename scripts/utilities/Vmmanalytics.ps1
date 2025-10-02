@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Vmmanalytics
@@ -9,44 +9,46 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$vmmServers��=��(Get-AutomationVariable -Name 'vmmServers').Split("," )
-$lastRunTimestamp��=��Get-Date -ErrorAction Stop (Get-AutomationVariable -Name 'lastRunTime')
-$currentTimestamp��=��Get-Date -ErrorAction Stop
-$workSpaceId=��Get-AutomationVariable -Name 'workspaceId'
-$sharedKey��=��Get-AutomationVariable -Name 'workspaceKey'
+$VmmServers��=��(Get-AutomationVariable -Name 'vmmServers').Split("," )
+$LastRunTimestamp��=��Get-Date -ErrorAction Stop (Get-AutomationVariable -Name 'lastRunTime')
+$CurrentTimestamp��=��Get-Date -ErrorAction Stop
+$WorkSpaceId=��Get-AutomationVariable -Name 'workspaceId'
+$SharedKey��=��Get-AutomationVariable -Name 'workspaceKey'
 [OutputType([PSObject])]
- ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+ ($CustomerId, $SharedKey, $date, $ContentLength, $method, $ContentType, $resource)
 {
-    $xHeaders = " x-ms-date:" + $date
-    $stringToHash = $method + " `n" + $contentLength + " `n" + $contentType + " `n" + $xHeaders + " `n" + $resource
-    $bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-    $keyBytes = [Convert]::FromBase64String($sharedKey)
+    $XHeaders = " x-ms-date:" + $date
+    $StringToHash = $method + " `n" + $ContentLength + " `n" + $ContentType + " `n" + $XHeaders + " `n" + $resource
+    $BytesToHash = [Text.Encoding]::UTF8.GetBytes($StringToHash)
+    $KeyBytes = [Convert]::FromBase64String($SharedKey)
     $sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
-    $sha256.Key = $keyBytes
-    $calculatedHash = $sha256.ComputeHash($bytesToHash)
-    $encodedHash = [Convert]::ToBase64String($calculatedHash)
-    $authorization = 'SharedKey {0}:{1}' -f $customerId,$encodedHash
+    $sha256.Key = $KeyBytes
+    $CalculatedHash = $sha256.ComputeHash($BytesToHash)
+    $EncodedHash = [Convert]::ToBase64String($CalculatedHash)
+    $authorization = 'SharedKey {0}:{1}' -f $CustomerId,$EncodedHash
     return $authorization
 }
-Function Post-OMSData($customerId, $sharedKey, $body)
+Function Post-OMSData($CustomerId, $SharedKey, $body)
 {
     $method = "POST"
-    $contentType = " application/json"
-    $resource = " /api/logs"
+    $ContentType = " application/json"
+    $resource = "/api/logs"
     $rfc1123date = [DateTime]::UtcNow.ToString(" r" )
-    $contentLength = $body.Length
+    $ContentLength = $body.Length
     $params = @{
         date = $rfc1123date
-        contentLength = $contentLength
-        resource = $resource ;  $uri = "https://" + $customerId + " .ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01
-        sharedKey = $sharedKey
-        customerId = $customerId
-        contentType = $contentType
-        fileName = $fileName
+        contentLength = $ContentLength
+        resource = $resource ;  $uri = "https://" + $CustomerId + " .ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01
+        sharedKey = $SharedKey
+        customerId = $CustomerId
+        contentType = $ContentType
+        fileName = $FileName
         method = $method
     }
     $signature @params
@@ -56,20 +58,20 @@ $headers = @{
         " x-ms-date" = $rfc1123date;
         " time-generated-field" = "StartTime" ;
     }
-    $response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $contentType -Headers $headers -Body $body -UseBasicParsing
+    $response = Invoke-WebRequest -Uri $uri -Method $method -ContentType $ContentType -Headers $headers -Body $body -UseBasicParsing
     return $response.StatusCode
 }
-foreach��($server��in��$vmmServers)
+foreach��($server��in��$VmmServers)
 {
 write-output��('Getting��jobs��data��from��VMM��Server��'+��$server)
-    $vmmJobsDataForOMS = Invoke-Command��-ComputerName��$server��-ScriptBlock��{
+    $VmmJobsDataForOMS = Invoke-Command��-ComputerName��$server��-ScriptBlock��{
         $server_r = $args[0]
-        $lastRunTimestamp_r = $args[1]
-        $currentTimestamp_r = $args[2]
-$jobsData��=��Get-SCJob��-All��-VMMServer $server_r |��where��{$_.Status -ne 'Running' -and $_.EndTime��-gt��$lastRunTimestamp_r��-and��$_.EndTime��-le��$currentTimestamp_r}
-��; ��$vmmJobsDataForOMS��=��@();
-        foreach��($job��in��$jobsData) {
-            $vmmJobsDataForOMS = $vmmJobsDataForOMS + New-Object -ErrorAction Stop��PSObject��-Property��@{
+        $LastRunTimestamp_r = $args[1]
+        $CurrentTimestamp_r = $args[2]
+$JobsData��=��Get-SCJob��-All��-VMMServer $server_r |��where��{$_.Status -ne 'Running' -and $_.EndTime��-gt��$LastRunTimestamp_r��-and��$_.EndTime��-le��$CurrentTimestamp_r}
+��; ��$VmmJobsDataForOMS��=��@();
+        foreach��($job��in��$JobsData) {
+            $VmmJobsDataForOMS = $VmmJobsDataForOMS + New-Object -ErrorAction Stop��PSObject��-Property��@{
                 JobName��=��$job.CmdletName;
                 Name��=��$job.Name;
                 StartTime��=��$job.StartTime.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" );
@@ -91,15 +93,16 @@ $jobsData��=��Get-SCJob��-All��-VMMServer $server_r |��where
                 VMMServer��=��$server_r;
                 }
         }
-           $vmmJobsDataForOMS��=��$vmmJobsDataForOMS��|��ConvertTo-Json;
-           Return $vmmJobsDataForOMS;
-        } -Args��$server,��$lastRunTimestamp,��$currentTimestamp
+           $VmmJobsDataForOMS��=��$VmmJobsDataForOMS��|��ConvertTo-Json;
+           Return $VmmJobsDataForOMS;
+        } -Args��$server,��$LastRunTimestamp,��$CurrentTimestamp
     write-output��('Pushing��job records to OMS for VMM server ' + $server)
-    if($vmmJobsDataForOMS) {
-        Post-OMSData��-customerId��$workSpaceId��-sharedKey��$sharedKey��-body��([System.Text.Encoding]::UTF8.GetBytes($vmmJobsDataForOMS))
+    if($VmmJobsDataForOMS) {
+        Post-OMSData��-customerId��$WorkSpaceId��-sharedKey��$SharedKey��-body��([System.Text.Encoding]::UTF8.GetBytes($VmmJobsDataForOMS))
     }
 }
-write-output��('Setting lastRunTimestamp varaible as UTC ' + $currentTimestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" ));
-Set-AutomationVariable -Name 'lastRunTime' -Value $currentTimestamp
+write-output��('Setting lastRunTimestamp varaible as UTC ' + $CurrentTimestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffffffZ" ));
+Set-AutomationVariable -Name 'lastRunTime' -Value $CurrentTimestamp
+
 
 

@@ -1,110 +1,139 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Automation, Az.Monitor
 
-<#`n.SYNOPSIS
-    Autosnooze Disable
+<#
+.SYNOPSIS
+    Disable AutoSnooze feature
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation runbook to disable AutoSnooze feature for virtual machines
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
- Disable AutoSnooze feature
- Disable AutoSnooze feature
-.\AutoSnooze_Disable.ps1
-Version History
-v1.0   - Initial Release
-$connectionName = "AzureRunAsConnection"
-try
-{
-    # Get the connection "AzureRunAsConnection "
-    $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-    "Logging in to Azure..."
-    $params = @{
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$AutomationAccountName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter()]
+    [string]$ConnectionName = "AzureRunAsConnection",
+
+    [Parameter()]
+    [string[]]$VMResourceGroupNames,
+
+    [Parameter()]
+    [string]$WebhookUri
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    # Connect to Azure using Run As Connection
+    $servicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName -ErrorAction Stop
+    Write-Output "Logging in to Azure using service principal..."
+
+    $connectParams = @{
         ApplicationId = $servicePrincipalConnection.ApplicationId
         TenantId = $servicePrincipalConnection.TenantId
         CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
     }
-    Add-AzureRmAccount @params
+
+    Connect-AzAccount -ServicePrincipal @connectParams -ErrorAction Stop
+    Write-Output "Successfully connected to Azure"
 }
-catch
-{
-    if (!$servicePrincipalConnection)
-    {
-        $ErrorMessage = "Connection $connectionName not found."
-        throw $ErrorMessage
-    } else{
-        Write-Error -Message $_.Exception
-        throw $_.Exception
+catch {
+    if (!$servicePrincipalConnection) {
+        $errorMessage = "Connection '$ConnectionName' not found."
+        Write-Error -Message $errorMessage
+        throw $errorMessage
+    } else {
+        Write-Error -Message "Failed to connect to Azure: $($_.Exception.Message)"
+        throw
     }
-}
-try
-{
-    Write-Output "Performing the AutoSnooze Disable..."
-    Write-Output "Collecting all the schedule names for AutoSnooze..."
-    #---------Read all the input variables---------------
-    $SubId = Get-AutomationVariable -Name 'Internal_AzureSubscriptionId'
-    $ResourceGroupNames = Get-AutomationVariable -Name 'External_ResourceGroupNames'
-    $automationAccountName = Get-AutomationVariable -Name 'Internal_AROautomationAccountName'
-    $aroResourceGroupName = Get-AutomationVariable -Name 'Internal_AROResourceGroupName'
-    $webhookUri = Get-AutomationVariable -Name 'Internal_AutoSnooze_WebhookUri'
-    $scheduleNameforCreateAlert = "Schedule_AutoSnooze_CreateAlert_Parent"
-    Write-Output "Disabling the schedules for AutoSnooze..."
-    #Disable the schedule for AutoSnooze
-    Set-AzureRmAutomationSchedule -automationAccountName $automationAccountName -Name $scheduleNameforCreateAlert -ResourceGroupName $aroResourceGroupName -IsEnabled $false
-    Write-Output "Disabling the alerts on all the VM's configured as per asset variable..."
-    [string[]] $VMRGList = $ResourceGroupNames -split " ,"
-    $AzureVMListTemp = $null
-    $AzureVMList=@()
-    ##Getting VM Details based on RG List or Subscription
-    if($null -ne $VMRGList)
-    {
-        foreach($Resource in $VMRGList)
-        {
-            Write-Output "Validating the resource group name ($($Resource.Trim()))"
-            $checkRGname = Get-AzureRmResourceGroup -ErrorAction Stop  $Resource.Trim() -ev notPresent -ea 0
-            if ($null -eq $checkRGname)
-            {
-                Write-Warning " $($Resource) is not a valid Resource Group Name. Please Verify!"
-				Write-Output " $($Resource) is not a valid Resource Group Name. Please Verify!"
-            }
-            else
-            {
-				$AzureVMListTemp = Get-AzureRmVM -ResourceGroupName $Resource -ErrorAction SilentlyContinue
-				if($null -ne $AzureVMListTemp)
-				{
-					$AzureVMList = $AzureVMList + $AzureVMListTemp
-				}
-            }
-        }
-    }
-    else
-    {
-        Write-Output "Getting all the VM's from the subscription..."
-$AzureVMList=Get-AzureRmVM -ErrorAction SilentlyContinue
-    }
-    Write-Output "Calling child runbook to disable the alert on all the VM's..."
-    foreach($VM in $AzureVMList)
-    {
-        try
-        {
-$params = @{"VMObject" =$VM;"AlertAction" ="Disable" ;"WebhookUri" =$webhookUri}
-            $runbook = Start-AzureRmAutomationRunbook -automationAccountName $automationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $aroResourceGroupName Parameters $params
-        }
-        catch
-        {
-            Write-Output "Error Occurred on Alert disable..."
-            Write-Output $_.Exception
-        }
-    }
-    Write-Output "AutoSnooze disable execution completed..."
-}
-catch
-{
-    Write-Output "Error Occurred on AutoSnooze Disable Wrapper..."
-    Write-Output $_.Exception
 }
 
+try {
+    Write-Output "Performing AutoSnooze disable operation..."
 
+    # Disable AutoSnooze schedule
+    $scheduleNameForCreateAlert = "Schedule_AutoSnooze_CreateAlert_Parent"
+    Write-Output "Disabling schedule: $scheduleNameForCreateAlert"
+
+    try {
+        $schedule = Get-AzAutomationSchedule -AutomationAccountName $AutomationAccountName -ResourceGroupName $ResourceGroupName -Name $scheduleNameForCreateAlert -ErrorAction Stop
+        Set-AzAutomationSchedule -AutomationAccountName $AutomationAccountName -ResourceGroupName $ResourceGroupName -Name $scheduleNameForCreateAlert -IsEnabled $false -ErrorAction Stop
+        Write-Output "Successfully disabled schedule: $scheduleNameForCreateAlert"
+    }
+    catch {
+        Write-Warning "Failed to disable schedule '$scheduleNameForCreateAlert': $($_.Exception.Message)"
+    }
+
+    # Get list of VMs to process
+    $azureVMList = @()
+
+    if ($VMResourceGroupNames -and $VMResourceGroupNames.Count -gt 0) {
+        foreach ($resourceGroupName in $VMResourceGroupNames) {
+            $trimmedRGName = $resourceGroupName.Trim()
+            Write-Output "Processing resource group: $trimmedRGName"
+
+            try {
+                $checkRGName = Get-AzResourceGroup -Name $trimmedRGName -ErrorAction Stop
+                $vms = Get-AzVM -ResourceGroupName $trimmedRGName -ErrorAction SilentlyContinue
+
+                if ($vms) {
+                    $azureVMList += $vms
+                    Write-Output "Found $($vms.Count) VMs in resource group: $trimmedRGName"
+                }
+            }
+            catch {
+                Write-Warning "Resource group '$trimmedRGName' not found or inaccessible: $($_.Exception.Message)"
+            }
+        }
+    }
+    else {
+        Write-Output "Getting all VMs from the subscription..."
+        $azureVMList = Get-AzVM -ErrorAction SilentlyContinue
+    }
+
+    Write-Output "Found $($azureVMList.Count) VMs to process for AutoSnooze disable"
+
+    # Disable alerts for each VM
+    $successCount = 0
+    $failureCount = 0
+
+    foreach ($vm in $azureVMList) {
+        try {
+            Write-Output "Disabling AutoSnooze alert for VM: $($vm.Name)"
+
+            $runbookParams = @{
+                "VMObject" = $vm
+                "AlertAction" = "Disable"
+                "WebhookUri" = $WebhookUri
+            }
+
+            $job = Start-AzAutomationRunbook -AutomationAccountName $AutomationAccountName -Name 'AutoSnooze_CreateAlert_Child' -ResourceGroupName $ResourceGroupName -Parameters $runbookParams -ErrorAction Stop
+
+            Write-Output "Started child runbook for VM: $($vm.Name), Job ID: $($job.JobId)"
+            $successCount++
+        }
+        catch {
+            Write-Warning "Failed to disable alert for VM '$($vm.Name)': $($_.Exception.Message)"
+            $failureCount++
+        }
+    }
+
+    Write-Output "AutoSnooze disable operation completed"
+    Write-Output "Success: $successCount VMs, Failures: $failureCount VMs"
+}
+catch {
+    Write-Error "Error occurred during AutoSnooze disable operation: $($_.Exception.Message)"
+    throw
+}

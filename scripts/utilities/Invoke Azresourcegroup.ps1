@@ -1,33 +1,54 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
-    Invoke Azresourcegroup
+<#
+.SYNOPSIS
+    Invoke Azure Resource Group creation
 
 .DESCRIPTION
-    Azure automation
+    Creates a new Azure Resource Group with specified configuration
 
+.PARAMETER ResourceGroupName
+    Name of the resource group
 
+.PARAMETER LocationName
+    Azure location name
+
+.PARAMETER Tags
+    Hash table of tags to apply
+
+.EXAMPLE
+    Invoke-AzResourceGroup -ResourceGroupName "MyRG" -LocationName "East US" -Tags @{Environment="Dev"}
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
 #>
-    Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
 [CmdletBinding()]
-function Invoke-AzResourceGroup {
-$ErrorActionPreference = "Stop";
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$LocationName,
+
+    [Parameter(Mandatory = $false)]
+    [hashtable]$Tags = @{}
+)
+
+$ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
 function Invoke-AzResourceGroup {
-    #region func-New-AzResourceGroup -ErrorAction Stop
-    #Creating the Resource Group Name
-$newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
-    New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-    #endregion func New-AzResourceGroup -ErrorAction Stop
+    $RG = New-AzResourceGroup -ErrorAction Stop @NewAzResourceGroupSplat
+    return $RG
 }
 
-
+# Execute the function
+Invoke-AzResourceGroup

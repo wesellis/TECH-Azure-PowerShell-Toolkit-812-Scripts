@@ -1,60 +1,89 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Compare Templates
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Verifies that two JSON template files have the same hash (after removing generator metadata)
 
-    1.0
+.PARAMETER TemplateFilePathExpected
+    Path to the expected template file
+
+.PARAMETER TemplateFilePathActual
+    Path to the actual template file
+
+.PARAMETER RemoveGeneratorMetadata
+    Remove generator metadata before comparison
+
+.PARAMETER WriteToHost
+    Write output to host
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-Verifies that two JSON template files have the same hash (after removing generator metadata)
-try {
-    # Main script execution
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    [string][Parameter(mandatory = $true)] $TemplateFilePathExpected,
-    [string][Parameter(mandatory = $true)] $TemplateFilePathActual,
-    [switch] $RemoveGeneratorMetadata,
-    [switch] $WriteToHost
+    [Parameter(Mandatory = $true)]
+    [string]$TemplateFilePathExpected,
+
+    [Parameter(Mandatory = $true)]
+    [string]$TemplateFilePathActual,
+
+    [switch]$RemoveGeneratorMetadata,
+
+    [switch]$WriteToHost
 )
-Import-Module " $PSScriptRoot/Local.psm1" -Force
-if ($WriteToHost) {
-    Write-Host "Comparing $TemplateFilePathExpected and $TemplateFilePathActual"
-}
-$templateContentsExpectedRaw = Get-Content -ErrorAction Stop $TemplateFilePathExpected -Raw
-$templateContentsActualRaw = Get-Content -ErrorAction Stop $TemplateFilePathActual -Raw
-if ($RemoveGeneratorMetadata) {
-    $templateContentsExpectedRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsExpectedRaw
-    $templateContentsActualRaw = Remove-GeneratorMetadata -ErrorAction Stop $templateContentsActualRaw
-}
-$templateContentsExpected = Convert-StringToLines $templateContentsExpectedRaw;
-$templateContentsActual = Convert-StringToLines $templateContentsActualRaw
-$diffs = Compare-Object $templateContentsExpected $templateContentsActual
-if ($diffs) {
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    Import-Module "$PSScriptRoot/Local.psm1" -Force
+
     if ($WriteToHost) {
-        Write-Warning "The templates do not match"
-        Write-Verbose " `n`n************* ACTUAL CONTENTS ****************"
-        Write-Verbose $templateContentsActualRaw
-        Write-Verbose " ***************** END OF ACTUAL CONTENTS ***************"
-        Write-Host " `n`n************* EXPECTED CONTENTS ****************"
-        Write-Host $templateContentsExpectedRaw
-        Write-Host " ***************** END OF EXPECTED CONTENTS ***************"
-        Write-Host " `n`n************* DIFFERENCES (IGNORING METADATA) ****************`n"
-        $diffs | Out-String | Write-Information Write-Host " `n***************** END OF DIFFERENCES ***************"
+        Write-Output "Comparing $TemplateFilePathExpected and $TemplateFilePathActual"
     }
-    return $false
-}
-else {
-    if($WriteToHost) {
-        Write-Host "Files are identical (not counting metadata)"
+
+    $TemplateContentsExpectedRaw = Get-Content -ErrorAction Stop $TemplateFilePathExpected -Raw
+    $TemplateContentsActualRaw = Get-Content -ErrorAction Stop $TemplateFilePathActual -Raw
+
+    if ($RemoveGeneratorMetadata) {
+        $TemplateContentsExpectedRaw = Remove-GeneratorMetadata -ErrorAction Stop $TemplateContentsExpectedRaw
+        $TemplateContentsActualRaw = Remove-GeneratorMetadata -ErrorAction Stop $TemplateContentsActualRaw
     }
-    return $true
+
+    $TemplateContentsExpected = Convert-StringToLines $TemplateContentsExpectedRaw
+    $TemplateContentsActual = Convert-StringToLines $TemplateContentsActualRaw
+
+    $diffs = Compare-Object $TemplateContentsExpected $TemplateContentsActual
+
+    if ($diffs) {
+        if ($WriteToHost) {
+            Write-Warning "The templates do not match"
+            Write-Verbose "`n`n************* ACTUAL CONTENTS ****************"
+            Write-Verbose $TemplateContentsActualRaw
+            Write-Verbose "***************** END OF ACTUAL CONTENTS ***************"
+            Write-Output "`n`n************* EXPECTED CONTENTS ****************"
+            Write-Output $TemplateContentsExpectedRaw
+            Write-Output "***************** END OF EXPECTED CONTENTS ***************"
+            Write-Output "`n`n************* DIFFERENCES (IGNORING METADATA) ****************`n"
+            $diffs | Out-String | Write-Output
+            Write-Output "`n***************** END OF DIFFERENCES ***************"
+        }
+        return $false
+    }
+    else {
+        if ($WriteToHost) {
+            Write-Output "Files are identical (not counting metadata)"
+        }
+        return $true
+    }
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }

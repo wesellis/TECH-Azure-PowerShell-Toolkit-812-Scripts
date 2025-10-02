@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 
 <#`n.SYNOPSIS
@@ -9,20 +9,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -30,13 +26,14 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -52,7 +49,7 @@ param(
     [Parameter()]
     [int]$PlatformUpdateDomainCount = 5
 )
-Write-Host "Creating Availability Set: $AvailabilitySetName"
+Write-Output "Creating Availability Set: $AvailabilitySetName"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     PlatformUpdateDomainCount = $PlatformUpdateDomainCount
@@ -62,14 +59,13 @@ $params = @{
     ErrorAction = "Stop"
     Name = $AvailabilitySetName
 }
-$AvailabilitySet @params
-Write-Host "Availability Set created successfully:"
-Write-Host "Name: $($AvailabilitySet.Name)"
-Write-Host "Location: $($AvailabilitySet.Location)"
-Write-Host "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
-Write-Host "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
-Write-Host "SKU: $($AvailabilitySet.Sku)"
+    [string]$AvailabilitySet @params
+Write-Output "Availability Set created successfully:"
+Write-Output "Name: $($AvailabilitySet.Name)"
+Write-Output "Location: $($AvailabilitySet.Location)"
+Write-Output "Fault Domains: $($AvailabilitySet.PlatformFaultDomainCount)"
+Write-Output "Update Domains: $($AvailabilitySet.PlatformUpdateDomainCount)"
+Write-Output "SKU: $($AvailabilitySet.Sku)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Webandgwfarmadd Postconfig1.1
@@ -7,13 +7,12 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
      [String]$WebGwServer,
      [String]$BrokerServer,
@@ -22,36 +21,32 @@ param(
      [String]$DomainNetbios,
      [String]$username,
      [String]$password,
-     [string]$ServerName = " gateway" ,
-     [int]$numberofwebServers,
-     $validationKey64,
-     $decryptionKey24
+     $ServerName = " gateway" ,
+     [int]$NumberofwebServers,
+    $ValidationKey64,
+    $DecryptionKey24
     )
-$localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-$username = $DomainNetbios + " \" + $Username
-$cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList @($username,(Read-Host -Prompt "Enter secure value" -AsSecureString))
+    $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
+    $username = $DomainNetbios + " \" + $Username
+    $cred = New-Object -ErrorAction Stop System.Management.Automation.PSCredential -ArgumentList @($username,(Read-Host -Prompt "Enter secure value" -AsSecureString))
 configuration RDWebAccessdeployment
 {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory)]
-        [String]$domainName,
+        [String]$DomainName,
         [Parameter(Mandatory)]
-        [PSCredential]$adminCreds,
-        # Connection Broker Node name
-        [String]$connectionBroker,
-        # Web Access Node name
-        [String]$webAccessServer,
-        # Gateway external FQDN
-        [String]$externalFqdn
+        [PSCredential]$AdminCreds,
+        [String]$ConnectionBroker,
+        [String]$WebAccessServer,
+        [String]$ExternalFqdn
       )
     Import-DscResource -ModuleName PSDesiredStateConfiguration -ModuleVersion 1.1
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xRemoteDesktopSessionHost
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-    if (-not $connectionBroker)   { $connectionBroker = $localhost }
-    if (-not $webAccessServer)    { $webAccessServer  = $localhost }
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
-    if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
+    if (-not $ConnectionBroker)   { $ConnectionBroker = $localhost }
+    if (-not $WebAccessServer)    { $WebAccessServer  = $localhost }
+    if (-not $CollectionName)         { $CollectionName = "Desktop Collection" }
+    if (-not $CollectionDescription)  { $CollectionDescription = "A sample RD Session collection up in cloud." }
     Node localhost
     {
         LocalConfigurationManager
@@ -62,52 +57,45 @@ param(
         xRDServer AddWebAccessServer
         {
             Role    = 'RDS-Web-Access'
-            Server  = $webAccessServer
-            GatewayExternalFqdn = $externalFqdn
+            Server  = $WebAccessServer
+            GatewayExternalFqdn = $ExternalFqdn
             ConnectionBroker = $BrokerServer
-            PsDscRunAsCredential = $adminCreds
+            PsDscRunAsCredential = $AdminCreds
         }
     }
-}#End of Configuration RDWebAccessdeployment
-$ConfigData = @{
+}
+    $ConfigData = @{
     AllNodes = @(
         @{
             NodeName = 'localhost'
             PSDscAllowPlainTextPassword = $true
         }
     )
-} # End of Config Data
+}
 RDWebAccessdeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $WebURL -domainName $Domainname -ConfigurationData $ConfigData -Verbose
 Start-DscConfiguration -Wait -Force -Path .\RDWebAccessdeployment -Verbose
 configuration RDGatewaydeployment
 {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter(Mandatory)]
-        [String]$domainName,
+        [String]$DomainName,
         [Parameter(Mandatory)]
-        [PSCredential]$adminCreds,
-        # Connection Broker Node name
-        [String]$connectionBroker,
-        # Web Access Node name
-        [String]$webAccessServer,
-        # Gateway external FQDN
-        [String]$externalFqdn,
-        # RD Session Host count and naming prefix
-        [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = "SessionHost-" ,
-        # Collection Name
-        [String]$collectionName,
-        # Connection Description
-        [String]$collectionDescription
+        [PSCredential]$AdminCreds,
+        [String]$ConnectionBroker,
+        [String]$WebAccessServer,
+        [String]$ExternalFqdn,
+        [Int]$NumberOfRdshInstances = 1,
+        [String]$SessionHostNamingPrefix = "SessionHost-" ,
+        [String]$CollectionName,
+        [String]$CollectionDescription
       )
     Import-DscResource -ModuleName PSDesiredStateConfiguration -ModuleVersion 1.1
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xRemoteDesktopSessionHost
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
-    if (-not $connectionBroker)   { $connectionBroker = $localhost }
-    if (-not $webAccessServer)    { $webAccessServer  = $localhost }
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
-    if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
+    if (-not $ConnectionBroker)   { $ConnectionBroker = $localhost }
+    if (-not $WebAccessServer)    { $WebAccessServer  = $localhost }
+    if (-not $CollectionName)         { $CollectionName = "Desktop Collection" }
+    if (-not $CollectionDescription)  { $CollectionDescription = "A sample RD Session collection up in cloud." }
     Node localhost
     {
         LocalConfigurationManager
@@ -118,76 +106,69 @@ param(
         xRDServer AddGatewayServer
         {
             Role    = 'RDS-Gateway'
-            Server  = $webAccessServer
-            GatewayExternalFqdn = $externalFqdn
+            Server  = $WebAccessServer
+            GatewayExternalFqdn = $ExternalFqdn
             ConnectionBroker = $BrokerServer
-            PsDscRunAsCredential = $adminCreds
+            PsDscRunAsCredential = $AdminCreds
         }
     }
-}#End of Configuration RDGatewaydeployment
-$ConfigData = @{
+}
+    $ConfigData = @{
     AllNodes = @(
         @{
             NodeName = 'localhost'
             PSDscAllowPlainTextPassword = $true
         }
     )
-} # End of Config Data
+}
 RDGatewaydeployment -adminCreds $cred -connectionBroker $BrokerServer -webAccessServer $localhost -externalFqdn $WebURL -domainName $Domainname -ConfigurationData $ConfigData -Verbose
 Start-DscConfiguration -Wait -Force -Path .\RDGatewaydeployment -Verbose
-Write-Host "Username : $($username),   Password: $($password)"
-$webServernameArray = New-Object -ErrorAction Stop System.Collections.ArrayList
-for ($i = 0; $i -le $numberofwebServers; $i++)
+Write-Output "Username : $($username),   Password: $($password)"
+    $WebServernameArray = New-Object -ErrorAction Stop System.Collections.ArrayList
+for ($i = 0; $i -le $NumberofwebServers; $i++)
 {
     if ($i -eq 0)
     {
-        $webServername = "Gateway"
-        #Write-Host "For i = 0, srvername = $($webServername)"
+    $WebServername = "Gateway"
     }
     else{
     $servercount = $i - 1
-    $webServername = " gateway" + $servercount.ToString()
-    #Write-Host "For $($i), servername = $($webServername)"
+    $WebServername = " gateway" + $servercount.ToString()
         }
-    $webServernameArray.Add($webServername) | Out-Null
+    $WebServernameArray.Add($WebServername) | Out-Null
 }
-Write-Host " web server Array value $($webServernameArray)"
+Write-Output " web server Array value $($WebServernameArray)"
 [int]$keylen = 64
-       $buff = new-object -ErrorAction Stop "System.Byte[]" $keylen
-$rnd = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
-       $rnd.GetBytes($buff)
-$result =""
+    $buff = new-object -ErrorAction Stop "System.Byte[]" $keylen
+    $rnd = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
+    $rnd.GetBytes($buff)
+    $result =""
        for($i=0; $i -lt $keylen; $i++)  {
-             $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
+    $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
-       $validationkey64 = $result
-       # Write-Host $validationkey64
-       # end of Validation Key code
-       $keylen = 24
-       $buff1 = new-object -ErrorAction Stop "System.Byte[]" $keylen
-$rnd1 = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
-       $rnd1.GetBytes($buff1)
-$result =""
+    $validationkey64 = $result
+    $keylen = 24
+    $buff1 = new-object -ErrorAction Stop "System.Byte[]" $keylen
+    $rnd1 = new-object -ErrorAction Stop System.Security.Cryptography.RNGCryptoServiceProvider
+    $rnd1.GetBytes($buff1)
+    $result =""
        for($i=0; $i -lt $keylen; $i++)  {
-             $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
+    $result = $result + [System.String]::Format(" {0:X2}" ,$buff[$i])
        }
-       $decryptionKey24 = $result
-       # Write-Host $decryptionKey24
-foreach ($item in $webServernameArray)
+    $DecryptionKey24 = $result
+foreach ($item in $WebServernameArray)
 {
     $WebServer = $item + " ." + $DomainName
-    Write-Host "Starting working on webserver name : $($WebServer)"
+    Write-Output "Starting working on webserver name : $($WebServer)"
     try{
     $session = New-PSSession -ComputerName $WebServer -Credential $cred
     }
     catch{
-    Write-Host $Error
+    Write-Output $Error
     }
-Invoke-Command -session $session -ScriptBlock {[CmdletBinding()]
-param($validationkey64,$decryptionKey24)
+Invoke-Command -session $session -ScriptBlock {param($validationkey64,$DecryptionKey24)
 function ValidateWindowsFeature
-{
-    $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
+{`n    param(`n        $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
     $RdsWindowsFeature = Get-WindowsFeature -ComputerName $localhost -Name RDS-Web-Access
     if ($RdsWindowsFeature.InstallState -eq "Installed" )
     {
@@ -198,39 +179,38 @@ function ValidateWindowsFeature
         Return $false
     }
 }
-$Validationheck = $False
-$Validationheck = ValidateWindowsFeature
-$localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
+    $Validationheck = $False
+    $Validationheck = ValidateWindowsFeature
+    $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
 if($Validationheck -eq $true)
 {
-    Write-Host "Windows feature RDS-Web_access present on $($localhost)"
-    $machineConfig = "C:\Windows\Web\RDWeb\Web.config"
-       if (Test-Path $machineConfig)
+    Write-Output "Windows feature RDS-Web_access present on $($localhost)"
+    $MachineConfig = "C:\Windows\Web\RDWeb\Web.config"
+       if (Test-Path $MachineConfig)
        {
-        Write-Host " editing machine config file : $($machineConfig) on server $($localhost) "
+        Write-Output " editing machine config file : $($MachineConfig) on server $($localhost) "
         try{
-        $xml = [xml](get-content -ErrorAction Stop $machineConfig)
-        $xml.Save($machineConfig + " _" )
-        $root = $xml.get_DocumentElement()
-        $system_web = $root." system.web"
+    $xml = [xml](get-content -ErrorAction Stop $MachineConfig)
+    $xml.Save($MachineConfig + " _" )
+    $root = $xml.get_DocumentElement()
+    $system_web = $root." system.web"
         if ($system_web.machineKey -eq $null)
              {
-             $machineKey = $xml.CreateElement(" machineKey" )
-$a = $system_web.AppendChild($machineKey)
+    $MachineKey = $xml.CreateElement(" machineKey" )
+$a = $system_web.AppendChild($MachineKey)
              }
-        $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" validationKey" ," $validationKey64" )
-        $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" decryptionKey" ," $decryptionKey24" )
-$a = $xml.Save($machineConfig)
+    $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" validationKey" ," $ValidationKey64" )
+    $system_web.SelectSingleNode(" machineKey" ).SetAttribute(" decryptionKey" ," $DecryptionKey24" )
+$a = $xml.Save($MachineConfig)
         }
         Catch{
-        Write-Host $Error
+        Write-Output $Error
         }
-        } # end of If test-path
-} # End of If($ValidationCheck -eq $True)
+        }
+}
 else
 {
-    Write-Host "Windows feature RDS-Web_access is not present on $($localhost)"
+    Write-Output "Windows feature RDS-Web_access is not present on $($localhost)"
 }
-} -ArgumentList $validationKey64,$decryptionKey24 # end of Script Block
-Remove-PSSession -Session $session
-} # end of foreach $item in $webServername
+} -ArgumentList $ValidationKey64,$DecryptionKey24
+Remove-PSSession -Session $session`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -40,7 +40,7 @@ $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
     "Tenant ID"         = " e09d9473-1a06-4717-98c1-528067eab3a4"
     "Billing Unit"      = "Per Hour"
 }
-$newAzBastionSplat = @{
+$NewAzBastionSplat = @{
     ResourceGroupName = "FGC_Prod_Bastion_RG"
     Name              = "FGC_Prod_Bastion"
     PublicIpAddress   = $publicip
@@ -48,5 +48,6 @@ $newAzBastionSplat = @{
     Tag               = $Tags
 }
 $bastion = New-AzBastion -ErrorAction Stop @newAzBastionSplat
+
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.KeyVault
 
@@ -7,51 +7,51 @@
 
 .DESCRIPTION
     Manage Key Vault
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$VaultName
 )
-Write-Host "Monitoring Key Vault: $VaultName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "============================================"
-# Get Key Vault details
+Write-Output "Monitoring Key Vault: $VaultName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "============================================"
 $KeyVault = Get-AzKeyVault -ResourceGroupName $ResourceGroupName -VaultName $VaultName
-Write-Host "Key Vault Information:"
-Write-Host "Vault Name: $($KeyVault.VaultName)"
-Write-Host "Location: $($KeyVault.Location)"
-Write-Host "Vault URI: $($KeyVault.VaultUri)"
-Write-Host "SKU: $($KeyVault.Sku)"
-Write-Host "Tenant ID: $($KeyVault.TenantId)"
-# Security settings
-Write-Host "`nSecurity Configuration:"
-Write-Host "Enabled for Deployment: $($KeyVault.EnabledForDeployment)"
-Write-Host "Enabled for Disk Encryption: $($KeyVault.EnabledForDiskEncryption)"
-Write-Host "Enabled for Template Deployment: $($KeyVault.EnabledForTemplateDeployment)"
-Write-Host "Soft Delete Enabled: $($KeyVault.EnableSoftDelete)"
-Write-Host "Purge Protection Enabled: $($KeyVault.EnablePurgeProtection)"
-# Access policies
-Write-Host "`nAccess Policies: $($KeyVault.AccessPolicies.Count)"
+Write-Output "Key Vault Information:"
+Write-Output "Vault Name: $($KeyVault.VaultName)"
+Write-Output "Location: $($KeyVault.Location)"
+Write-Output "Vault URI: $($KeyVault.VaultUri)"
+Write-Output "SKU: $($KeyVault.Sku)"
+Write-Output "Tenant ID: $($KeyVault.TenantId)"
+Write-Output "`nSecurity Configuration:"
+Write-Output "Enabled for Deployment: $($KeyVault.EnabledForDeployment)"
+Write-Output "Enabled for Disk Encryption: $($KeyVault.EnabledForDiskEncryption)"
+Write-Output "Enabled for Template Deployment: $($KeyVault.EnabledForTemplateDeployment)"
+Write-Output "Soft Delete Enabled: $($KeyVault.EnableSoftDelete)"
+Write-Output "Purge Protection Enabled: $($KeyVault.EnablePurgeProtection)"
+Write-Output "`nAccess Policies: $($KeyVault.AccessPolicies.Count)"
 foreach ($Policy in $KeyVault.AccessPolicies) {
-    Write-Host "  - Object ID: $($Policy.ObjectId)"
-    Write-Host "    Application ID: $($Policy.ApplicationId)"
-    Write-Host "    Permissions to Keys: $($Policy.PermissionsToKeys -join ', ')"
-    Write-Host "    Permissions to Secrets: $($Policy.PermissionsToSecrets -join ', ')"
-    Write-Host "    Permissions to Certificates: $($Policy.PermissionsToCertificates -join ', ')"
-    Write-Host "    ---"
+    Write-Output "  - Object ID: $($Policy.ObjectId)"
+    Write-Output "    Application ID: $($Policy.ApplicationId)"
+    Write-Output "    Permissions to Keys: $($Policy.PermissionsToKeys -join ', ')"
+    Write-Output "    Permissions to Secrets: $($Policy.PermissionsToSecrets -join ', ')"
+    Write-Output "    Permissions to Certificates: $($Policy.PermissionsToCertificates -join ', ')"
+    Write-Output "    ---"
 }
-# Get vault contents summary
 try {
     $Secrets = Get-AzKeyVaultSecret -VaultName $VaultName
     $Keys = Get-AzKeyVaultKey -VaultName $VaultName
     $Certificates = Get-AzKeyVaultCertificate -VaultName $VaultName
-    Write-Host "`nVault Contents:"
-    Write-Host "Secrets: $($Secrets.Count)"
-    Write-Host "Keys: $($Keys.Count)"
-    Write-Host "Certificates: $($Certificates.Count)"
+    Write-Output "`nVault Contents:"
+    Write-Output "Secrets: $($Secrets.Count)"
+    Write-Output "Keys: $($Keys.Count)"
+    Write-Output "Certificates: $($Certificates.Count)"
 } catch {
-    Write-Host "`nVault Contents: Unable to access (check permissions)"
+    Write-Output "`nVault Contents: Unable to access (check permissions)"
 }
-Write-Host "`nKey Vault monitoring completed at $(Get-Date)"
+Write-Output "`nKey Vault monitoring completed at $(Get-Date)"
+
+
 

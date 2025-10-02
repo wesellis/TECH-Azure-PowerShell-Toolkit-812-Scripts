@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,15 +6,15 @@
 
 .DESCRIPTION
     Audit, enforce, or fix Azure resource tag compliance across subscriptions and resource groups
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Resource Tagging Enforcer
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter()]
-    [string]$SubscriptionId,
+    $SubscriptionId,
     [Parameter()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [hashtable]$RequiredTags = @{
         'Environment' = @('Development', 'Testing', 'Staging', 'Production')
@@ -29,13 +29,13 @@
     },
     [Parameter()]
     [ValidateSet("Audit", "Enforce", "Fix")]
-    [string]$Action = "Audit",
+    $Action = "Audit",
     [Parameter()]
     [switch]$IncludeResourceGroups,
     [Parameter()]
-    [string]$OutputPath = ".\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
+    $OutputPath = ".\tag-compliance-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
-$nonCompliantResources = @()
+$NonCompliantResources = @()
 try {
         if (-not (Get-AzContext)) { Connect-AzAccount }
     if ($SubscriptionId) {
@@ -47,35 +47,34 @@ try {
         Get-AzResource
     }
     if ($IncludeResourceGroups) {
-        $resourceGroups = if ($ResourceGroupName) {
+        $ResourceGroups = if ($ResourceGroupName) {
             Get-AzResourceGroup -Name $ResourceGroupName
         } else {
             Get-AzResourceGroup
         }
-        $resources += $resourceGroups
+        $resources += $ResourceGroups
     }
-    
+
         foreach ($resource in $resources) {
-        $missingTags = @()
-        $invalidTags = @()
-        foreach ($requiredTag in $RequiredTags.Keys) {
-            if (-not $resource.Tags -or -not $resource.Tags.ContainsKey($requiredTag)) {
-                $missingTags += $requiredTag
-            } elseif ($RequiredTags[$requiredTag].Count -gt 0) {
-                # Check if value is in allowed list
-                if ($resource.Tags[$requiredTag] -notin $RequiredTags[$requiredTag]) {
-                    $invalidTags += "$requiredTag=$($resource.Tags[$requiredTag])"
+        $MissingTags = @()
+        $InvalidTags = @()
+        foreach ($RequiredTag in $RequiredTags.Keys) {
+            if (-not $resource.Tags -or -not $resource.Tags.ContainsKey($RequiredTag)) {
+                $MissingTags += $RequiredTag
+            } elseif ($RequiredTags[$RequiredTag].Count -gt 0) {
+                if ($resource.Tags[$RequiredTag] -notin $RequiredTags[$RequiredTag]) {
+                    $InvalidTags += "$RequiredTag=$($resource.Tags[$RequiredTag])"
                 }
             }
         }
-        if ($missingTags.Count -gt 0 -or $invalidTags.Count -gt 0) {
-            $nonCompliantResources += [PSCustomObject]@{
+        if ($MissingTags.Count -gt 0 -or $InvalidTags.Count -gt 0) {
+            $NonCompliantResources += [PSCustomObject]@{
                 ResourceName = $resource.Name
                 ResourceType = $resource.ResourceType
                 ResourceGroup = $resource.ResourceGroupName
                 Location = $resource.Location
-                MissingTags = ($missingTags -join ', ')
-                InvalidTags = ($invalidTags -join ', ')
+                MissingTags = ($MissingTags -join ', ')
+                InvalidTags = ($InvalidTags -join ', ')
                 CurrentTags = if ($resource.Tags) { ($resource.Tags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '; ' } else { "None" }
                 ComplianceStatus = "Non-Compliant"
             }
@@ -83,54 +82,50 @@ try {
     }
         switch ($Action) {
         "Audit" {
-            Write-Host "Audit completed. Found $($nonCompliantResources.Count) non-compliant resources." -ForegroundColor Yellow
+            Write-Output "Audit completed. Found $($NonCompliantResources.Count) non-compliant resources." # Color: $2
         }
         "Fix" {
-            
-            foreach ($resource in $nonCompliantResources) {
+
+            foreach ($resource in $NonCompliantResources) {
                 try {
-                    $resourceObj = Get-AzResource -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup
-                    $newTags = if ($resourceObj.Tags) { $resourceObj.Tags.Clone() } else { @{} }
-                    # Add missing required tags with default values
-                    foreach ($missingTag in ($resource.MissingTags -split ', ')) {
-                        if ($missingTag -and $DefaultTags.ContainsKey($missingTag)) {
-                            $newTags[$missingTag] = $DefaultTags[$missingTag]
-                        } elseif ($missingTag) {
-                            $newTags[$missingTag] = "Unknown"
+                    $ResourceObj = Get-AzResource -Name $resource.ResourceName -ResourceGroupName $resource.ResourceGroup
+                    $NewTags = if ($ResourceObj.Tags) { $ResourceObj.Tags.Clone() } else { @{} }
+                    foreach ($MissingTag in ($resource.MissingTags -split ', ')) {
+                        if ($MissingTag -and $DefaultTags.ContainsKey($MissingTag)) {
+                            $NewTags[$MissingTag] = $DefaultTags[$MissingTag]
+                        } elseif ($MissingTag) {
+                            $NewTags[$MissingTag] = "Unknown"
                         }
                     }
-                    # Add default tags
-                    foreach ($defaultTag in $DefaultTags.Keys) {
-                        if (-not $newTags.ContainsKey($defaultTag)) {
-                            $newTags[$defaultTag] = $DefaultTags[$defaultTag]
+                    foreach ($DefaultTag in $DefaultTags.Keys) {
+                        if (-not $NewTags.ContainsKey($DefaultTag)) {
+                            $NewTags[$DefaultTag] = $DefaultTags[$DefaultTag]
                         }
                     }
-                    Set-AzResource -ResourceId $resourceObj.ResourceId -Tag $newTags -Force
-                    Write-Host "Successfully updated tags for $($resource.ResourceName)" -ForegroundColor Green
+                    Set-AzResource -ResourceId $ResourceObj.ResourceId -Tag $NewTags -Force
+                    Write-Output "Successfully updated tags for $($resource.ResourceName)" # Color: $2
                 } catch {
                     Write-Warning "Failed to update tags for $($resource.ResourceName): $($_.Exception.Message)"
                 }
             }
         }
     }
-        $nonCompliantResources | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
-    
-        # Success summary
-    Write-Host ""
-    Write-Host "                              TAG COMPLIANCE ANALYSIS COMPLETE"
-    Write-Host ""
-    Write-Host "Compliance Summary:"
-    Write-Host "    Total Resources: $($resources.Count)"
-    Write-Host "    Non-Compliant: $($nonCompliantResources.Count)"
-    Write-Host "    Compliance Rate: $([math]::Round((($resources.Count - $nonCompliantResources.Count) / $resources.Count) * 100, 2))%"
-    Write-Host ""
-    Write-Host "Required Tags:"
-    foreach ($tag in $RequiredTags.Keys) {
-        $allowedValues = if ($RequiredTags[$tag].Count -gt 0) { "($($RequiredTags[$tag] -join ', '))" } else { "(any value)" }
-        Write-Host "    $tag $allowedValues"
-    }
-    Write-Host ""
-    Write-Host ""
-    
-} catch { throw }
+        $NonCompliantResources | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
 
+    Write-Output ""
+    Write-Output "                              TAG COMPLIANCE ANALYSIS COMPLETE"
+    Write-Output ""
+    Write-Output "Compliance Summary:"
+    Write-Output "    Total Resources: $($resources.Count)"
+    Write-Output "    Non-Compliant: $($NonCompliantResources.Count)"
+    Write-Output "    Compliance Rate: $([math]::Round((($resources.Count - $NonCompliantResources.Count) / $resources.Count) * 100, 2))%"
+    Write-Output ""
+    Write-Output "Required Tags:"
+    foreach ($tag in $RequiredTags.Keys) {
+        $AllowedValues = if ($RequiredTags[$tag].Count -gt 0) { "($($RequiredTags[$tag] -join ', '))" } else { "(any value)" }
+        Write-Output "    $tag $AllowedValues"
+    }
+    Write-Output ""
+    Write-Output ""
+
+} catch { throw`n}

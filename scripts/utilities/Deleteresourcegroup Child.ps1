@@ -1,66 +1,73 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
-    Deleteresourcegroup Child
+<#
+.SYNOPSIS
+    Delete Resource Group Child Script
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation script for deleting a specific resource group.
+    This script connects to Azure using a service principal and removes the specified resource group.
 
-    1.0
+.PARAMETER RGName
+    The name of the resource group to delete
+
+.NOTES
+    Version: 1.0
+    Author: Wes Ellis (wes@wesellis.com)
     Requires appropriate permissions and modules
+    Updated to use Az modules instead of deprecated AzureRM
 #>
- Script for deleting the resource group
- Script for deleting the resource group
-.\DeleteResourceGroup_Child.ps1
-Version History
-v1.0   -Initial Release
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
+    [Parameter(Mandatory = $true, HelpMessage = 'The name of the resource group to delete')]
     [String]$RGName
 )
-#region Functions
-$connectionName = "AzureRunAsConnection"
-try
-{
-    # Get the connection "AzureRunAsConnection "
-$servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-    "Logging in to Azure..."
-    $params = @{
-        ApplicationId = $servicePrincipalConnection.ApplicationId
-        TenantId = $servicePrincipalConnection.TenantId
-        CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
-    }
-    Add-AzureRmAccount @params
-}
-catch
-{
-    if (!$servicePrincipalConnection)
-    {
-$ErrorMessage = "Connection $connectionName not found."
+
+$ErrorActionPreference = "Stop"
+
+try {
+    $ConnectionName = "AzureRunAsConnection"
+
+    Write-Output "Connecting to Azure..."
+    $ServicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName
+
+    if (-not $ServicePrincipalConnection) {
+        $ErrorMessage = "Connection $ConnectionName not found."
         throw $ErrorMessage
-    } else{
-        Write-Error -Message $_.Exception
-        throw $_.Exception
     }
-}
-try
-{
-    if ($null -eq $RGName)
-    {
-        Write-Warning " $($RGName) is empty. Please Verify!"
+
+    $params = @{
+        ApplicationId         = $ServicePrincipalConnection.ApplicationId
+        TenantId             = $ServicePrincipalConnection.TenantId
+        CertificateThumbprint = $ServicePrincipalConnection.CertificateThumbprint
     }
-    else
-    {
-        Write-Output "Removing the resource group $($RGName)..."
-        Remove-AzureRmResourceGroup -Name $RGName.Trim() -Force
 
-} catch
-{
-    Write-Output "Error Occurred..."
-    Write-Output $_.Exception
+    Connect-AzAccount -ServicePrincipal @params
+    Write-Output "Successfully connected to Azure."
+
+    if ([string]::IsNullOrWhiteSpace($RGName)) {
+        Write-Warning "Resource group name is empty. Please verify the parameter."
+        return
+    }
+
+    $trimmedRGName = $RGName.Trim()
+    Write-Output "Checking if resource group '$trimmedRGName' exists..."
+
+    $resourceGroup = Get-AzResourceGroup -Name $trimmedRGName -ErrorAction SilentlyContinue
+
+    if ($null -eq $resourceGroup) {
+        Write-Warning "Resource group '$trimmedRGName' does not exist."
+        return
+    }
+
+    Write-Output "Removing resource group '$trimmedRGName'..."
+    Remove-AzResourceGroup -Name $trimmedRGName -Force -AsJob
+
+    Write-Output "Resource group deletion initiated successfully."
 }
-
-
+catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}

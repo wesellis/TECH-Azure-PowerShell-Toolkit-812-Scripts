@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.ServiceBus
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage Service Bus
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -18,7 +20,7 @@
     [Parameter()]
     [int]$MaxSizeInMegabytes = 1024
 )
-Write-Host "Creating Service Bus queue: $QueueName"
+Write-Output "Creating Service Bus queue: $QueueName"
 $params = @{
     ErrorAction = "Stop"
     MaxSizeInMegabytes = $MaxSizeInMegabytes
@@ -27,9 +29,11 @@ $params = @{
     Name = $QueueName
 }
 $Queue @params
-Write-Host "Queue created successfully:"
-Write-Host "Name: $($Queue.Name)"
-Write-Host "Max Size: $($Queue.MaxSizeInMegabytes) MB"
-Write-Host "Status: $($Queue.Status)"
-Write-Host "Namespace: $NamespaceName"
+Write-Output "Queue created successfully:"
+Write-Output "Name: $($Queue.Name)"
+Write-Output "Max Size: $($Queue.MaxSizeInMegabytes) MB"
+Write-Output "Status: $($Queue.Status)"
+Write-Output "Namespace: $NamespaceName"
+
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -14,8 +14,8 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter()]
@@ -32,7 +32,7 @@ param(
     [Parameter()]
     [string]$OutputPath = " .\policy-audit-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) {
         Connect-AzAccount
@@ -42,32 +42,30 @@ try {
     }
     }
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
-    $policyAssignments = Get-AzPolicyAssignment -ErrorAction Stop
-    $policyStates = Get-AzPolicyState -ErrorAction Stop
-    $complianceReport = $policyAssignments | ForEach-Object {
-        $assignment = $_
-        $states = $policyStates | Where-Object { $_.PolicyAssignmentId -eq $assignment.ResourceId }
-        $compliantCount = ($states | Where-Object { $_.ComplianceState -eq "Compliant" }).Count
-        $nonCompliantCount = ($states | Where-Object { $_.ComplianceState -eq "NonCompliant" }).Count
-$totalResources = $states.Count
+    [string]$PolicyAssignments = Get-AzPolicyAssignment -ErrorAction Stop
+    [string]$PolicyStates = Get-AzPolicyState -ErrorAction Stop
+    [string]$ComplianceReport = $PolicyAssignments | ForEach-Object {
+    [string]$assignment = $_
+    [string]$states = $PolicyStates | Where-Object { $_.PolicyAssignmentId -eq $assignment.ResourceId }
+    [string]$CompliantCount = ($states | Where-Object { $_.ComplianceState -eq "Compliant" }).Count
+    [string]$NonCompliantCount = ($states | Where-Object { $_.ComplianceState -eq "NonCompliant" }).Count
+    [string]$TotalResources = $states.Count
         [PSCustomObject]@{
             PolicyName = $assignment.Properties.DisplayName
             AssignmentId = $assignment.ResourceId
             Scope = $assignment.Properties.Scope
-            TotalResources = $totalResources
-            CompliantResources = $compliantCount
-            NonCompliantResources = $nonCompliantCount
-            ComplianceRate = if ($totalResources -gt 0) { [math]::Round(($compliantCount / $totalResources) * 100, 2) } else { 0 }
+            TotalResources = $TotalResources
+            CompliantResources = $CompliantCount
+            NonCompliantResources = $NonCompliantCount
+            ComplianceRate = if ($TotalResources -gt 0) { [math]::Round(($CompliantCount / $TotalResources) * 100, 2) } else { 0 }
         }
     }
     if ($ExportReport) {
-        $complianceReport | Export-Csv -Path $OutputPath -NoTypeInformation
+    [string]$ComplianceReport | Export-Csv -Path $OutputPath -NoTypeInformation
 
     }
-    Write-Host "Policy Compliance Summary:" -ForegroundColor Cyan
-    $complianceReport | Format-Table PolicyName, TotalResources, CompliantResources, NonCompliantResources, ComplianceRate
-$avgCompliance = ($complianceReport | Measure-Object ComplianceRate -Average).Average
-    Write-Host "Average Compliance Rate: $([math]::Round($avgCompliance, 2))%" -ForegroundColor Green
-} catch { throw }
-
-
+    Write-Output "Policy Compliance Summary:" # Color: $2
+    [string]$ComplianceReport | Format-Table PolicyName, TotalResources, CompliantResources, NonCompliantResources, ComplianceRate
+    [string]$AvgCompliance = ($ComplianceReport | Measure-Object ComplianceRate -Average).Average
+    Write-Output "Average Compliance Rate: $([math]::Round($AvgCompliance, 2))%" # Color: $2
+} catch { throw`n}

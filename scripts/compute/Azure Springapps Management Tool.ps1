@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
 
@@ -11,9 +11,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Azure Spring Apps Enterprise Management Tool
     Tool for managing Azure Spring Apps instances with enterprise features,
     including monitoring, security, scaling, and application deployment automation.
@@ -130,27 +129,26 @@ param(
         [ValidateSet("Info" , "Warning" , "Error" , "Success" )]
         [string]$Level = "Info"
     )
-    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-    $colors = @{
+$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+$colors = @{
         Info = "White"
         Warning = "Yellow"
         Error = "Red"
         Success = "Green"
     }
-    Write-Host " [$timestamp] $Message" -ForegroundColor $colors[$Level]
+    Write-Output " [$timestamp] $Message" -ForegroundColor $colors[$Level]
 }
 function Initialize-SpringCLI {
     try {
         Write-Verbose "Log entry"ng Azure CLI Spring extension..." "Info"
-        $springExtension = az extension list --query " [?name=='spring'].name" -o tsv
-        if (-not $springExtension) {
+    [string]$SpringExtension = az extension list --query " [?name=='spring'].name" -o tsv
+        if (-not $SpringExtension) {
             Write-Verbose "Log entry"nstalling Azure CLI Spring extension..." "Info"
             az extension add --name spring
             Write-Verbose "Log entry"nstalled Spring extension" "Success"
         } else {
             Write-Verbose "Log entry"ng extension is already installed" "Success"
         }
-        # Update to latest version
         az extension update --name spring
     } catch {
         Write-Verbose "Log entry"nitialize Spring CLI: $($_.Exception.Message)" "Error"
@@ -158,52 +156,45 @@ function Initialize-SpringCLI {
     }
 }
 function New-SpringAppsInstance -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param()
     if ($PSCmdlet.ShouldProcess("Spring Apps instance '$SpringAppsName'" , "Create" )) {
         try {
         Write-Verbose "Log entry"ng Azure Spring Apps instance: $SpringAppsName" "Info"
-        # Check if instance already exists
-        $existing = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " name" -o tsv 2>$null
+    [string]$existing = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " name" -o tsv 2>$null
         if ($existing) {
             Write-Verbose "Log entry"ng Apps instance already exists: $SpringAppsName" "Warning"
             return
         }
-        # Build creation command
-        $createCmd = @(
+    [string]$CreateCmd = @(
             " az" , "spring" , "create" ,
             " --name" , $SpringAppsName,
             " --resource-group" , $ResourceGroupName,
             " --location" , $Location,
             " --sku" , $Tier
         )
-        # Add tags
         if ($Tags.Count -gt 0) {
-            $tagString = ($Tags.GetEnumerator() | ForEach-Object { " $($_.Key)=$($_.Value)" }) -join " "
-            $createCmd = $createCmd + " --tags" , $tagString
+    [string]$TagString = ($Tags.GetEnumerator() | ForEach-Object { " $($_.Key)=$($_.Value)" }) -join " "
+    [string]$CreateCmd = $CreateCmd + " --tags" , $TagString
         }
-        # Add VNet integration if specified
         if ($VNetName -and $SubnetName) {
-            $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName -ErrorAction SilentlyContinue
+$vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName -ErrorAction SilentlyContinue
             if ($vnet) {
-                $subnet = $vnet.Subnets | Where-Object { $_.Name -eq $SubnetName }
+    [string]$subnet = $vnet.Subnets | Where-Object { $_.Name -eq $SubnetName }
                 if ($subnet) {
-                    $createCmd = $createCmd + " --vnet" , $vnet.Id, "--app-subnet" , $subnet.Id
+    [string]$CreateCmd = $CreateCmd + " --vnet" , $vnet.Id, "--app-subnet" , $subnet.Id
                     Write-Verbose "Log entry"nfiguring VNet integration" "Info"
                 }
             }
         }
-        # Execute creation
-        & $createCmd | Out-Null
+        & $CreateCmd | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Verbose "Log entry"ng Apps instance: $SpringAppsName" "Success"
         } else {
             throw "Failed to create Spring Apps instance"
         }
-        # Wait for instance to be ready
         do {
             Start-Sleep -Seconds 30
-            $status = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " properties.provisioningState" -o tsv
+    [string]$status = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " properties.provisioningState" -o tsv
             Write-Verbose "Log entry"nstance provisioning state: $status" "Info"
         } while ($status -eq "Creating" )
         if ($status -eq "Succeeded" ) {
@@ -218,12 +209,10 @@ function New-SpringAppsInstance -ErrorAction Stop {
     }
 }
 function Set-SpringCloudService -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param()
     if ($PSCmdlet.ShouldProcess("Spring Cloud services for '$SpringAppsName'" , "Configure" )) {
         try {
         Write-Verbose "Log entry"nfiguring Spring Cloud services..." "Info"
-        # Configure Config Server
         if ($EnableConfigServer) {
             Write-Verbose "Log entry"nabling Spring Cloud Config Server..." "Info"
             if ($ConfigServerRepo) {
@@ -241,7 +230,6 @@ function Set-SpringCloudService -ErrorAction Stop {
 }
 " @
             } else {
-                # Default public config repo for demo
                 az spring config-server set --name $SpringAppsName --resource-group $ResourceGroupName --config-file @"
 {
   " gitProperty" : {
@@ -258,13 +246,10 @@ function Set-SpringCloudService -ErrorAction Stop {
             }
             Write-Verbose "Log entry"nfigured Config Server" "Success"
         }
-        # Enable Service Registry (Eureka)
         if ($EnableServiceRegistry) {
             Write-Verbose "Log entry"nabling Service Registry..." "Info"
-            # Service Registry is enabled by default in Standard/Enterprise tiers
             Write-Verbose "Log entry"n registration" "Success"
         }
-        # Configure Gateway
         if ($EnableGateway) {
             Write-Verbose "Log entry"nabling Spring Cloud Gateway..." "Info"
             az spring gateway update --name $SpringAppsName --resource-group $ResourceGroupName --assign-endpoint true
@@ -278,17 +263,15 @@ function Set-SpringCloudService -ErrorAction Stop {
 function Deploy-SpringApplication {
     try {
         Write-Verbose "Log entry"ng Spring application: $AppName" "Info"
-        # Create app if it doesn't exist
-        $existingApp = az spring app show --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --query " name" -o tsv 2>$null
-        if (-not $existingApp) {
+    [string]$ExistingApp = az spring app show --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --query " name" -o tsv 2>$null
+        if (-not $ExistingApp) {
             Write-Verbose "Log entry"ng Spring application: $AppName" "Info"
             az spring app create --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --instance-count $InstanceCount --cpu $CpuCount --memory " $($MemoryInGB)Gi"
             Write-Verbose "Log entry"n: $AppName" "Success"
         }
-        # Deploy application
         if ($ArtifactPath -and (Test-Path $ArtifactPath)) {
             Write-Verbose "Log entry"ng artifact: $ArtifactPath" "Info"
-            $deployCmd = @(
+    [string]$DeployCmd = @(
                 " az" , "spring" , "app" , "deploy" ,
                 " --name" , $AppName,
                 " --service" , $SpringAppsName,
@@ -296,9 +279,9 @@ function Deploy-SpringApplication {
                 " --artifact-path" , $ArtifactPath
             )
             if ($DeploymentName) {
-                $deployCmd = $deployCmd + " --deployment" , $DeploymentName
+    [string]$DeployCmd = $DeployCmd + " --deployment" , $DeploymentName
             }
-            & $deployCmd | Out-Null
+            & $DeployCmd | Out-Null
             if ($LASTEXITCODE -eq 0) {
                 Write-Verbose "Log entry"n: $AppName" "Success"
             } else {
@@ -307,12 +290,10 @@ function Deploy-SpringApplication {
         } else {
             Write-Verbose "Log entry"No artifact path specified or file not found, skipping deployment" "Warning"
         }
-        # Assign public endpoint if needed
         az spring app update --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --assign-endpoint true
-        # Get application URL
-        $appUrl = az spring app show --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --query " properties.url" -o tsv
-        if ($appUrl) {
-            Write-Verbose "Log entry"n URL: $appUrl" "Success"
+    [string]$AppUrl = az spring app show --name $AppName --service $SpringAppsName --resource-group $ResourceGroupName --query " properties.url" -o tsv
+        if ($AppUrl) {
+            Write-Verbose "Log entry"n URL: $AppUrl" "Success"
         }
     } catch {
         Write-Verbose "Log entry"ng application: $($_.Exception.Message)" "Error"
@@ -320,7 +301,6 @@ function Deploy-SpringApplication {
     }
 }
 function Set-SpringAppScale -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param()
     if ($PSCmdlet.ShouldProcess("Spring application '$AppName'" , "Scale" )) {
         try {
@@ -339,37 +319,31 @@ function Set-SpringAppScale -ErrorAction Stop {
     }
 }
 function Set-SpringMonitoring -ErrorAction Stop {
-    [CmdletBinding(SupportsShouldProcess)]
     param()
     if ($PSCmdlet.ShouldProcess("Spring Apps monitoring configuration for '$SpringAppsName'" , "Configure" )) {
         try {
             Write-Verbose "Log entry"nfiguring monitoring for Spring Apps..." "Info"
-            # Create Application Insights if enabled
             if ($EnableApplicationInsights) {
-                $appInsightsName = " $SpringAppsName-insights"
-                # Check if Application Insights exists
-                $existingInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -ErrorAction SilentlyContinue
-                if (-not $existingInsights) {
-                    Write-Verbose "Log entry"ng Application Insights: $appInsightsName" "Info"
-                    $appInsights = New-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $appInsightsName -Location $Location -Kind " java"
+    [string]$AppInsightsName = " $SpringAppsName-insights"
+$ExistingInsights = Get-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $AppInsightsName -ErrorAction SilentlyContinue
+                if (-not $ExistingInsights) {
+                    Write-Verbose "Log entry"ng Application Insights: $AppInsightsName" "Info"
+$AppInsights = New-AzApplicationInsights -ResourceGroupName $ResourceGroupName -Name $AppInsightsName -Location $Location -Kind " java"
                     Write-Verbose "Log entry"n Insights" "Success"
                 } else {
-                    $appInsights = $existingInsights
+    [string]$AppInsights = $ExistingInsights
                 }
-                # Configure Application Insights for Spring Apps
-                az spring build-service builder buildpack-binding create --name " default" --builder-name " default" --service $SpringAppsName --resource-group $ResourceGroupName --type "ApplicationInsights" --properties " connection-string=$($appInsights.ConnectionString)"
+                az spring build-service builder buildpack-binding create --name " default" --builder-name " default" --service $SpringAppsName --resource-group $ResourceGroupName --type "ApplicationInsights" --properties " connection-string=$($AppInsights.ConnectionString)"
                 Write-Verbose "Log entry"ntegrated Application Insights" "Success"
             }
-            # Create Log Analytics workspace
-            $workspaceName = " law-$ResourceGroupName-spring"
-            $workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -ErrorAction SilentlyContinue
+    [string]$WorkspaceName = " law-$ResourceGroupName-spring"
+$workspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ErrorAction SilentlyContinue
             if (-not $workspace) {
-                $workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $workspaceName -Location $Location
-                Write-Verbose "Log entry"nalytics workspace: $workspaceName" "Success"
+$workspace = New-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -Location $Location
+                Write-Verbose "Log entry"nalytics workspace: $WorkspaceName" "Success"
             }
-            # Configure diagnostic settings
-            $springAppsId = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " id" -o tsv
-            $diagnosticSettings = @{
+    [string]$SpringAppsId = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --query " id" -o tsv
+$DiagnosticSettings = @{
                 logs = @(
                     @{
                         category = "ApplicationConsole"
@@ -407,7 +381,7 @@ function Set-SpringMonitoring -ErrorAction Stop {
                     }
                 )
             }
-            Set-AzDiagnosticSetting -ResourceId $springAppsId -WorkspaceId $workspace.ResourceId -Log $diagnosticSettings.logs -Metric $diagnosticSettings.metrics -Name " $SpringAppsName-diagnostics"
+            Set-AzDiagnosticSetting -ResourceId $SpringAppsId -WorkspaceId $workspace.ResourceId -Log $DiagnosticSettings.logs -Metric $DiagnosticSettings.metrics -Name " $SpringAppsName-diagnostics"
             Write-Verbose "Log entry"nfigured  monitoring" "Success"
         } catch {
             Write-Verbose "Log entry"nfigure monitoring: $($_.Exception.Message)" "Error"
@@ -417,16 +391,14 @@ function Set-SpringMonitoring -ErrorAction Stop {
 function Get-SpringAppsStatus -ErrorAction Stop {
     try {
         Write-Verbose "Log entry"nitoring Spring Apps instance status..." "Info"
-        # Get instance details
-        $instance = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
+    [string]$instance = az spring show --name $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
         Write-Verbose "Log entry"ng Apps Instance Status:" "Info"
         Write-Verbose "Log entry"Name: $($instance.name)" "Info"
         Write-Verbose "Log entry"n: $($instance.location)" "Info"
         Write-Verbose "Log entry"ning State: $($instance.properties.provisioningState)" "Info"
         Write-Verbose "Log entry"nstance.properties.serviceId)" "Info"
         Write-Verbose "Log entry"Network Profile: $($instance.properties.networkProfile.outboundType)" "Info"
-        # Get applications
-        $apps = az spring app list --service $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
+    [string]$apps = az spring app list --service $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
         if ($apps) {
             Write-Verbose "Log entry"ns:" "Info"
             foreach ($app in $apps) {
@@ -434,8 +406,7 @@ function Get-SpringAppsStatus -ErrorAction Stop {
                 Write-Verbose "Log entry"ningState)" "Info"
                 Write-Verbose "Log entry"nfo"
                 Write-Verbose "Log entry"nfo"
-                # Get deployment status
-                $deployments = az spring app deployment list --app $app.name --service $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
+    [string]$deployments = az spring app deployment list --app $app.name --service $SpringAppsName --resource-group $ResourceGroupName --output json | ConvertFrom-Json
                 foreach ($deployment in $deployments) {
                     Write-Verbose "Log entry"nt: $($deployment.name) - Status: $($deployment.properties.status)" "Info"
                     Write-Verbose "Log entry"nstances: $($deployment.properties.deploymentSettings.resourceRequests.cpu) CPU, $($deployment.properties.deploymentSettings.resourceRequests.memory) Memory" "Info"
@@ -482,13 +453,11 @@ try {
     Write-Verbose "Log entry"n: $Action" "Info"
     Write-Verbose "Log entry"ng Apps Name: $SpringAppsName" "Info"
     Write-Verbose "Log entry"Name" "Info"
-    # Initialize Spring CLI extension
     Initialize-SpringCLI
-    # Ensure resource group exists
 $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
     if (-not $rg) {
         Write-Verbose "Log entry"ng resource group: $ResourceGroupName" "Info"
-$resourcegroupSplat = @{
+$ResourcegroupSplat = @{
     Name = $ResourceGroupName
     Location = $Location
     Tag = $Tags
@@ -554,7 +523,4 @@ New-AzResourceGroup @resourcegroupSplat
     Write-Verbose "Log entry"ng Apps Management Tool completed successfully" "Success"
 } catch {
     Write-Verbose "Log entry"n failed: $($_.Exception.Message)" "Error"
-    throw
-}
-
-
+    throw`n}

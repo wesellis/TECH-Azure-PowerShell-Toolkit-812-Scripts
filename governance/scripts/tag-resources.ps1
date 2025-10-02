@@ -6,27 +6,30 @@
     Manages and enforces resource tagging across subscriptions and resource groups
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     on resources. Supports bulk operations, tag inheritance, compliance reporting,
     and automated remediation of missing or incorrect tags.
-.PARAMETER Action
+.parameter Action
     Action to perform: Apply, Remove, Validate, Report, Inherit, Fix
-.PARAMETER Scope
+.parameter Scope
     Scope for tag operations (subscription, resource group, or specific resource)
-.PARAMETER Tags
+.parameter Tags
     Hashtable of tags to apply or validate
-.PARAMETER RequiredTags
+.parameter RequiredTags
     Array of tag names that must be present on all resources
-.PARAMETER ResourceType
+.parameter ResourceType
     Filter operations to specific resource types
-.PARAMETER ResourceGroup
+.parameter ResourceGroup
     Target specific resource group(s)
-.PARAMETER InheritFromResourceGroup
+.parameter InheritFromResourceGroup
     Inherit tags from resource group to child resources
-.PARAMETER RemoveUnauthorized
+.parameter RemoveUnauthorized
     Remove tags not in the approved list
-.PARAMETER ExportPath
+.parameter ExportPath
     Path for compliance report export
-.PARAMETER Force
+.parameter Force
     Skip confirmation prompts
 .EXAMPLE
     .\tag-resources.ps1 -Action Apply -Tags @{Environment='Production';Owner='TeamA'} -ResourceGroup "RG-Prod"
@@ -41,53 +44,49 @@
 
     Inherits resource group tags to all child resources
 .NOTES
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
-[CmdletBinding(SupportsShouldProcess = $true)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+[parameter(Mandatory = $true)]
     [ValidateSet('Apply', 'Remove', 'Validate', 'Report', 'Inherit', 'Fix')]
     [string]$Action,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$Scope,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [hashtable]$Tags,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$RequiredTags,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$ResourceType,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$ResourceGroup,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$InheritFromResourceGroup,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$RemoveUnauthorized,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$AuthorizedTags,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$ExportPath,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$Force,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$IncludeResourceGroups,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [hashtable]$DefaultValues
 )
 
-#region Initialize
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
@@ -98,34 +97,29 @@ if (-not $ExportPath) {
 $script:LogPath = ".\TagOperations_$(Get-Date -Format 'yyyyMMdd').log"
 $script:ModifiedResources = @()
 
-#endregion
 
-#region Functions
-[OutputType([bool])]
- {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Message,
+function Write-Log {
+    [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Success')]
         [string]$Level = 'Info'
     )
 
     $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    $logEntry = "$timestamp [$Level] $Message"
-    Add-Content -Path $script:LogPath -Value $logEntry -ErrorAction SilentlyContinue
+    $LogEntry = "$timestamp [$Level] $Message"
+    Add-Content -Path $script:LogPath -Value $LogEntry -ErrorAction SilentlyContinue
 
     switch ($Level) {
-        'Info'    { Write-Verbose $Message }
-        'Warning' { Write-Warning $Message }
-        'Error'   { Write-Error $Message }
-        'Success' { Write-Host $Message -ForegroundColor Green }
+        'Info'    { write-Verbose $Message }
+        'Warning' { write-Warning $Message }
+        'Error'   { write-Error $Message }
+        'Success' { Write-Output $Message -ForegroundColor Green }
     }
 }
 
 function Initialize-Azure {
     $context = Get-AzContext
     if (-not $context) {
-        Write-LogEntry "Connecting to Azure..." -Level Warning
+        write-LogEntry "Connecting to Azure..." -Level Warning
         Connect-AzAccount
         $context = Get-AzContext
     }
@@ -133,9 +127,7 @@ function Initialize-Azure {
 }
 
 function Get-ScopedResources {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Scope,
+    [string]$Scope,
         [string[]]$ResourceGroups,
         [string[]]$ResourceTypes
     )
@@ -144,16 +136,13 @@ function Get-ScopedResources {
 
     if ($Scope) {
         if ($Scope -match '^/subscriptions/.+/resourceGroups/[^/]+$') {
-            # Resource group scope
-            $rgName = $Scope.Split('/')[-1]
-            $resources = Get-AzResource -ResourceGroupName $rgName
+            $RgName = $Scope.Split('/')[-1]
+            $resources = Get-AzResource -ResourceGroupName $RgName
         }
         elseif ($Scope -match '^/subscriptions/[^/]+$') {
-            # Subscription scope
             $resources = Get-AzResource
         }
         else {
-            # Specific resource
             $resources = @(Get-AzResource -ResourceId $Scope)
         }
     }
@@ -166,14 +155,12 @@ function Get-ScopedResources {
         $resources = Get-AzResource
     }
 
-    # Filter by resource type if specified
     if ($ResourceTypes) {
         $resources = $resources | Where-Object {
             $_.ResourceType -in $ResourceTypes
         }
     }
 
-    # Include resource groups if requested
     if ($IncludeResourceGroups) {
         $rgs = if ($ResourceGroups) {
             $ResourceGroups | ForEach-Object { Get-AzResourceGroup -Name $_ }
@@ -197,90 +184,82 @@ function Get-ScopedResources {
 }
 
 function Apply-ResourceTags {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$Resource,
+    [object]$Resource,
         [hashtable]$TagsToApply,
         [switch]$Merge
     )
 
     try {
-        $currentTags = if ($Resource.Tags) { $Resource.Tags } else { @{} }
+        $CurrentTags = if ($Resource.Tags) { $Resource.Tags } else { @{} }
 
         if ($Merge) {
-            # Merge with existing tags
             foreach ($key in $TagsToApply.Keys) {
-                $currentTags[$key] = $TagsToApply[$key]
+                $CurrentTags[$key] = $TagsToApply[$key]
             }
-            $finalTags = $currentTags
+            $FinalTags = $CurrentTags
         }
         else {
-            # Replace all tags
-            $finalTags = $TagsToApply
+            $FinalTags = $TagsToApply
         }
 
         if ($PSCmdlet.ShouldProcess($Resource.Name, "Apply tags")) {
             if ($Resource.ResourceType -eq 'Microsoft.Resources/resourceGroups') {
-                Set-AzResourceGroup -Name $Resource.Name -Tag $finalTags | Out-Null
+                Set-AzResourceGroup -Name $Resource.Name -Tag $FinalTags | Out-Null
             }
             else {
-                Set-AzResource -ResourceId $Resource.ResourceId -Tag $finalTags -Force | Out-Null
+                Set-AzResource -ResourceId $Resource.ResourceId -Tag $FinalTags -Force | Out-Null
             }
 
             $script:ModifiedResources += [PSCustomObject]@{
                 ResourceId = $Resource.ResourceId
                 Name = $Resource.Name
                 Action = 'TagsApplied'
-                Tags = $finalTags
+                Tags = $FinalTags
                 Timestamp = Get-Date
             }
 
-            Write-LogEntry "Applied tags to: $($Resource.Name)" -Level Success
+            write-LogEntry "Applied tags to: $($Resource.Name)" -Level Success
             return $true
-        
+
 } catch {
-        Write-LogEntry "Failed to apply tags to $($Resource.Name): $_" -Level Error
+        write-LogEntry "Failed to apply tags to $($Resource.Name): $_" -Level Error
         return $false
     }
 }
 
 function Remove-ResourceTags {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$Resource,
+    [object]$Resource,
         [string[]]$TagsToRemove
     )
 
     try {
-        $currentTags = if ($Resource.Tags) { $Resource.Tags.Clone() } else { @{} }
+        $CurrentTags = if ($Resource.Tags) { $Resource.Tags.Clone() } else { @{} }
 
-        foreach ($tagName in $TagsToRemove) {
-            if ($currentTags.ContainsKey($tagName)) {
-                $currentTags.Remove($tagName)
+        foreach ($TagName in $TagsToRemove) {
+            if ($CurrentTags.ContainsKey($TagName)) {
+                $CurrentTags.Remove($TagName)
             }
         }
 
         if ($PSCmdlet.ShouldProcess($Resource.Name, "Remove tags")) {
             if ($Resource.ResourceType -eq 'Microsoft.Resources/resourceGroups') {
-                Set-AzResourceGroup -Name $Resource.Name -Tag $currentTags | Out-Null
+                Set-AzResourceGroup -Name $Resource.Name -Tag $CurrentTags | Out-Null
             }
             else {
-                Set-AzResource -ResourceId $Resource.ResourceId -Tag $currentTags -Force | Out-Null
+                Set-AzResource -ResourceId $Resource.ResourceId -Tag $CurrentTags -Force | Out-Null
             }
 
-            Write-LogEntry "Removed tags from: $($Resource.Name)" -Level Success
+            write-LogEntry "Removed tags from: $($Resource.Name)" -Level Success
             return $true
-        
+
 } catch {
-        Write-LogEntry "Failed to remove tags from $($Resource.Name): $_" -Level Error
+        write-LogEntry "Failed to remove tags from $($Resource.Name): $_" -Level Error
         return $false
     }
 }
 
 function Test-TagCompliance {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$Resource,
+    [object]$Resource,
         [string[]]$RequiredTagNames,
         [hashtable]$RequiredTagValues
     )
@@ -292,32 +271,30 @@ function Test-TagCompliance {
         UnauthorizedTags = @()
     }
 
-    $currentTags = if ($Resource.Tags) { $Resource.Tags } else { @{} }
+    $CurrentTags = if ($Resource.Tags) { $Resource.Tags } else { @{} }
 
-    # Check required tags
-    foreach ($tagName in $RequiredTagNames) {
-        if (-not $currentTags.ContainsKey($tagName)) {
-            $compliance.MissingTags += $tagName
+    foreach ($TagName in $RequiredTagNames) {
+        if (-not $CurrentTags.ContainsKey($TagName)) {
+            $compliance.MissingTags += $TagName
             $compliance.IsCompliant = $false
         }
-        elseif ($RequiredTagValues -and $RequiredTagValues.ContainsKey($tagName)) {
-            $expectedValue = $RequiredTagValues[$tagName]
-            if ($currentTags[$tagName] -ne $expectedValue) {
+        elseif ($RequiredTagValues -and $RequiredTagValues.ContainsKey($TagName)) {
+            $ExpectedValue = $RequiredTagValues[$TagName]
+            if ($CurrentTags[$TagName] -ne $ExpectedValue) {
                 $compliance.IncorrectValues += @{
-                    Tag = $tagName
-                    Current = $currentTags[$tagName]
-                    Expected = $expectedValue
+                    Tag = $TagName
+                    Current = $CurrentTags[$TagName]
+                    Expected = $ExpectedValue
                 }
                 $compliance.IsCompliant = $false
             }
         }
     }
 
-    # Check for unauthorized tags
     if ($AuthorizedTags) {
-        foreach ($tagName in $currentTags.Keys) {
-            if ($tagName -notin $AuthorizedTags) {
-                $compliance.UnauthorizedTags += $tagName
+        foreach ($TagName in $CurrentTags.Keys) {
+            if ($TagName -notin $AuthorizedTags) {
+                $compliance.UnauthorizedTags += $TagName
                 $compliance.IsCompliant = $false
             }
         }
@@ -327,9 +304,7 @@ function Test-TagCompliance {
 }
 
 function Export-ComplianceReport {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [array]$ComplianceData,
+    [array]$ComplianceData,
         [string]$Path
     )
 
@@ -350,48 +325,42 @@ function Export-ComplianceReport {
     }
 
     $report | Export-Csv -Path $Path -NoTypeInformation
-    Write-LogEntry "Compliance report exported to: $Path" -Level Success
+    write-LogEntry "Compliance report exported to: $Path" -Level Success
 }
 
 function Invoke-TagInheritance {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$ResourceGroup,
+    [object]$ResourceGroup,
         [object[]]$Resources
     )
 
-    $rgTags = if ($ResourceGroup.Tags) { $ResourceGroup.Tags } else { @{} }
+    $RgTags = if ($ResourceGroup.Tags) { $ResourceGroup.Tags } else { @{} }
 
-    if ($rgTags.Count -eq 0) {
-        Write-LogEntry "Resource group $($ResourceGroup.ResourceGroupName) has no tags to inherit" -Level Warning
+    if ($RgTags.Count -eq 0) {
+        write-LogEntry "Resource group $($ResourceGroup.ResourceGroupName) has no tags to inherit" -Level Warning
         return
     }
 
-    $inheritedCount = 0
+    $InheritedCount = 0
 
     foreach ($resource in $Resources) {
         if ($resource.ResourceGroupName -eq $ResourceGroup.ResourceGroupName) {
-            if (Apply-ResourceTags -Resource $resource -TagsToApply $rgTags -Merge) {
-                $inheritedCount++
+            if (Apply-ResourceTags -Resource $resource -TagsToApply $RgTags -Merge) {
+                $InheritedCount++
             }
         }
     }
 
-    Write-LogEntry "Inherited tags to $inheritedCount resources in $($ResourceGroup.ResourceGroupName)" -Level Success
+    write-LogEntry "Inherited tags to $InheritedCount resources in $($ResourceGroup.ResourceGroupName)" -Level Success
 }
 
-#endregion
 
-#region Main-try {
-    Write-Host "`nResource Tagging Management" -ForegroundColor Cyan
-    Write-Host "============================" -ForegroundColor Cyan
+    Write-Host "`nResource Tagging Management" -ForegroundColor Green
+    Write-Host "============================" -ForegroundColor Green
 
-    # Initialize Azure connection
     $context = Initialize-Azure
-    Write-Host "Connected to subscription: $($context.Subscription.Name)" -ForegroundColor Yellow
+    Write-Host "Connected to subscription: $($context.Subscription.Name)" -ForegroundColor Green
 
-    # Get resources in scope
-    Write-Host "`nGathering resources..." -ForegroundColor Yellow
+    Write-Host "`nGathering resources..." -ForegroundColor Green
     $resources = Get-ScopedResources -Scope $Scope -ResourceGroups $ResourceGroup -ResourceTypes $ResourceType
 
     Write-Host "Found $($resources.Count) resources" -ForegroundColor Green
@@ -402,23 +371,23 @@ function Invoke-TagInheritance {
                 throw "Tags parameter is required for Apply action"
             }
 
-            Write-Host "`nApplying tags to resources..." -ForegroundColor Yellow
-            $successCount = 0
+            Write-Host "`nApplying tags to resources..." -ForegroundColor Green
+            $SuccessCount = 0
 
             foreach ($resource in $resources) {
                 if (Apply-ResourceTags -Resource $resource -TagsToApply $Tags -Merge) {
-                    $successCount++
+                    $SuccessCount++
                 }
 
                 $params = @{
-                    Status = "$successCount of $($resources.Count)"
-                    PercentComplete = (($successCount / $resources.Count) * 100)
+                    Status = "$SuccessCount of $($resources.Count)"
+                    PercentComplete = (($SuccessCount / $resources.Count) * 100)
                     Activity = "Applying tags"
                 }
-                Write-Progress @params
+                write-Progress @params
             }
 
-            Write-Host "Successfully tagged $successCount resources" -ForegroundColor Green
+            Write-Host "Successfully tagged $SuccessCount resources" -ForegroundColor Green
         }
 
         'Remove' {
@@ -426,27 +395,27 @@ function Invoke-TagInheritance {
                 throw "Specify tags to remove or use -RemoveUnauthorized"
             }
 
-            Write-Host "`nRemoving tags from resources..." -ForegroundColor Yellow
-            $tagsToRemove = if ($Tags) { $Tags.Keys } else { @() }
+            Write-Host "`nRemoving tags from resources..." -ForegroundColor Green
+            $TagsToRemove = if ($Tags) { $Tags.Keys } else { @() }
 
             foreach ($resource in $resources) {
                 if ($RemoveUnauthorized -and $AuthorizedTags) {
-                    $currentTags = if ($resource.Tags) { $resource.Tags.Keys } else { @() }
-                    $unauthorizedTags = $currentTags | Where-Object { $_ -notin $AuthorizedTags }
-                    if ($unauthorizedTags) {
-                        Remove-ResourceTags -Resource $resource -TagsToRemove $unauthorizedTags
+                    $CurrentTags = if ($resource.Tags) { $resource.Tags.Keys } else { @() }
+                    $UnauthorizedTags = $CurrentTags | Where-Object { $_ -notin $AuthorizedTags }
+                    if ($UnauthorizedTags) {
+                        Remove-ResourceTags -Resource $resource -TagsToRemove $UnauthorizedTags
                     }
                 }
-                elseif ($tagsToRemove) {
-                    Remove-ResourceTags -Resource $resource -TagsToRemove $tagsToRemove
+                elseif ($TagsToRemove) {
+                    Remove-ResourceTags -Resource $resource -TagsToRemove $TagsToRemove
                 }
             }
         }
 
         'Validate' {
-            Write-Host "`nValidating tag compliance..." -ForegroundColor Yellow
-            $complianceData = @()
-            $compliantCount = 0
+            Write-Host "`nValidating tag compliance..." -ForegroundColor Green
+            $ComplianceData = @()
+            $CompliantCount = 0
 
             foreach ($resource in $resources) {
                 $params = @{
@@ -456,64 +425,64 @@ function Invoke-TagInheritance {
                 }
                 $compliance = Test-TagCompliance @params
 
-                $complianceData += @{
+                $ComplianceData += @{
                     Resource = $resource
                     Compliance = $compliance
                 }
 
                 if ($compliance.IsCompliant) {
-                    $compliantCount++
+                    $CompliantCount++
                 }
             }
 
-            $complianceRate = if ($resources.Count -gt 0) {
-                [Math]::Round(($compliantCount / $resources.Count) * 100, 2)
+            $ComplianceRate = if ($resources.Count -gt 0) {
+                [Math]::Round(($CompliantCount / $resources.Count) * 100, 2)
             } else { 0 }
 
-            Write-Host "`nCompliance Summary:" -ForegroundColor Cyan
-            Write-Host "Total Resources: $($resources.Count)" -ForegroundColor White
-            Write-Host "Compliant: $compliantCount" -ForegroundColor Green
-            Write-Host "Non-Compliant: $($resources.Count - $compliantCount)" -ForegroundColor Red
-            Write-Host "Compliance Rate: $complianceRate%" -ForegroundColor $(
-                if ($complianceRate -ge 90) { 'Green' }
-                elseif ($complianceRate -ge 70) { 'Yellow' }
+            Write-Host "`nCompliance Summary:" -ForegroundColor Green
+            Write-Host "Total Resources: $($resources.Count)" -ForegroundColor Green
+            Write-Host "Compliant: $CompliantCount" -ForegroundColor Green
+            Write-Host "Non-Compliant: $($resources.Count - $CompliantCount)" -ForegroundColor Green
+            Write-Output "Compliance Rate: $ComplianceRate%" -ForegroundColor $(
+                if ($ComplianceRate -ge 90) { 'Green' }
+                elseif ($ComplianceRate -ge 70) { 'Yellow' }
                 else { 'Red' }
             )
 
-            Export-ComplianceReport -ComplianceData $complianceData -Path $ExportPath
+            Export-ComplianceReport -ComplianceData $ComplianceData -Path $ExportPath
         }
 
         'Report' {
-            Write-Host "`nGenerating tag report..." -ForegroundColor Yellow
-            $tagSummary = @{}
+            Write-Host "`nGenerating tag report..." -ForegroundColor Green
+            $TagSummary = @{}
 
             foreach ($resource in $resources) {
                 if ($resource.Tags) {
                     foreach ($tag in $resource.Tags.GetEnumerator()) {
-                        if (-not $tagSummary.ContainsKey($tag.Key)) {
-                            $tagSummary[$tag.Key] = @{
+                        if (-not $TagSummary.ContainsKey($tag.Key)) {
+                            $TagSummary[$tag.Key] = @{
                                 Count = 0
                                 Values = @{}
                             }
                         }
-                        $tagSummary[$tag.Key].Count++
+                        $TagSummary[$tag.Key].Count++
 
-                        if (-not $tagSummary[$tag.Key].Values.ContainsKey($tag.Value)) {
-                            $tagSummary[$tag.Key].Values[$tag.Value] = 0
+                        if (-not $TagSummary[$tag.Key].Values.ContainsKey($tag.Value)) {
+                            $TagSummary[$tag.Key].Values[$tag.Value] = 0
                         }
-                        $tagSummary[$tag.Key].Values[$tag.Value]++
+                        $TagSummary[$tag.Key].Values[$tag.Value]++
                     }
                 }
             }
 
-            Write-Host "`nTag Usage Summary:" -ForegroundColor Cyan
-            foreach ($tagName in ($tagSummary.Keys | Sort-Object)) {
-                Write-Host "  $tagName : $($tagSummary[$tagName].Count) resources" -ForegroundColor White
-                $topValues = $tagSummary[$tagName].Values.GetEnumerator() |
+            Write-Host "`nTag Usage Summary:" -ForegroundColor Green
+            foreach ($TagName in ($TagSummary.Keys | Sort-Object)) {
+                Write-Host "  $TagName : $($TagSummary[$TagName].Count) resources" -ForegroundColor Green
+                $TopValues = $TagSummary[$TagName].Values.GetEnumerator() |
                     Sort-Object Value -Descending |
                     Select-Object -First 3
-                foreach ($value in $topValues) {
-                    Write-Host "    - $($value.Key): $($value.Value)" -ForegroundColor Gray
+                foreach ($value in $TopValues) {
+                    Write-Host "    - $($value.Key): $($value.Value)" -ForegroundColor Green
                 }
             }
         }
@@ -523,23 +492,23 @@ function Invoke-TagInheritance {
                 throw "Use -InheritFromResourceGroup switch for inheritance"
             }
 
-            Write-Host "`nInheriting tags from resource groups..." -ForegroundColor Yellow
+            Write-Host "`nInheriting tags from resource groups..." -ForegroundColor Green
 
-            $resourceGroups = if ($ResourceGroup) {
+            $ResourceGroups = if ($ResourceGroup) {
                 $ResourceGroup | ForEach-Object { Get-AzResourceGroup -Name $_ }
             } else {
                 Get-AzResourceGroup
             }
 
-            foreach ($rg in $resourceGroups) {
-                Write-Host "Processing resource group: $($rg.ResourceGroupName)" -ForegroundColor White
-                $rgResources = $resources | Where-Object { $_.ResourceGroupName -eq $rg.ResourceGroupName }
-                Invoke-TagInheritance -ResourceGroup $rg -Resources $rgResources
+            foreach ($rg in $ResourceGroups) {
+                Write-Host "Processing resource group: $($rg.ResourceGroupName)" -ForegroundColor Green
+                $RgResources = $resources | Where-Object { $_.ResourceGroupName -eq $rg.ResourceGroupName }
+                Invoke-TagInheritance -ResourceGroup $rg -Resources $RgResources
             }
         }
 
         'Fix' {
-            Write-Host "`nFixing tag compliance issues..." -ForegroundColor Yellow
+            Write-Host "`nFixing tag compliance issues..." -ForegroundColor Green
 
             foreach ($resource in $resources) {
                 $params = @{
@@ -550,27 +519,24 @@ function Invoke-TagInheritance {
                 $compliance = Test-TagCompliance @params
 
                 if (-not $compliance.IsCompliant) {
-                    $tagsToApply = @{}
+                    $TagsToApply = @{}
 
-                    # Add missing tags with defaults
-                    foreach ($tagName in $compliance.MissingTags) {
-                        $tagsToApply[$tagName] = if ($DefaultValues -and $DefaultValues.ContainsKey($tagName)) {
-                            $DefaultValues[$tagName]
+                    foreach ($TagName in $compliance.MissingTags) {
+                        $TagsToApply[$TagName] = if ($DefaultValues -and $DefaultValues.ContainsKey($TagName)) {
+                            $DefaultValues[$TagName]
                         } else {
                             "Unknown"
                         }
                     }
 
-                    # Fix incorrect values
                     foreach ($incorrect in $compliance.IncorrectValues) {
-                        $tagsToApply[$incorrect.Tag] = $incorrect.Expected
+                        $TagsToApply[$incorrect.Tag] = $incorrect.Expected
                     }
 
-                    if ($tagsToApply.Count -gt 0) {
-                        Apply-ResourceTags -Resource $resource -TagsToApply $tagsToApply -Merge
+                    if ($TagsToApply.Count -gt 0) {
+                        Apply-ResourceTags -Resource $resource -TagsToApply $TagsToApply -Merge
                     }
 
-                    # Remove unauthorized tags
                     if ($compliance.UnauthorizedTags -and $RemoveUnauthorized) {
                         Remove-ResourceTags -Resource $resource -TagsToRemove $compliance.UnauthorizedTags
                     }
@@ -581,23 +547,18 @@ function Invoke-TagInheritance {
         }
     }
 
-    # Export modification log
     if ($script:ModifiedResources.Count -gt 0) {
-        $logPath = ".\TagModifications_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
-        $script:ModifiedResources | Export-Csv -Path $logPath -NoTypeInformation
-        Write-Host "`nModification log saved to: $logPath" -ForegroundColor Cyan
+        $LogPath = ".\TagModifications_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
+        $script:ModifiedResources | Export-Csv -Path $LogPath -NoTypeInformation
+        Write-Host "`nModification log saved to: $LogPath" -ForegroundColor Green
     }
 
     Write-Host "`nOperation completed successfully!" -ForegroundColor Green
 }
 catch {
-    Write-LogEntry "Operation failed: $_" -Level Error
-    Write-Error $_
+    write-LogEntry "Operation failed: $_" -Level Error
+    write-Error $_
     throw
 }
 finally {
-    $ProgressPreference = 'Continue'
-}
-
-#endregion
-
+    $ProgressPreference = 'Continue'`n}

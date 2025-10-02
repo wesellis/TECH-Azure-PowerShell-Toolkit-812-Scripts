@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,10 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure OpenAI Service Manager
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -37,17 +37,14 @@
     [switch]$RestrictPublicAccess
 )
 try {
-    # Test Azure connection
         if (-not (Get-AzContext)) { Connect-AzAccount }
-    # Validate resource group
-        $resourceGroup = Invoke-AzureOperation -Operation {
+        $ResourceGroup = Invoke-AzureOperation -Operation {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
-    
+
     switch ($Action.ToLower()) {
         "create" {
-            # Create OpenAI account
-                $openAIParams = @{
+                $OpenAIParams = @{
                 ResourceGroupName = $ResourceGroupName
                 Name = $AccountName
                 Location = $Location
@@ -61,7 +58,7 @@ try {
             }
             if ($NetworkRules.Count -gt 0) {
                 if ($NetworkRules.ContainsKey("AllowedIPs")) {
-                    $openAIParams.NetworkRuleSet.IpRules = $NetworkRules.AllowedIPs | ForEach-Object {
+                    $OpenAIParams.NetworkRuleSet.IpRules = $NetworkRules.AllowedIPs | ForEach-Object {
                         @{ IpAddress = $_ }
                     }
                 }
@@ -69,11 +66,9 @@ try {
             Invoke-AzureOperation -Operation {
                 New-AzCognitiveServicesAccount -ErrorAction Stop @openAIParams
             } -OperationName "Create OpenAI Account" | Out-Null
-            
-            # Deploy model
+
                 Invoke-AzureOperation -Operation {
-                # Using REST API call as PowerShell module may not have latest deployment cmdlets
-                $subscriptionId = (Get-AzContext).Subscription.Id
+                $SubscriptionId = (Get-AzContext).Subscription.Id
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
@@ -91,24 +86,24 @@ try {
                         }
                     }
                 } | ConvertTo-Json -Depth 5
-                Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
+                Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/deployments/$DeploymentName?api-version=2023-05-01" -Method PUT -Headers $headers -Body $body
             } -OperationName "Deploy AI Model" | Out-Null
-            
+
         }
         "listmodels" {
                 $models = Invoke-AzureOperation -Operation {
-                $subscriptionId = (Get-AzContext).Subscription.Id
+                $SubscriptionId = (Get-AzContext).Subscription.Id
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
-                Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models?api-version=2023-05-01" -Method GET -Headers $headers
+                Invoke-RestMethod -Uri "https://management.azure.com/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName/models?api-version=2023-05-01" -Method GET -Headers $headers
             } -OperationName "List Available Models"
-            Write-Host ""
+            Write-Output ""
             foreach ($model in $models.value) {
-                Write-Host " $($model.name) - $($model.version)"
+                Write-Output " $($model.name) - $($model.version)"
                 if ($model.capabilities) {
-                    Write-Host "Capabilities: $($model.capabilities -join ', ')"
+                    Write-Output "Capabilities: $($model.capabilities -join ', ')"
                 }
             }
         }
@@ -116,39 +111,36 @@ try {
                 $keys = Invoke-AzureOperation -Operation {
                 Get-AzCognitiveServicesAccountKey -ResourceGroupName $ResourceGroupName -Name $AccountName
             } -OperationName "Get API Keys"
-            Write-Host ""
-            Write-Host "Key 1: $($keys.Key1)"
-            Write-Host "Key 2: $($keys.Key2)"
-            Write-Host ""
-            Write-Host "[WARN]  Store these keys securely! Consider using Azure Key Vault."
+            Write-Output ""
+            Write-Output "Key 1: $($keys.Key1)"
+            Write-Output "Key 2: $($keys.Key2)"
+            Write-Output ""
+            Write-Output "[WARN]  Store these keys securely! Consider using Azure Key Vault."
         }
     }
-    # Configure monitoring if enabled
     if ($EnableMonitoring) {
             Invoke-AzureOperation -Operation {
-            # Create diagnostic settings for OpenAI monitoring
-            $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-            if ($logAnalyticsWorkspace) {
-                $diagnosticParams = @{
+            $LogAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+            if ($LogAnalyticsWorkspace) {
+                $DiagnosticParams = @{
                     ResourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.CognitiveServices/accounts/$AccountName"
                     Name = "$AccountName-diagnostics"
-                    WorkspaceId = $logAnalyticsWorkspace.ResourceId
+                    WorkspaceId = $LogAnalyticsWorkspace.ResourceId
                     Enabled = $true
                     Category = @("Audit", "RequestResponse", "Trace")
                     MetricCategory = @("AllMetrics")
                 }
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                
+
                 return $null
             }
         } -OperationName "Configure Monitoring" | Out-Null
-        $diagnosticSettings = $true
-        if ($diagnosticSettings) {
-            
+        $DiagnosticSettings = $true
+        if ($DiagnosticSettings) {
+
         }
     }
-    # Apply enterprise tags
         $tags = @{
         'Environment' = 'Production'
         'Service' = 'OpenAI'
@@ -162,81 +154,71 @@ try {
         $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $AccountName -ResourceType "Microsoft.CognitiveServices/accounts"
         Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
     } -OperationName "Apply Enterprise Tags" | Out-Null
-    # Security assessment
-        $securityScore = 0
-    $maxScore = 5
-    $securityFindings = @()
-    # Check network access
+        $SecurityScore = 0
+    $MaxScore = 5
+    $SecurityFindings = @()
     if ($RestrictPublicAccess) {
-        $securityScore++
-        $securityFindings += "[OK] Public access restricted"
+        $SecurityScore++
+        $SecurityFindings += "[OK] Public access restricted"
     } else {
-        $securityFindings += "[WARN]  Public access allowed - consider restricting"
+        $SecurityFindings += "[WARN]  Public access allowed - consider restricting"
     }
-    # Check monitoring
     if ($EnableMonitoring) {
-        $securityScore++
-        $securityFindings += "[OK] Monitoring enabled"
+        $SecurityScore++
+        $SecurityFindings += "[OK] Monitoring enabled"
     } else {
-        $securityFindings += "[WARN]  Monitoring not configured"
+        $SecurityFindings += "[WARN]  Monitoring not configured"
     }
-    # Check resource group location compliance
     if ($Location -in @("East US", "West Europe", "Southeast Asia")) {
-        $securityScore++
-        $securityFindings += "[OK] Deployed in compliant region"
+        $SecurityScore++
+        $SecurityFindings += "[OK] Deployed in compliant region"
     }
-    # Check SKU for production readiness
     if ($SkuName -ne "F0") {
-        $securityScore++
-        $securityFindings += "[OK] Production-ready SKU selected"
+        $SecurityScore++
+        $SecurityFindings += "[OK] Production-ready SKU selected"
     }
-    # Check tagging compliance
     if ($tags.Count -ge 5) {
-        $securityScore++
-        $securityFindings += "[OK] Enterprise tagging compliant"
+        $SecurityScore++
+        $SecurityFindings += "[OK] Enterprise tagging compliant"
     }
-    # Final validation
-        $serviceStatus = Invoke-AzureOperation -Operation {
+        $ServiceStatus = Invoke-AzureOperation -Operation {
         Get-AzCognitiveServicesAccount -ResourceGroupName $ResourceGroupName -Name $AccountName
     } -OperationName "Validate Service Status"
-    # Success summary
-    Write-Host ""
-    Write-Host "                              AZURE OPENAI SERVICE READY"
-    Write-Host ""
-    Write-Host "    Account: $AccountName"
-    Write-Host "    Resource Group: $ResourceGroupName"
-    Write-Host "    Location: $Location"
-    Write-Host "    SKU: $SkuName"
-    Write-Host "    Endpoint: $($serviceStatus.Endpoint)"
-    Write-Host "    Status: $($serviceStatus.ProvisioningState)"
+    Write-Output ""
+    Write-Output "                              AZURE OPENAI SERVICE READY"
+    Write-Output ""
+    Write-Output "    Account: $AccountName"
+    Write-Output "    Resource Group: $ResourceGroupName"
+    Write-Output "    Location: $Location"
+    Write-Output "    SKU: $SkuName"
+    Write-Output "    Endpoint: $($ServiceStatus.Endpoint)"
+    Write-Output "    Status: $($ServiceStatus.ProvisioningState)"
     if ($Action.ToLower() -eq "create") {
-        Write-Host ""
-        Write-Host "Model Deployment:"
-        Write-Host "    Model: $ModelName ($ModelVersion)"
-        Write-Host "    Deployment: $DeploymentName"
-        Write-Host "    Capacity: $Capacity TPM"
+        Write-Output ""
+        Write-Output "Model Deployment:"
+        Write-Output "    Model: $ModelName ($ModelVersion)"
+        Write-Output "    Deployment: $DeploymentName"
+        Write-Output "    Capacity: $Capacity TPM"
     }
-    Write-Host ""
-    Write-Host "[LOCK] Security Assessment: $securityScore/$maxScore"
-    foreach ($finding in $securityFindings) {
-        Write-Host "   $finding"
+    Write-Output ""
+    Write-Output "[LOCK] Security Assessment: $SecurityScore/$MaxScore"
+    foreach ($finding in $SecurityFindings) {
+        Write-Output "   $finding"
     }
-    Write-Host ""
-    Write-Host "    Test API: Use the endpoint and keys to make API calls"
-    Write-Host "    Monitor usage: Check Azure Monitor for usage metrics"
-    Write-Host "    Set up alerts: Configure cost and usage alerts"
-    Write-Host "    Review compliance: Ensure AI governance policies are met"
-    Write-Host ""
-    
-} catch {
-    
-    Write-Host ""
-    Write-Host "Troubleshooting Tips:"
-    Write-Host "    Verify OpenAI service availability in your region"
-    Write-Host "    Check subscription quotas for Cognitive Services"
-    Write-Host "    Ensure proper permissions for AI service creation"
-    Write-Host "    Validate model availability for your region"
-    Write-Host ""
-    throw
-}
+    Write-Output ""
+    Write-Output "    Test API: Use the endpoint and keys to make API calls"
+    Write-Output "    Monitor usage: Check Azure Monitor for usage metrics"
+    Write-Output "    Set up alerts: Configure cost and usage alerts"
+    Write-Output "    Review compliance: Ensure AI governance policies are met"
+    Write-Output ""
 
+} catch {
+
+    Write-Output ""
+    Write-Output "Troubleshooting Tips:"
+    Write-Output "    Verify OpenAI service availability in your region"
+    Write-Output "    Check subscription quotas for Cognitive Services"
+    Write-Output "    Ensure proper permissions for AI service creation"
+    Write-Output "    Validate model availability for your region"
+    Write-Output ""
+    throw`n}

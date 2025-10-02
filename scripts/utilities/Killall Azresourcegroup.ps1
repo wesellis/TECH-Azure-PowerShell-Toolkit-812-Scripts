@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,82 +10,71 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
 This script recursively calls the Kill-AzResourceGroup.ps1 script to remove any resourceGroups that failed deletion previous.
 Some resource cannot be deleted until hours after they are created
 $x = Get-AzResourceGroup -ErrorAction Stop | Select ResourceGroupName
 foreach($rg in $x)
 try {
-    # Main script execution
 {
 $o = "'" + $rg.ResourceGroupName + " ',"
-Write-Host $o
+Write-Output $o
 }
-$rgs = @( ... )
+    $rgs = @( ... )
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [string] $TTKPath = " ." ,
     [long] $SleepTime = 600,
-    [string] $ResourceGroupName, # if a single name is passed, use it
-    [array] $ResourceGroupNames, # if an array is passed, use it
+    [string] $ResourceGroupName,
+    [array] $ResourceGroupNames,
     [string] $Pattern = " azdo-*" # else use the default pattern
 )
-$azdoResourceGroups = @()
+    $AzdoResourceGroups = @()
 Set-Item -ErrorAction Stop Env:\SuppressAzurePowerShellBreakingChangeWarnings " true"
 if ($ResourceGroupNames.count -ne 0) {
-    foreach ($rgName in $ResourceGroupNames) {
-        $azdoResourceGroups = $azdoResourceGroups + @{"ResourceGroupName" = $rgName }
+    foreach ($RgName in $ResourceGroupNames) {
+    $AzdoResourceGroups = $AzdoResourceGroups + @{"ResourceGroupName" = $RgName }
     }
     $SecondErrorAction = "SilentlyContinue"
 }
 elseif (![string]::IsNullOrWhiteSpace($ResourceGroupName)) {
-    $azdoResourceGroups = $azdoResourceGroups + @{"ResourceGroupName" = $ResourceGroupName }
+    $AzdoResourceGroups = $AzdoResourceGroups + @{"ResourceGroupName" = $ResourceGroupName }
     $SecondErrorAction = "Continue"
 }
 else {
-    #if a RG name was not passed remove all with the CI pattern
-    $azdoResourceGroups = get-AzResourceGroup -ErrorAction Stop | Where-Object { $_.ResourceGroupName -like $Pattern }
-$SecondErrorAction = "SilentlyContinue"
+    $AzdoResourceGroups = get-AzResourceGroup -ErrorAction Stop | Where-Object { $_.ResourceGroupName -like $Pattern }
+    $SecondErrorAction = "SilentlyContinue"
 }
-foreach ($rg in $azdoResourceGroups) {
-    Write-Host " ***********************"
-    Write-Host "  $(Get-Date)"
-    Write-Host " ***********************"
-    # remove the resource group
-$bypassTag = $(Get-AzTag -ResourceId $rg.ResourceId).properties.tagsproperty.bypass
-    # skip resourece groups that have been tagged due to some bug and can't be deleted
-    # this enables getting to the other resourceGroups instead of timing out
-    if (!$bypassTag) {
-        Write-Host "First attempt on ResourceGroup: $($rg.ResourceGroupName)"
-        Write-Host " --------------------------------------------------------------------------"
+foreach ($rg in $AzdoResourceGroups) {
+    Write-Output " ***********************"
+    Write-Output "  $(Get-Date)"
+    Write-Output " ***********************"
+    $BypassTag = $(Get-AzTag -ResourceId $rg.ResourceId).properties.tagsproperty.bypass
+    if (!$BypassTag) {
+        Write-Output "First attempt on ResourceGroup: $($rg.ResourceGroupName)"
+        Write-Output " --------------------------------------------------------------------------"
         & $TTKPath/ci-scripts/Kill-AzResourceGroup.ps1 -ResourceGroupName ($rg.ResourceGroupName) -Verbose -ErrorAction SilentlyContinue
-        # if the resource group still exists after the first attempt, try again after a few minutes
-        Write-Host "Checking for ResourceGroup: $($rg.ResourceGroupName)"
+        Write-Output "Checking for ResourceGroup: $($rg.ResourceGroupName)"
         if ($null -ne (Get-AzResourceGroup -Name $rg.ResourceGroupName -verbose -ErrorAction SilentlyContinue)) {
-            Write-Host "Found the resource group - sleeping..."
+            Write-Output "Found the resource group - sleeping..."
             Start-Sleep $SleepTime
-            Write-Host "Second Attempt on ResourceGroup: $($rg.ResourceGroupName)"
-            Write-Host " --------------------------------------------------------------------------"
+            Write-Output "Second Attempt on ResourceGroup: $($rg.ResourceGroupName)"
+            Write-Output " --------------------------------------------------------------------------"
             & $TTKPath/ci-scripts/Kill-AzResourceGroup.ps1 -ResourceGroupName ($rg.ResourceGroupName) -verbose -ErrorAction $SecondErrorAction
             if ($null -ne (Get-AzResourceGroup -Name $rg.ResourceGroupName -verbose -ErrorAction SilentlyContinue)) {
-                Write-Host " =================================================================="
-                Write-Host "Failed to delete: $($rg.ResourceGroupName) "
-                Write-Host " =================================================================="
+                Write-Output " =================================================================="
+                Write-Output "Failed to delete: $($rg.ResourceGroupName) "
+                Write-Output " =================================================================="
             }
         }
         else {
-            Write-Host "ResourceGroup Not found (delete success)"
+            Write-Output "ResourceGroup Not found (delete success)"
         }
     }
     else {
-        # Write to the log that we skipped an RG due to the tag
-        Write-Host " `nSkipping $($rg.ResourceGroupName) due to bypass tag...`n"
+        Write-Output " `nSkipping $($rg.ResourceGroupName) due to bypass tag...`n"
     }
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

@@ -1,58 +1,166 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules PartnerCenter, Az.Accounts
 
-<#`n.SYNOPSIS
-    Connect Az Secure App Model
+<#
+.SYNOPSIS
+    Connect to Azure using Secure App Model
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script for connecting to Azure using Secure App Model with Partner Center
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+
+    SECURITY WARNING: Never hardcode credentials, tokens, or tenant IDs in scripts.
+    Use secure methods like Azure Key Vault, environment variables, or parameter files.
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$TenantId,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ApplicationId,
+
+    [Parameter(Mandatory = $true)]
+    [string]$AccountId,
+
+    [Parameter(Mandatory = $false)]
+    [string]$RefreshToken,
+
+    [Parameter(Mandatory = $false)]
+    [string]$KeyVaultName,
+
+    [Parameter(Mandatory = $false)]
+    [string]$SecretName
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-Import-Module 'PartnerCenter'
-$TenantID_3001 = $null
-$TenantID_3001 = " e09d9473-1a06-4717-98c1-528067eab3a4" #FGC Health Tenant ID
-$RefreshToken_3001 = $null
-$RefreshToken_3001 = " 0.ARcApCcy3LpT8Ui1S4mTbNXKU0biMg2kdDBJrz9JcmUtdbsXAB8.AgABAAAAAAB2UyzwtQEKR7-rWbgdcBZIAQDs_wIA9P9pUxrVuXTg2zH4nC-eDuKt76Y8r544qqPu0Jw1DRa6Szg_xUeEDmiDPA64kaWOq8yW4evU8al0GB0h877MvgrTPpMPJMmE5FnOEz2VQNmwMia9uxNmUVwZyAyziJOIiPYH0sji3IBN0T3jRVww39_sylhbomngbZVMlEI3SyjU82UYxte4IIGR8Xvy6E8V7HPkYiVrG92mbJaSwGOaoX3Mjda3IqF4ZtdZrEXV-EhCG3Og78CtaTBBNKAyxhBb_owYceDIFfcV4W3PEZtzFNPQBZOscZrd31ojm8Nbcje-s1pHEZIyDuqba_2rcfJ7P0tGZnb-BGskwoGjhrf8uZEY50EyWiBG4D-E4Bhy4msNL19SHzEqd_WhvyNcCRJbGaI6eFBB7q81F0JQO_TTPoXlgmSeszCyBUyBPp8-R_kpshlZLrgdSVo1aARYdT1tuds635TNZa6IVfeE0f9QssIpb-dSw_kp3TEv5ijzYTEqPIZVHQWKROfZd3sDRaIjRgYDLbS50LiUU-G7xAtx2ATleDzLahpnMTCscIInmLJcE9NyFPixF3yamvTWkcXTAx9Ghn6XhnKsEZA15kjoAzK4s6NDGoL8M8Uaf4mYM_vMB42z1roksREn6GAAJ_5wjOeDSdBAHRaDn1_4BJ_FYX_eoAl8eeoqDejBRLtEOM7HrmtxHV-9aZjmw2C5TjJOUdOKOuZApBQ_p6Do01bhbjSO57ZCo6737sn0fv7zjCFkEKth1yu-JBXKcWqfvAdAAHWHIl4AwIB2XOjjlck6j5Am9YuwC2W9nEyGIqYO-3bGDz0-PmADXzqsr2xguVPrd1jRMyTvWNcocN7XT0KhgQDOJtybwmm4vfZXZzk76aVBPCtDE2LCBl_-CGC097VbNus2EFtZlQTjXhFAHOsxo9JEKm2vgnHv8dd3gtvV5yRZ2iYfqjs0hRtiZX1sjkluqey4rmZNuCrCY-K2o7hkMP_cDuPTik0UuFPBgNN7SJAQYipUp-_KdknxgmeAkhu-iNkIgiDnZ_ZLUj2vFa6giKlxiPKEHhSI1UtflQWhPPn4BZjdKurkIGhkHto7aJ3-IRKq1X_G6fTvvCNNLMxY-9m8LzExrHo82keOXw" #PSAutomation_M365SecureApp1
-$AccountId_3001 = $null
-$AccountId_3001 = 'Abdullah@canadacomputing.ca'
-$Appcredential_3001 = $null
-$Appcredential_3001 = Get-Credential -ErrorAction Stop
-$newPartnerAccessTokenSplat_azureToken_3001 = $null
-$newPartnerAccessTokenSplat_azureToken_3001 = @{
-    ApplicationId    = $Appcredential_3001.UserName
-    Credential       = $Appcredential_3001
-    RefreshToken     = $RefreshToken_3001 #comment out if you are usnig the UseAuthorizationCode parameter
-    Scopes           = 'https://management.azure.com/user_impersonation'
-    ServicePrincipal = $true
-    Tenant           = $TenantID_3001
-    # UseAuthorizationCode = $true #use only the first time to provide consent if you get a consent error
+
+function Get-RefreshTokenSecure {
+    param(
+        [string]$KeyVaultName,
+        [string]$SecretName,
+        [string]$RefreshToken
+    )
+
+    if ($KeyVaultName -and $SecretName) {
+        Write-Verbose "Retrieving refresh token from Key Vault: $KeyVaultName"
+        try {
+            $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $SecretName -AsPlainText
+            return $secret
+        }
+        catch {
+            Write-Error "Failed to retrieve refresh token from Key Vault: $_"
+            throw
+        }
+    }
+    elseif ($RefreshToken) {
+        Write-Warning "Using refresh token from parameter. Consider using Key Vault for production scenarios."
+        return $RefreshToken
+    }
+    else {
+        # Prompt for refresh token if not provided
+        $secureToken = Read-Host -Prompt "Enter refresh token" -AsSecureString
+        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken)
+        return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+    }
 }
-$azuretoken_3001 = $null
-$azuretoken_3001 = New-PartnerAccessToken -ErrorAction Stop @newPartnerAccessTokenSplat_azureToken_3001
-$newPartnerAccessTokenSplat_graphToken_3001 = $null
-$newPartnerAccessTokenSplat_graphToken_3001 = @{
-    ApplicationId    = $Appcredential_3001.UserName
-    Credential       = $Appcredential_3001
-    RefreshToken     = $RefreshToken_3001
-    Scopes           = 'https://graph.windows.net/.default'
-    ServicePrincipal = $true
-    Tenant           = $TenantID_3001
-    # UseAuthorizationCode = $true #use only the first time to provide consent if you get a consent error
+
+function Get-ApplicationCredential {
+    param(
+        [string]$ApplicationId
+    )
+
+    Write-Verbose "Getting credential for Application ID: $ApplicationId"
+
+    # Check for environment variable first
+    $appSecret = $env:AZURE_APP_SECRET
+
+    if ($appSecret) {
+        $securePassword = ConvertTo-SecureString $appSecret -AsPlainText -Force
+        return New-Object System.Management.Automation.PSCredential ($ApplicationId, $securePassword)
+    }
+    else {
+        # Prompt for credentials
+        return Get-Credential -UserName $ApplicationId -Message "Enter application secret"
+    }
 }
-$graphToken_3001 = $null
-$graphToken_3001 = New-PartnerAccessToken -ErrorAction Stop @newPartnerAccessTokenSplat_graphToken_3001
-$connectAzAccountSplat_3001 = $null;
-$connectAzAccountSplat_3001 = @{
-    AccessToken      = $azuretoken_3001.AccessToken
-    AccountId        = $AccountId_3001
-    GraphAccessToken = $graphToken_3001.AccessToken
-    Tenant           = $TenantID_3001
+
+try {
+    Write-Verbose "Starting Azure Secure App Model connection..."
+
+    # Import required module
+    Import-Module 'PartnerCenter' -ErrorAction Stop
+
+    # Get refresh token securely
+    $secureRefreshToken = Get-RefreshTokenSecure -KeyVaultName $KeyVaultName `
+                                                 -SecretName $SecretName `
+                                                 -RefreshToken $RefreshToken
+
+    # Get application credential
+    $appCredential = Get-ApplicationCredential -ApplicationId $ApplicationId
+
+    # Create Azure management token
+    Write-Verbose "Creating Azure management token..."
+    $azureTokenParams = @{
+        ApplicationId    = $appCredential.UserName
+        Credential       = $appCredential
+        RefreshToken     = $secureRefreshToken
+        Scopes           = 'https://management.azure.com/user_impersonation'
+        ServicePrincipal = $true
+        Tenant           = $TenantId
+    }
+
+    $azureToken = New-PartnerAccessToken @azureTokenParams
+
+    # Create Graph token
+    Write-Verbose "Creating Graph token..."
+    $graphTokenParams = @{
+        ApplicationId    = $appCredential.UserName
+        Credential       = $appCredential
+        RefreshToken     = $secureRefreshToken
+        Scopes           = 'https://graph.windows.net/.default'
+        ServicePrincipal = $true
+        Tenant           = $TenantId
+    }
+
+    $graphToken = New-PartnerAccessToken @graphTokenParams
+
+    # Connect to Azure Account
+    Write-Verbose "Connecting to Azure Account..."
+    $connectParams = @{
+        AccessToken      = $azureToken.AccessToken
+        AccountId        = $AccountId
+        GraphAccessToken = $graphToken.AccessToken
+        Tenant           = $TenantId
+    }
+
+    Connect-AzAccount @connectParams
+
+    Write-Verbose "Successfully connected to Azure using Secure App Model"
+
+    # Return connection details (without sensitive information)
+    return @{
+        TenantId      = $TenantId
+        ApplicationId = $ApplicationId
+        AccountId     = $AccountId
+        Connected     = $true
+        ConnectedAt   = Get-Date
+    }
 }
-Connect-AzAccount @connectAzAccountSplat_3001
+catch {
+    Write-Error "Failed to connect to Azure: $($_.Exception.Message)"
+    throw
+}
+finally {
+    # Clear sensitive variables
+    if ($secureRefreshToken) { Clear-Variable -Name secureRefreshToken -Force -ErrorAction SilentlyContinue }
+    if ($appCredential) { Clear-Variable -Name appCredential -Force -ErrorAction SilentlyContinue }
+    if ($azureToken) { Clear-Variable -Name azureToken -Force -ErrorAction SilentlyContinue }
+    if ($graphToken) { Clear-Variable -Name graphToken -Force -ErrorAction SilentlyContinue }
+}

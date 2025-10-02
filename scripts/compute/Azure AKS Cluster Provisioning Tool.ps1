@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#
 .SYNOPSIS
@@ -39,72 +39,64 @@
 
 .EXAMPLE
     .\Provision-AKS.ps1 -ResourceGroupName "myRG" -AksClusterName "myCluster" -Location "eastus"
-#>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$AksClusterName,
-    
+
     [Parameter()]
     [int]$NodeCount = 3,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$Location,
-    
+
     [Parameter()]
     [string]$NodeVmSize = "Standard_DS2_v2",
-    
+
     [Parameter()]
     [string]$KubernetesVersion = "1.28.0",
-    
+
     [Parameter()]
     [string]$NetworkPlugin = "azure",
-    
+
     [Parameter()]
     [bool]$EnableRBAC = $true,
-    
+
     [Parameter()]
     [bool]$EnableManagedIdentity = $true
 )
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 
-# Set error handling and verbose preferences
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colorMap = @{
+    $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
-    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
 
 try {
-    # Display configuration
     Write-LogMessage "Provisioning AKS Cluster: $AksClusterName" -Level "INFO"
     Write-LogMessage "Resource Group: $ResourceGroupName" -Level "INFO"
     Write-LogMessage "Location: $Location" -Level "INFO"
@@ -116,9 +108,7 @@ try {
     Write-LogMessage "Managed Identity Enabled: $EnableManagedIdentity" -Level "INFO"
 
     Write-LogMessage "`nCreating AKS cluster (this may take 10-15 minutes)..." -Level "INFO"
-
-    # Parameters for AKS cluster creation
-    $aksParams = @{
+    $AksParams = @{
         ResourceGroupName = $ResourceGroupName
         Name = $AksClusterName
         Location = $Location
@@ -130,9 +120,7 @@ try {
         EnableManagedIdentity = $EnableManagedIdentity
         ErrorAction = "Stop"
     }
-
-    # Create the AKS cluster
-    $AksCluster = New-AzAksCluster @aksParams
+    [string]$AksCluster = New-AzAksCluster @aksParams
 
     Write-LogMessage "`nAKS Cluster $AksClusterName provisioned successfully!" -Level "SUCCESS"
     Write-LogMessage "Cluster FQDN: $($AksCluster.Fqdn)" -Level "INFO"
@@ -159,5 +147,4 @@ try {
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    throw
-}
+    throw`n}

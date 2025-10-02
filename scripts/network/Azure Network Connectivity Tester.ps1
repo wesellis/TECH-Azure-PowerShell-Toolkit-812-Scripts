@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -15,8 +15,8 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
@@ -30,7 +30,7 @@ param(
     [Parameter()]
     [string]$ResourceGroupName
 )
-Write-Host "Script Started" -ForegroundColor Green
+Write-Output "Script Started" # Color: $2
 try {
     if (-not (Get-AzContext)) {
         Connect-AzAccount
@@ -39,9 +39,9 @@ try {
         }
     }
     }
-    $vm = Get-AzVM -Name $SourceVMName -ResourceGroupName $ResourceGroupName
-    $networkWatcher = Get-AzNetworkWatcher -Location $vm.Location
-$connectivityTest = @{
+    [string]$vm = Get-AzVM -Name $SourceVMName -ResourceGroupName $ResourceGroupName
+    [string]$NetworkWatcher = Get-AzNetworkWatcher -Location $vm.Location
+    $ConnectivityTest = @{
         Source = @{
             ResourceId = $vm.Id
         }
@@ -50,15 +50,12 @@ $connectivityTest = @{
             Port = $Port
         }
     }
-
-$result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $networkWatcher @connectivityTest
-    Write-Host "Connectivity Test Results:" -ForegroundColor Cyan
-    Write-Host "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable" ){"Green" }else{"Red" })
-    Write-Host "Average Latency: $($result.AvgLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Min Latency: $($result.MinLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Max Latency: $($result.MaxLatencyInMs) ms" -ForegroundColor White
-    Write-Host "Probes Sent: $($result.ProbesSent)" -ForegroundColor White
-    Write-Host "Probes Failed: $($result.ProbesFailed)" -ForegroundColor White
-} catch { throw }
-
-
+    [string]$result = Test-AzNetworkWatcherConnectivity -NetworkWatcher $NetworkWatcher @connectivityTest
+    Write-Output "Connectivity Test Results:" # Color: $2
+    Write-Output "Status: $($result.ConnectionStatus)" -ForegroundColor $(if($result.ConnectionStatus -eq "Reachable" ){"Green" }else{"Red" })
+    Write-Output "Average Latency: $($result.AvgLatencyInMs) ms" # Color: $2
+    Write-Output "Min Latency: $($result.MinLatencyInMs) ms" # Color: $2
+    Write-Output "Max Latency: $($result.MaxLatencyInMs) ms" # Color: $2
+    Write-Output "Probes Sent: $($result.ProbesSent)" # Color: $2
+    Write-Output "Probes Failed: $($result.ProbesFailed)" # Color: $2
+} catch { throw`n}

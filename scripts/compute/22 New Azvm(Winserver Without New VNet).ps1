@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -11,16 +11,13 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function New-IaaCAzVM -ErrorAction Stop {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -142,26 +139,22 @@ function New-IaaCAzVM -ErrorAction Stop {
         [ValidateNotNullOrEmpty()]
         [string]$DiskSizeInGB
     )
-    #Creating the Resource Group Name
-    $newAzResourceGroupSplat = @{
+    $NewAzResourceGroupSplat = @{
         Name     = $ResourceGroupName
         Location = $LocationName
         Tag      = $Tags
     }
     New-AzResourceGroup -ErrorAction Stop @newAzResourceGroupSplat
-    #Getting the Existing VNET. We put our VMs in the same VNET as much as possible, so we do not have to create new bastions and new VPN gateways for each VM
-    $getAzVirtualNetworkSplat = @{
+    $GetAzVirtualNetworkSplat = @{
         Name = $VnetName
     }
     $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
-    #Getting the Existing Subnet
-    $getAzVirtualNetworkSubnetConfigSplat = @{
+    $GetAzVirtualNetworkSubnetConfigSplat = @{
         VirtualNetwork = $vnet
         Name           = $SubnetName
     }
     $VMsubnet = Get-AzVirtualNetworkSubnetConfig -ErrorAction Stop @getAzVirtualNetworkSubnetConfigSplat
-    #Creating the PublicIP for the VM
-    $newAzPublicIpAddressSplat = @{
+    $NewAzPublicIpAddressSplat = @{
         Name              = $PublicIPAddressName
         DomainNameLabel   = $DNSNameLabel
         ResourceGroupName = $ResourceGroupName
@@ -169,32 +162,30 @@ function New-IaaCAzVM -ErrorAction Stop {
         AllocationMethod  = $PublicIPAllocation
         Tag               = $Tags
     }
-    $PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
-    #Creating the Application Security Group
-    $newAzApplicationSecurityGroupSplat = @{
+    [string]$PIP = New-AzPublicIpAddress -ErrorAction Stop @newAzPublicIpAddressSplat
+    $NewAzApplicationSecurityGroupSplat = @{
         ResourceGroupName = " $ResourceGroupName"
         Name              = " $ASGName"
         Location          = " $LocationName"
         Tag               = $Tags
     }
-    $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-    $newAzNetworkInterfaceIpConfigSplat = @{
+    [string]$ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
+    $NewAzNetworkInterfaceIpConfigSplat = @{
         Name                     = $IPConfigName
         Subnet                   = $VMSubnet
         PublicIpAddress          = $PIP
         ApplicationSecurityGroup = $ASG
         Primary                  = $true
     }
-    $IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-    $newAzNetworkSecurityGroupSplat = @{
+    [string]$IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
+    $NewAzNetworkSecurityGroupSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         Name              = $NSGName
         Tag               = $Tags
     }
-    $NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
-    #Creating the NIC for the VM
-    $newAzNetworkInterfaceSplat = @{
+    [string]$NSG = New-AzNetworkSecurityGroup -ErrorAction Stop @newAzNetworkSecurityGroupSplat
+    $NewAzNetworkInterfaceSplat = @{
         Name                   = $NICName
         ResourceGroupName      = $ResourceGroupName
         Location               = $LocationName
@@ -202,49 +193,43 @@ function New-IaaCAzVM -ErrorAction Stop {
         IpConfiguration        = $IPConfig1
         Tag                    = $Tags
     }
-    $NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
-    #Creating the Cred Object for the VM
+    [string]$NIC = New-AzNetworkInterface -ErrorAction Stop @newAzNetworkInterfaceSplat
     $Credential = Get-Credential -ErrorAction Stop
-    #Creating the VM Config Object for the VM
-    $newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName = $VMName
         VMSize = $VMSize
         Tags   = $Tags
     }
-    $VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-    #Creating the OS Object for the VM
-    $setAzVMOperatingSystemSplat = @{
+    [string]$VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
+    $SetAzVMOperatingSystemSplat = @{
         VM           = $VirtualMachine
         Windows        = $true
         ComputerName = $ComputerName
         Credential   = $Credential
     }
-    $VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
-    #Adding the NIC to the VM
-    $addAzVMNetworkInterfaceSplat = @{
+    [string]$VirtualMachine = Set-AzVMOperatingSystem -ErrorAction Stop @setAzVMOperatingSystemSplat
+    $AddAzVMNetworkInterfaceSplat = @{
         VM = $VirtualMachine
         Id = $NIC.Id
     }
-    $VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
-    $setAzVMSourceImageSplat = @{
+    [string]$VirtualMachine = Add-AzVMNetworkInterface @addAzVMNetworkInterfaceSplat
+    $SetAzVMSourceImageSplat = @{
         VM            = $VirtualMachine
         PublisherName = $PublisherName
         Offer         = $Offer
         Skus          = $Skus
         Version       = $Version
     }
-    $VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
-    #Setting the VM OS Disk to the VM
-    $setAzVMOSDiskSplat = @{
+    [string]$VirtualMachine = Set-AzVMSourceImage -ErrorAction Stop @setAzVMSourceImageSplat
+    $SetAzVMOSDiskSplat = @{
         VM           = $VirtualMachine
         Name         = $OSDiskName
         Caching      = $OSDiskCaching
         CreateOption = $OSCreateOption
         DiskSizeInGB = $DiskSizeInGB
     }
-    $VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
-    #Creating the VM
-    $newAzVMSplat = @{
+    [string]$VirtualMachine = Set-AzVMOSDisk -ErrorAction Stop @setAzVMOSDiskSplat
+    $NewAzVMSplat = @{
         ResourceGroupName = $ResourceGroupName
         Location          = $LocationName
         VM                = $VirtualMachine
@@ -253,32 +238,32 @@ function New-IaaCAzVM -ErrorAction Stop {
     }
     New-AzVM -ErrorAction Stop @newAzVMSplat
 }
-$LocationName = 'CanadaCentral'
-$CustomerName = 'CanadaComputing'
-$VMName = 'VEEAM-CCGW1'
-$ResourceGroupName = -join (" $CustomerName" , "_$VMName" , "_RG" )
-$ComputerName = $VMName
-$VMSize = "Standard_B2MS"
-$OSDiskCaching = "ReadWrite"
-$OSCreateOption = "FromImage"
-$GUID = [guid]::NewGuid()
-$OSDiskName = -join (" $VMName" , "_OSDisk" , "_1" , "_$GUID" )
-$ASGName = -join (" $VMName" , "_ASG1" )
-$NSGName = -join (" $VMName" , "-nsg" )
-$DNSNameLabel = -join (" $VMName" , "DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
-$NICPrefix = 'NIC1'
-$NICName = -join (" $VMName" , "_$NICPrefix" ).ToLower()
-$IPConfigName = -join (" $VMName" , "$NICName" , "_IPConfig1" ).ToLower()
-$PublicIPAddressName = -join (" $VMName" , "-ip" )
-$VnetName = 'VEEAM1-POC_group-vnet'
-$SubnetName = 'VEEAM1-POC-subnet'
-$PublicIPAllocation = 'Static'
-$PublisherName = "MicrosoftWindowsServer"
-$Offer = "WindowsServer"
-$Skus = " 2019-datacenter-gensecond"
-$Version = " latest"
-$DiskSizeInGB = '127'
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
+    [string]$LocationName = 'CanadaCentral'
+    [string]$CustomerName = 'CanadaComputing'
+    [string]$VMName = 'VEEAM-CCGW1'
+    [string]$ResourceGroupName = -join (" $CustomerName" , "_$VMName" , "_RG" )
+    [string]$ComputerName = $VMName
+    [string]$VMSize = "Standard_B2MS"
+    [string]$OSDiskCaching = "ReadWrite"
+    [string]$OSCreateOption = "FromImage"
+    [string]$GUID = [guid]::NewGuid()
+    [string]$OSDiskName = -join (" $VMName" , "_OSDisk" , "_1" , "_$GUID" )
+    [string]$ASGName = -join (" $VMName" , "_ASG1" )
+    [string]$NSGName = -join (" $VMName" , "-nsg" )
+    [string]$DNSNameLabel = -join (" $VMName" , "DNS" ).ToLower() # mydnsname.westus.cloudapp.azure.com
+    [string]$NICPrefix = 'NIC1'
+    [string]$NICName = -join (" $VMName" , "_$NICPrefix" ).ToLower()
+    [string]$IPConfigName = -join (" $VMName" , "$NICName" , "_IPConfig1" ).ToLower()
+    [string]$PublicIPAddressName = -join (" $VMName" , "-ip" )
+    [string]$VnetName = 'VEEAM1-POC_group-vnet'
+    [string]$SubnetName = 'VEEAM1-POC-subnet'
+    [string]$PublicIPAllocation = 'Static'
+    [string]$PublisherName = "MicrosoftWindowsServer"
+    [string]$Offer = "WindowsServer"
+    [string]$Skus = " 2019-datacenter-gensecond"
+    [string]$Version = " latest"
+    [string]$DiskSizeInGB = '127'
+    [string]$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
 [hashtable]$Tags = @{
     "Autoshutown"       = 'OFF'
     "Createdby"         = 'Abdullah Ollivierre'
@@ -302,27 +287,22 @@ $datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
     "Subscription ID"   = ""
     "Tenant ID"         = ""
 }
-$NewIaaCAzVMSplat = @{
+    $NewIaaCAzVMSplat = @{
     LocationName        = $LocationName
     CustomerName        = $CustomerName
     VMName              = $VMName
     ResourceGroupName   = $ResourceGroupName
-    #Creating the Tag Hashtable for the VM
     datetime            = $datetime
     Tags                = $Tags
-    ##VM
     ComputerName        = $ComputerName
     VMSize              = $VMSize
     OSDiskCaching       = $OSDiskCaching
     OSCreateOption      = $OSCreateOption
     GUID                = $GUID
     OSDiskName          = $OSDiskName
-    #ASG
     ASGName             = $ASGName
-    #Defining the NSG name
     NSGName             = $NSGName
-    ## Networking
-    DNSNameLabel        = $DNSNameLabel   # mydnsname.westus.cloudapp.azure.com
+    DNSNameLabel        = $DNSNameLabel
     NICPrefix           = $NICPrefix
     NICName             = $NICName
     IPConfigName        = $IPConfigName
@@ -330,18 +310,13 @@ $NewIaaCAzVMSplat = @{
     VnetName            = $VnetName
     SubnetName          = $SubnetName
     PublicIPAllocation  = $PublicIPAllocation
-    ##Operating System
     PublisherName       = $PublisherName
     Offer               = $Offer
     Skus                = $Skus
     Version             = $Version
-    ##Disk
     DiskSizeInGB        = $DiskSizeInGB
 }
 New-IaaCAzVM -ErrorAction Stop @NewIaaCAzVMSplat
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

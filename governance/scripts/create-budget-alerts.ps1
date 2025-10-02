@@ -7,40 +7,39 @@
 .DESCRIPTION
     create budget alerts operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Creates and manages budget alerts for cost monitoring and control
     and sends notifications when thresholds are reached. Supports multiple budget types,
     time grains, and notification channels including email, webhooks, and action groups.
-.PARAMETER BudgetName
+.parameter BudgetName
     Name of the budget to create or manage
-.PARAMETER Scope
+.parameter Scope
     Scope for the budget (subscription, resource group, or management group)
-.PARAMETER Amount
+.parameter Amount
     Budget amount in the specified currency
-.PARAMETER Currency
+.parameter Currency
     Currency code (default: USD)
-.PARAMETER TimeGrain
+.parameter TimeGrain
     Budget time period: Monthly, Quarterly, Annual, BillingMonth, BillingQuarter, BillingYear
-.PARAMETER StartDate
+.parameter StartDate
     Start date for the budget period
-.PARAMETER EndDate
+.parameter EndDate
     End date for the budget period (optional for recurring budgets)
-.PARAMETER ThresholdPercentages
+.parameter ThresholdPercentages
     Array of percentage thresholds that trigger alerts (e.g., 80, 90, 100, 110)
-.PARAMETER NotificationEmails
+.parameter NotificationEmails
     Email addresses to receive budget alerts
-.PARAMETER WebhookUrl
+.parameter WebhookUrl
     Webhook URL for programmatic notifications
-.PARAMETER ActionGroupId
+.parameter ActionGroupId
     Resource ID of the Action Group for alert routing
-.PARAMETER FilterResourceGroups
+.parameter FilterResourceGroups
     Filter budget to specific resource groups
-.PARAMETER FilterTags
+.parameter FilterTags
     Filter budget by resource tags (hashtable)
-.PARAMETER IncludeForecast
+.parameter IncludeForecast
     Include forecasted spend in threshold calculations
-.PARAMETER Action
+.parameter Action
     Action to perform: Create, Update, Delete, List, GetAlerts
 
     .\create-budget-alerts.ps1 -BudgetName "Monthly-Production" -Amount 5000 -TimeGrain Monthly -ThresholdPercentages 80,100 -NotificationEmails "team@example.com"
@@ -55,126 +54,116 @@
 
     Creates quarterly budget filtered to specific resource groups
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
-[CmdletBinding(SupportsShouldProcess = $true, DefaultParameterSetName = 'Create')]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true, ParameterSetName = 'Create')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'Update')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'Delete')]
-    [Parameter(Mandatory = $false, ParameterSetName = 'GetAlerts')]
+[parameter(Mandatory = $true, ParameterSetName = 'Create')]
+    [parameter(Mandatory = $true, ParameterSetName = 'Update')]
+    [parameter(Mandatory = $true, ParameterSetName = 'Delete')]
+    [parameter(Mandatory = $false, ParameterSetName = 'GetAlerts')]
     [ValidateNotNullOrEmpty()]
     [string]$BudgetName,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$Scope,
 
-    [Parameter(Mandatory = $true, ParameterSetName = 'Create')]
-    [Parameter(Mandatory = $false, ParameterSetName = 'Update')]
+    [parameter(Mandatory = $true, ParameterSetName = 'Create')]
+    [parameter(Mandatory = $false, ParameterSetName = 'Update')]
     [ValidateRange(1, 999999999)]
     [decimal]$Amount,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateSet('USD', 'EUR', 'GBP', 'CAD', 'AUD', 'INR', 'JPY', 'CNY')]
     [string]$Currency = 'USD',
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateSet('Monthly', 'Quarterly', 'Annual', 'BillingMonth', 'BillingQuarter', 'BillingYear')]
     [string]$TimeGrain = 'Monthly',
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [datetime]$StartDate = (Get-Date -Day 1 -Hour 0 -Minute 0 -Second 0),
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [datetime]$EndDate,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateRange(1, 200)]
     [int[]]$ThresholdPercentages = @(80, 90, 100),
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateScript({$_ -match '^[\w\.\-]+@[\w\.\-]+\.\w+$'})]
     [string[]]$NotificationEmails,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateScript({$_ -match '^https?://'})]
     [string]$WebhookUrl,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$ActionGroupId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$FilterResourceGroups,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [hashtable]$FilterTags,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$FilterMeters,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$IncludeForecast,
 
-    [Parameter(Mandatory = $true, ParameterSetName = 'List')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'Delete')]
-    [Parameter(Mandatory = $true, ParameterSetName = 'GetAlerts')]
+    [parameter(Mandatory = $true, ParameterSetName = 'List')]
+    [parameter(Mandatory = $true, ParameterSetName = 'Delete')]
+    [parameter(Mandatory = $true, ParameterSetName = 'GetAlerts')]
     [ValidateSet('Create', 'Update', 'Delete', 'List', 'GetAlerts')]
     [string]$Action,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$ExportReport,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$ExportPath
 )
 
-#region Initialize-Configuration
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-# Set default export path if not provided
 if ($ExportReport -and -not $ExportPath) {
     $ExportPath = ".\BudgetReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
 }
 
-# Initialize logging
 $script:LogPath = ".\BudgetManagement_$(Get-Date -Format 'yyyyMMdd').log"
 
-#endregion
 
-#region Helper-Functions
-[OutputType([bool])]
+[OutputType([bool])] 
  {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Message,
+    [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Success')]
         [string]$Level = 'Info'
     )
 
     $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    $logEntry = "$timestamp [$Level] $Message"
+    $LogEntry = "$timestamp [$Level] $Message"
 
-    Add-Content -Path $script:LogPath -Value $logEntry -ErrorAction SilentlyContinue
+    Add-Content -Path $script:LogPath -Value $LogEntry -ErrorAction SilentlyContinue
 
     switch ($Level) {
-        'Info'    { Write-Verbose $Message }
-        'Warning' { Write-Warning $Message }
-        'Error'   { Write-Error $Message }
-        'Success' { Write-Host $Message -ForegroundColor Green }
+        'Info'    { write-Verbose $Message }
+        'Warning' { write-Warning $Message }
+        'Error'   { write-Error $Message }
+        'Success' { Write-Output $Message -ForegroundColor Green }
     }
 }
 
 function Initialize-RequiredModules {
-    $requiredModules = @('Az.Consumption', 'Az.Resources', 'Az.Monitor')
+    $RequiredModules = @('Az.Consumption', 'Az.Resources', 'Az.Monitor')
 
-    foreach ($module in $requiredModules) {
+    foreach ($module in $RequiredModules) {
         if (-not (Get-Module -ListAvailable -Name $module)) {
-            Write-LogEntry "Module $module not found. Installing..." -Level Warning
+            write-LogEntry "Module $module not found. Installing..." -Level Warning
             try {
                 Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser
-                                Write-LogEntry "Successfully installed module: $module" -Level Success
+                                write-LogEntry "Successfully installed module: $module" -Level Success
             }
             catch {
                 throw "Failed to install required module $module : $_"
@@ -188,7 +177,7 @@ function Initialize-RequiredModules {
 function Get-CurrentContext {
     $context = Get-AzContext
     if (-not $context) {
-        Write-LogEntry "No context found. Initiating authentication..." -Level Warning
+        write-LogEntry "No context found. Initiating authentication..." -Level Warning
         Connect-AzAccount
         $context = Get-AzContext
     }
@@ -196,9 +185,7 @@ function Get-CurrentContext {
 }
 
 function Resolve-BudgetScope {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ExplicitScope,
+    [string]$ExplicitScope,
         [string]$ResourceGroup
     )
 
@@ -217,13 +204,11 @@ function Resolve-BudgetScope {
 }
 
 function Format-CurrencyAmount {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [decimal]$Amount,
+    [decimal]$Amount,
         [string]$Currency = 'USD'
     )
 
-    $currencySymbols = @{
+    $CurrencySymbols = @{
         'USD' = '$'
         'EUR' = ''
         'GBP' = '£'
@@ -234,17 +219,13 @@ function Format-CurrencyAmount {
         'CNY' = '�'
     }
 
-    $symbol = if ($currencySymbols.ContainsKey($Currency)) { $currencySymbols[$Currency] } else { $Currency }
+    $symbol = if ($CurrencySymbols.ContainsKey($Currency)) { $CurrencySymbols[$Currency] } else { $Currency }
     return "$symbol$([Math]::Round($Amount, 2))"
 }
 
-#endregion
 
-#region Core-Functions
 function New-BudgetConfiguration {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Name,
+    [string]$Name,
         [decimal]$Amount,
         [string]$Currency,
         [string]$TimeGrain,
@@ -267,7 +248,6 @@ function New-BudgetConfiguration {
         $config.TimePeriod['EndDate'] = $EndDate.ToString('yyyy-MM-dd')
     }
 
-    # Add filters if specified
     $filters = @{}
 
     if ($FilterResourceGroups -and $FilterResourceGroups.Count -gt 0) {
@@ -290,9 +270,7 @@ function New-BudgetConfiguration {
 }
 
 function New-BudgetNotifications {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [int[]]$ThresholdPercentages,
+    [int[]]$ThresholdPercentages,
         [string[]]$Emails,
         [string]$Webhook,
         [string]$ActionGroup
@@ -301,7 +279,7 @@ function New-BudgetNotifications {
     $notifications = @{}
 
     foreach ($threshold in $ThresholdPercentages) {
-        $notificationName = "Threshold_$($threshold)_Percent"
+        $NotificationName = "Threshold_$($threshold)_Percent"
 
         $notification = @{
             Enabled = $true
@@ -321,29 +299,26 @@ function New-BudgetNotifications {
             $notification.ContactGroups = @($ActionGroup)
         }
 
-        # Add webhook as custom notification
         if ($Webhook) {
             $notification['Locale'] = 'en-us'
         }
 
-        $notifications[$notificationName] = $notification
+        $notifications[$NotificationName] = $notification
     }
 
     return $notifications
 }
 
 function New-AzureBudget {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [hashtable]$BudgetConfig,
+    [hashtable]$BudgetConfig,
         [hashtable]$Notifications,
         [string]$Scope
     )
 
     try {
-        Write-LogEntry "Creating budget: $($BudgetConfig.Name)" -Level Info
+        write-LogEntry "Creating budget: $($BudgetConfig.Name)" -Level Info
 
-        $budgetParams = @{
+        $BudgetParams = @{
             Name = $BudgetConfig.Name
             Amount = $BudgetConfig.Amount
             Category = $BudgetConfig.Category
@@ -352,26 +327,23 @@ function New-AzureBudget {
         }
 
         if ($BudgetConfig.TimePeriod.EndDate) {
-            $budgetParams['EndDate'] = [DateTime]::Parse($BudgetConfig.TimePeriod.EndDate)
+            $BudgetParams['EndDate'] = [DateTime]::Parse($BudgetConfig.TimePeriod.EndDate)
         }
 
-        # Handle scope parameter
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $resourceGroup = $Scope.Split('/')[-1]
-            $budgetParams['ResourceGroupName'] = $resourceGroup
+            $ResourceGroup = $Scope.Split('/')[-1]
+            $BudgetParams['ResourceGroupName'] = $ResourceGroup
         }
 
-        # Create budget
         if ($PSCmdlet.ShouldProcess($BudgetConfig.Name, "Create Budget")) {
             $budget = New-AzConsumptionBudget @budgetParams
 
-            # Add notifications
-            foreach ($notificationKey in $Notifications.Keys) {
-                $notif = $Notifications[$notificationKey]
+            foreach ($NotificationKey in $Notifications.Keys) {
+                $notif = $Notifications[$NotificationKey]
 
-                $notifParams = @{
+                $NotifParams = @{
                     Name = $BudgetConfig.Name
-                    NotificationKey = $notificationKey
+                    NotificationKey = $NotificationKey
                     Threshold = $notif.Threshold
                     ContactEmail = $notif.ContactEmails
                     Enabled = $notif.Enabled
@@ -379,202 +351,188 @@ function New-AzureBudget {
                 }
 
                 if ($notif.ContactGroups -and $notif.ContactGroups.Count -gt 0) {
-                    $notifParams['ContactGroup'] = $notif.ContactGroups
+                    $NotifParams['ContactGroup'] = $notif.ContactGroups
                 }
 
                 if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-                    $notifParams['ResourceGroupName'] = $resourceGroup
+                    $NotifParams['ResourceGroupName'] = $ResourceGroup
                 }
 
                 Set-AzConsumptionBudget @notifParams | Out-Null
             }
 
-            Write-LogEntry "Successfully created budget: $($BudgetConfig.Name)" -Level Success
+            write-LogEntry "Successfully created budget: $($BudgetConfig.Name)" -Level Success
             return $budget
-        
+
 } catch {
-        Write-LogEntry "Failed to create budget: $_" -Level Error
+        write-LogEntry "Failed to create budget: $_" -Level Error
         throw
     }
 }
 
 function Update-AzureBudget {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Name,
+    [string]$Name,
         [hashtable]$Updates,
         [string]$Scope
     )
 
     try {
-        Write-LogEntry "Updating budget: $Name" -Level Info
+        write-LogEntry "Updating budget: $Name" -Level Info
 
-        $updateParams = @{
+        $UpdateParams = @{
             Name = $Name
         }
 
         if ($Updates.ContainsKey('Amount')) {
-            $updateParams['Amount'] = $Updates.Amount
+            $UpdateParams['Amount'] = $Updates.Amount
         }
 
         if ($Updates.ContainsKey('TimeGrain')) {
-            $updateParams['TimeGrain'] = $Updates.TimeGrain
+            $UpdateParams['TimeGrain'] = $Updates.TimeGrain
         }
 
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $updateParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $UpdateParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         if ($PSCmdlet.ShouldProcess($Name, "Update Budget")) {
             $budget = Set-AzConsumptionBudget @updateParams
-            Write-LogEntry "Successfully updated budget: $Name" -Level Success
+            write-LogEntry "Successfully updated budget: $Name" -Level Success
             return $budget
-        
+
 } catch {
-        Write-LogEntry "Failed to update budget: $_" -Level Error
+        write-LogEntry "Failed to update budget: $_" -Level Error
         throw
     }
 }
 
 function Remove-AzureBudget {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Name,
+    [string]$Name,
         [string]$Scope
     )
 
     try {
-        Write-LogEntry "Removing budget: $Name" -Level Info
+        write-LogEntry "Removing budget: $Name" -Level Info
 
-        $removeParams = @{
+        $RemoveParams = @{
             Name = $Name
         }
 
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $removeParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $RemoveParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         if ($PSCmdlet.ShouldProcess($Name, "Remove Budget")) {
             Remove-AzConsumptionBudget @removeParams
-            Write-LogEntry "Successfully removed budget: $Name" -Level Success
-        
+            write-LogEntry "Successfully removed budget: $Name" -Level Success
+
 } catch {
-        Write-LogEntry "Failed to remove budget: $_" -Level Error
+        write-LogEntry "Failed to remove budget: $_" -Level Error
         throw
     }
 }
 
 function Get-BudgetAlerts {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$BudgetName,
+    [string]$BudgetName,
         [string]$Scope,
         [int]$DaysBack = 30
     )
 
     try {
-        Write-LogEntry "Retrieving alerts for budget: $BudgetName" -Level Info
+        write-LogEntry "Retrieving alerts for budget: $BudgetName" -Level Info
 
-        $startDate = (Get-Date).AddDays(-$DaysBack)
-        $endDate = Get-Date
+        $StartDate = (Get-Date).AddDays(-$DaysBack)
+        $EndDate = Get-Date
 
-        # Get budget details
-        $budgetParams = @{}
+        $BudgetParams = @{}
         if ($BudgetName) {
-            $budgetParams['Name'] = $BudgetName
+            $BudgetParams['Name'] = $BudgetName
         }
 
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $budgetParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $BudgetParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         $budget = Get-AzConsumptionBudget @budgetParams
 
-        # Get current usage
-        $usageParams = @{
-            StartDate = $startDate
-            EndDate = $endDate
+        $UsageParams = @{
+            StartDate = $StartDate
+            EndDate = $EndDate
             Granularity = 'Daily'
         }
 
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $usageParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $UsageParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         $usage = Get-AzConsumptionUsageDetail @usageParams
 
-        # Calculate total spend
-        $totalSpend = ($usage | Measure-Object -Property PretaxCost -Sum).Sum
+        $TotalSpend = ($usage | Measure-Object -Property PretaxCost -Sum).Sum
 
-        # Check against thresholds
         $alerts = @()
-        $budgetAmount = $budget.Amount
+        $BudgetAmount = $budget.Amount
 
         foreach ($notification in $budget.Notification.PSObject.Properties) {
             $threshold = $notification.Value.Threshold
-            $thresholdAmount = ($budgetAmount * $threshold) / 100
+            $ThresholdAmount = ($BudgetAmount * $threshold) / 100
 
-            if ($totalSpend -ge $thresholdAmount) {
+            if ($TotalSpend -ge $ThresholdAmount) {
                 $alerts += [PSCustomObject]@{
                     BudgetName = $budget.Name
                     Threshold = $threshold
-                    ThresholdAmount = Format-CurrencyAmount -Amount $thresholdAmount -Currency $Currency
-                    CurrentSpend = Format-CurrencyAmount -Amount $totalSpend -Currency $Currency
-                    PercentUsed = [Math]::Round(($totalSpend / $budgetAmount) * 100, 2)
+                    ThresholdAmount = Format-CurrencyAmount -Amount $ThresholdAmount -Currency $Currency
+                    CurrentSpend = Format-CurrencyAmount -Amount $TotalSpend -Currency $Currency
+                    PercentUsed = [Math]::Round(($TotalSpend / $BudgetAmount) * 100, 2)
                     Status = 'Triggered'
                     Notification = $notification.Name
                 }
             }
         }
 
-        Write-LogEntry "Found $($alerts.Count) triggered alerts" -Level Info
+        write-LogEntry "Found $($alerts.Count) triggered alerts" -Level Info
         return $alerts
     }
     catch {
-        Write-LogEntry "Failed to retrieve budget alerts: $_" -Level Error
+        write-LogEntry "Failed to retrieve budget alerts: $_" -Level Error
         throw
     }
 }
 
 function Get-BudgetUsageReport {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Scope,
+    [string]$Scope,
         [int]$DaysBack = 30
     )
 
     try {
-        Write-LogEntry "Generating budget usage report" -Level Info
+        write-LogEntry "Generating budget usage report" -Level Info
 
-        $startDate = (Get-Date).AddDays(-$DaysBack)
-        $endDate = Get-Date
+        $StartDate = (Get-Date).AddDays(-$DaysBack)
+        $EndDate = Get-Date
 
-        # Get all budgets
-        $budgetParams = @{}
+        $BudgetParams = @{}
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $budgetParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $BudgetParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         $budgets = Get-AzConsumptionBudget @budgetParams
 
-        # Get usage details
-        $usageParams = @{
-            StartDate = $startDate
-            EndDate = $endDate
+        $UsageParams = @{
+            StartDate = $StartDate
+            EndDate = $EndDate
             Granularity = 'Monthly'
         }
 
         if ($Scope -match '^/subscriptions/[^/]+/resourceGroups/') {
-            $usageParams['ResourceGroupName'] = $Scope.Split('/')[-1]
+            $UsageParams['ResourceGroupName'] = $Scope.Split('/')[-1]
         }
 
         $usage = Get-AzConsumptionUsageDetail @usageParams
-        $totalSpend = ($usage | Measure-Object -Property PretaxCost -Sum).Sum
+        $TotalSpend = ($usage | Measure-Object -Property PretaxCost -Sum).Sum
 
         $report = @()
         foreach ($budget in $budgets) {
-            $percentUsed = if ($budget.Amount -gt 0) {
-                [Math]::Round(($totalSpend / $budget.Amount) * 100, 2)
+            $PercentUsed = if ($budget.Amount -gt 0) {
+                [Math]::Round(($TotalSpend / $budget.Amount) * 100, 2)
             } else { 0 }
 
             $report += [PSCustomObject]@{
@@ -583,66 +541,58 @@ function Get-BudgetUsageReport {
                 TimeGrain = $budget.TimeGrain
                 StartDate = $budget.TimePeriod.StartDate
                 EndDate = if ($budget.TimePeriod.EndDate) { $budget.TimePeriod.EndDate } else { 'Ongoing' }
-                CurrentSpend = Format-CurrencyAmount -Amount $totalSpend -Currency $Currency
-                PercentUsed = $percentUsed
-                Status = if ($percentUsed -ge 100) { 'Exceeded' }
-                        elseif ($percentUsed -ge 80) { 'Warning' }
+                CurrentSpend = Format-CurrencyAmount -Amount $TotalSpend -Currency $Currency
+                PercentUsed = $PercentUsed
+                Status = if ($PercentUsed -ge 100) { 'Exceeded' }
+                        elseif ($PercentUsed -ge 80) { 'Warning' }
                         else { 'Normal' }
                 NotificationCount = $budget.Notification.PSObject.Properties.Count
             }
         }
 
-        Write-LogEntry "Generated report for $($report.Count) budgets" -Level Info
+        write-LogEntry "Generated report for $($report.Count) budgets" -Level Info
         return $report
     }
     catch {
-        Write-LogEntry "Failed to generate usage report: $_" -Level Error
+        write-LogEntry "Failed to generate usage report: $_" -Level Error
         throw
     }
 }
 
-#endregion
 
-#region Main-Execution
 try {
-    Write-Host "`nBudget Alert Management Tool" -ForegroundColor Cyan
-    Write-Host "=============================" -ForegroundColor Cyan
+    Write-Host "`nBudget Alert Management Tool" -ForegroundColor Green
+    Write-Host "=============================" -ForegroundColor Green
 
-    # Initialize modules and context
     Initialize-RequiredModules
     $context = Get-CurrentContext
 
-    # Resolve scope
-    $targetScope = Resolve-BudgetScope -ExplicitScope $Scope
+    $TargetScope = Resolve-BudgetScope -ExplicitScope $Scope
 
-    Write-LogEntry "Operating at scope: $targetScope" -Level Info
-    Write-Host "Target scope: $targetScope" -ForegroundColor Yellow
+    write-LogEntry "Operating at scope: $TargetScope" -Level Info
+    Write-Host "Target scope: $TargetScope" -ForegroundColor Green
 
-    # Handle parameter set determination
     if (-not $Action) {
         $Action = 'Create'
     }
 
-    # Execute requested action
     switch ($Action) {
         'Create' {
             if (-not $BudgetName -or -not $Amount) {
                 throw "BudgetName and Amount are required for Create action"
             }
 
-            # Create budget configuration
             $params = @{
                 Currency = $Currency
                 Name = $BudgetName
                 Amount = $Amount
-                Scope = $targetScope
+                Scope = $TargetScope
                 TimeGrain = $TimeGrain
                 EndDate = $EndDate
                 StartDate = $StartDate
             }
-            $budgetConfig = New-BudgetConfiguration @params
+            $BudgetConfig = New-BudgetConfiguration @params
 
-            # Create notifications
             $params = @{
                 Emails = $NotificationEmails
                 Webhook = $WebhookUrl
@@ -651,19 +601,18 @@ try {
             }
             $notifications = New-BudgetNotifications @params
 
-            # Create the budget
             $params = @{
-                Scope = $targetScope
+                Scope = $TargetScope
                 Notifications = $notifications
-                BudgetConfig = $budgetConfig
+                BudgetConfig = $BudgetConfig
             }
             $budget = New-AzureBudget @params
 
             Write-Host "`nBudget created successfully!" -ForegroundColor Green
-            Write-Host "Name: $($budget.Name)" -ForegroundColor White
-            Write-Host "Amount: $(Format-CurrencyAmount -Amount $Amount -Currency $Currency)" -ForegroundColor White
-            Write-Host "Time Grain: $TimeGrain" -ForegroundColor White
-            Write-Host "Alerts: $($ThresholdPercentages -join '%, ')%" -ForegroundColor White
+            Write-Host "Name: $($budget.Name)" -ForegroundColor Green
+            Write-Host "Amount: $(Format-CurrencyAmount -Amount $Amount -Currency $Currency)" -ForegroundColor Green
+            Write-Host "Time Grain: $TimeGrain" -ForegroundColor Green
+            Write-Host "Alerts: $($ThresholdPercentages -join '%, ')%" -ForegroundColor Green
         }
 
         'Update' {
@@ -681,7 +630,7 @@ try {
 
             $params = @{
                 Updates = $updates
-                Scope = $targetScope
+                Scope = $TargetScope
                 Name = $BudgetName
             }
             $budget = Update-AzureBudget @params
@@ -694,18 +643,18 @@ try {
                 throw "BudgetName is required for Delete action"
             }
 
-            Remove-AzureBudget -Name $BudgetName -Scope $targetScope
+            Remove-AzureBudget -Name $BudgetName -Scope $TargetScope
             Write-Host "`nBudget removed successfully!" -ForegroundColor Green
         }
 
         'List' {
-            $report = Get-BudgetUsageReport -Scope $targetScope -DaysBack 30
+            $report = Get-BudgetUsageReport -Scope $TargetScope -DaysBack 30
 
             if ($report.Count -eq 0) {
-                Write-Host "`nNo budgets found" -ForegroundColor Yellow
+                Write-Host "`nNo budgets found" -ForegroundColor Green
             }
             else {
-                Write-Host "`nBudgets Summary:" -ForegroundColor Cyan
+                Write-Host "`nBudgets Summary:" -ForegroundColor Green
                 $report | Format-Table -AutoSize
 
                 if ($ExportReport) {
@@ -717,29 +666,28 @@ try {
 
         'GetAlerts' {
             $alerts = if ($BudgetName) {
-                Get-BudgetAlerts -BudgetName $BudgetName -Scope $targetScope
+                Get-BudgetAlerts -BudgetName $BudgetName -Scope $TargetScope
             }
             else {
-                # Get alerts for all budgets
-                $allAlerts = @()
-                $budgetParams = @{}
-                if ($targetScope -match '^/subscriptions/[^/]+/resourceGroups/') {
-                    $budgetParams['ResourceGroupName'] = $targetScope.Split('/')[-1]
+                $AllAlerts = @()
+                $BudgetParams = @{}
+                if ($TargetScope -match '^/subscriptions/[^/]+/resourceGroups/') {
+                    $BudgetParams['ResourceGroupName'] = $TargetScope.Split('/')[-1]
                 }
 
                 $budgets = Get-AzConsumptionBudget @budgetParams
                 foreach ($budget in $budgets) {
-                    $budgetAlerts = Get-BudgetAlerts -BudgetName $budget.Name -Scope $targetScope
-                    $allAlerts += $budgetAlerts
+                    $BudgetAlerts = Get-BudgetAlerts -BudgetName $budget.Name -Scope $TargetScope
+                    $AllAlerts += $BudgetAlerts
                 }
-                $allAlerts
+                $AllAlerts
             }
 
             if ($alerts.Count -eq 0) {
                 Write-Host "`nNo triggered alerts found" -ForegroundColor Green
             }
             else {
-                Write-Host "`nTriggered Alerts:" -ForegroundColor Yellow
+                Write-Host "`nTriggered Alerts:" -ForegroundColor Green
                 $alerts | Format-Table -AutoSize
 
                 if ($ExportReport) {
@@ -753,14 +701,9 @@ try {
     Write-Host "`nOperation completed successfully!" -ForegroundColor Green
 }
 catch {
-    Write-LogEntry "Operation failed: $_" -Level Error
-    Write-Error $_
+    write-LogEntry "Operation failed: $_" -Level Error
+    write-Error $_
     throw
 }
 finally {
-    # Cleanup
-    $ProgressPreference = 'Continue'
-}
-
-#endregion\n
-
+    $ProgressPreference = 'Continue'}

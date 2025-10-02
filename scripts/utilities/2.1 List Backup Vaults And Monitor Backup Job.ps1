@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -7,17 +7,13 @@
 .DESCRIPTION
     Azure automation
     Wes Ellis (wes@wesellis.com)
-#>
 $ErrorActionPreference = "Stop"
-[OutputType([bool])]
- {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [Parameter()]
+function Write-Log {
+    [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
 $colorMap = @{
@@ -26,11 +22,11 @@ $colorMap = @{
     $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-[CmdletBinding(SupportsShouldProcess)]
-
-        [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
-    [string]$JobId,
+    $JobId,
         [Parameter(Mandatory = $true)]
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault]$Vault,
         [Parameter(Mandatory = $false)]
@@ -44,20 +40,17 @@ $colorMap = @{
         $startTime = Get-Date -ErrorAction Stop
         while (-not $completed) {
             if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
             $job = Get-AzRecoveryServicesBackupJob -JobId $JobId -ErrorAction Stop
             $elapsedTime = (Get-Date) - $startTime
-            # Header
             Write-Host " === Azure Backup Job Monitor ===" -ForegroundColor Cyan
             Write-Host " --------------------------------------------------" -ForegroundColor Gray
-            # Basic Info
             Write-Host "Vault:     $($Vault.Name)" -ForegroundColor White
             Write-Host "Job ID:    $JobId" -ForegroundColor White
             Write-Host "Operation: $($job.Operation)" -ForegroundColor White
             Write-Host "Workload:  $($job.WorkloadName)" -ForegroundColor White
             Write-Host " --------------------------------------------------" -ForegroundColor Gray
-            # Status Information
 $statusColor = switch ($job.Status) {
                 "InProgress" { "Yellow" }
                 "Completed" { "Green" }
@@ -68,7 +61,6 @@ $statusColor = switch ($job.Status) {
             Write-Host "Duration:   $($job.Duration)" -ForegroundColor White
             Write-Host "Start Time: $($job.StartTime)" -ForegroundColor White
             Write-Host "Monitoring: $($elapsedTime.ToString('hh\:mm\:ss'))" -ForegroundColor White
-            # Subtasks
             if ($job.SubTasks) {
                 Write-Host " --------------------------------------------------" -ForegroundColor Gray
                 Write-Host "SubTasks:" -ForegroundColor White
@@ -88,7 +80,6 @@ $taskColor = switch ($task.Status) {
                 }
             }
             Write-Host " --------------------------------------------------" -ForegroundColor Gray
-            # Update job history
 $jobHistory = $jobHistory + [PSCustomObject]@{
                 TimeStamp = Get-Date -ErrorAction Stop
                 Status = $job.Status
@@ -99,7 +90,6 @@ $jobHistory = $jobHistory + [PSCustomObject]@{
             }
             if ($job.Status -in @("Completed" , "Failed" , "CompletedWithWarnings" )) {
                 $completed = $true
-                # Generate final reports
                 New-HTML -FilePath " .\BackupJobReport.html" -ShowHTML {
                     New-HTMLTable -DataTable $jobHistory -Title "Backup Job History" {
                         New-HTMLTableHeader -Title "Backup Job Report - $($job.WorkloadName)" -BackgroundColor " #007bff" -Color " #ffffff"
@@ -140,7 +130,6 @@ try {
     } while (-not $validSelection)
     $selectedVault = $menuOptions[[int]$selection]
     Write-Host " `nUsing vault: $($selectedVault.Name)" -ForegroundColor Green
-    # Get list of backup jobs
     $jobs = Get-BackupJobsList -Vault $selectedVault
     if ($jobs) {
 $selectedJob = Select-BackupJob -Jobs $jobs
@@ -157,5 +146,7 @@ $jobProgress = Watch-AzureBackupJob -JobId $selectedJob.JobId -Vault $selectedVa
     Write-Error $_
     throw
 }
+
+
 
 

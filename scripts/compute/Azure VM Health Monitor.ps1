@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,13 +27,14 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -45,17 +42,14 @@ param(
     [string]$VmName
 )
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Status
-Write-Host "VM Name: $($VM.Name)"
-Write-Host "Resource Group: $($VM.ResourceGroupName)"
-Write-Host "Location: $($VM.Location)"
-Write-Host "Power State: $($VM.PowerState)"
-Write-Host "Provisioning State: $($VM.ProvisioningState)"
+Write-Output "VM Name: $($VM.Name)"
+Write-Output "Resource Group: $($VM.ResourceGroupName)"
+Write-Output "Location: $($VM.Location)"
+Write-Output "Power State: $($VM.PowerState)"
+Write-Output "Provisioning State: $($VM.ProvisioningState)"
 foreach ($Status in $VM.Statuses) {
-    Write-Host "Status: $($Status.Code) - $($Status.DisplayStatus)"
+    Write-Output "Status: $($Status.Code) - $($Status.DisplayStatus)"
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

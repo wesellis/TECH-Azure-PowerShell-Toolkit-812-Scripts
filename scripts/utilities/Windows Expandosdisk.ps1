@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Expandosdisk
@@ -8,37 +8,28 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
-$VerbosePreference = 'Continue'
-[CmdletBinding()]
+    $VerbosePreference = 'Continue'
 function Resize-PartitionWithRetries {
-    [CmdletBinding()
-try {
-    # Main script execution
-]
-param(
-        [string]$driveLetter
+    param(
+        $DriveLetter
     )
-    $size = Get-PartitionSupportedSize -DriveLetter $driveLetter
-$maxSize = $size.SizeMax
-    Write-Verbose "Partition supported size for $($driveLetter): $maxSize"
-    Get-Partition -DriveLetter $driveLetter | Resize-Partition -Size $maxSize
-    Write-Verbose " $driveLetter partition info after resize:"
-    Get-Partition -DriveLetter $driveLetter
+    $size = Get-PartitionSupportedSize -DriveLetter $DriveLetter
+    $MaxSize = $size.SizeMax
+    Write-Verbose "Partition supported size for $($DriveLetter): $MaxSize"
+    Get-Partition -DriveLetter $DriveLetter | Resize-Partition -Size $MaxSize
+    Write-Verbose " $DriveLetter partition info after resize:"
+    Get-Partition -DriveLetter $DriveLetter
 }
-$runBlock = {
+    $RunBlock = {
     Resize-PartitionWithRetries -driveLetter 'C'
 }
-RunWithRetries -runBlock $runBlock -retryAttempts 3 -waitBeforeRetrySeconds 5 -ignoreFailure $false
+RunWithRetries -runBlock $RunBlock -retryAttempts 3 -waitBeforeRetrySeconds 5 -ignoreFailure $false
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

@@ -1,79 +1,109 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Assign Unallocated Space
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure automation script to assign unallocated disk space to the last partition
+    on a disk. Useful for Dev Box scenarios where OS disk size during image creation
+    may differ from the disk size assigned in the definition.
 
-    1.0
+.PARAMETER TaskParams
+    The parameters for the task when invoked from windows-configure-user-tasks
+
+.PARAMETER SuppressVerboseOutput
+    Suppresses verbose output if set to $true
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Assign unallocated space to last partition on Disk.
-    The OS disk size during image creation could be different (smaller) from the disk size assigned to a Dev Box definition.
-    While creating ReFS drive, unallocated partition gets created because of this mismatch which needs to be assigned to existing drive.
-    On first user logon this script will assign any unallocated space to last partition on that VM.
-.PARAMETER TaskParams
-    The parameters for the task when it is invoked from windows-configure-user-tasks\run-firstlogon-tasks.ps1.
-.PARAMETER SuppressVerboseOutput
-    Suppresses verbose output if set to $true.
-    Sample Bicep snippet for using the artifact:
-    {
-      name: 'assign-unallocated-space'
-      parameters: {
-        DriveLetter: 'D'
-      }
-    }
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true)][PSObject] $TaskParams,
-    [Parameter(Mandatory = $false)][bool] $SuppressVerboseOutput
+    [Parameter(Mandatory = $true)]
+    [PSObject]$TaskParams,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$SuppressVerboseOutput
 )
-Set-StrictMode -Version latest
-function Invoke-AssignUnallocatedSpace {
-function Write-Host {
-    [CmdletBinding()]
-param(
+
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+
+function Write-ColorOutput {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+
         [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $colorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
-param(
-        [Parameter(Mandatory = $true)][PSObject] $TaskParams,
-        [Parameter(Mandatory = $false)][bool] $SuppressVerboseOutput
+
+function Invoke-AssignUnallocatedSpace {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [PSObject]$TaskParams,
+
+        [Parameter(Mandatory = $false)]
+        [bool]$SuppressVerboseOutput
     )
+
     if (-not $SuppressVerboseOutput) {
-        Write-Host " `nStarted with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
+        Write-ColorOutput "Started with volumes:" -Level INFO
+        Get-Volume -ErrorAction Stop | Out-String | Write-Output
     }
+
     $driveLetter = $TaskParams.DriveLetter
-    $supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter
-    $partition = Get-Partition -DriveLetter $driveLetter
-    [Int32];  $maxSizeMB = $supportedSize.SizeMax / 1MB
-    [Int32];  $currentSizeMB = $partition.Size / 1MB
-    # Guard against error 'The size of the extent is less than the minimum of 1MB'
-    if (($maxSizeMB - $currentSizeMB) -gt 1) {
-        $partition | Resize-Partition -Size $supportedSize.SizeMax
-        if (-not $SuppressVerboseOutput) {
-            Write-Host " `nEnded with volumes:$(Get-Volume -ErrorAction Stop | Out-String)"
+
+    try {
+        $supportedSize = Get-PartitionSupportedSize -DriveLetter $driveLetter -ErrorAction Stop
+        $partition = Get-Partition -DriveLetter $driveLetter -ErrorAction Stop
+
+        [Int32]$maxSizeMB = $supportedSize.SizeMax / 1MB
+        [Int32]$currentSizeMB = $partition.Size / 1MB
+
+        if (($maxSizeMB - $currentSizeMB) -gt 1) {
+            Write-ColorOutput "Resizing partition $driveLetter from $currentSizeMB MB to $maxSizeMB MB" -Level INFO
+            $partition | Resize-Partition -Size $supportedSize.SizeMax -ErrorAction Stop
+            Write-ColorOutput "Successfully resized partition" -Level SUCCESS
+
+            if (-not $SuppressVerboseOutput) {
+                Write-ColorOutput "Ended with volumes:" -Level INFO
+                Get-Volume -ErrorAction Stop | Out-String | Write-Output
+            }
+        }
+        else {
+            Write-ColorOutput "No unallocated space to assign (difference: $(($maxSizeMB - $currentSizeMB)) MB)" -Level INFO
         }
     }
+    catch {
+        Write-ColorOutput "Error processing partition: $_" -Level ERROR
+        throw
+    }
 }
-if (( -not(Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
+
+if ((-not (Test-Path variable:global:IsUnderTest)) -or (-not $global:IsUnderTest)) {
     try {
         Invoke-AssignUnallocatedSpace -TaskParams $TaskParams -SuppressVerboseOutput $SuppressVerboseOutput
     }
     catch {
-        Write-Host " !!! [WARN] Unhandled exception (will be ignored):`n$_`n$($_.ScriptStackTrace)"
+        Write-ColorOutput "Unhandled exception (will be ignored): $_`n$($_.ScriptStackTrace)" -Level WARN
     }
 }

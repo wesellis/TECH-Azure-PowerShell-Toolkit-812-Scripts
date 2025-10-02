@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -16,11 +18,9 @@
     [Parameter()]
     [string]$NetworkWatcherName = "NetworkWatcher_$Location"
 )
-Write-Host "Enabling Network Watcher in: $Location"
-# Check if Network Watcher already exists
+Write-Output "Enabling Network Watcher in: $Location"
 $NetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $ResourceGroupName -Name $NetworkWatcherName -ErrorAction SilentlyContinue
 if (-not $NetworkWatcher) {
-    # Create Network Watcher
     $params = @{
         ErrorAction = "Stop"
         ResourceGroupName = $ResourceGroupName
@@ -29,18 +29,20 @@ if (-not $NetworkWatcher) {
     }
     $NetworkWatcher @params
 } else {
-    Write-Host "Network Watcher already exists:"
+    Write-Output "Network Watcher already exists:"
 }
-Write-Host "Name: $($NetworkWatcher.Name)"
-Write-Host "Location: $($NetworkWatcher.Location)"
-Write-Host "Provisioning State: $($NetworkWatcher.ProvisioningState)"
-Write-Host "`nNetwork Watcher capabilities:"
-Write-Host "   IP Flow Verify"
-Write-Host "   Next Hop"
-Write-Host "   Security Group View"
-Write-Host "   VPN Diagnostics"
-Write-Host "   NSG Flow Logs"
-Write-Host "   Connection Monitor"
-Write-Host "   Packet Capture"
-Write-Host "   Connection Troubleshoot"
+Write-Output "Name: $($NetworkWatcher.Name)"
+Write-Output "Location: $($NetworkWatcher.Location)"
+Write-Output "Provisioning State: $($NetworkWatcher.ProvisioningState)"
+Write-Output "`nNetwork Watcher capabilities:"
+Write-Output "   IP Flow Verify"
+Write-Output "   Next Hop"
+Write-Output "   Security Group View"
+Write-Output "   VPN Diagnostics"
+Write-Output "   NSG Flow Logs"
+Write-Output "   Connection Monitor"
+Write-Output "   Packet Capture"
+Write-Output "   Connection Troubleshoot"
+
+
 

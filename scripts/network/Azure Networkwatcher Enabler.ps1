@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,33 +9,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -46,35 +43,31 @@ param(
     [Parameter()]
     [string]$NetworkWatcherName = "NetworkWatcher_$Location"
 )
-Write-Host "Enabling Network Watcher in: $Location"
-$NetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $ResourceGroupName -Name $NetworkWatcherName -ErrorAction SilentlyContinue
+Write-Output "Enabling Network Watcher in: $Location"
+    [string]$NetworkWatcher = Get-AzNetworkWatcher -ResourceGroupName $ResourceGroupName -Name $NetworkWatcherName -ErrorAction SilentlyContinue
 if (-not $NetworkWatcher) {
-    # Create Network Watcher
-   $params = @{
+    $params = @{
        ErrorAction = "Stop"
        ResourceGroupName = $ResourceGroupName
        Name = $NetworkWatcherName
-       Location = $Location  Write-Host "Network Watcher created successfully:" " INFO
+       Location = $Location  Write-Output "Network Watcher created successfully:" " INFO
    }
    ; @params
 } else {
-    Write-Host "Network Watcher already exists:"
+    Write-Output "Network Watcher already exists:"
 }
-Write-Host "Name: $($NetworkWatcher.Name)"
-Write-Host "Location: $($NetworkWatcher.Location)"
-Write-Host "Provisioning State: $($NetworkWatcher.ProvisioningState)"
-Write-Host " `nNetwork Watcher capabilities:"
-Write-Host "   IP Flow Verify"
-Write-Host "   Next Hop"
-Write-Host "   Security Group View"
-Write-Host "   VPN Diagnostics"
-Write-Host "   NSG Flow Logs"
-Write-Host "   Connection Monitor"
-Write-Host "   Packet Capture"
-Write-Host "   Connection Troubleshoot"
+Write-Output "Name: $($NetworkWatcher.Name)"
+Write-Output "Location: $($NetworkWatcher.Location)"
+Write-Output "Provisioning State: $($NetworkWatcher.ProvisioningState)"
+Write-Output " `nNetwork Watcher capabilities:"
+Write-Output "   IP Flow Verify"
+Write-Output "   Next Hop"
+Write-Output "   Security Group View"
+Write-Output "   VPN Diagnostics"
+Write-Output "   NSG Flow Logs"
+Write-Output "   Connection Monitor"
+Write-Output "   Packet Capture"
+Write-Output "   Connection Troubleshoot"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

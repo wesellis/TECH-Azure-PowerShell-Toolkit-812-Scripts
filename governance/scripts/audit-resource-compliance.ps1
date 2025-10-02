@@ -7,19 +7,18 @@
 .DESCRIPTION
     audit resource compliance operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Audits Azure resource compliance against policies
 
     Evaluates resources against Azure Policy assignments and generates compliance reports.
     Supports multiple output formats and remediation tracking.
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Target subscription ID (optional, uses current context if not specified)
-.PARAMETER ResourceGroup
+.parameter ResourceGroup
     Limit audit to specific resource group
-.PARAMETER OutputFormat
+.parameter OutputFormat
     Report format: JSON, CSV, HTML (default: JSON)
-.PARAMETER ExportPath
+.parameter ExportPath
     Path for report file (optional, auto-generates if not specified)
 
     .\audit-resource-compliance.ps1 -OutputFormat CSV
@@ -30,49 +29,46 @@
 
     Audits specific resource group with HTML report
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
 [CmdletBinding()]
 param(
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
         catch { throw "Invalid subscription ID format" }
     })]
     [string]$SubscriptionId,
 
-    [Parameter(ValueFromPipeline)]`n    [string]$ResourceGroup,
+    [parameter(ValueFromPipeline)]`n    [string]$ResourceGroup,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('JSON', 'CSV', 'HTML')]
     [string]$OutputFormat = 'JSON',
 
-    [Parameter(ValueFromPipeline)]`n    [string]$ExportPath,
+    [parameter(ValueFromPipeline)]`n    [string]$ExportPath,
 
-    [Parameter()]
+    [parameter()]
     [switch]$IncludeRemediation,
 
-    [Parameter()]
+    [parameter()]
     [switch]$DetailedReport
 )
-
-# Set up error handling
-$ErrorActionPreference = 'Stop'
+    [string]$ErrorActionPreference = 'Stop'
 try { } catch { throw }
 
-#region Functions
 
-[OutputType([bool])]
+[OutputType([bool])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Not connected to Azure. Initiating login..." -ForegroundColor Yellow
+        Write-Host "Not connected to Azure. Initiating login..." -ForegroundColor Green
         Connect-AzAccount
-        $context = Get-AzContext
+    $context = Get-AzContext
     }
 
     if ($SubscriptionId -and $context.Subscription.Id -ne $SubscriptionId) {
-        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Yellow
+        Write-Host "Switching to subscription: $SubscriptionId" -ForegroundColor Green
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     }
 
@@ -80,22 +76,20 @@ try { } catch { throw }
 }
 
 function Get-PolicyCompliance {
-    param(
+        param(
         [string]$ResourceGroupName
     )
-
     $params = @{
         Top = 5000
     }
 
     if ($ResourceGroupName) {
-        $params['ResourceGroupName'] = $ResourceGroupName
+    [string]$params['ResourceGroupName'] = $ResourceGroupName
     }
 
     try {
-        $states = Get-AzPolicyState @params
-
-        $compliance = foreach ($state in $states) {
+    $states = Get-AzPolicyState @params
+    [string]$compliance = foreach ($state in $states) {
             [PSCustomObject]@{
                 ResourceId = $state.ResourceId
                 ResourceName = if ($state.ResourceId) { $state.ResourceId.Split('/')[-1] } else { 'N/A' }
@@ -112,24 +106,23 @@ function Get-PolicyCompliance {
         return $compliance
     }
     catch {
-        Write-Error "Failed to retrieve policy compliance: $_"
+        write-Error "Failed to retrieve policy compliance: $_"
         return @()
     }
 }
 
 function Get-ComplianceSummary {
-    param(
+        param(
         [array]$ComplianceData
     )
-
-    $total = $ComplianceData.Count
-    $compliant = ($ComplianceData | Where-Object IsCompliant).Count
-    $nonCompliant = $total - $compliant
+    [string]$total = $ComplianceData.Count
+    [string]$compliant = ($ComplianceData | Where-Object IsCompliant).Count
+    [string]$NonCompliant = $total - $compliant
 
     return [PSCustomObject]@{
         TotalResources = $total
         CompliantResources = $compliant
-        NonCompliantResources = $nonCompliant
+        NonCompliantResources = $NonCompliant
         CompliancePercentage = if ($total -gt 0) { [Math]::Round(($compliant / $total) * 100, 2) } else { 0 }
         ByResourceType = $ComplianceData | Group-Object ResourceType | ForEach-Object {
             [PSCustomObject]@{
@@ -149,7 +142,7 @@ function Get-ComplianceSummary {
 }
 
 function Export-ComplianceReport {
-    param(
+        param(
         [object]$Summary,
         [array]$Details,
         [string]$Format,
@@ -158,36 +151,36 @@ function Export-ComplianceReport {
 
     switch ($Format) {
         'JSON' {
-            $report = @{
+    $report = @{
                 GeneratedAt = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
                 Summary = $Summary
                 Details = $Details
             }
-            $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $Path -Encoding UTF8
+    [string]$report | ConvertTo-Json -Depth 10 | Out-File -FilePath $Path -Encoding UTF8
         }
 
         'CSV' {
-            $Details | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
+    [string]$Details | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
         }
 
         'HTML' {
-            $html = @"
+    [string]$html = @"
 <!DOCTYPE html>
 <html>
 <head>
     <title>Azure Policy Compliance Report</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; }
-        h1 { color: #0078d4; }
-        .summary { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        h1 { color:
+        .summary { background:
         .metric { display: inline-block; margin: 10px 20px; }
         .metric-value { font-size: 24px; font-weight: bold; }
-        .compliant { color: #107c10; }
-        .non-compliant { color: #d13438; }
+        .compliant { color:
+        .non-compliant { color:
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #0078d4; color: white; padding: 10px; text-align: left; }
-        td { padding: 8px; border-bottom: 1px solid #ddd; }
-        tr:hover { background: #f5f5f5; }
+        th { background:
+        td { padding: 8px; border-bottom: 1px solid
+        tr:hover { background:
     </style>
 </head>
 <body>
@@ -225,7 +218,7 @@ function Export-ComplianceReport {
         <tbody>
 "@
             foreach ($resource in ($Details | Where-Object { -not $_.IsCompliant } | Select-Object -First 100)) {
-                $html += @"
+    [string]$html += @"
             <tr>
                 <td>$($resource.ResourceName)</td>
                 <td>$($resource.ResourceType)</td>
@@ -235,36 +228,33 @@ function Export-ComplianceReport {
             </tr>
 "@
             }
-
-            $html += @"
+    [string]$html += @"
         </tbody>
     </table>
     <p>Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
 </body>
 </html>
 "@
-            $html | Out-File -FilePath $Path -Encoding UTF8
+    [string]$html | Out-File -FilePath $Path -Encoding UTF8
         }
     }
 }
 
 function Get-RemediationTasks {
-    param(
+        param(
         [array]$NonCompliantResources
     )
-
-    $tasks = foreach ($resource in $NonCompliantResources) {
+    [string]$tasks = foreach ($resource in $NonCompliantResources) {
         try {
-            $remediation = Get-AzPolicyRemediation -Name $resource.PolicyAssignment -ErrorAction SilentlyContinue
+    $remediation = Get-AzPolicyRemediation -Name $resource.PolicyAssignment -ErrorAction SilentlyContinue
 
             [PSCustomObject]@{
                 ResourceId = $resource.ResourceId
                 PolicyAssignment = $resource.PolicyAssignment
                 RemediationExists = $null -ne $remediation
                 RemediationState = if ($remediation) { $remediation.ProvisioningState } else { 'Not Started' }
-            
+
 } catch {
-            # Remediation not available for this policy
             [PSCustomObject]@{
                 ResourceId = $resource.ResourceId
                 PolicyAssignment = $resource.PolicyAssignment
@@ -277,77 +267,57 @@ function Get-RemediationTasks {
     return $tasks
 }
 
-#endregion
 
-#region Main-Execution
-
-Write-Host "`nAzure Policy Compliance Audit" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
-
-# Connect to Azure
-$context = Test-AzureConnection
+Write-Host "`nAzure Policy Compliance Audit" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
+    [string]$context = Test-AzureConnection
 Write-Host "Connected to subscription: $($context.Subscription.Name)" -ForegroundColor Green
 
-# Set default export path if not provided
 if (-not $ExportPath) {
     $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-    $extension = $OutputFormat.ToLower()
-    $ExportPath = ".\PolicyCompliance_$timestamp.$extension"
+    [string]$extension = $OutputFormat.ToLower()
+    [string]$ExportPath = ".\PolicyCompliance_$timestamp.$extension"
 }
 
-# Get compliance data
-Write-Host "`nRetrieving compliance data..." -ForegroundColor Yellow
-$complianceData = Get-PolicyCompliance -ResourceGroupName $ResourceGroup
+Write-Host "`nRetrieving compliance data..." -ForegroundColor Green
+    $ComplianceData = Get-PolicyCompliance -ResourceGroupName $ResourceGroup
 
-if ($complianceData.Count -eq 0) {
-    Write-Warning "No policy compliance data found"
+if ($ComplianceData.Count -eq 0) {
+    write-Warning "No policy compliance data found"
     exit 0
 }
 
-Write-Host "Retrieved $($complianceData.Count) policy states" -ForegroundColor Green
+Write-Host "Retrieved $($ComplianceData.Count) policy states" -ForegroundColor Green
+    $summary = Get-ComplianceSummary -ComplianceData $ComplianceData
 
-# Generate summary
-$summary = Get-ComplianceSummary -ComplianceData $complianceData
-
-# Display summary
-Write-Host "`nCompliance Summary:" -ForegroundColor Cyan
-Write-Host "Total Resources: $($summary.TotalResources)"
+Write-Host "`nCompliance Summary:" -ForegroundColor Green
+Write-Output "Total Resources: $($summary.TotalResources)"
 Write-Host "Compliant: $($summary.CompliantResources)" -ForegroundColor Green
-Write-Host "Non-Compliant: $($summary.NonCompliantResources)" -ForegroundColor $(if ($summary.NonCompliantResources -gt 0) { 'Red' } else { 'Green' })
-Write-Host "Compliance Rate: $($summary.CompliancePercentage)%`n"
+Write-Output "Non-Compliant: $($summary.NonCompliantResources)" -ForegroundColor $(if ($summary.NonCompliantResources -gt 0) { 'Red' } else { 'Green' })
+Write-Output "Compliance Rate: $($summary.CompliancePercentage)%`n"
 
-# Show detailed breakdown if requested
 if ($DetailedReport) {
-    Write-Host "Resource Type Breakdown:" -ForegroundColor Cyan
-    $summary.ByResourceType | Format-Table -AutoSize
+    Write-Host "Resource Type Breakdown:" -ForegroundColor Green
+    [string]$summary.ByResourceType | Format-Table -AutoSize
 
-    Write-Host "Policy Assignment Breakdown:" -ForegroundColor Cyan
-    $summary.ByPolicy | Select-Object -First 10 | Format-Table -AutoSize
+    Write-Host "Policy Assignment Breakdown:" -ForegroundColor Green
+    [string]$summary.ByPolicy | Select-Object -First 10 | Format-Table -AutoSize
 }
-
-# Get remediation info if requested
-$remediationTasks = @()
+    [string]$RemediationTasks = @()
 if ($IncludeRemediation) {
-    Write-Host "Checking remediation status..." -ForegroundColor Yellow
-    $nonCompliant = $complianceData | Where-Object { -not $_.IsCompliant }
-    $remediationTasks = Get-RemediationTasks -NonCompliantResources $nonCompliant
-
-    $availableRemediations = ($remediationTasks | Where-Object RemediationExists).Count
-    Write-Host "Remediation available for $availableRemediations of $($nonCompliant.Count) non-compliant resources" -ForegroundColor Cyan
+    Write-Host "Checking remediation status..." -ForegroundColor Green
+    [string]$NonCompliant = $ComplianceData | Where-Object { -not $_.IsCompliant }
+    $RemediationTasks = Get-RemediationTasks -NonCompliantResources $NonCompliant
+    [string]$AvailableRemediations = ($RemediationTasks | Where-Object RemediationExists).Count
+    Write-Host "Remediation available for $AvailableRemediations of $($NonCompliant.Count) non-compliant resources" -ForegroundColor Green
 }
 
-# Export report
-Write-Host "`nExporting report to: $ExportPath" -ForegroundColor Yellow
-Export-ComplianceReport -Summary $summary -Details $complianceData -Format $OutputFormat -Path $ExportPath
+Write-Host "`nExporting report to: $ExportPath" -ForegroundColor Green
+Export-ComplianceReport -Summary $summary -Details $ComplianceData -Format $OutputFormat -Path $ExportPath
 Write-Host "Report exported successfully" -ForegroundColor Green
 
-# Final message
 if ($summary.NonCompliantResources -gt 0) {
-    Write-Host "`nAction Required: $($summary.NonCompliantResources) resources need attention" -ForegroundColor Yellow
+    Write-Host "`nAction Required: $($summary.NonCompliantResources) resources need attention" -ForegroundColor Green
 }
 else {
-    Write-Host "`nAll resources are compliant!" -ForegroundColor Green
-}
-
-#endregion\n
-
+    Write-Host "`nAll resources are compliant!" -ForegroundColor Green}

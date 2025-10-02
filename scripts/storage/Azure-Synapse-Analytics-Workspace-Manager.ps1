@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Storage
 #Requires -Modules Az.Resources
 
@@ -7,10 +7,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Synapse Analytics Workspace Manager
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding(SupportsShouldProcess)]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -53,30 +53,27 @@
     [switch]$EnableMonitoring
 )
 try {
-    # Test Azure connection
         if (-not (Get-AzContext)) { Connect-AzAccount }
-    # Validate resource group
-        $resourceGroup = Invoke-AzureOperation -Operation {
+        $ResourceGroup = Invoke-AzureOperation -Operation {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
-    
+
     switch ($Action.ToLower()) {
         "create" {
-            # Create or validate storage account for Synapse
                 if (-not $StorageAccountName) {
                 $StorageAccountName = ($WorkspaceName + "storage").ToLower() -replace '[^a-z0-9]', ''
                 if ($StorageAccountName.Length -gt 24) {
                     $StorageAccountName = $StorageAccountName.Substring(0, 24)
                 }
             }
-            $storageAccount = Invoke-AzureOperation -Operation {
+            $StorageAccount = Invoke-AzureOperation -Operation {
                 $existing = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue
                 if ($existing) {
-                    
+
                     return $existing
                 } else {
-                    
-                    $storageParams = @{
+
+                    $StorageParams = @{
                         ResourceGroupName = $ResourceGroupName
                         Name = $StorageAccountName
                         Location = $Location
@@ -89,27 +86,24 @@ try {
                     New-AzStorageAccount -ErrorAction Stop @storageParams
                 }
             } -OperationName "Create/Get Storage Account"
-            # Create file system
-            $ctx = $storageAccount.Context
+            $ctx = $StorageAccount.Context
             $null = Invoke-AzureOperation -Operation {
                 $existing = Get-AzDataLakeGen2FileSystem -Context $ctx -Name $FileSystemName -ErrorAction SilentlyContinue
                 if (-not $existing) {
                     New-AzDataLakeGen2FileSystem -Context $ctx -Name $FileSystemName
-                    
+
                 } else {
-                    
+
                     return $existing
                 }
             } -OperationName "Create File System"
-            
-            # Generate secure password if not provided
+
             if (-not $SQLAdminPassword) {
-                $passwordText = -join ((65..90) + (97..122) + (48..57) + @(33,35,36,37,38,42,43,45,61,63,64) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+                $PasswordText = -join ((65..90) + (97..122) + (48..57) + @(33,35,36,37,38,42,43,45,61,63,64) | Get-Random -Count 16 | ForEach-Object {[char]$_})
                 $SQLAdminPassword = Read-Host -Prompt "Enter secure value" -AsSecureString
-                
+
             }
-            # Create Synapse workspace
-                $workspaceParams = @{
+                $WorkspaceParams = @{
                 ResourceGroupName = $ResourceGroupName
                 Name = $WorkspaceName
                 Location = $Location
@@ -122,25 +116,22 @@ try {
             $workspace = Invoke-AzureOperation -Operation {
                 New-AzSynapseWorkspace -ErrorAction Stop @workspaceParams
             } -OperationName "Create Synapse Workspace"
-            
-            # Configure firewall rules
-                # Allow Azure services
+
             Invoke-AzureOperation -Operation {
                 New-AzSynapseFirewallRule -WorkspaceName $WorkspaceName -Name "AllowAllWindowsAzureIps" -StartIpAddress "0.0.0.0" -EndIpAddress "0.0.0.0"
             } -OperationName "Create Azure Services Firewall Rule"
-            # Add custom IP rules
             if ($AllowedIPs.Count -gt 0) {
                 foreach ($ip in $AllowedIPs) {
-                    $ruleName = "CustomRule-$($ip -replace '\.', '-')"
+                    $RuleName = "CustomRule-$($ip -replace '\.', '-')"
                     Invoke-AzureOperation -Operation {
-                        New-AzSynapseFirewallRule -WorkspaceName $WorkspaceName -Name $ruleName -StartIpAddress $ip -EndIpAddress $ip
+                        New-AzSynapseFirewallRule -WorkspaceName $WorkspaceName -Name $RuleName -StartIpAddress $ip -EndIpAddress $ip
                     } -OperationName "Create Custom IP Firewall Rule"
                 }
-                
+
             }
         }
         "createsqlpool" {
-                $sqlPoolParams = @{
+                $SqlPoolParams = @{
                 WorkspaceName = $WorkspaceName
                 Name = $SQLPoolName
                 PerformanceLevel = $SQLPoolSKU
@@ -148,10 +139,10 @@ try {
             $null = Invoke-AzureOperation -Operation {
                 New-AzSynapseSqlPool -ErrorAction Stop @sqlPoolParams
             } -OperationName "Create SQL Pool"
-            
+
         }
         "createsparkpool" {
-                $sparkPoolParams = @{
+                $SparkPoolParams = @{
                 WorkspaceName = $WorkspaceName
                 Name = $SparkPoolName
                 NodeSize = $SparkPoolSize
@@ -166,25 +157,24 @@ try {
             $null = Invoke-AzureOperation -Operation {
                 New-AzSynapseSparkPool -ErrorAction Stop @sparkPoolParams
             } -OperationName "Create Spark Pool"
-            
+
         }
         "managefirewall" {
-                $existingRules = Invoke-AzureOperation -Operation {
+                $ExistingRules = Invoke-AzureOperation -Operation {
                 Get-AzSynapseFirewallRule -WorkspaceName $WorkspaceName
             } -OperationName "Get Firewall Rules"
-            Write-Host ""
-            foreach ($rule in $existingRules) {
-                Write-Host " $($rule.Name): $($rule.StartIpAddress) - $($rule.EndIpAddress)"
+            Write-Output ""
+            foreach ($rule in $ExistingRules) {
+                Write-Output " $($rule.Name): $($rule.StartIpAddress) - $($rule.EndIpAddress)"
             }
-            # Add new rules if specified
             if ($AllowedIPs.Count -gt 0) {
-                
+
                 foreach ($ip in $AllowedIPs) {
-                    $ruleName = "CustomRule-$($ip -replace '\.', '-')-$(Get-Date -Format 'yyyyMMdd')"
+                    $RuleName = "CustomRule-$($ip -replace '\.', '-')-$(Get-Date -Format 'yyyyMMdd')"
                     Invoke-AzureOperation -Operation {
-                        New-AzSynapseFirewallRule -WorkspaceName $WorkspaceName -Name $ruleName -StartIpAddress $ip -EndIpAddress $ip
+                        New-AzSynapseFirewallRule -WorkspaceName $WorkspaceName -Name $RuleName -StartIpAddress $ip -EndIpAddress $ip
                     } -OperationName "Add Firewall Rule"
-                    
+
                 }
             }
         }
@@ -192,90 +182,85 @@ try {
                 $workspace = Invoke-AzureOperation -Operation {
                 Get-AzSynapseWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName
             } -OperationName "Get Workspace Info"
-            $sqlPools = Invoke-AzureOperation -Operation {
+            $SqlPools = Invoke-AzureOperation -Operation {
                 Get-AzSynapseSqlPool -WorkspaceName $WorkspaceName
             } -OperationName "Get SQL Pools"
-            $sparkPools = Invoke-AzureOperation -Operation {
+            $SparkPools = Invoke-AzureOperation -Operation {
                 Get-AzSynapseSparkPool -WorkspaceName $WorkspaceName
             } -OperationName "Get Spark Pools"
-            Write-Host ""
-            Write-Host "Synapse Workspace Information"
-            Write-Host "Workspace Name: $($workspace.Name)"
-            Write-Host "Location: $($workspace.Location)"
-            Write-Host "Workspace URL: $($workspace.WebUrl)"
-            Write-Host "SQL Endpoint: $($workspace.SqlAdministratorLogin)"
-            Write-Host "Provisioning State: $($workspace.ProvisioningState)"
-            if ($sqlPools.Count -gt 0) {
-                Write-Host ""
-                Write-Host "SQL Pools:"
-                foreach ($pool in $sqlPools) {
-                    Write-Host " $($pool.Name) - $($pool.Sku.Name) - $($pool.Status)"
+            Write-Output ""
+            Write-Output "Synapse Workspace Information"
+            Write-Output "Workspace Name: $($workspace.Name)"
+            Write-Output "Location: $($workspace.Location)"
+            Write-Output "Workspace URL: $($workspace.WebUrl)"
+            Write-Output "SQL Endpoint: $($workspace.SqlAdministratorLogin)"
+            Write-Output "Provisioning State: $($workspace.ProvisioningState)"
+            if ($SqlPools.Count -gt 0) {
+                Write-Output ""
+                Write-Output "SQL Pools:"
+                foreach ($pool in $SqlPools) {
+                    Write-Output " $($pool.Name) - $($pool.Sku.Name) - $($pool.Status)"
                 }
             }
-            if ($sparkPools.Count -gt 0) {
-                Write-Host ""
-                Write-Host "[!] Spark Pools:"
-                foreach ($pool in $sparkPools) {
-                    Write-Host " $($pool.Name) - $($pool.NodeSize) - Nodes: $($pool.NodeCount)"
+            if ($SparkPools.Count -gt 0) {
+                Write-Output ""
+                Write-Output "[!] Spark Pools:"
+                foreach ($pool in $SparkPools) {
+                    Write-Output " $($pool.Name) - $($pool.NodeSize) - Nodes: $($pool.NodeCount)"
                 }
             }
         }
         "delete" {
                 $confirmation = Read-Host "Are you sure you want to delete the Synapse workspace '$WorkspaceName' and all its resources? (yes/no)"
             if ($confirmation.ToLower() -ne "yes") {
-                
+
                 return
             }
-            # Delete SQL pools first
-            $sqlPools = Get-AzSynapseSqlPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
-            foreach ($pool in $sqlPools) {
-                
+            $SqlPools = Get-AzSynapseSqlPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
+            foreach ($pool in $SqlPools) {
+
                 if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
             }
-            # Delete Spark pools
-            $sparkPools = Get-AzSynapseSparkPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
-            foreach ($pool in $sparkPools) {
-                
+            $SparkPools = Get-AzSynapseSparkPool -WorkspaceName $WorkspaceName -ErrorAction SilentlyContinue
+            foreach ($pool in $SparkPools) {
+
                 if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
             }
-            # Delete workspace
             Invoke-AzureOperation -Operation {
                 if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
             } -OperationName "Delete Synapse Workspace"
-            
+
         }
     }
-    # Configure monitoring if enabled and creating workspace
     if ($EnableMonitoring -and $Action.ToLower() -eq "create") {
-            $diagnosticSettings = Invoke-AzureOperation -Operation {
-            $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-            if ($logAnalyticsWorkspace) {
-                $resourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.Synapse/workspaces/$WorkspaceName"
-                $diagnosticParams = @{
-                    ResourceId = $resourceId
+            $DiagnosticSettings = Invoke-AzureOperation -Operation {
+            $LogAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+            if ($LogAnalyticsWorkspace) {
+                $ResourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.Synapse/workspaces/$WorkspaceName"
+                $DiagnosticParams = @{
+                    ResourceId = $ResourceId
                     Name = "$WorkspaceName-diagnostics"
-                    WorkspaceId = $logAnalyticsWorkspace.ResourceId
+                    WorkspaceId = $LogAnalyticsWorkspace.ResourceId
                     Enabled = $true
                     Category = @("SynapseRbacOperations", "GatewayApiRequests", "BuiltinSqlReqsEnded", "IntegrationPipelineRuns", "IntegrationActivityRuns", "IntegrationTriggerRuns")
                     MetricCategory = @("AllMetrics")
                 }
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                
+
                 return $null
             }
         } -OperationName "Configure Monitoring"
-        if ($diagnosticSettings) {
-            
+        if ($DiagnosticSettings) {
+
         }
     }
-    # Apply enterprise tags if creating workspace
     if ($Action.ToLower() -eq "create") {
             $tags = @{
             'Environment' = 'Production'
@@ -291,116 +276,104 @@ try {
         $null = Invoke-AzureOperation -Operation {
             $resource = Get-AzResource -ResourceGroupName $ResourceGroupName -Name $WorkspaceName -ResourceType "Microsoft.Synapse/workspaces"
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
-            
+
         } -OperationName "Apply Enterprise Tags"
     }
-    # Security assessment
-        $securityScore = 0
-    $maxScore = 6
-    $securityFindings = @()
+        $SecurityScore = 0
+    $MaxScore = 6
+    $SecurityFindings = @()
     if ($Action.ToLower() -eq "create") {
-        # Check managed VNet
         if ($EnableManagedVNet) {
-            $securityScore++
-            $securityFindings += "[OK] Managed virtual network enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Managed virtual network enabled"
         } else {
-            $securityFindings += "[WARN]  Managed VNet not enabled - consider for enhanced security"
+            $SecurityFindings += "[WARN]  Managed VNet not enabled - consider for enhanced security"
         }
-        # Check data exfiltration protection
         if ($EnableDataExfiltrationProtection) {
-            $securityScore++
-            $securityFindings += "[OK] Data exfiltration protection enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Data exfiltration protection enabled"
         } else {
-            $securityFindings += "[WARN]  Data exfiltration protection disabled"
+            $SecurityFindings += "[WARN]  Data exfiltration protection disabled"
         }
-        # Check monitoring
         if ($EnableMonitoring) {
-            $securityScore++
-            $securityFindings += "[OK] Monitoring enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Monitoring enabled"
         } else {
-            $securityFindings += "[WARN]  Monitoring not configured"
+            $SecurityFindings += "[WARN]  Monitoring not configured"
         }
-        # Check firewall configuration
         if ($AllowedIPs.Count -gt 0) {
-            $securityScore++
-            $securityFindings += "[OK] Custom firewall rules configured"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Custom firewall rules configured"
         } else {
-            $securityFindings += "[WARN]  Only Azure services allowed - configure specific IP rules"
+            $SecurityFindings += "[WARN]  Only Azure services allowed - configure specific IP rules"
         }
-        # Check storage account security
-        if ($storageAccount.EnableHttpsTrafficOnly) {
-            $securityScore++
-            $securityFindings += "[OK] HTTPS-only traffic enforced on storage"
+        if ($StorageAccount.EnableHttpsTrafficOnly) {
+            $SecurityScore++
+            $SecurityFindings += "[OK] HTTPS-only traffic enforced on storage"
         }
-        # Check region compliance
         if ($Location -in @("East US", "West Europe", "Southeast Asia")) {
-            $securityScore++
-            $securityFindings += "[OK] Deployed in compliant region"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Deployed in compliant region"
         }
     }
-    # Cost optimization recommendations
-        $costRecommendations = @()
+        $CostRecommendations = @()
     if ($Action.ToLower() -eq "create") {
-        $costRecommendations += "Enable auto-pause for Spark pools to reduce costs during idle time"
-        $costRecommendations += "Use serverless SQL pool for exploratory workloads"
-        $costRecommendations += "Schedule SQL pool scaling based on usage patterns"
-        $costRecommendations += "Monitor storage costs and implement lifecycle policies"
-        $costRecommendations += "Use reserved capacity for predictable workloads"
+        $CostRecommendations += "Enable auto-pause for Spark pools to reduce costs during idle time"
+        $CostRecommendations += "Use serverless SQL pool for exploratory workloads"
+        $CostRecommendations += "Schedule SQL pool scaling based on usage patterns"
+        $CostRecommendations += "Monitor storage costs and implement lifecycle policies"
+        $CostRecommendations += "Use reserved capacity for predictable workloads"
     }
-    # Final validation
         if ($Action.ToLower() -notin @("delete")) {
-        $workspaceStatus = Invoke-AzureOperation -Operation {
+        $WorkspaceStatus = Invoke-AzureOperation -Operation {
             Get-AzSynapseWorkspace -ResourceGroupName $ResourceGroupName -Name $WorkspaceName
         } -OperationName "Validate Workspace Status"
     }
-    # Success summary
-    Write-Host ""
-    Write-Host "                      AZURE SYNAPSE ANALYTICS WORKSPACE READY"
-    Write-Host ""
+    Write-Output ""
+    Write-Output "                      AZURE SYNAPSE ANALYTICS WORKSPACE READY"
+    Write-Output ""
     if ($Action.ToLower() -eq "create") {
-        Write-Host "Synapse Workspace Details:"
-        Write-Host "    Workspace Name: $WorkspaceName"
-        Write-Host "    Resource Group: $ResourceGroupName"
-        Write-Host "    Location: $Location"
-        Write-Host "    Workspace URL: https://$WorkspaceName.dev.azuresynapse.net"
-        Write-Host "    SQL Admin: $SQLAdminUsername"
-        Write-Host "    Storage Account: $StorageAccountName"
-        Write-Host "    Status: $($workspaceStatus.ProvisioningState)"
+        Write-Output "Synapse Workspace Details:"
+        Write-Output "    Workspace Name: $WorkspaceName"
+        Write-Output "    Resource Group: $ResourceGroupName"
+        Write-Output "    Location: $Location"
+        Write-Output "    Workspace URL: https://$WorkspaceName.dev.azuresynapse.net"
+        Write-Output "    SQL Admin: $SQLAdminUsername"
+        Write-Output "    Storage Account: $StorageAccountName"
+        Write-Output "    Status: $($WorkspaceStatus.ProvisioningState)"
         if ($SQLAdminPassword) {
-            Write-Host ""
-            Write-Host "    Username: $SQLAdminUsername"
-            Write-Host "    Password: [SecureString - Store in Key Vault]"
-            Write-Host "   [WARN]  Store these credentials securely in Azure Key Vault!"
+            Write-Output ""
+            Write-Output "    Username: $SQLAdminUsername"
+            Write-Output "    Password: [SecureString - Store in Key Vault]"
+            Write-Output "   [WARN]  Store these credentials securely in Azure Key Vault!"
         }
-        Write-Host ""
-        Write-Host "[LOCK] Security Assessment: $securityScore/$maxScore"
-        foreach ($finding in $securityFindings) {
-            Write-Host "   $finding"
+        Write-Output ""
+        Write-Output "[LOCK] Security Assessment: $SecurityScore/$MaxScore"
+        foreach ($finding in $SecurityFindings) {
+            Write-Output "   $finding"
         }
-        Write-Host ""
-        Write-Host "Cost Optimization:"
-        foreach ($recommendation in $costRecommendations) {
-            Write-Host "   $recommendation"
+        Write-Output ""
+        Write-Output "Cost Optimization:"
+        foreach ($recommendation in $CostRecommendations) {
+            Write-Output "   $recommendation"
         }
-        Write-Host ""
-        Write-Host "    Create SQL and Spark pools using CreateSQLPool/CreateSparkPool actions"
-        Write-Host "    Import data using Azure Data Factory integration"
-        Write-Host "    Configure Git integration for version control"
-        Write-Host "    Set up monitoring alerts and dashboards"
-        Write-Host "    Configure private endpoints for enhanced security"
+        Write-Output ""
+        Write-Output "    Create SQL and Spark pools using CreateSQLPool/CreateSparkPool actions"
+        Write-Output "    Import data using Azure Data Factory integration"
+        Write-Output "    Configure Git integration for version control"
+        Write-Output "    Set up monitoring alerts and dashboards"
+        Write-Output "    Configure private endpoints for enhanced security"
     }
-    Write-Host ""
-    
-} catch {
-    
-    Write-Host ""
-    Write-Host "Troubleshooting Tips:"
-    Write-Host "    Verify Synapse Analytics service availability in your region"
-    Write-Host "    Check subscription quotas and limits"
-    Write-Host "    Ensure proper permissions for resource creation"
-    Write-Host "    Validate storage account configuration"
-    Write-Host "    Check firewall rules and network connectivity"
-    Write-Host ""
-    throw
-}
+    Write-Output ""
 
+} catch {
+
+    Write-Output ""
+    Write-Output "Troubleshooting Tips:"
+    Write-Output "    Verify Synapse Analytics service availability in your region"
+    Write-Output "    Check subscription quotas and limits"
+    Write-Output "    Ensure proper permissions for resource creation"
+    Write-Output "    Validate storage account configuration"
+    Write-Output "    Check firewall rules and network connectivity"
+    Write-Output ""
+    throw`n}

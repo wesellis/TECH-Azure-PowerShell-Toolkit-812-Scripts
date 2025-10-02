@@ -1,16 +1,22 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Copy Filetoazureblob
 
 .DESCRIPTION
     Azure automation
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+
 .NOTES
-    Author: Wes Ellis (wes@wesellis.com)
     Version: 1.0
     Requires appropriate permissions and modules
 #>
+$ErrorActionPreference = 'Stop'
+
 Write-Output "Updating settings.json file..."
 Write-Output "  Storage account: $env:storageAccountName"
 Write-Output "  Container: $env:containerName"
@@ -31,7 +37,6 @@ if ($blob)
     Write-Output " ---------"
     $json = $text | ConvertFrom-Json
     Write-Output "Existing settings.json file found. Updating..."
-    # Rename exportScopes to scopes + convert to object array
     if ($json.exportScopes)
     {
         Write-Output "  Updating exportScopes..."
@@ -49,7 +54,6 @@ if ($blob)
         $json | Add-Member -MemberType NoteProperty -Name scopes -Value $json.exportScopes
         $json.PSObject.Properties.Remove('exportScopes')
     }
-    # Force string array to object array with unique values
     if ($json.scopes)
     {
         Write-Output "  Converting string array to object array..."
@@ -89,7 +93,6 @@ if (!$json)
 }
 if (!($json.retention))
 {
-    # In case the retention object is not present in the settings.json file (versions before 0.4), add it with default values
 $retention = @"
     {
         " msexports" : {
@@ -151,4 +154,5 @@ Write-Output " ---------"
 $text | Out-File $filePath
 Write-Output "Uploading settings.json file..."
 Set-AzStorageBlobContent -ErrorAction Stop @storageContext -File $filePath -Force | Out-Null
+
 

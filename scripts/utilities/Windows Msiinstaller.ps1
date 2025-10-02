@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Msiinstaller
@@ -14,20 +14,19 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory)]
-    [string]$url
+    $url
 )
 try {
-$output = " $PSScriptRoot\file.msi"
-    Write-Host "Downloading $url..."
+    $output = " $PSScriptRoot\file.msi"
+    Write-Output "Downloading $url..."
     Invoke-WebRequest $url -OutFile $output
-    Write-Host "Download complete."
-    Write-Host "Installing $output..."
-    Start-Process msiexec -ArgumentList " /i $output /qn" -Wait -NoNewWindow
-    Write-Host "Installation complete."
+    Write-Output "Download complete."
+    Write-Output "Installing $output..."
+    Start-Process msiexec -ArgumentList "/i $output /qn" -Wait -NoNewWindow
+    Write-Output "Installation complete."
     Remove-Item -ErrorAction Stop $outpu -Forcet -Force
 } catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

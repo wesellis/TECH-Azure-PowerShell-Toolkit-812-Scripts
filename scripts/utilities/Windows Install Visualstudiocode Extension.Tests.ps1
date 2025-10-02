@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Install Visualstudiocode Extension.Tests
@@ -7,43 +7,39 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 BeforeAll {
     $script:IsUnderTest = $true
-    $retryModuleName = 'windows-retry-utils'
+    $RetryModuleName = 'windows-retry-utils'
     try {
-    # Main script execution
-" _common/$retryModuleName.psm1" ) -DisableNameChecking
-    $marketplaceModuleName = 'windows-visual-studio-marketplace-utils'
+" _common/$RetryModuleName.psm1" ) -DisableNameChecking
+    $MarketplaceModuleName = 'windows-visual-studio-marketplace-utils'
         . (Join-Path $PSScriptRoot " windows-install-visualstudiocode-extension.ps1" )
     $script:currentAttempt = 0
     $script:sleepTimes = @()
-    Mock -CommandName Start-Sleep -ModuleName $retryModuleName -MockWith {
-[CmdletBinding()]
-[OutputType([bool])]
- {
-    [CmdletBinding()]
-param(
+    Mock -CommandName Start-Sleep -ModuleName $RetryModuleName -MockWith {
+function Write-Log {
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-param ($seconds) $script:sleepTimes += $seconds; Write-Host "Sleeping $seconds seconds" }
+[CmdletBinding()]
+param($seconds) $script:sleepTimes += $seconds; Write-Output "Sleeping $seconds seconds" }
     Mock Write-Information {}
 }
 Describe "Confirm-UserRequest Tests" {
@@ -67,24 +63,22 @@ Describe "Confirm-UserRequest Tests" {
 }
 Describe "Import-ExtensionToLocalPath Tests" {
     BeforeEach {
-        # Mock dependencies
         Mock Import-RemoteVisualStudioPackageToPath -MockWith {}
         Mock Get-VisualStudioExtension -MockWith {
             return "C:\\Temp\\mocked-extension.vsix"
         }
-        [CmdletBinding()]
-function Copy-Item {}
+        function Copy-Item {}
         Mock Copy-Item -MockWith {}
     }
     It "Should download the VSIX file from a URL" {
         Mock Test-Path -MockWith { return $false }
-        $result = Import-ExtensionToLocalPath -extensionVsixPath " https://example.com/test.vsix" -downloadLocation "C:\\Temp"
+    $result = Import-ExtensionToLocalPath -extensionVsixPath " https://example.com/test.vsix" -downloadLocation "C:\\Temp"
         Assert-MockCalled Copy-Item -Exactly 1
         Assert-MockCalled Import-RemoteVisualStudioPackageToPath -Exactly 1
     }
     It "Should copy the local VSIX file to the download location" {
         Mock Test-Path -MockWith { return $true }
-        $result = Import-ExtensionToLocalPath -extensionVsixPath "C:\\myext\\test.vsix" -downloadLocation "C:\\Temp"
+    $result = Import-ExtensionToLocalPath -extensionVsixPath "C:\\myext\\test.vsix" -downloadLocation "C:\\Temp"
         Assert-MockCalled Copy-Item -Exactly 1
         Assert-MockCalled Import-RemoteVisualStudioPackageToPath -Exactly 0
     }
@@ -94,19 +88,18 @@ function Copy-Item {}
 onExistent\\test.vsix" -downloadLocation "C:\\Temp" } | Should -Throw
     }
     It "Should call Get-VisualStudioExtension -ErrorAction Stop for ExtensionName" {
-$result = Import-ExtensionToLocalPath -extensionName " test-name" -extensionVersion " 1.0.0" -downloadLocation "C:\\Temp"
-        $result | Should -Be "C:\\Temp\\mocked-extension.vsix"
+    $result = Import-ExtensionToLocalPath -extensionName " test-name" -extensionVersion " 1.0.0" -downloadLocation "C:\\Temp"
+    $result | Should -Be "C:\\Temp\\mocked-extension.vsix"
         Assert-MockCalled Get-VisualStudioExtension -Exactly 1 -Scope It
     }
     It "Should call Get-VisualStudioExtension -ErrorAction Stop for ExtensionId" {
-$result = Import-ExtensionToLocalPath -extensionId " test-id" -extensionVersion " 1.0.0" -downloadLocation "C:\\Temp"
-        $result | Should -Be "C:\\Temp\\mocked-extension.vsix"
+    $result = Import-ExtensionToLocalPath -extensionId " test-id" -extensionVersion " 1.0.0" -downloadLocation "C:\\Temp"
+    $result | Should -Be "C:\\Temp\\mocked-extension.vsix"
         Assert-MockCalled Get-VisualStudioExtension -Exactly 1 -Scope It
     }
 }
 Describe "Main Function Tests" {
     BeforeEach {
-        # Mock dependencies
         Mock Confirm-UserRequest {}
         Mock Import-ExtensionToLocalPath -MockWith {
             return "C:\\Temp\\mocked-extension.vsix"
@@ -114,8 +107,7 @@ Describe "Main Function Tests" {
         Mock Resolve-VisualStudioCodeBootstrapPath -MockWith {
             return "C:\\Program Files\\VSCode\\extensions"
         }
-        [CmdletBinding()]
-function Get-ChildItem -ErrorAction Stop {}
+        function Get-ChildItem -ErrorAction Stop {}
         Mock Get-ChildItem -MockWith {
             return @(" mocked-extension1" , "mocked-extension2" )
         }
@@ -133,7 +125,4 @@ function Get-ChildItem -ErrorAction Stop {}
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

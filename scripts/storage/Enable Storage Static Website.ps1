@@ -1,17 +1,22 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
-<#`n.SYNOPSIS
+<#
+.SYNOPSIS
     Enable Storage Static Website
 
 .DESCRIPTION
     Azure automation
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+
 .NOTES
-    Author: Wes Ellis (wes@wesellis.com)
     Version: 1.0
     Requires appropriate permissions and modules
 #>
+
 $ErrorActionPreference = "Stop"
 [CmdletBinding()]
 param(
@@ -21,8 +26,8 @@ param(
     [string] $ErrorDocument404Path
 )
 try {
-$storageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName;
-$ctx = $storageAccount.Context
+    $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName;
+    $ctx = $StorageAccount.Context
 Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $IndexDocument -ErrorDocument404Path $ErrorDocument404Path
 New-Item $IndexDocument -Force -ErrorAction Stop
 Set-Content $IndexDocument '<h1>Welcome</h1>' -ErrorAction Stop
@@ -34,4 +39,3 @@ Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $ErrorDocument404
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-

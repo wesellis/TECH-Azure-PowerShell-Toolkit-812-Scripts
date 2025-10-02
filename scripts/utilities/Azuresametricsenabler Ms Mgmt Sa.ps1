@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,28 +9,29 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 $Timestampfield = "Timestamp"
-$customerID = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_ID-MS-Mgmt-SA'
-$sharedKey = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_KEY-MS-Mgmt-SA'
+$CustomerID = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_ID-MS-Mgmt-SA'
+$SharedKey = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_KEY-MS-Mgmt-SA'
 $ApiVerSaAsm = '2016-04-01'
 $ApiVerSaArm = '2016-01-01'
 $ApiStorage='2016-05-31'
 $AAAccount = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationAccount-MS-Mgmt-SA'
 $AAResourceGroup = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationResourceGroup-MS-Mgmt-SA'
-$varQueueList="AzureSAIngestion-List-Queues"
-$varFilesList="AzureSAIngestion-List-Files";
-$varTableList="AzureSAIngestion-List-Tables"
+$VarQueueList="AzureSAIngestion-List-Queues"
+$VarFilesList="AzureSAIngestion-List-Files";
+$VarTableList="AzureSAIngestion-List-Tables"
 [OutputType([bool])]
- ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+ ($SharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
 $str=  New-Object -TypeName "System.Text.StringBuilder" ;
-	$builder=  [System.Text.StringBuilder]::new(" /" )
+	$builder=  [System.Text.StringBuilder]::new("/" )
 	$builder.Append($resource) |out-null
 	$builder.Append($uri.AbsolutePath) | out-null
 	$str.Append($builder.ToString()) | out-null
@@ -38,7 +39,6 @@ $values2=@{}
 	IF($service -eq 'Table')
 	{
 $values= [System.Web.HttpUtility]::ParseQueryString($uri.query)
-		#    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
 		foreach ($str2 in $values.Keys)
 		{
 			[System.Collections.ArrayList]$list=$values.GetValues($str2)
@@ -75,7 +75,6 @@ $builder3=[System.Text.StringBuilder]::new()
 	Else
 	{
 $values= [System.Web.HttpUtility]::ParseQueryString($uri.query)
-		#    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
 		foreach ($str2 in $values.Keys)
 		{
 			[System.Collections.ArrayList]$list=$values.GetValues($str2)
@@ -106,36 +105,32 @@ $builder3=[System.Text.StringBuilder]::new()
 			$str.Append($builder3.ToString())|out-null
 		}
 	}
-	#   ;  $stringToHash = $stringToHash + $str.ToString();
-	#$str.ToString()
-	############
-	$xHeaders = " x-ms-date:$(date) `n" +" x-ms-version:$ApiStorage"
+	$XHeaders = " x-ms-date:$(date) `n" +" x-ms-version:$ApiStorage"
 	if ($service -eq 'Table')
 	{
-		$stringToHash= $method + " `n" + " `n" + " `n$(date) `n" +$str.ToString()
+		$StringToHash= $method + " `n" + " `n" + " `n$(date) `n" +$str.ToString()
 	}
 	Else
 	{
 		IF ($method -eq 'GET' -or $method -eq 'HEAD')
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
+			$StringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
 		}
 		Else
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n$(bodylength) `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
+			$StringToHash = $method + " `n" + " `n" + " `n$(bodylength) `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
 		}
 	}
-	##############
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
+	$BytesToHash = [Text.Encoding]::UTF8.GetBytes($StringToHash)
+	$KeyBytes = [Convert]::FromBase64String($SharedKey)
 	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $resource,$encodedHash
+	$sha256.Key = $KeyBytes
+	$CalculatedHash = $sha256.ComputeHash($BytesToHash)
+	$EncodedHash = [Convert]::ToBase64String($CalculatedHash)
+	$authorization = 'SharedKey {0}:{1}' -f $resource,$EncodedHash
 	return $authorization
 }
-Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
+Function invoke-StorageREST($SharedKey, $method, $msgbody, $resource,$uri,$svc)
 {
 	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	If ($method -eq 'PUT')
@@ -144,7 +139,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	    date = $rfc1123date
 	    service = $svc }Else {
 	    resource = $resource
-	    sharedKey = $sharedKey
+	    sharedKey = $SharedKey
 	    bodylength = $msgbody.length
 	    method = $method
 	}
@@ -154,7 +149,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	    date = $rfc1123date
 	    service = $svc }
 	    resource = $resource
-	    sharedKey = $sharedKey
+	    sharedKey = $SharedKey
 	    body = $body
 	    method = $method
 	}
@@ -167,13 +162,12 @@ $headersforsa=  @{
 			'x-ms-date'=" $rfc1123date"
 			'Accept-Charset'='UTF-8'
 			'MaxDataServiceVersion'='3.0;NetFx'
-			#      'Accept'='application/atom+xml,application/json;odata=nometadata'
 			'Accept'='application/json;odata=nometadata'
 		}
 	}
 	Else
 	{
-		$headersforSA=  @{
+		$HeadersforSA=  @{
 			'x-ms-date'=" $rfc1123date"
 			'Content-Type'='application\xml'
 			'Authorization'= " $signature"
@@ -207,46 +201,46 @@ $headersforsa=  @{
 		}
 	}
 }
-function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($CustomerId, $SharedKey, $date, $ContentLength, $method, $ContentType, $resource)
 {
-	$xHeaders = " x-ms-date:" + $date
-	$stringToHash = $method + " `n$(contentLength) `n" + $contentType + " `n$(xHeaders) `n" + $resource
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
+	$XHeaders = " x-ms-date:" + $date
+	$StringToHash = $method + " `n$(contentLength) `n" + $ContentType + " `n$(xHeaders) `n" + $resource
+	$BytesToHash = [Text.Encoding]::UTF8.GetBytes($StringToHash)
+	$KeyBytes = [Convert]::FromBase64String($SharedKey)
 	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $customerId,$encodedHash
+	$sha256.Key = $KeyBytes
+	$CalculatedHash = $sha256.ComputeHash($BytesToHash)
+	$EncodedHash = [Convert]::ToBase64String($CalculatedHash)
+	$authorization = 'SharedKey {0}:{1}' -f $CustomerId,$EncodedHash
 	return $authorization
 }
-Function Post-OMSData($customerId, $sharedKey, $body, $logType)
+Function Post-OMSData($CustomerId, $SharedKey, $body, $LogType)
 {
 	$method = "POST"
-	$contentType = " application/json"
-	$resource = " /api/logs"
+	$ContentType = " application/json"
+	$resource = "/api/logs"
 	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
-	$contentLength = $body.Length
+	$ContentLength = $body.Length
 	$params = @{
 	    date = $rfc1123date
-	    contentLength = $contentLength
+	    contentLength = $ContentLength
 	    resource = $resource
-	    sharedKey = $sharedKey
-	    customerId = $customerId
-	    contentType = $contentType
-	    fileName = $fileName
+	    sharedKey = $SharedKey
+	    customerId = $CustomerId
+	    contentType = $ContentType
+	    fileName = $FileName
 	    method = $method
 	}
 	$signature @params
 $uri = "https://$(customerId) .ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
 $OMSheaders = @{
 		"Authorization" = $signature;
-		"Log-Type" = $logType;
+		"Log-Type" = $LogType;
 		" x-ms-date" = $rfc1123date;
 		" time-generated-field" = $TimeStampField;
 	}
 	Try{
-		$response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $OMSheaders -Body $body -UseBasicParsing
+		$response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $ContentType -Headers $OMSheaders -Body $body -UseBasicParsing
 	}
 	Catch
 	{
@@ -254,39 +248,29 @@ $OMSheaders = @{
 	}
 	return $response.StatusCode
 	write-output $response.StatusCode
-	Write-error #Requires -Version 7.0
-#Requires -Modules Az.Resources
+	Write-error
 
-<#`n.SYNOPSIS
-    Azuresametricsenabler Ms Mgmt Sa
-
-.DESCRIPTION
-    Azure automation
-
-
-    Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 $Timestampfield = "Timestamp"
-$customerID = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_ID-MS-Mgmt-SA'
-$sharedKey = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_KEY-MS-Mgmt-SA'
+$CustomerID = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_ID-MS-Mgmt-SA'
+$SharedKey = Get-AutomationVariable -Name 'AzureSAIngestion-OPSINSIGHTS_WS_KEY-MS-Mgmt-SA'
 $ApiVerSaAsm = '2016-04-01'
 $ApiVerSaArm = '2016-01-01'
 $ApiStorage='2016-05-31'
 $AAAccount = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationAccount-MS-Mgmt-SA'
 $AAResourceGroup = Get-AutomationVariable -Name 'AzureSAIngestion-AzureAutomationResourceGroup-MS-Mgmt-SA'
-$varQueueList="AzureSAIngestion-List-Queues"
-$varFilesList="AzureSAIngestion-List-Files";
-$varTableList="AzureSAIngestion-List-Tables"
+$VarQueueList="AzureSAIngestion-List-Queues"
+$VarFilesList="AzureSAIngestion-List-Files";
+$VarTableList="AzureSAIngestion-List-Tables"
 [OutputType([bool])]
- ($sharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
+ ($SharedKey, $date,  $method, $bodylength, $resource,$uri ,$service)
 {
 	Add-Type -AssemblyName System.Web
 $str=  New-Object -TypeName "System.Text.StringBuilder" ;
-	$builder=  [System.Text.StringBuilder]::new(" /" )
+	$builder=  [System.Text.StringBuilder]::new("/" )
 	$builder.Append($resource) |out-null
 	$builder.Append($uri.AbsolutePath) | out-null
 	$str.Append($builder.ToString()) | out-null
@@ -294,7 +278,6 @@ $values2=@{}
 	IF($service -eq 'Table')
 	{
 $values= [System.Web.HttpUtility]::ParseQueryString($uri.query)
-		#    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
 		foreach ($str2 in $values.Keys)
 		{
 			[System.Collections.ArrayList]$list=$values.GetValues($str2)
@@ -331,7 +314,6 @@ $builder3=[System.Text.StringBuilder]::new()
 	Else
 	{
 $values= [System.Web.HttpUtility]::ParseQueryString($uri.query)
-		#    NameValueCollection values = HttpUtility.ParseQueryString(address.Query);
 		foreach ($str2 in $values.Keys)
 		{
 			[System.Collections.ArrayList]$list=$values.GetValues($str2)
@@ -362,36 +344,32 @@ $builder3=[System.Text.StringBuilder]::new()
 			$str.Append($builder3.ToString())|out-null
 		}
 	}
-	#   ;  $stringToHash = $stringToHash + $str.ToString();
-	#$str.ToString()
-	############
-	$xHeaders = " x-ms-date:$(date) `n" +" x-ms-version:$ApiStorage"
+	$XHeaders = " x-ms-date:$(date) `n" +" x-ms-version:$ApiStorage"
 	if ($service -eq 'Table')
 	{
-		$stringToHash= $method + " `n" + " `n" + " `n$(date) `n" +$str.ToString()
+		$StringToHash= $method + " `n" + " `n" + " `n$(date) `n" +$str.ToString()
 	}
 	Else
 	{
 		IF ($method -eq 'GET' -or $method -eq 'HEAD')
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
+			$StringToHash = $method + " `n" + " `n" + " `n" + " `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
 		}
 		Else
 		{
-			$stringToHash = $method + " `n" + " `n" + " `n$(bodylength) `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
+			$StringToHash = $method + " `n" + " `n" + " `n$(bodylength) `n" + " `n" +" application/xml" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n" + " `n$(xHeaders) `n" +$str.ToString()
 		}
 	}
-	##############
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
+	$BytesToHash = [Text.Encoding]::UTF8.GetBytes($StringToHash)
+	$KeyBytes = [Convert]::FromBase64String($SharedKey)
 	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $resource,$encodedHash
+	$sha256.Key = $KeyBytes
+	$CalculatedHash = $sha256.ComputeHash($BytesToHash)
+	$EncodedHash = [Convert]::ToBase64String($CalculatedHash)
+	$authorization = 'SharedKey {0}:{1}' -f $resource,$EncodedHash
 	return $authorization
 }
-Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
+Function invoke-StorageREST($SharedKey, $method, $msgbody, $resource,$uri,$svc)
 {
 	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
 	If ($method -eq 'PUT')
@@ -400,7 +378,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	    date = $rfc1123date
 	    service = $svc }Else {
 	    resource = $resource
-	    sharedKey = $sharedKey
+	    sharedKey = $SharedKey
 	    bodylength = $msgbody.length
 	    method = $method
 	}
@@ -410,7 +388,7 @@ Function invoke-StorageREST($sharedKey, $method, $msgbody, $resource,$uri,$svc)
 	    date = $rfc1123date
 	    service = $svc }
 	    resource = $resource
-	    sharedKey = $sharedKey
+	    sharedKey = $SharedKey
 	    body = $body
 	    method = $method
 	}
@@ -423,13 +401,12 @@ $headersforsa=  @{
 			'x-ms-date'=" $rfc1123date"
 			'Accept-Charset'='UTF-8'
 			'MaxDataServiceVersion'='3.0;NetFx'
-			#      'Accept'='application/atom+xml,application/json;odata=nometadata'
 			'Accept'='application/json;odata=nometadata'
 		}
 	}
 	Else
 	{
-		$headersforSA=  @{
+		$HeadersforSA=  @{
 			'x-ms-date'=" $rfc1123date"
 			'Content-Type'='application\xml'
 			'Authorization'= " $signature"
@@ -463,46 +440,46 @@ $headersforsa=  @{
 		}
 	}
 }
-function New-OMSSignature ($customerId, $sharedKey, $date, $contentLength, $method, $contentType, $resource)
+function New-OMSSignature ($CustomerId, $SharedKey, $date, $ContentLength, $method, $ContentType, $resource)
 {
-	$xHeaders = " x-ms-date:" + $date
-	$stringToHash = $method + " `n$(contentLength) `n" + $contentType + " `n$(xHeaders) `n" + $resource
-	$bytesToHash = [Text.Encoding]::UTF8.GetBytes($stringToHash)
-	$keyBytes = [Convert]::FromBase64String($sharedKey)
+	$XHeaders = " x-ms-date:" + $date
+	$StringToHash = $method + " `n$(contentLength) `n" + $ContentType + " `n$(xHeaders) `n" + $resource
+	$BytesToHash = [Text.Encoding]::UTF8.GetBytes($StringToHash)
+	$KeyBytes = [Convert]::FromBase64String($SharedKey)
 	$sha256 = New-Object -ErrorAction Stop System.Security.Cryptography.HMACSHA256
-	$sha256.Key = $keyBytes
-	$calculatedHash = $sha256.ComputeHash($bytesToHash)
-	$encodedHash = [Convert]::ToBase64String($calculatedHash)
-	$authorization = 'SharedKey {0}:{1}' -f $customerId,$encodedHash
+	$sha256.Key = $KeyBytes
+	$CalculatedHash = $sha256.ComputeHash($BytesToHash)
+	$EncodedHash = [Convert]::ToBase64String($CalculatedHash)
+	$authorization = 'SharedKey {0}:{1}' -f $CustomerId,$EncodedHash
 	return $authorization
 }
-Function Post-OMSData($customerId, $sharedKey, $body, $logType)
+Function Post-OMSData($CustomerId, $SharedKey, $body, $LogType)
 {
 	$method = "POST"
-	$contentType = " application/json"
-	$resource = " /api/logs"
+	$ContentType = " application/json"
+	$resource = "/api/logs"
 	$rfc1123date = [DateTime]::UtcNow.ToString(" r" )
-	$contentLength = $body.Length
+	$ContentLength = $body.Length
 	$params = @{
 	    date = $rfc1123date
-	    contentLength = $contentLength
+	    contentLength = $ContentLength
 	    resource = $resource
-	    sharedKey = $sharedKey
-	    customerId = $customerId
-	    contentType = $contentType
-	    fileName = $fileName
+	    sharedKey = $SharedKey
+	    customerId = $CustomerId
+	    contentType = $ContentType
+	    fileName = $FileName
 	    method = $method
 	}
 	$signature @params
 $uri = "https://$(customerId) .ods.opinsights.azure.com" + $resource + "?api-version=2016-04-01"
 $OMSheaders = @{
 		"Authorization" = $signature;
-		"Log-Type" = $logType;
+		"Log-Type" = $LogType;
 		" x-ms-date" = $rfc1123date;
 		" time-generated-field" = $TimeStampField;
 	}
 	Try{
-		$response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $contentType -Headers $OMSheaders -Body $body -UseBasicParsing
+		$response = Invoke-WebRequest -Uri $uri -Method POST  -ContentType $ContentType -Headers $OMSheaders -Body $body -UseBasicParsing
 	}
 	Catch
 	{
@@ -519,13 +496,13 @@ if ($null -eq $ArmConn)
 	throw "Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
 $retry = 6
-$syncOk = $false
+$SyncOk = $false
 do
 {
 	try
 	{
 		Add-AzureRMAccount -ServicePrincipal -Tenant $ArmConn.TenantID -ApplicationId $ArmConn.ApplicationID -CertificateThumbprint $ArmConn.CertificateThumbprint
-		$syncOk = $true
+		$SyncOk = $true
 	}
 	catch
 	{
@@ -535,7 +512,7 @@ do
 		$retry = $retry - 1
 		Start-Sleep -s 60
 	}
-} while (-not $syncOk -and $retry -ge 0)
+} while (-not $SyncOk -and $retry -ge 0)
 "Selecting Azure subscription..."
 $SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $ArmConn.SubscriptionId -TenantId $ArmConn.tenantid
 $subscriptionid=$ArmConn.SubscriptionId
@@ -564,13 +541,13 @@ $header = "Bearer " + $result.AccessToken;
 $headers = @{"Authorization" =$header;"Accept" =" application/json" }
 $body=$null
 $HTTPVerb="GET"
-$subscriptionInfoUri = "https://management.azure.com/subscriptions/$(subscriptionid)?api-version=2016-02-01"
-$subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
-IF($subscriptionInfo)
+$SubscriptionInfoUri = "https://management.azure.com/subscriptions/$(subscriptionid)?api-version=2016-02-01"
+$SubscriptionInfo = Invoke-RestMethod -Uri $SubscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
+IF($SubscriptionInfo)
 {
 	"Successfully connected to Azure ARM REST"
 }
-if ($getAsmHeader) {
+if ($GetAsmHeader) {
 	try
     {
         $AsmConn = Get-AutomationConnection -Name AzureClassicRunAsConnection -ea 0
@@ -579,26 +556,25 @@ if ($getAsmHeader) {
     {
         if ($null -eq $AsmConn) {
             Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
-            $getAsmHeader=$false
+            $GetAsmHeader=$false
         }
     }
      if ($null -eq $AsmConn) {
         Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
-        $getAsmHeader=$false
+        $GetAsmHeader=$false
     }Else{
         $CertificateAssetName = $AsmConn.CertificateAssetName
         $AzureCert = Get-AutomationCertificate -Name $CertificateAssetName
         if ($null -eq $AzureCert)
         {
             Write-Warning  "Could not retrieve certificate asset: $CertificateAssetName. Ensure that this asset exists and valid  in the Automation account."
-            $getAsmHeader=$false
+            $GetAsmHeader=$false
         }
         Else{
         "Logging into Azure Service Manager"
         Write-Verbose "Authenticating to Azure with certificate." -Verbose
         Set-AzureSubscription -SubscriptionName $AsmConn.SubscriptionName -SubscriptionId $AsmConn.SubscriptionId -Certificate $AzureCert
         Select-AzureSubscription -SubscriptionId $AsmConn.SubscriptionId
-        #finally create the headers for ASM REST
         $headerasm = @{" x-ms-version" =" 2013-08-01" }
         }
     }
@@ -617,7 +593,7 @@ $salist = $salist + (ConvertFrom-Json -InputObject $armresp.Content).Value
 $Uri=" https://management.azure.com/subscriptions/{1}/providers/Microsoft.ClassicStorage/storageAccounts?api-version={0}"   -f  $ApiVerSaAsm,$SubscriptionId
 $sresp=Invoke-WebRequest -Uri $uri -Method GET  -Headers $headers -UseBasicParsing
 $salist = $salist + (ConvertFrom-Json -InputObject $sresp.Content).value
-" $(GEt-date)  $($saList.count) storage accounts found"
+" $(GEt-date)  $($SaList.count) storage accounts found"
 Foreach($sa in $salist)
 {
 	$prikey=$storageaccount=$rg=$type=$null
@@ -645,20 +621,20 @@ Foreach($sa in $salist)
 	$sa|Add-Member -MemberType NoteProperty -Name Key -Value $prikey
 }
 $vhdinventory=@()
-$allContainers=@()
+$AllContainers=@()
 Foreach($sa in $salist)
 {
-	[uri]$uriListC= "https://{0}.blob.core.windows.net/?comp=list" -f $sa.name
+	[uri]$UriListC= "https://{0}.blob.core.windows.net/?comp=list" -f $sa.name
 	Write-verbose " $(get-date) - Getting list of blobs for $($sa.name) "
-	[xml]$lb=invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $uriListC
+	[xml]$lb=invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $UriListC
 	$containers=@($lb.EnumerationResults.Containers.Container)
 	IF(![string]::IsNullOrEmpty($lb.EnumerationResults.Containers.Container))
 	{
 		Foreach($container in @($containers))
 		{
 			$allcontainers = $allcontainers + $container
-			[uri]$uriLBlobs = "https://{0}.blob.core.windows.net/{1}/?comp=list&include=metadata&maxresults=1000&restype=container" -f $sa.name,$container.name
-			[xml]$fresponse= invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $uriLBlobs
+			[uri]$UriLBlobs = "https://{0}.blob.core.windows.net/{1}/?comp=list&include=metadata&maxresults=1000&restype=container" -f $sa.name,$container.name
+			[xml]$fresponse= invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $UriLBlobs
 $blobs=$fresponse.EnumerationResults.Blobs.blob
 			Foreach($blob in $blobs)
 			{
@@ -675,7 +651,7 @@ $cu = New-Object -ErrorAction Stop PSObject -Property @{
 						LeaseState=$blob.Properties.LeaseState.ToString()
 						StorageAccount= $sa.name
 						SubscriptionID = $ArmConn.SubscriptionId;
-						AzureSubscription = $subscriptionInfo.displayName
+						AzureSubscription = $SubscriptionInfo.displayName
 					}
 					$vhdinventory = $vhdinventory + $cu
 				}
@@ -684,7 +660,7 @@ $cu = New-Object -ErrorAction Stop PSObject -Property @{
 	}
 }
 $jsonvhdpool = ConvertTo-Json -InputObject $vhdinventory
-If($jsonvhdpool){$OMSRES=Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonvhdpool)) -logType $logname}
+If($jsonvhdpool){$OMSRES=Post-OMSData -customerId $CustomerId -sharedKey $SharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonvhdpool)) -logType $logname}
 if($OMSRES -ge 200 -and $omsres -lt 300)
 {
 	Write-Output " $($vhdinventory.count) VHD inventory uploaded to OMS"
@@ -721,13 +697,13 @@ if ($null -eq $ArmConn)
 	throw "Could not retrieve connection asset AzureRunAsConnection,  Ensure that runas account  exists in the Automation account."
 }
 $retry = 6
-$syncOk = $false
+$SyncOk = $false
 do
 {
 	try
 	{
 		Add-AzureRMAccount -ServicePrincipal -Tenant $ArmConn.TenantID -ApplicationId $ArmConn.ApplicationID -CertificateThumbprint $ArmConn.CertificateThumbprint
-		$syncOk = $true
+		$SyncOk = $true
 	}
 	catch
 	{
@@ -737,7 +713,7 @@ do
 		$retry = $retry - 1
 		Start-Sleep -s 60
 	}
-} while (-not $syncOk -and $retry -ge 0)
+} while (-not $SyncOk -and $retry -ge 0)
 "Selecting Azure subscription..."
 $SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $ArmConn.SubscriptionId -TenantId $ArmConn.tenantid
 $subscriptionid=$ArmConn.SubscriptionId
@@ -766,13 +742,13 @@ $header = "Bearer " + $result.AccessToken;
 $headers = @{"Authorization" =$header;"Accept" =" application/json" }
 $body=$null
 $HTTPVerb="GET"
-$subscriptionInfoUri = "https://management.azure.com/subscriptions/$(subscriptionid)?api-version=2016-02-01"
-$subscriptionInfo = Invoke-RestMethod -Uri $subscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
-IF($subscriptionInfo)
+$SubscriptionInfoUri = "https://management.azure.com/subscriptions/$(subscriptionid)?api-version=2016-02-01"
+$SubscriptionInfo = Invoke-RestMethod -Uri $SubscriptionInfoUri -Headers $headers -Method Get -UseBasicParsing
+IF($SubscriptionInfo)
 {
 	"Successfully connected to Azure ARM REST"
 }
-if ($getAsmHeader) {
+if ($GetAsmHeader) {
 	try
     {
         $AsmConn = Get-AutomationConnection -Name AzureClassicRunAsConnection -ea 0
@@ -781,26 +757,25 @@ if ($getAsmHeader) {
     {
         if ($null -eq $AsmConn) {
             Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account."
-            $getAsmHeader=$false
+            $GetAsmHeader=$false
         }
     }
      if ($null -eq $AsmConn) {
         Write-Warning "Could not retrieve connection asset AzureClassicRunAsConnection. Ensure that runas account exist and valid in the Automation account. Quota usage infomration for classic accounts will no tbe collected"
-        $getAsmHeader=$false
+        $GetAsmHeader=$false
     }Else{
         $CertificateAssetName = $AsmConn.CertificateAssetName
         $AzureCert = Get-AutomationCertificate -Name $CertificateAssetName
         if ($null -eq $AzureCert)
         {
             Write-Warning  "Could not retrieve certificate asset: $CertificateAssetName. Ensure that this asset exists and valid  in the Automation account."
-            $getAsmHeader=$false
+            $GetAsmHeader=$false
         }
         Else{
         "Logging into Azure Service Manager"
         Write-Verbose "Authenticating to Azure with certificate." -Verbose
         Set-AzureSubscription -SubscriptionName $AsmConn.SubscriptionName -SubscriptionId $AsmConn.SubscriptionId -Certificate $AzureCert
         Select-AzureSubscription -SubscriptionId $AsmConn.SubscriptionId
-        #finally create the headers for ASM REST
         $headerasm = @{" x-ms-version" =" 2013-08-01" }
         }
     }
@@ -819,7 +794,7 @@ $salist = $salist + (ConvertFrom-Json -InputObject $armresp.Content).Value
 $Uri=" https://management.azure.com/subscriptions/{1}/providers/Microsoft.ClassicStorage/storageAccounts?api-version={0}"   -f  $ApiVerSaAsm,$SubscriptionId
 $sresp=Invoke-WebRequest -Uri $uri -Method GET  -Headers $headers -UseBasicParsing
 $salist = $salist + (ConvertFrom-Json -InputObject $sresp.Content).value
-" $(GEt-date)  $($saList.count) storage accounts found"
+" $(GEt-date)  $($SaList.count) storage accounts found"
 Foreach($sa in $salist)
 {
 	$prikey=$storageaccount=$rg=$type=$null
@@ -847,20 +822,20 @@ Foreach($sa in $salist)
 	$sa|Add-Member -MemberType NoteProperty -Name Key -Value $prikey
 }
 $vhdinventory=@()
-$allContainers=@()
+$AllContainers=@()
 Foreach($sa in $salist)
 {
-	[uri]$uriListC= "https://{0}.blob.core.windows.net/?comp=list" -f $sa.name
+	[uri]$UriListC= "https://{0}.blob.core.windows.net/?comp=list" -f $sa.name
 	Write-verbose " $(get-date) - Getting list of blobs for $($sa.name) "
-	[xml]$lb=invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $uriListC
+	[xml]$lb=invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $UriListC
 	$containers=@($lb.EnumerationResults.Containers.Container)
 	IF(![string]::IsNullOrEmpty($lb.EnumerationResults.Containers.Container))
 	{
 		Foreach($container in @($containers))
 		{
 			$allcontainers = $allcontainers + $container
-			[uri]$uriLBlobs = "https://{0}.blob.core.windows.net/{1}/?comp=list&include=metadata&maxresults=1000&restype=container" -f $sa.name,$container.name
-			[xml]$fresponse= invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $uriLBlobs
+			[uri]$UriLBlobs = "https://{0}.blob.core.windows.net/{1}/?comp=list&include=metadata&maxresults=1000&restype=container" -f $sa.name,$container.name
+			[xml]$fresponse= invoke-StorageREST -sharedKey $sa.key -method GET -resource $sa.name -uri $UriLBlobs
 $blobs=$fresponse.EnumerationResults.Blobs.blob
 			Foreach($blob in $blobs)
 			{
@@ -877,7 +852,7 @@ $cu = New-Object -ErrorAction Stop PSObject -Property @{
 						LeaseState=$blob.Properties.LeaseState.ToString()
 						StorageAccount= $sa.name
 						SubscriptionID = $ArmConn.SubscriptionId;
-						AzureSubscription = $subscriptionInfo.displayName
+						AzureSubscription = $SubscriptionInfo.displayName
 					}
 					$vhdinventory = $vhdinventory + $cu
 				}
@@ -886,7 +861,7 @@ $cu = New-Object -ErrorAction Stop PSObject -Property @{
 	}
 }
 $jsonvhdpool = ConvertTo-Json -InputObject $vhdinventory
-If($jsonvhdpool){$OMSRES=Post-OMSData -customerId $customerId -sharedKey $sharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonvhdpool)) -logType $logname}
+If($jsonvhdpool){$OMSRES=Post-OMSData -customerId $CustomerId -sharedKey $SharedKey -body ([System.Text.Encoding]::UTF8.GetBytes($jsonvhdpool)) -logType $logname}
 if($OMSRES -ge 200 -and $omsres -lt 300)
 {
 	Write-Output " $($vhdinventory.count) VHD inventory uploaded to OMS"
@@ -913,6 +888,4 @@ $response=invoke-StorageREST -sharedKey $sa.Key -method PUT -resource $sa.name -
 			}
 		}
 	}
-}
-
-
+`n}

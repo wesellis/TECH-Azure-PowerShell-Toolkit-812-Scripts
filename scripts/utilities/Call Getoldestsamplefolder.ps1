@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Call Getoldestsamplefolder
@@ -8,7 +8,8 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -16,8 +17,7 @@
 $ENV:BUILD_SOURCESDIRECTORY = (Resolve-Path "$PSScriptRoot/../.." ).ToString()
 $ENV:SAMPLE_FOLDER = " ."
 $ENV:SAMPLE_NAME = Split-Path -Leaf $PSScriptRoot
-$ENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" # TODO
-$ENV:RESULT_BEST_PRACTICE = "FAIL"
+$ENV:STORAGE_ACCOUNT_NAME = " azureqsbicep" $ENV:RESULT_BEST_PRACTICE = "FAIL"
 $ENV:RESULT_CREDSCAN = "PASS"
 $ENV:BUILD_REASON = "PullRequest"
 $ENV:AGENT_JOBSTATUS = "Succeeded"
@@ -34,8 +34,11 @@ if (($StorageAccountKey -eq "" ) -or ($null -eq $StorageAccountKey)) {
     Write-Error "Missing StorageAccountKey"
 }
 $params = @{
-    PurgeOldRows = $false #TODO REMOVE
+    PurgeOldRows = $false
     TableName = "QuickStartsMetadataService"
     StorageAccountKey = $StorageAccountKey
 }
 & @params
+
+
+

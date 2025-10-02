@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -20,9 +20,10 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     Output (if any)
     General notes
         You do not need to create a new VNET as Bastion deployment is per virtual network, not per subscription/account or virtual machine. So ensure you place the Bastion in your existing VNET
-$getAzVirtualNetworkSplat = @{
+$GetAzVirtualNetworkSplat = @{
     Name = 'ProductionVNET'
 }
 $vnet = Get-AzVirtualNetwork -ErrorAction Stop @getAzVirtualNetworkSplat
+
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Gitinstall
@@ -8,19 +8,17 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter()]
     $SetCredHelper = $false
 )
-#region Functions-Set-StrictMode -Version Latest
-$VerbosePreference = 'Continue'
+    $VerbosePreference = 'Continue'
 function getSimpleValue([string] $url, [string] $filename ) {
     $fullpath = " ${env:Temp}\$filename"
     Invoke-WebRequest -Uri $url -OutFile $fullpath
@@ -28,48 +26,39 @@ function getSimpleValue([string] $url, [string] $filename ) {
     return $value
 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
-$gitTag = getSimpleValue -url " https://gitforwindows.org/latest-tag.txt" -filename " gitlatesttag.txt" ;
-$gitVersion = getSimpleValue -url " https://gitforwindows.org/latest-version.txt" -filename " gitlatestversion.txt" ;
-$installerFile = "Git-$gitVersion-64-bit.exe" ;
-$uri = "https://github.com/git-for-windows/git/releases/download/$gitTag/$installerFile"
-$Installer = " $env:Temp\GitInstaller.exe"
-$ProgressPreference = 'SilentlyContinue'
+    $GitTag = getSimpleValue -url " https://gitforwindows.org/latest-tag.txt" -filename " gitlatesttag.txt" ;
+    $GitVersion = getSimpleValue -url " https://gitforwindows.org/latest-version.txt" -filename " gitlatestversion.txt" ;
+    $InstallerFile = "Git-$GitVersion-64-bit.exe" ;
+    $uri = "https://github.com/git-for-windows/git/releases/download/$GitTag/$InstallerFile"
+    $Installer = " $env:Temp\GitInstaller.exe"
+    $ProgressPreference = 'SilentlyContinue'
 try {
     Invoke-RestMethod -Uri $uri -OutFile $Installer -UseBasicParsing
-    # Regarding setting the Components:
-    # Download installer from https://git-scm.com/downloads
-    # Run it manually using Git-<version>-64-bit.exe /SAVEINF="C:\.tools\gitinstall.ini"
-    # Select needed components in the UI and complete the install.
-    # Use value of 'Components' in generated gitinstall.ini.
-    # Reference https://jrsoftware.org/ishelp/index.php?topic=setupcmdline
     $arguments = @('/silent', '/norestart', '/Components=ext,ext\shellhere,ext\guihere,gitlfs,assoc,assoc_sh,scalar')
-    Write-Host "Installing $installerFile"
+    Write-Output "Installing $InstallerFile"
     Start-Process -FilePath $Installer -ArgumentList $arguments -Wait -Verbose
-    Write-Host "Done Installing $installerFile"
+    Write-Output "Done Installing $InstallerFile"
     if ($SetCredHelper -eq $true) {
-        Write-Host "Setting system git config credential.helper to manager"
-        $basePath = "C:\Program Files\Git"
-        $binPath = Join-Path $basePath " bin\git.exe"
-        $cmdPath = Join-Path $basePath " cmd\git.exe"
-        if (Test-Path $binPath) {
-            $gitPath = $binPath
+        Write-Output "Setting system git config credential.helper to manager"
+    $BasePath = "C:\Program Files\Git"
+    $BinPath = Join-Path $BasePath " bin\git.exe"
+    $CmdPath = Join-Path $BasePath " cmd\git.exe"
+        if (Test-Path $BinPath) {
+    $GitPath = $BinPath
         }
         else {
-$gitPath = $cmdPath
+    $GitPath = $CmdPath
         }
-        if (-not (Test-Path $gitPath)) {
+        if (-not (Test-Path $GitPath)) {
             throw "Unable to find git.exe"
         }
-$arguments = @('config', '--system', 'credential.helper', 'manager')
-        Write-Host "Running $gitPath $($arguments -join ' ')"
-        & $gitPath $arguments
-        Write-Host "Result: $LastExitCode"
-        Write-Host "Git system config settings:"
-        & $gitPath @('config', '--system', '--list')
-        Write-Host "Done updating git config"
+    $arguments = @('config', '--system', 'credential.helper', 'manager')
+        Write-Output "Running $GitPath $($arguments -join ' ')"
+        & $GitPath $arguments
+        Write-Output "Result: $LastExitCode"
+        Write-Output "Git system config settings:"
+        & $GitPath @('config', '--system', '--list')
+        Write-Output "Done updating git config"
 
 } catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
-
-
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

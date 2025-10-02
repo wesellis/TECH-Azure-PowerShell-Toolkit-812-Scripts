@@ -26,15 +26,14 @@ param(
     [switch]$Interactive = $true
 )
 
-Write-Host "=== PowerShell Gallery Publishing Setup ===" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "=== PowerShell Gallery Publishing Setup ===" -ForegroundColor Green
+Write-Output ""
 
-# Function to test PowerShell Gallery connectivity
 function Test-GalleryConnectivity {
-    Write-Host "Testing PowerShell Gallery connectivity..." -ForegroundColor Yellow
+    Write-Host "Testing PowerShell Gallery connectivity..." -ForegroundColor Green
 
     try {
-        $testModule = Find-Module -Name "PowerShellGet" -ErrorAction Stop
+        $TestModule = Find-Module -Name "PowerShellGet" -ErrorAction Stop
         Write-Host "✓ PowerShell Gallery is accessible" -ForegroundColor Green
         return $true
     } catch {
@@ -44,7 +43,6 @@ function Test-GalleryConnectivity {
     }
 }
 
-# Function to validate API key
 function Test-ApiKey {
     param([string]$ApiKey)
 
@@ -52,7 +50,6 @@ function Test-ApiKey {
         return $false
     }
 
-    # Basic validation - API keys are typically GUIDs or long strings
     if ($ApiKey.Length -lt 20) {
         Write-Host "✗ API key appears too short" -ForegroundColor Red
         return $false
@@ -62,12 +59,9 @@ function Test-ApiKey {
     return $true
 }
 
-# Function to create gallery profile
 function New-GalleryProfile {
     param([string]$ApiKey)
-
-    $profilePath = Join-Path $env:USERPROFILE ".azure-toolkit-gallery.json"
-
+    $ProfilePath = Join-Path $env:USERPROFILE ".azure-toolkit-gallery.json"
     $profile = @{
         ApiKey = $ApiKey
         LastUpdated = Get-Date
@@ -80,146 +74,128 @@ function New-GalleryProfile {
         ModulePrefix = "Az.Toolkit"
         Repository = "https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts"
     }
+    $profile | ConvertTo-Json -Depth 3 | Out-File -FilePath $ProfilePath -Encoding UTF8
+    Write-Host "✓ Gallery profile saved to: $ProfilePath" -ForegroundColor Green
 
-    $profile | ConvertTo-Json -Depth 3 | Out-File -FilePath $profilePath -Encoding UTF8
-    Write-Host "✓ Gallery profile saved to: $profilePath" -ForegroundColor Green
-
-    return $profilePath
+    return $ProfilePath
 }
 
-# Main setup process
 if ($Interactive) {
-    Write-Host "This script will help you set up PowerShell Gallery publishing for the Azure Toolkit." -ForegroundColor White
-    Write-Host ""
+    Write-Host "This script will help you set up PowerShell Gallery publishing for the Azure Toolkit." -ForegroundColor Green
+    Write-Output ""
 
-    # Step 1: Check prerequisites
-    Write-Host "Step 1: Checking prerequisites..." -ForegroundColor Cyan
+    Write-Host "Step 1: Checking prerequisites..." -ForegroundColor Green
 
-    # Check PowerShell version
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         Write-Host "✗ PowerShell 7.0+ is required" -ForegroundColor Red
-        Write-Host "  Download from: https://github.com/PowerShell/PowerShell/releases" -ForegroundColor Yellow
+        Write-Host "  Download from: https://github.com/PowerShell/PowerShell/releases" -ForegroundColor Red
         exit 1
     } else {
         Write-Host "✓ PowerShell $($PSVersionTable.PSVersion) detected" -ForegroundColor Green
     }
-
-    # Check PowerShellGet
-    $psGet = Get-Module -Name PowerShellGet -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
-    if (-not $psGet -or $psGet.Version -lt [Version]"2.0.0") {
+    $PsGet = Get-Module -Name PowerShellGet -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+    if (-not $PsGet -or $PsGet.Version -lt [Version]"2.0.0") {
         Write-Host "✗ PowerShellGet 2.0+ is required" -ForegroundColor Red
-        Write-Host "  Install with: Install-Module -Name PowerShellGet -Force" -ForegroundColor Yellow
+        Write-Output "  Install with: Install-Module -Name PowerShellGet -Force" # Color: $2
         exit 1
     } else {
-        Write-Host "✓ PowerShellGet $($psGet.Version) detected" -ForegroundColor Green
+        Write-Output "✓ PowerShellGet $($PsGet.Version) detected" # Color: $2
     }
 
-    # Test gallery connectivity
     if (-not (Test-GalleryConnectivity)) {
-        Write-Host "Cannot proceed without PowerShell Gallery access" -ForegroundColor Red
+        Write-Output "Cannot proceed without PowerShell Gallery access" # Color: $2
         exit 1
     }
 
-    Write-Host ""
+    Write-Output ""
 
-    # Step 2: Get API key
-    Write-Host "Step 2: PowerShell Gallery API Key Setup" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "You need a PowerShell Gallery API key to publish modules." -ForegroundColor White
-    Write-Host "Get your API key from: https://www.powershellgallery.com/account/apikeys" -ForegroundColor Yellow
-    Write-Host ""
+    Write-Output "Step 2: PowerShell Gallery API Key Setup" # Color: $2
+    Write-Output ""
+    Write-Output "You need a PowerShell Gallery API key to publish modules." # Color: $2
+    Write-Output "Get your API key from: https://www.powershellgallery.com/account/apikeys" # Color: $2
+    Write-Output ""
 
     do {
-        $apiKey = Read-Host "Enter your PowerShell Gallery API key (or 'skip' to skip)" -AsSecureString
-        $apiKeyPlain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($apiKey))
+    $ApiKey = Read-Host "Enter your PowerShell Gallery API key (or 'skip' to skip)" -AsSecureString
+    $ApiKeyPlain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($ApiKey))
 
-        if ($apiKeyPlain -eq 'skip') {
-            Write-Host "Skipping API key setup. You can configure it later." -ForegroundColor Yellow
+        if ($ApiKeyPlain -eq 'skip') {
+            Write-Output "Skipping API key setup. You can configure it later." # Color: $2
             break
         }
+    $ValidKey = Test-ApiKey -ApiKey $ApiKeyPlain
+    } while (-not $ValidKey)
 
-        $validKey = Test-ApiKey -ApiKey $apiKeyPlain
-    } while (-not $validKey)
-
-    if ($apiKeyPlain -ne 'skip') {
-        # Create gallery profile
-        $profilePath = New-GalleryProfile -ApiKey $apiKeyPlain
-        Write-Host ""
+    if ($ApiKeyPlain -ne 'skip') {
+        $ProfilePath = New-GalleryProfile -ApiKey $ApiKeyPlain
+        Write-Output ""
     }
 
-    # Step 3: Module preparation
-    Write-Host "Step 3: Module Preparation" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Output "Step 3: Module Preparation" # Color: $2
+    Write-Output ""
+    $ToolkitRoot = Split-Path -Parent $PSScriptRoot
+    $ScriptsPath = Join-Path $ToolkitRoot "scripts"
 
-    $toolkitRoot = Split-Path -Parent $PSScriptRoot
-    $scriptsPath = Join-Path $toolkitRoot "scripts"
-
-    if (-not (Test-Path $scriptsPath)) {
-        Write-Host "✗ Scripts directory not found: $scriptsPath" -ForegroundColor Red
+    if (-not (Test-Path $ScriptsPath)) {
+        Write-Output "✗ Scripts directory not found: $ScriptsPath" # Color: $2
         exit 1
     }
-
-    $categories = Get-ChildItem -Path $scriptsPath -Directory
-    Write-Host "Found $($categories.Count) script categories:" -ForegroundColor Green
+    $categories = Get-ChildItem -Path $ScriptsPath -Directory
+    Write-Output "Found $($categories.Count) script categories:" # Color: $2
     foreach ($category in $categories) {
-        $scriptCount = (Get-ChildItem -Path $category.FullName -Filter "*.ps1").Count
-        Write-Host "  - $($category.Name): $scriptCount scripts" -ForegroundColor White
+        $ScriptCount = (Get-ChildItem -Path $category.FullName -Filter "*.ps1").Count
+        Write-Output "  - $($category.Name): $ScriptCount scripts" # Color: $2
     }
 
-    Write-Host ""
+    Write-Output ""
 
-    # Step 4: Test publishing setup
-    Write-Host "Step 4: Testing Publishing Setup" -ForegroundColor Cyan
+    Write-Output "Step 4: Testing Publishing Setup" # Color: $2
 
-    if ($apiKeyPlain -and $apiKeyPlain -ne 'skip') {
-        Write-Host "Testing module publishing (dry run)..." -ForegroundColor Yellow
+    if ($ApiKeyPlain -and $ApiKeyPlain -ne 'skip') {
+        Write-Output "Testing module publishing (dry run)..." # Color: $2
 
         try {
-            & (Join-Path $PSScriptRoot "Publish-ToGallery.ps1") -ApiKey $apiKeyPlain -WhatIf
-            Write-Host "✓ Publishing test successful" -ForegroundColor Green
+            & (Join-Path $PSScriptRoot "Publish-ToGallery.ps1") -ApiKey $ApiKeyPlain -WhatIf
+            Write-Output "✓ Publishing test successful" # Color: $2
         } catch {
-            Write-Host "✗ Publishing test failed: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Output "✗ Publishing test failed: $($_.Exception.Message)" # Color: $2
         }
     } else {
-        Write-Host "Skipping publishing test (no API key provided)" -ForegroundColor Yellow
+        Write-Output "Skipping publishing test (no API key provided)" # Color: $2
     }
 
-    Write-Host ""
+    Write-Output ""
 
-    # Step 5: Next steps
-    Write-Host "Step 5: Next Steps" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "Setup complete! Here's what you can do next:" -ForegroundColor White
-    Write-Host ""
-    Write-Host "1. Publish all modules:" -ForegroundColor Yellow
-    Write-Host "   .\tools\Publish-ToGallery.ps1 -ApiKey 'your-key'" -ForegroundColor White
-    Write-Host ""
-    Write-Host "2. Publish specific module:" -ForegroundColor Yellow
-    Write-Host "   .\tools\Publish-ToGallery.ps1 -ModuleName 'Az.Toolkit.Compute' -ApiKey 'your-key'" -ForegroundColor White
-    Write-Host ""
-    Write-Host "3. Test before publishing:" -ForegroundColor Yellow
-    Write-Host "   .\tools\Publish-ToGallery.ps1 -ApiKey 'your-key' -WhatIf" -ForegroundColor White
-    Write-Host ""
-    Write-Host "4. Run tests:" -ForegroundColor Yellow
-    Write-Host "   .\tests\Run-Tests.ps1" -ForegroundColor White
-    Write-Host ""
+    Write-Output "Step 5: Next Steps" # Color: $2
+    Write-Output ""
+    Write-Output "Setup complete! Here's what you can do next:" # Color: $2
+    Write-Output ""
+    Write-Output "1. Publish all modules:" # Color: $2
+    Write-Output "   .\tools\Publish-ToGallery.ps1 -ApiKey 'your-key'" # Color: $2
+    Write-Output ""
+    Write-Output "2. Publish specific module:" # Color: $2
+    Write-Output "   .\tools\Publish-ToGallery.ps1 -ModuleName 'Az.Toolkit.Compute' -ApiKey 'your-key'" # Color: $2
+    Write-Output ""
+    Write-Output "3. Test before publishing:" # Color: $2
+    Write-Output "   .\tools\Publish-ToGallery.ps1 -ApiKey 'your-key' -WhatIf" # Color: $2
+    Write-Output ""
+    Write-Output "4. Run tests:" # Color: $2
+    Write-Output "   .\tests\Run-Tests.ps1" # Color: $2
+    Write-Output ""
 
-    if ($profilePath) {
-        Write-Host "Your settings are saved in: $profilePath" -ForegroundColor Cyan
+    if ($ProfilePath) {
+        Write-Output "Your settings are saved in: $ProfilePath" # Color: $2
     }
 
 } else {
-    # Non-interactive mode - just validate environment
-    Write-Host "Running environment validation..." -ForegroundColor Yellow
-
+    Write-Output "Running environment validation..." # Color: $2
     $issues = @()
 
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         $issues += "PowerShell 7.0+ required"
     }
-
-    $psGet = Get-Module -Name PowerShellGet -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
-    if (-not $psGet -or $psGet.Version -lt [Version]"2.0.0") {
+    $PsGet = Get-Module -Name PowerShellGet -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1
+    if (-not $PsGet -or $PsGet.Version -lt [Version]"2.0.0") {
         $issues += "PowerShellGet 2.0+ required"
     }
 
@@ -228,16 +204,17 @@ if ($Interactive) {
     }
 
     if ($issues.Count -eq 0) {
-        Write-Host "✓ Environment validation passed" -ForegroundColor Green
+        Write-Output "✓ Environment validation passed" # Color: $2
         exit 0
     } else {
-        Write-Host "✗ Environment validation failed:" -ForegroundColor Red
+        Write-Output "✗ Environment validation failed:" # Color: $2
         foreach ($issue in $issues) {
-            Write-Host "  - $issue" -ForegroundColor Red
+            Write-Output "  - $issue" # Color: $2
         }
         exit 1
     }
 }
 
-Write-Host ""
-Write-Host "Setup complete! Happy publishing! 🚀" -ForegroundColor Green
+Write-Output ""
+Write-Output "Setup complete! Happy publishing! 🚀" # Color: $2
+

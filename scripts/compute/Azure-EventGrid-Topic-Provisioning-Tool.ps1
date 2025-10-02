@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage Event Grid
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$TopicName,
@@ -15,11 +17,10 @@
     [string]$InputSchema = "EventGridSchema",
     [hashtable]$Tags = @{}
 )
-Write-Host "Provisioning Event Grid Topic: $TopicName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Input Schema: $InputSchema"
-# Create the Event Grid Topic
+Write-Output "Provisioning Event Grid Topic: $TopicName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "Input Schema: $InputSchema"
 $params = @{
     ErrorAction = "Stop"
     InputSchema = $InputSchema
@@ -29,35 +30,33 @@ $params = @{
 }
 $EventGridTopic @params
 if ($Tags.Count -gt 0) {
-    Write-Host "`nApplying tags:"
+    Write-Output "`nApplying tags:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Host "  $($Tag.Key): $($Tag.Value)"
+        Write-Output "  $($Tag.Key): $($Tag.Value)"
     }
-    # Apply tags (this would require Set-AzEventGridTopic -ErrorAction Stop in actual implementation)
 }
-Write-Host "`nEvent Grid Topic $TopicName provisioned successfully"
-Write-Host "Topic Endpoint: $($EventGridTopic.Endpoint)"
-Write-Host "Provisioning State: $($EventGridTopic.ProvisioningState)"
-# Get topic keys
+Write-Output "`nEvent Grid Topic $TopicName provisioned successfully"
+Write-Output "Topic Endpoint: $($EventGridTopic.Endpoint)"
+Write-Output "Provisioning State: $($EventGridTopic.ProvisioningState)"
 try {
     $Keys = Get-AzEventGridTopicKey -ResourceGroupName $ResourceGroupName -Name $TopicName
-    Write-Host "`nAccess Keys:"
-    Write-Host "Key 1: $($Keys.Key1.Substring(0,8))... (use for authentication)"
-    Write-Host "Key 2: $($Keys.Key2.Substring(0,8))... (backup key)"
+    Write-Output "`nAccess Keys:"
+    Write-Output "Key 1: $($Keys.Key1.Substring(0,8))... (use for authentication)"
+    Write-Output "Key 2: $($Keys.Key2.Substring(0,8))... (backup key)"
 } catch {
-    Write-Host "`nAccess Keys: Available via Get-AzEventGridTopicKey -ErrorAction Stop cmdlet"
+    Write-Output "`nAccess Keys: Available via Get-AzEventGridTopicKey -ErrorAction Stop cmdlet"
 }
-Write-Host "`nEvent Publishing:"
-Write-Host "Endpoint: $($EventGridTopic.Endpoint)"
-Write-Host "Headers Required:"
-Write-Host "    aeg-sas-key: [access key]"
-Write-Host "    Content-Type: application/json"
-Write-Host "`nNext Steps:"
-Write-Host "1. Create event subscriptions for this topic"
-Write-Host "2. Configure event handlers (Azure Functions, Logic Apps, etc.)"
-Write-Host "3. Start publishing events to the topic endpoint"
-Write-Host "4. Monitor event delivery through Azure Portal"
-Write-Host "`nSample Event Format (EventGridSchema):"
+Write-Output "`nEvent Publishing:"
+Write-Output "Endpoint: $($EventGridTopic.Endpoint)"
+Write-Output "Headers Required:"
+Write-Output "    aeg-sas-key: [access key]"
+Write-Output "    Content-Type: application/json"
+Write-Output "`nNext Steps:"
+Write-Output "1. Create event subscriptions for this topic"
+Write-Output "2. Configure event handlers (Azure Functions, Logic Apps, etc.)"
+Write-Output "3. Start publishing events to the topic endpoint"
+Write-Output "4. Monitor event delivery through Azure Portal"
+Write-Output "`nSample Event Format (EventGridSchema):"
 Write-Information @"
 [
   {
@@ -73,5 +72,7 @@ Write-Information @"
   }
 ]
 "@
-Write-Host "`nEvent Grid Topic provisioning completed at $(Get-Date)"
+Write-Output "`nEvent Grid Topic provisioning completed at $(Get-Date)"
+
+
 

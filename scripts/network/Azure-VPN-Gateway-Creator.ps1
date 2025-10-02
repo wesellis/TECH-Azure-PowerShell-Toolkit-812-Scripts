@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage VPN
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -21,19 +23,16 @@
     [Parameter()]
     [string]$GatewaySku = "VpnGw1"
 )
-Write-Host "Creating VPN Gateway: $GatewayName"
-# Get VNet
+Write-Output "Creating VPN Gateway: $GatewayName"
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-# Create gateway subnet if it doesn't exist
 $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet" -ErrorAction SilentlyContinue
 if (-not $GatewaySubnet) {
-    Write-Host "Creating GatewaySubnet..."
+    Write-Output "Creating GatewaySubnet..."
     Add-AzVirtualNetworkSubnetConfig -Name "GatewaySubnet" -VirtualNetwork $VNet -AddressPrefix "10.0.255.0/27"
     Set-AzVirtualNetwork -VirtualNetwork $VNet
     $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
     $GatewaySubnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name "GatewaySubnet"
 }
-# Create public IP for gateway
 $GatewayIpName = "$GatewayName-pip"
 $params = @{
     ErrorAction = "Stop"
@@ -43,7 +42,6 @@ $params = @{
     Location = $Location
 }
 $GatewayIp @params
-# Create gateway IP configuration
 $params = @{
     ErrorAction = "Stop"
     PublicIpAddressId = $GatewayIp.Id
@@ -51,8 +49,7 @@ $params = @{
     Name = "gatewayConfig"
 }
 $GatewayIpConfig @params
-# Create VPN gateway
-Write-Host "Creating VPN Gateway (this may take 30-45 minutes)..."
+Write-Output "Creating VPN Gateway (this may take 30-45 minutes)..."
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
@@ -64,9 +61,11 @@ $params = @{
     Name = $GatewayName
 }
 $Gateway @params
-Write-Host "VPN Gateway created successfully:"
-Write-Host "Name: $($Gateway.Name)"
-Write-Host "Type: $($Gateway.GatewayType)"
-Write-Host "SKU: $($Gateway.Sku.Name)"
-Write-Host "Public IP: $($GatewayIp.IpAddress)"
+Write-Output "VPN Gateway created successfully:"
+Write-Output "Name: $($Gateway.Name)"
+Write-Output "Type: $($Gateway.GatewayType)"
+Write-Output "SKU: $($Gateway.Sku.Name)"
+Write-Output "Public IP: $($GatewayIp.IpAddress)"
+
+
 

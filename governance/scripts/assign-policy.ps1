@@ -7,7 +7,6 @@
 .DESCRIPTION
     assign policy operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Assigns Azure policies to subscriptions, resource groups, or management groups with
 
@@ -70,8 +69,7 @@
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
-
+param(
     [Parameter(ParameterSetName = "ByDefinitionId", Mandatory = $true, HelpMessage = "Policy definition resource ID")]
     [ValidateNotNullOrEmpty()]
     [string]$PolicyDefinitionId,
@@ -146,38 +144,31 @@
     [ValidateScript({ Test-Path (Split-Path $_ -Parent) })]
     [string]$LogPath
 )
-
-#region Functions
-
-# Initialize logging
-$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 if (-not $LogPath) {
-    $LogPath = Join-Path $env:TEMP "assign-policy_$timestamp.log"
+    [string]$LogPath = Join-Path $env:TEMP "assign-policy_$timestamp.log"
 }
 
-[OutputType([bool])]
- {
-    [CmdletBinding(SupportsShouldProcess)]
-
+function Write-Log {
+    param(
         [string]$Message,
         [ValidateSet('Info', 'Warning', 'Error', 'Debug')]
         [string]$Level = 'Info'
     )
-
-    $logEntry = "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [$Level] $Message"
-    Add-Content -Path $LogPath -Value $logEntry
+    [string]$LogEntry = "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] [$Level] $Message"
+    Add-Content -Path $LogPath -Value $LogEntry
 
     switch ($Level) {
         'Error' { Write-Error $Message }
         'Warning' { Write-Warning $Message }
         'Debug' { Write-Debug $Message }
-        default { Write-Host $Message }
+        default { Write-Output $Message }
     }
 }
 
 function Test-AzureConnection {
     try {
-        $context = Get-AzContext
+    $context = Get-AzContext
         if (-not $context) {
             throw "Not connected to Azure"
         }
@@ -191,8 +182,7 @@ function Test-AzureConnection {
 }
 
 function Get-PolicyDefinition {
-    [CmdletBinding(SupportsShouldProcess)]
-
+    param(
         [string]$DefinitionId,
         [string]$PolicyName
     )
@@ -200,11 +190,11 @@ function Get-PolicyDefinition {
     try {
         if ($DefinitionId) {
             Write-Log "Retrieving policy definition by ID: $DefinitionId"
-            $policy = Get-AzPolicyDefinition -Id $DefinitionId
+    $policy = Get-AzPolicyDefinition -Id $DefinitionId
         }
         elseif ($PolicyName) {
             Write-Log "Searching for built-in policy: $PolicyName"
-            $policies = Get-AzPolicyDefinition | Where-Object { $_.Properties.DisplayName -eq $PolicyName -or $_.Name -eq $PolicyName }
+    $policies = Get-AzPolicyDefinition | Where-Object { $_.Properties.DisplayName -eq $PolicyName -or $_.Name -eq $PolicyName }
 
             if ($policies.Count -eq 0) {
                 throw "No policy found with name '$PolicyName'"
@@ -212,8 +202,7 @@ function Get-PolicyDefinition {
             elseif ($policies.Count -gt 1) {
                 Write-Log "Multiple policies found with name '$PolicyName'. Using the first match."
             }
-
-            $policy = $policies[0]
+    [string]$policy = $policies[0]
         }
         else {
             throw "Either PolicyDefinitionId or PolicyName must be provided"
@@ -229,8 +218,7 @@ function Get-PolicyDefinition {
 }
 
 function Resolve-AssignmentScope {
-    [CmdletBinding(SupportsShouldProcess)]
-
+    param(
         [string]$Scope,
         [string]$SubscriptionId,
         [string]$ResourceGroupName,
@@ -243,37 +231,36 @@ function Resolve-AssignmentScope {
     }
 
     if ($ManagementGroupId) {
-        $resolvedScope = "/providers/Microsoft.Management/managementGroups/$ManagementGroupId"
-        Write-Log "Using management group scope: $resolvedScope"
-        return $resolvedScope
+    [string]$ResolvedScope = "/providers/Microsoft.Management/managementGroups/$ManagementGroupId"
+        Write-Log "Using management group scope: $ResolvedScope"
+        return $ResolvedScope
     }
 
     if ($SubscriptionId) {
         if ($ResourceGroupName) {
-            $resolvedScope = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName"
-            Write-Log "Using resource group scope: $resolvedScope"
+    [string]$ResolvedScope = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName"
+            Write-Log "Using resource group scope: $ResolvedScope"
         }
         else {
-            $resolvedScope = "/subscriptions/$SubscriptionId"
-            Write-Log "Using subscription scope: $resolvedScope"
+    [string]$ResolvedScope = "/subscriptions/$SubscriptionId"
+            Write-Log "Using subscription scope: $ResolvedScope"
         }
-        return $resolvedScope
+        return $ResolvedScope
     }
-
-    # Use current subscription context
     $context = Get-AzContext
     if ($context -and $context.Subscription) {
-        $resolvedScope = "/subscriptions/$($context.Subscription.Id)"
-        Write-Log "Using current subscription scope: $resolvedScope"
-        return $resolvedScope
+    [string]$ResolvedScope = "/subscriptions/$($context.Subscription.Id)"
+        Write-Log "Using current subscription scope: $ResolvedScope"
+        return $ResolvedScope
     }
 
     throw "Unable to determine assignment scope. Please provide Scope, SubscriptionId, or ensure you have an active Azure context."
 }
 
 function ConvertTo-PolicyParameters {
-    [CmdletBinding(SupportsShouldProcess)]
-[object]$InputParameters)
+    param(
+        [object]$InputParameters
+    )
 
     if (-not $InputParameters) {
         return $null
@@ -281,9 +268,9 @@ function ConvertTo-PolicyParameters {
 
     if ($InputParameters -is [string] -and (Test-Path $InputParameters)) {
         try {
-            $paramContent = Get-Content $InputParameters -Raw | ConvertFrom-Json
+    $ParamContent = Get-Content $InputParameters -Raw | ConvertFrom-Json
             Write-Log "Loaded parameters from file: $InputParameters"
-            return $paramContent
+            return $ParamContent
         }
         catch {
             Write-Log "Failed to parse parameter file '$InputParameters': $($_.Exception.Message)" -Level Error
@@ -300,8 +287,7 @@ function ConvertTo-PolicyParameters {
 }
 
 function New-PolicyAssignmentObject {
-    [CmdletBinding(SupportsShouldProcess)]
-
+    param(
         [object]$PolicyDefinition,
         [string]$Name,
         [string]$DisplayName,
@@ -317,7 +303,7 @@ function New-PolicyAssignmentObject {
     )
 
     try {
-        $assignmentParams = @{
+    $AssignmentParams = @{
             PolicyDefinition = $PolicyDefinition
             Name = $Name
             Scope = $Scope
@@ -325,47 +311,45 @@ function New-PolicyAssignmentObject {
         }
 
         if ($DisplayName) {
-            $assignmentParams.DisplayName = $DisplayName
+    [string]$AssignmentParams.DisplayName = $DisplayName
         }
 
         if ($Description) {
-            $assignmentParams.Description = $Description
+    [string]$AssignmentParams.Description = $Description
         }
 
         if ($Parameters) {
-            $assignmentParams.PolicyParameter = $Parameters
+    [string]$AssignmentParams.PolicyParameter = $Parameters
         }
 
         if ($NotScopes -and $NotScopes.Count -gt 0) {
-            $assignmentParams.NotScope = $NotScopes
+    [string]$AssignmentParams.NotScope = $NotScopes
         }
 
         if ($NonComplianceMessages -and $NonComplianceMessages.Count -gt 0) {
-            $assignmentParams.NonComplianceMessage = $NonComplianceMessages
+    [string]$AssignmentParams.NonComplianceMessage = $NonComplianceMessages
         }
 
-        # Configure identity if policy requires it
         if ($PolicyDefinition.Properties.PolicyRule.then.details.roleDefinitionIds) {
             if (-not $Location) {
                 throw "Location is required when assigning policies that require managed identity"
             }
-
-            $assignmentParams.Location = $Location
+    [string]$AssignmentParams.Location = $Location
 
             if ($UserAssignedIdentityId) {
-                $assignmentParams.IdentityType = "UserAssigned"
-                $assignmentParams.IdentityId = $UserAssignedIdentityId
+    [string]$AssignmentParams.IdentityType = "UserAssigned"
+    [string]$AssignmentParams.IdentityId = $UserAssignedIdentityId
             }
             elseif ($UseSystemIdentity) {
-                $assignmentParams.IdentityType = "SystemAssigned"
+    [string]$AssignmentParams.IdentityType = "SystemAssigned"
             }
             else {
                 Write-Log "Policy requires managed identity but none specified. Using system-assigned identity." -Level Warning
-                $assignmentParams.IdentityType = "SystemAssigned"
+    [string]$AssignmentParams.IdentityType = "SystemAssigned"
             }
         }
 
-        return $assignmentParams
+        return $AssignmentParams
     }
     catch {
         Write-Log "Failed to create policy assignment parameters: $($_.Exception.Message)" -Level Error
@@ -374,14 +358,13 @@ function New-PolicyAssignmentObject {
 }
 
 function Test-PolicyAssignment {
-    [CmdletBinding(SupportsShouldProcess)]
-
+    param(
         [string]$Name,
         [string]$Scope
     )
 
     try {
-        $existing = Get-AzPolicyAssignment -Name $Name -Scope $Scope -ErrorAction SilentlyContinue
+    $existing = Get-AzPolicyAssignment -Name $Name -Scope $Scope -ErrorAction SilentlyContinue
         if ($existing) {
             Write-Log "Policy assignment '$Name' already exists in scope '$Scope'" -Level Warning
             return $existing
@@ -393,82 +376,66 @@ function Test-PolicyAssignment {
     }
 }
 
-# Main execution
 try {
     Write-Log "Starting policy assignment process..."
 
-    # Test Azure connection
     if (-not (Test-AzureConnection)) {
         throw "Azure connection required. Please run Connect-AzAccount first."
     }
 
-    # Set subscription context if provided
     if ($SubscriptionId) {
         Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
         Write-Log "Set subscription context: $SubscriptionId"
     }
+    [string]$AssignmentScope = Resolve-AssignmentScope -Scope $Scope -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ManagementGroupId $ManagementGroupId
 
-    # Resolve assignment scope
-    $assignmentScope = Resolve-AssignmentScope -Scope $Scope -SubscriptionId $SubscriptionId -ResourceGroupName $ResourceGroupName -ManagementGroupId $ManagementGroupId
-
-    # Get policy definition
     if ($PolicySetDefinitionId) {
         Write-Log "Retrieving policy set definition: $PolicySetDefinitionId"
-        $policyDefinition = Get-AzPolicySetDefinition -Id $PolicySetDefinitionId
-        Write-Log "Found policy set: $($policyDefinition.Properties.DisplayName)"
+    $PolicyDefinition = Get-AzPolicySetDefinition -Id $PolicySetDefinitionId
+        Write-Log "Found policy set: $($PolicyDefinition.Properties.DisplayName)"
     }
     else {
-        $policyDefinition = Get-PolicyDefinition -DefinitionId $PolicyDefinitionId -PolicyName $PolicyName
+    $PolicyDefinition = Get-PolicyDefinition -DefinitionId $PolicyDefinitionId -PolicyName $PolicyName
     }
 
-    # Generate assignment name if not provided
     if (-not $AssignmentName) {
-        $baseName = if ($PolicyName) { $PolicyName } else { $policyDefinition.Name }
-        $AssignmentName = "$baseName-assignment-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-        $AssignmentName = $AssignmentName -replace '[^a-zA-Z0-9\-_]', '-'
-        $AssignmentName = $AssignmentName.Substring(0, [Math]::Min($AssignmentName.Length, 64))
+    [string]$BaseName = if ($PolicyName) { $PolicyName } else { $PolicyDefinition.Name }
+    [string]$AssignmentName = "$BaseName-assignment-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    [string]$AssignmentName = $AssignmentName -replace '[^a-zA-Z0-9\-_]', '-'
+    [string]$AssignmentName = $AssignmentName.Substring(0, [Math]::Min($AssignmentName.Length, 64))
         Write-Log "Generated assignment name: $AssignmentName"
     }
 
-    # Generate display name if not provided
     if (-not $DisplayName) {
-        $DisplayName = "Assignment: $($policyDefinition.Properties.DisplayName)"
+    [string]$DisplayName = "Assignment: $($PolicyDefinition.Properties.DisplayName)"
         Write-Log "Generated display name: $DisplayName"
     }
-
-    # Check for existing assignment
-    $existingAssignment = Test-PolicyAssignment -Name $AssignmentName -Scope $assignmentScope
-    if ($existingAssignment -and -not $Force) {
+    [string]$ExistingAssignment = Test-PolicyAssignment -Name $AssignmentName -Scope $AssignmentScope
+    if ($ExistingAssignment -and -not $Force) {
         throw "Policy assignment '$AssignmentName' already exists. Use -Force to overwrite."
     }
-
-    # Process parameters
-    $policyParameters = ConvertTo-PolicyParameters -InputParameters $Parameters
-    if ($policyParameters) {
+    [string]$PolicyParameters = ConvertTo-PolicyParameters -InputParameters $Parameters
+    if ($PolicyParameters) {
         Write-Log "Processed policy parameters"
     }
 
-    # Validate identity configuration
     if ($SystemAssignedIdentity -and $UserAssignedIdentityId) {
         throw "Cannot specify both SystemAssignedIdentity and UserAssignedIdentityId"
     }
+    [string]$AssignmentParams = New-PolicyAssignmentObject -PolicyDefinition $PolicyDefinition -Name $AssignmentName -DisplayName $DisplayName -Description $Description -Scope $AssignmentScope -Parameters $PolicyParameters -NotScopes $NotScopes -Location $Location -EnforcementMode $EnforcementMode -NonComplianceMessages $NonComplianceMessages -UseSystemIdentity $SystemAssignedIdentity -UserAssignedIdentityId $UserAssignedIdentityId
 
-    # Create assignment parameters
-    $assignmentParams = New-PolicyAssignmentObject -PolicyDefinition $policyDefinition -Name $AssignmentName -DisplayName $DisplayName -Description $Description -Scope $assignmentScope -Parameters $policyParameters -NotScopes $NotScopes -Location $Location -EnforcementMode $EnforcementMode -NonComplianceMessages $NonComplianceMessages -UseSystemIdentity $SystemAssignedIdentity -UserAssignedIdentityId $UserAssignedIdentityId
-
-    # WhatIf processing
     if ($WhatIf) {
         Write-Log "WhatIf mode: Would create policy assignment with the following configuration:" -Level Warning
         Write-Log "  Assignment Name: $AssignmentName"
         Write-Log "  Display Name: $DisplayName"
-        Write-Log "  Policy: $($policyDefinition.Properties.DisplayName)"
-        Write-Log "  Scope: $assignmentScope"
+        Write-Log "  Policy: $($PolicyDefinition.Properties.DisplayName)"
+        Write-Log "  Scope: $AssignmentScope"
         Write-Log "  Enforcement Mode: $EnforcementMode"
-        if ($assignmentParams.IdentityType) {
-            Write-Log "  Identity Type: $($assignmentParams.IdentityType)"
+        if ($AssignmentParams.IdentityType) {
+            Write-Log "  Identity Type: $($AssignmentParams.IdentityType)"
         }
-        if ($policyParameters) {
-            Write-Log "  Parameters: Yes ($($policyParameters.Count) parameters)"
+        if ($PolicyParameters) {
+            Write-Log "  Parameters: Yes ($($PolicyParameters.Count) parameters)"
         }
         if ($NotScopes) {
             Write-Log "  Exclusions: $($NotScopes.Count) not-scopes"
@@ -476,18 +443,16 @@ try {
         return
     }
 
-    # Remove existing assignment if forcing
-    if ($existingAssignment -and $Force) {
+    if ($ExistingAssignment -and $Force) {
         Write-Log "Removing existing assignment: $AssignmentName"
         if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
-        Start-Sleep -Seconds 5  # Allow time for cleanup
+        Start-Sleep -Seconds 5
     }
 
-    # Create policy assignment
     Write-Log "Creating policy assignment '$AssignmentName'..."
-    $assignment = New-AzPolicyAssignment @assignmentParams
+    [string]$assignment = New-AzPolicyAssignment @assignmentParams
 
     Write-Log "Policy assignment created successfully!"
     Write-Log "Assignment ID: $($assignment.ResourceId)"
@@ -503,17 +468,12 @@ try {
         }
     }
 
-    # Return assignment object
     return $assignment
 }
 catch {
-    $errorMessage = "Policy assignment failed: $($_.Exception.Message)"
-    Write-Log $errorMessage -Level Error
+    [string]$ErrorMessage = "Policy assignment failed: $($_.Exception.Message)"
+    Write-Log $ErrorMessage -Level Error
     throw $_
 }
 finally {
-    Write-Log "Log file saved to: $LogPath"
-}
-
-#endregion\n
-
+    Write-Log "Log file saved to: $LogPath"}

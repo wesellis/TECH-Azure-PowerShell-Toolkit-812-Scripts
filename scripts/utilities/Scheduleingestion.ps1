@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -48,5 +48,6 @@ $RunbookStartTime = $RunbookStartTime.AddMinutes($RunFrequency)
     {throw "Creation of schedules has failed!" }
 }
 "Done!"
+
 
 

@@ -1,36 +1,62 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Network
 
-<#`n.SYNOPSIS
-    Invoke Azapplicationsecuritygroup
+<#
+.SYNOPSIS
+    Invoke Azure Application Security Group creation
 
 .DESCRIPTION
-    Azure automation
+    Creates a new Azure Application Security Group for network security
 
+.PARAMETER ResourceGroupName
+    Name of the resource group
 
+.PARAMETER VMName
+    Name of the virtual machine
+
+.PARAMETER LocationName
+    Azure location name
+
+.PARAMETER Tags
+    Hash table of tags to apply
+
+.EXAMPLE
+    Invoke-AzApplicationSecurityGroup -ResourceGroupName "MyRG" -VMName "MyVM" -LocationName "East US" -Tags @{Environment="Dev"}
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
 #>
-    Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
 [CmdletBinding()]
-function Invoke-AzApplicationSecurityGroup {
-}
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$LocationName,
+
+    [Parameter(Mandatory = $false)]
+    [hashtable]$Tags = @{}
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
 function Invoke-AzApplicationSecurityGroup {
-    #region func-New-AzApplicationSecurityGroup -ErrorAction Stop
-    #Creating the Application Security Group
-    $ASGName = -join (" $VMName" , "_ASG1" )
-$newAzApplicationSecurityGroupSplat = @{
-        ResourceGroupName = " $ResourceGroupName"
-        Name              = " $ASGName"
-        Location          = " $LocationName"
+    $ASGName = -join ($VMName, "_ASG1")
+    $NewAzApplicationSecurityGroupSplat = @{
+        ResourceGroupName = $ResourceGroupName
+        Name              = $ASGName
+        Location          = $LocationName
         Tag               = $Tags
     }
-$ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @newAzApplicationSecurityGroupSplat
-    #endRegion func New-AzApplicationSecurityGroup -ErrorAction Stop
+    $ASG = New-AzApplicationSecurityGroup -ErrorAction Stop @NewAzApplicationSecurityGroupSplat
+    return $ASG
 }
 
-
+# Execute the function
+Invoke-AzApplicationSecurityGroup

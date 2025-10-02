@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,7 +10,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
+$ErrorActionPreference = 'Stop'
+
    Runbook for OMS ASR Log Ingestion
    This Runbook will ingest ASR related logs to OMS Log Analytics. Preview 0.9 will have limited support for VMware/Physical 2 Azure scenario.
     Kristian Nese (Kristian.Nese@Microsoft.com) ECG OMS CAT
@@ -26,7 +27,6 @@ $Vaults -ResourceType "Microsoft.RecoveryServices/vaults"
 Write-Output "Found the following vaults:" $Vaults.name
 foreach ($Vault in $Vaults)
 {
-    # Setting Vault context
     $params = @{
         ErrorAction = "Stop"
         ResourceGroupName = $Vault.ResourceGroupName Write-Output $VaultSettings
@@ -34,7 +34,7 @@ foreach ($Vault in $Vaults)
     }
     $VaultSettings @params
     $Location = $Vault.Location
-    Set-AzureRmSiteRecoveryVaultSettings -ARSVault $VaultSettings # Ingesting ASRJobs into OMS -ErrorAction "Stop"
+    Set-AzureRmSiteRecoveryVaultSettings -ARSVault $VaultSettings
     $ASRLogs = @()
     $LogData = New-Object -ErrorAction Stop psobject -Property @{}
     $ASRJobs -StartTime "(Get-Date).AddHours(((-1)))" -ErrorAction "Stop"
@@ -79,9 +79,8 @@ foreach ($Vault in $Vaults)
     Write-output $ASRLogs
     $ASRLogsJson = ConvertTo-Json -InputObject $ASRLogs
     $LogType = "RecoveryServices"
-    Send-OMSAPIIngestionData -customerId $omsworkspaceId -sharedKey $omsworkspaceKey -body $ASRLogsJson -logType $LogType
+    Send-OMSAPIIngestionData -customerId $OmsworkspaceId -sharedKey $OmsworkspaceKey -body $ASRLogsJson -logType $LogType
     }
-    # Get all Protection Containers for the Recovery Vault
     $Containers = Get-AzureRmSiteRecoveryProtectionContainer -ErrorAction Stop
     If ([string]::IsNullOrEmpty($Containers) -eq $true)
     {
@@ -90,7 +89,6 @@ foreach ($Vault in $Vaults)
     else
     {
         Write-Output $Containers.FriendlyName
-        # Iterate through all Containers, discover protection entities and send data to OMS
         foreach ($Container in $Containers)
         {
             $VMSize -Location $Location -ErrorAction "Stop"
@@ -99,37 +97,34 @@ foreach ($Vault in $Vaults)
             $AllVms = Get-AzureRmVm -ErrorAction Stop
             $DRServer = Get-AzureRmSiteRecoveryServer -ErrorAction Stop
             $RecoveryVms -ProtectionContainer $Container  Write-Output $RecoveryVms.FriendlyName -ErrorAction "Stop"
-            # Getting VM Details
             foreach ($RecoveryVm in $RecoveryVms)
             {
                 $params = @{
                     Location = $Location | Where-Object {$_.Name
                     eq = $null
                     and = $RecoveryVm.ReplicationProvider
-                    ne = "HyperVReplica2012R2" ) { $vNetRgName = "None" $vNetName = "None" $StorageInfo = $RecoveryVm.RecoveryAzureStorageAccount.split(" /" ) $StorageRgName = $StorageInfo[4] $StorageName = $StorageInfo[8]"
+                    ne = "HyperVReplica2012R2" ) { $VNetRgName = "None" $VNetName = "None" $StorageInfo = $RecoveryVm.RecoveryAzureStorageAccount.split("/" ) $StorageRgName = $StorageInfo[4] $StorageName = $StorageInfo[8]"
                     ErrorAction = "Stop"
                 }
                 $VMSize @params
                             Write-Output "Found the following Hyper-V Protected machines missing vNet" $RecoveryVm.FriendlyName
                         }
-                        # Ignoring On-Prem 2 On-Prem scenario for now
                         else
                         {
                             if ($RecoveryVm.ReplicationProvider -eq "HyperVReplica2012R2" )
                             {
-                                    $vNetRgName = "None"
-                                    $vNetName = "None"
+                                    $VNetRgName = "None"
+                                    $VNetName = "None"
                                     $StorageRgName = "None"
                                     $StorageName = "None"
                                 Write-Output "These VMs are ignored for OMS for now" $RecoveryVm.FriendlyName
                             }
-                            # Fetching unprotected VMs with no Azure association
                             else
                             {
                                 if($RecoveryVm.ReplicationProvider -eq $null)
                                 {
-                                    $vNetRgName = "None"
-                                    $vNetName = "None"
+                                    $VNetRgName = "None"
+                                    $VNetName = "None"
                                     $StorageRgName = "None"
                                     $StorageName = "None"
                                     Write-Output "Found the following unprotected VMs" $RecoveryVm.FriendlyName
@@ -137,7 +132,6 @@ foreach ($Vault in $Vaults)
                             }
                         }
                     }
-            #Constructing the data log for OMS Log Analytics
 $ASRVMs = @()
 $Data = New-Object -ErrorAction Stop psobject -Property @{
                     LogType = 'VM';
@@ -145,14 +139,14 @@ $Data = New-Object -ErrorAction Stop psobject -Property @{
                     ASRVaultName = $vault.Name;
                     ASRVaultLocation = $Location;
                     VMName = $RecoveryVm.FriendlyName;
-                    VMId = $RecoveryVm.ID.Split(" /" )[14];
+                    VMId = $RecoveryVm.ID.Split("/" )[14];
                     ProtectionStatus = $RecoveryVm.ProtectionStatus;
                     ActiveLocation = $RecoveryVm.ActiveLocation;
                     ReplicationHealth = $RecoveryVm.ReplicationHealth;
                     TestFailoverDescription = $RecoveryVm.TestFailoverDescription;
-                    AzureFailoverNetwork = $vNetName;
+                    AzureFailoverNetwork = $VNetName;
                     AzureStorageAccount = $StorageName;
-                    AzurevNetResourceGroupName = $vNetRgName;
+                    AzurevNetResourceGroupName = $VNetRgName;
                     AzureStorageAccountResourceGroupName = $StorageRgName;
                     Disk = $RecoveryVm.Disks.Name;
                     SubscriptionId = $azuresubscriptionid;
@@ -176,11 +170,9 @@ $Data = New-Object -ErrorAction Stop psobject -Property @{
          write-output $ASRVMs
 $ASRVMsJson = ConvertTo-Json -InputObject $ASRVMs
 $LogType = "RecoveryServices"
-         Send-OMSAPIIngestionData -customerId $omsworkspaceId -sharedKey $omsworkspaceKey -body $ASRVMsJson -logType $LogType
+         Send-OMSAPIIngestionData -customerId $OmsworkspaceId -sharedKey $OmsworkspaceKey -body $ASRVMsJson -logType $LogType
             }
          }
       }
    }
-}
-
-
+`n}

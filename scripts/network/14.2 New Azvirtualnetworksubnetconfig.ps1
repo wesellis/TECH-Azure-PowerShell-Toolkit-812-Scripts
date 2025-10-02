@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -21,11 +21,12 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     Output (if any)
     General notes
     Create a virtual network and an Azure Bastion subnet. You must create the Azure Bastion subnet using the name value AzureBastionSubnet. This value lets Azure know which subnet to deploy the Bastion resources to. This is different than a Gateway subnet. You must use a subnet of at least /27 or larger subnet (/27, /26, and so on). Create the AzureBastionSubnet without any route tables or delegations. If you use Network Security Groups on the AzureBastionSubnet, refer to the Work with NSGs article.
-$subnetName = "AzureBastionSubnet";
-$newAzVirtualNetworkSubnetConfigSplat = @{
-    Name = $subnetName
+$SubnetName = "AzureBastionSubnet";
+$NewAzVirtualNetworkSubnetConfigSplat = @{
+    Name = $SubnetName
     AddressPrefix = '10.0.0.0/24'
 }
 $subnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
+
 
 

@@ -1,30 +1,79 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
-    Get Azureresourcereport
+<#
+.SYNOPSIS
+    Get Azureresourcereport - Generate Azure Resource Reports
 
 .DESCRIPTION
-    Azure automation
-
+    Azure automation script that generates comprehensive HTML reports of Azure resources across all subscriptions.
+    This script gathers statistics across all subscriptions and generates detailed HTML reports showing resource groups and resources.
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+
+.EXAMPLE
+    PS C:\> .\Get_Azureresourcereport.ps1
+    Generates an HTML report of all Azure resources
+
+.INPUTS
+    None
+
+.OUTPUTS
+    HTML report file with Azure resource information
+
+.NOTES
+    Requires PSWriteHTML module for HTML report generation
+    Must be connected to Azure with appropriate permissions
+#>
+
+[CmdletBinding()]
+param()
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+# Install and import PSWriteHTML module if not available
 if (-not (Get-Module -ListAvailable -Name PSWriteHTML)) {
-    Write-Host "Installing PSWriteHTML module..." -ForegroundColor Yellow
+    Write-Output "Installing PSWriteHTML module..."
     Install-Module -Name PSWriteHTML -Force -Scope CurrentUser
 }
 Import-Module PSWriteHTML
-[CmdletBinding()]
-[OutputType([PSObject])]
- -ErrorAction Stop {
-    $reportData = @{
+
+function Write-EnhancedOutput {
+    <#
+    .SYNOPSIS
+        Enhanced output function with color coding
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
+        "INFO" = "Cyan"; "WARN" = "Yellow"; "ERROR" = "Red"; "SUCCESS" = "Green"
+    }
+    $LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Host $LogEntry -ForegroundColor $ColorMap[$Level]
+}
+
+function Get-ResourceReport {
+    <#
+    .SYNOPSIS
+        Gathers Azure resource statistics across all subscriptions
+    #>
+    [CmdletBinding()]
+    [OutputType([PSObject])]
+    param()
+
+    $ReportData = @{
         Subscriptions = @()
         TotalStats = @{
             SubscriptionCount = 0
@@ -32,16 +81,19 @@ Import-Module PSWriteHTML
             ResourceCount = 0
         }
     }
-    Write-Host "Gathering  statistics across all subscriptions..." -ForegroundColor Yellow
-    # Get all subscriptions
+
+    Write-EnhancedOutput "Gathering statistics across all subscriptions..." -Level "INFO"
     $subscriptions = Get-AzSubscription -ErrorAction Stop
-    $reportData.TotalStats.SubscriptionCount = $subscriptions.Count
+    $ReportData.TotalStats.SubscriptionCount = $subscriptions.Count
+
     foreach ($sub in $subscriptions) {
-        Write-Host "Processing subscription: $($sub.Name)" -ForegroundColor Cyan
+        Write-EnhancedOutput "Processing subscription: $($sub.Name)" -Level "INFO"
         Set-AzContext -Subscription $sub.Id | Out-Null
+
         $rgs = Get-AzResourceGroup -ErrorAction Stop
         $resources = Get-AzResource -ErrorAction Stop
-        $subData = @{
+
+        $SubData = @{
             Name = $sub.Name
             Id = $sub.Id
             TenantId = $sub.TenantId
@@ -49,16 +101,18 @@ Import-Module PSWriteHTML
             ResourceGroupCount = $rgs.Count
             ResourceCount = $resources.Count
         }
+
         foreach ($rg in $rgs) {
-            $rgResources = Get-AzResource -ResourceGroupName $rg.ResourceGroupName
-            $rgData = @{
+            $RgResources = Get-AzResource -ResourceGroupName $rg.ResourceGroupName
+            $RgData = @{
                 Name = $rg.ResourceGroupName
                 Location = $rg.Location
                 Resources = @()
-                ResourceCount = $rgResources.Count
+                ResourceCount = $RgResources.Count
             }
-            foreach ($resource in $rgResources) {
-                $rgData.Resources += @{
+
+            foreach ($resource in $RgResources) {
+                $RgData.Resources += @{
                     Name = $resource.Name
                     Type = $resource.Type
                     Location = $resource.Location
@@ -66,37 +120,32 @@ Import-Module PSWriteHTML
                     Id = $resource.Id
                 }
             }
-            $subData.ResourceGroups += $rgData
+
+            $SubData.ResourceGroups += $RgData
         }
-        $reportData.Subscriptions += $subData
-        $reportData.TotalStats.ResourceGroupCount += $rgs.Count
-        $reportData.TotalStats.ResourceCount += $resources.Count
+
+        $ReportData.Subscriptions += $SubData
+        $ReportData.TotalStats.ResourceGroupCount += $rgs.Count
+        $ReportData.TotalStats.ResourceCount += $resources.Count
     }
-    return $reportData
+
+    return $ReportData
 }
+
 function Export-ResourceReportToHtml {
-function Write-Host {
+    <#
+    .SYNOPSIS
+        Exports resource report data to HTML format
+    #>
     [CmdletBinding()]
-param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-param(
+    param(
         [Parameter(Mandatory)]
         [object]$ReportData
     )
-    $reportPath = "AzureResourceReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
-    New-HTML -TitleText 'Azure Resources Report' -FilePath $reportPath {
+
+    $ReportPath = "AzureResourceReport_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+
+    New-HTML -TitleText 'Azure Resources Report' -FilePath $ReportPath {
         New-HTMLTab -Name 'Overview' {
             New-HTMLSection -HeaderText 'Summary Statistics' {
                 New-HTMLTable -DataTable @(
@@ -115,6 +164,7 @@ param(
                 ) -HideButtons
             }
         }
+
         foreach ($sub in $ReportData.Subscriptions) {
             New-HTMLTab -Name $sub.Name {
                 New-HTMLSection -HeaderText "Subscription Details" {
@@ -137,25 +187,25 @@ param(
                         }
                     ) -HideButtons
                 }
+
                 if ($sub.ResourceGroups.Count -gt 0) {
                     New-HTMLSection -HeaderText "Resource Groups" {
-                        # Create a single table for all resource groups
-                        $rgTable = @()
+                        $RgTable = @()
                         foreach ($rg in $sub.ResourceGroups) {
-                            $rgTable = $rgTable + [PSCustomObject]@{
+                            $RgTable += [PSCustomObject]@{
                                 'Resource Group Name' = $rg.Name
                                 'Location' = $rg.Location
                                 'Resource Count' = $rg.ResourceCount
                             }
                         }
-                        New-HTMLTable -DataTable $rgTable -HideButtons
+                        New-HTMLTable -DataTable $RgTable -HideButtons
                     }
-                    # Create a section for resources
+
                     New-HTMLSection -HeaderText "Resources Details" {
-                        $resourcesTable = @()
+                        $ResourcesTable = @()
                         foreach ($rg in $sub.ResourceGroups) {
                             foreach ($resource in $rg.Resources) {
-                                $resourcesTable = $resourcesTable + [PSCustomObject]@{
+                                $ResourcesTable += [PSCustomObject]@{
                                     'Resource Group' = $rg.Name
                                     'Resource Name' = $resource.Name
                                     'Type' = $resource.Type
@@ -163,33 +213,32 @@ param(
                                 }
                             }
                         }
-                        if ($resourcesTable.Count -gt 0) {
-                            New-HTMLTable -DataTable $resourcesTable -HideButtons
+                        if ($ResourcesTable.Count -gt 0) {
+                            New-HTMLTable -DataTable $ResourcesTable -HideButtons
                         }
                     }
                 }
             }
         }
     } -Online -ShowHTML
-    Write-Host "Report generated: $reportPath" -ForegroundColor Green
-    # Open the report in default browser
-    Invoke-Item $reportPath
+
+    Write-EnhancedOutput "Report generated: $ReportPath" -Level "SUCCESS"
+    Invoke-Item $ReportPath
 }
+
+# Main execution
 try {
-    # Check if already connected to Azure
-$context = Get-AzContext -ErrorAction Stop
+    $context = Get-AzContext -ErrorAction Stop
     if (-not $context) {
-        Write-Host "Please connect to Azure first using Connect-AzAccount" -ForegroundColor Yellow
+        Write-EnhancedOutput "Please connect to Azure first using Connect-AzAccount" -Level "WARN"
         Connect-AzAccount
     }
-    # Get  report data
-$reportData = Get-ResourceReport -ErrorAction Stop
-    # Generate HTML report
-    Export-ResourceReportToHtml -ReportData $reportData
+
+    $ReportData = Get-ResourceReport -ErrorAction Stop
+    Export-ResourceReportToHtml -ReportData $ReportData
 }
 catch {
-    Write-Host "An error occurred: $_" -ForegroundColor Red
-    Write-Host "Stack trace: $($_.ScriptStackTrace)" -ForegroundColor Red
+    Write-EnhancedOutput "An error occurred: $_" -Level "ERROR"
+    Write-EnhancedOutput "Stack trace: $($_.ScriptStackTrace)" -Level "ERROR"
+    throw
 }
-
-

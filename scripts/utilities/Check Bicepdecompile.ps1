@@ -1,41 +1,63 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Bicepdecompile
+<#
+.SYNOPSIS
+    Check Bicep Decompile output
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Detects unwanted raw output from bicep decompile command and identifies files that need cleanup
 
-    1.0
+.PARAMETER SampleFolder
+    Path to the folder containing Bicep files to check
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Detect unwanted raw output from bicep decompile command
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+
 [CmdletBinding()]
 param(
     [Parameter()]
-    $sampleFolder = $ENV:SAMPLE_FOLDER
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER
 )
-Write-Host "Finding all bicep files in: $sampleFolder";
-$bicepFiles = Get-ChildItem -Path " $sampleFolder\*.bicep" -Recurse
-foreach ($f in $bicepFiles) {
-$bicepText = Get-Content -Path $f.FullName -Raw
-    # check for use of _var, _resource, _param - raw output from decompile
-    $bicepText | Select-String -Pattern " resource \w{1,}_resource | \w{1,}_var | \w{1,}_param | \s\w{1,}_id\s" -AllMatches |
-    foreach-object { $_.Matches } | foreach-object {
-        Write-Warning " $($f.Name) may contain raw output from decompile, please clean up: $($_.Value)"
-        # write the environment var
-        Write-Host " ##vso[task.setvariable variable=label.decompile.clean-up.needed]$true"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    if ([string]::IsNullOrWhiteSpace($SampleFolder)) {
+        throw "SampleFolder parameter is required. Please provide a valid path."
+    }
+
+    Write-Output "Finding all bicep files in: $SampleFolder"
+    Write-Verbose "Searching for *.bicep files recursively"
+
+    $BicepFiles = Get-ChildItem -Path "$SampleFolder\*.bicep" -Recurse
+    Write-Verbose "Found $($BicepFiles.Count) Bicep files to analyze"
+
+    $issuesFound = $false
+
+    foreach ($f in $BicepFiles) {
+        Write-Verbose "Analyzing file: $($f.FullName)"
+        $BicepText = Get-Content -Path $f.FullName -Raw
+
+        $matches = $BicepText | Select-String -Pattern "resource \w{1,}_resource | \w{1,}_var | \w{1,}_param | \s\w{1,}_id\s" -AllMatches
+
+        if ($matches) {
+            $issuesFound = $true
+            foreach ($match in $matches.Matches) {
+                Write-Warning "$($f.Name) may contain raw output from decompile, please clean up: $($match.Value)"
+                Write-Output "##vso[task.setvariable variable=label.decompile.clean-up.needed]$true"
+            }
+        }
+    }
+
+    if (-not $issuesFound) {
+        Write-Output "No decompile cleanup issues found in Bicep files"
     }
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

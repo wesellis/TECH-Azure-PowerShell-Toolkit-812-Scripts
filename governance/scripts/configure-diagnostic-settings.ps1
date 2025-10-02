@@ -7,94 +7,86 @@
 .DESCRIPTION
     configure diagnostic settings operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Configures diagnostic settings for Azure resources
 
     Manages diagnostic settings across resources, enabling logging and metrics
     collection to Log Analytics, Storage Accounts, or Event Hubs
-.PARAMETER ResourceId
+.parameter ResourceId
     Resource ID to configure diagnostics for
-.PARAMETER WorkspaceId
+.parameter WorkspaceId
     Log Analytics workspace resource ID
-.PARAMETER StorageAccountId
+.parameter StorageAccountId
     Storage account resource ID for archival
-.PARAMETER EventHubAuthorizationRuleId
+.parameter EventHubAuthorizationRuleId
     Event Hub authorization rule ID for streaming
-.PARAMETER EnableAllLogs
+.parameter EnableAllLogs
     Enable all available log categories
-.PARAMETER EnableAllMetrics
+.parameter EnableAllMetrics
     Enable all available metrics
 
     .\configure-diagnostic-settings.ps1 -ResourceId "/subscriptions/xxx/resourceGroups/rg/providers/Microsoft.Web/sites/app" -WorkspaceId "/subscriptions/xxx/.../workspace"
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
-[CmdletBinding(SupportsShouldProcess = $true)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $false)]
+[parameter(Mandatory = $false)]
     [string]$ResourceId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$WorkspaceId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$StorageAccountId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$EventHubAuthorizationRuleId,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$DiagnosticSettingName = "DefaultDiagnostics",
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$EnableAllLogs,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$EnableAllMetrics,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$LogCategories,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$MetricCategories,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [int]$RetentionDays = 30,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$ApplyToResourceGroup,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [switch]$RemoveExisting
 )
 
-#region Functions
-[OutputType([PSCustomObject])]
+[OutputType([PSCustomObject])] 
  {
-    [CmdletBinding(SupportsShouldProcess)]
-[string]$ResourceId)
+    [string]$ResourceId)
 
     try {
         $categories = Get-AzDiagnosticSettingCategory -ResourceId $ResourceId
         return @{
             Logs = $categories | Where-Object { $_.CategoryType -eq 'Logs' }
             Metrics = $categories | Where-Object { $_.CategoryType -eq 'Metrics' }
-        
+
 } catch {
-        Write-Error "Failed to get diagnostic categories: $_"
+        write-Error "Failed to get diagnostic categories: $_"
         return $null
     }
 }
 
 function New-DiagnosticSetting {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceId,
+    [string]$ResourceId,
         [string]$Name,
         [object]$Categories,
         [hashtable]$Destinations
@@ -104,21 +96,21 @@ function New-DiagnosticSetting {
     $metrics = @()
 
     if ($EnableAllLogs -or $LogCategories) {
-        $logCats = if ($EnableAllLogs) { $Categories.Logs } else {
+        $LogCats = if ($EnableAllLogs) { $Categories.Logs } else {
             $Categories.Logs | Where-Object { $_.Name -in $LogCategories }
         }
 
-        foreach ($cat in $logCats) {
+        foreach ($cat in $LogCats) {
             $logs += New-AzDiagnosticSettingLogSettingsObject -Enabled $true -Category $cat.Name -RetentionPolicyDay $RetentionDays -RetentionPolicyEnabled ($RetentionDays -gt 0)
         }
     }
 
     if ($EnableAllMetrics -or $MetricCategories) {
-        $metricCats = if ($EnableAllMetrics) { $Categories.Metrics } else {
+        $MetricCats = if ($EnableAllMetrics) { $Categories.Metrics } else {
             $Categories.Metrics | Where-Object { $_.Name -in $MetricCategories }
         }
 
-        foreach ($cat in $metricCats) {
+        foreach ($cat in $MetricCats) {
             $metrics += New-AzDiagnosticSettingMetricSettingsObject -Enabled $true -Category $cat.Name -RetentionPolicyDay $RetentionDays -RetentionPolicyEnabled ($RetentionDays -gt 0)
         }
     }
@@ -139,9 +131,7 @@ function New-DiagnosticSetting {
     }
 }
 
-#endregion
 
-#region Main-try {
     if (-not (Get-AzContext)) {
         Connect-AzAccount
     }
@@ -167,7 +157,7 @@ function New-DiagnosticSetting {
     }
 
     foreach ($resource in $resources) {
-        Write-Host "Configuring diagnostics for: $($resource.Name)" -ForegroundColor Yellow
+        Write-Host "Configuring diagnostics for: $($resource.Name)" -ForegroundColor Green
 
         if ($RemoveExisting) {
             $existing = Get-AzDiagnosticSetting -ResourceId $resource.ResourceId
@@ -186,9 +176,5 @@ function New-DiagnosticSetting {
     Write-Host "`nDiagnostic settings configuration completed!" -ForegroundColor Green
 }
 catch {
-    Write-Error "Failed to configure diagnostic settings: $_"
-    throw
-}
-
-#endregion\n
-
+    write-Error "Failed to configure diagnostic settings: $_"
+    throw}

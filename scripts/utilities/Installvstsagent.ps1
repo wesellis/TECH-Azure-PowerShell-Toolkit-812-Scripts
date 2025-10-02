@@ -1,74 +1,104 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Installvstsagent
+<#
+.SYNOPSIS
+    Install Azure DevOps Agent
 
 .DESCRIPTION
-    Azure automation
+    Installs and configures Azure DevOps agent with autologon support
 
+.PARAMETER VSTSAccount
+    Azure DevOps organization name
 
+.PARAMETER PersonalAccessToken
+    Personal Access Token for Azure DevOps authentication
+
+.PARAMETER AgentName
+    Name for the agent
+
+.PARAMETER PoolName
+    Agent pool name
+
+.PARAMETER RunAsAutoLogon
+    Whether to run as autologon
+
+.PARAMETER VmAdminUserName
+    VM administrator username
+
+.PARAMETER VmAdminPassword
+    VM administrator password
+
+.EXAMPLE
+    .\Installvstsagent.ps1 -VSTSAccount "myorg" -PersonalAccessToken "token" -AgentName "agent1" -PoolName "default" -RunAsAutoLogon "false"
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
 #>
-    Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
-    [Parameter(Mandatory = $true)]$VSTSAccount,
-    [Parameter(Mandatory = $true)]$PersonalAccessToken,
-    [Parameter(Mandatory = $true)]$AgentName,
-    [Parameter(Mandatory = $true)]$PoolName,
-    [Parameter(Mandatory = $true)]$runAsAutoLogon,
-    [Parameter(Mandatory = $false)]$vmAdminUserName,
-    [Parameter(Mandatory = $false)]$vmAdminPassword
+    [Parameter(Mandatory = $true)]
+    [string]$VSTSAccount,
+
+    [Parameter(Mandatory = $true)]
+    [string]$PersonalAccessToken,
+
+    [Parameter(Mandatory = $true)]
+    [string]$AgentName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$PoolName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RunAsAutoLogon,
+
+    [Parameter(Mandatory = $false)]
+    [string]$VmAdminUserName,
+
+    [Parameter(Mandatory = $false)]
+    [string]$VmAdminPassword
 )
-function PrepMachineForAutologon () {
-    # Create a PS session for the user to trigger the creation of the registry entries required for autologon
-    $computerName = " localhost"
+
+$ErrorActionPreference = "Stop"
+function PrepMachineForAutologon {
+    $ComputerName = "localhost"
     $password = Read-Host -Prompt "Enter secure value" -AsSecureString
-    if ($vmAdminUserName.Split(" \" ).Count -eq 2) {
-        $domain = $vmAdminUserName.Split(" \" )[0]
-        $userName = $vmAdminUserName.Split('\')[1]
+    if ($VmAdminUserName.Split("\").Count -eq 2) {
+        $domain = $VmAdminUserName.Split("\")[0]
+        $UserName = $VmAdminUserName.Split('\')[1]
     }
     else {
         $domain = $Env:ComputerName
-        $userName = $vmAdminUserName
-        Write-Verbose "Username constructed to use for creating a PSSession: $domain\\$userName"
+        $UserName = $VmAdminUserName
+        Write-Verbose "Username constructed to use for creating a PSSession: $domain\$UserName"
     }
-    $credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential(" $domain\\$userName" , $password)
-    Enter-PSSession -ComputerName $computerName -Credential $credentials
+    $credentials = New-Object -ErrorAction Stop System.Management.Automation.PSCredential("$domain\$UserName", $password)
+    Enter-PSSession -ComputerName $ComputerName -Credential $credentials
     Exit-PSSession
-    $ErrorActionPreference = " stop"
+    $ErrorActionPreference = "stop"
     try {
-        # Check if the HKU drive already exists
         Get-PSDrive -PSProvider Registry -Name HKU | Out-Null
-        $canCheckRegistry = $true
+    $CanCheckRegistry = $true
     }
     catch [System.Management.Automation.DriveNotFoundException] {
         try {
-            # Create the HKU drive
             New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
-            $canCheckRegistry = $true
+    $CanCheckRegistry = $true
         }
         catch {
-            # Ignore the failure to create the drive and go ahead with trying to set the agent up
-            Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists.
-$_"
+            Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists. $_"
         }
     }
-    # 120 seconds timeout
     $timeout = 120
-    # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
-    while ($timeout -ge 0 -and $canCheckRegistry) {
-        $objUser = New-Object -ErrorAction Stop System.Security.Principal.NTAccount($vmAdminUserName)
-        $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
-        $securityId = $securityId.Value
-        if (Test-Path "HKU:\\$securityId" ) {
-            if (!(Test-Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" )) {
-                New-Item -Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" -Force
-                Write-Host "Created the registry entry path required to enable autologon."
+    while ($timeout -ge 0 -and $CanCheckRegistry) {
+    $ObjUser = New-Object -ErrorAction Stop System.Security.Principal.NTAccount($VmAdminUserName)
+    $SecurityId = $ObjUser.Translate([System.Security.Principal.SecurityIdentifier])
+    $SecurityId = $SecurityId.Value
+        if (Test-Path "HKU:\$SecurityId") {
+            if (!(Test-Path "HKU:\$SecurityId\SOFTWARE\Microsoft\Windows\CurrentVersion\Run")) {
+                New-Item -Path "HKU:\$SecurityId\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Force
+                Write-Output "Created the registry entry path required to enable autologon."
             }
             break
         }
@@ -82,60 +112,61 @@ $_"
     }
 }
 Write-Verbose "Entering InstallVSOAgent.ps1" -verbose
-$currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
-Write-Verbose "Current folder: $currentLocation" -verbose
-$agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
-New-Item -ItemType Directory -Force -Path $agentTempFolderName
-Write-Verbose "Temporary Agent download folder: $agentTempFolderName" -verbose
-$serverUrl = "https://dev.azure.com/$VSTSAccount"
-Write-Verbose "Server URL: $serverUrl" -verbose
-$retryCount = 3
-$retries = 1
+    $CurrentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
+Write-Verbose "Current folder: $CurrentLocation" -verbose
+    $AgentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Force -Path $AgentTempFolderName
+Write-Verbose "Temporary Agent download folder: $AgentTempFolderName" -verbose
+    $ServerUrl = "https://dev.azure.com/$VSTSAccount"
+Write-Verbose "Server URL: $ServerUrl" -verbose
+    $RetryCount = 3
+    $retries = 1
 Write-Verbose "Downloading Agent install files" -verbose
 do {
     try {
-        Write-Verbose "Trying to get download URL for latest VSTS agent release..."
-        $latestRelease = Invoke-RestMethod -Uri " https://api.github.com/repos/Microsoft/vsts-agent/releases"
-        $latestRelease = $latestRelease | Where-Object assets -ne $null | Sort-Object created_at -Descending | Select-Object -First 1
-        $assetsURL = ($latestRelease.assets).browser_download_url
-        $latestReleaseDownloadUrl = ((Invoke-RestMethod -Uri $assetsURL) -match 'win-x64').downloadurl
-        Invoke-WebRequest -Uri $latestReleaseDownloadUrl -Method Get -OutFile " $agentTempFolderName\agent.zip"
+        Write-Verbose "Trying to get download URL for latest Azure DevOps agent release..."
+        $LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/Microsoft/azure-pipelines-agent/releases"
+        $LatestRelease = $LatestRelease | Where-Object assets -ne $null | Sort-Object created_at -Descending | Select-Object -First 1
+        $AssetsURL = ($LatestRelease.assets).browser_download_url
+        $LatestReleaseDownloadUrl = ((Invoke-RestMethod -Uri $AssetsURL) -match 'win-x64').downloadurl
+        Invoke-WebRequest -Uri $LatestReleaseDownloadUrl -Method Get -OutFile "$AgentTempFolderName\agent.zip"
         Write-Verbose "Downloaded agent successfully on attempt $retries" -verbose
         break
     }
     catch {
-        $exceptionText = ($_ | Out-String).Trim()
-        Write-Verbose "Exception occured downloading agent: $exceptionText in try number $retries" -verbose
+        $ExceptionText = ($_ | Out-String).Trim()
+        Write-Verbose "Exception occurred downloading agent: $ExceptionText in try number $retries" -verbose
         $retries++
         Start-Sleep -Seconds 30
     }
 }
-while ($retries -le $retryCount)
-$agentInstallationPath = Join-Path "C:" $AgentName
-New-Item -ItemType Directory -Force -Path $agentInstallationPath
-New-Item -ItemType Directory -Force -Path (Join-Path $agentInstallationPath $WorkFolder)
+while ($retries -le $RetryCount)
+    $AgentInstallationPath = Join-Path "C:" $AgentName
+New-Item -ItemType Directory -Force -Path $AgentInstallationPath
+New-Item -ItemType Directory -Force -Path (Join-Path $AgentInstallationPath $WorkFolder)
 Write-Verbose "Extracting the zip file for the agent" -verbose;
-$destShellFolder = (new-object -com shell.application).namespace(" $agentInstallationPath" )
-$destShellFolder.CopyHere((new-object -com shell.application).namespace(" $agentTempFolderName\agent.zip" ).Items(), 16)
+    $DestShellFolder = (New-Object -ComObject shell.application).namespace("$AgentInstallationPath")
+    $DestShellFolder.CopyHere((New-Object -ComObject shell.application).namespace("$AgentTempFolderName\agent.zip").Items(), 16)
 Write-Verbose "Unblocking files" -verbose
-Get-ChildItem -Recurse -Path $agentInstallationPath | Unblock-File | out-null
-$agentConfigPath = [System.IO.Path]::Combine($agentInstallationPath, 'config.cmd')
-Write-Verbose "Agent Location = $agentConfigPath" -Verbose
-if (![System.IO.File]::Exists($agentConfigPath)) {
-    Write-Error "File not found: $agentConfigPath" -Verbose
+Get-ChildItem -Recurse -Path $AgentInstallationPath | Unblock-File | out-null
+    $AgentConfigPath = [System.IO.Path]::Combine($AgentInstallationPath, 'config.cmd')
+Write-Verbose "Agent Location = $AgentConfigPath" -Verbose
+if (![System.IO.File]::Exists($AgentConfigPath)) {
+    Write-Error "File not found: $AgentConfigPath" -Verbose
     return
 }
 Write-Verbose "Configuring agent" -Verbose
-Push-Location -Path $agentInstallationPath
-if ($runAsAutoLogon -ieq " true" ) {
+Push-Location -Path $AgentInstallationPath
+if ($RunAsAutoLogon -ieq "true") {
     PrepMachineForAutologon
-    # Setup the agent with autologon enabled
-    .\config.cmd --unattended --url $serverUrl --auth PAT --token $PersonalAccessToken --pool $PoolName --agent $AgentName --runAsAutoLogon --overwriteAutoLogon --windowslogonaccount $vmAdminUserName --windowslogonpassword $vmAdminPassword
+    .\config.cmd --unattended --url $ServerUrl --auth PAT --token $PersonalAccessToken --pool $PoolName --agent $AgentName --runAsAutoLogon --overwriteAutoLogon --windowslogonaccount $VmAdminUserName --windowslogonpassword $VmAdminPassword
 }
 else {
-    # Setup the agent as a service
-    .\config.cmd --unattended --url $serverUrl --auth PAT --token $PersonalAccessToken --pool $PoolName --agent $AgentName --runasservice
+    .\config.cmd --unattended --url $ServerUrl --auth PAT --token $PersonalAccessToken --pool $PoolName --agent $AgentName --runasservice
 }
 Pop-Location
 Write-Verbose "Agent install output: $LASTEXITCODE" -Verbose
 Write-Verbose "Exiting InstallVSTSAgent.ps1" -Verbose
+
+
+

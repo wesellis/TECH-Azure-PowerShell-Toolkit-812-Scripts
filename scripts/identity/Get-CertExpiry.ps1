@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.KeyVault
 #Requires -Modules Az.Resources
 #Requires -Module Az.Resources
@@ -6,6 +6,9 @@
     Check certificate expiry
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Check certificate expiration in Key Vaults
 .PARAMETER Vault
 Key Vault name to check
@@ -15,6 +18,8 @@ Days until expiration to warn (default 30)
 .\Get-CertExpiry.ps1 -Days 60
 #>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$Vault,
     [int]$Days = 30
@@ -34,6 +39,4 @@ foreach ($kv in $vaults) {
             }
         }
     }
-}
-
-
+`n}

@@ -7,30 +7,29 @@
 .DESCRIPTION
     enable policy compliance scans operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Enables and configures periodic Azure Policy compliance scans
 
     Configures Azure Policy compliance scanning frequency and triggers
     on-demand compliance evaluations. Supports scheduling automatic
     scans and monitoring compliance state changes.
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Target subscription for compliance scans
-.PARAMETER ManagementGroupId
+.parameter ManagementGroupId
     Target management group for compliance scans
-.PARAMETER PolicyAssignmentName
+.parameter PolicyAssignmentName
     Specific policy assignment to scan
-.PARAMETER TriggerScan
+.parameter TriggerScan
     Trigger an immediate compliance scan
-.PARAMETER ScheduleScans
+.parameter ScheduleScans
     Enable scheduled compliance scans
-.PARAMETER ScanFrequency
+.parameter ScanFrequency
     Frequency for scheduled scans: Daily, Weekly, Monthly
-.PARAMETER NotificationEmail
+.parameter NotificationEmail
     Email address for compliance notifications
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Limit scans to specific resource group
-.PARAMETER ExcludeCompliant
+.parameter ExcludeCompliant
     Exclude compliant resources from scan results
 
     .\enable-policy-compliance-scans.ps1 -TriggerScan -SubscriptionId "12345678-1234-1234-1234-123456789012"
@@ -39,58 +38,57 @@
 
     .\enable-policy-compliance-scans.ps1 -ScheduleScans -ScanFrequency Weekly -NotificationEmail "admin@example.com"
 
-    Enables weekly scheduled scans with email notifications#>
+    Enables weekly scheduled scans with email notifications
 
 [CmdletBinding()]
 param(
-    [Parameter()]
+    [parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
         catch { throw "Invalid subscription ID format" }
     })]
     [string]$SubscriptionId,
 
-    [Parameter()]
+    [parameter()]
     [string]$ManagementGroupId,
 
-    [Parameter()]
+    [parameter()]
     [string]$PolicyAssignmentName,
 
-    [Parameter()]
+    [parameter()]
     [switch]$TriggerScan,
 
-    [Parameter()]
+    [parameter()]
     [switch]$ScheduleScans,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Daily', 'Weekly', 'Monthly')]
     [string]$ScanFrequency = 'Weekly',
 
-    [Parameter()]
+    [parameter()]
     [ValidatePattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')]
     [string]$NotificationEmail,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceGroupName,
 
-    [Parameter()]
+    [parameter()]
     [switch]$ExcludeCompliant
 )
+    [string]$ErrorActionPreference = 'Stop'
 
-$ErrorActionPreference = 'Stop'
-
-[OutputType([PSCustomObject])]
+[OutputType([PSCustomObject])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
 }
 
 function Get-ComplianceScope {
-    param(
+        param(
         [string]$SubscriptionId,
         [string]$ManagementGroupId,
         [string]$ResourceGroupName
@@ -108,7 +106,7 @@ function Get-ComplianceScope {
         }
     }
     else {
-        $context = Get-AzContext
+    $context = Get-AzContext
         if ($ResourceGroupName) {
             return "/subscriptions/$($context.Subscription.Id)/resourceGroups/$ResourceGroupName"
         }
@@ -119,121 +117,104 @@ function Get-ComplianceScope {
 }
 
 function Start-ComplianceScan {
-    param(
+        param(
         [string]$Scope,
         [string]$PolicyAssignment
     )
 
     try {
-        Write-Host "Triggering compliance evaluation for scope: $Scope" -ForegroundColor Yellow
-
-        $params = @{}
+        Write-Host "Triggering compliance evaluation for scope: $Scope" -ForegroundColor Green
+    $params = @{}
         if ($PolicyAssignment) {
-            # Trigger scan for specific policy assignment
-            $params['PolicyAssignmentName'] = $PolicyAssignment
-            $params['SubscriptionId'] = ($Scope -split '/')[2]
+    [string]$params['PolicyAssignmentName'] = $PolicyAssignment
+    [string]$params['SubscriptionId'] = ($Scope -split '/')[2]
         }
         else {
-            # Trigger scan for entire scope
             if ($Scope -match '/subscriptions/([^/]+)') {
-                $params['SubscriptionId'] = $Matches[1]
+    [string]$params['SubscriptionId'] = $Matches[1]
             }
         }
-
-        # Start policy compliance evaluation
-        $job = Start-AzPolicyComplianceScan @params
+    [string]$job = Start-AzPolicyComplianceScan @params
 
         Write-Host "Compliance scan initiated successfully" -ForegroundColor Green
-        Write-Host "Scan Job ID: $($job.Name)" -ForegroundColor Cyan
+        Write-Host "Scan Job ID: $($job.Name)" -ForegroundColor Green
 
         return $job
     }
     catch {
-        Write-Error "Failed to trigger compliance scan: $_"
+        write-Error "Failed to trigger compliance scan: $_"
         throw
     }
 }
 
 function Get-ComplianceStatus {
-    param(
+        param(
         [string]$Scope,
         [bool]$ExcludeCompliant
     )
 
     try {
-        Write-Host "Retrieving compliance status..." -ForegroundColor Yellow
-
-        $params = @{
+        Write-Host "Retrieving compliance status..." -ForegroundColor Green
+    $params = @{
             Scope = $Scope
             Top = 1000
         }
 
         if ($ExcludeCompliant) {
-            $params['Filter'] = "ComplianceState eq 'NonCompliant'"
+    [string]$params['Filter'] = "ComplianceState eq 'NonCompliant'"
         }
-
-        $states = Get-AzPolicyState @params
-
-        $summary = @{
+    $states = Get-AzPolicyState @params
+    $summary = @{
             TotalResources = $states.Count
             Compliant = ($states | Where-Object { $_.ComplianceState -eq 'Compliant' }).Count
             NonCompliant = ($states | Where-Object { $_.ComplianceState -eq 'NonCompliant' }).Count
             Unknown = ($states | Where-Object { $_.ComplianceState -eq 'Unknown' }).Count
         }
-
-        $summary.CompliancePercentage = if ($summary.TotalResources -gt 0) {
+    [string]$summary.CompliancePercentage = if ($summary.TotalResources -gt 0) {
             [Math]::Round(($summary.Compliant / $summary.TotalResources) * 100, 2)
         } else { 0 }
 
         return @{
             Summary = $summary
             Details = $states
-        
+
 } catch {
-        Write-Error "Failed to retrieve compliance status: $_"
+        write-Error "Failed to retrieve compliance status: $_"
         throw
     }
 }
 
 function Set-ComplianceSchedule {
-    param(
+        param(
         [string]$Frequency,
         [string]$Scope,
         [string]$NotificationEmail
     )
 
-    Write-Host "Configuring compliance scan schedule..." -ForegroundColor Yellow
-
-    # Note: Azure Policy compliance scans run automatically
-    # This function demonstrates how you could set up additional automation
-
-    $scheduleConfig = @{
+    Write-Host "Configuring compliance scan schedule..." -ForegroundColor Green
+    $ScheduleConfig = @{
         Frequency = $Frequency
         Scope = $Scope
         LastConfigured = Get-Date
         NotificationEmail = $NotificationEmail
     }
 
-    # In a real implementation, you might:
-    # 1. Create an Azure Logic App for scheduled scanning
-    # 2. Set up Azure Automation runbooks
-    # 3. Configure monitoring alerts
 
-    Write-Host "Schedule configuration:" -ForegroundColor Cyan
-    Write-Host "Frequency: $Frequency"
-    Write-Host "Scope: $Scope"
+    Write-Host "Schedule configuration:" -ForegroundColor Green
+    Write-Output "Frequency: $Frequency"
+    Write-Output "Scope: $Scope"
     if ($NotificationEmail) {
-        Write-Host "Notifications: $NotificationEmail"
+        Write-Output "Notifications: $NotificationEmail"
     }
 
-    Write-Host "`nNote: Azure Policy automatically evaluates compliance." -ForegroundColor Yellow
-    Write-Host "Consider setting up Logic Apps or Automation for custom scheduling." -ForegroundColor Yellow
+    Write-Host "`nNote: Azure Policy automatically evaluates compliance." -ForegroundColor Green
+    Write-Host "Consider setting up Logic Apps or Automation for custom scheduling." -ForegroundColor Green
 
-    return $scheduleConfig
+    return $ScheduleConfig
 }
 
 function Send-ComplianceNotification {
-    param(
+        param(
         [object]$ComplianceData,
         [string]$EmailAddress
     )
@@ -241,97 +222,79 @@ function Send-ComplianceNotification {
     if (-not $EmailAddress) {
         return
     }
+    [string]$summary = $ComplianceData.Summary
 
-    $summary = $ComplianceData.Summary
+    Write-Host "`nWould send compliance notification to: $EmailAddress" -ForegroundColor Green
+    Write-Host "Summary:" -ForegroundColor Green
+    Write-Output "Total Resources: $($summary.TotalResources)"
+    Write-Output "Compliant: $($summary.Compliant) ($($summary.CompliancePercentage)%)"
+    Write-Output "Non-Compliant: $($summary.NonCompliant)"
+    Write-Output "Unknown: $($summary.Unknown)"
 
-    Write-Host "`nWould send compliance notification to: $EmailAddress" -ForegroundColor Yellow
-    Write-Host "Summary:" -ForegroundColor Cyan
-    Write-Host "Total Resources: $($summary.TotalResources)"
-    Write-Host "Compliant: $($summary.Compliant) ($($summary.CompliancePercentage)%)"
-    Write-Host "Non-Compliant: $($summary.NonCompliant)"
-    Write-Host "Unknown: $($summary.Unknown)"
 
-    # In a real implementation, you would use:
-    # - Send-MailMessage (if SMTP is configured)
-    # - Azure Logic Apps for email
-    # - Azure Monitor Action Groups
-    # - Microsoft Graph API for Office 365
-
-    Write-Host "`nNote: Email functionality requires additional configuration" -ForegroundColor Yellow
+    Write-Host "`nNote: Email functionality requires additional configuration" -ForegroundColor Green
 }
 
 function Show-ComplianceReport {
-    param([object]$ComplianceData)
+        param([object]$ComplianceData)
+    [string]$summary = $ComplianceData.Summary
 
-    $summary = $ComplianceData.Summary
+    Write-Host "`nCompliance Report" -ForegroundColor Green
+    write-Host ("=" * 50) -ForegroundColor Cyan
+    Write-Host "Generated: $(Get-Date)" -ForegroundColor Green
 
-    Write-Host "`nCompliance Report" -ForegroundColor Cyan
-    Write-Host ("=" * 50) -ForegroundColor Cyan
-    Write-Host "Generated: $(Get-Date)" -ForegroundColor Gray
-
-    Write-Host "`nSummary:" -ForegroundColor Cyan
-    Write-Host "Total Resources: $($summary.TotalResources)"
+    Write-Host "`nSummary:" -ForegroundColor Green
+    Write-Output "Total Resources: $($summary.TotalResources)"
     Write-Host "Compliant: $($summary.Compliant)" -ForegroundColor Green
-    Write-Host "Non-Compliant: $($summary.NonCompliant)" -ForegroundColor $(if ($summary.NonCompliant -gt 0) { 'Red' } else { 'Green' })
-    Write-Host "Unknown: $($summary.Unknown)" -ForegroundColor Yellow
-    Write-Host "Compliance Rate: $($summary.CompliancePercentage)%"
+    Write-Output "Non-Compliant: $($summary.NonCompliant)" -ForegroundColor $(if ($summary.NonCompliant -gt 0) { 'Red' } else { 'Green' })
+    Write-Host "Unknown: $($summary.Unknown)" -ForegroundColor Green
+    Write-Output "Compliance Rate: $($summary.CompliancePercentage)%"
 
     if ($summary.NonCompliant -gt 0 -and $ComplianceData.Details) {
-        Write-Host "`nTop Non-Compliant Resources:" -ForegroundColor Red
-        $ComplianceData.Details |
+        Write-Host "`nTop Non-Compliant Resources:" -ForegroundColor Green
+    [string]$ComplianceData.Details |
             Where-Object { $_.ComplianceState -eq 'NonCompliant' } |
             Select-Object -First 5 |
             ForEach-Object {
-                $resourceName = ($_.ResourceId -split '/')[-1]
-                Write-Host "  - $resourceName ($($_.ResourceType))" -ForegroundColor Red
+    [string]$ResourceName = ($_.ResourceId -split '/')[-1]
+                Write-Host "  - $ResourceName ($($_.ResourceType))" -ForegroundColor Green
             }
     }
 }
 
-# Main execution
-Write-Host "`nAzure Policy Compliance Scanner" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
-
-$context = Test-AzureConnection
+Write-Host "`nAzure Policy Compliance Scanner" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
+    [string]$context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
-# Set subscription context if provided
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     Write-Host "Switched to subscription: $SubscriptionId" -ForegroundColor Green
 }
+    $scope = Get-ComplianceScope -SubscriptionId $SubscriptionId -ManagementGroupId $ManagementGroupId -ResourceGroupName $ResourceGroupName
+Write-Host "Compliance scope: $scope" -ForegroundColor Green
 
-# Determine compliance scope
-$scope = Get-ComplianceScope -SubscriptionId $SubscriptionId -ManagementGroupId $ManagementGroupId -ResourceGroupName $ResourceGroupName
-Write-Host "Compliance scope: $scope" -ForegroundColor Cyan
-
-# Trigger compliance scan if requested
 if ($TriggerScan) {
-    $scanJob = Start-ComplianceScan -Scope $scope -PolicyAssignment $PolicyAssignmentName
+    [string]$ScanJob = Start-ComplianceScan -Scope $scope -PolicyAssignment $PolicyAssignmentName
 
-    # Wait a moment for scan to process
-    Write-Host "Waiting for scan to process..." -ForegroundColor Yellow
+    Write-Host "Waiting for scan to process..." -ForegroundColor Green
     Start-Sleep -Seconds 10
 }
+    $ComplianceData = Get-ComplianceStatus -Scope $scope -ExcludeCompliant $ExcludeCompliant
 
-# Get current compliance status
-$complianceData = Get-ComplianceStatus -Scope $scope -ExcludeCompliant $ExcludeCompliant
+Show-ComplianceReport -ComplianceData $ComplianceData
 
-# Show compliance report
-Show-ComplianceReport -ComplianceData $complianceData
-
-# Configure scheduled scans if requested
 if ($ScheduleScans) {
-    $scheduleConfig = Set-ComplianceSchedule -Frequency $ScanFrequency -Scope $scope -NotificationEmail $NotificationEmail
+    [string]$ScheduleConfig = Set-ComplianceSchedule -Frequency $ScanFrequency -Scope $scope -NotificationEmail $NotificationEmail
 }
 
-# Send notification if email is provided
 if ($NotificationEmail) {
-    Send-ComplianceNotification -ComplianceData $complianceData -EmailAddress $NotificationEmail
+    Send-ComplianceNotification -ComplianceData $ComplianceData -EmailAddress $NotificationEmail
 }
 
 Write-Host "`nCompliance scan configuration completed!" -ForegroundColor Green
 
-# Return compliance data
-return $complianceData\n
+return $ComplianceData\n
+
+
 

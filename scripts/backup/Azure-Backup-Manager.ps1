@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Resources
 #Requires -Modules Az.RecoveryServices
@@ -52,10 +52,9 @@
 
 .NOTES
     Requires Azure PowerShell modules and appropriate permissions for Recovery Services
-#>
 
-[CmdletBinding(SupportsShouldProcess)]
 [OutputType([PSCustomObject])]
+[CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
@@ -87,22 +86,19 @@ param(
     [string]$Location = "East US"
 )
 
-# Set error handling preference
 $ErrorActionPreference = 'Stop'
 
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
+
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $colorMap = @{
         "INFO" = "Cyan"
@@ -110,24 +106,21 @@ function Write-LogMessage {
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
+
     $logEntry = "$timestamp [Backup-Manager] [$Level] $Message"
     Write-Host $logEntry -ForegroundColor $colorMap[$Level]
 }
 
-# Function to create a Recovery Services Vault
 function New-RecoveryVault {
-    [CmdletBinding()]
     param(
         [string]$ResourceGroupName,
         [string]$VaultName,
         [string]$Location
     )
-    
+
     try {
         Write-LogMessage "Creating Recovery Services Vault: $VaultName" -Level "INFO"
-        
-        # Check if resource group exists
+
         try {
             Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop | Out-Null
         }
@@ -135,14 +128,13 @@ function New-RecoveryVault {
             Write-LogMessage "Creating resource group: $ResourceGroupName" -Level "INFO"
             New-AzResourceGroup -Name $ResourceGroupName -Location $Location | Out-Null
         }
-        
+
         $vault = New-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Name $VaultName -Location $Location
-        
-        # Set vault storage redundancy
+
         Set-AzRecoveryServicesVaultContext -Vault $vault
         $storageConfig = Get-AzRecoveryServicesBackupProperty -Vault $vault
         Set-AzRecoveryServicesBackupProperty -Vault $vault -BackupStorageRedundancy "GeoRedundant"
-        
+
         Write-LogMessage "Recovery Services Vault created successfully" -Level "SUCCESS"
         return $vault
     }
@@ -152,18 +144,16 @@ function New-RecoveryVault {
     }
 }
 
-# Function to get backup item for a VM
 function Get-VMBackupItem {
-    [CmdletBinding()]
     param(
         [string]$VMName,
         [string]$VMResourceGroupName
     )
-    
+
     try {
         $backupItems = Get-AzRecoveryServicesBackupItem -BackupManagementType "AzureVM" -WorkloadType "AzureVM"
-        $vmBackup = $backupItems | Where-Object { 
-            $_.Name -like "*$VMName*" -or 
+        $vmBackup = $backupItems | Where-Object {
+            $_.Name -like "*$VMName*" -or
             $_.SourceResourceId -like "*$VMName*" -or
             ($_.SourceResourceId -like "*$VMResourceGroupName*" -and $_.Name -like "*$VMName*")
         }
@@ -181,26 +171,22 @@ try {
     Write-LogMessage "VM: $VMName" -Level "INFO"
     Write-LogMessage "Action: $Action" -Level "INFO"
 
-    # Validate Azure context
     $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
-    
+
     Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
 
-    # Set VM resource group if not provided
     if (-not $VMResourceGroupName) {
         $VMResourceGroupName = $ResourceGroupName
     }
 
-    # Handle vault creation separately
     if ($Action -eq 'CreateVault') {
         $vault = New-RecoveryVault -ResourceGroupName $ResourceGroupName -VaultName $VaultName -Location $Location
         return $vault
     }
 
-    # Get and set vault context
     try {
         Write-LogMessage "Connecting to Recovery Services Vault..." -Level "INFO"
         $vault = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Name $VaultName -ErrorAction Stop
@@ -216,9 +202,9 @@ try {
     switch ($Action) {
         'Status' {
             Write-LogMessage "Getting backup status for VM: $VMName" -Level "INFO"
-            
+
             $vmBackup = Get-VMBackupItem -VMName $VMName -VMResourceGroupName $VMResourceGroupName
-            
+
             if ($vmBackup) {
                 $status = [PSCustomObject]@{
                     VMName = $VMName
@@ -234,11 +220,11 @@ try {
                     WorkloadType = $vmBackup.WorkloadType
                     LatestRecoveryPoint = $vmBackup.LatestRecoveryPoint
                 }
-                
+
                 Write-LogMessage "Backup status retrieved successfully" -Level "SUCCESS"
                 Write-LogMessage "Protection Status: $($status.ProtectionStatus)" -Level "INFO"
                 Write-LogMessage "Last Backup: $($status.LastBackupTime)" -Level "INFO"
-                
+
                 return $status
             } else {
                 Write-LogMessage "No backup configuration found for VM: $VMName" -Level "WARN"
@@ -249,18 +235,18 @@ try {
 
         'Backup' {
             Write-LogMessage "Starting backup for VM: $VMName" -Level "INFO"
-            
+
             if ($PSCmdlet.ShouldProcess($VMName, 'Start backup')) {
                 $vmBackup = Get-VMBackupItem -VMName $VMName -VMResourceGroupName $VMResourceGroupName
-                
+
                 if ($vmBackup) {
                     Write-LogMessage "Initiating backup job..." -Level "INFO"
                     $job = Backup-AzRecoveryServicesBackupItem -Item $vmBackup
-                    
+
                     Write-LogMessage "Backup job started successfully" -Level "SUCCESS"
                     Write-LogMessage "Job ID: $($job.JobId)" -Level "INFO"
                     Write-LogMessage "Job Status: $($job.Status)" -Level "INFO"
-                    
+
                     $backupResult = [PSCustomObject]@{
                         VMName = $VMName
                         JobId = $job.JobId
@@ -269,7 +255,7 @@ try {
                         StartTime = $job.StartTime
                         ActivityId = $job.ActivityId
                     }
-                    
+
                     return $backupResult
                 } else {
                     Write-LogMessage "VM '$VMName' is not configured for backup" -Level "ERROR"
@@ -281,9 +267,8 @@ try {
 
         'Enable' {
             Write-LogMessage "Enabling backup protection for VM: $VMName" -Level "INFO"
-            
+
             if ($PSCmdlet.ShouldProcess($VMName, 'Enable backup protection')) {
-                # Verify VM exists
                 try {
                     $vm = Get-AzVM -Name $VMName -ResourceGroupName $VMResourceGroupName -ErrorAction Stop
                     Write-LogMessage "VM found: $($vm.Name)" -Level "SUCCESS"
@@ -293,7 +278,6 @@ try {
                     throw "VM not found: $($_.Exception.Message)"
                 }
 
-                # Get backup policy
                 try {
                     $policy = Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName -ErrorAction Stop
                     Write-LogMessage "Using backup policy: $($policy.Name)" -Level "INFO"
@@ -307,13 +291,12 @@ try {
                     }
                 }
 
-                # Enable backup protection
                 Write-LogMessage "Enabling backup protection..." -Level "INFO"
                 $result = Enable-AzRecoveryServicesBackupProtection -ResourceGroupName $VMResourceGroupName -Name $VMName -Policy $policy
-                
+
                 Write-LogMessage "Backup protection enabled successfully" -Level "SUCCESS"
                 Write-LogMessage "Policy: $($policy.Name)" -Level "INFO"
-                
+
                 $enableResult = [PSCustomObject]@{
                     VMName = $VMName
                     ResourceGroupName = $VMResourceGroupName
@@ -322,25 +305,25 @@ try {
                     Status = "Enabled"
                     EnabledDate = Get-Date
                 }
-                
+
                 return $enableResult
             }
         }
 
         'Disable' {
             Write-LogMessage "Disabling backup protection for VM: $VMName" -Level "WARN"
-            
+
             if ($PSCmdlet.ShouldProcess($VMName, 'Disable backup protection')) {
                 $vmBackup = Get-VMBackupItem -VMName $VMName -VMResourceGroupName $VMResourceGroupName
-                
+
                 if ($vmBackup) {
                     Write-LogMessage "WARNING: This will disable backup protection and may delete backup data" -Level "WARN"
                     $confirmation = Read-Host "Type 'DISABLE' to confirm disabling backup for $VMName"
-                    
+
                     if ($confirmation -eq 'DISABLE') {
                         Disable-AzRecoveryServicesBackupProtection -Item $vmBackup -RemoveRecoveryPoints -Force
                         Write-LogMessage "Backup protection disabled for VM: $VMName" -Level "SUCCESS"
-                        
+
                         return [PSCustomObject]@{
                             VMName = $VMName
                             Status = "Disabled"
@@ -359,12 +342,12 @@ try {
 
         'Policy' {
             Write-LogMessage "Retrieving backup policies" -Level "INFO"
-            
+
             $policies = Get-AzRecoveryServicesBackupProtectionPolicy
             $vmPolicies = $policies | Where-Object { $_.WorkloadType -eq "AzureVM" }
-            
+
             Write-LogMessage "Found $($vmPolicies.Count) VM backup policies" -Level "SUCCESS"
-            
+
             $policyInfo = $vmPolicies | Select-Object @{
                 Name = 'PolicyName'
                 Expression = { $_.Name }
@@ -381,19 +364,19 @@ try {
                 Name = 'RetentionPolicy'
                 Expression = { $_.RetentionPolicy.DailySchedule.DurationCountInDays }
             }
-            
+
             $policyInfo | Format-Table -AutoSize
             return $policyInfo
         }
 
         'Schedule' {
             Write-LogMessage "Getting backup schedule for VM: $VMName" -Level "INFO"
-            
+
             $vmBackup = Get-VMBackupItem -VMName $VMName -VMResourceGroupName $VMResourceGroupName
-            
+
             if ($vmBackup) {
                 $policy = Get-AzRecoveryServicesBackupProtectionPolicy -Name $vmBackup.PolicyName
-                
+
                 $scheduleInfo = [PSCustomObject]@{
                     VMName = $VMName
                     PolicyName = $policy.Name
@@ -405,7 +388,7 @@ try {
                     MonthlyRetentionMonths = $policy.RetentionPolicy.MonthlySchedule.DurationCountInMonths
                     YearlyRetentionYears = $policy.RetentionPolicy.YearlySchedule.DurationCountInYears
                 }
-                
+
                 Write-LogMessage "Schedule information retrieved" -Level "SUCCESS"
                 return $scheduleInfo
             } else {
@@ -416,9 +399,9 @@ try {
 
         'Restore' {
             Write-LogMessage "Preparing restore operation for VM: $VMName" -Level "INFO"
-            
+
             $vmBackup = Get-VMBackupItem -VMName $VMName -VMResourceGroupName $VMResourceGroupName
-            
+
             if ($vmBackup) {
                 if ($RestorePointDate) {
                     $startDate = Get-Date $RestorePointDate
@@ -427,10 +410,10 @@ try {
                     $endDate = Get-Date
                     $startDate = $endDate.AddDays(-30)
                 }
-                
+
                 Write-LogMessage "Searching for recovery points between $startDate and $endDate" -Level "INFO"
                 $recoveryPoints = Get-AzRecoveryServicesBackupRecoveryPoint -Item $vmBackup -StartDate $startDate -EndDate $endDate
-                
+
                 if ($recoveryPoints) {
                     $restoreInfo = [PSCustomObject]@{
                         VMName = $VMName
@@ -439,10 +422,10 @@ try {
                         OldestRestorePoint = $recoveryPoints[-1].RecoveryPointTime
                         RestorePoints = $recoveryPoints | Select-Object RecoveryPointTime, RecoveryPointType
                     }
-                    
+
                     Write-LogMessage "Found $($recoveryPoints.Count) recovery points" -Level "SUCCESS"
                     Write-LogMessage "Use Azure Portal or REST API to perform actual restore operation" -Level "INFO"
-                    
+
                     return $restoreInfo
                 } else {
                     Write-LogMessage "No recovery points found for the specified date range" -Level "WARN"
@@ -460,3 +443,5 @@ catch {
     Write-Error "Backup operation failed: $_"
     throw
 }
+
+

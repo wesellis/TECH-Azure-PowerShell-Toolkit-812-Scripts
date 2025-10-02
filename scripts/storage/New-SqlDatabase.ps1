@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Sql
 
@@ -6,6 +6,9 @@
     Create Azure SQL Database
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 Create SQL Server and database
 .PARAMETER ResourceGroup
 Resource group name
@@ -26,6 +29,8 @@ ew-SqlDatabase.ps1 -ResourceGroup rg-sql -ServerName mysqlserver -DatabaseName m
 #>
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter(Mandatory)]
     [string]$ResourceGroup,
     [Parameter(Mandatory)]
@@ -40,16 +45,16 @@ ew-SqlDatabase.ps1 -ResourceGroup rg-sql -ServerName mysqlserver -DatabaseName m
     [SecureString]$AdminPassword
 )
 $cred = New-Object PSCredential($AdminUser, $AdminPassword)
-Write-Host "Creating SQL Server $ServerName" -ForegroundColor Green
-$sqlserverSplat = @{
+Write-Output "Creating SQL Server $ServerName" # Color: $2
+$SqlserverSplat = @{
     ResourceGroupName = $ResourceGroup
     ServerName = $ServerName
     Location = $Location
     SqlAdministratorCredentials = $cred
 }
 New-AzSqlServer @sqlserverSplat
-Write-Host "Creating database $DatabaseName" -ForegroundColor Green
-$sqldatabaseSplat = @{
+Write-Output "Creating database $DatabaseName" # Color: $2
+$SqldatabaseSplat = @{
     ResourceGroupName = $ResourceGroup
     ServerName = $ServerName
     DatabaseName = $DatabaseName
@@ -57,9 +62,7 @@ $sqldatabaseSplat = @{
     RequestedServiceObjectiveName = "S0"
 }
 New-AzSqlDatabase @sqldatabaseSplat
-Write-Host "SQL Database created successfully" -ForegroundColor Green
-Write-Host "Server: $($server.FullyQualifiedDomainName)"
-Write-Host "Database: $DatabaseName"
-return @{Server = $server; Database = $db}
-
-
+Write-Output "SQL Database created successfully" # Color: $2
+Write-Output "Server: $($server.FullyQualifiedDomainName)"
+Write-Output "Database: $DatabaseName"
+return @{Server = $server; Database = $db`n}

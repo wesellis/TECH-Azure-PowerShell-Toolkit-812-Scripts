@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Rundeployscaleset
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -23,3 +25,5 @@ $args=@{
     'newStorageAccountType'='Premium_LRS';
 }
 .\deployscaleset.ps1 @args
+
+

@@ -1,36 +1,55 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 
-<#`n.SYNOPSIS
-    Invoke Azvmconfig
+<#
+.SYNOPSIS
+    Invoke Azure VM Config creation
 
 .DESCRIPTION
-    Azure automation
+    Creates a new Azure VM configuration with system assigned identity
 
+.PARAMETER VMName
+    Name of the virtual machine
 
+.PARAMETER VMSize
+    Size of the virtual machine
+
+.PARAMETER Tags
+    Hash table of tags to apply
+
+.EXAMPLE
+    Invoke-AzVMConfig -VMName "MyVM" -VMSize "Standard_B2s" -Tags @{Environment="Dev"}
+
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
 #>
-    Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
 [CmdletBinding()]
-function Invoke-AzVMConfig {
-}
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$VMName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$VMSize,
+
+    [Parameter(Mandatory = $false)]
+    [hashtable]$Tags = @{}
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
 function Invoke-AzVMConfig {
-    #region func-New-AzVMConfig -ErrorAction Stop
-    #Creating the VM Config Object for the VM
-$newAzVMConfigSplat = @{
+    $NewAzVMConfigSplat = @{
         VMName       = $VMName
         VMSize       = $VMSize
         Tags         = $Tags
         IdentityType = 'SystemAssigned'
     }
-$VirtualMachine = New-AzVMConfig -ErrorAction Stop @newAzVMConfigSplat
-    #endRegion func New-AzVMConfig -ErrorAction Stop
+    $VirtualMachine = New-AzVMConfig -ErrorAction Stop @NewAzVMConfigSplat
+    return $VirtualMachine
 }
 
-
+# Execute the function
+Invoke-AzVMConfig

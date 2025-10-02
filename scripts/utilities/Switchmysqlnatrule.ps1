@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,6 +10,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -38,5 +40,6 @@ Set-AzureNetworkInterface -NetworkInterface $nic1
 $nic0.IpConfigurations[0].LoadBalancerInboundNatRules.add($rule1)
 Set-AzureNetworkInterface -NetworkInterface $nic0
 exit 0
+
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -24,4 +24,5 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
     General notes
 Get-AzNetworkSecurityGroup -ErrorAction Stop | Select-Object -Property Name
 Get-AzNetworkSecurityGroup -Name 'FAX1-nsg' -ResourceGroupName "FAX1_GROUP"
+
 

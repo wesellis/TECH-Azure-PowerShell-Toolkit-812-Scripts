@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,16 +6,16 @@
 
 .DESCRIPTION
     Monitor service health
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Service Health Monitor
-# Monitor Azure service health and incidents
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter()]
-    [string]$SubscriptionId,
+    $SubscriptionId,
     [Parameter()]
     [ValidateSet("All", "Service", "Planned", "Health", "Security")]
-    [string]$EventType = "All",
+    $EventType = "All",
     [Parameter()]
     [int]$DaysBack = 7,
     [Parameter()]
@@ -24,27 +24,26 @@
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
     if ($SubscriptionId) { Set-AzContext -SubscriptionId $SubscriptionId }
-    $startTime = (Get-Date).AddDays(-$DaysBack)
-    $serviceHealthEvents = Get-AzServiceHealth -StartTime $startTime
+    $StartTime = (Get-Date).AddDays(-$DaysBack)
+    $ServiceHealthEvents = Get-AzServiceHealth -StartTime $StartTime
     if ($ActiveOnly) {
-        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.Status -eq "Active" }
+        $ServiceHealthEvents = $ServiceHealthEvents | Where-Object { $_.Status -eq "Active" }
     }
     if ($EventType -ne "All") {
-        $serviceHealthEvents = $serviceHealthEvents | Where-Object { $_.EventType -eq $EventType }
+        $ServiceHealthEvents = $ServiceHealthEvents | Where-Object { $_.EventType -eq $EventType }
     }
-    Write-Host "Service Health Summary (Last $DaysBack days):"
-    Write-Host "Total Events: $($serviceHealthEvents.Count)"
-    $eventSummary = $serviceHealthEvents | Group-Object EventType | ForEach-Object {
+    Write-Output "Service Health Summary (Last $DaysBack days):"
+    Write-Output "Total Events: $($ServiceHealthEvents.Count)"
+    $EventSummary = $ServiceHealthEvents | Group-Object EventType | ForEach-Object {
         [PSCustomObject]@{
             EventType = $_.Name
             Count = $_.Count
             ActiveEvents = ($_.Group | Where-Object { $_.Status -eq "Active" }).Count
         }
     }
-    $eventSummary | Format-Table EventType, Count, ActiveEvents
-    if ($serviceHealthEvents.Count -gt 0) {
-        Write-Host "Recent Events:"
-        $serviceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
+    $EventSummary | Format-Table EventType, Count, ActiveEvents
+    if ($ServiceHealthEvents.Count -gt 0) {
+        Write-Output "Recent Events:"
+        $ServiceHealthEvents | Sort-Object LastUpdateTime -Descending | Select-Object -First 10 | Format-Table Title, EventType, Status, LastUpdateTime
     }
-} catch { throw }
-
+} catch { throw`n}

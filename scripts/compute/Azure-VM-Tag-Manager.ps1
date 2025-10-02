@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,8 +10,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -20,16 +21,16 @@
     [Parameter(Mandatory)]
     [hashtable]$Tags
 )
-Write-Host "Updating tags for VM: $VmName"
+Write-Output "Updating tags for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-# Merge existing tags with new tags
 $ExistingTags = $VM.Tags
 if (-not $ExistingTags) { $ExistingTags = @{} }
 foreach ($Tag in $Tags.GetEnumerator()) {
     $ExistingTags[$Tag.Key] = $Tag.Value
-    Write-Host "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
+    Write-Output "Added/Updated tag: $($Tag.Key) = $($Tag.Value)"
 }
 Update-AzVM -ResourceGroupName $ResourceGroupName -VM $VM -Tag $ExistingTags
-Write-Host "Tags updated successfully for VM: $VmName"
+Write-Output "Tags updated successfully for VM: $VmName"
+
 
 

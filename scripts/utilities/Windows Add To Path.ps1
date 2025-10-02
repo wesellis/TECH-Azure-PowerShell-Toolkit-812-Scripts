@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Add To Path
@@ -14,28 +14,27 @@
     1.0
     Requires appropriate permissions and modules
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
+    $ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)]
-    [string]$newPath
+    $NewPath
 )
 try {
-    Write-Host "Adding '$newPath' to system's Path environment variable"
-    if ($newPath.Contains(" ;" )) {
-        Write-Host "WARNING: Cannot add path that contains ';' (semicolon) to system's Path environment variable"
-        Write-Host "Not making any changes"
+    Write-Output "Adding '$NewPath' to system's Path environment variable"
+    if ($NewPath.Contains(" ;" )) {
+        Write-Output "WARNING: Cannot add path that contains ';' (semicolon) to system's Path environment variable"
+        Write-Output "Not making any changes"
         exit 0
     }
     $path = [Environment]::GetEnvironmentVariable('Path', 'Machine')
-$pathPieces = $path -split " ;"
-    if ($newPath -in $pathPieces) {
-        Write-Host "Path already contains '$newPath'. Not making any changes."
+    $PathPieces = $path -split " ;"
+    if ($NewPath -in $PathPieces) {
+        Write-Output "Path already contains '$NewPath'. Not making any changes."
     }
     else {
-        $modifiedPath = $path + " ;" + $newPath
-        [Environment]::SetEnvironmentVariable("Path" , $modifiedPath, 'Machine')
-        Write-Host " '$newPath' added to system's Path environment variable"
+    $ModifiedPath = $path + " ;" + $NewPath
+        [Environment]::SetEnvironmentVariable("Path" , $ModifiedPath, 'Machine')
+        Write-Output " '$NewPath' added to system's Path environment variable"
 
 } catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

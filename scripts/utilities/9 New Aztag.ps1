@@ -1,39 +1,43 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
-<#`n.SYNOPSIS
-    New Aztag
+<#
+.SYNOPSIS
+    Create or update Azure resource tags
 
 .DESCRIPTION
-    New Aztag operation
+    Create or update Azure resource tags operation
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Author: Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-$Tag = @{
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceId,
+
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Tags,
+
+    [Parameter()]
+    [ValidateSet('Replace', 'Merge', 'Delete')]
+    [string]$Operation = 'Replace'
+)
+
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-$Tag = @{
-    "Autoshutown"     = 'OFF'
-    "Createdby"       = 'Abdullah Ollivierre'
-    "CustomerName"   = 'FGC Health'
-    "DateTimeCreated" = " $datetime"
-    "Environment"     = 'Lab'
-    "Application"     = 'Kroll'
-    "Purpose"         = 'Dev & Test'
-    "Uptime"         = '240 hrs/month'
-    "Workload"        = 'Kroll Lab'
-    "VMGenenetation"  = 'Gen2'
-    "RebootCaution"   = 'Reboot If needed'
-    "VMSize"          = 'B2MS'
+
+switch ($Operation) {
+    'Replace' {
+        New-AzTag -ResourceId $ResourceId -Tag $Tags -ErrorAction Stop
+    }
+    'Merge' {
+        Update-AzTag -ResourceId $ResourceId -Tag $Tags -Operation Merge -ErrorAction Stop
+    }
+    'Delete' {
+        Update-AzTag -ResourceId $ResourceId -Tag $Tags -Operation Delete -ErrorAction Stop
+    }
 }
-$tags = @{"Team" ="Compliance" ; "Environment" ="Production" }
-New-AzTag -ResourceId $resource.id -Tag $tags
-$tags = @{"Dept" ="Finance" ; "Status" ="Normal" }
-Update-AzTag -ResourceId $resource.id -Tag $tags -Operation Merge
-
-

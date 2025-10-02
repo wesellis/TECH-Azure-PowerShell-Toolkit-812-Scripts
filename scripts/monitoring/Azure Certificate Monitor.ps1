@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.KeyVault
 
@@ -15,8 +15,8 @@
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 [CmdletBinding()]
 param(
     [Parameter()]
@@ -26,25 +26,25 @@ param(
     [Parameter()]
     [switch]$CheckAppGatewayCertificates
 )
-Write-Host "Azure Script Started" -ForegroundColor GreenName "Azure Certificate Monitor" -Version " 1.0" -Description "Monitor SSL certificate expiration"
+Write-Output "Azure Script Started" # Color: $2 "Azure Certificate Monitor" -Version " 1.0" -Description "Monitor SSL certificate expiration"
 try {
     if (-not (Get-AzContext)) { Connect-AzAccount }
-    $expiringCertificates = @()
-    $warningDate = (Get-Date).AddDays($ExpirationWarningDays)
+    [string]$ExpiringCertificates = @()
+    [string]$WarningDate = (Get-Date).AddDays($ExpirationWarningDays)
     if ($CheckKeyVaultCertificates) {
-        $keyVaults = Get-AzKeyVault -ErrorAction Stop
-        foreach ($vault in $keyVaults) {
+    [string]$KeyVaults = Get-AzKeyVault -ErrorAction Stop
+        foreach ($vault in $KeyVaults) {
             try {
-$certificates = Get-AzKeyVaultCertificate -VaultName $vault.VaultName
+    [string]$certificates = Get-AzKeyVaultCertificate -VaultName $vault.VaultName
                 foreach ($cert in $certificates) {
-$certDetails = Get-AzKeyVaultCertificate -VaultName $vault.VaultName -Name $cert.Name
-                    if ($certDetails.Expires -and $certDetails.Expires -le $warningDate) {
-$expiringCertificates = $expiringCertificates + [PSCustomObject]@{
+    [string]$CertDetails = Get-AzKeyVaultCertificate -VaultName $vault.VaultName -Name $cert.Name
+                    if ($CertDetails.Expires -and $CertDetails.Expires -le $WarningDate) {
+    [string]$ExpiringCertificates = $ExpiringCertificates + [PSCustomObject]@{
                             Service = "Key Vault"
                             VaultName = $vault.VaultName
                             CertificateName = $cert.Name
-                            ExpirationDate = $certDetails.Expires
-                            DaysUntilExpiration = [math]::Round(($certDetails.Expires - (Get-Date)).TotalDays)
+                            ExpirationDate = $CertDetails.Expires
+                            DaysUntilExpiration = [math]::Round(($CertDetails.Expires - (Get-Date)).TotalDays)
                         }
                     }
                 }
@@ -53,17 +53,14 @@ $expiringCertificates = $expiringCertificates + [PSCustomObject]@{
             }
         }
     }
-    Write-Host "Certificate Monitoring Results:" -ForegroundColor Cyan
-    Write-Host "Warning threshold: $ExpirationWarningDays days" -ForegroundColor Yellow
-    Write-Host "Certificates expiring soon: $($expiringCertificates.Count)" -ForegroundColor Red
-    if ($expiringCertificates.Count -gt 0) {
-        $expiringCertificates | Sort-Object ExpirationDate | Format-Table Service, VaultName, CertificateName, ExpirationDate, DaysUntilExpiration
+    Write-Output "Certificate Monitoring Results:" # Color: $2
+    Write-Output "Warning threshold: $ExpirationWarningDays days" # Color: $2
+    Write-Output "Certificates expiring soon: $($ExpiringCertificates.Count)" # Color: $2
+    if ($ExpiringCertificates.Count -gt 0) {
+    [string]$ExpiringCertificates | Sort-Object ExpirationDate | Format-Table Service, VaultName, CertificateName, ExpirationDate, DaysUntilExpiration
     } else {
-        Write-Host "No certificates expiring within $ExpirationWarningDays days" -ForegroundColor Green
+        Write-Output "No certificates expiring within $ExpirationWarningDays days" # Color: $2
     }
 } catch {
 
-    throw
-}
-
-
+    throw`n}

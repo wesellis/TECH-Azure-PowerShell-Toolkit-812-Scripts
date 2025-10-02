@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -697,4 +697,5 @@ $getAzVMImageSplat = @{
     Skus = '20_04-lts-gen2'
 }
 Get-AzVMImage -ErrorAction Stop @getAzVMImageSplat
+
 

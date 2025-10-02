@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -7,15 +7,15 @@
 
 .DESCRIPTION
     Monitor subscription usage
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Subscription Usage Monitor
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [Parameter()]
-    [string]$SubscriptionId,
+    $SubscriptionId,
     [Parameter()]
-    [string]$Location = "East US",
+    $Location = "East US",
     [Parameter()]
     [int]$WarningThreshold = 80,
     [Parameter()]
@@ -23,87 +23,82 @@
     [Parameter()]
     [switch]$ExportReport,
     [Parameter()]
-    [string]$OutputPath = ".\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
+    $OutputPath = ".\subscription-usage-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
 )
 try {
         if (-not (Get-AzContext)) { Connect-AzAccount }
     if ($SubscriptionId) {
         Set-AzContext -SubscriptionId $SubscriptionId
     }
-        # Get compute usage
-    $vmUsage = Get-AzVMUsage -Location $Location
-    # Get network usage
-    $networkUsage = Get-AzNetworkUsage -Location $Location
-    # Get storage usage
-    $storageUsage = Get-AzStorageUsage -Location $Location
-        $usageReport = @{
+    $VmUsage = Get-AzVMUsage -Location $Location
+    $NetworkUsage = Get-AzNetworkUsage -Location $Location
+    $StorageUsage = Get-AzStorageUsage -Location $Location
+        $UsageReport = @{
         SubscriptionId = (Get-AzContext).Subscription.Id
         SubscriptionName = (Get-AzContext).Subscription.Name
         Location = $Location
         ReportDate = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-        ComputeUsage = $vmUsage | ForEach-Object {
-            $usagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
+        ComputeUsage = $VmUsage | ForEach-Object {
+            $UsagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
             @{
                 Name = $_.Name.LocalizedValue
                 Current = $_.CurrentValue
                 Limit = $_.Limit
-                UsagePercent = $usagePercent
-                Status = if ($usagePercent -ge $CriticalThreshold) { "Critical" }
-                        elseif ($usagePercent -ge $WarningThreshold) { "Warning" }
+                UsagePercent = $UsagePercent
+                Status = if ($UsagePercent -ge $CriticalThreshold) { "Critical" }
+                        elseif ($UsagePercent -ge $WarningThreshold) { "Warning" }
                         else { "OK" }
             }
         }
-        NetworkUsage = $networkUsage | ForEach-Object {
-            $usagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
+        NetworkUsage = $NetworkUsage | ForEach-Object {
+            $UsagePercent = if ($_.Limit -gt 0) { [math]::Round(($_.CurrentValue / $_.Limit) * 100, 2) } else { 0 }
             @{
                 Name = $_.Name.LocalizedValue
                 Current = $_.CurrentValue
                 Limit = $_.Limit
-                UsagePercent = $usagePercent
-                Status = if ($usagePercent -ge $CriticalThreshold) { "Critical" }
-                        elseif ($usagePercent -ge $WarningThreshold) { "Warning" }
+                UsagePercent = $UsagePercent
+                Status = if ($UsagePercent -ge $CriticalThreshold) { "Critical" }
+                        elseif ($UsagePercent -ge $WarningThreshold) { "Warning" }
                         else { "OK" }
             }
         }
         StorageUsage = @{
-            Name = $storageUsage.Name.LocalizedValue
-            Current = $storageUsage.CurrentValue
-            Limit = $storageUsage.Limit
-            UsagePercent = if ($storageUsage.Limit -gt 0) { [math]::Round(($storageUsage.CurrentValue / $storageUsage.Limit) * 100, 2) } else { 0 }
+            Name = $StorageUsage.Name.LocalizedValue
+            Current = $StorageUsage.CurrentValue
+            Limit = $StorageUsage.Limit
+            UsagePercent = if ($StorageUsage.Limit -gt 0) { [math]::Round(($StorageUsage.CurrentValue / $StorageUsage.Limit) * 100, 2) } else { 0 }
         }
     }
         if ($ExportReport) {
-        $usageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
-        
-    }
-        # Display critical and warning items
-    $criticalItems = @()
-    $warningItems = @()
-    $usageReport.ComputeUsage + $usageReport.NetworkUsage | ForEach-Object {
-        if ($_.Status -eq "Critical") { $criticalItems += $_ }
-        elseif ($_.Status -eq "Warning") { $warningItems += $_ }
-    }
-    Write-Host ""
-    Write-Host "                              SUBSCRIPTION USAGE REPORT"
-    Write-Host ""
-    Write-Host "Usage Summary for $($Location):"
-    Write-Host "    Critical Items: $($criticalItems.Count)"
-    Write-Host "    Warning Items: $($warningItems.Count)"
-    Write-Host "    Total Quotas Monitored: $($usageReport.ComputeUsage.Count + $usageReport.NetworkUsage.Count + 1)"
-    if ($criticalItems.Count -gt 0) {
-        Write-Host ""
-        $criticalItems | ForEach-Object {
-            Write-Host "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
-        }
-    }
-    if ($warningItems.Count -gt 0) {
-        Write-Host ""
-        Write-Host "[WARN] Warning Usage (>$WarningThreshold%):"
-        $warningItems | ForEach-Object {
-            Write-Host "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
-        }
-    }
-    Write-Host ""
-    
-} catch { throw }
+        $UsageReport | ConvertTo-Json -Depth 10 | Out-File -FilePath $OutputPath -Encoding UTF8
 
+    }
+    $CriticalItems = @()
+    $WarningItems = @()
+    $UsageReport.ComputeUsage + $UsageReport.NetworkUsage | ForEach-Object {
+        if ($_.Status -eq "Critical") { $CriticalItems += $_ }
+        elseif ($_.Status -eq "Warning") { $WarningItems += $_ }
+    }
+    Write-Output ""
+    Write-Output "                              SUBSCRIPTION USAGE REPORT"
+    Write-Output ""
+    Write-Output "Usage Summary for $($Location):"
+    Write-Output "    Critical Items: $($CriticalItems.Count)"
+    Write-Output "    Warning Items: $($WarningItems.Count)"
+    Write-Output "    Total Quotas Monitored: $($UsageReport.ComputeUsage.Count + $UsageReport.NetworkUsage.Count + 1)"
+    if ($CriticalItems.Count -gt 0) {
+        Write-Output ""
+        $CriticalItems | ForEach-Object {
+            Write-Output "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
+        }
+    }
+    if ($WarningItems.Count -gt 0) {
+        Write-Output ""
+        Write-Output "[WARN] Warning Usage (>$WarningThreshold%):"
+        $WarningItems | ForEach-Object {
+            Write-Output "    $($_.Name): $($_.Current)/$($_.Limit) ($($_.UsagePercent)%)"
+        }
+    }
+    Write-Output ""
+
+} catch { throw`n}

@@ -1,63 +1,105 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Manage Azure resources
+<#
+.SYNOPSIS
+    Manage Azure resources using CLI bridge
 
 .DESCRIPTION
-.DESCRIPTION`n    Automate Azure operations and operations
-    Author: Wes Ellis (wes@wesellis.com)#>
-[CmdletBinding()]
+    Automate Azure operations using Azure CLI commands from PowerShell
 
+.PARAMETER Command
+    The Azure CLI command to execute
+
+.PARAMETER OutputFormat
+    Output format for the command (json, table, tsv, yaml)
+
+.PARAMETER PassThru
+    Return raw output without conversion
+
+.PARAMETER Force
+    Force execution even if not logged in
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
+    Requires Azure CLI installed
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter()]
     [string]$Command,
+
+    [Parameter()]
+    [ValidateSet("json", "table", "tsv", "yaml")]
     [string]$OutputFormat = "json",
-    [switch]$PassThru
+
+    [Parameter()]
+    [switch]$PassThru,
+
+    [Parameter()]
+    [switch]$Force
 )
-Write-Host "Azure CLI PowerShell Bridge"
-Write-Host "==========================="
-# Check if Azure CLI is installed
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+Write-Host "Azure CLI PowerShell Bridge" -ForegroundColor Cyan
+Write-Host "===========================" -ForegroundColor DarkGray
+
+# Check Azure CLI installation
 try {
-    $azVersion = az version 2>$null | ConvertFrom-Json
-    Write-Host "[OK] Azure CLI Version: $($azVersion.'azure-cli')"
-} catch {
+    $AzVersion = az version 2>$null | ConvertFrom-Json
+    Write-Host "[OK] Azure CLI Version: $($AzVersion.'azure-cli')" -ForegroundColor Green
+}
+catch {
     Write-Error "Azure CLI is not installed or not in PATH. Please install Azure CLI first."
     return
 }
-# Check if logged in to Azure CLI
+
+# Check authentication
 try {
     $account = az account show 2>$null | ConvertFrom-Json
-    Write-Host "[OK] Logged in as: $($account.user.name)"
-    Write-Host "[OK] Subscription: $($account.name)"
-} catch {
+    Write-Host "[OK] Logged in as: $($account.user.name)" -ForegroundColor Green
+    Write-Host "[OK] Subscription: $($account.name)" -ForegroundColor Green
+}
+catch {
     Write-Warning "Not logged in to Azure CLI. Please run 'az login' first."
     if (-not $Force) {
         return
     }
 }
+
+# Show usage if no command provided
 if (-not $Command) {
-    Write-Host "`nUsage Examples:"
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'"
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'"
-    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru"
+    Write-Host "`nUsage Examples:" -ForegroundColor Cyan
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az vm list'" -ForegroundColor DarkGray
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az group list' -OutputFormat 'table'" -ForegroundColor DarkGray
+    Write-Host "  .\Azure-CLI-PowerShell-Bridge.ps1 -Command 'az account show' -PassThru" -ForegroundColor DarkGray
     return
 }
-Write-Host "`nExecuting: $Command --output $OutputFormat"
+
+Write-Host "`nExecuting: $Command --output $OutputFormat" -ForegroundColor Yellow
+
 try {
-    # Execute Azure CLI command safely without Invoke-Expression
-    $commandParts = $Command.Split(' ') + @('--output', $OutputFormat)
-    $result = & $commandParts[0] $commandParts[1..($commandParts.Length-1)]
+    # Parse and execute the command
+    $CommandParts = $Command.Split(' ') + @('--output', $OutputFormat)
+    $result = & $CommandParts[0] $CommandParts[1..($CommandParts.Length-1)]
+
     if ($OutputFormat -eq "json" -and -not $PassThru) {
-        # Parse JSON and return as PowerShell objects
-        $jsonResult = $result | ConvertFrom-Json
-        Write-Host "`n[OK] Command executed successfully"
-        return $jsonResult
-    } else {
-        # Return raw output
-        Write-Host "`n[OK] Command executed successfully"
+        $JsonResult = $result | ConvertFrom-Json
+        Write-Host "`n[OK] Command executed successfully" -ForegroundColor Green
+        return $JsonResult
+    }
+    else {
+        Write-Host "`n[OK] Command executed successfully" -ForegroundColor Green
         return $result
     }
-} catch {
+}
+catch {
     Write-Error "Failed to execute Azure CLI command: $($_.Exception.Message)"
     return $null
 }
-Write-Host "`nAzure CLI bridge completed at $(Get-Date)"
-
+finally {
+    Write-Verbose "Azure CLI bridge completed at $(Get-Date)"
+}

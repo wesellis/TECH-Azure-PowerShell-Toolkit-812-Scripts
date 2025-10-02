@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Pester
 
 <#
@@ -6,35 +6,38 @@
     Comprehensive Pester tests for Azure PowerShell Toolkit
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Tests script structure, PowerShell compliance, security, and functionality
     across all 800+ scripts in the toolkit.
 
 .NOTES
-    Author: Azure PowerShell Toolkit Team
+    Author: Wes Ellis
+    Created: 2025-04-21
+    Last Modified: 2025-08-02
     Version: 1.0
     Test Framework: Pester 5.0+
-#>
+
+$ErrorActionPreference = 'Stop'
 
 BeforeAll {
-    # Set up test environment
     $script:ToolkitRoot = Split-Path -Parent $PSScriptRoot
     $script:ScriptsPath = Join-Path $ToolkitRoot "scripts"
     $script:ModulesPath = Join-Path $ToolkitRoot "modules"
 
-    # Import required modules for testing
     if (-not (Get-Module -Name Az.Accounts -ListAvailable)) {
         Write-Warning "Az.Accounts module not found. Some tests may be skipped."
     }
 
-    # Get all PowerShell scripts
     $script:AllScripts = Get-ChildItem -Path $ScriptsPath -Filter "*.ps1" -Recurse
-    $script:ModuleFiles = Get-ChildItem -Path $ModulesPath -Filter "*.ps*" -Recurse -ErrorAction SilentlyContinue
+    $script:ModuleFiles = Get-ChildItem -Path $ModulesPath -Filter '*.ps*' -Recurse -ErrorAction SilentlyContinue
 }
 
 Describe "Azure PowerShell Toolkit - Repository Structure" {
 
-    Context "Essential Files" {
-        It "Should have README.md in root" {
+    Context 'Essential Files' {
+        It 'Should have README.md in root' {
             Join-Path $ToolkitRoot "README.md" | Should -Exist
         }
 
@@ -51,37 +54,38 @@ Describe "Azure PowerShell Toolkit - Repository Structure" {
         }
 
         It "Should have LICENSE file" {
-            $licenseFile = Get-ChildItem -Path $ToolkitRoot -Filter "LICENSE*" | Select-Object -First 1
-            $licenseFile | Should -Not -BeNullOrEmpty
+            $LicenseFile = Get-ChildItem -Path $ToolkitRoot -Filter "LICENSE*" | Select-Object -First 1
+            $LicenseFile | Should -Not -BeNullOrEmpty
         }
     }
 
     Context "Directory Structure" {
-        It "Should have scripts directory" {
+        It 'Should have scripts directory' {
             $ScriptsPath | Should -Exist
         }
 
         It "Should have docs directory" {
-            Join-Path $ToolkitRoot "docs" | Should -Exist
+            Join-Path $ToolkitRoot 'docs' | Should -Exist
         }
 
         It "Should have .github directory" {
             Join-Path $ToolkitRoot ".github" | Should -Exist
         }
 
-        It "Should have GitHub workflows" {
+        It 'Should have GitHub workflows' {
             Join-Path $ToolkitRoot ".github/workflows" | Should -Exist
         }
     }
 
     Context "Script Categories" {
-        $expectedCategories = @(
-            "compute", "storage", "network", "identity",
-            "monitoring", "cost", "devops", "backup",
-            "migration", "ai", "iot", "utilities"
+        $ExpectedCategories = @(
+            "compute", 'storage', "network", "identity",
+            "monitoring", "cost", 'devops', "backup",
+            "migration", "ai", 'iot', "utilities"
         )
 
-        foreach ($category in $expectedCategories) {
+        $ExpectedCategories | ForEach-Object {
+            $category = $_
             It "Should have $category category directory" {
                 Join-Path $ScriptsPath $category | Should -Exist
             }
@@ -91,15 +95,16 @@ Describe "Azure PowerShell Toolkit - Repository Structure" {
 
 Describe "PowerShell Script Standards Compliance" {
 
-    Context "Script File Standards" {
-        foreach ($script in $AllScripts) {
+    Context 'Script File Standards' {
+        $AllScripts | ForEach-Object {
+            $script = $_
             Context "Script: $($script.Name)" {
 
                 It "Should have .ps1 extension" {
                     $script.Extension | Should -Be ".ps1"
                 }
 
-                It "Should be readable" {
+                It 'Should be readable' {
                     { Get-Content -Path $script.FullName -ErrorAction Stop } | Should -Not -Throw
                 }
 
@@ -107,7 +112,7 @@ Describe "PowerShell Script Standards Compliance" {
                     $script.Length | Should -BeGreaterThan 0
                 }
 
-                It "Should not be empty" {
+                It 'Should not be empty' {
                     $content = Get-Content -Path $script.FullName -Raw
                     $content.Trim() | Should -Not -BeNullOrEmpty
                 }
@@ -115,8 +120,9 @@ Describe "PowerShell Script Standards Compliance" {
         }
     }
 
-    Context "PowerShell Syntax Validation" {
-        foreach ($script in $AllScripts) {
+    Context 'PowerShell Syntax Validation' {
+        $AllScripts | ForEach-Object {
+            $script = $_
             It "Script $($script.Name) should have valid PowerShell syntax" {
                 $errors = $null
                 $tokens = $null
@@ -130,8 +136,8 @@ Describe "PowerShell Script Standards Compliance" {
         }
     }
 
-    Context "Required Elements" {
-        foreach ($script in ($AllScripts | Select-Object -First 10)) {  # Test subset for performance
+    Context 'Required Elements' {
+        foreach ($script in ($AllScripts | Select-Object -First 10)) {
             Context "Script: $($script.Name)" {
                 BeforeEach {
                     $content = Get-Content -Path $script.FullName -Raw
@@ -141,17 +147,20 @@ Describe "PowerShell Script Standards Compliance" {
                     $content | Should -Match '#Requires'
                 }
 
-                It "Should have comment-based help" {
-                    $content | Should -Match '\.SYNOPSIS|\.DESCRIPTION'
+                It 'Should have comment-based help' {
+                    $content | Should -Match '\.SYNOPSIS |\.DESCRIPTION'
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
                 }
 
-                It "Should have CmdletBinding attribute" {
-                    $content | Should -Match '\[CmdletBinding\(\)\]|\[CmdletBinding\([^\)]+\)\]'
+                It 'Should have CmdletBinding attribute' {
+                    $content | Should -Match '\|\+\)\]'
                 }
 
                 It "Should have proper parameter blocks" {
                     if ($content -match 'param\s*\(') {
-                        $content | Should -Match '\[Parameter\('
+                        $content | Should -Match '\[parameter\('
                     }
                 }
             }
@@ -161,12 +170,12 @@ Describe "PowerShell Script Standards Compliance" {
 
 Describe "Security Compliance" {
 
-    Context "Credential Security" {
-        foreach ($script in $AllScripts) {
+    Context 'Credential Security' {
+        $AllScripts | ForEach-Object {
+            $script = $_
             It "Script $($script.Name) should not contain hardcoded passwords" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Check for common password patterns
                 $content | Should -Not -Match 'password\s*=\s*["\'][^"\']*["\']'
                 $content | Should -Not -Match '\$password\s*=\s*["\'][^"\']*["\']'
             }
@@ -182,7 +191,6 @@ Describe "Security Compliance" {
             It "Script $($script.Name) should not use ConvertTo-SecureString with plaintext" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Allow secure patterns but flag dangerous ones
                 if ($content -match 'ConvertTo-SecureString') {
                     $content | Should -Not -Match 'ConvertTo-SecureString.*-AsPlainText.*-Force'
                 }
@@ -195,7 +203,6 @@ Describe "Security Compliance" {
             It "Script $($script.Name) should not output sensitive information" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Check for potential sensitive output
                 $content | Should -Not -Match 'Write-Output.*password'
                 $content | Should -Not -Match 'Write-Host.*secret'
                 $content | Should -Not -Match 'echo.*key'
@@ -206,7 +213,7 @@ Describe "Security Compliance" {
 
 Describe "Documentation Quality" {
 
-    Context "Comment-Based Help" {
+    Context 'Comment-Based Help' {
         foreach ($script in ($AllScripts | Select-Object -First 5)) {
             Context "Script: $($script.Name)" {
                 BeforeEach {
@@ -218,7 +225,13 @@ Describe "Documentation Quality" {
                 }
 
                 It "Should have .DESCRIPTION" {
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
                     $content | Should -Match '\.DESCRIPTION'
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
                 }
 
                 It "Should have .EXAMPLE" {
@@ -241,7 +254,6 @@ Describe "Documentation Quality" {
             It "Script $($script.Name) should not contain emojis" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Check for common emoji unicode ranges
                 $content | Should -Not -Match '[\u{1F600}-\u{1F64F}]'  # Emoticons
                 $content | Should -Not -Match '[\u{1F300}-\u{1F5FF}]'  # Symbols
                 $content | Should -Not -Match '[\u{1F680}-\u{1F6FF}]'  # Transport
@@ -253,7 +265,7 @@ Describe "Documentation Quality" {
 
 Describe "Azure Integration" {
 
-    Context "Azure Module Dependencies" {
+    Context 'Azure Module Dependencies' {
         foreach ($script in ($AllScripts | Select-Object -First 5)) {
             Context "Script: $($script.Name)" {
                 BeforeEach {
@@ -261,16 +273,14 @@ Describe "Azure Integration" {
                 }
 
                 It "Should use proper Azure PowerShell modules" {
-                    if ($content -match 'Get-Az|Set-Az|New-Az|Remove-Az') {
-                        # If using Az commands, should have proper requires
+                    if ($content -match 'Get-Az |Set-Az |New-Az |Remove-Az') {
                         $content | Should -Match '#Requires.*Az\.'
                     }
                 }
 
                 It "Should handle Azure authentication properly" {
-                    if ($content -match 'Connect-AzAccount|Get-AzContext') {
-                        # Should check for existing context
-                        $content | Should -Match 'Get-AzContext|Test-AzConnection|Connect-AzAccount'
+                    if ($content -match 'Connect-AzAccount |Get-AzContext') {
+                        $content | Should -Match 'Get-AzContext |Test-AzConnection |Connect-AzAccount'
                     }
                 }
             }
@@ -278,35 +288,33 @@ Describe "Azure Integration" {
     }
 
     Context "Resource Management" {
-        It "Should have resource group validation patterns" {
-            $resourceScripts = $AllScripts | Where-Object {
-                $_.Name -match 'ResourceGroup|resource-group'
+        It 'Should have resource group validation patterns' {
+            $ResourceScripts = $AllScripts | Where-Object {
+                $_.Name -match 'ResourceGroup |resource-group'
             }
 
-            $resourceScripts.Count | Should -BeGreaterThan 0
+            $ResourceScripts.Count | Should -BeGreaterThan 0
         }
 
         It "Should have subscription management patterns" {
-            $subscriptionScripts = $AllScripts | Where-Object {
-                $_.Name -match 'Subscription|subscription'
+            $SubscriptionScripts = $AllScripts | Where-Object {
+                $_.Name -match 'Subscription |subscription'
             }
 
-            # Should have at least some subscription management
-            $subscriptionScripts.Count | Should -BeGreaterOrEqual 0
+            $SubscriptionScripts.Count | Should -BeGreaterOrEqual 0
         }
     }
 }
 
 Describe "Performance and Best Practices" {
 
-    Context "Error Handling" {
+    Context 'Error Handling' {
         foreach ($script in ($AllScripts | Select-Object -First 5)) {
             It "Script $($script.Name) should have error handling" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Should have some form of error handling
-                $hasErrorHandling = $content -match 'try\s*\{|catch\s*\{|trap\s*\{|\$ErrorActionPreference|\-ErrorAction'
-                $hasErrorHandling | Should -Be $true
+                $HasErrorHandling = $content -match 'try\s*\{|catch\s*\{|trap\s*\{|\$ErrorActionPreference |\-ErrorAction'
+                $HasErrorHandling | Should -Be $true
             }
         }
     }
@@ -316,9 +324,8 @@ Describe "Performance and Best Practices" {
             It "Script $($script.Name) should validate mandatory parameters" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                if ($content -match '\[Parameter\([^\)]*Mandatory\s*=\s*\$true') {
-                    # If has mandatory parameters, should be well-formed
-                    $content | Should -Match '\[Parameter\([^\)]*Mandatory\s*=\s*\$true[^\)]*\)\]'
+                if ($content -match '\[parameter\([^\)]*Mandatory\s*=\s*\$true') {
+                    $content | Should -Match '\[parameter\([^\)]*Mandatory\s*=\s*\$true[^\)]*\)\]'
                 }
             }
         }
@@ -329,7 +336,6 @@ Describe "Performance and Best Practices" {
             It "Script $($script.Name) should use consistent output methods" {
                 $content = Get-Content -Path $script.FullName -Raw
 
-                # Should prefer Write-Output, Write-Host, or Write-Verbose over echo
                 if ($content -match 'echo\s') {
                     Write-Warning "Script $($script.Name) uses 'echo' instead of Write-Output"
                 }
@@ -338,24 +344,25 @@ Describe "Performance and Best Practices" {
     }
 }
 
-Describe "Module Structure" -Skip:(-not (Test-Path $ModulesPath)) {
+Describe 'Module Structure' -Skip:(-not (Test-Path $ModulesPath)) {
 
     Context "Module Files" {
-        It "Should have module manifest files" {
-            $manifestFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psd1" -Recurse
-            $manifestFiles.Count | Should -BeGreaterThan 0
+        It 'Should have module manifest files' {
+            $ManifestFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psd1" -Recurse
+            $ManifestFiles.Count | Should -BeGreaterThan 0
         }
 
         It "Should have module script files" {
-            $moduleFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psm1" -Recurse
-            $moduleFiles.Count | Should -BeGreaterOrEqual 0
+            $ModuleFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psm1" -Recurse
+            $ModuleFiles.Count | Should -BeGreaterOrEqual 0
         }
     }
 
     Context "Module Manifests" {
-        $manifestFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psd1" -Recurse
+        $ManifestFiles = Get-ChildItem -Path $ModulesPath -Filter "*.psd1" -Recurse
 
-        foreach ($manifest in $manifestFiles) {
+        $ManifestFiles | ForEach-Object {
+            $manifest = $_
             It "Manifest $($manifest.Name) should be valid" {
                 { Test-ModuleManifest -Path $manifest.FullName } | Should -Not -Throw
             }
@@ -365,13 +372,12 @@ Describe "Module Structure" -Skip:(-not (Test-Path $ModulesPath)) {
 
 Describe "Integration Tests" -Tag "Integration" {
 
-    Context "Script Execution" {
-        It "Should be able to load scripts without errors" {
+    Context 'Script Execution' {
+        It 'Should be able to load scripts without errors' {
             foreach ($script in ($AllScripts | Select-Object -First 3)) {
                 $errors = @()
 
                 try {
-                    # Try to parse the script
                     $null = [System.Management.Automation.PSParser]::Tokenize(
                         (Get-Content -Path $script.FullName -Raw), [ref]$errors
                     )
@@ -397,8 +403,8 @@ Describe "Integration Tests" -Tag "Integration" {
 
 Describe "Toolkit Statistics" {
 
-    Context "Repository Metrics" {
-        It "Should have expected number of scripts" {
+    Context 'Repository Metrics' {
+        It 'Should have expected number of scripts' {
             $AllScripts.Count | Should -BeGreaterThan 700
         }
 
@@ -411,20 +417,20 @@ Describe "Toolkit Statistics" {
         }
 
         It "Should have comprehensive documentation" {
-            $docFiles = Get-ChildItem -Path (Join-Path $ToolkitRoot "docs") -Filter "*.md" -Recurse
-            $docFiles.Count | Should -BeGreaterThan 10
+            $DocFiles = Get-ChildItem -Path (Join-Path $ToolkitRoot 'docs') -Filter "*.md" -Recurse
+            $DocFiles.Count | Should -BeGreaterThan 10
         }
     }
 
     Context "Quality Metrics" {
-        It "Should have high percentage of compliant scripts" {
-            $compliantScripts = $AllScripts | Where-Object {
+        It 'Should have high percentage of compliant scripts' {
+            $CompliantScripts = $AllScripts | Where-Object {
                 $content = Get-Content -Path $_.FullName -Raw
-                $content -match '\[CmdletBinding\(\)\]' -and $content -match '#Requires'
+                $content -match '\' -and $content -match '#Requires'
             }
 
-            $complianceRate = ($compliantScripts.Count / $AllScripts.Count) * 100
-            $complianceRate | Should -BeGreaterThan 80
+            $ComplianceRate = ($CompliantScripts.Count / $AllScripts.Count) * 100
+            $ComplianceRate | Should -BeGreaterThan 80
         }
     }
-}
+`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Create Shortcut
@@ -8,17 +8,14 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -32,53 +29,48 @@ param(
     $ShortcutWorkingDirectory,
     [Parameter()]
     $ShortcutIcon,
-    # defaults to Public Desktop if not provided
     [Parameter()]
     $ShortcutDestinationPath = [System.Environment]::GetFolderPath("CommonDesktopDirectory" ),
     [Parameter()]
     $EnableRunAsAdmin = $false
 )
-$newShortcutPath = $ShortcutDestinationPath + " \" + $ShortcutName + " .lnk"
+    $NewShortcutPath = $ShortcutDestinationPath + " \" + $ShortcutName + " .lnk"
 if (-not (Test-Path -Path $ShortcutDestinationPath))
 {
     New-Item -ItemType 'directory' -Path $ShortcutDestinationPath
 }
-if (-not (Test-Path -Path $newShortcutPath))
+if (-not (Test-Path -Path $NewShortcutPath))
 {
-    # create the wshshell obhect
     $shell = New-Object -ComObject wscript.shell
-$newShortcut = $shell.CreateShortcut($newShortcutPath)
-    $newShortcut.TargetPath = $ShortcutTargetPath
-    # save the shortcut
-    Write-Host "Creating specified shortcut. Shortcut file: '$newShortcutPath'. Shortcut target path: '$($newShortcut.TargetPath)'"
+    $NewShortcut = $shell.CreateShortcut($NewShortcutPath)
+    $NewShortcut.TargetPath = $ShortcutTargetPath
+    Write-Output "Creating specified shortcut. Shortcut file: '$NewShortcutPath'. Shortcut target path: '$($NewShortcut.TargetPath)'"
     if ([System.String]::IsNullOrWhiteSpace($ShortcutArguments) -eq $false)
     {
-        Write-Host "Using shortcut Arguments '$ShortcutArguments'."
-        $newShortcut.Arguments = $ShortcutArguments
+        Write-Output "Using shortcut Arguments '$ShortcutArguments'."
+    $NewShortcut.Arguments = $ShortcutArguments
     }
     if (-not ([System.String]::IsNullOrWhiteSpace($ShortcutIcon)))
     {
-        # can be " file" or " file, index" such as " notepad.exe, 0"
-        $newShortcut.IconLocation = $ShortcutIcon
+    $NewShortcut.IconLocation = $ShortcutIcon
     }
     if (-not ([System.String]::IsNullOrWhiteSpace($ShortcutWorkingDirectory)))
     {
-        $newShortcut.WorkingDirectory = $ShortcutWorkingDirectory
+    $NewShortcut.WorkingDirectory = $ShortcutWorkingDirectory
     }
-    $newShortcut.Save()
+    $NewShortcut.Save()
     if ($EnableRunAsAdmin -eq $true)
     {
-        Write-Host "Enabling $newShortcutPath to Run As Admin."
-$bytes = [System.IO.File]::ReadAllBytes($newShortcutPath)
-        $bytes[0x15] = $bytes[0x15] -bor 0x20 #set byte 21 (0x15) bit 6 (0x20) ON
-        [System.IO.File]::WriteAllBytes($newShortcutPath, $bytes)
+        Write-Output "Enabling $NewShortcutPath to Run As Admin."
+    $bytes = [System.IO.File]::ReadAllBytes($NewShortcutPath)
+    $bytes[0x15] = $bytes[0x15] -bor 0x20
+        [System.IO.File]::WriteAllBytes($NewShortcutPath, $bytes)
     }
 }
 else
 {
-    Write-Warning "Specified shortcut already exists: $newShortcutPath"
+    Write-Warning "Specified shortcut already exists: $NewShortcutPath"
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

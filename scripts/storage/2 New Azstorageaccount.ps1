@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -93,4 +93,5 @@ $newAzStorageAccountSplat = @{
     Tag               = $Tags
 }
 New-AzStorageAccount -ErrorAction Stop @newAzStorageAccountSplat
+
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,9 +10,8 @@
 
     1.0
     Requires appropriate permissions and modules
-#>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
     Starts all Azure V2 (ARM) virtual machines by resource group.
    Uses PowerShell workflow to start all VMs in parallel.  Includes a retry and wait cycle to display when VMs are started.
    Workflow sessions require Azure authentication into each session so this script uses a splatting of parameters required for Connect-AzureRmAccount that
@@ -44,41 +43,40 @@ $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue"
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$CertificateThumbprint,
+    $CertificateThumbprint,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$ApplicationId,
+    $ApplicationId,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$TenantId,
-    [Parameter(ValueFromPipeline)]`n    [string]$Environment= "AzureCloud" ,
-    [Parameter(ValueFromPipeline)]`n    [string]$FirstServer
+    $TenantId,
+    [Parameter(ValueFromPipeline)]`n    $Environment= "AzureCloud" ,
+    [Parameter(ValueFromPipeline)]`n    $FirstServer
 )
-$loginParams = @{
+    $LoginParams = @{
 "CertificateThumbprint" = $CertificateThumbprint
 "ApplicationId" = $ApplicationId
 "TenantId" = $TenantId
 "ServicePrincipal" = $null
 "EnvironmentName" = $Environment
 }
-$ProgressPreference = 'SilentlyContinue'
+    $ProgressPreference = 'SilentlyContinue'
 if ((Get-Module -ErrorAction Stop AzureRM).Version -lt " 5.5.0" ) {
    Write-warning "Old version of Azure PowerShell module  $((Get-Module -ErrorAction Stop AzureRM).Version.ToString()) detected.  Minimum of 5.5.0 required. Run Update-Module AzureRM"
    BREAK
 }
 function Start-Vm
 {
-    [CmdletBinding()]
-param($vmName, $resourceGroupName)
-    Write-Output "Starting $vmName..."
+    param($VmName, $ResourceGroupName)
+    Write-Output "Starting $VmName..."
     $count=1
     do
     {
-        $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
-        Write-Output " $vmName current status is $status"
+    $status = ((get-azurermvm -ResourceGroupName $ResourceGroupName -Name $VmName -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
+        Write-Output " $VmName current status is $status"
         if($status -ne 'VM running')
         {
             if($count -gt 1)
@@ -86,8 +84,8 @@ param($vmName, $resourceGroupName)
                 Write-Output "Failed to start $VMName. Retrying in 60 seconds..."
                 sleep 60
             }
-            $rtn = Start-AzureRMVM -Name $VMName -ResourceGroupName $ResourceGroupName -ea SilentlyContinue
-            $count++
+    $rtn = Start-AzureRMVM -Name $VMName -ResourceGroupName $ResourceGroupName -ea SilentlyContinue
+    $count++
         }
     }
     while($status -ne 'VM running' -and $count -lt 5)
@@ -99,27 +97,25 @@ param($vmName, $resourceGroupName)
     {
         Write-Output "Startup of $VMName FAILED on attempt number $count of 5."
     }
-}  # end of start-vm function
+}
 Workflow Start-VMs
-{ [CmdletBinding()]
-param($VMs, $ResourceGroupName, $loginParams)
+{ param($VMs, $ResourceGroupName, $LoginParams)
   foreach -parallel ($vm in $VMs)
     {
-      $login = Connect-AzureRmAccount @loginParams
-      $vmName = $vm.Name
-      Start-Vm -VmName $vmName -ResourceGroupName $resourceGroupName
+    $login = Connect-AzureRmAccount @loginParams
+    $VmName = $vm.Name
+      Start-Vm -VmName $VmName -ResourceGroupName $ResourceGroupName
     }
-} # end of worflow
+}
 try
 {
-    # Log into Azure
     Connect-AzureRmAccount @loginParams -ea Stop | out-null
 }
 catch
 {
     if (! $CertificateThumbprint)
     {
-        $ErrorMessage = "Certificate $CertificateThumbprint not found."
+    $ErrorMessage = "Certificate $CertificateThumbprint not found."
         throw $ErrorMessage
     }
     else
@@ -129,36 +125,31 @@ catch
     }
     BREAK
 }
-$vms = Get-AzureRmVM -ResourceGroupName $ResourceGroupName
- #pre action confirmation
+    $vms = Get-AzureRmVM -ResourceGroupName $ResourceGroupName
  write-output "Starting...$($vms.Name)"
-if($firstServer)
+if($FirstServer)
 {
-    Start-Vm -vmName $firstServer -ResourceGroupName $resourceGroupName
+    Start-Vm -vmName $FirstServer -ResourceGroupName $ResourceGroupName
     sleep 10
 }
-$remainingVMs = $vms | where-object -FilterScript{$_.name -ne $firstServer}
-Start-VMs -VMs $remainingVMs -ResourceGroupName $resourceGroupName -loginParams $loginParams
- #post action confirmation
+    $RemainingVMs = $vms | where-object -FilterScript{$_.name -ne $FirstServer}
+Start-VMs -VMs $RemainingVMs -ResourceGroupName $ResourceGroupName -loginParams $LoginParams
  do{
     cls
-    Write-Host "Waiting for VMs in $resourceGroupName to start..."
-    $allStatus = @()
+    Write-Output "Waiting for VMs in $ResourceGroupName to start..."
+    $AllStatus = @()
     foreach ($vm in $VMs)
     {
-        $status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
+    $status = ((get-azurermvm -ResourceGroupName $ResourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
         " $($vm.Name) - $status"
-$allStatus = $allStatus + $status
+    $AllStatus = $AllStatus + $status
     }
     sleep 3
  }
- while($allStatus -ne 'VM Running')
+ while($AllStatus -ne 'VM Running')
 cls
-Write-Host "All VMs in $resourceGroupName are ready..."
+Write-Output "All VMs in $ResourceGroupName are ready..."
 foreach ($vm in $VMs)
 {
-$status = ((get-azurermvm -ResourceGroupName $resourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
-   " $($vm.Name) - $status"
-}
-
-
+    $status = ((get-azurermvm -ResourceGroupName $ResourceGroupName -Name $vm.Name -status).Statuses|where{$_.Code -like 'PowerState*'}).DisplayStatus
+   " $($vm.Name) - $status"`n}

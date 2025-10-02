@@ -7,30 +7,29 @@
 .DESCRIPTION
     remediate compliance operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Remediates non-compliant Azure resources based on policy assignments
 
     Identifies and remediates non-compliant resources by triggering
     remediation tasks for policies that support automatic remediation.
     Supports bulk remediation and monitoring of remediation progress.
-.PARAMETER SubscriptionId
+.parameter SubscriptionId
     Target subscription for remediation
-.PARAMETER PolicyAssignmentName
+.parameter PolicyAssignmentName
     Specific policy assignment to remediate
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Limit remediation to specific resource group
-.PARAMETER MaxResources
+.parameter MaxResources
     Maximum number of resources to remediate at once
-.PARAMETER RemediationMode
+.parameter RemediationMode
     Remediation mode: Auto, Manual, Preview
-.PARAMETER WaitForCompletion
+.parameter WaitForCompletion
     Wait for remediation tasks to complete
-.PARAMETER TimeoutMinutes
+.parameter TimeoutMinutes
     Timeout for waiting on remediation completion
-.PARAMETER ExcludeResourceTypes
+.parameter ExcludeResourceTypes
     Resource types to exclude from remediation
-.PARAMETER DryRun
+.parameter DryRun
     Preview remediation actions without executing
 
     .\remediate-compliance.ps1 -PolicyAssignmentName "audit-vm-backup" -RemediationMode Auto
@@ -39,68 +38,62 @@
 
     .\remediate-compliance.ps1 -ResourceGroupName "RG-Prod" -DryRun
 
-    Preview remediation actions for production resource group#>
+    Preview remediation actions for production resource group
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding()]
-
-    [Parameter()]
+[parameter()]
     [ValidateScript({
         try { [System.Guid]::Parse($_) | Out-Null; $true }
         catch { throw "Invalid subscription ID format" }
     })]
     [string]$SubscriptionId,
 
-    [Parameter()]
+    [parameter()]
     [string]$PolicyAssignmentName,
 
-    [Parameter()]
+    [parameter()]
     [string]$ResourceGroupName,
 
-    [Parameter()]
+    [parameter()]
     [ValidateRange(1, 500)]
     [int]$MaxResources = 100,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Auto', 'Manual', 'Preview')]
     [string]$RemediationMode = 'Manual',
 
-    [Parameter()]
+    [parameter()]
     [switch]$WaitForCompletion,
 
-    [Parameter()]
+    [parameter()]
     [ValidateRange(1, 480)]
     [int]$TimeoutMinutes = 60,
 
-    [Parameter()]
+    [parameter()]
     [string[]]$ExcludeResourceTypes,
 
-    [Parameter()]
+    [parameter()]
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
 
-[OutputType([PSCustomObject])]
- {
+function Write-Log {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
 }
 
 function Get-RemediableViolations {
-    [CmdletBinding()]
-
-        [string]$PolicyAssignment,
+    [string]$PolicyAssignment,
         [string]$ResourceGroup,
         [int]$MaxResults,
         [string[]]$ExcludeTypes
     )
 
-    Write-Host "Finding non-compliant resources..." -ForegroundColor Yellow
+    Write-Host "Finding non-compliant resources..." -ForegroundColor Green
 
     try {
         $params = @{
@@ -118,35 +111,31 @@ function Get-RemediableViolations {
 
         $violations = Get-AzPolicyState @params
 
-        # Filter out excluded resource types
         if ($ExcludeTypes) {
             $violations = $violations | Where-Object { $_.ResourceType -notin $ExcludeTypes }
         }
 
-        # Filter to only remediable violations (policies with deployIfNotExists or modify effects)
-        $remediableViolations = $violations | Where-Object {
-            $policyDef = Get-AzPolicyDefinition -Id $_.PolicyDefinitionId -ErrorAction SilentlyContinue
-            if ($policyDef) {
-                $effect = $policyDef.Properties.PolicyRule.then.effect
+        $RemediableViolations = $violations | Where-Object {
+            $PolicyDef = Get-AzPolicyDefinition -Id $_.PolicyDefinitionId -ErrorAction SilentlyContinue
+            if ($PolicyDef) {
+                $effect = $PolicyDef.Properties.PolicyRule.then.effect
                 return $effect -in @('deployIfNotExists', 'modify')
             }
             return $false
         }
 
-        Write-Host "Found $($violations.Count) non-compliant resources, $($remediableViolations.Count) are remediable" -ForegroundColor Cyan
+        Write-Host "Found $($violations.Count) non-compliant resources, $($RemediableViolations.Count) are remediable" -ForegroundColor Green
 
-        return $remediableViolations
+        return $RemediableViolations
     }
     catch {
-        Write-Error "Failed to retrieve policy violations: $_"
+        write-Error "Failed to retrieve policy violations: $_"
         throw
     }
 }
 
 function Get-PolicyAssignments {
-    [CmdletBinding()]
-
-        [string]$ResourceGroup
+    [string]$ResourceGroup
     )
 
     try {
@@ -157,65 +146,59 @@ function Get-PolicyAssignments {
 
         $assignments = Get-AzPolicyAssignment @params
         return $assignments | Where-Object {
-            # Filter to assignments that support remediation
-            $policyDef = Get-AzPolicyDefinition -Id $_.Properties.PolicyDefinitionId -ErrorAction SilentlyContinue
-            if ($policyDef) {
-                $effect = $policyDef.Properties.PolicyRule.then.effect
+            $PolicyDef = Get-AzPolicyDefinition -Id $_.Properties.PolicyDefinitionId -ErrorAction SilentlyContinue
+            if ($PolicyDef) {
+                $effect = $PolicyDef.Properties.PolicyRule.then.effect
                 return $effect -in @('deployIfNotExists', 'modify')
             }
             return $false
-        
+
 } catch {
-        Write-Error "Failed to retrieve policy assignments: $_"
+        write-Error "Failed to retrieve policy assignments: $_"
         throw
     }
 }
 
 function New-RemediationTask {
-    [CmdletBinding()]
-
-        [object]$PolicyAssignment,
+    [object]$PolicyAssignment,
         [array]$Violations,
         [string]$Mode
     )
 
-    $assignmentName = $PolicyAssignment.Name
-    $remediationName = "remediation-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    $AssignmentName = $PolicyAssignment.Name
+    $RemediationName = "remediation-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 
-    Write-Host "Creating remediation task for: $assignmentName" -ForegroundColor Yellow
+    Write-Host "Creating remediation task for: $AssignmentName" -ForegroundColor Green
 
     try {
-        if ($PSCmdlet.ShouldProcess($assignmentName, "Create remediation task")) {
+        if ($PSCmdlet.ShouldProcess($AssignmentName, "Create remediation task")) {
             $params = @{
-                Name = $remediationName
+                Name = $RemediationName
                 PolicyAssignmentId = $PolicyAssignment.ResourceId
                 Scope = $PolicyAssignment.Properties.Scope
             }
 
-            # Limit to specific resources if we have a small set
             if ($Violations.Count -le 50) {
-                $resourceIds = $Violations | Select-Object -ExpandProperty ResourceId
-                $params['ResourceIdentifier'] = $resourceIds
+                $ResourceIds = $Violations | Select-Object -ExpandProperty ResourceId
+                $params['ResourceIdentifier'] = $ResourceIds
             }
 
             $remediation = Start-AzPolicyRemediation @params
 
-            Write-Host "Remediation task created: $remediationName" -ForegroundColor Green
-            Write-Host "Task ID: $($remediation.Id)" -ForegroundColor Cyan
-            Write-Host "Resources to remediate: $($Violations.Count)" -ForegroundColor Cyan
+            Write-Host "Remediation task created: $RemediationName" -ForegroundColor Green
+            Write-Host "Task ID: $($remediation.Id)" -ForegroundColor Green
+            Write-Host "Resources to remediate: $($Violations.Count)" -ForegroundColor Green
 
             return $remediation
-        
+
 } catch {
-        Write-Error "Failed to create remediation task for $assignmentName : $_"
+        write-Error "Failed to create remediation task for $AssignmentName : $_"
         return $null
     }
 }
 
 function Wait-ForRemediationCompletion {
-    [CmdletBinding()]
-
-        [array]$RemediationTasks,
+    [array]$RemediationTasks,
         [int]$TimeoutMinutes
     )
 
@@ -223,12 +206,12 @@ function Wait-ForRemediationCompletion {
         return
     }
 
-    Write-Host "Monitoring remediation progress..." -ForegroundColor Yellow
+    Write-Host "Monitoring remediation progress..." -ForegroundColor Green
     $timeout = (Get-Date).AddMinutes($TimeoutMinutes)
 
     do {
-        $allCompleted = $true
-        $inProgress = 0
+        $AllCompleted = $true
+        $InProgress = 0
         $completed = 0
         $failed = 0
 
@@ -238,63 +221,61 @@ function Wait-ForRemediationCompletion {
 
                 switch ($status.Properties.ProvisioningState) {
                     'Succeeded' { $completed++ }
-                    'Failed' { $failed++; $allCompleted = $false }
-                    'Canceled' { $failed++; $allCompleted = $false }
-                    default { $inProgress++; $allCompleted = $false }
-                
+                    'Failed' { $failed++; $AllCompleted = $false }
+                    'Canceled' { $failed++; $AllCompleted = $false }
+                    default { $InProgress++; $AllCompleted = $false }
+
 } catch {
-                Write-Warning "Could not get status for remediation task: $($task.Name)"
-                $allCompleted = $false
+                write-Warning "Could not get status for remediation task: $($task.Name)"
+                $AllCompleted = $false
             }
         }
 
-        Write-Host "Remediation Status - Completed: $completed, In Progress: $inProgress, Failed: $failed" -ForegroundColor Cyan
+        Write-Host "Remediation Status - Completed: $completed, In Progress: $InProgress, Failed: $failed" -ForegroundColor Green
 
-        if (-not $allCompleted -and (Get-Date) -lt $timeout) {
+        if (-not $AllCompleted -and (Get-Date) -lt $timeout) {
             Start-Sleep -Seconds 30
         }
-    } while (-not $allCompleted -and (Get-Date) -lt $timeout)
+    } while (-not $AllCompleted -and (Get-Date) -lt $timeout)
 
-    if ($allCompleted) {
+    if ($AllCompleted) {
         Write-Host "All remediation tasks completed!" -ForegroundColor Green
     } else {
-        Write-Warning "Remediation tasks did not complete within the timeout period"
+        write-Warning "Remediation tasks did not complete within the timeout period"
     }
 }
 
 function Show-RemediationSummary {
-    [CmdletBinding()]
-
-        [array]$Violations,
+    [array]$Violations,
         [array]$RemediationTasks,
         [bool]$IsDryRun
     )
 
-    Write-Host "`nRemediation Summary" -ForegroundColor Cyan
-    Write-Host ("=" * 50) -ForegroundColor Cyan
+    Write-Host "`nRemediation Summary" -ForegroundColor Green
+    write-Host ("=" * 50) -ForegroundColor Cyan
 
     if ($IsDryRun) {
-        Write-Host "DRY RUN - No actual remediation performed" -ForegroundColor Yellow
+        Write-Host "DRY RUN - No actual remediation performed" -ForegroundColor Green
     }
 
-    Write-Host "Non-compliant resources found: $($Violations.Count)"
-    Write-Host "Remediation tasks created: $($RemediationTasks.Count)"
+    Write-Output "Non-compliant resources found: $($Violations.Count)"
+    Write-Output "Remediation tasks created: $($RemediationTasks.Count)"
 
     if ($Violations.Count -gt 0) {
-        Write-Host "`nViolations by Resource Type:" -ForegroundColor Cyan
+        Write-Host "`nViolations by Resource Type:" -ForegroundColor Green
         $Violations | Group-Object ResourceType | Sort-Object Count -Descending | ForEach-Object {
-            Write-Host "  $($_.Name): $($_.Count)"
+            Write-Output "  $($_.Name): $($_.Count)"
         }
 
-        Write-Host "`nViolations by Policy:" -ForegroundColor Cyan
+        Write-Host "`nViolations by Policy:" -ForegroundColor Green
         $Violations | Group-Object PolicyDefinitionId | Sort-Object Count -Descending | ForEach-Object {
-            $policyName = ($_.Name -split '/')[-1]
-            Write-Host "  $policyName : $($_.Count)"
+            $PolicyName = ($_.Name -split '/')[-1]
+            Write-Output "  $PolicyName : $($_.Count)"
         }
     }
 
     if ($RemediationTasks.Count -gt 0) {
-        Write-Host "`nRemediation Tasks:" -ForegroundColor Cyan
+        Write-Host "`nRemediation Tasks:" -ForegroundColor Green
         $RemediationTasks | ForEach-Object {
             Write-Host "  - $($_.Name)" -ForegroundColor Green
         }
@@ -302,58 +283,53 @@ function Show-RemediationSummary {
 }
 
 function Get-RemediationGuidance {
-    [CmdletBinding()]
-[array]$Violations)
+    [array]$Violations)
 
     $guidance = @()
 
-    # Group violations by policy to provide specific guidance
-    $policyGroups = $Violations | Group-Object PolicyDefinitionId
+    $PolicyGroups = $Violations | Group-Object PolicyDefinitionId
 
-    foreach ($group in $policyGroups) {
-        $policyId = $group.Name
+    foreach ($group in $PolicyGroups) {
+        $PolicyId = $group.Name
         $count = $group.Count
 
         try {
-            $policyDef = Get-AzPolicyDefinition -Id $policyId -ErrorAction SilentlyContinue
-            if ($policyDef) {
-                $policyName = $policyDef.Properties.DisplayName
-                $effect = $policyDef.Properties.PolicyRule.then.effect
+            $PolicyDef = Get-AzPolicyDefinition -Id $PolicyId -ErrorAction SilentlyContinue
+            if ($PolicyDef) {
+                $PolicyName = $PolicyDef.Properties.DisplayName
+                $effect = $PolicyDef.Properties.PolicyRule.then.effect
 
                 switch ($effect) {
                     'deployIfNotExists' {
-                        $guidance += "Policy '$policyName' ($count resources): Automatic deployment will be triggered for missing configurations"
+                        $guidance += "Policy '$PolicyName' ($count resources): Automatic deployment will be triggered for missing configurations"
                     }
                     'modify' {
-                        $guidance += "Policy '$policyName' ($count resources): Resource properties will be automatically modified"
+                        $guidance += "Policy '$PolicyName' ($count resources): Resource properties will be automatically modified"
                     }
                     default {
-                        $guidance += "Policy '$policyName' ($count resources): Manual remediation required - effect is '$effect'"
+                        $guidance += "Policy '$PolicyName' ($count resources): Manual remediation required - effect is '$effect'"
                     }
                 }
-            
+
 } catch {
-            $guidance += "Policy $policyId ($count resources): Unable to retrieve policy details"
+            $guidance += "Policy $PolicyId ($count resources): Unable to retrieve policy details"
         }
     }
 
     return $guidance
 }
 
-# Main execution
-Write-Host "`nAzure Policy Compliance Remediation" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
+Write-Host "`nAzure Policy Compliance Remediation" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
 
 $context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
-# Set subscription context if provided
 if ($SubscriptionId) {
     Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
     Write-Host "Switched to subscription: $SubscriptionId" -ForegroundColor Green
 }
 
-# Find non-compliant resources
 $violations = Get-RemediableViolations -PolicyAssignment $PolicyAssignmentName -ResourceGroup $ResourceGroupName -MaxResults $MaxResources -ExcludeTypes $ExcludeResourceTypes
 
 if ($violations.Count -eq 0) {
@@ -361,58 +337,52 @@ if ($violations.Count -eq 0) {
     exit 0
 }
 
-# Get remediation guidance
 $guidance = Get-RemediationGuidance -Violations $violations
-Write-Host "`nRemediation Actions:" -ForegroundColor Cyan
+Write-Host "`nRemediation Actions:" -ForegroundColor Green
 $guidance | ForEach-Object {
-    Write-Host "  $_" -ForegroundColor Yellow
+    Write-Host "  $_" -ForegroundColor Green
 }
 
-# If this is a dry run, show summary and exit
 if ($DryRun) {
     Show-RemediationSummary -Violations $violations -RemediationTasks @() -IsDryRun $true
-    Write-Host "`nDry run completed. Use without -DryRun to execute remediation." -ForegroundColor Yellow
+    Write-Host "`nDry run completed. Use without -DryRun to execute remediation." -ForegroundColor Green
     exit 0
 }
 
-# Create remediation tasks
-$remediationTasks = @()
+$RemediationTasks = @()
 
 if ($PolicyAssignmentName) {
-    # Remediate specific policy assignment
     $assignment = Get-AzPolicyAssignment -Name $PolicyAssignmentName
     if ($assignment) {
         $task = New-RemediationTask -PolicyAssignment $assignment -Violations $violations -Mode $RemediationMode
-        if ($task) { $remediationTasks += $task }
+        if ($task) { $RemediationTasks += $task }
     }
 } else {
-    # Get all policy assignments that need remediation
     $assignments = Get-PolicyAssignments -ResourceGroup $ResourceGroupName
 
     foreach ($assignment in $assignments) {
-        $assignmentViolations = $violations | Where-Object { $_.PolicyAssignmentId -eq $assignment.ResourceId }
+        $AssignmentViolations = $violations | Where-Object { $_.PolicyAssignmentId -eq $assignment.ResourceId }
 
-        if ($assignmentViolations.Count -gt 0) {
-            $task = New-RemediationTask -PolicyAssignment $assignment -Violations $assignmentViolations -Mode $RemediationMode
-            if ($task) { $remediationTasks += $task }
+        if ($AssignmentViolations.Count -gt 0) {
+            $task = New-RemediationTask -PolicyAssignment $assignment -Violations $AssignmentViolations -Mode $RemediationMode
+            if ($task) { $RemediationTasks += $task }
         }
     }
 }
 
-# Wait for completion if requested
-if ($WaitForCompletion -and $remediationTasks.Count -gt 0) {
-    Wait-ForRemediationCompletion -RemediationTasks $remediationTasks -TimeoutMinutes $TimeoutMinutes
+if ($WaitForCompletion -and $RemediationTasks.Count -gt 0) {
+    Wait-ForRemediationCompletion -RemediationTasks $RemediationTasks -TimeoutMinutes $TimeoutMinutes
 }
 
-# Show summary
-Show-RemediationSummary -Violations $violations -RemediationTasks $remediationTasks -IsDryRun $false
+Show-RemediationSummary -Violations $violations -RemediationTasks $RemediationTasks -IsDryRun $false
 
 Write-Host "`nRemediation process completed!" -ForegroundColor Green
 
-# Return results
 return @{
     ViolationsFound = $violations.Count
-    RemediationTasks = $remediationTasks
+    RemediationTasks = $RemediationTasks
     Guidance = $guidance
 }\n
+
+
 

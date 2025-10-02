@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,6 +10,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -26,5 +28,6 @@ $params = @{
     " dnsZoneName" = " default.local" ;
 }
 New-AzureRmResourceGroupDeployment -Name " <deployment name>" -ResourceGroupName $rgname -TemplateFile " $PSScriptRoot/azuredeploy.json"  -TemplateParameterObject $params
+
 
 

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -10,33 +10,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -57,18 +54,18 @@ param(
     [string]$Tier = "Standard_v2" ,
     [int]$Capacity = 2
 )
-Write-Host "Provisioning Application Gateway: $GatewayName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName"
-Write-Host "Tier: $Tier"
-Write-Host "Capacity: $Capacity"
-$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
-$Subnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name $SubnetName
-Write-Host "Using VNet: $VNetName"
-Write-Host "Using Subnet: $SubnetName"
-$PublicIpName = " $GatewayName-pip"
-$params = @{
+Write-Output "Provisioning Application Gateway: $GatewayName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "SKU: $SkuName"
+Write-Output "Tier: $Tier"
+Write-Output "Capacity: $Capacity"
+    [string]$VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
+    [string]$Subnet = Get-AzVirtualNetworkSubnetConfig -VirtualNetwork $VNet -Name $SubnetName
+Write-Output "Using VNet: $VNetName"
+Write-Output "Using Subnet: $SubnetName"
+    [string]$PublicIpName = " $GatewayName-pip"
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = "Standard"
     Location = $Location
@@ -76,44 +73,44 @@ $params = @{
     ErrorAction = "Stop"
     Name = $PublicIpName
 }
-$PublicIp @params
-Write-Host "Public IP created: $PublicIpName"
-$params = @{
+    [string]$PublicIp @params
+Write-Output "Public IP created: $PublicIpName"
+    $params = @{
     ErrorAction = "Stop"
     Subnet = $Subnet
     Name = " gatewayIP01"
 }
-$GatewayIpConfig @params
-$params = @{
+    [string]$GatewayIpConfig @params
+    $params = @{
     ErrorAction = "Stop"
     PublicIPAddress = $PublicIp
     Name = " frontendIP01"
 }
-$FrontendIpConfig @params
-$params = @{
+    [string]$FrontendIpConfig @params
+    $params = @{
     ErrorAction = "Stop"
     Port = "80"
     Name = " frontendPort01"
 }
-$FrontendPort @params
-$BackendPool -Name " backendPool01" -ErrorAction "Stop"
-$params = @{
+    [string]$FrontendPort @params
+    [string]$BackendPool -Name " backendPool01" -ErrorAction "Stop"
+    $params = @{
     ErrorAction = "Stop"
     Port = "80"
     CookieBasedAffinity = "Disabled"
     Name = " backendHttpSettings01"
     Protocol = "Http"
 }
-$BackendHttpSettings @params
-$params = @{
+    [string]$BackendHttpSettings @params
+    $params = @{
     FrontendIPConfiguration = $FrontendIpConfig
     ErrorAction = "Stop"
     FrontendPort = $FrontendPort
     Name = " httpListener01"
     Protocol = "Http"
 }
-$HttpListener @params
-$params = @{
+    [string]$HttpListener @params
+    $params = @{
     RuleType = "Basic"
     Name = " routingRule01"
     HttpListener = $HttpListener
@@ -121,16 +118,16 @@ $params = @{
     ErrorAction = "Stop"
     BackendHttpSettings = $BackendHttpSettings
 }
-$RoutingRule @params
-$params = @{
+    [string]$RoutingRule @params
+    $params = @{
     Tier = $Tier
     ErrorAction = "Stop"
     Capacity = $Capacity
     Name = $SkuName
 }
-$Sku @params
-Write-Host " `nCreating Application Gateway (this may take 10-15 minutes)..." ;
-$params = @{
+    [string]$Sku @params
+Write-Output " `nCreating Application Gateway (this may take 10-15 minutes)..." ;
+    $params = @{
     ResourceGroupName = $ResourceGroupName
     Sku = $Sku
     GatewayIpConfiguration = $GatewayIpConfig
@@ -144,14 +141,11 @@ $params = @{
     FrontendIpConfiguration = $FrontendIpConfig
     Name = $GatewayName
 }
-$AppGateway @params
-Write-Host " `nApplication Gateway $GatewayName provisioned successfully"
-Write-Host "Public IP: $($PublicIp.IpAddress)"
-Write-Host "Provisioning State: $($AppGateway.ProvisioningState)"
-Write-Host " `nApplication Gateway provisioning completed at $(Get-Date)"
+    [string]$AppGateway @params
+Write-Output " `nApplication Gateway $GatewayName provisioned successfully"
+Write-Output "Public IP: $($PublicIp.IpAddress)"
+Write-Output "Provisioning State: $($AppGateway.ProvisioningState)"
+Write-Output " `nApplication Gateway provisioning completed at $(Get-Date)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

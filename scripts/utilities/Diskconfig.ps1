@@ -1,186 +1,250 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules Storage
 
-<#`n.SYNOPSIS
-    Diskconfig
+<#
+.SYNOPSIS
+    Configures disk storage pools and partitions for Azure VMs
 
 .DESCRIPTION
-    Azure automation
+    This script configures disk storage by creating storage pools from multiple LUNs,
+    or configuring individual disks with custom partitions, drive letters, and mount points.
+    It supports both pooled storage configurations and single disk configurations.
 
+.PARAMETER Luns
+    Comma-separated list of LUN numbers to configure. Use '#' to separate different configurations.
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
+.PARAMETER Names
+    Names for the storage pools or disk labels. Use '#' to separate different configurations.
+
+.PARAMETER Paths
+    Drive letters or mount paths for the volumes. Use '#' to separate configurations and ',' for multiple partitions.
+
+.PARAMETER Sizes
+    Percentage of disk space for each partition. Use '#' to separate configurations and ',' for multiple partitions.
+
+.EXAMPLE
+    .\Diskconfig.ps1 -Luns "0,1,2" -Names "DataPool" -Paths "S:" -Sizes "100"
+    Creates a storage pool from LUNs 0,1,2 with a single volume on drive S: using all available space
+
+.EXAMPLE
+    .\Diskconfig.ps1 -Luns "3" -Names "LogDisk" -Paths "L:,C:\Logs" -Sizes "50,50"
+    Configures LUN 3 as a single disk with two partitions: 50% on L: drive and 50% mounted to C:\Logs
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
-param(
-    [String] $luns = " 0,1,2" ,
-    [String] $names = " 3" ,
-    [string] $paths = "S:" ,
-    [string];  $sizes = "L:"
-)
-#region Functions
+.VERSION
+    2.0
+
+.NOTES
+    Requires appropriate permissions and Storage module
+    Updated for better error handling and modern PowerShell practices
+#>
+
 [CmdletBinding()]
-function Log
-{
-    [CmdletBinding()]
 param(
-        [string] $message
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Luns = "0,1,2",
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Names = "DataPool",
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Paths = "S:",
+
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Sizes = "100"
+)
+
+$ErrorActionPreference = "Stop"
+
+function Write-Log {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message
     )
-$message = (Get-Date).ToString() + " : " + $message;
-    Write-Host $message;
-    if (-not (Test-Path (" c:" + [char]92 + " sapcd" )))
-    {
-        $nul = mkdir (" c:" + [char]92 + " sapcd" );
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "$timestamp : $Message"
+    Write-Output $logMessage
+
+    $logPath = "C:\sapcd"
+    if (-not (Test-Path $logPath)) {
+        New-Item -ItemType Directory -Path $logPath -Force | Out-Null
     }
-    $message | Out-File -Append -FilePath (" c:" + [char]92 + " sapcd" + [char]92 + " log.txt" );
+
+    $logMessage | Out-File -Append -FilePath "$logPath\log.txt"
 }
-$SEP_CONFIGS = " #"
-$SEP_DISKS = " ,"
-$SEP_PARTS = " ,"
-$lunsSplit  = @($luns  -split $SEP_CONFIGS)
-$namesSplit = @($names -split $SEP_CONFIGS);
-$pathsSplit = @($paths -split $SEP_CONFIGS);
-$sizesSplit = @($sizes -split $SEP_CONFIGS)
-for ($index = 0; $index -lt $lunsSplit.Count; $index++)
-{
-    $lunParts = @($lunsSplit[$index]  -split $SEP_DISKS)
-    $poolname = $namesSplit[$index]
-    $pathsPartSplit = $pathsSplit[$index] -split $SEP_PARTS
-$sizesPartSplit = $sizesSplit[$index] -split $SEP_PARTS
-    #todo parts must be same size
-    if ($lunParts.Count -gt 1)
-    {
-$count = 0;
-        $subsystem = Get-StorageSubSystem;
-        $pool = Get-StoragePool -FriendlyName $poolname -ErrorAction SilentlyContinue
-        if (-not ($pool))
-        {
-            Log "Creating Pool" ;
-            $disks = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -In $lunParts | % { Get-PhysicalDisk -ErrorAction Stop | where DeviceId -eq $_.Index }
-$pool = New-StoragePool -FriendlyName $poolname -StorageSubSystemUniqueId $subsystem.UniqueId -PhysicalDisks $disks -ResiliencySettingNameDefault Simple -ProvisioningTypeDefault Fixed;
-        }
-        $diskname = " $($poolname)"
-$disk = Get-VirtualDisk -FriendlyName $diskname -ErrorAction SilentlyContinue
-        if (-not $disk)
-        {
-            Log "Creating disk" ;
-            $disk = New-VirtualDisk -StoragePoolUniqueId $pool.UniqueId -FriendlyName $diskname -UseMaximumSize
-        }
-        Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId -ErrorAction SilentlyContinue
-        for ($partIndex = 0; $partIndex -lt $pathsPartSplit.Count; $partIndex++)
-        {
-            $name = " $($poolname)-$($partIndex)"
-            $path = $pathsPartSplit[$partIndex]
-            $size = $sizesPartSplit[$partIndex]
-            $args = @{}
-            if ($path.Length -eq 1)
-            {
-                $args = $args + @{"DriveLetter" =$path}
+
+try {
+    Write-Log "Starting disk configuration process"
+
+    $SEP_CONFIGS = "#"
+    $SEP_DISKS = ","
+    $SEP_PARTS = ","
+
+    $LunsSplit = @($Luns -split $SEP_CONFIGS)
+    $NamesSplit = @($Names -split $SEP_CONFIGS)
+    $PathsSplit = @($Paths -split $SEP_CONFIGS)
+    $SizesSplit = @($Sizes -split $SEP_CONFIGS)
+
+    for ($index = 0; $index -lt $LunsSplit.Count; $index++) {
+        $LunParts = @($LunsSplit[$index] -split $SEP_DISKS)
+        $poolname = $NamesSplit[$index].Trim()
+        $PathsPartSplit = $PathsSplit[$index] -split $SEP_PARTS
+        $SizesPartSplit = $SizesSplit[$index] -split $SEP_PARTS
+
+        if ($LunParts.Count -gt 1) {
+            # Multiple LUNs - create storage pool
+            Write-Log "Processing storage pool configuration with multiple LUNs: $($LunParts -join ',')"
+
+            $subsystem = Get-StorageSubSystem
+            $pool = Get-StoragePool -FriendlyName $poolname -ErrorAction SilentlyContinue
+
+            if (-not $pool) {
+                Write-Log "Creating storage pool: $poolname"
+                $disks = Get-CimInstance Win32_DiskDrive -ErrorAction Stop |
+                    Where-Object { $_.InterfaceType -eq "SCSI" -and $_.SCSILogicalUnit -in $LunParts } |
+                    ForEach-Object { Get-PhysicalDisk | Where-Object DeviceId -eq $_.Index }
+
+                if ($disks.Count -eq 0) {
+                    throw "No physical disks found for LUNs: $($LunParts -join ',')"
+                }
+
+                $pool = New-StoragePool -FriendlyName $poolname -StorageSubSystemUniqueId $subsystem.UniqueId -PhysicalDisks $disks -ResiliencySettingNameDefault Simple -ProvisioningTypeDefault Fixed
             }
-            if ($size -eq " 100" )
-            {
-                $args = $args + @{"UseMaximumSize" =$true}
+
+            $diskname = $poolname
+            $disk = Get-VirtualDisk -FriendlyName $diskname -ErrorAction SilentlyContinue
+
+            if (-not $disk) {
+                Write-Log "Creating virtual disk: $diskname"
+                $disk = New-VirtualDisk -StoragePoolUniqueId $pool.UniqueId -FriendlyName $diskname -UseMaximumSize
             }
-            else
-            {
-                $unallocatedSize = $disk.Size - ($disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Measure-Object -Property Size -Sum).Sum
-                [UInt64] $sizeToUse = ($unallocatedSize / 100) * ([int]$size)
-                $args = $args + @{"Size" =$sizeToUse}
-            }
-$volume = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name
-            if (-not $volume)
-            {
-$partition = New-Partition -DiskId $disk.UniqueId @args
-                $partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false;
-            }
-            if ($path.Length -ne 1)
-            {
-                $partition = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name | Get-Partition -ErrorAction Stop
-                $ddisk = $disk | Get-Disk -ErrorAction Stop
-                $diskMounted = $false
-                foreach ($accessPath in $partition.AccessPaths)
-                {
-                    $diskMounted = (Join-Path $accessPath '') -eq (Join-Path $path '')
-                    if ($diskMounted)
-                    {
-                        break
+
+            Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId -ErrorAction SilentlyContinue
+
+            for ($PartIndex = 0; $PartIndex -lt $PathsPartSplit.Count; $PartIndex++) {
+                $name = "$poolname-$PartIndex"
+                $path = $PathsPartSplit[$PartIndex].Trim()
+                $size = $SizesPartSplit[$PartIndex].Trim()
+                $args = @{}
+
+                if ($path.Length -eq 2 -and $path.EndsWith(":")) {
+                    $args["DriveLetter"] = $path[0]
+                }
+
+                if ($size -eq "100") {
+                    $args["UseMaximumSize"] = $true
+                }
+                else {
+                    $physicalDisk = $disk | Get-Disk
+                    $UnallocatedSize = $physicalDisk.Size - ($physicalDisk | Get-Partition | Measure-Object -Property Size -Sum).Sum
+                    [UInt64]$SizeToUse = ($UnallocatedSize / 100) * ([int]$size)
+                    $args["Size"] = $SizeToUse
+                }
+
+                $volume = $disk | Get-Disk | Get-Partition | Get-Volume | Where-Object FileSystemLabel -eq $name
+                if (-not $volume) {
+                    Write-Log "Creating partition: $name"
+                    $partition = New-Partition -DiskId $disk.UniqueId @args
+                    $partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false
+                }
+
+                if ($path.Length -ne 2 -or -not $path.EndsWith(":")) {
+                    $partition = $disk | Get-Disk | Get-Partition | Get-Volume | Where-Object FileSystemLabel -eq $name | Get-Partition
+                    $physicalDisk = $disk | Get-Disk
+                    $DiskMounted = $false
+
+                    foreach ($AccessPath in $partition.AccessPaths) {
+                        $DiskMounted = (Join-Path $AccessPath '') -eq (Join-Path $path '')
+                        if ($DiskMounted) {
+                            break
+                        }
+                    }
+
+                    if (-not $DiskMounted) {
+                        if (-not (Test-Path $path)) {
+                            New-Item -ItemType Directory -Path $path -Force | Out-Null
+                        }
+                        Add-PartitionAccessPath -PartitionNumber $partition.PartitionNumber -DiskNumber $physicalDisk.Number -AccessPath $path
                     }
                 }
-                if (-not $diskMounted)
-                {
-                    if (-not (Test-Path $path))
-                    {
-$nul = mkdir $path
+            }
+        }
+        elseif ($LunParts.Count -eq 1) {
+            # Single LUN - configure individual disk
+            $lun = $LunParts[0].Trim()
+            Write-Log "Processing single disk configuration for LUN: $lun"
+
+            $disk = Get-CimInstance Win32_DiskDrive -ErrorAction Stop |
+                Where-Object { $_.InterfaceType -eq "SCSI" -and $_.SCSILogicalUnit -eq $lun } |
+                ForEach-Object { Get-Disk -Number $_.Index } |
+                Select-Object -First 1
+
+            if (-not $disk) {
+                throw "No disk found for LUN: $lun"
+            }
+
+            Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId -ErrorAction SilentlyContinue
+
+            for ($PartIndex = 0; $PartIndex -lt $PathsPartSplit.Count; $PartIndex++) {
+                $name = "$poolname-$PartIndex"
+                $path = $PathsPartSplit[$PartIndex].Trim()
+                $size = $SizesPartSplit[$PartIndex].Trim()
+                $args = @{}
+
+                if ($path.Length -eq 2 -and $path.EndsWith(":")) {
+                    $args["DriveLetter"] = $path[0]
+                }
+
+                if ($size -eq "100") {
+                    $args["UseMaximumSize"] = $true
+                }
+                else {
+                    $UnallocatedSize = $disk.Size - $disk.AllocatedSize
+                    [UInt64]$SizeToUse = ($UnallocatedSize / 100) * ([int]$size)
+                    $args["Size"] = $SizeToUse
+                }
+
+                $volume = $disk | Get-Partition | Get-Volume | Where-Object FileSystemLabel -eq $name
+                if (-not $volume) {
+                    Write-Log "Creating partition: $name on disk $($disk.Number)"
+                    $partition = New-Partition -DiskId $disk.UniqueId @args
+                    $partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false
+                }
+
+                if ($path.Length -ne 2 -or -not $path.EndsWith(":")) {
+                    $partition = $disk | Get-Partition | Get-Volume | Where-Object FileSystemLabel -eq $name | Get-Partition
+                    $DiskMounted = $false
+
+                    foreach ($AccessPath in $partition.AccessPaths) {
+                        $DiskMounted = (Join-Path $AccessPath '') -eq (Join-Path $path '')
+                        if ($DiskMounted) {
+                            break
+                        }
                     }
-                    Add-PartitionAccessPath -PartitionNumber $partition.PartitionNumber -DiskNumber $ddisk.Number -AccessPath $path
+
+                    if (-not $DiskMounted) {
+                        if (-not (Test-Path $path)) {
+                            New-Item -ItemType Directory -Path $path -Force | Out-Null
+                        }
+                        Add-PartitionAccessPath -PartitionNumber $partition.PartitionNumber -DiskNumber $disk.Number -AccessPath $path
+                    }
                 }
             }
         }
     }
-    elseif ($lunParts.Length -eq 1)
-    {
-$lun = $lunParts[0];
-        Log ("Creating volume for disk " + $lun);
-        $disk = Get-CimInstance -ErrorAction Stop Win32_DiskDrive | where InterfaceType -eq SCSI | where SCSILogicalUnit -eq $lun | % { Get-Disk -Number $_.Index } | select -First 1;
-        Initialize-Disk -PartitionStyle GPT -UniqueId $disk.UniqueId -ErrorAction SilentlyContinue
-        for ($partIndex = 0; $partIndex -lt $pathsPartSplit.Count; $partIndex++)
-        {
-            $name = " $($poolname)-$($partIndex)"
-            $path = $pathsPartSplit[$partIndex]
-            $size = $sizesPartSplit[$partIndex]
-            $args = @{}
-            if ($path.Length -eq 1)
-            {
-                $args = $args + @{"DriveLetter" =$path}
-            }
-            if ($size -eq " 100" )
-            {
-                $args = $args + @{"UseMaximumSize" =$true}
-            }
-            else
-            {
-                $unallocatedSize = $disk.Size - $disk.AllocatedSize
-                [UInt64] $sizeToUse = ($unallocatedSize / 100) * ([int]$size)
-                $args = $args + @{"Size" =$sizeToUse}
-            }
-$volume = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name
-            if (-not $volume)
-            {
-$partition = New-Partition -DiskId $disk.UniqueId @args
-                $partition | Format-Volume -FileSystem NTFS -NewFileSystemLabel $name -Confirm:$false;
-            }
-            if ($path.Length -ne 1)
-            {
-                $partition = $disk | Get-Disk -ErrorAction Stop | Get-Partition -ErrorAction Stop | Get-Volume -ErrorAction Stop | where FileSystemLabel -eq $name | Get-Partition -ErrorAction Stop
-                $ddisk = $disk | Get-Disk -ErrorAction Stop
-                $diskMounted = $false
-                foreach ($accessPath in $partition.AccessPaths)
-                {
-$diskMounted = (Join-Path $accessPath '') -eq (Join-Path $path '')
-                    if ($diskMounted)
-                    {
-                        break
-                    }
-                }
-                if (-not $diskMounted)
-                {
-                    if (-not (Test-Path $path))
-                    {
-$nul = mkdir $path
-                    }
-                    Add-PartitionAccessPath -PartitionNumber $partition.PartitionNumber -DiskNumber $ddisk.Number -AccessPath $path
-                }
-            }
-        }
-    }
+
+    Write-Log "Disk configuration completed successfully"
 }
-} catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
+catch {
+    $errorMessage = "Script execution failed: $($_.Exception.Message)"
+    Write-Log $errorMessage
+    Write-Error $errorMessage
     throw
 }

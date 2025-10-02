@@ -5,7 +5,6 @@
 .DESCRIPTION
     migrate content operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Migrates content from existing Azure repositories into consolidated structure
 
@@ -29,7 +28,8 @@
 
     Shows what would be migrated without performing the operations
 
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
+#>
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -46,46 +46,35 @@ param(
     [Parameter(Mandatory = $false)]
     [switch]$WhatIf
 )
-
-#region Initialize-Configuration
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-
-# Migration statistics
-$migrationStats = @{
+$MigrationStats = @{
     FilesProcessed = 0
     DirectoriesCreated = 0
     Errors = @()
     Phases = @()
 }
 
-#endregion
 
-#region Functions
-[OutputType([bool])]
- {
-    [CmdletBinding()]
+function Write-Log {
     param(
         [string]$Title
     )
-
     $separator = '=' * 65
-    Write-Host $Title -InformationAction Continue
-    Write-Host $separator -InformationAction Continue
+    Write-Output $Title -InformationAction Continue
+    Write-Output $separator -InformationAction Continue
 }
 
 function Write-PhaseHeader {
-    [CmdletBinding()]
     param(
         [string]$PhaseTitle
     )
 
-    Write-Host "`n$PhaseTitle" -InformationAction Continue
-    $migrationStats.Phases += $PhaseTitle
+    Write-Output "`n$PhaseTitle" -InformationAction Continue
+    $MigrationStats.Phases += $PhaseTitle
 }
 
 function Copy-RepositoryContent {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$SourcePath,
         [string]$DestinationPath,
@@ -99,18 +88,14 @@ function Copy-RepositoryContent {
             Write-Warning "Source path not found: $SourcePath"
             return $false
         }
-
-        # Ensure destination directory exists
-        $destinationDir = Split-Path $DestinationPath -Parent
-        if (-not (Test-Path $destinationDir)) {
-            if ($PSCmdlet.ShouldProcess($destinationDir, "Create directory")) {
-                New-Item -Path $destinationDir -ItemType Directory -Force | Out-Null
-                $migrationStats.DirectoriesCreated++
+        $DestinationDir = Split-Path $DestinationPath -Parent
+        if (-not (Test-Path $DestinationDir)) {
+            if ($PSCmdlet.ShouldProcess($DestinationDir, "Create directory")) {
+                New-Item -Path $DestinationDir -ItemType Directory -Force | Out-Null
+                $MigrationStats.DirectoriesCreated++
             }
         }
-
-        # Copy content with filters
-        $copyParams = @{
+        $CopyParams = @{
             Path = "$SourcePath\*"
             Destination = $DestinationPath
             Recurse = $true
@@ -120,24 +105,23 @@ function Copy-RepositoryContent {
 
         if ($PSCmdlet.ShouldProcess($SourcePath, "Copy to $DestinationPath")) {
             $result = Copy-Item @copyParams -PassThru
-            $migrationStats.FilesProcessed += $result.Count
-            Write-Host "  [OK] $Description" -InformationAction Continue
+            $MigrationStats.FilesProcessed += $result.Count
+            Write-Output "  [OK] $Description" -InformationAction Continue
             return $true
         }
         else {
-            Write-Host "  [WHATIF] Would copy $Description" -InformationAction Continue
+            Write-Output "  [WHATIF] Would copy $Description" -InformationAction Continue
             return $true
-        
+
 } catch {
-        $errorMsg = "Failed to copy $Description`: $_"
-        $migrationStats.Errors += $errorMsg
-        Write-Warning $errorMsg
+        $ErrorMsg = "Failed to copy $Description`: $_"
+        $MigrationStats.Errors += $ErrorMsg
+        Write-Warning $ErrorMsg
         return $false
     }
 }
 
 function Copy-SingleFile {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [string]$SourceFile,
         [string]$DestinationFile,
@@ -149,35 +133,33 @@ function Copy-SingleFile {
             Write-Warning "Source file not found: $SourceFile"
             return $false
         }
-
-        $destinationDir = Split-Path $DestinationFile -Parent
-        if (-not (Test-Path $destinationDir)) {
-            if ($PSCmdlet.ShouldProcess($destinationDir, "Create directory")) {
-                New-Item -Path $destinationDir -ItemType Directory -Force | Out-Null
-                $migrationStats.DirectoriesCreated++
+    [string]$DestinationDir = Split-Path $DestinationFile -Parent
+        if (-not (Test-Path $DestinationDir)) {
+            if ($PSCmdlet.ShouldProcess($DestinationDir, "Create directory")) {
+                New-Item -Path $DestinationDir -ItemType Directory -Force | Out-Null
+                $MigrationStats.DirectoriesCreated++
             }
         }
 
         if ($PSCmdlet.ShouldProcess($SourceFile, "Copy to $DestinationFile")) {
             Copy-Item -Path $SourceFile -Destination $DestinationFile -Force
-            $migrationStats.FilesProcessed++
-            Write-Host "  [OK] $Description" -InformationAction Continue
+            $MigrationStats.FilesProcessed++
+            Write-Output "  [OK] $Description" -InformationAction Continue
             return $true
         }
         else {
-            Write-Host "  [WHATIF] Would copy $Description" -InformationAction Continue
+            Write-Output "  [WHATIF] Would copy $Description" -InformationAction Continue
             return $true
-        
+
 } catch {
-        $errorMsg = "Failed to copy $Description`: $_"
-        $migrationStats.Errors += $errorMsg
-        Write-Warning $errorMsg
+        $ErrorMsg = "Failed to copy $Description`: $_"
+        $MigrationStats.Errors += $ErrorMsg
+        Write-Warning $ErrorMsg
         return $false
     }
 }
 
 function Get-MigrationPhases {
-    [CmdletBinding()]
     param()
 
     return @(
@@ -219,127 +201,106 @@ function Get-MigrationPhases {
     )
 }
 
-#endregion
 
-#region Main-Execution
 try {
     Write-MigrationHeader "Azure Enterprise Toolkit Content Migration"
 
-    # Validate paths
     if (-not (Test-Path $SourceBasePath)) {
         throw "Source base path does not exist: $SourceBasePath"
     }
 
-    # Ensure target base exists
     if (-not (Test-Path $TargetBasePath)) {
         if ($PSCmdlet.ShouldProcess($TargetBasePath, "Create target directory")) {
             New-Item -Path $TargetBasePath -ItemType Directory -Force | Out-Null
-            $migrationStats.DirectoriesCreated++
+                $MigrationStats.DirectoriesCreated++
         }
     }
 
-    # Change to target directory
     if ($PSCmdlet.ShouldProcess($TargetBasePath, "Set location")) {
         Set-Location -Path $TargetBasePath -ErrorAction Stop
     }
-
-    # Execute migration phases
     $phases = Get-MigrationPhases
     foreach ($phase in $phases) {
         Write-PhaseHeader "PHASE $($phases.IndexOf($phase) + 1): $($phase.Name)"
+        $SourcePath = Join-Path $SourceBasePath $phase.SourceSubPath
+        $TargetPath = Join-Path $TargetBasePath $phase.TargetSubPath
 
-        $sourcePath = Join-Path $SourceBasePath $phase.SourceSubPath
-        $targetPath = Join-Path $TargetBasePath $phase.TargetSubPath
+        if (Test-Path $SourcePath) {
+        $ScriptsSource = if (Test-Path "$SourcePath\scripts") { "$SourcePath\scripts" } else { $SourcePath }
+            Copy-RepositoryContent -SourcePath $ScriptsSource -DestinationPath $TargetPath -Description $phase.Description
 
-        # Copy main content
-        if (Test-Path $sourcePath) {
-            # Copy scripts/main content
-            $scriptsSource = if (Test-Path "$sourcePath\scripts") { "$sourcePath\scripts" } else { $sourcePath }
-            Copy-RepositoryContent -SourcePath $scriptsSource -DestinationPath $targetPath -Description $phase.Description
-
-            # Copy modules if applicable
             if ($phase.IncludeModules) {
-                $modulesSource = Join-Path $sourcePath "modules"
-                if (Test-Path $modulesSource) {
-                    Copy-RepositoryContent -SourcePath $modulesSource -DestinationPath "$targetPath\modules" -Description "PowerShell modules"
+        $ModulesSource = Join-Path $SourcePath "modules"
+                if (Test-Path $ModulesSource) {
+                    Copy-RepositoryContent -SourcePath $ModulesSource -DestinationPath "$TargetPath\modules" -Description "PowerShell modules"
                 }
             }
 
-            # Copy standard subdirectories
             foreach ($subdir in @('dashboards', 'docs', 'examples', 'templates')) {
-                $subdirPath = Join-Path $sourcePath $subdir
-                if (Test-Path $subdirPath) {
-                    Copy-RepositoryContent -SourcePath $subdirPath -DestinationPath "$targetPath\$subdir" -Description "$subdir content"
+            $SubdirPath = Join-Path $SourcePath $subdir
+                if (Test-Path $SubdirPath) {
+                    Copy-RepositoryContent -SourcePath $SubdirPath -DestinationPath "$TargetPath\$subdir" -Description "$subdir content"
                 }
             }
-
-            # Copy README if exists
-            $readmePath = Join-Path $sourcePath "README.md"
-            if (Test-Path $readmePath) {
-                Copy-SingleFile -SourceFile $readmePath -DestinationFile "$targetPath\README.md" -Description "README documentation"
+        $ReadmePath = Join-Path $SourcePath "README.md"
+            if (Test-Path $ReadmePath) {
+                Copy-SingleFile -SourceFile $ReadmePath -DestinationFile "$TargetPath\README.md" -Description "README documentation"
             }
         }
         else {
-            Write-Warning "Source not found: $sourcePath"
+            Write-Warning "Source not found: $SourcePath"
         }
     }
 
-    # Unified Documentation Phase
     Write-PhaseHeader "PHASE 6: Creating Unified Documentation"
-    $docFiles = @(
+    $DocFiles = @(
         @{ Source = "Azure-Automation-Scripts\CONTRIBUTING.md"; Target = "docs\CONTRIBUTING.md" },
         @{ Source = "Azure-Automation-Scripts\CHANGELOG.md"; Target = "docs\CHANGELOG.md" }
     )
 
-    foreach ($docFile in $docFiles) {
-        $sourcePath = Join-Path $SourceBasePath $docFile.Source
-        $targetPath = Join-Path $TargetBasePath $docFile.Target
-        if (Test-Path $sourcePath) {
-            Copy-SingleFile -SourceFile $sourcePath -DestinationFile $targetPath -Description "Documentation file: $($docFile.Target)"
+    foreach ($DocFile in $DocFiles) {
+        $SourcePath = Join-Path $SourceBasePath $DocFile.Source
+        $TargetPath = Join-Path $TargetBasePath $DocFile.Target
+        if (Test-Path $SourcePath) {
+            Copy-SingleFile -SourceFile $SourcePath -DestinationFile $TargetPath -Description "Documentation file: $($DocFile.Target)"
         }
     }
 
-    # Utility Tools Phase
     Write-PhaseHeader "PHASE 7: Creating Utility Tools"
-    $utilityFiles = @(
+    $UtilityFiles = @(
         @{ Source = "enhanced-github-upload.ps1"; Target = "tools\github-upload.ps1" },
         @{ Source = "github-download.ps1"; Target = "tools\github-download.ps1" }
     )
 
-    foreach ($utilityFile in $utilityFiles) {
-        $sourcePath = Join-Path $SourceBasePath $utilityFile.Source
-        $targetPath = Join-Path $TargetBasePath $utilityFile.Target
-        if (Test-Path $sourcePath) {
-            Copy-SingleFile -SourceFile $sourcePath -DestinationFile $targetPath -Description "Utility tool: $($utilityFile.Target)"
+    foreach ($UtilityFile in $UtilityFiles) {
+        $SourcePath = Join-Path $SourceBasePath $UtilityFile.Source
+        $TargetPath = Join-Path $TargetBasePath $UtilityFile.Target
+        if (Test-Path $SourcePath) {
+            Copy-SingleFile -SourceFile $SourcePath -DestinationFile $TargetPath -Description "Utility tool: $($UtilityFile.Target)"
         }
     }
 
-    # Migration Summary
     Write-PhaseHeader "MIGRATION SUMMARY"
-    Write-Host "Files processed: $($migrationStats.FilesProcessed)" -InformationAction Continue
-    Write-Host "Directories created: $($migrationStats.DirectoriesCreated)" -InformationAction Continue
-    Write-Host "Phases completed: $($migrationStats.Phases.Count)" -InformationAction Continue
+    Write-Output "Files processed: $($MigrationStats.FilesProcessed)" -InformationAction Continue
+    Write-Output "Directories created: $($MigrationStats.DirectoriesCreated)" -InformationAction Continue
+    Write-Output "Phases completed: $($MigrationStats.Phases.Count)" -InformationAction Continue
 
-    if ($migrationStats.Errors.Count -gt 0) {
-        Write-Warning "Errors encountered: $($migrationStats.Errors.Count)"
-        $migrationStats.Errors | ForEach-Object { Write-Warning "  - $_" }
+    if ($MigrationStats.Errors.Count -gt 0) {
+        Write-Warning "Errors encountered: $($MigrationStats.Errors.Count)"
+        $MigrationStats.Errors | ForEach-Object { Write-Warning "  - $_" }
     }
 
-    Write-Host "`nContent migration completed successfully!" -InformationAction Continue
-    Write-Host "Total consolidated components: $($phases.Count) major toolkits" -InformationAction Continue
-    Write-Host "Ready for git operations" -InformationAction Continue
+    Write-Output "`nContent migration completed successfully!" -InformationAction Continue
+    Write-Output "Total consolidated components: $($phases.Count) major toolkits" -InformationAction Continue
+    Write-Output "Ready for git operations" -InformationAction Continue
 }
 catch {
     Write-Error "Migration failed: $_"
-    Write-Error "Migration statistics: $($migrationStats | ConvertTo-Json -Depth 2)"
+    Write-Error "Migration statistics: $($MigrationStats | ConvertTo-Json -Depth 2)"
     throw
 }
 finally {
-    # Restore original location if needed
     if ($PWD.Path -ne $TargetBasePath) {
         Pop-Location -ErrorAction SilentlyContinue
     }
-}
-
-#endregion\n
-
+`n}

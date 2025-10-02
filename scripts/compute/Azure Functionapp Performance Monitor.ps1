@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,73 +9,70 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [string]$AppName
 )
-Write-Host "Monitoring Function App: $AppName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host " ============================================"
-$FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
-Write-Host "Function App Information:"
-Write-Host "Name: $($FunctionApp.Name)"
-Write-Host "State: $($FunctionApp.State)"
-Write-Host "Location: $($FunctionApp.Location)"
-Write-Host "Default Hostname: $($FunctionApp.DefaultHostName)"
-Write-Host "Kind: $($FunctionApp.Kind)"
-Write-Host "App Service Plan: $($FunctionApp.AppServicePlan)"
-Write-Host " `nRuntime Configuration:"
-Write-Host "Runtime: $($FunctionApp.Runtime)"
-Write-Host "Runtime Version: $($FunctionApp.RuntimeVersion)"
-Write-Host "OS Type: $($FunctionApp.OSType)"
-$AppSettings = $FunctionApp.ApplicationSettings
+Write-Output "Monitoring Function App: $AppName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output " ============================================"
+    $FunctionApp = Get-AzFunctionApp -ResourceGroupName $ResourceGroupName -Name $AppName
+Write-Output "Function App Information:"
+Write-Output "Name: $($FunctionApp.Name)"
+Write-Output "State: $($FunctionApp.State)"
+Write-Output "Location: $($FunctionApp.Location)"
+Write-Output "Default Hostname: $($FunctionApp.DefaultHostName)"
+Write-Output "Kind: $($FunctionApp.Kind)"
+Write-Output "App Service Plan: $($FunctionApp.AppServicePlan)"
+Write-Output " `nRuntime Configuration:"
+Write-Output "Runtime: $($FunctionApp.Runtime)"
+Write-Output "Runtime Version: $($FunctionApp.RuntimeVersion)"
+Write-Output "OS Type: $($FunctionApp.OSType)"
+    [string]$AppSettings = $FunctionApp.ApplicationSettings
 if ($AppSettings) {
-    Write-Host " `nApplication Settings: $($AppSettings.Count) configured"
-    # List non-sensitive setting keys
-$SafeSettings = $AppSettings.Keys | Where-Object {
-        $_ -notlike " *KEY*" -and
-        $_ -notlike " *SECRET*" -and
-        $_ -notlike " *PASSWORD*" -and
-        $_ -notlike " *CONNECTION*"
+    Write-Output " `nApplication Settings: $($AppSettings.Count) configured"
+    [string]$SafeSettings = $AppSettings.Keys | Where-Object {
+    [string]$_ -notlike " *KEY*" -and
+    [string]$_ -notlike " *SECRET*" -and
+    [string]$_ -notlike " *PASSWORD*" -and
+    [string]$_ -notlike " *CONNECTION*"
     }
     if ($SafeSettings) {
-        Write-Host "Non-sensitive settings: $($SafeSettings -join ', ')"
+        Write-Output "Non-sensitive settings: $($SafeSettings -join ', ')"
     }
 }
-Write-Host " `nSecurity:"
-Write-Host "HTTPS Only: $($FunctionApp.HttpsOnly)"
+Write-Output " `nSecurity:"
+Write-Output "HTTPS Only: $($FunctionApp.HttpsOnly)"
 try {
-    # Note: This would require additional permissions and might not always be accessible
-    Write-Host " `nFunctions: Use Azure Portal or Azure CLI for  function metrics"
+    Write-Output " `nFunctions: Use Azure Portal or Azure CLI for  function metrics"
 } catch {
-    Write-Host " `nFunctions: Unable to enumerate (check permissions)"
+    Write-Output " `nFunctions: Unable to enumerate (check permissions)"
 }
-Write-Host " `nFunction App monitoring completed at $(Get-Date)"
+Write-Output " `nFunction App monitoring completed at $(Get-Date)"
+
 
 

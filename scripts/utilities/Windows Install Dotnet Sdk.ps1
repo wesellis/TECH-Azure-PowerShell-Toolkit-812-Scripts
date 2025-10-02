@@ -1,18 +1,21 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Run a process
-  
+
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
   Run a process and validate that the process started and completed without any errors
   .PARAMETER command
   The command that will be run
   .PARAMETER arguments
   The arguments required to run the supplied command
-  #>
-$errLog = [System.IO.Path]::GetTempFileName()
-$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $errLog -PassThru -Wait
-    # If $process variable is null, something is wrong
+$ErrorActionPreference = 'Stop'
+
+$ErrLog = [System.IO.Path]::GetTempFileName()
+$process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectStandardError $ErrLog -PassThru -Wait
     if (!$process) {
         Write-Error "ERROR command failed to start: $command $arguments"
         return;
@@ -22,7 +25,7 @@ $process = Start-Process -FilePath $command -ArgumentList $arguments -RedirectSt
         Write-Output "Error running: $command $arguments"
         Write-Output "Exit code: $($process.ExitCode)"
         Write-Output " **ERROR**"
-        Get-Content -Path $errLog
+        Get-Content -Path $ErrLog
         throw "Exit code from process was nonzero"
     }
 }
@@ -36,46 +39,44 @@ try {
     else {
         $Arch = " <auto>"
     }
-    if ($false -eq [System.String]::IsNullOrWhiteSpace($installLocation)) {
-        $InstallDir = $installLocation
+    if ($false -eq [System.String]::IsNullOrWhiteSpace($InstallLocation)) {
+        $InstallDir = $InstallLocation
     }
     else {
         $InstallDir = " c:\program files\dotnet"
     }
-    if ($false -eq [System.String]::IsNullOrWhiteSpace($dotnetSdkVersion)) {
-        $dotnet_sdk_version = $dotnetSdkVersion
+    if ($false -eq [System.String]::IsNullOrWhiteSpace($DotnetSdkVersion)) {
+        $dotnet_sdk_version = $DotnetSdkVersion
     }
-    elseif ($false -eq [System.String]::IsNullOrWhiteSpace($globalJsonPath)) {
-        Write-Host "Attempting to read global.json"
-        $globalJsonFullPath = ""
-        if ($globalJsonPath.EndsWith(" global.json" )) {
-            $globalJsonFullPath = $globalJsonPath
+    elseif ($false -eq [System.String]::IsNullOrWhiteSpace($GlobalJsonPath)) {
+        Write-Output "Attempting to read global.json"
+        $GlobalJsonFullPath = ""
+        if ($GlobalJsonPath.EndsWith(" global.json" )) {
+            $GlobalJsonFullPath = $GlobalJsonPath
         }
         else {
-            $globalJsonFullPath = [System.IO.Path]::Combine($globalJsonPath, "global.json" )
+            $GlobalJsonFullPath = [System.IO.Path]::Combine($GlobalJsonPath, "global.json" )
         }
-        if ($true -eq [System.IO.File]::Exists($globalJsonFullPath)) {
-            Write-Host "Reading from global.json"
+        if ($true -eq [System.IO.File]::Exists($GlobalJsonFullPath)) {
+            Write-Output "Reading from global.json"
             Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-json-utils.psm1')
-            $dotnet_sdk_version = (Get-JsonFromFile -ErrorAction Stop $globalJsonFullPath).sdk.version
-            Write-Host "Found version $dotnet_sdk_version"
+            $dotnet_sdk_version = (Get-JsonFromFile -ErrorAction Stop $GlobalJsonFullPath).sdk.version
+            Write-Output "Found version $dotnet_sdk_version"
         }
         else {
-            Write-Host " global.json not found, setting version to latest"
+            Write-Output " global.json not found, setting version to latest"
             $dotnet_sdk_version = "Latest"
         }
     }
     Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-retry-utils.psm1')
-    # download the dotnet sdk script and run it
     Write-Information Downloading dotnet-install script
-$scriptLocation = [System.IO.Path]::Combine($env:TEMP, 'dotnet-install.ps1')
-    ProcessRunner -command curl -arguments " -SsL https://dot.net/v1/dotnet-install.ps1 -o $scriptLocation"
+$ScriptLocation = [System.IO.Path]::Combine($env:TEMP, 'dotnet-install.ps1')
+    ProcessRunner -command curl -arguments " -SsL https://dot.net/v1/dotnet-install.ps1 -o $ScriptLocation"
     RunWithRetries -retryAttempts 10 -waitBeforeRetrySeconds 2 -exponentialBackoff -runBlock {
-        & " $scriptLocation" -Version $dotnet_sdk_version -InstallDir $InstallDir -Architecture $Arch -Runtime $runtime
+        & " $ScriptLocation" -Version $dotnet_sdk_version -InstallDir $InstallDir -Architecture $Arch -Runtime $runtime
     }
     & ([System.IO.Path]::Combine($InstallDir, "dotnet.exe" )) --list-sdks
     & ([System.IO.Path]::Combine($InstallDir, "dotnet.exe" )) --list-runtimes
 }
 catch {
-    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop
-}
+    Write-Error " !!! [ERROR] Unhandled exception:`n$_`n$($_.ScriptStackTrace)" -ErrorAction Stop`n}

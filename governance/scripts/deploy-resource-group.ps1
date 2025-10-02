@@ -7,30 +7,29 @@
 .DESCRIPTION
     deploy resource group operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Deploys Azure resource groups with governance policies and tags
 
     Creates Azure resource groups with standardized naming, tagging, and
     governance policies. Supports applying policy initiatives and
     resource locks automatically.
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Name of the resource group to create
-.PARAMETER Location
+.parameter Location
     Azure region for the resource group
-.PARAMETER Tags
+.parameter Tags
     Hashtable of tags to apply to the resource group
-.PARAMETER PolicyInitiativeId
+.parameter PolicyInitiativeId
     Policy initiative to assign to the resource group
-.PARAMETER ApplyResourceLock
+.parameter ApplyResourceLock
     Apply a CanNotDelete lock to the resource group
-.PARAMETER Environment
+.parameter Environment
     Environment type: Dev, Test, Staging, Production
-.PARAMETER Owner
+.parameter Owner
     Resource owner contact information
-.PARAMETER CostCenter
+.parameter CostCenter
     Cost center for billing allocation
-.PARAMETER Force
+.parameter Force
     Overwrite existing resource group if it exists
 
     .\deploy-resource-group.ps1 -ResourceGroupName "RG-WebApp-Prod" -Location "East US" -Environment "Production"
@@ -39,84 +38,76 @@
 
     .\deploy-resource-group.ps1 -ResourceGroupName "RG-Dev" -Location "West US" -Tags @{Project="MyApp"} -ApplyResourceLock
 
-    Creates dev resource group with custom tags and resource lock#>
+    Creates dev resource group with custom tags and resource lock
 
-[CmdletBinding(SupportsShouldProcess)]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+[parameter(Mandatory = $true)]
     [ValidatePattern('^RG-[A-Za-z0-9\-]+$')]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [string]$Location,
 
-    [Parameter()]
+    [parameter()]
     [hashtable]$Tags = @{},
 
-    [Parameter()]
+    [parameter()]
     [string]$PolicyInitiativeId,
 
-    [Parameter()]
+    [parameter()]
     [switch]$ApplyResourceLock,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Dev', 'Test', 'Staging', 'Production')]
     [string]$Environment,
 
-    [Parameter()]
+    [parameter()]
     [string]$Owner,
 
-    [Parameter()]
+    [parameter()]
     [string]$CostCenter,
 
-    [Parameter()]
+    [parameter()]
     [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
 
-[OutputType([PSObject])]
+[OutputType([PSObject])] 
  {
     $context = Get-AzContext
     if (-not $context) {
-        Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+        Write-Host "Connecting to Azure..." -ForegroundColor Green
         Connect-AzAccount
     }
     return Get-AzContext
 }
 
 function New-StandardTags {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [hashtable]$CustomTags,
+    [hashtable]$CustomTags,
         [string]$Environment,
         [string]$Owner,
         [string]$CostCenter
     )
 
-    $standardTags = @{
+    $StandardTags = @{
         'CreatedBy' = 'PowerShell-Toolkit'
         'CreatedOn' = (Get-Date -Format 'yyyy-MM-dd')
         'ManagedBy' = 'Governance-Script'
     }
 
-    if ($Environment) { $standardTags['Environment'] = $Environment }
-    if ($Owner) { $standardTags['Owner'] = $Owner }
-    if ($CostCenter) { $standardTags['CostCenter'] = $CostCenter }
+    if ($Environment) { $StandardTags['Environment'] = $Environment }
+    if ($Owner) { $StandardTags['Owner'] = $Owner }
+    if ($CostCenter) { $StandardTags['CostCenter'] = $CostCenter }
 
-    # Merge with custom tags (custom tags take precedence)
     foreach ($key in $CustomTags.Keys) {
-        $standardTags[$key] = $CustomTags[$key]
+        $StandardTags[$key] = $CustomTags[$key]
     }
 
-    return $standardTags
+    return $StandardTags
 }
 
 function New-ResourceGroupWithGovernance {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Name,
+    [string]$Name,
         [string]$Location,
         [hashtable]$Tags,
         [string]$PolicyInitiative,
@@ -124,20 +115,19 @@ function New-ResourceGroupWithGovernance {
         [bool]$Force
     )
 
-    # Check if resource group exists
-    $existingRG = Get-AzResourceGroup -Name $Name -ErrorAction SilentlyContinue
+    $ExistingRG = Get-AzResourceGroup -Name $Name -ErrorAction SilentlyContinue
 
-    if ($existingRG -and -not $Force) {
+    if ($ExistingRG -and -not $Force) {
         throw "Resource group '$Name' already exists. Use -Force to update."
     }
 
     if ($PSCmdlet.ShouldProcess($Name, "Create/Update Resource Group")) {
-        if ($existingRG) {
-            Write-Host "Updating existing resource group: $Name" -ForegroundColor Yellow
+        if ($ExistingRG) {
+            Write-Host "Updating existing resource group: $Name" -ForegroundColor Green
             $rg = Set-AzResourceGroup -Name $Name -Tag $Tags
         } else {
             Write-Host "Creating resource group: $Name" -ForegroundColor Green
-            $resourcegroupSplat = @{
+            $ResourcegroupSplat = @{
     Name = $Name
     Location = $Location
     Tag = $Tags
@@ -145,9 +135,8 @@ function New-ResourceGroupWithGovernance {
 New-AzResourceGroup @resourcegroupSplat
         }
 
-        # Apply policy initiative if specified
         if ($PolicyInitiative) {
-            Write-Host "Applying policy initiative..." -ForegroundColor Yellow
+            Write-Host "Applying policy initiative..." -ForegroundColor Green
             try {
                 $params = @{
                     Name = "$Name-governance-$(Get-Date -Format 'yyyyMMdd')"
@@ -159,13 +148,12 @@ New-AzResourceGroup @resourcegroupSplat
                 Write-Host "Policy initiative applied successfully" -ForegroundColor Green
             }
             catch {
-                Write-Warning "Failed to apply policy initiative: $_"
+                write-Warning "Failed to apply policy initiative: $_"
             }
         }
 
-        # Apply resource lock if requested
         if ($ApplyLock) {
-            Write-Host "Applying resource lock..." -ForegroundColor Yellow
+            Write-Host "Applying resource lock..." -ForegroundColor Green
             try {
                 $params = @{
                     LockName = "$Name-CanNotDelete"
@@ -178,7 +166,7 @@ New-AzResourceGroup @resourcegroupSplat
                 Write-Host "Resource lock applied successfully" -ForegroundColor Green
             }
             catch {
-                Write-Warning "Failed to apply resource lock: $_"
+                write-Warning "Failed to apply resource lock: $_"
             }
         }
 
@@ -187,58 +175,52 @@ New-AzResourceGroup @resourcegroupSplat
 }
 
 function Show-DeploymentSummary {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$ResourceGroup,
+    [object]$ResourceGroup,
         [hashtable]$Tags,
         [string]$PolicyInitiative,
         [bool]$HasLock
     )
 
-    Write-Host "`nDeployment Summary:" -ForegroundColor Cyan
-    Write-Host "Resource Group: $($ResourceGroup.ResourceGroupName)"
-    Write-Host "Location: $($ResourceGroup.Location)"
-    Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
-    Write-Host "Tags Applied: $($Tags.Count)"
+    Write-Host "`nDeployment Summary:" -ForegroundColor Green
+    Write-Output "Resource Group: $($ResourceGroup.ResourceGroupName)"
+    Write-Output "Location: $($ResourceGroup.Location)"
+    Write-Output "Resource ID: $($ResourceGroup.ResourceId)"
+    Write-Output "Tags Applied: $($Tags.Count)"
 
     if ($PolicyInitiative) {
-        Write-Host "Policy Initiative: Applied"
+        Write-Output "Policy Initiative: Applied"
     }
 
     if ($HasLock) {
-        Write-Host "Resource Lock: Applied"
+        Write-Output "Resource Lock: Applied"
     }
 
-    Write-Host "`nTags:" -ForegroundColor Cyan
+    Write-Host "`nTags:" -ForegroundColor Green
     $Tags.GetEnumerator() | Sort-Object Key | ForEach-Object {
-        Write-Host "  $($_.Key): $($_.Value)"
+        Write-Output "  $($_.Key): $($_.Value)"
     }
 }
 
-# Main execution
-Write-Host "`nAzure Resource Group Deployment" -ForegroundColor Cyan
-Write-Host ("=" * 50) -ForegroundColor Cyan
+Write-Host "`nAzure Resource Group Deployment" -ForegroundColor Green
+write-Host ("=" * 50) -ForegroundColor Cyan
 
 $context = Test-AzureConnection
 Write-Host "Connected to: $($context.Subscription.Name)" -ForegroundColor Green
 
-# Build complete tag set
-$allTags = New-StandardTags -CustomTags $Tags -Environment $Environment -Owner $Owner -CostCenter $CostCenter
+$AllTags = New-StandardTags -CustomTags $Tags -Environment $Environment -Owner $Owner -CostCenter $CostCenter
 
-# Validate location
-$validLocations = Get-AzLocation | Select-Object -ExpandProperty Location
-if ($Location -notin $validLocations) {
+$ValidLocations = Get-AzLocation | Select-Object -ExpandProperty Location
+if ($Location -notin $ValidLocations) {
     throw "Invalid location: $Location. Use Get-AzLocation to see valid locations."
 }
 
-# Deploy resource group with governance
-$resourceGroup = New-ResourceGroupWithGovernance -Name $ResourceGroupName -Location $Location -Tags $allTags -PolicyInitiative $PolicyInitiativeId -ApplyLock $ApplyResourceLock -Force $Force
+$ResourceGroup = New-ResourceGroupWithGovernance -Name $ResourceGroupName -Location $Location -Tags $AllTags -PolicyInitiative $PolicyInitiativeId -ApplyLock $ApplyResourceLock -Force $Force
 
-# Show summary
-Show-DeploymentSummary -ResourceGroup $resourceGroup -Tags $allTags -PolicyInitiative $PolicyInitiativeId -HasLock $ApplyResourceLock
+Show-DeploymentSummary -ResourceGroup $ResourceGroup -Tags $AllTags -PolicyInitiative $PolicyInitiativeId -HasLock $ApplyResourceLock
 
 Write-Host "`nResource group deployment completed successfully!" -ForegroundColor Green
 
-# Return resource group object
-return $resourceGroup\n
+return $ResourceGroup\n
+
+
 

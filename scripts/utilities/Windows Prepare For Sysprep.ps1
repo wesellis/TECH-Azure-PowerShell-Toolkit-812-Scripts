@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Prepare For Sysprep
@@ -22,14 +22,16 @@ function getNewestLink($match) {
     $data = $get[0].assets | Where-Object name -Match $match
     return $data.browser_download_url
 }
-Write-Host " === Removing Microsoft.Winget.Source for all users"
+Write-Output " === Removing Microsoft.Winget.Source for all users"
 Get-AppxPackage -AllUsers Microsoft.Winget.Source* | Remove-AppPackage -ErrorAction Continue
-$wingetUrl = getNewestLink(" msixbundle" )
-$wingetLicenseUrl = getNewestLink("License1.xml" )
-Write-Host " === Downloadng winget bundle from $wingetUrl and its license from $wingetLicenseUrl";
-$wingetPath = " $env:TEMP/winget.msixbundle"
-Invoke-WebRequest -Uri $wingetUrl -OutFile $wingetPath;
-$wingetLicensePath = " $env:TEMP/winget-license.xml"
-Invoke-WebRequest -Uri $wingetLicenseUrl -OutFile $wingetLicensePath
-Write-Host " === Installing winget bundle from $wingetPath and license from $wingetLicensePath"
-Add-AppxProvisionedPackage -Online -PackagePath $wingetPath -LicensePath $wingetLicensePath -ErrorAction Continue
+$WingetUrl = getNewestLink(" msixbundle" )
+$WingetLicenseUrl = getNewestLink("License1.xml" )
+Write-Output " === Downloadng winget bundle from $WingetUrl and its license from $WingetLicenseUrl";
+$WingetPath = " $env:TEMP/winget.msixbundle"
+Invoke-WebRequest -Uri $WingetUrl -OutFile $WingetPath;
+$WingetLicensePath = " $env:TEMP/winget-license.xml"
+Invoke-WebRequest -Uri $WingetLicenseUrl -OutFile $WingetLicensePath
+Write-Output " === Installing winget bundle from $WingetPath and license from $WingetLicensePath"
+Add-AppxProvisionedPackage -Online -PackagePath $WingetPath -LicensePath $WingetLicensePath -ErrorAction Continue
+
+

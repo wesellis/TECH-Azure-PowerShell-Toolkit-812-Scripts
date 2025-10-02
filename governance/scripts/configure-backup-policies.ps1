@@ -7,30 +7,29 @@
 .DESCRIPTION
     configure backup policies operation
     Author: Wes Ellis (wes@wesellis.com)
-#>
 
     Configures backup policies for Azure VMs and SQL databases
     Virtual Machines, SQL databases, and file shares. Supports creating custom
     backup policies with configurable retention periods and schedules.
-.PARAMETER VaultName
+.parameter VaultName
     Name of the Recovery Services vault
-.PARAMETER ResourceGroupName
+.parameter ResourceGroupName
     Name of the resource group containing the vault
-.PARAMETER PolicyName
+.parameter PolicyName
     Name of the backup policy to create or update
-.PARAMETER BackupType
+.parameter BackupType
     Type of backup policy: VM, SQL, FileShare
-.PARAMETER RetentionDaily
+.parameter RetentionDaily
     Number of days to retain daily backups
-.PARAMETER RetentionWeekly
+.parameter RetentionWeekly
     Number of weeks to retain weekly backups
-.PARAMETER RetentionMonthly
+.parameter RetentionMonthly
     Number of months to retain monthly backups
-.PARAMETER RetentionYearly
+.parameter RetentionYearly
     Number of years to retain yearly backups
-.PARAMETER ScheduleTime
+.parameter ScheduleTime
     Time of day to run backups (24-hour format)
-.PARAMETER ApplyToResources
+.parameter ApplyToResources
     Apply the policy to specific resources immediately
 
     .\configure-backup-policies.ps1 -VaultName "MyVault" -ResourceGroupName "MyRG" -PolicyName "DailyVM" -BackupType VM
@@ -41,67 +40,63 @@
 
     Creates SQL backup policy with 30-day retention
 
-    Author: Azure PowerShell Toolkit#>
+    Author: Azure PowerShell Toolkit
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VaultName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$PolicyName,
 
-    [Parameter(Mandatory = $true)]
+    [parameter(Mandatory = $true)]
     [ValidateSet('VM', 'SQL', 'FileShare')]
     [string]$BackupType,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateRange(1, 9999)]
     [int]$RetentionDaily = 7,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateRange(1, 520)]
     [int]$RetentionWeekly = 4,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateRange(1, 120)]
     [int]$RetentionMonthly = 12,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidateRange(1, 99)]
     [int]$RetentionYearly = 5,
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [ValidatePattern('^([01]?[0-9]|2[0-3]):[0-5][0-9]$')]
     [string]$ScheduleTime = "02:00",
 
-    [Parameter(Mandatory = $false)]
+    [parameter(Mandatory = $false)]
     [string[]]$ApplyToResources,
 
-    [Parameter()]
+    [parameter()]
     [switch]$InstantRPRetention,
 
-    [Parameter()]
+    [parameter()]
     [ValidateSet('Standard', 'Enhanced')]
     [string]$PolicyTier = 'Standard'
 )
 
-#region Initialize-Configuration
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-#endregion
 
-#region Functions
-[OutputType([bool])]
+[OutputType([bool])] 
  {
-    [CmdletBinding()]
     param(
         [string]$VaultName,
         [string]$ResourceGroupName
@@ -109,17 +104,16 @@ $ProgressPreference = 'SilentlyContinue'
 
     try {
         $vault = Get-AzRecoveryServicesVault -Name $VaultName -ResourceGroupName $ResourceGroupName -ErrorAction Stop
-        Write-Verbose "Recovery Services vault '$VaultName' found"
+        write-Verbose "Recovery Services vault '$VaultName' found"
         return $vault
     }
     catch {
-        Write-Error "Recovery Services vault '$VaultName' not found in resource group '$ResourceGroupName'"
+        write-Error "Recovery Services vault '$VaultName' not found in resource group '$ResourceGroupName'"
         throw
     }
 }
 
 function New-VMBackupPolicy {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault]$Vault,
         [string]$PolicyName,
@@ -133,40 +127,33 @@ function New-VMBackupPolicy {
     try {
         Set-AzRecoveryServicesVaultContext -Vault $Vault
 
-        # Check if policy already exists
         $existingPolicy = Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName -ErrorAction SilentlyContinue
 
         if ($existingPolicy) {
-            Write-Verbose "Policy '$PolicyName' already exists. Updating..."
+            write-Verbose "Policy '$PolicyName' already exists. Updating..."
         }
         else {
-            Write-Verbose "Creating new VM backup policy: $PolicyName"
+            write-Verbose "Creating new VM backup policy: $PolicyName"
         }
 
-        # Parse schedule time
         $scheduleHour = [int]($ScheduleTime.Split(':')[0])
         $scheduleMinute = [int]($ScheduleTime.Split(':')[1])
         $scheduleDate = Get-Date -Hour $scheduleHour -Minute $scheduleMinute -Second 0
 
-        # Create schedule policy object
         $schedulePolicy = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType AzureVM
         $schedulePolicy.ScheduleRunTimes[0] = $scheduleDate
 
-        # Create retention policy object
         $retentionPolicy = Get-AzRecoveryServicesBackupRetentionPolicyObject -WorkloadType AzureVM
 
-        # Configure daily retention
         $retentionPolicy.DailySchedule.DurationCountInDays = $RetentionDaily
         $retentionPolicy.IsDailyScheduleEnabled = $true
 
-        # Configure weekly retention
         if ($RetentionWeekly -gt 0) {
             $retentionPolicy.WeeklySchedule.DurationCountInWeeks = $RetentionWeekly
             $retentionPolicy.WeeklySchedule.DaysOfTheWeek = @("Sunday")
             $retentionPolicy.IsWeeklyScheduleEnabled = $true
         }
 
-        # Configure monthly retention
         if ($RetentionMonthly -gt 0) {
             $retentionPolicy.MonthlySchedule.DurationCountInMonths = $RetentionMonthly
             $retentionPolicy.MonthlySchedule.RetentionScheduleFormatType = "Weekly"
@@ -175,7 +162,6 @@ function New-VMBackupPolicy {
             $retentionPolicy.IsMonthlyScheduleEnabled = $true
         }
 
-        # Configure yearly retention
         if ($RetentionYearly -gt 0) {
             $retentionPolicy.YearlySchedule.DurationCountInYears = $RetentionYearly
             $retentionPolicy.YearlySchedule.RetentionScheduleFormatType = "Weekly"
@@ -185,7 +171,6 @@ function New-VMBackupPolicy {
             $retentionPolicy.IsYearlyScheduleEnabled = $true
         }
 
-        # Create or update the policy
         if ($PSCmdlet.ShouldProcess($PolicyName, "Create/Update VM Backup Policy")) {
             if ($existingPolicy) {
                 $params = @{
@@ -206,17 +191,16 @@ function New-VMBackupPolicy {
             }
         }
 
-        Write-Host "VM backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        write-Host "VM backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
-        Write-Error "Failed to configure VM backup policy: $_"
+        write-Error "Failed to configure VM backup policy: $_"
         throw
     }
 }
 
 function New-SQLBackupPolicy {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault]$Vault,
         [string]$PolicyName,
@@ -229,13 +213,11 @@ function New-SQLBackupPolicy {
     try {
         Set-AzRecoveryServicesVaultContext -Vault $Vault
 
-        Write-Verbose "Creating SQL backup policy: $PolicyName"
+        write-Verbose "Creating SQL backup policy: $PolicyName"
 
-        # Get SQL workload backup policy object
         $schedulePolicy = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType MSSQL -ScheduleRunFrequency Daily
         $retentionPolicy = Get-AzRecoveryServicesBackupRetentionPolicyObject -WorkloadType MSSQL
 
-        # Configure retention
         $retentionPolicy.FullBackupRetentionPolicy.IsDailyScheduleEnabled = $true
         $retentionPolicy.FullBackupRetentionPolicy.DailySchedule.DurationCountInDays = $RetentionDaily
 
@@ -265,17 +247,16 @@ function New-SQLBackupPolicy {
             New-AzRecoveryServicesBackupProtectionPolicy @params
         }
 
-        Write-Host "SQL backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        write-Host "SQL backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
-        Write-Error "Failed to configure SQL backup policy: $_"
+        write-Error "Failed to configure SQL backup policy: $_"
         throw
     }
 }
 
 function New-FileShareBackupPolicy {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault]$Vault,
         [string]$PolicyName,
@@ -286,14 +267,12 @@ function New-FileShareBackupPolicy {
     try {
         Set-AzRecoveryServicesVaultContext -Vault $Vault
 
-        Write-Verbose "Creating FileShare backup policy: $PolicyName"
+        write-Verbose "Creating FileShare backup policy: $PolicyName"
 
-        # Parse schedule time
         $scheduleHour = [int]($ScheduleTime.Split(':')[0])
         $scheduleMinute = [int]($ScheduleTime.Split(':')[1])
         $scheduleDate = Get-Date -Hour $scheduleHour -Minute $scheduleMinute -Second 0
 
-        # Get FileShare workload backup policy objects
         $schedulePolicy = Get-AzRecoveryServicesBackupSchedulePolicyObject -WorkloadType AzureFiles
         $schedulePolicy.ScheduleRunTimes[0] = $scheduleDate
 
@@ -310,17 +289,16 @@ function New-FileShareBackupPolicy {
             New-AzRecoveryServicesBackupProtectionPolicy @params
         }
 
-        Write-Host "FileShare backup policy '$PolicyName' configured successfully" -InformationAction Continue
+        write-Host "FileShare backup policy '$PolicyName' configured successfully" -InformationAction Continue
         return Get-AzRecoveryServicesBackupProtectionPolicy -Name $PolicyName
     }
     catch {
-        Write-Error "Failed to configure FileShare backup policy: $_"
+        write-Error "Failed to configure FileShare backup policy: $_"
         throw
     }
 }
 
 function Apply-BackupPolicy {
-    [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Microsoft.Azure.Commands.RecoveryServices.ARSVault]$Vault,
         [object]$Policy,
@@ -332,11 +310,10 @@ function Apply-BackupPolicy {
         Set-AzRecoveryServicesVaultContext -Vault $Vault
 
         foreach ($resourceId in $ResourceIds) {
-            Write-Verbose "Applying policy to resource: $resourceId"
+            write-Verbose "Applying policy to resource: $resourceId"
 
             switch ($BackupType) {
                 'VM' {
-                    # Parse VM details from resource ID
                     $vmName = $resourceId.Split('/')[-1]
                     $rgName = $resourceId.Split('/')[4]
 
@@ -354,31 +331,28 @@ Get-AzVM @vmSplat
                                 Policy = $Policy
                             }
                             Enable-AzRecoveryServicesBackupProtection @params
-                            Write-Host "Backup enabled for VM: $vmName" -InformationAction Continue
+                            write-Host "Backup enabled for VM: $vmName" -InformationAction Continue
                         }
                     }
                     else {
-                        Write-Warning "VM not found: $vmName"
+                        write-Warning "VM not found: $vmName"
                     }
                 }
                 'SQL' {
-                    # SQL backup implementation
-                    Write-Verbose "SQL backup configuration for: $resourceId"
+                    write-Verbose "SQL backup configuration for: $resourceId"
                 }
                 'FileShare' {
-                    # FileShare backup implementation
-                    Write-Verbose "FileShare backup configuration for: $resourceId"
+                    write-Verbose "FileShare backup configuration for: $resourceId"
                 }
             }
-        
+
 } catch {
-        Write-Error "Failed to apply backup policy: $_"
+        write-Error "Failed to apply backup policy: $_"
         throw
     }
 }
 
 function Get-BackupPolicySummary {
-    [CmdletBinding()]
     param(
         [object]$Policy,
         [string]$BackupType
@@ -403,16 +377,12 @@ function Get-BackupPolicySummary {
     return $summary
 }
 
-#endregion
 
-#region Main-Execution
 try {
-    Write-Host "[START] Configuring backup policies" -InformationAction Continue
+    write-Host "[START] Configuring backup policies" -InformationAction Continue
 
-    # Validate Recovery Services vault
     $vault = Test-RecoveryServicesVault -VaultName $VaultName -ResourceGroupName $ResourceGroupName
 
-    # Create/Update backup policy based on type
     $policy = switch ($BackupType) {
         'VM' {
             $params = @{
@@ -448,20 +418,17 @@ try {
         }
     }
 
-    # Apply policy to resources if specified
     if ($ApplyToResources -and $ApplyToResources.Count -gt 0) {
-        Write-Host "[APPLY] Applying policy to specified resources" -InformationAction Continue
+        write-Host "[APPLY] Applying policy to specified resources" -InformationAction Continue
         Apply-BackupPolicy -Vault $vault -Policy $policy -ResourceIds $ApplyToResources -BackupType $BackupType
     }
 
-    # Display policy summary
     $summary = Get-BackupPolicySummary -Policy $policy -BackupType $BackupType
-    Write-Host "`n[SUMMARY] Backup Policy Configuration:" -InformationAction Continue
+    write-Host "`n[SUMMARY] Backup Policy Configuration:" -InformationAction Continue
     $summary | Format-List
 
-    Write-Host "[COMPLETE] Backup policy configuration completed successfully" -InformationAction Continue
+    write-Host "[COMPLETE] Backup policy configuration completed successfully" -InformationAction Continue
 
-    # Return the policy object
     return $policy
 }
 catch {
@@ -471,13 +438,12 @@ catch {
         Line = $_.InvocationInfo.ScriptLineNumber
     }
 
-    Write-Error "Backup policy configuration failed: $($errorDetails.Message) at line $($errorDetails.Line)"
+    write-Error "Backup policy configuration failed: $($errorDetails.Message) at line $($errorDetails.Line)"
     throw
 }
 finally {
-    # Cleanup
     $ProgressPreference = 'Continue'
 }
 
-#endregion\n
+
 

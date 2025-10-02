@@ -1,82 +1,66 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules xActiveDirectory, xPendingReboot
 
-<#`n.SYNOPSIS
-    Configureadbdc
+<#
+.SYNOPSIS
+    Configure Active Directory Backup Domain Controller
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    DSC configuration for setting up an Active Directory Backup Domain Controller
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
 configuration ConfigureADBDC
 {
-   [CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
-param(
-        [Parameter(Mandatory)]
+    param(
+        [Parameter(Mandatory = $true)]
         [String]$DomainName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]$Admincreds,
-        [Int]$RetryCount=20,
-        [Int]$RetryIntervalSec=30
+
+        [Int]$RetryCount = 20,
+        [Int]$RetryIntervalSec = 30
     )
+
     Import-DscResource -ModuleName xActiveDirectory, xPendingReboot
-    [System.Management.Automation.PSCredential ]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
+
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+
     Node localhost
     {
         LocalConfigurationManager
         {
             RebootNodeIfNeeded = $true
         }
+
         xWaitForADDomain DscForestWait
         {
             DomainName = $DomainName
-            DomainUserCredential= $DomainCreds
+            DomainUserCredential = $DomainCreds
             RetryCount = $RetryCount
             RetryIntervalSec = $RetryIntervalSec
         }
+
         xADDomainController BDC
         {
             DomainName = $DomainName
             DomainAdministratorCredential = $DomainCreds
             SafemodeAdministratorPassword = $DomainCreds
-            DatabasePath = "F:
-TDS"
-            LogPath = "F:
-TDS"
+            DatabasePath = "F:\NTDS"
+            LogPath = "F:\NTDS"
             SysvolPath = "F:\SYSVOL"
-            DependsOn = " [xWaitForADDomain]DscForestWait"
+            DependsOn = "[xWaitForADDomain]DscForestWait"
         }
-#>
-        Script UpdateDNSForwarder
+
+        xPendingReboot RebootAfterPromotion
         {
-            SetScript =
-            {
-                Write-Verbose -Verbose "Getting DNS forwarding rule..."
-$dnsFwdRule = Get-DnsServerForwarder -Verbose
-                if ($dnsFwdRule)
-                {
-                    Write-Verbose -Verbose "Removing DNS forwarding rule"
-                    Remove-DnsServerForwarder -IPAddress $dnsFwdRule.IPAddress -Force -Verbose
-                }
-                Write-Verbose -Verbose "End of UpdateDNSForwarder script..."
-            }
-            GetScript =  { @{} }
-            TestScript = { $false}
-            DependsOn = " [xADDomainController]BDC"
-        }
-        xPendingReboot RebootAfterPromotion {
             Name = "RebootAfterDCPromotion"
-            DependsOn = " [xADDomainController]BDC"
+            DependsOn = "[xADDomainController]BDC"
         }
     }
-}
-} catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
 }

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
     Manage VNets
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,7 +21,7 @@
     [Parameter(Mandatory)]
     [string]$AddressPrefix
 )
-Write-Host "Adding subnet to VNet: $VNetName"
+Write-Output "Adding subnet to VNet: $VNetName"
 $VNet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -Name $VNetName
 $params = @{
     AddressPrefix = $AddressPrefix
@@ -28,8 +30,10 @@ $params = @{
 }
 Add-AzVirtualNetworkSubnetConfig @params
 Set-AzVirtualNetwork -VirtualNetwork $VNet
-Write-Host "Subnet added successfully:"
-Write-Host "Subnet: $SubnetName"
-Write-Host "Address: $AddressPrefix"
-Write-Host "VNet: $VNetName"
+Write-Output "Subnet added successfully:"
+Write-Output "Subnet: $SubnetName"
+Write-Output "Address: $AddressPrefix"
+Write-Output "VNet: $VNetName"
+
+
 

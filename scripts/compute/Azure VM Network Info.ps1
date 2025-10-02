@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,12 +27,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -44,24 +41,21 @@ param(
     [Parameter(Mandatory)]
     [string]$VmName
 )
-Write-Host "Retrieving network information for VM: $VmName"
+Write-Output "Retrieving network information for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-Write-Host " `nNetwork Interfaces:"
+Write-Output " `nNetwork Interfaces:"
 foreach ($NicRef in $VM.NetworkProfile.NetworkInterfaces) {
-    $NicId = $NicRef.Id
-    $Nic = Get-AzNetworkInterface -ResourceId $NicId
-    Write-Host "NIC: $($Nic.Name)"
-    Write-Host "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
-    Write-Host "Subnet: $($Nic.IpConfigurations[0].Subnet.Id.Split('/')[-1])"
+    [string]$NicId = $NicRef.Id
+$Nic = Get-AzNetworkInterface -ResourceId $NicId
+    Write-Output "NIC: $($Nic.Name)"
+    Write-Output "Private IP: $($Nic.IpConfigurations[0].PrivateIpAddress)"
+    Write-Output "Subnet: $($Nic.IpConfigurations[0].Subnet.Id.Split('/')[-1])"
     if ($Nic.IpConfigurations[0].PublicIpAddress) {
-$PipId = $Nic.IpConfigurations[0].PublicIpAddress.Id
+    [string]$PipId = $Nic.IpConfigurations[0].PublicIpAddress.Id
 $Pip = Get-AzPublicIpAddress -ResourceId $PipId
-        Write-Host "Public IP: $($Pip.IpAddress)"
+        Write-Output "Public IP: $($Pip.IpAddress)"
     }
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

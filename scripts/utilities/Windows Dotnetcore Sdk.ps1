@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Windows Dotnetcore Sdk
@@ -8,45 +8,42 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
-[string]$DotNetCoreVersion = " latest" ,
+$DotNetCoreVersion = " latest" ,
 [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Runtime,
+    $Runtime,
 [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Channel,
+    $Channel,
 [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$GlobalJsonFilePath,
-[string]$OverrideDotnet
+    $GlobalJsonFilePath,
+$OverrideDotnet
 )
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 if (![string]::IsNullOrEmpty($GlobalJsonFilePath)) {
     Import-Module -Force (Join-Path $(Split-Path -Parent $PSScriptRoot) '_common/windows-json-utils.psm1')
     if([System.IO.File]::Exists($GlobalJsonFilePath)) {
-        $DotNetCoreVersion = (Get-JsonFromFile -ErrorAction Stop $GlobalJsonFilePath).sdk.version
+    $DotNetCoreVersion = (Get-JsonFromFile -ErrorAction Stop $GlobalJsonFilePath).sdk.version
     }
-    Write-Host "Installing NetCore SDK version: $DotNetCoreVersion"
+    Write-Output "Installing NetCore SDK version: $DotNetCoreVersion"
     & .\dotnet-install.ps1 -Version $DotNetCoreVersion -InstallDir "C:\Program Files\dotnet"
     exit 0
 }
-$Override = $false
+    $Override = $false
 if ((![string]::IsNullOrEmpty($OverrideDotnet)) -and ($OverrideDotnet -eq "OverrideDotnet" )) {
-$Override = $true
+    $Override = $true
 }
-Write-Host "Installing NetCore SDK version: $DotNetCoreVersion  channel: $Channel  runtime: $Runtime  OverrideDotnet: $OverrideDotnet  Override:$Override"
+Write-Output "Installing NetCore SDK version: $DotNetCoreVersion  channel: $Channel  runtime: $Runtime  OverrideDotnet: $OverrideDotnet  Override:$Override"
 Unblock-File -Path .\dotnet-install.ps1
 if ([string]::IsNullOrEmpty($Channel)) {
     if ([string]::IsNullOrEmpty($Runtime)) {
@@ -71,5 +68,4 @@ else
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

@@ -33,3 +33,31 @@ config.local.json
 # Azure specific
 .azure/
 *.publishsettings
+
+# Node.js artifacts
+node_modules/
+package-lock.json
+npm-debug.log
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+*REVIEW*.md
+*CHECKLIST*.md
+Fix-*.ps1
+Analyze-*.ps1
+Quick-Fix-*.ps1
+quality-reports/
+SCRIPT_ISSUES_REPORT.md
+SCRIPT-CATALOG.md

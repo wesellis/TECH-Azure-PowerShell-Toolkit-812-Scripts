@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.RecoveryServices
 
@@ -13,10 +13,14 @@
 #>
 [CmdletBinding()]
 
+$ErrorActionPreference = 'Stop'
+
     [string]$ResourceGroupName,
     [string]$VaultName,
     [string]$VmName
 )
 Backup-AzVM -ResourceGroupName $ResourceGroupName -VaultName $VaultName -Name $VmName
+
+
 
 

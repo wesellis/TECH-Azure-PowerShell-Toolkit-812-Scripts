@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Upload VHD to managed disk
@@ -8,8 +8,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 $ErrorActionPreference = "Stop"
-# Example: Upload VHD to managed disk
-# AzCopy.exe copy "c:\somewhere\mydisk.vhd" $diskSas.AccessSAS --blob-type PageBlob
+
 

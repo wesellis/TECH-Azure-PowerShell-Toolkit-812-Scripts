@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$CacheName,
@@ -18,12 +20,11 @@
     [bool]$EnableNonSslPort = $false,
     [hashtable]$RedisConfiguration = @{}
 )
-Write-Host "Provisioning Redis Cache: $CacheName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "SKU: $SkuName $SkuFamily$SkuCapacity"
-Write-Host "Non-SSL Port Enabled: $EnableNonSslPort"
-# Create the Redis Cache
+Write-Output "Provisioning Redis Cache: $CacheName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "SKU: $SkuName $SkuFamily$SkuCapacity"
+Write-Output "Non-SSL Port Enabled: $EnableNonSslPort"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     SkuName = $SkuName
@@ -35,17 +36,18 @@ $params = @{
 }
 $RedisCache @params
 if ($RedisConfiguration.Count -gt 0) {
-    Write-Host "`nApplying Redis Configuration:"
+    Write-Output "`nApplying Redis Configuration:"
     foreach ($Config in $RedisConfiguration.GetEnumerator()) {
-        Write-Host "  $($Config.Key): $($Config.Value)"
+        Write-Output "  $($Config.Key): $($Config.Value)"
     }
 }
-Write-Host "`nRedis Cache $CacheName provisioned successfully"
-Write-Host "Host Name: $($RedisCache.HostName)"
-Write-Host "Port: $($RedisCache.Port)"
-Write-Host "SSL Port: $($RedisCache.SslPort)"
-Write-Host "Provisioning State: $($RedisCache.ProvisioningState)"
-# Display access keys info (without showing actual keys)
-Write-Host "`nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet"
-Write-Host "`nRedis Cache provisioning completed at $(Get-Date)"
+Write-Output "`nRedis Cache $CacheName provisioned successfully"
+Write-Output "Host Name: $($RedisCache.HostName)"
+Write-Output "Port: $($RedisCache.Port)"
+Write-Output "SSL Port: $($RedisCache.SslPort)"
+Write-Output "Provisioning State: $($RedisCache.ProvisioningState)"
+Write-Output "`nAccess Keys: Available via Azure Portal or Get-AzRedisCacheKey -ErrorAction Stop cmdlet"
+Write-Output "`nRedis Cache provisioning completed at $(Get-Date)"
+
+
 

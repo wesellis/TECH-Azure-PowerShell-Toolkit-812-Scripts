@@ -1,10 +1,13 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
     Retrieves and manages logs from Azure Container Instances
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
      log retrieval tool for Azure Container Instances with filtering,
     export capabilities, and real-time monitoring. Supports both single container
     and container group operations with  output options.
@@ -38,7 +41,7 @@
     Follow logs in real-time
     .\Azure-ContainerInstance-Logs.ps1 -ResourceGroupName "RG-Containers" -ContainerGroupName "web-app" -ExportPath ".\logs.txt" -FilterPattern "ERROR"
     Export error logs to file
-.NOTES#>
+.NOTES
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
@@ -63,12 +66,12 @@ param(
     [ValidateSet('Text', 'JSON', 'CSV')]
     [string]$Format = 'Text'
 )
-$ErrorActionPreference = 'Stop'
+    [string]$ErrorActionPreference = 'Stop'
 function (Get-AzContext) {
     try {
-        $context = Get-AzContext
+    $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -78,28 +81,27 @@ function (Get-AzContext) {
         return $false
     }
 }
-[OutputType([bool])]
- {
+function Write-Log {
     param(
         [string]$ResourceGroup,
         [string]$GroupName
     )
     try {
-        Write-Host "Retrieving container group information..." -ForegroundColor Yellow
-        $containerGroup = Get-AzContainerGroup -ResourceGroupName $ResourceGroup -Name $GroupName
-        Write-Host "`nContainer Group Information:" -ForegroundColor Cyan
-        Write-Host "Name: $($containerGroup.Name)"
-        Write-Host "Location: $($containerGroup.Location)"
-        Write-Host "State: $($containerGroup.State)" -ForegroundColor $(if ($containerGroup.State -eq 'Running') { 'Green' } else { 'Yellow' })
-        Write-Host "OS Type: $($containerGroup.OsType)"
-        if ($containerGroup.Container) {
-            Write-Host "`nContainers:" -ForegroundColor Cyan
-            foreach ($container in $containerGroup.Container) {
-                $status = if ($container.InstanceView) { $container.InstanceView.CurrentState.State } else { "Unknown" }
-                Write-Host "  - $($container.Name): $status" -ForegroundColor $(if ($status -eq 'Running') { 'Green' } else { 'Yellow' })
+        Write-Host "Retrieving container group information..." -ForegroundColor Green
+    $ContainerGroup = Get-AzContainerGroup -ResourceGroupName $ResourceGroup -Name $GroupName
+        Write-Host "`nContainer Group Information:" -ForegroundColor Green
+        Write-Output "Name: $($ContainerGroup.Name)"
+        Write-Output "Location: $($ContainerGroup.Location)"
+        Write-Output "State: $($ContainerGroup.State)" -ForegroundColor $(if ($ContainerGroup.State -eq 'Running') { 'Green' } else { 'Yellow' })
+        Write-Output "OS Type: $($ContainerGroup.OsType)"
+        if ($ContainerGroup.Container) {
+            Write-Host "`nContainers:" -ForegroundColor Green
+            foreach ($container in $ContainerGroup.Container) {
+    [string]$status = if ($container.InstanceView) { $container.InstanceView.CurrentState.State } else { "Unknown" }
+                Write-Output "  - $($container.Name): $status" -ForegroundColor $(if ($status -eq 'Running') { 'Green' } else { 'Yellow' })
             }
         }
-        return $containerGroup
+        return $ContainerGroup
     }
     catch {
         throw "Failed to retrieve container group information: $_"
@@ -114,17 +116,15 @@ function Get-ContainerLogs {
         [string]$SinceTime
     )
     try {
-        $params = @{
+    $params = @{
             ResourceGroupName = $ResourceGroup
             ContainerGroupName = $GroupName
             Tail = $TailLines
         }
         if ($ContainerName) {
-            $params.ContainerName = $ContainerName
+    [string]$params.ContainerName = $ContainerName
         }
-        # Note: Az.ContainerInstance module doesn't support Since parameter directly
-        # This would need to be implemented with filtering after retrieval
-        $logs = Get-AzContainerInstanceLog @params
+    $logs = Get-AzContainerInstanceLog @params
         return $logs
     }
     catch {
@@ -142,61 +142,59 @@ function Format-LogOutput {
     if (-not $LogContent) {
         return $null
     }
-    $logLines = $LogContent -split "`n"
-    # Apply filter if specified
+    [string]$LogLines = $LogContent -split "`n"
     if ($FilterPattern) {
-        $logLines = $logLines | Where-Object { $_ -match $FilterPattern }
+    [string]$LogLines = $LogLines | Where-Object { $_ -match $FilterPattern }
     }
     switch ($OutputFormat) {
         'JSON' {
-            $jsonLogs = @()
-            $lineNumber = 1
-            foreach ($line in $logLines) {
+    [string]$JsonLogs = @()
+    [string]$LineNumber = 1
+            foreach ($line in $LogLines) {
                 if ($line.Trim()) {
-                    $logEntry = @{
-                        LineNumber = $lineNumber
+    $LogEntry = @{
+                        LineNumber = $LineNumber
                         Container = $ContainerName
                         Timestamp = if ($IncludeTimestamps) { Get-Date } else { $null }
                         Message = $line.Trim()
                     }
-                    $jsonLogs += $logEntry
-                    $lineNumber++
+    [string]$JsonLogs += $LogEntry
+    [string]$LineNumber++
                 }
             }
-            return ($jsonLogs | ConvertTo-Json -Depth 2)
+            return ($JsonLogs | ConvertTo-Json -Depth 2)
         }
         'CSV' {
-            $csvLogs = @()
-            $lineNumber = 1
-            foreach ($line in $logLines) {
+    [string]$CsvLogs = @()
+    [string]$LineNumber = 1
+            foreach ($line in $LogLines) {
                 if ($line.Trim()) {
-                    $csvLogs += [PSCustomObject]@{
-                        LineNumber = $lineNumber
+    [string]$CsvLogs += [PSCustomObject]@{
+                        LineNumber = $LineNumber
                         Container = $ContainerName
                         Timestamp = if ($IncludeTimestamps) { Get-Date } else { "" }
                         Message = $line.Trim()
                     }
-                    $lineNumber++
+    [string]$LineNumber++
                 }
             }
-            return ($csvLogs | ConvertTo-Csv -NoTypeInformation)
+            return ($CsvLogs | ConvertTo-Csv -NoTypeInformation)
         }
         default {
-            # Text format
-            $formattedLines = @()
-            foreach ($line in $logLines) {
+    [string]$FormattedLines = @()
+            foreach ($line in $LogLines) {
                 if ($line.Trim()) {
-                    $prefix = ""
+    [string]$prefix = ""
                     if ($IncludeTimestamps) {
-                        $prefix += "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] "
+    [string]$prefix += "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] "
                     }
                     if ($ContainerName) {
-                        $prefix += "[$ContainerName] "
+    [string]$prefix += "[$ContainerName] "
                     }
-                    $formattedLines += "$prefix$($line.Trim())"
+    [string]$FormattedLines += "$prefix$($line.Trim())"
                 }
             }
-            return $formattedLines -join "`n"
+            return $FormattedLines -join "`n"
         }
     }
 }
@@ -206,11 +204,11 @@ function Export-LogsToFile {
         [string]$FilePath
     )
     try {
-        $directory = Split-Path $FilePath -Parent
+    [string]$directory = Split-Path $FilePath -Parent
         if ($directory -and -not (Test-Path $directory)) {
             New-Item -ItemType Directory -Path $directory -Force | Out-Null
         }
-        $Content | Out-File -FilePath $FilePath -Encoding UTF8
+    [string]$Content | Out-File -FilePath $FilePath -Encoding UTF8
         Write-Host "Logs exported to: $FilePath" -ForegroundColor Green
     }
     catch {
@@ -224,37 +222,37 @@ function Start-LogFollowing {
         [string]$ContainerName,
         [string]$FilterPattern
     )
-    Write-Host "Following logs in real-time. Press Ctrl+C to stop..." -ForegroundColor Yellow
+    Write-Host "Following logs in real-time. Press Ctrl+C to stop..." -ForegroundColor Green
     Write-Host ("=" * 60) -ForegroundColor Cyan
-    $lastLogCount = 0
+    [string]$LastLogCount = 0
     try {
         while ($true) {
-            $logs = Get-ContainerLogs -ResourceGroup $ResourceGroup -GroupName $GroupName -ContainerName $ContainerName -TailLines 1000
+    $logs = Get-ContainerLogs -ResourceGroup $ResourceGroup -GroupName $GroupName -ContainerName $ContainerName -TailLines 1000
             if ($logs) {
-                $logLines = $logs -split "`n"
-                $newLogCount = $logLines.Count
-                if ($newLogCount -gt $lastLogCount) {
-                    $newLines = $logLines[$lastLogCount..($newLogCount - 1)]
-                    foreach ($line in $newLines) {
+    [string]$LogLines = $logs -split "`n"
+    [string]$NewLogCount = $LogLines.Count
+                if ($NewLogCount -gt $LastLogCount) {
+    [string]$NewLines = $LogLines[$LastLogCount..($NewLogCount - 1)]
+                    foreach ($line in $NewLines) {
                         if ($line.Trim()) {
-                            $shouldDisplay = $true
+    [string]$ShouldDisplay = $true
                             if ($FilterPattern -and $line -notmatch $FilterPattern) {
-                                $shouldDisplay = $false
+    [string]$ShouldDisplay = $false
                             }
-                            if ($shouldDisplay) {
-                                $timestamp = Get-Date -Format 'HH:mm:ss'
-                                $prefix = if ($ContainerName) { "[$timestamp][$ContainerName] " } else { "[$timestamp] " }
-                                Write-Host "$prefix$($line.Trim())" -ForegroundColor White
+                            if ($ShouldDisplay) {
+    $timestamp = Get-Date -Format 'HH:mm:ss'
+    [string]$prefix = if ($ContainerName) { "[$timestamp][$ContainerName] " } else { "[$timestamp] " }
+                                Write-Host "$prefix$($line.Trim())" -ForegroundColor Green
                             }
                         }
                     }
-                    $lastLogCount = $newLogCount
+    [string]$LastLogCount = $NewLogCount
                 }
             }
             Start-Sleep -Seconds 2
-        
+
 } catch [System.Management.Automation.PipelineStoppedException] {
-        Write-Host "`nLog following stopped by user." -ForegroundColor Yellow
+        Write-Host "`nLog following stopped by user." -ForegroundColor Green
     }
     catch {
         Write-Error "Error during log following: $_"
@@ -266,94 +264,86 @@ function Show-LogSummary {
         [string]$ContainerName
     )
     if (-not $LogContent) {
-        Write-Host "No logs available" -ForegroundColor Yellow
+        Write-Host "No logs available" -ForegroundColor Green
         return
     }
-    $logLines = ($LogContent -split "`n") | Where-Object { $_.Trim() }
-    $totalLines = $logLines.Count
-    Write-Host "`nLog Summary:" -ForegroundColor Cyan
-    Write-Host "Container: $(if ($ContainerName) { $ContainerName } else { 'All containers' })"
-    Write-Host "Total Lines: $totalLines"
-    Write-Host "Retrieved: $(Get-Date)" -ForegroundColor Gray
-    # Simple pattern analysis
-    $errorCount = ($logLines | Where-Object { $_ -match "ERROR|Error|error" }).Count
-    $warningCount = ($logLines | Where-Object { $_ -match "WARN|Warning|warning" }).Count
-    $infoCount = ($logLines | Where-Object { $_ -match "INFO|Info|info" }).Count
-    if ($errorCount -gt 0 -or $warningCount -gt 0) {
-        Write-Host "`nLog Level Breakdown:" -ForegroundColor Cyan
-        if ($errorCount -gt 0) { Write-Host "Errors: $errorCount" -ForegroundColor Red }
-        if ($warningCount -gt 0) { Write-Host "Warnings: $warningCount" -ForegroundColor Yellow }
-        if ($infoCount -gt 0) { Write-Host "Info: $infoCount" -ForegroundColor Green }
+    [string]$LogLines = ($LogContent -split "`n") | Where-Object { $_.Trim() }
+    [string]$TotalLines = $LogLines.Count
+    Write-Host "`nLog Summary:" -ForegroundColor Green
+    Write-Output "Container: $(if ($ContainerName) { $ContainerName } else { 'All containers' })"
+    Write-Output "Total Lines: $TotalLines"
+    Write-Host "Retrieved: $(Get-Date)" -ForegroundColor Green
+    [string]$ErrorCount = ($LogLines | Where-Object { $_ -match "ERROR|Error|error" }).Count
+    [string]$WarningCount = ($LogLines | Where-Object { $_ -match "WARN|Warning|warning" }).Count
+    [string]$InfoCount = ($LogLines | Where-Object { $_ -match "INFO|Info|info" }).Count
+    if ($ErrorCount -gt 0 -or $WarningCount -gt 0) {
+        Write-Host "`nLog Level Breakdown:" -ForegroundColor Green
+        if ($ErrorCount -gt 0) { Write-Host "Errors: $ErrorCount" -ForegroundColor Green
+        if ($WarningCount -gt 0) { Write-Host "Warnings: $WarningCount" -ForegroundColor Green
+        if ($InfoCount -gt 0) { Write-Host "Info: $InfoCount" -ForegroundColor Green
     }
 }
-# Main execution
-Write-Host "`nAzure Container Instance Log Viewer" -ForegroundColor Cyan
+Write-Host "`nAzure Container Instance Log Viewer" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
-# Test Azure connection
 if (-not ((Get-AzContext))) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
-# Get and validate container group
 try {
-    $containerGroup = Get-ContainerGroupInfo -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName
-    # Validate specific container if specified
+    $ContainerGroup = Get-ContainerGroupInfo -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName
     if ($ContainerName) {
-        $specificContainer = $containerGroup.Container | Where-Object { $_.Name -eq $ContainerName }
-        if (-not $specificContainer) {
-            $availableContainers = ($containerGroup.Container | ForEach-Object { $_.Name }) -join ", "
-            Write-Error "Container '$ContainerName' not found. Available containers: $availableContainers"
+    [string]$SpecificContainer = $ContainerGroup.Container | Where-Object { $_.Name -eq $ContainerName }
+        if (-not $SpecificContainer) {
+    [string]$AvailableContainers = ($ContainerGroup.Container | ForEach-Object { $_.Name }) -join ", "
+            Write-Error "Container '$ContainerName' not found. Available containers: $AvailableContainers"
             throw
         }
-    
+
 } catch {
     Write-Error "Container group '$ContainerGroupName' not found in resource group '$ResourceGroupName': $_"
     throw
 }
-# Handle follow mode
 if ($Follow) {
     Start-LogFollowing -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName -ContainerName $ContainerName -FilterPattern $FilterPattern
     exit 0
 }
-# Retrieve logs
-Write-Host "`nRetrieving logs..." -ForegroundColor Yellow
+Write-Host "`nRetrieving logs..." -ForegroundColor Green
 try {
     if ($ContainerName) {
-        Write-Host "Container: $ContainerName | Lines: $Tail" -ForegroundColor Cyan
-        $logs = Get-ContainerLogs -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName -ContainerName $ContainerName -TailLines $Tail
-        $formattedLogs = Format-LogOutput -LogContent $logs -ContainerName $ContainerName -OutputFormat $Format -IncludeTimestamps $ShowTimestamps -FilterPattern $FilterPattern
+        Write-Host "Container: $ContainerName | Lines: $Tail" -ForegroundColor Green
+    $logs = Get-ContainerLogs -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName -ContainerName $ContainerName -TailLines $Tail
+    [string]$FormattedLogs = Format-LogOutput -LogContent $logs -ContainerName $ContainerName -OutputFormat $Format -IncludeTimestamps $ShowTimestamps -FilterPattern $FilterPattern
         if ($ShowMetadata) {
             Show-LogSummary -LogContent $logs -ContainerName $ContainerName
         }
-        if ($formattedLogs) {
-            Write-Host "`nLogs:" -ForegroundColor Cyan
-            Write-Host $formattedLogs
+        if ($FormattedLogs) {
+            Write-Host "`nLogs:" -ForegroundColor Green
+            Write-Output $FormattedLogs
             if ($ExportPath) {
-                Export-LogsToFile -Content $formattedLogs -FilePath $ExportPath
+                Export-LogsToFile -Content $FormattedLogs -FilePath $ExportPath
             }
         }
         else {
-            Write-Host "No logs match the specified criteria" -ForegroundColor Yellow
+            Write-Host "No logs match the specified criteria" -ForegroundColor Green
         }
     }
     else {
-        # Get logs from all containers
-        foreach ($container in $containerGroup.Container) {
-            Write-Host "`n$("=" * 20) $($container.Name) $("=" * 20)" -ForegroundColor Cyan
-            $logs = Get-ContainerLogs -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName -ContainerName $container.Name -TailLines $Tail
-            $formattedLogs = Format-LogOutput -LogContent $logs -ContainerName $container.Name -OutputFormat $Format -IncludeTimestamps $ShowTimestamps -FilterPattern $FilterPattern
+        foreach ($container in $ContainerGroup.Container) {
+            Write-Host "`n$("=" * 20) $($container.Name) $("=" * 20)" -ForegroundColor Green
+    $logs = Get-ContainerLogs -ResourceGroup $ResourceGroupName -GroupName $ContainerGroupName -ContainerName $container.Name -TailLines $Tail
+    [string]$FormattedLogs = Format-LogOutput -LogContent $logs -ContainerName $container.Name -OutputFormat $Format -IncludeTimestamps $ShowTimestamps -FilterPattern $FilterPattern
             if ($ShowMetadata) {
                 Show-LogSummary -LogContent $logs -ContainerName $container.Name
             }
-            if ($formattedLogs) {
-                Write-Host $formattedLogs
+            if ($FormattedLogs) {
+                Write-Output $FormattedLogs
                 if ($ExportPath) {
-                    $containerLogPath = $ExportPath -replace '(\.[^.]+)$', "_$($container.Name)`$1"
-                    Export-LogsToFile -Content $formattedLogs -FilePath $containerLogPath
+    [string]$ContainerLogPath = $ExportPath -replace '(\.[^.]+)$', "_$($container.Name)`$1"
+                    Export-LogsToFile -Content $FormattedLogs -FilePath $ContainerLogPath
                 }
             }
             else {
-                Write-Host "No logs available for this container" -ForegroundColor Yellow
+                Write-Host "No logs available for this container" -ForegroundColor Green
             }
         }
     }
@@ -361,7 +351,4 @@ try {
 }
 catch {
     Write-Error "Failed to retrieve logs: $_"
-    throw
-}
-
-
+    throw`n}

@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Servicedscvmss
@@ -8,7 +8,8 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -16,11 +17,10 @@
 Configuration Main
 {
 [CmdletBinding(SupportsShouldProcess)]
- [string] $nodeName, [string] $webDeployPackage  )
+ [string] $NodeName, [string] $WebDeployPackage  )
 Import-DscResource -ModuleName PSDesiredStateConfiguration
-Node $nodeName
+Node $NodeName
   {
-   # This commented section represents an example configuration that can be updated as required.
     WindowsFeature WebServerRole
     {
       Name = "Web-Server"
@@ -81,7 +81,6 @@ Node $nodeName
       Name = "Web-AppInit"
       Ensure = "Present"
     }
-	##Get-WindowsFeature -ErrorAction Stop NET-WCF-* | format-table -property name,displayname -AutoSize
 	WindowsFeature WCFServices45
     {
       Name = "NET-WCF-Services45"
@@ -136,18 +135,6 @@ Node $nodeName
         State = "Running"
         DependsOn = " [Package]InstallWebDeploy"
     }
-	# Install the IIS role
-		#WindowsFeature IIS
-		#{
-		#	Ensure          = "Present"
-		#	Name            = "Web-Server"
-		#}
-		## Install the ASP .NET 4.5 role
-		#WindowsFeature AspNet45
-		#{
-		#	Ensure          = "Present"
-		#	Name            = "Web-Asp-Net45"
-		#}
 		Script DeployWebPackage
 		{
 			GetScript = {@{Result = "DeployWebPackage" }}
@@ -160,16 +147,15 @@ Node $nodeName
 				Add-Type -assembly " system.io.compression.filesystem"
 				[io.compression.zipfile]::ExtractToDirectory($dest, "C:\inetpub\wwwroot" )
 				$SourceFolder = "C:\inetpub\wwwroot"
-$appPaths = @(Get-ChildItem -ErrorAction Stop $SourceFolder -Directory)
-				foreach ($appPath in $appPaths)
+$AppPaths = @(Get-ChildItem -ErrorAction Stop $SourceFolder -Directory)
+				foreach ($AppPath in $AppPaths)
 				{
-$x = "IIS:\Sites\Default Web Site\" + $appPath.Name
+$x = "IIS:\Sites\Default Web Site\" + $AppPath.Name
 					ConvertTo-WebApplication -PSPath $x
 				}
 			}
 			DependsOn  = " [WindowsFeature]WebServerRole"
 		}
-		# Copy the website content
 		File WebContent
 		{
 			Ensure          = "Present"
@@ -180,6 +166,4 @@ $x = "IIS:\Sites\Default Web Site\" + $appPath.Name
 			DependsOn       = " [Script]DeployWebPackage"
 		}
   }
-}
-
-
+`n}

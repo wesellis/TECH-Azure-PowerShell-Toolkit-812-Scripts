@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,71 +9,63 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
     [Parameter()]
     $url,
     [Parameter()]
-    $ttkFolder = $ENV:TTK_FOLDER,
+    $TtkFolder = $ENV:TTK_FOLDER,
     [Parameter()]
-    $sampleFolder = $ENV:SAMPLE_FOLDER,
+    $SampleFolder = $ENV:SAMPLE_FOLDER,
     [Parameter()]
-    $sampleName = $ENV:SAMPLE_NAME,
+    $SampleName = $ENV:SAMPLE_NAME,
     [Parameter()]
-    $paramFileName = $ENV:GEN_PARAMETERS_FILENAME,
+    $ParamFileName = $ENV:GEN_PARAMETERS_FILENAME,
     [Parameter()]
-    $resourceGroupName = $ENV:RESOURCEGROUP_NAME,
+    $ResourceGroupName = $ENV:RESOURCEGROUP_NAME,
     [Parameter()]
     $filename = "PSWhatIf.zip" ,
     [Parameter()]
     $StorageAccountKey,
     [Parameter()]
-    $txtFileName = " results.txt" ,
+    $TxtFileName = " results.txt" ,
     [Parameter()]
-    $jsonFileName = " results.json" ,
-    [switch]$uploadResults
+    $JsonFileName = " results.json" ,
+    [switch]$UploadResults
 )
-if (!$uploadResults) {
-    Invoke-WebRequest -uri " $url" -OutFile " $ttkFolder/$filename" -Verbose
-    Get-ChildItem -ErrorAction Stop " $ttkFolder/$filename"
-    # Unzip Module
-    Write-Host "Expanding files..."
-    Expand-Archive -Path " $ttkFolder/$filename" -DestinationPath " $ttkFolder/modules" -Verbose -Force
-    Write-Host "Expanded files found:"
-    #Get-ChildItem -ErrorAction Stop " $ttkFolder/modules" -Recurse
-    # Import Module
-    Import-Module " $ttkFolder/modules/Az.Accounts/Az.Accounts.psd1" -Verbose -Scope Local
-    Import-Module " $ttkFolder/modules/Az.Resources/Az.Resources.psd1" -Verbose -Scope Local
-    # Run What-If to file
+if (!$UploadResults) {
+    Invoke-WebRequest -uri " $url" -OutFile " $TtkFolder/$filename" -Verbose
+    Get-ChildItem -ErrorAction Stop " $TtkFolder/$filename"
+    Write-Output "Expanding files..."
+    Expand-Archive -Path " $TtkFolder/$filename" -DestinationPath " $TtkFolder/modules" -Verbose -Force
+    Write-Output "Expanded files found:"
+    Import-Module " $TtkFolder/modules/Az.Accounts/Az.Accounts.psd1" -Verbose -Scope Local
+    Import-Module " $TtkFolder/modules/Az.Resources/Az.Resources.psd1" -Verbose -Scope Local
     $params = @{
-        ResourceGroupName = $resourceGroupName
-        TemplateParameterFile = " $sampleFolder\$paramFileName"
-        TemplateFile = " $sampleFolder\azuredeploy.json"
+        ResourceGroupName = $ResourceGroupName
+        TemplateParameterFile = " $SampleFolder\$ParamFileName"
+        TemplateFile = " $SampleFolder\azuredeploy.json"
         Name = "mainTemplate"
         ScopeType = "ResourceGroup"
     }
     $results @params
-    # Upload files to storage container
-    $results | Out-String | Set-Content -Path " $ttkFolder/modules/$txtFileName"
-    $results | ConvertTo-Json | Set-Content -Path " $ttkFolder/modules/$jsonFileName"
+    $results | Out-String | Set-Content -Path " $TtkFolder/modules/$TxtFileName"
+    $results | ConvertTo-Json | Set-Content -Path " $TtkFolder/modules/$JsonFileName"
 }
-else { # these need to be done in separate runs due to compatibility problems with the modules
-$ctx = New-AzStorageContext -StorageAccountName " azurequickstartsservice" -StorageAccountKey $StorageAccountKey -Environment AzureCloud
-$RowKey = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
-    Write-Host "RowKey: $RowKey"
+else {
+    $ctx = New-AzStorageContext -StorageAccountName " azurequickstartsservice" -StorageAccountKey $StorageAccountKey -Environment AzureCloud
+    $RowKey = $SampleName.Replace(" \" , "@" ).Replace("/" , "@" )
+    Write-Output "RowKey: $RowKey"
     $params = @{
         Properties = "@{"CacheControl" = " no-cache" }"
-        File = " $ttkFolder/modules/$txtFileName"
+        File = " $TtkFolder/modules/$TxtFileName"
         Context = $ctx
         Blob = " $RowKey@txtFileName"
         Container = " whatif"
@@ -81,7 +73,7 @@ $RowKey = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
     Set-AzStorageBlobContent @params
     $params = @{
         Properties = "@{"CacheControl" = " no-cache" }"
-        File = " $ttkFolder/modules/$jsonFileName"
+        File = " $TtkFolder/modules/$JsonFileName"
         Context = $ctx
         Blob = " $RowKey@jsonFileName"
         Container = " whatif"
@@ -90,7 +82,4 @@ $RowKey = $SampleName.Replace(" \" , "@" ).Replace(" /" , "@" )
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

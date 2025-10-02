@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -7,8 +7,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -19,7 +21,7 @@
     [Parameter()]
     [int]$QuotaInGB = 1024
 )
-Write-Host "Creating File Share: $ShareName"
+Write-Output "Creating File Share: $ShareName"
 $StorageAccount = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Context = $StorageAccount.Context
 $params = @{
@@ -29,17 +31,18 @@ $params = @{
     Name = $ShareName
 }
 $FileShare @params
-Write-Host "File Share created successfully:"
-Write-Host "Name: $($FileShare.Name)"
-Write-Host "Quota: $QuotaInGB GB"
-Write-Host "Storage Account: $StorageAccountName"
-# Get connection info
+Write-Output "File Share created successfully:"
+Write-Output "Name: $($FileShare.Name)"
+Write-Output "Quota: $QuotaInGB GB"
+Write-Output "Storage Account: $StorageAccountName"
 $Keys = Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccountName
 $Key = $Keys[0].Value
-Write-Host "`nConnection Information:"
-Write-Host "UNC Path: \\$StorageAccountName.file.core.windows.net\$ShareName"
-Write-Host "Mount Command (Windows):"
-Write-Host "    net use Z: \\$StorageAccountName.file.core.windows.net\$ShareName /u:AZURE\$StorageAccountName $Key"
-Write-Host "Mount Command (Linux):"
-Write-Host "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$ShareName /mnt/myfileshare -o vers=3.0,username=$StorageAccountName,password=$Key,dir_mode=0777,file_mode=0777"
+Write-Output "`nConnection Information:"
+Write-Output "UNC Path: \\$StorageAccountName.file.core.windows.net\$ShareName"
+Write-Output "Mount Command (Windows):"
+Write-Output "    net use Z: \\$StorageAccountName.file.core.windows.net\$ShareName /u:AZURE\$StorageAccountName $Key"
+Write-Output "Mount Command (Linux):"
+Write-Output "    sudo mount -t cifs //$StorageAccountName.file.core.windows.net/$ShareName /mnt/myfileshare -o vers=3.0,username=$StorageAccountName,password=$Key,dir_mode=0777,file_mode=0777"
+
+
 

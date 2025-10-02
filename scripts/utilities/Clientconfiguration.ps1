@@ -1,55 +1,61 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
+#Requires -Modules TemplateHelpDSC
 
-<#`n.SYNOPSIS
-    Clientconfiguration
+<#
+.SYNOPSIS
+    Client Configuration DSC
 
 .DESCRIPTION
-    Azure automation
+    Azure DSC configuration for client machines to join domain and configure for SCCM
 
-
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
-configuration Configuration
+#>
+
+configuration ClientConfiguration
 {
-   [CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
-param(
-        [Parameter(Mandatory)]
+    param(
+        [Parameter(Mandatory = $true)]
         [String]$DomainName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$DCName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$DPMPName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$CSName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$PSName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [System.Array]$ClientName,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$Configuration,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [String]$DNSIPAddress,
-        [Parameter(Mandatory)]
+
+        [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]$Admincreds
     )
+
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Force
     Import-DscResource -ModuleName TemplateHelpDSC
+
     $LogFolder = "TempLog"
-    $LogPath = " c:\$LogFolder"
-    $DName = $DomainName.Split(" ." )[0]
-    $DCComputerAccount = " $DName\$DCName$"
-$PSComputerAccount = " $DName\$PSName$"
-    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential (" ${DomainName}\$($Admincreds.UserName)" , $Admincreds.Password)
-$PrimarySiteName = $PSName.split(" ." )[0] + " $"
+    $LogPath = "c:\$LogFolder"
+    $DName = $DomainName.Split(".")[0]
+    $DCComputerAccount = "$DName\$DCName$"
+    $PSComputerAccount = "$DName\$PSName$"
+    [System.Management.Automation.PSCredential]$DomainCreds = New-Object -ErrorAction Stop System.Management.Automation.PSCredential ("${DomainName}\$($Admincreds.UserName)", $Admincreds.Password)
+    $PrimarySiteName = $PSName.Split(".")[0] + "$"
+
     Node localhost
     {
         LocalConfigurationManager
@@ -57,36 +63,42 @@ $PrimarySiteName = $PSName.split(" ." )[0] + " $"
             ConfigurationMode = 'ApplyOnly'
             RebootNodeIfNeeded = $true
         }
+
         SetCustomPagingFile PagingSettings
         {
             Drive       = 'C:'
             InitialSize = '8192'
             MaximumSize = '8192'
         }
+
         SetDNS DnsServerAddress
         {
             DNSIPAddress = $DNSIPAddress
             Ensure = "Present"
-            DependsOn = " [SetCustomPagingFile]PagingSettings"
+            DependsOn = "[SetCustomPagingFile]PagingSettings"
         }
+
         InstallFeatureForSCCM InstallFeature
         {
             Name = "Client"
             Role = "Client"
-            DependsOn = " [SetCustomPagingFile]PagingSettings"
+            DependsOn = "[SetCustomPagingFile]PagingSettings"
         }
+
         WaitForDomainReady WaitForDomain
         {
             Ensure = "Present"
             DCName = $DCName
-            DependsOn = " [SetDNS]DnsServerAddress"
+            DependsOn = "[SetDNS]DnsServerAddress"
         }
+
         JoinDomain JoinDomain
         {
             DomainName = $DomainName
             Credential = $DomainCreds
-            DependsOn = " [WaitForDomainReady]WaitForDomain"
+            DependsOn = "[WaitForDomainReady]WaitForDomain"
         }
+
         WaitForConfigurationFile WaitForPSJoinDomain
         {
             Role = "DC"
@@ -94,38 +106,46 @@ $PrimarySiteName = $PSName.split(" ." )[0] + " $"
             LogFolder = $LogFolder
             ReadNode = "PSJoinDomain"
             Ensure = "Present"
-            DependsOn = " [JoinDomain]JoinDomain"
+            DependsOn = "[JoinDomain]JoinDomain"
         }
+
         File ShareFolder
         {
             DestinationPath = $LogPath
             Type = 'Directory'
             Ensure = 'Present'
-            DependsOn = " [WaitForConfigurationFile]WaitForPSJoinDomain"
+            DependsOn = "[WaitForConfigurationFile]WaitForPSJoinDomain"
         }
+
         FileReadAccessShare DomainSMBShare
         {
             Name = $LogFolder
             Path = $LogPath
             Account = $DCComputerAccount,$PSComputerAccount
-            DependsOn = " [File]ShareFolder"
+            DependsOn = "[File]ShareFolder"
         }
+
         OpenFirewallPortForSCCM OpenFirewall
         {
             Name = "Client"
             Role = "Client"
-            DependsOn = " [JoinDomain]JoinDomain"
+            DependsOn = "[JoinDomain]JoinDomain"
         }
-        AddUserToLocalAdminGroup AddADUserToLocalAdminGroup {
+
+        AddUserToLocalAdminGroup AddADUserToLocalAdminGroup
+        {
             Name = $($Admincreds.UserName)
             DomainName = $DomainName
-            DependsOn = " [FileReadAccessShare]DomainSMBShare"
+            DependsOn = "[FileReadAccessShare]DomainSMBShare"
         }
-        AddUserToLocalAdminGroup AddADComputerToLocalAdminGroup {
-            Name = " $PrimarySiteName"
+
+        AddUserToLocalAdminGroup AddADComputerToLocalAdminGroup
+        {
+            Name = $PrimarySiteName
             DomainName = $DomainName
-            DependsOn = " [FileReadAccessShare]DomainSMBShare"
+            DependsOn = "[FileReadAccessShare]DomainSMBShare"
         }
+
         WriteConfigurationFile WriteClientFinished
         {
             Role = "Client"
@@ -133,11 +153,7 @@ $PrimarySiteName = $PSName.split(" ." )[0] + " $"
             WriteNode = "ClientFinished"
             Status = "Passed"
             Ensure = "Present"
-            DependsOn = " [AddUserToLocalAdminGroup]AddADUserToLocalAdminGroup" ," [AddUserToLocalAdminGroup]AddADComputerToLocalAdminGroup"
+            DependsOn = "[AddUserToLocalAdminGroup]AddADUserToLocalAdminGroup","[AddUserToLocalAdminGroup]AddADComputerToLocalAdminGroup"
         }
     }
-}
-} catch {
-    Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
 }

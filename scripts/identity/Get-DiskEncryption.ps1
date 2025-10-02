@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,6 +6,9 @@
     Check disk encryption status
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 Check encryption status for VMs and disks
 .PARAMETER ResourceGroup
 Resource group to check
@@ -13,13 +16,13 @@ Resource group to check
 Show only unencrypted resources
 .\Get-DiskEncryption.ps1
 .\Get-DiskEncryption.ps1 -ResourceGroup rg-prod -Unencrypted
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroup,
     [switch]$Unencrypted
 )
-# Get VMs
 $vms = if ($ResourceGroup) { Get-AzVM -ResourceGroupName $ResourceGroup } else { Get-AzVM }
 $results = foreach ($vm in $vms) {
     $status = Get-AzVMDiskEncryptionStatus -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name -ErrorAction SilentlyContinue
@@ -30,7 +33,6 @@ $results = foreach ($vm in $vms) {
         DataEncrypted = $status.DataVolumesEncrypted
     }
 }
-# Get disks
 $disks = if ($ResourceGroup) { Get-AzDisk -ResourceGroupName $ResourceGroup } else { Get-AzDisk }
 $results += foreach ($disk in $disks) {
     $encrypted = $disk.Encryption.Type -ne "EncryptionAtRestWithPlatformKey"
@@ -44,7 +46,4 @@ $results += foreach ($disk in $disks) {
 if ($Unencrypted) {
     $results | Where-Object { $_.OSEncrypted -ne "Encrypted" -and $_.OSEncrypted -ne $true }
 } else {
-    $results
-}
-
-
+    $results`n}

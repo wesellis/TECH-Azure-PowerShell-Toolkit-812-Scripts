@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,7 +9,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -20,17 +19,11 @@ function Invoke-AzNetworkInterfaceIpConfig {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzNetworkInterfaceIpConfig {
-    #region func-New-AzNetworkInterfaceIpConfig;
-$newAzNetworkInterfaceIpConfigSplat = @{
+$NewAzNetworkInterfaceIpConfigSplat = @{
     Name                     = $IPConfigName
     Subnet                   = $Subnet
-    # Subnet                   = $Vnet.Subnets[0].Id
-    # PublicIpAddress          = $PIP.ID
     PublicIpAddress          = $PIP
     ApplicationSecurityGroup = $ASG
     Primary                  = $true
 }
-$IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat
-}
-
-
+$IPConfig1 = New-AzNetworkInterfaceIpConfig -ErrorAction Stop @newAzNetworkInterfaceIpConfigSplat`n}

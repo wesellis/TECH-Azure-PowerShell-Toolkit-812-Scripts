@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,26 +6,27 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$GatewayName,
     [hashtable]$Settings
 )
-# Get current Application Gateway
 $Gateway = Get-AzApplicationGateway -ResourceGroupName $ResourceGroupName -Name $GatewayName
-Write-Host "Updating Application Gateway: $GatewayName"
-Write-Host "Current SKU: $($Gateway.Sku.Name)"
-Write-Host "Current Tier: $($Gateway.Sku.Tier)"
-Write-Host "Current Capacity: $($Gateway.Sku.Capacity)"
-# Apply settings (example implementation)
+Write-Output "Updating Application Gateway: $GatewayName"
+Write-Output "Current SKU: $($Gateway.Sku.Name)"
+Write-Output "Current Tier: $($Gateway.Sku.Tier)"
+Write-Output "Current Capacity: $($Gateway.Sku.Capacity)"
 if ($Settings) {
     foreach ($Setting in $Settings.GetEnumerator()) {
-        Write-Host "Applying setting: $($Setting.Key) = $($Setting.Value)"
+        Write-Output "Applying setting: $($Setting.Key) = $($Setting.Value)"
     }
 }
-# Update the gateway
 Set-AzApplicationGateway -ApplicationGateway $Gateway
-Write-Host "Application Gateway $GatewayName updated successfully"
+Write-Output "Application Gateway $GatewayName updated successfully"
+
+
 

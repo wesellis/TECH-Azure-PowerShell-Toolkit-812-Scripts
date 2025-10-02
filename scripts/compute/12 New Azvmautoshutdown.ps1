@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -37,65 +37,58 @@
 
 .EXAMPLE
     .\Configure-VMShutdown.ps1 -ResourceGroupName "myRG" -VMName "myVM" -ShutdownTime "18:00" -TimeZone "Pacific Standard Time"
-#>
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    
+
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$VMName,
-    
+
     [Parameter()]
     [ValidatePattern('^\d{2}:\d{2}$')]
     [string]$ShutdownTime = "23:59",
-    
+
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$TimeZone = "Eastern Standard Time",
-    
+
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Location = "eastus",
-    
+
     [Parameter()]
     [bool]$EnableNotifications = $false,
-    
+
     [Parameter()]
     [ValidateRange(1, 120)]
     [int]$NotificationTimeMinutes = 15
 )
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 
-# Set error handling and verbose preferences
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-
-# Custom logging function
 function Write-LogMessage {
-    [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]$Message,
-        
+
         [Parameter()]
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colorMap = @{
+    $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    
-    $logEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
 
 try {
@@ -106,42 +99,32 @@ try {
     Write-LogMessage "Time Zone: $TimeZone" -Level "INFO"
     Write-LogMessage "Location: $Location" -Level "INFO"
 
-    # Get subscription and VM details
     Write-LogMessage "Retrieving Azure context and VM information..." -Level "INFO"
     $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
-    
-    $SubscriptionId = $context.Subscription.Id
+    [string]$SubscriptionId = $context.Subscription.Id
     Write-LogMessage "Using subscription: $SubscriptionId" -Level "INFO"
 
-    # Get the VM
     Write-LogMessage "Retrieving VM details..." -Level "INFO"
     $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VMName -ErrorAction Stop
     if (-not $VM) {
         throw "VM '$VMName' not found in resource group '$ResourceGroupName'"
     }
-    
-    $VMResourceId = $VM.Id
+    [string]$VMResourceId = $VM.Id
     Write-LogMessage "VM Resource ID: $VMResourceId" -Level "INFO"
+    [string]$TimeComponents = $ShutdownTime.Split(':')
+    [string]$ShutdownTimeFormatted = "{0:D2}{1:D2}" -f [int]$TimeComponents[0], [int]$TimeComponents[1]
+    [string]$ScheduledShutdownResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.devtestlab/schedules/shutdown-computevm-$VMName"
 
-    # Convert time format from HH:mm to HHmm
-    $timeComponents = $ShutdownTime.Split(':')
-    $shutdownTimeFormatted = "{0:D2}{1:D2}" -f [int]$timeComponents[0], [int]$timeComponents[1]
-
-    # Build the scheduled shutdown resource ID
-    $ScheduledShutdownResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/microsoft.devtestlab/schedules/shutdown-computevm-$VMName"
-    
     Write-LogMessage "Creating shutdown schedule resource..." -Level "INFO"
     Write-LogMessage "Schedule Resource ID: $ScheduledShutdownResourceId" -Level "INFO"
-
-    # Configure properties for the shutdown schedule
     $Properties = @{
         'status' = 'Enabled'
         'taskType' = 'ComputeVmShutdownTask'
         'dailyRecurrence' = @{
-            'time' = $shutdownTimeFormatted
+            'time' = $ShutdownTimeFormatted
         }
         'timeZoneId' = $TimeZone
         'notificationSettings' = @{
@@ -153,20 +136,19 @@ try {
 
     Write-LogMessage "Shutdown schedule properties configured:" -Level "INFO"
     Write-LogMessage "  Status: Enabled" -Level "INFO"
-    Write-LogMessage "  Daily shutdown time: $ShutdownTime ($shutdownTimeFormatted)" -Level "INFO"
+    Write-LogMessage "  Daily shutdown time: $ShutdownTime ($ShutdownTimeFormatted)" -Level "INFO"
     Write-LogMessage "  Time zone: $TimeZone" -Level "INFO"
     Write-LogMessage "  Notifications: $(if ($EnableNotifications) { 'Enabled' } else { 'Disabled' })" -Level "INFO"
     if ($EnableNotifications) {
         Write-LogMessage "  Notification time: $NotificationTimeMinutes minutes before shutdown" -Level "INFO"
     }
 
-    # Create the scheduled shutdown resource
     Write-LogMessage "Creating the auto-shutdown schedule..." -Level "INFO"
-    $result = New-AzResource -Location $Location -ResourceId $ScheduledShutdownResourceId -Properties $Properties -Force -ErrorAction Stop
+    [string]$result = New-AzResource -Location $Location -ResourceId $ScheduledShutdownResourceId -Properties $Properties -Force -ErrorAction Stop
 
     Write-LogMessage "Auto-shutdown configuration completed successfully!" -Level "SUCCESS"
     Write-LogMessage "VM '$VMName' will automatically shutdown at $ShutdownTime ($TimeZone)" -Level "SUCCESS"
-    
+
     if ($EnableNotifications) {
         Write-LogMessage "Notifications will be sent $NotificationTimeMinutes minutes before shutdown" -Level "INFO"
     }
@@ -179,5 +161,4 @@ try {
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    throw
-}
+    throw`n}

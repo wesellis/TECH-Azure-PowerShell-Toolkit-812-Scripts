@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,20 +10,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -31,13 +27,14 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-[CmdletBinding()];
+;
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -45,23 +42,20 @@ param(
     [Parameter(Mandatory)]
     [string]$VmName
 )
-Write-Host "Retrieving disk information for VM: $VmName"
+Write-Output "Retrieving disk information for VM: $VmName"
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName
-Write-Host " `nOS Disk:"
-Write-Host "Name: $($VM.StorageProfile.OsDisk.Name)"
-Write-Host "Size: $($VM.StorageProfile.OsDisk.DiskSizeGB) GB"
-Write-Host "Type: $($VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)"
+Write-Output " `nOS Disk:"
+Write-Output "Name: $($VM.StorageProfile.OsDisk.Name)"
+Write-Output "Size: $($VM.StorageProfile.OsDisk.DiskSizeGB) GB"
+Write-Output "Type: $($VM.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)"
 if ($VM.StorageProfile.DataDisks.Count -gt 0) {
-    Write-Host " `nData Disks:"
+    Write-Output " `nData Disks:"
     foreach ($Disk in $VM.StorageProfile.DataDisks) {
-        Write-Host "Name: $($Disk.Name) | Size: $($Disk.DiskSizeGB) GB | LUN: $($Disk.Lun)"
+        Write-Output "Name: $($Disk.Name) | Size: $($Disk.DiskSizeGB) GB | LUN: $($Disk.Lun)"
     }
 } else {
-    Write-Host " `nNo data disks attached."
+    Write-Output " `nNo data disks attached."
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

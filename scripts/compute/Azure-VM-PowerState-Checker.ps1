@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,6 +6,9 @@
     Checks and reports Azure VM power states with  status information
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Retrieves  power state and status information for Azure VMs.
     Supports single VM or multiple VM checking with formatted output and monitoring options.
 .PARAMETER ResourceGroupName
@@ -25,11 +28,9 @@
     .\Azure-VM-PowerState-Checker.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01"
     .\Azure-VM-PowerState-Checker.ps1 -ResourceGroupName "RG-Production" -VmNames @("VM-Web01", "VM-Web02") -OutputFormat Table
     .\Azure-VM-PowerState-Checker.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01" -Watch -WatchInterval 60
-#>
-[CmdletBinding(DefaultParameterSetName = 'Single')]
-[CmdletBinding()]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
@@ -49,12 +50,11 @@
     [int]$WatchInterval = 30
 )
 $ErrorActionPreference = 'Stop'
-[OutputType([bool])]
- {
+function Write-Log {
     try {
         $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -65,20 +65,18 @@ $ErrorActionPreference = 'Stop'
     }
 }
 function Get-VMPowerState {
-    [CmdletBinding()]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [bool]$IncludeDetails
     )
     try {
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
-        $powerState = ($vm.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
-        $provisioningState = ($vm.Statuses | Where-Object { $_.Code -like 'ProvisioningState/*' }).DisplayStatus
+        $PowerState = ($vm.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
+        $ProvisioningState = ($vm.Statuses | Where-Object { $_.Code -like 'ProvisioningState/*' }).DisplayStatus
         $result = [PSCustomObject]@{
             VMName = $vm.Name
-            PowerState = $powerState
-            ProvisioningState = $provisioningState
+            PowerState = $PowerState
+            ProvisioningState = $ProvisioningState
             Location = $vm.Location
             ResourceGroup = $ResourceGroup
             LastUpdated = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
@@ -86,12 +84,10 @@ function Get-VMPowerState {
         if ($IncludeDetails) {
             $result | Add-Member -NotePropertyName 'VMSize' -NotePropertyValue $vm.HardwareProfile.VmSize
             $result | Add-Member -NotePropertyName 'OSType' -NotePropertyValue $vm.StorageProfile.OsDisk.OsType
-            # Get VM agent status if available
-            $vmAgentStatus = ($vm.Statuses | Where-Object { $_.Code -like 'VMAgent/*' }).DisplayStatus
-            if ($vmAgentStatus) {
-                $result | Add-Member -NotePropertyName 'VMAgent' -NotePropertyValue $vmAgentStatus
+            $VmAgentStatus = ($vm.Statuses | Where-Object { $_.Code -like 'VMAgent/*' }).DisplayStatus
+            if ($VmAgentStatus) {
+                $result | Add-Member -NotePropertyName 'VMAgent' -NotePropertyValue $VmAgentStatus
             }
-            # Get boot diagnostics status
             if ($vm.DiagnosticsProfile -and $vm.DiagnosticsProfile.BootDiagnostics) {
                 $result | Add-Member -NotePropertyName 'BootDiagnostics' -NotePropertyValue $vm.DiagnosticsProfile.BootDiagnostics.Enabled
             }
@@ -110,9 +106,7 @@ function Get-VMPowerState {
     }
 }
 function Format-Output {
-    [CmdletBinding()]
-
-        [object[]]$VMStates,
+    [object[]]$VMStates,
         [string]$Format
     )
     switch ($Format) {
@@ -123,14 +117,12 @@ function Format-Output {
             return ($VMStates | ConvertTo-Csv -NoTypeInformation)
         }
         default {
-            # Table format
             return ($VMStates | Format-Table -AutoSize)
         }
     }
 }
 function Show-PowerStateColor {
-    [CmdletBinding()]
-[string]$PowerState)
+    [string]$PowerState)
     switch -Wildcard ($PowerState) {
         "*running*" { return 'Green' }
         "*stopped*" { return 'Red' }
@@ -141,101 +133,86 @@ function Show-PowerStateColor {
     }
 }
 function Start-VMWatcher {
-    [CmdletBinding()]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [int]$Interval
     )
-    Write-Host "Starting power state monitor for VM: $Name" -ForegroundColor Cyan
-    Write-Host "Press Ctrl+C to stop monitoring" -ForegroundColor Yellow
+    Write-Host "Starting power state monitor for VM: $Name" -ForegroundColor Green
+    Write-Host "Press Ctrl+C to stop monitoring" -ForegroundColor Green
     Write-Host ("=" * 60) -ForegroundColor Gray
-    $lastState = ""
+    $LastState = ""
     try {
         while ($true) {
-            $vmState = Get-VMPowerState -ResourceGroup $ResourceGroup -Name $Name -IncludeDetails $IncludeDetails
-            $currentState = $vmState.PowerState
-            # Only display if state changed or first run
-            if ($currentState -ne $lastState) {
+            $VmState = Get-VMPowerState -ResourceGroup $ResourceGroup -Name $Name -IncludeDetails $IncludeDetails
+            $CurrentState = $VmState.PowerState
+            if ($CurrentState -ne $LastState) {
                 $timestamp = Get-Date -Format 'HH:mm:ss'
-                $color = Show-PowerStateColor -PowerState $currentState
-                Write-Host "[$timestamp] " -NoNewline -ForegroundColor Gray
-                Write-Host "$Name`: " -NoNewline -ForegroundColor White
-                Write-Host "$currentState" -ForegroundColor $color
-                $lastState = $currentState
+                $color = Show-PowerStateColor -PowerState $CurrentState
+                Write-Output "[$timestamp] " -NoNewline -ForegroundColor Gray
+                Write-Output "$Name`: " -NoNewline -ForegroundColor White
+                Write-Output "$CurrentState" -ForegroundColor $color
+                $LastState = $CurrentState
             }
             Start-Sleep -Seconds $Interval
-        
+
 } catch [System.Management.Automation.PipelineStoppedException] {
-        Write-Host "`nMonitoring stopped by user." -ForegroundColor Yellow
+        Write-Host "`nMonitoring stopped by user." -ForegroundColor Green
     }
     catch {
         Write-Error "Error during monitoring: $_"
     }
 }
-# Main execution
-Write-Host "`nAzure VM Power State Checker" -ForegroundColor Cyan
+Write-Host "`nAzure VM Power State Checker" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
-# Test Azure connection
 if (-not (Test-AzureConnection)) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
 try {
-    # Handle watch mode for single VM
     if ($Watch -and $PSCmdlet.ParameterSetName -eq 'Single') {
         Start-VMWatcher -ResourceGroup $ResourceGroupName -Name $VmName -Interval $WatchInterval
         return
     }
-    # Prepare VM list
-    $vmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
-    Write-Host "`nChecking power state for $($vmList.Count) VM(s)..." -ForegroundColor Yellow
-    # Get power states
-    $vmStates = @()
-    foreach ($vm in $vmList) {
-        Write-Host "Checking: $vm" -ForegroundColor Gray
-        $vmState = Get-VMPowerState -ResourceGroup $ResourceGroupName -Name $vm -IncludeDetails $IncludeDetails
-        $vmStates += $vmState
+    $VmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
+    Write-Host "`nChecking power state for $($VmList.Count) VM(s)..." -ForegroundColor Green
+    $VmStates = @()
+    foreach ($vm in $VmList) {
+        Write-Host "Checking: $vm" -ForegroundColor Green
+        $VmState = Get-VMPowerState -ResourceGroup $ResourceGroupName -Name $vm -IncludeDetails $IncludeDetails
+        $VmStates += $VmState
     }
-    # Display results
-    Write-Host "`nPower State Results:" -ForegroundColor Cyan
+    Write-Host "`nPower State Results:" -ForegroundColor Green
     if ($OutputFormat -eq 'Table') {
-        # Custom table display with colors
-        foreach ($vmState in $vmStates) {
-            $color = Show-PowerStateColor -PowerState $vmState.PowerState
-            Write-Host "VM: " -NoNewline
-            Write-Host "$($vmState.VMName)" -NoNewline -ForegroundColor White
-            Write-Host " | Power State: " -NoNewline
-            Write-Host "$($vmState.PowerState)" -NoNewline -ForegroundColor $color
-            Write-Host " | Location: " -NoNewline
-            Write-Host "$($vmState.Location)" -ForegroundColor Gray
+        foreach ($VmState in $VmStates) {
+            $color = Show-PowerStateColor -PowerState $VmState.PowerState
+            Write-Output "VM: " -NoNewline
+            Write-Output "$($VmState.VMName)" -NoNewline -ForegroundColor White
+            Write-Output " | Power State: " -NoNewline
+            Write-Output "$($VmState.PowerState)" -NoNewline -ForegroundColor $color
+            Write-Output " | Location: " -NoNewline
+            Write-Host "$($VmState.Location)" -ForegroundColor Green
             if ($IncludeDetails) {
-                Write-Host "Size: $($vmState.VMSize) | OS: $($vmState.OSType)" -ForegroundColor Gray
-                if ($vmState.VMAgent) {
-                    Write-Host "VM Agent: $($vmState.VMAgent)" -ForegroundColor Gray
+                Write-Host "Size: $($VmState.VMSize) | OS: $($VmState.OSType)" -ForegroundColor Green
+                if ($VmState.VMAgent) {
+                    Write-Host "VM Agent: $($VmState.VMAgent)" -ForegroundColor Green
                 }
             }
         }
     } else {
-        # JSON or CSV output
-        $output = Format-Output -VMStates $vmStates -Format $OutputFormat
+        $output = Format-Output -VMStates $VmStates -Format $OutputFormat
         Write-Output $output
     }
-    # Summary
-    Write-Host "`nSummary:" -ForegroundColor Cyan
-    $runningCount = ($vmStates | Where-Object { $_.PowerState -like "*running*" }).Count
-    $stoppedCount = ($vmStates | Where-Object { $_.PowerState -like "*stopped*" -or $_.PowerState -like "*deallocated*" }).Count
-    $otherCount = $vmStates.Count - $runningCount - $stoppedCount
-    Write-Host "Running: $runningCount" -ForegroundColor Green
-    Write-Host "Stopped/Deallocated: $stoppedCount" -ForegroundColor Red
-    if ($otherCount -gt 0) {
-        Write-Host "Other States: $otherCount" -ForegroundColor Yellow
+    Write-Host "`nSummary:" -ForegroundColor Green
+    $RunningCount = ($VmStates | Where-Object { $_.PowerState -like "*running*" }).Count
+    $StoppedCount = ($VmStates | Where-Object { $_.PowerState -like "*stopped*" -or $_.PowerState -like "*deallocated*" }).Count
+    $OtherCount = $VmStates.Count - $RunningCount - $StoppedCount
+    Write-Host "Running: $RunningCount" -ForegroundColor Green
+    Write-Host "Stopped/Deallocated: $StoppedCount" -ForegroundColor Green
+    if ($OtherCount -gt 0) {
+        Write-Host "Other States: $OtherCount" -ForegroundColor Green
     }
-    Write-Host "`nLast checked: $(Get-Date)" -ForegroundColor Gray
+    Write-Host "`nLast checked: $(Get-Date)" -ForegroundColor Green
 }
 catch {
     Write-Error "Failed to check VM power state: $_"
-    throw
-}
-
-
+    throw`n}

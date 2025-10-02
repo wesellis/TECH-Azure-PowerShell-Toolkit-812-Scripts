@@ -1,103 +1,173 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Configurewinrm
+<#
+.SYNOPSIS
+    Configure WinRM for HTTPS
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script to configure WinRM with HTTPS listener and certificate
 
+.PARAMETER HostName
+    The hostname for the WinRM HTTPS configuration
 
+.NOTES
     Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+    Version: 1.0
     Requires appropriate permissions and modules
+#>
+
 [CmdletBinding()]
-$ErrorActionPreference = "Stop"
 param(
     [Parameter(Mandatory = $true)]
-    [string] $HostName
+    [string]$HostName
 )
-[OutputType([PSObject])]
 
-{
-    try
-    {
-        $config = Winrm enumerate winrm/config/listener
-        foreach($conf in $config)
-        {
-            if($conf.Contains("HTTPS" ))
-            {
-                Write-Verbose "HTTPS is already configured. Deleting the exisiting configuration."
+$ErrorActionPreference = "Stop"
+
+function Write-Log {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+
+    $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Verbose "[$Timestamp] [$Level] $Message"
+}
+
+function Remove-WinRMListener {
+    Write-Log "Checking for existing HTTPS listeners..."
+
+    try {
+        $config = winrm enumerate winrm/config/listener
+        foreach ($conf in $config) {
+            if ($conf.Contains("HTTPS")) {
+                Write-Log "HTTPS is already configured. Deleting the existing configuration."
                 winrm delete winrm/config/Listener?Address=*+Transport=HTTPS
                 break
             }
-
-} catch
-    {
-        Write-Verbose -Verbose "Exception while deleting the listener: " + $_.Exception.Message
+        }
+    }
+    catch {
+        Write-Log "Exception while deleting the listener: $($_.Exception.Message)" "WARN"
     }
 }
-function Create-Certificate
-{
-    [CmdletBinding()]
-param(
-        [string]$hostname
+
+function New-WinRMCertificate {
+    param(
+        [string]$HostName
     )
-    # makecert ocassionally produces negative serial numbers
-	# which golang tls/crypto <1.6.1 cannot handle
-	# https://github.com/golang/go/issues/8265
-    $serial = Get-Random -ErrorAction Stop
-    # Dynamically generate the end date for the certificate
-    	# validity period to be a year from the date the
-	# script is run
-    $endDate = (Get-Date).AddYears(1).ToString("MM/dd/yyyy" )
-    .\makecert -r -pe -n CN=$hostname -b 01/01/2012 -e $endDate -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
-    $thumbprint=(Get-ChildItem -ErrorAction Stop cert:\Localmachine\my | Where-Object { $_.Subject -eq "CN=" + $hostname } | Select-Object -Last 1).Thumbprint
-    if(-not $thumbprint)
-    {
-        throw "Failed to create the test certificate."
+
+    Write-Log "Creating new certificate for hostname: $HostName"
+
+    # Check if makecert.exe exists
+    $makecertPath = ".\makecert.exe"
+    if (-not (Test-Path $makecertPath)) {
+        Write-Log "makecert.exe not found, using New-SelfSignedCertificate instead" "WARN"
+
+        # Use PowerShell cmdlet instead
+        $cert = New-SelfSignedCertificate -DnsName $HostName `
+                                         -CertStoreLocation "Cert:\LocalMachine\My" `
+                                         -KeyExportPolicy Exportable `
+                                         -KeySpec KeyExchange `
+                                         -KeyLength 2048 `
+                                         -KeyUsageProperty All `
+                                         -Provider "Microsoft RSA SChannel Cryptographic Provider" `
+                                         -NotAfter (Get-Date).AddYears(1)
+
+        return $cert.Thumbprint
     }
-    return $thumbprint
+    else {
+        $serial = Get-Random
+        $EndDate = (Get-Date).AddYears(1).ToString("MM/dd/yyyy")
+
+        & $makecertPath -r -pe -n "CN=$HostName" -b 01/01/2012 -e $EndDate `
+                       -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange `
+                       -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial 2>&1 | Out-Null
+
+        $thumbprint = (Get-ChildItem cert:\LocalMachine\my |
+                      Where-Object { $_.Subject -eq "CN=$HostName" } |
+                      Select-Object -Last 1).Thumbprint
+
+        if (-not $thumbprint) {
+            throw "Failed to create the test certificate."
+        }
+
+        return $thumbprint
+    }
 }
-function Configure-WinRMHttpsListener
-{
-    [CmdletBinding()]
-param([string] $HostName,
-          [string] $port)
-    # Delete the WinRM Https listener if it is already configured
-    Delete-WinRMListener
-    # Create a test certificate
-    $cert = (Get-ChildItem -ErrorAction Stop cert:\LocalMachine\My | Where-Object { $_.Subject -eq "CN=" + $hostname } | Select-Object -Last 1)
+
+function Set-WinRMHttpsListener {
+    param(
+        [string]$HostName,
+        [string]$Port = "5986"
+    )
+
+    Write-Log "Configuring WinRM HTTPS listener on port $Port"
+
+    Remove-WinRMListener
+
+    # Get existing certificate or create new one
+    $cert = Get-ChildItem cert:\LocalMachine\My |
+            Where-Object { $_.Subject -eq "CN=$HostName" } |
+            Select-Object -Last 1
+
     $thumbprint = $cert.Thumbprint
-    if(-not $thumbprint)
-    {
-	    $thumbprint = Create-Certificate -hostname $HostName
-    }
-    elseif (-not $cert.PrivateKey)
-    {
-        # The private key is missing - could have been sysprepped
-        # Delete the certificate
-        Remove-Item -ErrorAction Stop Cert:\LocalMachine\My\$thumbpri -Forcen -Forcet -Force
-$thumbprint = Create-Certificate -hostname $HostName
-    }
-$WinrmCreate= " winrm create --% winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`" $hostName`" ;CertificateThumbprint=`" $thumbPrint`" }"
-    invoke-expression $WinrmCreate
-    winrm set winrm/config/service/auth '@{Basic=" true" }'
-}
-function Add-FirewallException
-{
-    [CmdletBinding()]
-param([string] $port)
-    # Delete an exisitng rule
-    netsh advfirewall firewall delete rule name="Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$port
-    # Add a new firewall rule
-    netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$port
-}
-$winrmHttpsPort=5986
-winrm set winrm/config '@{MaxEnvelopeSizekb = " 8192" }'
-Configure-WinRMHttpsListener $HostName $port
-Add-FirewallException -port $winrmHttpsPort
 
+    if (-not $thumbprint) {
+        $thumbprint = New-WinRMCertificate -HostName $HostName
+    }
+    elseif (-not $cert.PrivateKey) {
+        Write-Log "Certificate exists but has no private key, recreating..." "WARN"
+        Remove-Item -Path "Cert:\LocalMachine\My\$thumbprint" -Force
+        $thumbprint = New-WinRMCertificate -HostName $HostName
+    }
 
+    Write-Log "Using certificate with thumbprint: $thumbprint"
+
+    # Create WinRM HTTPS listener
+    $WinrmCreate = "winrm create winrm/config/Listener?Address=*+Transport=HTTPS @{Hostname=`"$HostName`";CertificateThumbprint=`"$thumbprint`"}"
+    Invoke-Expression $WinrmCreate
+
+    # Enable basic authentication
+    winrm set winrm/config/service/auth '@{Basic="true"}'
+
+    Write-Log "WinRM HTTPS listener configured successfully"
+}
+
+function Add-FirewallException {
+    param(
+        [string]$Port
+    )
+
+    Write-Log "Adding firewall exception for port $Port"
+
+    # Remove existing rule if it exists
+    netsh advfirewall firewall delete rule name="Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$Port 2>$null
+
+    # Add new firewall rule
+    netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" `
+                                       dir=in action=allow protocol=TCP localport=$Port
+
+    Write-Log "Firewall exception added successfully"
+}
+
+try {
+    $WinrmHttpsPort = 5986
+
+    Write-Log "Starting WinRM HTTPS configuration for hostname: $HostName"
+
+    # Set WinRM max envelope size
+    winrm set winrm/config '@{MaxEnvelopeSizekb="8192"}'
+
+    # Configure WinRM HTTPS listener
+    Set-WinRMHttpsListener -HostName $HostName -Port $WinrmHttpsPort
+
+    # Add firewall exception
+    Add-FirewallException -Port $WinrmHttpsPort
+
+    Write-Log "WinRM HTTPS configuration completed successfully"
+}
+catch {
+    Write-Error "Failed to configure WinRM: $($_.Exception.Message)"
+    throw
+}

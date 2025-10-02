@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -6,6 +6,9 @@
     Scale VM sizes
 
 .DESCRIPTION
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
     Scale VMs
 .PARAMETER ResourceGroupName
     Resource group
@@ -32,11 +35,9 @@
     .\Azure-VM-Scaling-Tool.ps1 -ResourceGroupName "RG-Production" -VmName "VM-WebServer01" -NewVmSize "Standard_D4s_v3"
     .\Azure-VM-Scaling-Tool.ps1 -ResourceGroupName "RG-Production" -VmNames @("VM-Web01", "VM-Web02") -NewVmSize "Standard_B2ms" -CheckCompatibility
     .\Azure-VM-Scaling-Tool.ps1 -ResourceGroupName "RG-Test" -VmName "VM-TestServer01" -NewVmSize "Standard_D2s_v3" -DryRun -ShowCostImpact
-#>
-[CmdletBinding(SupportsShouldProcess, DefaultParameterSetName = 'Single')]
-[CmdletBinding(SupportsShouldProcess)]
-
-    [Parameter(Mandatory = $true)]
+param(
+[Parameter(Mandatory = $true)]
+)
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
     [Parameter(Mandatory = $true, ParameterSetName = 'Single')]
@@ -65,14 +66,12 @@
     [switch]$StopIfRequired
 )
 $ErrorActionPreference = 'Stop'
-# Global tracking variables
 $script:ScalingResults = @()
-[OutputType([bool])]
- {
+function Write-Log {
     try {
         $context = Get-AzContext
         if (-not $context) {
-            Write-Host "Connecting to Azure..." -ForegroundColor Yellow
+            Write-Host "Connecting to Azure..." -ForegroundColor Green
             Connect-AzAccount
         }
         return $true
@@ -83,13 +82,11 @@ $script:ScalingResults = @()
     }
 }
 function Get-AvailableVMSizes {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$Location
+    [string]$Location
     )
     try {
-        $availableSizes = Get-AzVMSize -Location $Location
-        return $availableSizes
+        $AvailableSizes = Get-AzVMSize -Location $Location
+        return $AvailableSizes
     }
     catch {
         Write-Warning "Could not retrieve available VM sizes for location: $Location"
@@ -97,9 +94,7 @@ function Get-AvailableVMSizes {
     }
 }
 function Test-VMSizeCompatibility {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$VM,
+    [object]$VM,
         [string]$TargetSize
     )
     $compatibility = @{
@@ -109,25 +104,21 @@ function Test-VMSizeCompatibility {
         RequiresStop = $false
     }
     try {
-        # Get available sizes for the VM's location
-        $availableSizes = Get-AvailableVMSizes -Location $VM.Location
-        if ($availableSizes) {
-            $targetSizeInfo = $availableSizes | Where-Object { $_.Name -eq $TargetSize }
-            if (-not $targetSizeInfo) {
+        $AvailableSizes = Get-AvailableVMSizes -Location $VM.Location
+        if ($AvailableSizes) {
+            $TargetSizeInfo = $AvailableSizes | Where-Object { $_.Name -eq $TargetSize }
+            if (-not $TargetSizeInfo) {
                 $compatibility.Issues += "Target size '$TargetSize' is not available in location '$($VM.Location)'"
                 return $compatibility
             }
-            # Basic compatibility checks
-            $currentSizeInfo = $availableSizes | Where-Object { $_.Name -eq $VM.HardwareProfile.VmSize }
-            if ($currentSizeInfo) {
-                # Check if it's a meaningful change
-                if ($currentSizeInfo.NumberOfCores -eq $targetSizeInfo.NumberOfCores -and
-                    $currentSizeInfo.MemoryInMB -eq $targetSizeInfo.MemoryInMB) {
+            $CurrentSizeInfo = $AvailableSizes | Where-Object { $_.Name -eq $VM.HardwareProfile.VmSize }
+            if ($CurrentSizeInfo) {
+                if ($CurrentSizeInfo.NumberOfCores -eq $TargetSizeInfo.NumberOfCores -and
+                    $CurrentSizeInfo.MemoryInMB -eq $TargetSizeInfo.MemoryInMB) {
                     $compatibility.Warnings += "Target size has same CPU and memory specifications as current size"
                 }
-                # Check for significant size changes that might require stopping
-                if ($targetSizeInfo.NumberOfCores -gt ($currentSizeInfo.NumberOfCores * 2) -or
-                    $targetSizeInfo.MemoryInMB -gt ($currentSizeInfo.MemoryInMB * 2)) {
+                if ($TargetSizeInfo.NumberOfCores -gt ($CurrentSizeInfo.NumberOfCores * 2) -or
+                    $TargetSizeInfo.MemoryInMB -gt ($CurrentSizeInfo.MemoryInMB * 2)) {
                     $compatibility.RequiresStop = $true
                     $compatibility.Warnings += "Large size increase may require VM to be stopped"
                 }
@@ -143,51 +134,45 @@ function Test-VMSizeCompatibility {
     return $compatibility
 }
 function Get-VMCostEstimate {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [object]$VM,
+    [object]$VM,
         [string]$CurrentSize,
         [string]$TargetSize
     )
-    # This is a placeholder for cost estimation
-    # In a real implementation, this would integrate with Azure Pricing API
-    $costInfo = @{
+    $CostInfo = @{
         CurrentSize = $CurrentSize
         TargetSize = $TargetSize
         EstimatedChange = "N/A (requires Azure Pricing API)"
         Warning = "Cost impact varies by region and billing model"
     }
-    Write-Host "Cost Impact Analysis:" -ForegroundColor Cyan
-    Write-Host "Current Size: $CurrentSize"
-    Write-Host "Target Size: $TargetSize"
-    Write-Host "Estimated Change: $($costInfo.EstimatedChange)" -ForegroundColor Yellow
-    Write-Host "Note: $($costInfo.Warning)" -ForegroundColor Gray
-    return $costInfo
+    Write-Host "Cost Impact Analysis:" -ForegroundColor Green
+    Write-Output "Current Size: $CurrentSize"
+    Write-Output "Target Size: $TargetSize"
+    Write-Host "Estimated Change: $($CostInfo.EstimatedChange)" -ForegroundColor Green
+    Write-Host "Note: $($CostInfo.Warning)" -ForegroundColor Green
+    return $CostInfo
 }
 function Wait-ForVMScaling {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [string]$TargetSize,
         [int]$TimeoutMinutes
     )
     $timeout = (Get-Date).AddMinutes($TimeoutMinutes)
-    $lastState = ""
-    Write-Host "Waiting for VM scaling to complete (timeout: $TimeoutMinutes minutes)..." -ForegroundColor Yellow
+    $LastState = ""
+    Write-Host "Waiting for VM scaling to complete (timeout: $TimeoutMinutes minutes)..." -ForegroundColor Green
     do {
         try {
             $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
-            $currentSize = $vm.HardwareProfile.VmSize
-            $vmStatus = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
-            $powerState = ($vmStatus.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
-            $currentState = "$powerState (Size: $currentSize)"
-            if ($currentState -ne $lastState) {
-                Write-Host "Current state: $currentState" -ForegroundColor Cyan
-                $lastState = $currentState
+            $CurrentSize = $vm.HardwareProfile.VmSize
+            $VmStatus = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
+            $PowerState = ($VmStatus.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
+            $CurrentState = "$PowerState (Size: $CurrentSize)"
+            if ($CurrentState -ne $LastState) {
+                Write-Host "Current state: $CurrentState" -ForegroundColor Green
+                $LastState = $CurrentState
             }
-            if ($currentSize -eq $TargetSize) {
-                Write-Host "VM scaling completed: $currentSize" -ForegroundColor Green
+            if ($CurrentSize -eq $TargetSize) {
+                Write-Host "VM scaling completed: $CurrentSize" -ForegroundColor Green
                 return $true
             }
             Start-Sleep -Seconds 15
@@ -201,9 +186,7 @@ function Wait-ForVMScaling {
     return $false
 }
 function Scale-AzureVM {
-    [CmdletBinding(SupportsShouldProcess)]
-
-        [string]$ResourceGroup,
+    [string]$ResourceGroup,
         [string]$Name,
         [string]$TargetSize
     )
@@ -219,31 +202,28 @@ function Scale-AzureVM {
         CompatibilityCheck = $null
     }
     try {
-        Write-Host "`nProcessing VM: $Name" -ForegroundColor Cyan
+        Write-Host "`nProcessing VM: $Name" -ForegroundColor Green
         Write-Host ("=" * 60) -ForegroundColor Gray
-        # Get current VM information
         $vm = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
         $result.CurrentSize = $vm.HardwareProfile.VmSize
-        Write-Host "VM Information:" -ForegroundColor Cyan
-        Write-Host "Name: $($vm.Name)"
-        Write-Host "Location: $($vm.Location)"
-        Write-Host "Current Size: $($result.CurrentSize)"
-        Write-Host "Target Size: $TargetSize"
-        # Check if already at target size
+        Write-Host "VM Information:" -ForegroundColor Green
+        Write-Output "Name: $($vm.Name)"
+        Write-Output "Location: $($vm.Location)"
+        Write-Output "Current Size: $($result.CurrentSize)"
+        Write-Output "Target Size: $TargetSize"
         if ($result.CurrentSize -eq $TargetSize) {
-            Write-Host "VM is already at target size: $TargetSize" -ForegroundColor Yellow
+            Write-Host "VM is already at target size: $TargetSize" -ForegroundColor Green
             $result.Success = $true
             $result.ActualFinalSize = $TargetSize
             return $result
         }
-        # Compatibility check
         if ($CheckCompatibility) {
-            Write-Host "`nChecking compatibility..." -ForegroundColor Yellow
+            Write-Host "`nChecking compatibility..." -ForegroundColor Green
             $compatibility = Test-VMSizeCompatibility -VM $vm -TargetSize $TargetSize
             $result.CompatibilityCheck = $compatibility
             if ($compatibility.Issues.Count -gt 0) {
                 foreach ($issue in $compatibility.Issues) {
-                    Write-Host "ERROR: $issue" -ForegroundColor Red
+                    Write-Host "ERROR: $issue" -ForegroundColor Green
                 }
                 if (-not $Force) {
                     throw "Compatibility check failed. Use -Force to override."
@@ -251,41 +231,37 @@ function Scale-AzureVM {
             }
             if ($compatibility.Warnings.Count -gt 0) {
                 foreach ($warning in $compatibility.Warnings) {
-                    Write-Host "WARNING: $warning" -ForegroundColor Yellow
+                    Write-Host "WARNING: $warning" -ForegroundColor Green
                 }
             }
             if ($compatibility.RequiresStop) {
                 $result.RequiredStop = $true
-                Write-Host "INFO: This scaling operation may require stopping the VM" -ForegroundColor Cyan
+                Write-Host "INFO: This scaling operation may require stopping the VM" -ForegroundColor Green
             }
         }
-        # Cost impact analysis
         if ($ShowCostImpact) {
             Get-VMCostEstimate -VM $vm -CurrentSize $result.CurrentSize -TargetSize $TargetSize
         }
-        # Check if VM needs to be stopped
-        $vmStatus = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
-        $powerState = ($vmStatus.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
-        $isRunning = $powerState -eq 'VM running'
-        if ($isRunning -and $result.RequiredStop -and $StopIfRequired) {
-            Write-Host "`nStopping VM for scaling operation..." -ForegroundColor Yellow
+        $VmStatus = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Status
+        $PowerState = ($VmStatus.Statuses | Where-Object { $_.Code -like 'PowerState/*' }).DisplayStatus
+        $IsRunning = $PowerState -eq 'VM running'
+        if ($IsRunning -and $result.RequiredStop -and $StopIfRequired) {
+            Write-Host "`nStopping VM for scaling operation..." -ForegroundColor Green
             if (-not $DryRun) {
                 Stop-AzVM -ResourceGroupName $ResourceGroup -Name $Name -Force
                 Write-Host "VM stopped successfully" -ForegroundColor Green
             } else {
-                Write-Host "DRY RUN: Would stop VM: $Name" -ForegroundColor Cyan
+                Write-Host "DRY RUN: Would stop VM: $Name" -ForegroundColor Green
             }
         }
-        # Perform scaling
-        Write-Host "`nScaling VM..." -ForegroundColor Yellow
+        Write-Host "`nScaling VM..." -ForegroundColor Green
         if ($PSCmdlet.ShouldProcess($Name, "Scale VM to $TargetSize")) {
             if (-not $DryRun) {
                 $vm.HardwareProfile.VmSize = $TargetSize
                 Update-AzVM -ResourceGroupName $ResourceGroup -VM $vm
                 Write-Host "VM scaling initiated successfully" -ForegroundColor Green
-                # Verify the change
-                $updatedVM = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
-                $result.ActualFinalSize = $updatedVM.HardwareProfile.VmSize
+                $UpdatedVM = Get-AzVM -ResourceGroupName $ResourceGroup -Name $Name
+                $result.ActualFinalSize = $UpdatedVM.HardwareProfile.VmSize
                 if ($result.ActualFinalSize -eq $TargetSize) {
                     Write-Host "VM successfully scaled to: $TargetSize" -ForegroundColor Green
                     $result.Success = $true
@@ -293,21 +269,20 @@ function Scale-AzureVM {
                     throw "Scaling verification failed. Expected: $TargetSize, Actual: $($result.ActualFinalSize)"
                 }
             } else {
-                Write-Host "DRY RUN: Would scale VM $Name from $($result.CurrentSize) to $TargetSize" -ForegroundColor Cyan
+                Write-Host "DRY RUN: Would scale VM $Name from $($result.CurrentSize) to $TargetSize" -ForegroundColor Green
                 $result.Success = $true
                 $result.ActualFinalSize = $TargetSize
             }
         }
-        # Restart VM if it was stopped for scaling
-        if ($isRunning -and $result.RequiredStop -and $StopIfRequired -and -not $DryRun) {
-            Write-Host "`nRestarting VM..." -ForegroundColor Yellow
+        if ($IsRunning -and $result.RequiredStop -and $StopIfRequired -and -not $DryRun) {
+            Write-Host "`nRestarting VM..." -ForegroundColor Green
             Start-AzVM -ResourceGroupName $ResourceGroup -Name $Name
             Write-Host "VM restarted successfully" -ForegroundColor Green
-        
+
 } catch {
         $result.Error = $_.Exception.Message
         $result.Success = $false
-        Write-Host "VM scaling failed: $Name - $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "VM scaling failed: $Name - $($_.Exception.Message)" -ForegroundColor Green
     }
     finally {
         $result.EndTime = Get-Date
@@ -316,8 +291,7 @@ function Scale-AzureVM {
     return $result
 }
 function New-ScalingReport {
-    [CmdletBinding(SupportsShouldProcess)]
-[object[]]$Results)
+    [object[]]$Results)
     $report = @{
         Timestamp = Get-Date
         TotalVMs = $Results.Count
@@ -325,75 +299,68 @@ function New-ScalingReport {
         Failed = ($Results | Where-Object { -not $_.Success }).Count
         Details = $Results
     }
-    Write-Host "`nVM Scaling Operation Summary" -ForegroundColor Cyan
+    Write-Host "`nVM Scaling Operation Summary" -ForegroundColor Green
     Write-Host ("=" * 50) -ForegroundColor Cyan
-    Write-Host "Total VMs: $($report.TotalVMs)"
+    Write-Output "Total VMs: $($report.TotalVMs)"
     Write-Host "Successful: $($report.Successful)" -ForegroundColor Green
-    Write-Host "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
-    # Show scaling details
-    Write-Host "`nScaling Details:" -ForegroundColor Cyan
+    Write-Output "Failed: $($report.Failed)" -ForegroundColor $(if ($report.Failed -gt 0) { 'Red' } else { 'Green' })
+    Write-Host "`nScaling Details:" -ForegroundColor Green
     foreach ($result in $Results) {
         $status = if ($result.Success) { "" } else { "" }
         $color = if ($result.Success) { 'Green' } else { 'Red' }
-        Write-Host "  $status $($result.VMName): $($result.CurrentSize)  $($result.ActualFinalSize)" -ForegroundColor $color
+        Write-Output "  $status $($result.VMName): $($result.CurrentSize)  $($result.ActualFinalSize)" -ForegroundColor $color
     }
     if ($report.Failed -gt 0) {
-        Write-Host "`nFailed Scaling Operations:" -ForegroundColor Red
+        Write-Host "`nFailed Scaling Operations:" -ForegroundColor Green
         $Results | Where-Object { -not $_.Success } | ForEach-Object {
-            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Red
+            Write-Host "  - $($_.VMName): $($_.Error)" -ForegroundColor Green
         }
     }
     if ($DryRun) {
-        Write-Host "`nDRY RUN COMPLETED - No actual scaling was performed" -ForegroundColor Yellow
+        Write-Host "`nDRY RUN COMPLETED - No actual scaling was performed" -ForegroundColor Green
     }
     return $report
 }
-# Main execution
-Write-Host "`nAzure VM Scaling Tool" -ForegroundColor Cyan
+Write-Host "`nAzure VM Scaling Tool" -ForegroundColor Green
 Write-Host ("=" * 50) -ForegroundColor Cyan
 if ($DryRun) {
-    Write-Host "DRY RUN MODE - No actual scaling will be performed" -ForegroundColor Cyan
+    Write-Host "DRY RUN MODE - No actual scaling will be performed" -ForegroundColor Green
 }
-# Test Azure connection
 if (-not (Test-AzureConnection)) {
     throw "Azure connection required. Please run Connect-AzAccount first."
 }
 Write-Host "Connected to subscription: $((Get-AzContext).Subscription.Name)" -ForegroundColor Green
-# Prepare VM list
-$vmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
-# Confirmation
+$VmList = if ($PSCmdlet.ParameterSetName -eq 'Multiple') { $VmNames } else { @($VmName) }
 if (-not $Force -and -not $DryRun) {
-    $vmCount = $vmList.Count
-    $vmText = if ($vmCount -eq 1) { "VM" } else { "$vmCount VMs" }
+    $VmCount = $VmList.Count
+    $VmText = if ($VmCount -eq 1) { "VM" } else { "$VmCount VMs" }
     $action = "scale"
-    Write-Host "`nAbout to $action $vmText in resource group '$ResourceGroupName':" -ForegroundColor Yellow
-    foreach ($vm in $vmList) {
-        Write-Host "  - $vm  $NewVmSize" -ForegroundColor White
+    Write-Host "`nAbout to $action $VmText in resource group '$ResourceGroupName':" -ForegroundColor Green
+    foreach ($vm in $VmList) {
+        Write-Host "  - $vm  $NewVmSize" -ForegroundColor Green
     }
-    Write-Host "`nScaling Options:" -ForegroundColor Yellow
-    Write-Host "Target Size: $NewVmSize"
-    Write-Host "Check Compatibility: $(if ($CheckCompatibility) { 'YES' } else { 'NO' })"
-    Write-Host "Show Cost Impact: $(if ($ShowCostImpact) { 'YES' } else { 'NO' })"
-    Write-Host "Auto-stop if Required: $(if ($StopIfRequired) { 'YES' } else { 'NO' })"
+    Write-Host "`nScaling Options:" -ForegroundColor Green
+    Write-Output "Target Size: $NewVmSize"
+    Write-Output "Check Compatibility: $(if ($CheckCompatibility) { 'YES' } else { 'NO' })"
+    Write-Output "Show Cost Impact: $(if ($ShowCostImpact) { 'YES' } else { 'NO' })"
+    Write-Output "Auto-stop if Required: $(if ($StopIfRequired) { 'YES' } else { 'NO' })"
     $confirmation = Read-Host "`nContinue with scaling? (y/N)"
     if ($confirmation -ne 'y') {
-        Write-Host "Operation cancelled" -ForegroundColor Yellow
+        Write-Host "Operation cancelled" -ForegroundColor Green
         exit 0
     }
 }
-# Process VMs
-Write-Host "`nStarting VM scaling operations..." -ForegroundColor Yellow
-foreach ($vm in $vmList) {
+Write-Host "`nStarting VM scaling operations..." -ForegroundColor Green
+foreach ($vm in $VmList) {
     try {
         $result = Scale-AzureVM -ResourceGroup $ResourceGroupName -Name $vm -TargetSize $NewVmSize
         $script:ScalingResults += $result
-        # Wait for completion if requested
         if ($result.Success -and $Wait -and -not $DryRun) {
-            $waitResult = Wait-ForVMScaling -ResourceGroup $ResourceGroupName -Name $vm -TargetSize $NewVmSize -TimeoutMinutes $TimeoutMinutes
-            $result.WaitCompleted = $waitResult
-        
+            $WaitResult = Wait-ForVMScaling -ResourceGroup $ResourceGroupName -Name $vm -TargetSize $NewVmSize -TimeoutMinutes $TimeoutMinutes
+            $result.WaitCompleted = $WaitResult
+
 } catch {
-        $errorResult = @{
+        $ErrorResult = @{
             VMName = $vm
             StartTime = Get-Date
             EndTime = Get-Date
@@ -403,14 +370,13 @@ foreach ($vm in $vmList) {
             TargetSize = $NewVmSize
             ActualFinalSize = "Unknown"
         }
-        $script:ScalingResults += $errorResult
+        $script:ScalingResults += $ErrorResult
     }
 }
-# Generate report
 $report = New-ScalingReport -Results $script:ScalingResults
-# Exit with appropriate code
-$exitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
-Write-Host "`nOperation completed!" -ForegroundColor $(if ($exitCode -eq 0) { 'Green' } else { 'Yellow' })
-exit $exitCode
+$ExitCode = if ($report.Failed -gt 0) { 1 } else { 0 }
+Write-Output "`nOperation completed!" -ForegroundColor $(if ($ExitCode -eq 0) { 'Green' } else { 'Yellow' })
+exit $ExitCode
+
 
 

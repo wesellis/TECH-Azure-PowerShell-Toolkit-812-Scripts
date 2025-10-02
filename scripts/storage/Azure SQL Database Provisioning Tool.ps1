@@ -1,113 +1,146 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Sql
 
-<#`n.SYNOPSIS
-    Azure Sql Database Provisioning Tool
+<#
+.SYNOPSIS
+    Azure SQL Database Provisioning Tool
 
 .DESCRIPTION
-    Azure automation
+    Azure automation for provisioning SQL databases
 
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 
-    Author: Wes Ellis (wes@wesellis.com)
-#>
-    Wes Ellis (wes@wesellis.com)
-
-    1.0
+.NOTES
+    Version: 1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
-try {
-    # Main script execution
-) { "Continue" } else { "SilentlyContinue" }
+#>
+
 [CmdletBinding()]
-function Write-Host {
-    [CmdletBinding()]
 param(
-        [Parameter()]
-    [ValidateNotNullOrEmpty()]
-    [string]$Message,
-        [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
-    )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
-        "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
-    }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
-}
-param(
-    [Parameter()]
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$ResourceGroupName,
-    [Parameter()]
+
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$ServerName,
-    [Parameter()]
+
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$DatabaseName,
-    [Parameter()]
+
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$Location,
-    [Parameter()]
+
+    [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
     [string]$AdminUser,
+
+    [Parameter(Mandatory)]
     [securestring]$AdminPassword,
-    [string]$Edition = "Standard" ,
-    [string]$ServiceObjective = "S0" ,
+
+    [Parameter()]
+    $Edition = "Standard",
+
+    [Parameter()]
+    $ServiceObjective = "S0",
+
+    [Parameter()]
     [bool]$AllowAzureIps = $true
 )
-Write-Host "Provisioning SQL Database: $DatabaseName" "INFO"
-Write-Host "SQL Server: $ServerName" "INFO"
-Write-Host "Resource Group: $ResourceGroupName" "INFO"
-Write-Host "Location: $Location" "INFO"
-Write-Host "Edition: $Edition" "INFO"
-Write-Host "Service Objective: $ServiceObjective" "INFO"
-Write-Host " `nCreating SQL Server..." "INFO";
-$params = @{
-    ResourceGroupName = $ResourceGroupName
-    ServerName = $ServerName
-    Location = $Location
-    SqlAdministratorCredentials = "(New-Object"
-    ErrorAction = "Stop PSCredential($AdminUser, $AdminPassword))"
-}
-$SqlServer @params
-Write-Host "SQL Server created: $($SqlServer.FullyQualifiedDomainName)" "INFO"
-if ($AllowAzureIps) {
-    Write-Host "Configuring firewall to allow Azure services..." "INFO"
-    $params = @{
-        ResourceGroupName = $ResourceGroupName
-        StartIpAddress = " 0.0.0.0"
-        ServerName = $ServerName
-        EndIpAddress = " 0.0.0.0"
-        ErrorAction = "Stop"
-        FirewallRuleName = "AllowAzureServices"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+function Write-Log {
+    param(
+        [Parameter()]
+        [ValidateNotNullOrEmpty()]
+        [string]$Message,
+
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        $Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
+        "INFO" = "Cyan"
+        "WARN" = "Yellow"
+        "ERROR" = "Red"
+        "SUCCESS" = "Green"
     }
-    New-AzSqlServerFirewallRule @params
+    $LogEntry = "$timestamp [SQL-DB] [$Level] $Message"
+    Write-Host $LogEntry -ForegroundColor $ColorMap[$Level]
 }
-Write-Host " `nCreating SQL Database..." "INFO" ;
-$params = @{
-    ResourceGroupName = $ResourceGroupName
-    Edition = $Edition
-    ServerName = $ServerName
-    RequestedServiceObjectiveName = $ServiceObjective
-    DatabaseName = $DatabaseName
-    ErrorAction = "Stop"
-}
-$SqlDatabase @params
-Write-Host " `nSQL Database $DatabaseName provisioned successfully" "INFO"
-Write-Host "Server: $($SqlServer.FullyQualifiedDomainName)" "INFO"
-Write-Host "Database: $($SqlDatabase.DatabaseName)" "INFO"
-Write-Host "Edition: $($SqlDatabase.Edition)" "INFO"
-Write-Host "Service Objective: $($SqlDatabase.CurrentServiceObjectiveName)" "INFO"
-Write-Host "Max Size: $([math]::Round($SqlDatabase.MaxSizeBytes / 1GB, 2)) GB" "INFO"
-Write-Host " `nConnection String (template):" "INFO"
-Write-Host "Server=tcp:$($SqlServer.FullyQualifiedDomainName),1433;Initial Catalog=$DatabaseName;Persist Security Info=False;User ID=$AdminUser;Password=***;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" "INFO"
-Write-Host " `nSQL Database provisioning completed at $(Get-Date)" "INFO"
+
+try {
+    Write-Log "Provisioning SQL Database: $DatabaseName" "INFO"
+    Write-Log "SQL Server: $ServerName" "INFO"
+    Write-Log "Resource Group: $ResourceGroupName" "INFO"
+    Write-Log "Location: $Location" "INFO"
+    Write-Log "Edition: $Edition" "INFO"
+    Write-Log "Service Objective: $ServiceObjective" "INFO"
+
+    # Check if SQL Server exists
+    $SqlServer = Get-AzSqlServer -ResourceGroupName $ResourceGroupName -ServerName $ServerName -ErrorAction SilentlyContinue
+
+    if (-not $SqlServer) {
+        Write-Log "Creating SQL Server..." "INFO"
+
+        $params = @{
+            ResourceGroupName = $ResourceGroupName
+            ServerName = $ServerName
+            Location = $Location
+            SqlAdministratorCredentials = (New-Object PSCredential($AdminUser, $AdminPassword))
+            ErrorAction = "Stop"
+        }
+
+        $SqlServer = New-AzSqlServer @params
+        Write-Log "SQL Server created: $($SqlServer.FullyQualifiedDomainName)" "SUCCESS"
+    } else {
+        Write-Log "SQL Server already exists: $($SqlServer.FullyQualifiedDomainName)" "INFO"
+    }
+
+    if ($AllowAzureIps) {
+        Write-Log "Configuring firewall to allow Azure services..." "INFO"
+
+        $firewallParams = @{
+            ResourceGroupName = $ResourceGroupName
+            ServerName = $ServerName
+            FirewallRuleName = "AllowAllAzureIps"
+            StartIpAddress = "0.0.0.0"
+            EndIpAddress = "0.0.0.0"
+            ErrorAction = "Stop"
+        }
+
+        New-AzSqlServerFirewallRule @firewallParams
+        Write-Log "Firewall rule configured" "SUCCESS"
+    }
+
+    # Create the database
+    Write-Log "Creating database..." "INFO"
+
+    $dbParams = @{
+        ResourceGroupName = $ResourceGroupName
+        ServerName = $ServerName
+        DatabaseName = $DatabaseName
+        Edition = $Edition
+        RequestedServiceObjectiveName = $ServiceObjective
+        ErrorAction = "Stop"
+    }
+
+    $Database = New-AzSqlDatabase @dbParams
+
+    Write-Log "Database created successfully!" "SUCCESS"
+    Write-Log "Database: $DatabaseName" "INFO"
+    Write-Log "Server: $($SqlServer.FullyQualifiedDomainName)" "INFO"
+    Write-Log "Edition: $($Database.Edition)" "INFO"
+    Write-Log "Service Objective: $($Database.CurrentServiceObjectiveName)" "INFO"
+
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

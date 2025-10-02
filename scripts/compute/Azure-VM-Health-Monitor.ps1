@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,22 +10,18 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$VmName
 )
-# Get VM status and details
 $VM = Get-AzVM -ResourceGroupName $ResourceGroupName -Name $VmName -Status
-Write-Host "VM Name: $($VM.Name)"
-Write-Host "Resource Group: $($VM.ResourceGroupName)"
-Write-Host "Location: $($VM.Location)"
-Write-Host "Power State: $($VM.PowerState)"
-Write-Host "Provisioning State: $($VM.ProvisioningState)"
-# Display status information
+Write-Output "VM Name: $($VM.Name)"
+Write-Output "Resource Group: $($VM.ResourceGroupName)"
+Write-Output "Location: $($VM.Location)"
+Write-Output "Power State: $($VM.PowerState)"
+Write-Output "Provisioning State: $($VM.ProvisioningState)"
 foreach ($Status in $VM.Statuses) {
-    Write-Host "Status: $($Status.Code) - $($Status.DisplayStatus)"
-}
-
-
+    Write-Output "Status: $($Status.Code) - $($Status.DisplayStatus)"`n}

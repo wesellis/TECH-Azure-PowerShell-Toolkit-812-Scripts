@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Storage
@@ -8,8 +8,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName
@@ -58,6 +60,4 @@ foreach ($Health in $HealthStatus) {
         "Error" { "" }
         default { "[WARN]" }
     }
-    Write-Information -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"
-}
-
+    Write-Information -Object "$StatusColor $($Health.ResourceName) ($($Health.ResourceType)): $($Health.Status)"`n}

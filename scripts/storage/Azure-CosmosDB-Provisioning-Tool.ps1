@@ -1,12 +1,14 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure script
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AccountName,
@@ -16,12 +18,11 @@
     [array]$LocationsToAdd = @(),
     [bool]$EnableMultipleWriteLocations = $false
 )
-Write-Host "Provisioning Cosmos DB Account: $AccountName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Primary Location: $Location"
-Write-Host "Consistency Level: $DefaultConsistencyLevel"
-Write-Host "Account Kind: $Kind"
-# Create the Cosmos DB account
+Write-Output "Provisioning Cosmos DB Account: $AccountName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Primary Location: $Location"
+Write-Output "Consistency Level: $DefaultConsistencyLevel"
+Write-Output "Account Kind: $Kind"
 $params = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
@@ -31,17 +32,17 @@ $params = @{
     Name = $AccountName
 }
 $CosmosDB @params
-Write-Host "Cosmos DB Account $AccountName provisioned successfully"
-Write-Host "Document Endpoint: $($CosmosDB.DocumentEndpoint)"
-Write-Host "Write Locations: $($CosmosDB.WriteLocations.Count)"
-Write-Host "Read Locations: $($CosmosDB.ReadLocations.Count)"
-# Add additional locations if specified
+Write-Output "Cosmos DB Account $AccountName provisioned successfully"
+Write-Output "Document Endpoint: $($CosmosDB.DocumentEndpoint)"
+Write-Output "Write Locations: $($CosmosDB.WriteLocations.Count)"
+Write-Output "Read Locations: $($CosmosDB.ReadLocations.Count)"
 if ($LocationsToAdd.Count -gt 0) {
-    Write-Host "`nAdding additional locations:"
+    Write-Output "`nAdding additional locations:"
     foreach ($AddLocation in $LocationsToAdd) {
-        Write-Host "Adding location: $AddLocation"
-        # Additional location configuration would go here
+        Write-Output "Adding location: $AddLocation"
     }
 }
-Write-Host "`nCosmos DB provisioning completed at $(Get-Date)"
+Write-Output "`nCosmos DB provisioning completed at $(Get-Date)"
+
+
 

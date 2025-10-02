@@ -1,746 +1,3467 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Compute
-#Requires -Modules Az.Storage
-#Requires -Modules Az.Network
-#Requires -Modules Az.Resources
-#Requires -Modules Az.KeyVault
-
 <#
 .SYNOPSIS
-    
+    Azure Toolkit Test Framework
 
 .DESCRIPTION
-    testing framework for validating Azure infrastructure, security, compliance,
-    and automation scripts across the enterprise toolkit.
-.PARAMETER TestScope
-    Scope of tests to run (All, Unit, Integration, Security, Performance, Compliance)
-.PARAMETER ResourceGroupName
-    Target resource group for integration tests
-.PARAMETER Location
-    Azure region for test resources
-.PARAMETER TestEnvironment
-    Test environment name (dev, test, staging)
-.PARAMETER IncludeDestructive
-    Include destructive tests (deletion, modification)
-.PARAMETER OutputFormat
-    Test output format (Console, JUnit, NUnitXml, AzureDevOps)
-.PARAMETER OutputPath
-    Path for test result output files
-.PARAMETER Parallel
-    Run tests in parallel for faster execution
-.PARAMETER Tags
-    Specific test tags to run
-    .\Azure-Toolkit-Test-Framework.ps1 -TestScope "All" -ResourceGroupName "test-rg" -Location "East US" -OutputFormat "JUnit"
-    .\Azure-Toolkit-Test-Framework.ps1 -TestScope "Security" -Tags @("RBAC", "Encryption") -OutputPath "C:\TestResults"
-.NOTES
-    Author: Wesley Ellis
-    Version: 2.0
-    Requires: PowerShell 7.0+, Pester 5.0+, Azure PowerShell modules
+    Azure PowerShell automation script
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
 #>
 
-[CmdletBinding()]
+#Requires -Version 7.0
+    [string]$site = switch -Wildcard ($env:COMPUTERNAME) {
+    "NYC-*" { "NewYork" }
+    "CHI-*" { "Chicago" }
+    "LA-*" { "LosAngeles" }
+    default { "Corporate" }
+}
+#Requires -Modules Az.Accounts, Az.Resources, Az.Compute, Az.Storage, Az.Network, Az.KeyVault, Pester
+
+
+[CmdletBinding(SupportsShouldProcess)]
 param(
-    [Parameter(Mandatory = $false)]
-    [ValidateSet("All", "Unit", "Integration", "Security", "Performance", "Compliance", "Infrastructure")]
-    [string]$TestScope = "All",
-    
-    [Parameter(Mandatory = $false)]
-    [string]$ResourceGroupName = "toolkit-test-rg-$(Get-Random -Maximum 9999)",
-    
-    [Parameter(Mandatory = $false)]
-    [string]$Location = "East US",
-    
-    [Parameter(Mandatory = $false)]
-    [string]$TestEnvironment = "test",
-    
-    [Parameter(Mandatory = $false)]
+    [parameter()]
+    [ValidateSet('All', 'Unit', 'Integration', 'Security', 'Performance', 'Compliance', 'Infrastructure')]
+    [string]$TestScope='All',
+
+    [parameter()]
+    [ValidatePattern('^[a-zA-Z0-9-_\.]+$')]
+    [string]$ResourceGroupName="toolkit-test-$(Get-Random -Maximum 9999)",
+
+    [parameter()]
+    [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
+    [string]$SubscriptionId,
+
+    [parameter()]
+    [ValidateSet('eastus', 'eastus2', 'westus', 'westus2', 'centralus', 'northeurope', 'westeurope')]
+    [string]$Location='eastus',
+
+    [parameter()]
+    [ValidateSet('Development', 'Test', 'Staging', 'Production')]
+    [string]$TestEnvironment='Test',
+
+    [parameter()]
     [switch]$IncludeDestructive,
-    
-    [Parameter(Mandatory = $false)]
-    [ValidateSet("Console", "JUnit", "NUnitXml", "AzureDevOps")]
-    [string]$OutputFormat = "Console",
-    
-    [Parameter(Mandatory = $false)]
-    [string]$OutputPath = ".\TestResults",
-    
-    [Parameter(Mandatory = $false)]
+
+    [parameter()]
+    [switch]$MockEnabled,
+
+    [parameter()]
+    [ValidateSet('Console', 'JUnit', 'NUnit', 'HTML', 'JSON', 'AzureDevOps')]
+    [string]$OutputFormat='Console',
+
+    [parameter()]
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $OutputPath='./TestResults',
+
+    [parameter()]
     [switch]$Parallel,
-    
-    [Parameter(Mandatory = $false)]
-    [string[]]$Tags = @()
+
+    [parameter()]
+    [ValidateRange(1, 16)]
+    [int]$MaxParallelJobs=4,
+
+    [parameter()]
+    [string[]]$Tags,
+
+    [parameter()]
+    [string[]]$ExcludeTags,
+
+    [parameter()]
+    [ValidateRange(0, 5)]
+    [int]$RetryCount=2,
+
+    [parameter()]
+    [ValidateRange(5, 300)]
+    [int]$TimeoutMinutes=60
 )
 
-#region Functions
+begin {
+    Set-StrictMode -Version Latest
+    [string]$ErrorActionPreference='Stop'
+    [string]$ProgressPreference='Continue'
 
-# Initialize test environment
-$ErrorActionPreference = "Stop"
-$script:TestStartTime = Get-Date
-$script:TestResults = @()
+    class AzureTestFramework {
+        [string]$TestScope
+        [string]$ResourceGroupName
+        [string]$Location
+        [string]$TestEnvironment
+        [hashtable]$Configuration=@{}
+        [hashtable]$AzureContext=@{}
+        [System.Collections.ArrayList]$TestResults=@()
+        [System.Collections.ArrayList]$ResourcesCreated=@()
+        [System.Diagnostics.Stopwatch]$Timer
+        [bool]$MockMode
 
-# Enhanced logging function
-function Write-TestLog {
-    param(
-        [string]$Message,
-        [ValidateSet("Info", "Warning", "Error", "Success", "Test")]
-        [string]$Level = "Info"
-    )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $colors = @{
-        Info = "White"
-        Warning = "Yellow" 
-        Error = "Red"
-        Success = "Green"
-        Test = "Cyan"
-    }
-    
-    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $colors[$Level]
-}
-
-# Install and import required modules
-function Initialize-TestEnvironment {
-    try {
-        Write-TestLog "Initializing test environment..." "Info"
-        
-        # Check and install Pester
-        $pesterModule = Get-Module -ListAvailable -Name Pester | Sort-Object Version -Descending | Select-Object -First 1
-        if (-not $pesterModule -or $pesterModule.Version -lt '5.0.0') {
-            Write-TestLog "Installing/updating Pester module..." "Info"
-            Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+        AzureTestFramework() {
+    [string]$this.Timer=[System.Diagnostics.Stopwatch]::new()
+    [string]$this.MockMode=$false
         }
-        
-                                
-        # Create output directory
-        if (-not (Test-Path $OutputPath)) {
-            New-Item -ItemType Directory -Path $OutputPath -Force | Out-Null
-        }
-        
-        Write-TestLog "Test environment initialized successfully" "Success"
-        
-    } catch {
-        Write-TestLog "Failed to initialize test environment: $($_.Exception.Message)" "Error"
-        throw
-    }
-}
 
-# Azure authentication and setup
-function Initialize-AzureTestEnvironment {
-    try {
-        Write-TestLog "Setting up Azure test environment..." "Info"
-        
-        # Ensure Azure connection
-        $context = Get-AzContext -ErrorAction Stop
-        if (-not $context) {
-            Write-TestLog "Connecting to Azure..." "Info"
-            Connect-AzAccount
-        }
-        
-        # Create test resource group
-        $rg = Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction SilentlyContinue
-        if (-not $rg) {
-            Write-TestLog "Creating test resource group: $ResourceGroupName" "Info"
-            $resourcegroupSplat = @{
-    Name = $ResourceGroupName
-    Location = $Location
-    Tag = @{
-}
-New-AzResourceGroup @resourcegroupSplat
-                Purpose = "AutomatedTesting"
-                CreatedBy = "TestFramework"
-                Environment = $TestEnvironment
-                CreatedDate = (Get-Date).ToString("yyyy-MM-dd")
+        [void] Initialize() {
+    [string]$this.Timer.Start()
+
+            write-Information "Initializing Azure Test Framework" -InformationAction Continue
+            write-Information "Test Environment: $($this.TestEnvironment)" -InformationAction Continue
+            write-Information "Mock Mode: $($this.MockMode)" -InformationAction Continue
+    [string]$pester=Get-Module -ListAvailable -Name Pester |
+                Where-Object { $_.Version -ge '5.3.0' } |
+         Select-Object select -First 1
+
+            if (-not $pester) {
+                throw "Pester 5.3.0+ required. Install with: Install-Module -Name Pester -MinimumVersion 5.3.0"
+            }
+
+            Import-Module Pester -Force
+
+            if (-not $this.MockMode) {
+    [string]$this.ConnectAzure()
+            }
+
+            if (-not (Test-Path $this.Configuration.OutputPath)) {
+                New-Item -Path $this.Configuration.OutputPath -ItemType Directory -Force | Out-Null
             }
         }
-        
-        $script:TestResourceGroup = $rg
-        Write-TestLog "Azure test environment ready" "Success"
-        
-    } catch {
-        Write-TestLog "Failed to setup Azure test environment: $($_.Exception.Message)" "Error"
-        throw
-    }
-}
 
-# Unit Tests for PowerShell Scripts
-function Invoke-UnitTests {
-    Write-TestLog "Running unit tests..." "Test"
-    
-    $unitTestConfig = New-PesterConfiguration -ErrorAction Stop
-    $unitTestConfig.Run.Container = New-PesterContainer -Path ".\tests\unit" -Data @{
-        ResourceGroupName = $ResourceGroupName
-        Location = $Location
-        TestEnvironment = $TestEnvironment
-    }
-    $unitTestConfig.Output.Verbosity = 'Detailed'
-    $unitTestConfig.TestResult.Enabled = $true
-    $unitTestConfig.TestResult.OutputPath = "$OutputPath\unit-test-results.xml"
-    $unitTestConfig.TestResult.OutputFormat = $OutputFormat
-    
-    # Create sample unit tests if directory doesn't exist
-    if (-not (Test-Path ".\tests\unit")) {
-        New-Item -ItemType Directory -Path ".\tests\unit" -Force | Out-Null
-        Create-SampleUnitTests
-    }
-    
-    $results = Invoke-Pester -Configuration $unitTestConfig
-    $script:TestResults += $results
-    
-    Write-TestLog "Unit tests completed: $($results.PassedCount) passed, $($results.FailedCount) failed" "Test"
-}
+        [void] ConnectAzure() {
+            try {
+    [string]$context=Get-AzContext
 
-# Integration Tests for Azure Resources
-function Invoke-IntegrationTests {
-    Write-TestLog "Running integration tests..." "Test"
-    
-    $integrationTestConfig = New-PesterConfiguration -ErrorAction Stop
-    $integrationTestConfig.Run.Container = New-PesterContainer -Path ".\tests\integration" -Data @{
-        ResourceGroupName = $ResourceGroupName
-        Location = $Location
-        TestEnvironment = $TestEnvironment
-    }
-    $integrationTestConfig.Output.Verbosity = 'Detailed'
-    $integrationTestConfig.TestResult.Enabled = $true
-    $integrationTestConfig.TestResult.OutputPath = "$OutputPath\integration-test-results.xml"
-    $integrationTestConfig.TestResult.OutputFormat = $OutputFormat
-    
-    # Create sample integration tests
-    if (-not (Test-Path ".\tests\integration")) {
-        New-Item -ItemType Directory -Path ".\tests\integration" -Force | Out-Null
-        Create-SampleIntegrationTests
-    }
-    
-    $results = Invoke-Pester -Configuration $integrationTestConfig
-    $script:TestResults += $results
-    
-    Write-TestLog "Integration tests completed: $($results.PassedCount) passed, $($results.FailedCount) failed" "Test"
-}
-
-# Security Tests for Azure Resources
-function Invoke-SecurityTests {
-    Write-TestLog "Running security tests..." "Test"
-    
-    $securityTestConfig = New-PesterConfiguration -ErrorAction Stop
-    $securityTestConfig.Run.Container = New-PesterContainer -Path ".\tests\security" -Data @{
-        ResourceGroupName = $ResourceGroupName
-        Location = $Location
-        TestEnvironment = $TestEnvironment
-    }
-    $securityTestConfig.Filter.Tag = "Security"
-    $securityTestConfig.Output.Verbosity = 'Detailed'
-    $securityTestConfig.TestResult.Enabled = $true
-    $securityTestConfig.TestResult.OutputPath = "$OutputPath\security-test-results.xml"
-    $securityTestConfig.TestResult.OutputFormat = $OutputFormat
-    
-    # Create security tests
-    if (-not (Test-Path ".\tests\security")) {
-        New-Item -ItemType Directory -Path ".\tests\security" -Force | Out-Null
-        Create-SampleSecurityTests
-    }
-    
-    $results = Invoke-Pester -Configuration $securityTestConfig
-    $script:TestResults += $results
-    
-    Write-TestLog "Security tests completed: $($results.PassedCount) passed, $($results.FailedCount) failed" "Test"
-}
-
-# Performance Tests
-function Invoke-PerformanceTests {
-    Write-TestLog "Running performance tests..." "Test"
-    
-    $performanceTestConfig = New-PesterConfiguration -ErrorAction Stop
-    $performanceTestConfig.Run.Container = New-PesterContainer -Path ".\tests\performance" -Data @{
-        ResourceGroupName = $ResourceGroupName
-        Location = $Location
-        TestEnvironment = $TestEnvironment
-    }
-    $performanceTestConfig.Filter.Tag = "Performance"
-    $performanceTestConfig.Output.Verbosity = 'Detailed'
-    $performanceTestConfig.TestResult.Enabled = $true
-    $performanceTestConfig.TestResult.OutputPath = "$OutputPath\performance-test-results.xml"
-    $performanceTestConfig.TestResult.OutputFormat = $OutputFormat
-    
-    # Create performance tests
-    if (-not (Test-Path ".\tests\performance")) {
-        New-Item -ItemType Directory -Path ".\tests\performance" -Force | Out-Null
-        Create-SamplePerformanceTests
-    }
-    
-    $results = Invoke-Pester -Configuration $performanceTestConfig
-    $script:TestResults += $results
-    
-    Write-TestLog "Performance tests completed: $($results.PassedCount) passed, $($results.FailedCount) failed" "Test"
-}
-
-# Compliance Tests
-function Invoke-ComplianceTests {
-    Write-TestLog "Running compliance tests..." "Test"
-    
-    $complianceTestConfig = New-PesterConfiguration -ErrorAction Stop
-    $complianceTestConfig.Run.Container = New-PesterContainer -Path ".\tests\compliance" -Data @{
-        ResourceGroupName = $ResourceGroupName
-        Location = $Location
-        TestEnvironment = $TestEnvironment
-    }
-    $complianceTestConfig.Filter.Tag = "Compliance"
-    $complianceTestConfig.Output.Verbosity = 'Detailed'
-    $complianceTestConfig.TestResult.Enabled = $true
-    $complianceTestConfig.TestResult.OutputPath = "$OutputPath\compliance-test-results.xml"
-    $complianceTestConfig.TestResult.OutputFormat = $OutputFormat
-    
-    # Create compliance tests
-    if (-not (Test-Path ".\tests\compliance")) {
-        New-Item -ItemType Directory -Path ".\tests\compliance" -Force | Out-Null
-        Create-SampleComplianceTests
-    }
-    
-    $results = Invoke-Pester -Configuration $complianceTestConfig
-    $script:TestResults += $results
-    
-    Write-TestLog "Compliance tests completed: $($results.PassedCount) passed, $($results.FailedCount) failed" "Test"
-}
-
-# Create sample unit tests
-function New-SampleUnitTests {
-    $unitTestContent = @'
-BeforeAll {
-    # Import automation scripts for testing
-    $script:AutomationScriptsPath = ".\automation-scripts"
-}
-
-Describe "PowerShell Script Validation" -Tag "Unit", "Validation" {
-    BeforeAll {
-        $scripts = Get-ChildItem -Path $script:AutomationScriptsPath -Filter "*.ps1" -Recurse
-    }
-    
-    It "Should have valid PowerShell syntax for <Name>" -TestCases @(
-        @{ Script = $scripts }
-    ) -ForEach $scripts {
-        $errors = $null
-        $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content -ErrorAction Stop $Script.FullName -Raw), [ref]$errors)
-        $errors.Count | Should -Be 0
-    }
-    
-    It "Should have help documentation for <Name>" -TestCases @(
-        @{ Script = $scripts }
-    ) -ForEach $scripts {
-        $content = Get-Content -ErrorAction Stop $Script.FullName -Raw
-        $content | Should -Match "\.SYNOPSIS
-    "
-        $content | Should -Match "\
-.DESCRIPTION"
-        $content | Should -Match "\.EXAMPLE"
-    }
-    
-    It "Should have proper error handling for <Name>" -TestCases @(
-        @{ Script = $scripts | Where-Object { $_.Name -notlike "*Test*" } }
-    ) -ForEach ($scripts | Where-Object { $_.Name -notlike "*Test*" }) {
-        $content = Get-Content -ErrorAction Stop $Script.FullName -Raw
-        $content | Should -Match "try\s*\{"
-        $content | Should -Match "catch\s*\{"
-    }
-}
-
-Describe "Module Dependencies" -Tag "Unit", "Dependencies" {
-    It "Should have required modules available" {
-        $requiredModules = @("Az.Accounts", "Az.Resources", "Az.Storage")
-        foreach ($module in $requiredModules) {
-            Get-Module -ListAvailable -Name $module | Should -Not -BeNullOrEmpty
-        }
-    }
-}
-'@
-    
-    $unitTestContent | Out-File -FilePath ".\tests\unit\ScriptValidation.Tests.ps1" -Encoding UTF8
-}
-
-# Create sample integration tests
-function New-SampleIntegrationTests {
-    $integrationTestContent = @'
-BeforeAll {
-    param($ResourceGroupName, $Location, $TestEnvironment)
-    $script:ResourceGroupName = $ResourceGroupName
-    $script:Location = $Location
-    $script:TestEnvironment = $TestEnvironment
-}
-
-Describe "Azure Resource Creation" -Tag "Integration", "Azure" {
-    It "Should create a storage account successfully" {
-        $storageAccountName = "testst$(Get-Random -Maximum 99999)"
-        $script = ".\automation-scripts\Data-Storage\Azure-StorageAccount-Provisioning-Tool.ps1"
-        
-        if (Test-Path $script) {
-            { & $script -ResourceGroupName $script:ResourceGroupName -StorageAccountName $storageAccountName -Location $script:Location -SkuName "Standard_LRS" } | Should -Not -Throw
-            
-            # Verify resource exists
-            $storageAccount = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $storageAccountName -ErrorAction SilentlyContinue
-            $storageAccount | Should -Not -BeNullOrEmpty
-            
-            # Cleanup
-            Remove-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $storageAccountName -Force
-        }
-    }
-    
-    It "Should create a virtual machine successfully" {
-        $vmName = "test-vm-$(Get-Random -Maximum 999)"
-        $script = ".\automation-scripts\Compute-Management\Azure-VM-Provisioning-Tool.ps1"
-        
-        if (Test-Path $script) {
-            { & $script -ResourceGroupName $script:ResourceGroupName -VMName $vmName -Location $script:Location -Size "Standard_B1s" -AdminUsername "testadmin" -AdminPassword (ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force) } | Should -Not -Throw
-            
-            # Verify resource exists
-            $vmSplat = @{
-    ResourceGroupName = $script:ResourceGroupName
-    Name = $vmName
-    ErrorAction = SilentlyContinue
-}
-Get-AzVM @vmSplat
-            $vm | Should -Not -BeNullOrEmpty
-            
-            # Cleanup if destructive tests are enabled
-            if ($script:IncludeDestructive) {
-                Remove-AzVM -ResourceGroupName $script:ResourceGroupName -Name $vmName -Force
-            }
-        }
-    }
-}
-
-Describe "Network Resources" -Tag "Integration", "Network" {
-    It "Should create a virtual network successfully" {
-        $vnetName = "test-vnet-$(Get-Random -Maximum 999)"
-        $script = ".\automation-scripts\Network-Security\Azure-VNet-Provisioning-Tool.ps1"
-        
-        if (Test-Path $script) {
-            { & $script -ResourceGroupName $script:ResourceGroupName -VNetName $vnetName -Location $script:Location -AddressPrefix "10.0.0.0/16" } | Should -Not -Throw
-            
-            # Verify resource exists
-            $vnet = Get-AzVirtualNetwork -ResourceGroupName $script:ResourceGroupName -Name $vnetName -ErrorAction SilentlyContinue
-            $vnet | Should -Not -BeNullOrEmpty
-        }
-    }
-}
-'@
-    
-    $integrationTestContent | Out-File -FilePath ".\tests\integration\AzureResources.Tests.ps1" -Encoding UTF8
-}
-
-# Create sample security tests
-function New-SampleSecurityTests {
-    $securityTestContent = @'
-BeforeAll {
-    param($ResourceGroupName, $Location, $TestEnvironment)
-    $script:ResourceGroupName = $ResourceGroupName
-    $script:Location = $Location
-}
-
-Describe "Security Configuration Tests" -Tag "Security", "Compliance" {
-    It "Should have encryption enabled for storage accounts" {
-        $storageAccounts = Get-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
-        
-        foreach ($account in $storageAccounts) {
-            $account.Encryption.Services.Blob.Enabled | Should -Be $true
-            $account.EnableHttpsTrafficOnly | Should -Be $true
-        }
-    }
-    
-    It "Should have proper RBAC assignments" {
-        $roleAssignments = Get-AzRoleAssignment -ResourceGroupName $script:ResourceGroupName
-        $roleAssignments | Should -Not -BeNullOrEmpty
-        
-        # Check for overly permissive roles
-        $dangerousRoles = $roleAssignments | Where-Object { $_.RoleDefinitionName -in @("Owner", "Contributor") -and $_.SignInName -like "*@*" }
-        $dangerousRoles.Count | Should -BeLessOrEqual 2 # Allow limited number of admin accounts
-    }
-    
-    It "Should have network security groups configured" {
-        $nsgs = Get-AzNetworkSecurityGroup -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
-        
-        foreach ($nsg in $nsgs) {
-            # Check for overly permissive rules
-            $openRules = $nsg.SecurityRules | Where-Object { 
-                $_.SourceAddressPrefix -eq "*" -and 
-                $_.DestinationPortRange -contains "*" -and 
-                $_.Access -eq "Allow" 
-            }
-            $openRules.Count | Should -Be 0
-        }
-    }
-    
-    It "Should have diagnostic settings enabled" {
-        $resources = Get-AzResource -ResourceGroupName $script:ResourceGroupName
-        
-        foreach ($resource in $resources) {
-            $diagnostics = Get-AzDiagnosticSetting -ResourceId $resource.ResourceId -ErrorAction SilentlyContinue
-            if ($resource.ResourceType -in @("Microsoft.Storage/storageAccounts", "Microsoft.Compute/virtualMachines", "Microsoft.KeyVault/vaults")) {
-                $diagnostics | Should -Not -BeNullOrEmpty
-            }
-        }
-    }
-}
-
-Describe "Key Vault Security" -Tag "Security", "KeyVault" {
-    It "Should have proper access policies" {
-        $keyVaults = Get-AzKeyVault -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
-        
-        foreach ($vault in $keyVaults) {
-            $vault.EnablePurgeProtection | Should -Be $true
-            $vault.EnableSoftDelete | Should -Be $true
-            $vault.EnableRbacAuthorization | Should -Be $true
-        }
-    }
-}
-'@
-    
-    $securityTestContent | Out-File -FilePath ".\tests\security\SecurityCompliance.Tests.ps1" -Encoding UTF8
-}
-
-# Create sample performance tests
-function New-SamplePerformanceTests {
-    $performanceTestContent = @'
-BeforeAll {
-    param($ResourceGroupName, $Location, $TestEnvironment)
-    $script:ResourceGroupName = $ResourceGroupName
-    $script:Location = $Location
-}
-
-Describe "Performance Tests" -Tag "Performance" {
-    It "Should create resources within acceptable time limits" {
-        $startTime = Get-Date -ErrorAction Stop
-        
-        # Test storage account creation performance
-        $storageAccountName = "perftest$(Get-Random -Maximum 99999)"
-        $script = ".\automation-scripts\Data-Storage\Azure-StorageAccount-Provisioning-Tool.ps1"
-        
-        if (Test-Path $script) {
-            & $script -ResourceGroupName $script:ResourceGroupName -StorageAccountName $storageAccountName -Location $script:Location -SkuName "Standard_LRS"
-            
-            $endTime = Get-Date -ErrorAction Stop
-            $duration = ($endTime - $startTime).TotalSeconds
-            
-            # Storage account should be created within 2 minutes
-            $duration | Should -BeLessOrEqual 120
-            
-            # Cleanup
-            Remove-AzStorageAccount -ResourceGroupName $script:ResourceGroupName -Name $storageAccountName -Force
-        }
-    }
-    
-    It "Should handle bulk operations efficiently" {
-        # Test bulk resource group creation
-        $startTime = Get-Date -ErrorAction Stop
-        
-        $testResourceGroups = @()
-        for ($i = 1; $i -le 5; $i++) {
-            $rgName = "perf-test-rg-$i-$(Get-Random -Maximum 999)"
-            $testResourceGroups += $rgName
-            New-AzResourceGroup -Name $rgName -Location $script:Location -Force | Out-Null
-        }
-        
-        $endTime = Get-Date -ErrorAction Stop
-        $duration = ($endTime - $startTime).TotalSeconds
-        
-        # Should create 5 resource groups within 1 minute
-        $duration | Should -BeLessOrEqual 60
-        
-        # Cleanup
-        foreach ($rgName in $testResourceGroups) {
-            Remove-AzResourceGroup -Name $rgName -Force -AsJob | Out-Null
-        }
-    }
-}
-'@
-    
-    $performanceTestContent | Out-File -FilePath ".\tests\performance\Performance.Tests.ps1" -Encoding UTF8
-}
-
-# Create sample compliance tests
-function New-SampleComplianceTests {
-    $complianceTestContent = @'
-BeforeAll {
-    param($ResourceGroupName, $Location, $TestEnvironment)
-    $script:ResourceGroupName = $ResourceGroupName
-}
-
-Describe "Compliance Tests" -Tag "Compliance", "Governance" {
-    It "Should have required tags on all resources" {
-        $resources = Get-AzResource -ResourceGroupName $script:ResourceGroupName
-        $requiredTags = @("Environment", "Application", "Owner")
-        
-        foreach ($resource in $resources) {
-            foreach ($tag in $requiredTags) {
-                $resource.Tags.Keys | Should -Contain $tag
-            }
-        }
-    }
-    
-    It "Should comply with naming conventions" {
-        $resources = Get-AzResource -ResourceGroupName $script:ResourceGroupName
-        
-        foreach ($resource in $resources) {
-            # Resource names should not contain spaces or special characters
-            $resource.Name | Should -Match "^[a-zA-Z0-9\-_]+$"
-            
-            # Resource names should have appropriate prefixes based on type
-            switch ($resource.ResourceType) {
-                "Microsoft.Storage/storageAccounts" {
-                    $resource.Name | Should -Match "^(st|storage)"
+                if (-not $context) {
+                    write-Information "Connecting to Azure..." -InformationAction Continue
+                    Connect-AzAccount
+    [string]$context=Get-AzContext
                 }
-                "Microsoft.Compute/virtualMachines" {
-                    $resource.Name | Should -Match "^(vm|server)"
+
+                if ($this.Configuration.SubscriptionId) {
+                    write-Information "Setting subscription: $($this.Configuration.SubscriptionId)" -InformationAction Continue
+                    Set-AzContext -SubscriptionId $this.Configuration.SubscriptionId
+    [string]$context=Get-AzContext
                 }
-                "Microsoft.KeyVault/vaults" {
-                    $resource.Name | Should -Match "^(kv|vault)"
+    [string]$this.AzureContext=@{
+                    SubscriptionId=$context.Subscription.Id
+                    SubscriptionName=$context.Subscription.Name
+                    TenantId=$context.Tenant.Id
+                    AccountId=$context.Account.Id
+                    Environment=$context.Environment.Name
+                }
+
+                write-Information "Connected to Azure" -InformationAction Continue
+                write-Information "  Subscription: $($this.AzureContext.SubscriptionName)" -InformationAction Continue
+                write-Information "  Account: $($this.AzureContext.AccountId)" -InformationAction Continue
+            }
+            catch {
+                throw "Failed to connect to Azure: $_"
+            }
+        }
+
+        [void] PrepareTestEnvironment() {
+            if ($this.MockMode) {
+                write-Information 'Skipping environment preparation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Preparing test environment..." -InformationAction Continue
+    [string]$rg=Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
+
+            if (-not $rg) {
+                write-Information "Creating resource group: $($this.ResourceGroupName)" -InformationAction Continue
+    $tags=@{
+                    Environment=$this.TestEnvironment
+                    Purpose='Testing'
+                    Framework='AzureToolkitTestFramework'
+                    CreatedBy=$this.AzureContext.AccountId
+                    CreatedDate=Get-Date -Format 'yyyy-MM-dd'
+                    AutoDelete='true'
+                }
+    [string]$rg=New-AzResourceGroup `
+                    -Name $this.ResourceGroupName `
+                    -Location $this.Location `
+                    -Tags $tags
+    [string]$this.ResourcesCreated.Add(@{
+                    Type='ResourceGroup'
+                    Name=$this.ResourceGroupName
+                    Id=$rg.ResourceId
+                })
+            }
+        }
+
+        [PSObject] RunTests() {
+    [string]$TestConfigs=$this.GetTestConfigurations()
+    [string]$AllResults=@()
+
+            foreach ($config in $TestConfigs) {
+                write-Information "Running $($config.Name) tests..." -InformationAction Continue
+
+                if ($this.Configuration.Parallel -and $config.CanRunParallel) {
+    [string]$results=$this.RunParallelTests($config)
+                }
+                else {
+    [string]$results=$this.RunSequentialTests($config)
+                }
+    [string]$AllResults += $results
+    [string]$this.TestResults.Add($results)
+            }
+
+            return $this.AggregateResults($AllResults)
+        }
+
+        [array] GetTestConfigurations() {
+    [string]$configs=@()
+    $TestMap=@{
+                Unit=@{
+                    Name='Unit'
+                    Path='./Unit'
+                    Pattern='*Unit*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Unit')
+                }
+                Integration=@{
+                    Name='Integration'
+                    Path='./Integration'
+                    Pattern='*Integration*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Integration')
+                    RequiresAzure=$true
+                }
+                Security=@{
+                    Name='Security'
+                    Path='./Security'
+                    Pattern='*Security*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Security', 'Compliance')
+                    RequiresAzure=$true
+                }
+                Performance=@{
+                    Name='Performance'
+                    Path='./Performance'
+                    Pattern='*Performance*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Performance')
+                    RequiresAzure=$true
+                }
+                Compliance=@{
+                    Name='Compliance'
+                    Path='./Compliance'
+                    Pattern='*Compliance*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Compliance', 'Governance')
+                    RequiresAzure=$true
+                }
+                Infrastructure=@{
+                    Name='Infrastructure'
+                    Path='./Infrastructure'
+                    Pattern='*Infrastructure*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Infrastructure')
+                    RequiresAzure=$true
                 }
             }
+
+            if ($this.TestScope -eq 'All') {
+    [string]$configs=$TestMap.Values
+            }
+            else {
+    [string]$configs=@($TestMap[$this.TestScope])
+            }
+
+            if ($this.Configuration.Tags) {
+    [string]$ConfiWhere-Objectonfigs | where {
+    [string]$config=$_
+    [string]$this.Where-Objectguration.Tags | where {
+    [string]$config.Tags -contains $_
+                    }
+                }
+            }
+
+            if ($this.Configuration.ExcludeTags) {
+        Where-Object   $configs=$configs | where {
+    [string]$config=$_
+                    -not Where-Objects.Configuration.ExcludeTags | where {
+    [string]$config.Tags -contains $_
+                    })
+                }
+            }
+
+            return $configs
         }
-    }
-    
-    It "Should have backup policies configured" {
-        $vms = Get-AzVM -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
-        
-        if ($vms) {
-            # Check if Recovery Services Vault exists
-            $recoveryVaults = Get-AzRecoveryServicesVault -ResourceGroupName $script:ResourceGroupName -ErrorAction SilentlyContinue
-            $recoveryVaults | Should -Not -BeNullOrEmpty
+
+        [PSObject] RunSequentialTests([hashtable]$config) {
+    [string]$container=New-PesterContainer -Path $config.Path
+    [string]$PesterConfig=New-PesterConfiguration
+    [string]$PesterConfig.Run.Container=$container
+    [string]$PesterConfig.Run.PassThru=$true
+    [string]$PesterConfig.Output.Verbosity='Normal'
+
+            if ($config.Tags) {
+    [string]$PesterConfig.Filter.Tag=$config.Tags
+            }
+
+            if ($this.Configuration.OutputFormat -ne 'Console') {
+    [string]$PesterConfig.TestResult.Enabled=$true
+    [string]$PesterConfig.TestResult.OutputPath=Join-Path $this.Configuration.OutputPath "$($config.Name)_Results.xml"
+    [string]$PesterConfig.TestResult.OutputFormat='NUnit2.5'
+            }
+    [string]$PesterConfig.Run.TestData=@{
+                ResourceGroupName=$this.ResourceGroupName
+                Location=$this.Location
+                MockMode=$this.MockMode
+                IncludeDestructive=$this.Configuration.IncludeDestructive
+                AzureContext=$this.AzureContext
+            }
+
+            return Invoke-Pester -Configuration $PesterConfig
         }
-    }
-    
-    It "Should have monitoring enabled" {
-        $resources = Get-AzResource -ResourceGroupName $script:ResourceGroupName
-        $monitorableResources = $resources | Where-Object { 
-            $_.ResourceType -in @(
-                "Microsoft.Compute/virtualMachines",
-                "Microsoft.Storage/storageAccounts",
-                "Microsoft.Web/sites",
-                "Microsoft.Sql/servers/databases"
+
+        [PSObject] RunParallelTests([hashtable]$config) {
+    [string]$TestFiles=Get-ChildItem -Path $config.Path -Filter $config.Pattern -Recurse
+    [string]$jobs=@()
+    [string]$results=@()
+    [string]$TestFiles | ForEach-Object {
+    [string]$job=Start-ThreadJob -ScriptBlock {
+                    param($FilePath, $TestData, $OutputPath)
+
+                    Import-Module Pester -Force
+    [string]$container=New-PesterContainer -Path $FilePath
+    [string]$config=New-PesterConfiguration
+    [string]$config.Run.Container=$container
+    [string]$config.Run.PassThru=$true
+    [string]$config.Run.TestData=$TestData
+    [string]$config.Output.Verbosity='Minimal'
+    [string]$null=$OutputPath
+
+                    Invoke-Pester -Configuration $config
+} -ArgumentList $file.FullName, @{
+                    ResourceGroupName=$this.ResourceGroupName
+                    Location=$this.Location
+                    MockMode=$this.MockMode
+                }, $this.Configuration.OutputPath
+    [string]$jobs += $job
+
+                if ($jobs.Count -ge $this.Configuration.MaxParallelJobs) {
+    [string]$completed=Wait-Job -Job $jobs -Any
+    [string]$results += Receive-Job -Job $CoWhere-Objected
+    [string]$jobs=$jobs | where { $_.Id -ne $completed.Id }
+                }
+            }
+
+            if ($jobs) {
+    [string]$results += $jobs | Wait-Job | Receive-Job
+            }
+
+            return $this.AggregateResults($results)
+        }
+
+        [PSObject] AggregateResults([array]$results) {
+            if (-not $results) {
+                return $null
+            }
+    [string]$aggregated=[PSCustomObject]@{
+                Tests=@()
+                PassedCount=0
+                FailedCount=0
+                SkippedCount=0
+                TotalCount=0
+                Duration=[TimeSpan]::Zero
+                Result='Passed'
+            }
+    [string]$results | ForEach-Object {
+    if ($result.Tests) {
+    [string]$aggregated.Tests += $result.Tests
+}
+    [string]$aggregated.PassedCount += $result.PassedCount
+    [string]$aggregated.FailedCount += $result.FailedCount
+    [string]$aggregated.SkippedCount += $result.SkippedCount
+    [string]$aggregated.TotalCount += $result.TotalCount
+    [string]$aggregated.Duration += $result.Duration
+            }
+
+            if ($aggregated.FailedCount -gt 0) {
+    [string]$aggregated.Result='Failed'
+            }
+
+            return $aggregated
+        }
+
+        [void] ValidateInfrastructure() {
+            if ($this.MockMode) {
+                write-Information 'Skipping infrastructure validation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Validating Azure infrastructure..." -InformationAction Continue
+    [string]$ValidationTests=@(
+                @{
+                    Name='Resource Group Exists'
+                    Test={ Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction Stop }
+                }
+                @{
+                    Name='Subscription Active'
+                    Test={
+    [string]$sub=Get-AzSubscription -SubscriptionId $this.AzureContext.SubscriptionId
+                        if ($sub.State -ne 'Enabled') {
+                            throw "Subscription is not enabled: $($sub.State)"
+                        }
+                    }
+                }
+                @{
+                    Name='Required Providers Registered'
+                    Test={
+    [string]$RequiredProviders=@(
+                            'Microsoft.Compute',
+                            'Microsoft.Storage',
+                            'Microsoft.Network',
+                            'Microsoft.KeyVault'
+                        )
+    [string]$RequiredProviders | ForEach-Object {
+    [string]$registration=Get-AzResourceProvider -ProviderNamespace $provider
+                            if ($registration.RegistrationState -ne 'Registered') {
+                                write-Warning "$provider is not registered. Registering..."
+                                Register-AzResourceProvider -ProviderNamespace $provider
+}
+                        }
+                    }
+                }
             )
+
+            foreach ($test in $ValidationTests) {
+                try {
+                    write-Information "  Validating: $($test.Name)" -InformationAction Continue
+                    & $test.Test
+                    write-Information "    Passed" -InformationAction Continue
+                }
+                catch {
+                    write-Warning "  Validation failed: $($test.Name) - $_"
+                }
+            }
         }
-        
-        foreach ($resource in $monitorableResources) {
-            $diagnostics = Get-AzDiagnosticSetting -ResourceId $resource.ResourceId -ErrorAction SilentlyContinue
-            $diagnostics | Should -Not -BeNullOrEmpty
+
+        [void] RunSecurityTests() {
+            write-Information "Running security validation tests..." -InformationAction Continue
+    [string]$SecurityChecks=@(
+                @{
+                    Name='RBAC Assignments'
+                    Check={
+    [string]$assignments=Get-AzRoleAssignment -ResourceGroupName $this.ResourceGroupName
+                        return @{
+                            Count=$assignments.Count
+      Select-Object                Assignments=$assignments | select DisplayName, RoleDefinitionName
+                        }
+                    }
+                }
+                @{
+                    Name='Network Security Groups'
+                    Check={
+    [string]$nsgs=Get-AzNetworkSecurityGroup -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+    [string]$nsgs | ForEach-Object {
+    [string]$rules=$nsg.SecurityRules + $nsg.DefaultSecuritWhere-Objects
+    [string]$RiskyRules=$rules | where {
+#Requires -Modules Az.Accounts, Az.Resources, Az.Compute, Az.Storage, Az.Network, Az.KeyVault, Pester
+
+
+[CmdletBinding(SupportsShouldProcess)]
+param(
+    [parameter()]
+    [ValidateSet('All', 'Unit', 'Integration', 'Security', 'Performance', 'Compliance', 'Infrastructure')]
+    [string]$TestScope='All',
+
+    [parameter()]
+    [ValidatePattern('^[a-zA-Z0-9-_\.]+$')]
+    [string]$ResourceGroupName="toolkit-test-$(Get-Random -Maximum 9999)",
+
+    [parameter()]
+    [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
+    [string]$SubscriptionId,
+
+    [parameter()]
+    [ValidateSet('eastus', 'eastus2', 'westus', 'westus2', 'centralus', 'northeurope', 'westeurope')]
+    [string]$Location='eastus',
+
+    [parameter()]
+    [ValidateSet('Development', 'Test', 'Staging', 'Production')]
+    [string]$TestEnvironment='Test',
+
+    [parameter()]
+    [switch]$IncludeDestructive,
+
+    [parameter()]
+    [switch]$MockEnabled,
+
+    [parameter()]
+    [ValidateSet('Console', 'JUnit', 'NUnit', 'HTML', 'JSON', 'AzureDevOps')]
+    [string]$OutputFormat='Console',
+
+    [parameter()]
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $OutputPath='./TestResults',
+
+    [parameter()]
+    [switch]$Parallel,
+
+    [parameter()]
+    [ValidateRange(1, 16)]
+    [int]$MaxParallelJobs=4,
+
+    [parameter()]
+    [string[]]$Tags,
+
+    [parameter()]
+    [string[]]$ExcludeTags,
+
+    [parameter()]
+    [ValidateRange(0, 5)]
+    [int]$RetryCount=2,
+
+    [parameter()]
+    [ValidateRange(5, 300)]
+    [int]$TimeoutMinutes=60
+)
+
+begin {
+    Set-StrictMode -Version Latest
+    [string]$ErrorActionPreference='Stop'
+    [string]$ProgressPreference='Continue'
+
+    class AzureTestFramework {
+        [string]$TestScope
+        [string]$ResourceGroupName
+        [string]$Location
+        [string]$TestEnvironment
+        [hashtable]$Configuration=@{}
+        [hashtable]$AzureContext=@{}
+        [System.Collections.ArrayList]$TestResults=@()
+        [System.Collections.ArrayList]$ResourcesCreated=@()
+        [System.Diagnostics.Stopwatch]$Timer
+        [bool]$MockMode
+
+        AzureTestFramework() {
+    [string]$this.Timer=[System.Diagnostics.Stopwatch]::new()
+    [string]$this.MockMode=$false
         }
-    }
+
+        [void] Initialize() {
+    [string]$this.Timer.Start()
+
+            write-Information "Initializing Azure Test Framework" -InformationAction Continue
+            write-Information "Test Environment: $($this.TestEnvironment)" -InformationAction Continue
+            write-Information "Mock Mode: $($this.MockMode)" -InformationAction Continue
+    [string]$PWhere-Object=Get-Module -ListAvailable -Name PesterSelect-Object             where { $_.Version -ge '5.3.0' } |
+                select -First 1
+
+            if (-not $pester) {
+                throw "Pester 5.3.0+ required. Install with: Install-Module -Name Pester -MinimumVersion 5.3.0"
+            }
+
+            Import-Module Pester -Force
+
+            if (-not $this.MockMode) {
+    [string]$this.ConnectAzure()
+            }
+
+            if (-not (Test-Path $this.Configuration.OutputPath)) {
+                New-Item -Path $this.Configuration.OutputPath -ItemType Directory -Force | Out-Null
+            }
+        }
+
+        [void] ConnectAzure() {
+            try {
+    [string]$context=Get-AzContext
+
+                if (-not $context) {
+                    write-Information "Connecting to Azure..." -InformationAction Continue
+                    Connect-AzAccount
+    [string]$context=Get-AzContext
+                }
+
+                if ($this.Configuration.SubscriptionId) {
+                    write-Information "Setting subscription: $($this.Configuration.SubscriptionId)" -InformationAction Continue
+                    Set-AzContext -SubscriptionId $this.Configuration.SubscriptionId
+    [string]$context=Get-AzContext
+                }
+    [string]$this.AzureContext=@{
+                    SubscriptionId=$context.Subscription.Id
+                    SubscriptionName=$context.Subscription.Name
+                    TenantId=$context.Tenant.Id
+                    AccountId=$context.Account.Id
+                    Environment=$context.Environment.Name
+                }
+
+                write-Information "Connected to Azure" -InformationAction Continue
+                write-Information "  Subscription: $($this.AzureContext.SubscriptionName)" -InformationAction Continue
+                write-Information "  Account: $($this.AzureContext.AccountId)" -InformationAction Continue
+            }
+            catch {
+                throw "Failed to connect to Azure: $_"
+            }
+        }
+
+        [void] PrepareTestEnvironment() {
+            if ($this.MockMode) {
+                write-Information 'Skipping environment preparation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Preparing test environment..." -InformationAction Continue
+    [string]$rg=Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
+
+            if (-not $rg) {
+                write-Information "Creating resource group: $($this.ResourceGroupName)" -InformationAction Continue
+    $tags=@{
+                    Environment=$this.TestEnvironment
+                    Purpose='Testing'
+                    Framework='AzureToolkitTestFramework'
+                    CreatedBy=$this.AzureContext.AccountId
+                    CreatedDate=Get-Date -Format 'yyyy-MM-dd'
+                    AutoDelete='true'
+                }
+    [string]$rg=New-AzResourceGroup `
+                    -Name $this.ResourceGroupName `
+                    -Location $this.Location `
+                    -Tags $tags
+    [string]$this.ResourcesCreated.Add(@{
+                    Type='ResourceGroup'
+                    Name=$this.ResourceGroupName
+                    Id=$rg.ResourceId
+                })
+            }
+        }
+
+        [PSObject] RunTests() {
+    [string]$TestConfigs=$this.GetTestConfigurations()
+    [string]$AllResults=@()
+
+            foreach ($config in $TestConfigs) {
+                write-Information "Running $($config.Name) tests..." -InformationAction Continue
+
+                if ($this.Configuration.Parallel -and $config.CanRunParallel) {
+    [string]$results=$this.RunParallelTests($config)
+                }
+                else {
+    [string]$results=$this.RunSequentialTests($config)
+                }
+    [string]$AllResults += $results
+    [string]$this.TestResults.Add($results)
+            }
+
+            return $this.AggregateResults($AllResults)
+        }
+
+        [array] GetTestConfigurations() {
+    [string]$configs=@()
+    $TestMap=@{
+                Unit=@{
+                    Name='Unit'
+                    Path='./Unit'
+                    Pattern='*Unit*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Unit')
+                }
+                Integration=@{
+                    Name='Integration'
+                    Path='./Integration'
+                    Pattern='*Integration*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Integration')
+                    RequiresAzure=$true
+                }
+                Security=@{
+                    Name='Security'
+                    Path='./Security'
+                    Pattern='*Security*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Security', 'Compliance')
+                    RequiresAzure=$true
+                }
+                Performance=@{
+                    Name='Performance'
+                    Path='./Performance'
+                    Pattern='*Performance*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Performance')
+                    RequiresAzure=$true
+                }
+                Compliance=@{
+                    Name='Compliance'
+                    Path='./Compliance'
+                    Pattern='*Compliance*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Compliance', 'Governance')
+                    RequiresAzure=$true
+                }
+                Infrastructure=@{
+                    Name='Infrastructure'
+                    Path='./Infrastructure'
+                    Pattern='*Infrastructure*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Infrastructure')
+                    RequiresAzure=$true
+                }
+            }
+
+            if ($this.TestScope -eq 'All') {
+    [string]$configs=$TestMap.Values
+            }
+            else {
+    [string]$configs=@($TestMap[$this.TestScope])
+            }
+
+   Where-Object    if ($this.Configuration.Tags) {
+    [string]$configs=$configs | whWhere-Object
+    [string]$config=$_
+    [string]$this.Configuration.Tags | where {
+    [string]$config.Tags -contains $_
+                    }
+                }
+           Where-Object           if ($this.Configuration.ExcludeTags) {
+    [string]$configs=$configs | wWhere-Object{
+    [string]$config=$_
+                    -not ($this.Configuration.ExcludeTags | where {
+    [string]$config.Tags -contains $_
+                    })
+                }
+            }
+
+            return $configs
+        }
+
+        [PSObject] RunSequentialTests([hashtable]$config) {
+    [string]$container=New-PesterContainer -Path $config.Path
+    [string]$PesterConfig=New-PesterConfiguration
+    [string]$PesterConfig.Run.Container=$container
+    [string]$PesterConfig.Run.PassThru=$true
+    [string]$PesterConfig.Output.Verbosity='Normal'
+
+            if ($config.Tags) {
+    [string]$PesterConfig.Filter.Tag=$config.Tags
+            }
+
+            if ($this.Configuration.OutputFormat -ne 'Console') {
+    [string]$PesterConfig.TestResult.Enabled=$true
+    [string]$PesterConfig.TestResult.OutputPath=Join-Path $this.Configuration.OutputPath "$($config.Name)_Results.xml"
+    [string]$PesterConfig.TestResult.OutputFormat='NUnit2.5'
+            }
+    [string]$PesterConfig.Run.TestData=@{
+                ResourceGroupName=$this.ResourceGroupName
+                Location=$this.Location
+                MockMode=$this.MockMode
+                IncludeDestructive=$this.Configuration.IncludeDestructive
+                AzureContext=$this.AzureContext
+            }
+
+            return Invoke-Pester -Configuration $PesterConfig
+        }
+
+        [PSObject] RunParallelTests([hashtable]$config) {
+    [string]$TestFiles=Get-ChildItem -Path $config.Path -Filter $config.Pattern -Recurse
+    [string]$jobs=@()
+    [string]$results=@()
+    [string]$TestFiles | ForEach-Object {
+    [string]$job=Start-ThreadJob -ScriptBlock {
+                    param($FilePath, $TestData, $OutputPath)
+
+                    Import-Module Pester -Force
+    [string]$container=New-PesterContainer -Path $FilePath
+    [string]$config=New-PesterConfiguration
+    [string]$config.Run.Container=$container
+    [string]$config.Run.PassThru=$true
+    [string]$config.Run.TestData=$TestData
+    [string]$config.Output.Verbosity='Minimal'
+    [string]$null=$OutputPath
+
+                    Invoke-Pester -Configuration $config
+} -ArgumentList $file.FullName, @{
+                    ResourceGroupName=$this.ResourceGroupName
+                    Location=$this.Location
+                    MockMode=$this.MockMode
+                }, $this.Configuration.OutputPath
+    [string]$jobs += $job
+
+                if ($jobs.Count -ge $this.Configuration.MaxParallelJobs) {
+    [string]$completed=Wait-Job -Job Where-Object -Any
+    [string]$results += Receive-Job -Job $completed
+    [string]$jobs=$jobs | where { $_.Id -ne $completed.Id }
+                }
+            }
+
+            if ($jobs) {
+    [string]$results += $jobs | Wait-Job | Receive-Job
+            }
+
+            return $this.AggregateResults($results)
+        }
+
+        [PSObject] AggregateResults([array]$results) {
+            if (-not $results) {
+                return $null
+            }
+    [string]$aggregated=[PSCustomObject]@{
+                Tests=@()
+                PassedCount=0
+                FailedCount=0
+                SkippedCount=0
+                TotalCount=0
+                Duration=[TimeSpan]::Zero
+                Result='Passed'
+            }
+    [string]$results | ForEach-Object {
+    if ($result.Tests) {
+    [string]$aggregated.Tests += $result.Tests
 }
+    [string]$aggregated.PassedCount += $result.PassedCount
+    [string]$aggregated.FailedCount += $result.FailedCount
+    [string]$aggregated.SkippedCount += $result.SkippedCount
+    [string]$aggregated.TotalCount += $result.TotalCount
+    [string]$aggregated.Duration += $result.Duration
+            }
+
+            if ($aggregated.FailedCount -gt 0) {
+    [string]$aggregated.Result='Failed'
+            }
+
+            return $aggregated
+        }
+
+        [void] ValidateInfrastructure() {
+            if ($this.MockMode) {
+                write-Information 'Skipping infrastructure validation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Validating Azure infrastructure..." -InformationAction Continue
+    [string]$ValidationTests=@(
+                @{
+                    Name='Resource Group Exists'
+                    Test={ Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction Stop }
+                }
+                @{
+                    Name='Subscription Active'
+                    Test={
+    [string]$sub=Get-AzSubscription -SubscriptionId $this.AzureContext.SubscriptionId
+                        if ($sub.State -ne 'Enabled') {
+                            throw "Subscription is not enabled: $($sub.State)"
+                        }
+                    }
+                }
+                @{
+                    Name='Required Providers Registered'
+                    Test={
+    [string]$RequiredProviders=@(
+                            'Microsoft.Compute',
+                            'Microsoft.Storage',
+                            'Microsoft.Network',
+                            'Microsoft.KeyVault'
+                        )
+    [string]$RequiredProviders | ForEach-Object {
+    [string]$registration=Get-AzResourceProvider -ProviderNamespace $provider
+                            if ($registration.RegistrationState -ne 'Registered') {
+                                write-Warning "$provider is not registered. Registering..."
+                                Register-AzResourceProvider -ProviderNamespace $provider
+}
+                        }
+                    }
+                }
+            )
+
+            foreach ($test in $ValidationTests) {
+                try {
+                    write-Information "  Validating: $($test.Name)" -InformationAction Continue
+                    & $test.Test
+                    write-Information "    Passed" -InformationAction Continue
+                }
+                catch {
+                    write-Warning "  Validation failed: $($test.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunSecurityTests() {
+            write-Information "Running security validation tests..." -InformationAction Continue
+    [string]$SecurityChecks=@(
+                @{
+                    Name='RBAC Assignments'
+                    Check={
+    [string]$assignments=Get-AzRoleAssignment -ResourceGroupName $this.ResourceGroupName
+                        returnSelect-Object                          Count=$assignments.Count
+                            Assignments=$assignments | select DisplayName, RoleDefinitionName
+                        }
+                    }
+                }
+                @{
+                    Name='Network Security Groups'
+                    Check={
+    [string]$nsgs=Get-AzNetworkSecurityGroup -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+
+                        foreach ($nsg in $nsgs) {
+            Where-Object           $rules=$nsg.SecurityRules + $nsg.DefaultSecurityRules
+    [string]$RiskyRules=$rules | where {
+    [string]$_.Access -eq 'Allow' -and
+    [string]$_.Direction -eq 'Inbound' -and
+    [string]$_.SourceAddressPrefix -eq '*'
+                            }
+
+                            if ($RiskyRules) {
+    [string]$issues += "NSG $($nsg.Name) has risky inbound rules"
+                            }
+                        }
+
+                        return @{
+                            NSGCount=$nsgs.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+                @{
+                    Name='Storage Account Security'
+                    Check={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if ($account.EnableHttpsTrafficOnly -ne $true) {
+    [string]$issues += "$($account.StorageAccountName) does not enforce HTTPS"
+}
+                            if ($account.AllowBlobPublicAccess -eq $true) {
+    [string]$issues += "$($account.StorageAccountName) allows public blob access"
+                            }
+                        }
+
+                        return @{
+                            StorageAccountCount=$StorageAccounts.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+            )
+
+            foreach ($check in $SecurityChecks) {
+                try {
+                    write-Information "  Running: $($check.Name)" -InformationAction Continue
+    [string]$result=& $check.Check
+
+                    if ($result.Issues -and $result.IssuForEach-Objectt -gt 0) {
+                        write-Warning "    Security issues found:"
+    [string]$result.Issues | foreach {
+                            write-Warning "      $_"
+                        }
+                    }
+                    else {
+                        write-Information "    No security issues found" -InformationAction Continue
+                    }
+                }
+                catch {
+                    write-Warning "  Security check failed: $($check.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunComplianceTests() {
+            write-Information "Running compliance validation..." -InformationAction Continue
+    [string]$ComplianceRules=@(
+                @{
+                    Name='Resource Tagging'
+                    Rule={
+       Where-Object            $resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$untagged=$resources | where { -not $_.Tags -or $_.Tags.Count -eq 0 }
+
+                        if ($untagged) {
+                            return @{
+                                Compliant=$false
+                                Message="$($untagged.Count) resources without tags"
+                                Resources=$untagged.Name
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Encryption at Rest'
+                    Rule={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$unencrypted=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if (-not $account.Encryption.Services.Blob.Enabled) {
+    [string]$unencrypted += $account.StorageAccountName
+}
+                        }
+
+                        if ($unencrypted) {
+                            return @{
+                                Compliant=$false
+                                Message="Storage accounts without encryption: $($unencrypted -join ', ')"
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Diagnostic Settings'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$WithoutDiagnostics=@()
+    [string]$resources | ForEach-Object {
+    [string]$diagnostics=Get-AzDiagnosticSetting -ResourceId $resource.Id -ErrorAction SilentlyContinue
+                            if (-not $diagnostics) {
+    [string]$WithoutDiagnostics += $resource.Name
+}
+                        }
+
+                        if ($WithoutDiagnostics.Count -gt ($resources.Count * 0.5)) {
+                            return @{
+                                Compliant=$false
+                                Message='More than 50% of resources lack diagnostic settings'
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+            )
+    [string]$ComplianceScore=0
+    [string]$TotalRules=$ComplianceRules.Count
+
+            foreach ($rule in $ComplianceRules) {
+                try {
+                    write-Information "  Checking: $($rule.Name)" -InformationAction Continue
+    [string]$result=& $rule.Rule
+
+                    if ($result.Compliant) {
+                        write-Information "    Compliant" -InformationAction Continue
+    [string]$ComplianceScore++
+                    }
+                    else {
+                        write-Warning "    Non-compliant: $($result.Message)"
+                    }
+                }
+                catch {
+                    write-Warning "  Compliance check failed: $($rule.Name) - $_"
+                }
+            }
+    [string]$percentage=[Math]::Round(($ComplianceScore / $TotalRules) * 100, 2)
+            write-Information "Overall Compliance Score: $percentage%" -InformationAction Continue
+        }
+
+        [void] Cleanup() {
+            if ($this.MockMode -or -not $this.Configuration.IncludeDestructive) {
+                write-Information "Skipping cleanup" -InformationAction Continue
+                return
+            }
+
+            write-Information "Cleaning up test resources..." -InformationAction Continue
+
+            foreach ($resource in $this.ResourcesCreated) {
+                try {
+                    switch ($resource.Type) {
+                        'ResourceGroup' {
+                            write-Information "  Removing resource group: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResourceGroup -Name $resource.Name -Force -AsJob
+                        }
+                        default {
+                            write-Information "  Removing resource: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResource -ResourceId $resource.Id -Force
+                        }
+                    }
+                }
+                catch {
+                    write-Warning "Failed to cleanup $($resource.Type): $($resource.Name) - $_"
+                }
+            }
+        }
+
+        [void] GenerateReport([PSObject]$results) {
+    [string]$ReportPath=Join-Path $this.Configuration.OutputPath "AzureTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+
+            switch ($this.Configuration.OutputFormat) {
+                'HTML' {
+    [string]$this.GenerateHtmlReport($results, "$ReportPath.html")
+                }
+                'JSON' {
+    [string]$results | ConvertTo-Json -Depth 10 | Out-File "$ReportPath.json" -Encoding UTF8
+                    write-Information "JSON report saved: $ReportPath.json" -InformationAction Continue
+                }
+                'JUnit' {
+    [string]$this.GenerateJUnitReport($results, "$ReportPath.xml")
+                }
+                'AzureDevOps' {
+    [string]$this.GenerateAzureDevOpsReport($results, "$ReportPath.md")
+                }
+            }
+        }
+
+        [void] GenerateHtmlReport([PSObject]$results, [string]$path) {
+    [string]$html=@"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure Infrastructure Test Report</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background:
+        h1 { margin: 0; }
+        .container { max-width: 1200px; margin: auto; background: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+        .metric { text-align: center; padding: 15px; background:
+        .metric-value { font-size: 2em; font-weight: bold; color:
+        .metric-label { color:
+        .passed { color:
+        .failed { color:
+        .skipped { color:
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background:
+        td { padding: 10px; border-bottom: 1px solid
+        .footer { text-align: center; padding: 20px; color:
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Infrastructure Test Report</h1>
+            <p>Environment: $($this.TestEnvironment) | Scope: $($this.TestScope)</p>
+            <p>Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
+        </div>
+        <div class="summary">
+            <div class="metric'>
+                <div class='metric-value">$($results.TotalCount)</div>
+                <div class="metric-label">Total Tests</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value passed">$($results.PassedCount)</div>
+                <div class="metric-label'>Passed</div>
+            </div>
+            <div class='metric'>
+                <div class='metric-value failed">$($results.FailedCount)</div>
+                <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value skipped">$($results.SkippedCount)</div>
+                <div class="metric-label">Skipped</div>
+            </div>
+        </div>
+        <div style="padding: 20px;'>
+            <h2>Test Details</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
 '@
-    
-    $complianceTestContent | Out-File -FilePath ".\tests\compliance\Governance.Tests.ps1" -Encoding UTF8
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$html += @"
+                    <tr>
+                        <td>$($test.Name)</td>
+                        <td>$($test.Duration.TotalMilliseconds) ms</td>
+                        <td class="$($status.ToLower())">$status</td>
+                        <td>$(if ($test.ErrorRecord) { $test.ErrorRecord.Exception.Message } else { '-' })</td>
+                    </tr>
+"@
+            }
+    [string]$html += @'
+                </tbody>
+            </table>
+        </div>
+        <div class='footer">
+            <p>Azure Test Framework v3.0.0 | Duration: $($this.Timer.Elapsed)</p>
+        </div>
+    </div>
+</body>
+</html>
+"@
+    [string]$html | Out-File -FilePath $path -Encoding UTF8
+            write-Information "HTML report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateJUnitReport([PSObject]$results, [string]$path) {
+    [string]$xml=@"
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Azure Infrastructure Tests" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+    <testsuite name="$($this.TestScope)" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+"@
+            foreach ($test in $results.Tests) {
+    [string]$xml += "        <testcase name=`"$($test.Name)`" time=`"$($test.Duration.TotalSeconds)`''
+                if ($test.Passed) {
+    [string]$xml += ' />`n'
+                }
+                elseif ($test.Skipped) {
+    [string]$xml += "><skipped /></testcase>`n"
+                }
+                else {
+    [string]$xml += "><failure>$($test.ErrorRecord.Exception.Message)</failure></testcase>`n"
+                }
+            }
+    [string]$xml += @"
+    </testsuite>
+</testsuites>
+"@
+    [string]$xml | Out-File -FilePath $path -Encoding UTF8
+            write-Information "JUnit report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateAzureDevOpsReport([PSObject]$results, [string]$path) {
+    [string]$markdown=@"
+
+- **Total Tests**: $($results.TotalCount)
+- **Passed**: $($results.PassedCount)
+- **Failed**: $($results.FailedCount)
+- **Skipped**: $($results.SkippedCount)
+- **Duration**: $($results.Duration)
+- **Pass Rate**: $([Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2))%
+
+- **Environment**: $($this.TestEnvironment)
+- **Resource Group**: $($this.ResourceGroupName)
+- **Location**: $($this.Location)
+- **Mock Mode**: $($this.MockMode)
+
+| Test | Duration | Status |
+|------|----------|--------|
+"@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$markdown += "| $($test.Name) | $($test.Duration.TotalMilliseconds)ms | $status |`n"
+            }
+    [string]$markdown | Out-File -FilePath $path -Encoding UTF8
+            write-Information "Azure DevOps report saved: $path" -InformationAction Continue
+        }
+    }
+
+    write-Information "Azure Infrastructure Test Framework v3.0.0" -InformationAction Continue
+    write-Information "==========================================" -InformationAction Continue
 }
 
-# Generate test report
-function New-TestReport -ErrorAction Stop {
+process {
     try {
-        Write-TestLog "Generating test report..." "Info"
-        
-        $totalTests = ($script:TestResults | ForEach-Object { $_.TotalCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-        $passedTests = ($script:TestResults | ForEach-Object { $_.PassedCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-        $failedTests = ($script:TestResults | ForEach-Object { $_.FailedCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-        $skippedTests = ($script:TestResults | ForEach-Object { $_.SkippedCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-        
-        $testDuration = (Get-Date) - $script:TestStartTime
-        
-        $report = @{
-            TestRun = @{
-                StartTime = $script:TestStartTime
-                EndTime = Get-Date -ErrorAction Stop
-                Duration = $testDuration.ToString()
-                Environment = $TestEnvironment
-                Scope = $TestScope
-            }
-            Summary = @{
-                TotalTests = $totalTests
-                PassedTests = $passedTests
-                FailedTests = $failedTests
-                SkippedTests = $skippedTests
-                SuccessRate = if ($totalTests -gt 0) { [math]::Round(($passedTests / $totalTests) * 100, 2) } else { 0 }
-            }
-            Details = $script:TestResults
+    [string]$framework=[AzureTestFramework]::new()
+    [string]$framework.TestScope=$TestScope
+    [string]$framework.ResourceGroupName=$ResourceGroupName
+    [string]$framework.Location=$Location
+    [string]$framework.TestEnvironment=$TestEnvironment
+    [string]$framework.MockMode=$MockEnabled
+    [string]$framework.Configuration=@{
+            SubscriptionId=$SubscriptionId
+            OutputPath=$OutputPath
+            OutputFormat=$OutputFormat
+            IncludeDestructive=$IncludeDestructive
+            Parallel=$Parallel
+            MaxParallelJobs=$MaxParallelJobs
+            Tags=$Tags
+            ExcludeTags=$ExcludeTags
+            RetryCount=$RetryCount
+            TimeoutMinutes=$TimeoutMinutes
         }
-        
-        # Save report
-        $reportPath = "$OutputPath\test-report-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
-        $report | ConvertTo-Json -Depth 10 | Out-File -FilePath $reportPath -Encoding UTF8
-        
-        # Console summary
-        Write-TestLog "Test Summary:" "Info"
-        Write-TestLog "  Total Tests: $totalTests" "Info"
-        Write-TestLog "  Passed: $passedTests" "Success"
-        Write-TestLog "  Failed: $failedTests" $(if ($failedTests -gt 0) { "Error" } else { "Info" })
-        Write-TestLog "  Skipped: $skippedTests" "Warning"
-        Write-TestLog "  Success Rate: $($report.Summary.SuccessRate)%" $(if ($report.Summary.SuccessRate -ge 95) { "Success" } elseif ($report.Summary.SuccessRate -ge 80) { "Warning" } else { "Error" })
-        Write-TestLog "  Duration: $($testDuration.ToString())" "Info"
-        Write-TestLog "  Report saved to: $reportPath" "Info"
-        
-    } catch {
-        Write-TestLog "Failed to generate test report: $($_.Exception.Message)" "Error"
-    }
-}
+    [string]$framework.Initialize()
 
-# Cleanup test resources
-function Remove-TestResources -ErrorAction Stop {
-    if ($IncludeDestructive) {
-        try {
-            Write-TestLog "Cleaning up test resources..." "Info"
-            
-            # Remove test resource group
-            if ($script:TestResourceGroup) {
-                Remove-AzResourceGroup -Name $ResourceGroupName -Force -AsJob | Out-Null
-                Write-TestLog "Test resource group cleanup initiated" "Success"
-            }
-            
-        } catch {
-            Write-TestLog "Failed to cleanup test resources: $($_.Exception.Message)" "Warning"
+        if (-not $MockEnabled) {
+    [string]$framework.PrepareTestEnvironment()
+    [string]$framework.ValidateInfrastructure()
         }
-    } else {
-        Write-TestLog "Skipping resource cleanup (use -IncludeDestructive to enable)" "Info"
-    }
-}
 
-# Main execution
-try {
-    Write-TestLog "Starting Azure Enterprise Toolkit Test Framework" "Info"
-    Write-TestLog "Test Scope: $TestScope" "Info"
-    Write-TestLog "Environment: $TestEnvironment" "Info"
-    Write-TestLog "Output Format: $OutputFormat" "Info"
-    
-    # Initialize environment
-    Initialize-TestEnvironment
-    Initialize-AzureTestEnvironment
-    
-    # Run tests based on scope
-    switch ($TestScope) {
-        "All" {
-            Invoke-UnitTests
-            Invoke-IntegrationTests
-            Invoke-SecurityTests
-            Invoke-PerformanceTests
-            Invoke-ComplianceTests
+        if ($TestScope -in @('Security', 'All')) {
+    [string]$framework.RunSecurityTests()
         }
-        "Unit" { Invoke-UnitTests }
-        "Integration" { Invoke-IntegrationTests }
-        "Security" { Invoke-SecurityTests }
-        "Performance" { Invoke-PerformanceTests }
-        "Compliance" { Invoke-ComplianceTests }
+
+        if ($TestScope -in @('Compliance', 'All')) {
+    [string]$framework.RunComplianceTests()
+        }
+    [string]$results=$framework.RunTests()
+
+        if ($OutputFormat -ne 'Console') {
+    [string]$framework.GenerateReport($results)
+        }
+
+        write-Information "`nTest Execution Summary" -InformationAction Continue
+        write-Information "=====================" -InformationAction Continue
+        write-Information "Total: $($results.TotalCount)" -InformationAction Continue
+        write-Information "Passed: $($results.PassedCount)" -InformationAction Continue
+        write-Information "Failed: $($results.FailedCount)" -InformationAction Continue
+        write-Information "Skipped: $($results.SkippedCount)" -InformationAction Continue
+        write-Information "Duration: $($framework.Timer.Elapsed)" -InformationAction Continue
+    [string]$PassRate=if ($results.TotalCount -gt 0) {
+            [Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2)
+        } else { 0 }
+
+        write-Information "Pass Rate: $PassRate%" -InformationAction Continue
+
+        if ($IncludeDestructive -and $PSCmdlet.ShouldProcess($ResourceGroupName, "Cleanup test resources")) {
+    [string]$framework.Cleanup()
+        }
+
+        return $results
     }
-    
-    # Generate report
-    New-TestReport -ErrorAction Stop
-    
-    # Cleanup if requested
-    Remove-TestResources -ErrorAction Stop
-    
-    Write-TestLog "Test framework execution completed" "Success"
-    
-    # Set exit code based on test results
-    $totalFailed = ($script:TestResults | ForEach-Object { $_.FailedCount }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
-    if ($totalFailed -gt 0) {
-        Write-TestLog "Tests failed - exiting with error code" "Error"
+    catch {
+        write-Error "Test framework failed: $_"
         throw
     }
-    
-} catch {
-    Write-TestLog "Test framework execution failed: $($_.Exception.Message)" "Error"
-    throw
+    finally {
+        if ($framework.Timer.IsRunning) {
+    [string]$framework.Timer.Stop()
+        }
+    }
 }
 
-#endregion
+end {
+    write-Information "`nAzure test execution completed" -InformationAction Continue
+    if (Test-Path $OutputPath) {
+        write-Information "Reports saved to: $OutputPath" -InformationAction Continue
+    }
+}
 
+
+.Access -eq 'Allow' -and
+#Requires -Modules Az.Accounts, Az.Resources, Az.Compute, Az.Storage, Az.Network, Az.KeyVault, Pester
+
+
+[CmdletBinding(SupportsShouldProcess)]
+param(
+    [parameter()]
+    [ValidateSet('All', 'Unit', 'Integration', 'Security', 'Performance', 'Compliance', 'Infrastructure')]
+    [string]$TestScope='All',
+
+    [parameter()]
+    [ValidatePattern('^[a-zA-Z0-9-_\.]+$')]
+    [string]$ResourceGroupName="toolkit-test-$(Get-Random -Maximum 9999)",
+
+    [parameter()]
+    [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
+    [string]$SubscriptionId,
+
+    [parameter()]
+    [ValidateSet('eastus', 'eastus2', 'westus', 'westus2', 'centralus', 'northeurope', 'westeurope')]
+    [string]$Location='eastus',
+
+    [parameter()]
+    [ValidateSet('Development', 'Test', 'Staging', 'Production')]
+    [string]$TestEnvironment='Test',
+
+    [parameter()]
+    [switch]$IncludeDestructive,
+
+    [parameter()]
+    [switch]$MockEnabled,
+
+    [parameter()]
+    [ValidateSet('Console', 'JUnit', 'NUnit', 'HTML', 'JSON', 'AzureDevOps')]
+    [string]$OutputFormat='Console',
+
+    [parameter()]
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $OutputPath='./TestResults',
+
+    [parameter()]
+    [switch]$Parallel,
+
+    [parameter()]
+    [ValidateRange(1, 16)]
+    [int]$MaxParallelJobs=4,
+
+    [parameter()]
+    [string[]]$Tags,
+
+    [parameter()]
+    [string[]]$ExcludeTags,
+
+    [parameter()]
+    [ValidateRange(0, 5)]
+    [int]$RetryCount=2,
+
+    [parameter()]
+    [ValidateRange(5, 300)]
+    [int]$TimeoutMinutes=60
+)
+
+begin {
+    Set-StrictMode -Version Latest
+    [string]$ErrorActionPreference='Stop'
+    [string]$ProgressPreference='Continue'
+
+    class AzureTestFramework {
+        [string]$TestScope
+        [string]$ResourceGroupName
+        [string]$Location
+        [string]$TestEnvironment
+        [hashtable]$Configuration=@{}
+        [hashtable]$AzureContext=@{}
+        [System.Collections.ArrayList]$TestResults=@()
+        [System.Collections.ArrayList]$ResourcesCreated=@()
+        [System.Diagnostics.Stopwatch]$Timer
+        [bool]$MockMode
+
+        AzureTestFramework() {
+    [string]$this.Timer=[System.Diagnostics.Stopwatch]::new()
+    [string]$this.MockMode=$false
+        }
+
+        [void] Initialize() {
+    [string]$this.Timer.Start()
+
+            write-Information "Initializing Azure Test Framework" -InformationAction Continue
+            write-Information "Test Environment: $($this.TestEnvironment)" -InformationAction Continue
+            write-Information "Mock Mode: $($this.MockMode)" -InformationAction Continue
+    [string]$pester=Get-Module -ListAvailable -Name Pester |
+                where { $_.Version -ge '5.3.0' } |
+                select -First 1
+
+            if (-not $pester) {
+                throw "Pester 5.3.0+ required. Install with: Install-Module -Name Pester -MinimumVersion 5.3.0"
+            }
+
+            Import-Module Pester -Force
+
+            if (-not $this.MockMode) {
+    [string]$this.ConnectAzure()
+            }
+
+            if (-not (Test-Path $this.Configuration.OutputPath)) {
+                New-Item -Path $this.Configuration.OutputPath -ItemType Directory -Force | Out-Null
+            }
+        }
+
+        [void] ConnectAzure() {
+            try {
+    [string]$context=Get-AzContext
+
+                if (-not $context) {
+                    write-Information "Connecting to Azure..." -InformationAction Continue
+                    Connect-AzAccount
+    [string]$context=Get-AzContext
+                }
+
+                if ($this.Configuration.SubscriptionId) {
+                    write-Information "Setting subscription: $($this.Configuration.SubscriptionId)" -InformationAction Continue
+                    Set-AzContext -SubscriptionId $this.Configuration.SubscriptionId
+    [string]$context=Get-AzContext
+                }
+    [string]$this.AzureContext=@{
+                    SubscriptionId=$context.Subscription.Id
+                    SubscriptionName=$context.Subscription.Name
+                    TenantId=$context.Tenant.Id
+                    AccountId=$context.Account.Id
+                    Environment=$context.Environment.Name
+                }
+
+                write-Information "Connected to Azure" -InformationAction Continue
+                write-Information "  Subscription: $($this.AzureContext.SubscriptionName)" -InformationAction Continue
+                write-Information "  Account: $($this.AzureContext.AccountId)" -InformationAction Continue
+            }
+            catch {
+                throw "Failed to connect to Azure: $_"
+            }
+        }
+
+        [void] PrepareTestEnvironment() {
+            if ($this.MockMode) {
+                write-Information 'Skipping environment preparation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Preparing test environment..." -InformationAction Continue
+    [string]$rg=Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
+
+            if (-not $rg) {
+                write-Information "Creating resource group: $($this.ResourceGroupName)" -InformationAction Continue
+    $tags=@{
+                    Environment=$this.TestEnvironment
+                    Purpose='Testing'
+                    Framework='AzureToolkitTestFramework'
+                    CreatedBy=$this.AzureContext.AccountId
+                    CreatedDate=Get-Date -Format 'yyyy-MM-dd'
+                    AutoDelete='true'
+                }
+    [string]$rg=New-AzResourceGroup `
+                    -Name $this.ResourceGroupName `
+                    -Location $this.Location `
+                    -Tags $tags
+    [string]$this.ResourcesCreated.Add(@{
+                    Type='ResourceGroup'
+                    Name=$this.ResourceGroupName
+                    Id=$rg.ResourceId
+                })
+            }
+        }
+
+        [PSObject] RunTests() {
+    [string]$TestConfigs=$this.GetTestConfigurations()
+    [string]$AllResults=@()
+
+            foreach ($config in $TestConfigs) {
+                write-Information "Running $($config.Name) tests..." -InformationAction Continue
+
+                if ($this.Configuration.Parallel -and $config.CanRunParallel) {
+    [string]$results=$this.RunParallelTests($config)
+                }
+                else {
+    [string]$results=$this.RunSequentialTests($config)
+                }
+    [string]$AllResults += $results
+    [string]$this.TestResults.Add($results)
+            }
+
+            return $this.AggregateResults($AllResults)
+        }
+
+        [array] GetTestConfigurations() {
+    [string]$configs=@()
+    $TestMap=@{
+                Unit=@{
+                    Name='Unit'
+                    Path='./Unit'
+                    Pattern='*Unit*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Unit')
+                }
+                Integration=@{
+                    Name='Integration'
+                    Path='./Integration'
+                    Pattern='*Integration*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Integration')
+                    RequiresAzure=$true
+                }
+                Security=@{
+                    Name='Security'
+                    Path='./Security'
+                    Pattern='*Security*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Security', 'Compliance')
+                    RequiresAzure=$true
+                }
+                Performance=@{
+                    Name='Performance'
+                    Path='./Performance'
+                    Pattern='*Performance*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Performance')
+                    RequiresAzure=$true
+                }
+                Compliance=@{
+                    Name='Compliance'
+                    Path='./Compliance'
+                    Pattern='*Compliance*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Compliance', 'Governance')
+                    RequiresAzure=$true
+                }
+                Infrastructure=@{
+                    Name='Infrastructure'
+                    Path='./Infrastructure'
+                    Pattern='*Infrastructure*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Infrastructure')
+                    RequiresAzure=$true
+                }
+            }
+
+            if ($this.TestScope -eq 'All') {
+    [string]$configs=$TestMap.Values
+            }
+            else {
+    [string]$configs=@($TestMap[$this.TestScope])
+            }
+
+            if ($this.Configuration.Tags) {
+    [string]$configs=$configs | where {
+    [string]$config=$_
+    [string]$this.Configuration.Tags | where {
+    [string]$config.Tags -contains $_
+                    }
+                }
+            }
+
+            if ($this.Configuration.ExcludeTags) {
+    [string]$configs=$configs | where {
+    [string]$config=$_
+                    -not ($this.Configuration.ExcludeTags | where {
+    [string]$config.Tags -contains $_
+                    })
+                }
+            }
+
+            return $configs
+        }
+
+        [PSObject] RunSequentialTests([hashtable]$config) {
+    [string]$container=New-PesterContainer -Path $config.Path
+    [string]$PesterConfig=New-PesterConfiguration
+    [string]$PesterConfig.Run.Container=$container
+    [string]$PesterConfig.Run.PassThru=$true
+    [string]$PesterConfig.Output.Verbosity='Normal'
+
+            if ($config.Tags) {
+    [string]$PesterConfig.Filter.Tag=$config.Tags
+            }
+
+            if ($this.Configuration.OutputFormat -ne 'Console') {
+    [string]$PesterConfig.TestResult.Enabled=$true
+    [string]$PesterConfig.TestResult.OutputPath=Join-Path $this.Configuration.OutputPath "$($config.Name)_Results.xml"
+    [string]$PesterConfig.TestResult.OutputFormat='NUnit2.5'
+            }
+    [string]$PesterConfig.Run.TestData=@{
+                ResourceGroupName=$this.ResourceGroupName
+                Location=$this.Location
+                MockMode=$this.MockMode
+                IncludeDestructive=$this.Configuration.IncludeDestructive
+                AzureContext=$this.AzureContext
+            }
+
+            return Invoke-Pester -Configuration $PesterConfig
+        }
+
+        [PSObject] RunParallelTests([hashtable]$config) {
+    [string]$TestFiles=Get-ChildItem -Path $config.Path -Filter $config.Pattern -Recurse
+    [string]$jobs=@()
+    [string]$results=@()
+    [string]$TestFiles | ForEach-Object {
+    [string]$job=Start-ThreadJob -ScriptBlock {
+                    param($FilePath, $TestData, $OutputPath)
+
+                    Import-Module Pester -Force
+    [string]$container=New-PesterContainer -Path $FilePath
+    [string]$config=New-PesterConfiguration
+    [string]$config.Run.Container=$container
+    [string]$config.Run.PassThru=$true
+    [string]$config.Run.TestData=$TestData
+    [string]$config.Output.Verbosity='Minimal'
+    [string]$null=$OutputPath
+
+                    Invoke-Pester -Configuration $config
+} -ArgumentList $file.FullName, @{
+                    ResourceGroupName=$this.ResourceGroupName
+                    Location=$this.Location
+                    MockMode=$this.MockMode
+                }, $this.Configuration.OutputPath
+    [string]$jobs += $job
+
+                if ($jobs.Count -ge $this.Configuration.MaxParallelJobs) {
+    [string]$completed=Wait-Job -Job $jobs -Any
+    [string]$results += Receive-Job -Job $completed
+    [string]$jobs=$jobs | where { $_.Id -ne $completed.Id }
+                }
+            }
+
+            if ($jobs) {
+    [string]$results += $jobs | Wait-Job | Receive-Job
+            }
+
+            return $this.AggregateResults($results)
+        }
+
+        [PSObject] AggregateResults([array]$results) {
+            if (-not $results) {
+                return $null
+            }
+    [string]$aggregated=[PSCustomObject]@{
+                Tests=@()
+                PassedCount=0
+                FailedCount=0
+                SkippedCount=0
+                TotalCount=0
+                Duration=[TimeSpan]::Zero
+                Result='Passed'
+            }
+    [string]$results | ForEach-Object {
+    if ($result.Tests) {
+    [string]$aggregated.Tests += $result.Tests
+}
+    [string]$aggregated.PassedCount += $result.PassedCount
+    [string]$aggregated.FailedCount += $result.FailedCount
+    [string]$aggregated.SkippedCount += $result.SkippedCount
+    [string]$aggregated.TotalCount += $result.TotalCount
+    [string]$aggregated.Duration += $result.Duration
+            }
+
+            if ($aggregated.FailedCount -gt 0) {
+    [string]$aggregated.Result='Failed'
+            }
+
+            return $aggregated
+        }
+
+        [void] ValidateInfrastructure() {
+            if ($this.MockMode) {
+                write-Information 'Skipping infrastructure validation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Validating Azure infrastructure..." -InformationAction Continue
+    [string]$ValidationTests=@(
+                @{
+                    Name='Resource Group Exists'
+                    Test={ Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction Stop }
+                }
+                @{
+                    Name='Subscription Active'
+                    Test={
+    [string]$sub=Get-AzSubscription -SubscriptionId $this.AzureContext.SubscriptionId
+                        if ($sub.State -ne 'Enabled') {
+                            throw "Subscription is not enabled: $($sub.State)"
+                        }
+                    }
+                }
+                @{
+                    Name='Required Providers Registered'
+                    Test={
+    [string]$RequiredProviders=@(
+                            'Microsoft.Compute',
+                            'Microsoft.Storage',
+                            'Microsoft.Network',
+                            'Microsoft.KeyVault'
+                        )
+    [string]$RequiredProviders | ForEach-Object {
+    [string]$registration=Get-AzResourceProvider -ProviderNamespace $provider
+                            if ($registration.RegistrationState -ne 'Registered') {
+                                write-Warning "$provider is not registered. Registering..."
+                                Register-AzResourceProvider -ProviderNamespace $provider
+}
+                        }
+                    }
+                }
+            )
+
+            foreach ($test in $ValidationTests) {
+                try {
+                    write-Information "  Validating: $($test.Name)" -InformationAction Continue
+                    & $test.Test
+                    write-Information "    Passed" -InformationAction Continue
+                }
+                catch {
+                    write-Warning "  Validation failed: $($test.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunSecurityTests() {
+            write-Information "Running security validation tests..." -InformationAction Continue
+    [string]$SecurityChecks=@(
+                @{
+                    Name='RBAC Assignments'
+                    Check={
+    [string]$assignments=Get-AzRoleAssignment -ResourceGroupName $this.ResourceGroupName
+                        return @{
+                            Count=$assignments.Count
+                            Assignments=$assignments | select DisplayName, RoleDefinitionName
+                        }
+                    }
+                }
+                @{
+                    Name='Network Security Groups'
+                    Check={
+    [string]$nsgs=Get-AzNetworkSecurityGroup -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+
+                        foreach ($nsg in $nsgs) {
+    [string]$rules=$nsg.SecurityRules + $nsg.DefaultSecurityRules
+    [string]$RiskyRules=$rules | where {
+    [string]$_.Access -eq 'Allow' -and
+    [string]$_.Direction -eq 'Inbound' -and
+    [string]$_.SourceAddressPrefix -eq '*'
+                            }
+
+                            if ($RiskyRules) {
+    [string]$issues += "NSG $($nsg.Name) has risky inbound rules"
+                            }
+                        }
+
+                        return @{
+                            NSGCount=$nsgs.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+                @{
+                    Name='Storage Account Security'
+                    Check={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if ($account.EnableHttpsTrafficOnly -ne $true) {
+    [string]$issues += "$($account.StorageAccountName) does not enforce HTTPS"
+}
+                            if ($account.AllowBlobPublicAccess -eq $true) {
+    [string]$issues += "$($account.StorageAccountName) allows public blob access"
+                            }
+                        }
+
+                        return @{
+                            StorageAccountCount=$StorageAccounts.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+            )
+
+            foreach ($check in $SecurityChecks) {
+                try {
+                    write-Information "  Running: $($check.Name)" -InformationAction Continue
+    [string]$result=& $check.Check
+
+                    if ($result.Issues -and $result.Issues.Count -gt 0) {
+                        write-Warning "    Security issues found:"
+    [string]$result.Issues | foreach {
+                            write-Warning "      $_"
+                        }
+                    }
+                    else {
+                        write-Information "    No security issues found" -InformationAction Continue
+                    }
+                }
+                catch {
+                    write-Warning "  Security check failed: $($check.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunComplianceTests() {
+            write-Information "Running compliance validation..." -InformationAction Continue
+    [string]$ComplianceRules=@(
+                @{
+                    Name='Resource Tagging'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$untagged=$resources | where { -not $_.Tags -or $_.Tags.Count -eq 0 }
+
+                        if ($untagged) {
+                            return @{
+                                Compliant=$false
+                                Message="$($untagged.Count) resources without tags"
+                                Resources=$untagged.Name
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Encryption at Rest'
+                    Rule={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$unencrypted=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if (-not $account.Encryption.Services.Blob.Enabled) {
+    [string]$unencrypted += $account.StorageAccountName
+}
+                        }
+
+                        if ($unencrypted) {
+                            return @{
+                                Compliant=$false
+                                Message="Storage accounts without encryption: $($unencrypted -join ', ')"
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Diagnostic Settings'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$WithoutDiagnostics=@()
+    [string]$resources | ForEach-Object {
+    [string]$diagnostics=Get-AzDiagnosticSetting -ResourceId $resource.Id -ErrorAction SilentlyContinue
+                            if (-not $diagnostics) {
+    [string]$WithoutDiagnostics += $resource.Name
+}
+                        }
+
+                        if ($WithoutDiagnostics.Count -gt ($resources.Count * 0.5)) {
+                            return @{
+                                Compliant=$false
+                                Message='More than 50% of resources lack diagnostic settings'
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+            )
+    [string]$ComplianceScore=0
+    [string]$TotalRules=$ComplianceRules.Count
+
+            foreach ($rule in $ComplianceRules) {
+                try {
+                    write-Information "  Checking: $($rule.Name)" -InformationAction Continue
+    [string]$result=& $rule.Rule
+
+                    if ($result.Compliant) {
+                        write-Information "    Compliant" -InformationAction Continue
+    [string]$ComplianceScore++
+                    }
+                    else {
+                        write-Warning "    Non-compliant: $($result.Message)"
+                    }
+                }
+                catch {
+                    write-Warning "  Compliance check failed: $($rule.Name) - $_"
+                }
+            }
+    [string]$percentage=[Math]::Round(($ComplianceScore / $TotalRules) * 100, 2)
+            write-Information "Overall Compliance Score: $percentage%" -InformationAction Continue
+        }
+
+        [void] Cleanup() {
+            if ($this.MockMode -or -not $this.Configuration.IncludeDestructive) {
+                write-Information "Skipping cleanup" -InformationAction Continue
+                return
+            }
+
+            write-Information "Cleaning up test resources..." -InformationAction Continue
+
+            foreach ($resource in $this.ResourcesCreated) {
+                try {
+                    switch ($resource.Type) {
+                        'ResourceGroup' {
+                            write-Information "  Removing resource group: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResourceGroup -Name $resource.Name -Force -AsJob
+                        }
+                        default {
+                            write-Information "  Removing resource: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResource -ResourceId $resource.Id -Force
+                        }
+                    }
+                }
+                catch {
+                    write-Warning "Failed to cleanup $($resource.Type): $($resource.Name) - $_"
+                }
+            }
+        }
+
+        [void] GenerateReport([PSObject]$results) {
+    [string]$ReportPath=Join-Path $this.Configuration.OutputPath "AzureTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+
+            switch ($this.Configuration.OutputFormat) {
+                'HTML' {
+    [string]$this.GenerateHtmlReport($results, "$ReportPath.html")
+                }
+                'JSON' {
+    [string]$results | ConvertTo-Json -Depth 10 | Out-File "$ReportPath.json" -Encoding UTF8
+                    write-Information "JSON report saved: $ReportPath.json" -InformationAction Continue
+                }
+                'JUnit' {
+    [string]$this.GenerateJUnitReport($results, "$ReportPath.xml")
+                }
+                'AzureDevOps' {
+    [string]$this.GenerateAzureDevOpsReport($results, "$ReportPath.md")
+                }
+            }
+        }
+
+        [void] GenerateHtmlReport([PSObject]$results, [string]$path) {
+    [string]$html=@"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure Infrastructure Test Report</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background:
+        h1 { margin: 0; }
+        .container { max-width: 1200px; margin: auto; background: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+        .metric { text-align: center; padding: 15px; background:
+        .metric-value { font-size: 2em; font-weight: bold; color:
+        .metric-label { color:
+        .passed { color:
+        .failed { color:
+        .skipped { color:
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background:
+        td { padding: 10px; border-bottom: 1px solid
+        .footer { text-align: center; padding: 20px; color:
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Infrastructure Test Report</h1>
+            <p>Environment: $($this.TestEnvironment) | Scope: $($this.TestScope)</p>
+            <p>Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
+        </div>
+        <div class="summary">
+            <div class="metric'>
+                <div class='metric-value">$($results.TotalCount)</div>
+                <div class="metric-label">Total Tests</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value passed">$($results.PassedCount)</div>
+                <div class="metric-label'>Passed</div>
+            </div>
+            <div class='metric'>
+                <div class='metric-value failed">$($results.FailedCount)</div>
+                <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value skipped">$($results.SkippedCount)</div>
+                <div class="metric-label">Skipped</div>
+            </div>
+        </div>
+        <div style="padding: 20px;'>
+            <h2>Test Details</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+'@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$html += @"
+                    <tr>
+                        <td>$($test.Name)</td>
+                        <td>$($test.Duration.TotalMilliseconds) ms</td>
+                        <td class="$($status.ToLower())">$status</td>
+                        <td>$(if ($test.ErrorRecord) { $test.ErrorRecord.Exception.Message } else { '-' })</td>
+                    </tr>
+"@
+            }
+    [string]$html += @'
+                </tbody>
+            </table>
+        </div>
+        <div class='footer">
+            <p>Azure Test Framework v3.0.0 | Duration: $($this.Timer.Elapsed)</p>
+        </div>
+    </div>
+</body>
+</html>
+"@
+    [string]$html | Out-File -FilePath $path -Encoding UTF8
+            write-Information "HTML report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateJUnitReport([PSObject]$results, [string]$path) {
+    [string]$xml=@"
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Azure Infrastructure Tests" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+    <testsuite name="$($this.TestScope)" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+"@
+            foreach ($test in $results.Tests) {
+    [string]$xml += "        <testcase name=`"$($test.Name)`" time=`"$($test.Duration.TotalSeconds)`''
+                if ($test.Passed) {
+    [string]$xml += ' />`n'
+                }
+                elseif ($test.Skipped) {
+    [string]$xml += "><skipped /></testcase>`n"
+                }
+                else {
+    [string]$xml += "><failure>$($test.ErrorRecord.Exception.Message)</failure></testcase>`n"
+                }
+            }
+    [string]$xml += @"
+    </testsuite>
+</testsuites>
+"@
+    [string]$xml | Out-File -FilePath $path -Encoding UTF8
+            write-Information "JUnit report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateAzureDevOpsReport([PSObject]$results, [string]$path) {
+    [string]$markdown=@"
+
+- **Total Tests**: $($results.TotalCount)
+- **Passed**: $($results.PassedCount)
+- **Failed**: $($results.FailedCount)
+- **Skipped**: $($results.SkippedCount)
+- **Duration**: $($results.Duration)
+- **Pass Rate**: $([Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2))%
+
+- **Environment**: $($this.TestEnvironment)
+- **Resource Group**: $($this.ResourceGroupName)
+- **Location**: $($this.Location)
+- **Mock Mode**: $($this.MockMode)
+
+| Test | Duration | Status |
+|------|----------|--------|
+"@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$markdown += "| $($test.Name) | $($test.Duration.TotalMilliseconds)ms | $status |`n"
+            }
+    [string]$markdown | Out-File -FilePath $path -Encoding UTF8
+            write-Information "Azure DevOps report saved: $path" -InformationAction Continue
+        }
+    }
+
+    write-Information "Azure Infrastructure Test Framework v3.0.0" -InformationAction Continue
+    write-Information "==========================================" -InformationAction Continue
+}
+
+process {
+    try {
+    [string]$framework=[AzureTestFramework]::new()
+    [string]$framework.TestScope=$TestScope
+    [string]$framework.ResourceGroupName=$ResourceGroupName
+    [string]$framework.Location=$Location
+    [string]$framework.TestEnvironment=$TestEnvironment
+    [string]$framework.MockMode=$MockEnabled
+    [string]$framework.Configuration=@{
+            SubscriptionId=$SubscriptionId
+            OutputPath=$OutputPath
+            OutputFormat=$OutputFormat
+            IncludeDestructive=$IncludeDestructive
+            Parallel=$Parallel
+            MaxParallelJobs=$MaxParallelJobs
+            Tags=$Tags
+            ExcludeTags=$ExcludeTags
+            RetryCount=$RetryCount
+            TimeoutMinutes=$TimeoutMinutes
+        }
+    [string]$framework.Initialize()
+
+        if (-not $MockEnabled) {
+    [string]$framework.PrepareTestEnvironment()
+    [string]$framework.ValidateInfrastructure()
+        }
+
+        if ($TestScope -in @('Security', 'All')) {
+    [string]$framework.RunSecurityTests()
+        }
+
+        if ($TestScope -in @('Compliance', 'All')) {
+    [string]$framework.RunComplianceTests()
+        }
+    [string]$results=$framework.RunTests()
+
+        if ($OutputFormat -ne 'Console') {
+    [string]$framework.GenerateReport($results)
+        }
+
+        write-Information "`nTest Execution Summary" -InformationAction Continue
+        write-Information "=====================" -InformationAction Continue
+        write-Information "Total: $($results.TotalCount)" -InformationAction Continue
+        write-Information "Passed: $($results.PassedCount)" -InformationAction Continue
+        write-Information "Failed: $($results.FailedCount)" -InformationAction Continue
+        write-Information "Skipped: $($results.SkippedCount)" -InformationAction Continue
+        write-Information "Duration: $($framework.Timer.Elapsed)" -InformationAction Continue
+    [string]$PassRate=if ($results.TotalCount -gt 0) {
+            [Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2)
+        } else { 0 }
+
+        write-Information "Pass Rate: $PassRate%" -InformationAction Continue
+
+        if ($IncludeDestructive -and $PSCmdlet.ShouldProcess($ResourceGroupName, "Cleanup test resources")) {
+    [string]$framework.Cleanup()
+        }
+
+        return $results
+    }
+    catch {
+        write-Error "Test framework failed: $_"
+        throw
+    }
+    finally {
+        if ($framework.Timer.IsRunning) {
+    [string]$framework.Timer.Stop()
+        }
+    }
+}
+
+end {
+    write-Information "`nAzure test execution completed" -InformationAction Continue
+    if (Test-Path $OutputPath) {
+        write-Information "Reports saved to: $OutputPath" -InformationAction Continue
+    }
+}
+
+
+.Direction -eq 'Inbound' -and
+#Requires -Modules Az.Accounts, Az.Resources, Az.Compute, Az.Storage, Az.Network, Az.KeyVault, Pester
+
+
+[CmdletBinding(SupportsShouldProcess)]
+param(
+    [parameter()]
+    [ValidateSet('All', 'Unit', 'Integration', 'Security', 'Performance', 'Compliance', 'Infrastructure')]
+    [string]$TestScope='All',
+
+    [parameter()]
+    [ValidatePattern('^[a-zA-Z0-9-_\.]+$')]
+    [string]$ResourceGroupName="toolkit-test-$(Get-Random -Maximum 9999)",
+
+    [parameter()]
+    [ValidatePattern('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$')]
+    [string]$SubscriptionId,
+
+    [parameter()]
+    [ValidateSet('eastus', 'eastus2', 'westus', 'westus2', 'centralus', 'northeurope', 'westeurope')]
+    [string]$Location='eastus',
+
+    [parameter()]
+    [ValidateSet('Development', 'Test', 'Staging', 'Production')]
+    [string]$TestEnvironment='Test',
+
+    [parameter()]
+    [switch]$IncludeDestructive,
+
+    [parameter()]
+    [switch]$MockEnabled,
+
+    [parameter()]
+    [ValidateSet('Console', 'JUnit', 'NUnit', 'HTML', 'JSON', 'AzureDevOps')]
+    [string]$OutputFormat='Console',
+
+    [parameter()]
+
+
+    [ValidateNotNullOrEmpty()]
+
+
+    [string] $OutputPath='./TestResults',
+
+    [parameter()]
+    [switch]$Parallel,
+
+    [parameter()]
+    [ValidateRange(1, 16)]
+    [int]$MaxParallelJobs=4,
+
+    [parameter()]
+    [string[]]$Tags,
+
+    [parameter()]
+    [string[]]$ExcludeTags,
+
+    [parameter()]
+    [ValidateRange(0, 5)]
+    [int]$RetryCount=2,
+
+    [parameter()]
+    [ValidateRange(5, 300)]
+    [int]$TimeoutMinutes=60
+)
+
+begin {
+    Set-StrictMode -Version Latest
+    [string]$ErrorActionPreference='Stop'
+    [string]$ProgressPreference='Continue'
+
+    class AzureTestFramework {
+        [string]$TestScope
+        [string]$ResourceGroupName
+        [string]$Location
+        [string]$TestEnvironment
+        [hashtable]$Configuration=@{}
+        [hashtable]$AzureContext=@{}
+        [System.Collections.ArrayList]$TestResults=@()
+        [System.Collections.ArrayList]$ResourcesCreated=@()
+        [System.Diagnostics.Stopwatch]$Timer
+        [bool]$MockMode
+
+        AzureTestFramework() {
+    [string]$this.Timer=[System.Diagnostics.Stopwatch]::new()
+    [string]$this.MockMode=$false
+        }
+
+        [void] Initialize() {
+    [string]$this.Timer.Start()
+
+            write-Information "Initializing Azure Test Framework" -InformationAction Continue
+            write-Information "Test Environment: $($this.TestEnvironment)" -InformationAction Continue
+            write-Information "Mock Mode: $($this.MockMode)" -InformationAction Continue
+    [string]$pester=Get-Module -ListAvailable -Name Pester |
+                where { $_.Version -ge '5.3.0' } |
+                select -First 1
+
+            if (-not $pester) {
+                throw "Pester 5.3.0+ required. Install with: Install-Module -Name Pester -MinimumVersion 5.3.0"
+            }
+
+            Import-Module Pester -Force
+
+            if (-not $this.MockMode) {
+    [string]$this.ConnectAzure()
+            }
+
+            if (-not (Test-Path $this.Configuration.OutputPath)) {
+                New-Item -Path $this.Configuration.OutputPath -ItemType Directory -Force | Out-Null
+            }
+        }
+
+        [void] ConnectAzure() {
+            try {
+    [string]$context=Get-AzContext
+
+                if (-not $context) {
+                    write-Information "Connecting to Azure..." -InformationAction Continue
+                    Connect-AzAccount
+    [string]$context=Get-AzContext
+                }
+
+                if ($this.Configuration.SubscriptionId) {
+                    write-Information "Setting subscription: $($this.Configuration.SubscriptionId)" -InformationAction Continue
+                    Set-AzContext -SubscriptionId $this.Configuration.SubscriptionId
+    [string]$context=Get-AzContext
+                }
+    [string]$this.AzureContext=@{
+                    SubscriptionId=$context.Subscription.Id
+                    SubscriptionName=$context.Subscription.Name
+                    TenantId=$context.Tenant.Id
+                    AccountId=$context.Account.Id
+                    Environment=$context.Environment.Name
+                }
+
+                write-Information "Connected to Azure" -InformationAction Continue
+                write-Information "  Subscription: $($this.AzureContext.SubscriptionName)" -InformationAction Continue
+                write-Information "  Account: $($this.AzureContext.AccountId)" -InformationAction Continue
+            }
+            catch {
+                throw "Failed to connect to Azure: $_"
+            }
+        }
+
+        [void] PrepareTestEnvironment() {
+            if ($this.MockMode) {
+                write-Information 'Skipping environment preparation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Preparing test environment..." -InformationAction Continue
+    [string]$rg=Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction SilentlyContinue
+
+            if (-not $rg) {
+                write-Information "Creating resource group: $($this.ResourceGroupName)" -InformationAction Continue
+    $tags=@{
+                    Environment=$this.TestEnvironment
+                    Purpose='Testing'
+                    Framework='AzureToolkitTestFramework'
+                    CreatedBy=$this.AzureContext.AccountId
+                    CreatedDate=Get-Date -Format 'yyyy-MM-dd'
+                    AutoDelete='true'
+                }
+    [string]$rg=New-AzResourceGroup `
+                    -Name $this.ResourceGroupName `
+                    -Location $this.Location `
+                    -Tags $tags
+    [string]$this.ResourcesCreated.Add(@{
+                    Type='ResourceGroup'
+                    Name=$this.ResourceGroupName
+                    Id=$rg.ResourceId
+                })
+            }
+        }
+
+        [PSObject] RunTests() {
+    [string]$TestConfigs=$this.GetTestConfigurations()
+    [string]$AllResults=@()
+
+            foreach ($config in $TestConfigs) {
+                write-Information "Running $($config.Name) tests..." -InformationAction Continue
+
+                if ($this.Configuration.Parallel -and $config.CanRunParallel) {
+    [string]$results=$this.RunParallelTests($config)
+                }
+                else {
+    [string]$results=$this.RunSequentialTests($config)
+                }
+    [string]$AllResults += $results
+    [string]$this.TestResults.Add($results)
+            }
+
+            return $this.AggregateResults($AllResults)
+        }
+
+        [array] GetTestConfigurations() {
+    [string]$configs=@()
+    $TestMap=@{
+                Unit=@{
+                    Name='Unit'
+                    Path='./Unit'
+                    Pattern='*Unit*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Unit')
+                }
+                Integration=@{
+                    Name='Integration'
+                    Path='./Integration'
+                    Pattern='*Integration*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Integration')
+                    RequiresAzure=$true
+                }
+                Security=@{
+                    Name='Security'
+                    Path='./Security'
+                    Pattern='*Security*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Security', 'Compliance')
+                    RequiresAzure=$true
+                }
+                Performance=@{
+                    Name='Performance'
+                    Path='./Performance'
+                    Pattern='*Performance*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Performance')
+                    RequiresAzure=$true
+                }
+                Compliance=@{
+                    Name='Compliance'
+                    Path='./Compliance'
+                    Pattern='*Compliance*.Tests.ps1'
+                    CanRunParallel=$true
+                    Tags=@('Compliance', 'Governance')
+                    RequiresAzure=$true
+                }
+                Infrastructure=@{
+                    Name='Infrastructure'
+                    Path='./Infrastructure'
+                    Pattern='*Infrastructure*.Tests.ps1'
+                    CanRunParallel=$false
+                    Tags=@('Infrastructure')
+                    RequiresAzure=$true
+                }
+            }
+
+            if ($this.TestScope -eq 'All') {
+    [string]$configs=$TestMap.Values
+            }
+            else {
+    [string]$configs=@($TestMap[$this.TestScope])
+            }
+
+            if ($this.Configuration.Tags) {
+    [string]$configs=$configs | where {
+    [string]$config=$_
+    [string]$this.Configuration.Tags | where {
+    [string]$config.Tags -contains $_
+                    }
+                }
+            }
+
+            if ($this.Configuration.ExcludeTags) {
+    [string]$configs=$configs | where {
+    [string]$config=$_
+                    -not ($this.Configuration.ExcludeTags | where {
+    [string]$config.Tags -contains $_
+                    })
+                }
+            }
+
+            return $configs
+        }
+
+        [PSObject] RunSequentialTests([hashtable]$config) {
+    [string]$container=New-PesterContainer -Path $config.Path
+    [string]$PesterConfig=New-PesterConfiguration
+    [string]$PesterConfig.Run.Container=$container
+    [string]$PesterConfig.Run.PassThru=$true
+    [string]$PesterConfig.Output.Verbosity='Normal'
+
+            if ($config.Tags) {
+    [string]$PesterConfig.Filter.Tag=$config.Tags
+            }
+
+            if ($this.Configuration.OutputFormat -ne 'Console') {
+    [string]$PesterConfig.TestResult.Enabled=$true
+    [string]$PesterConfig.TestResult.OutputPath=Join-Path $this.Configuration.OutputPath "$($config.Name)_Results.xml"
+    [string]$PesterConfig.TestResult.OutputFormat='NUnit2.5'
+            }
+    [string]$PesterConfig.Run.TestData=@{
+                ResourceGroupName=$this.ResourceGroupName
+                Location=$this.Location
+                MockMode=$this.MockMode
+                IncludeDestructive=$this.Configuration.IncludeDestructive
+                AzureContext=$this.AzureContext
+            }
+
+            return Invoke-Pester -Configuration $PesterConfig
+        }
+
+        [PSObject] RunParallelTests([hashtable]$config) {
+    [string]$TestFiles=Get-ChildItem -Path $config.Path -Filter $config.Pattern -Recurse
+    [string]$jobs=@()
+    [string]$results=@()
+    [string]$TestFiles | ForEach-Object {
+    [string]$job=Start-ThreadJob -ScriptBlock {
+                    param($FilePath, $TestData, $OutputPath)
+
+                    Import-Module Pester -Force
+    [string]$container=New-PesterContainer -Path $FilePath
+    [string]$config=New-PesterConfiguration
+    [string]$config.Run.Container=$container
+    [string]$config.Run.PassThru=$true
+    [string]$config.Run.TestData=$TestData
+    [string]$config.Output.Verbosity='Minimal'
+    [string]$null=$OutputPath
+
+                    Invoke-Pester -Configuration $config
+} -ArgumentList $file.FullName, @{
+                    ResourceGroupName=$this.ResourceGroupName
+                    Location=$this.Location
+                    MockMode=$this.MockMode
+                }, $this.Configuration.OutputPath
+    [string]$jobs += $job
+
+                if ($jobs.Count -ge $this.Configuration.MaxParallelJobs) {
+    [string]$completed=Wait-Job -Job $jobs -Any
+    [string]$results += Receive-Job -Job $completed
+    [string]$jobs=$jobs | where { $_.Id -ne $completed.Id }
+                }
+            }
+
+            if ($jobs) {
+    [string]$results += $jobs | Wait-Job | Receive-Job
+            }
+
+            return $this.AggregateResults($results)
+        }
+
+        [PSObject] AggregateResults([array]$results) {
+            if (-not $results) {
+                return $null
+            }
+    [string]$aggregated=[PSCustomObject]@{
+                Tests=@()
+                PassedCount=0
+                FailedCount=0
+                SkippedCount=0
+                TotalCount=0
+                Duration=[TimeSpan]::Zero
+                Result='Passed'
+            }
+    [string]$results | ForEach-Object {
+    if ($result.Tests) {
+    [string]$aggregated.Tests += $result.Tests
+}
+    [string]$aggregated.PassedCount += $result.PassedCount
+    [string]$aggregated.FailedCount += $result.FailedCount
+    [string]$aggregated.SkippedCount += $result.SkippedCount
+    [string]$aggregated.TotalCount += $result.TotalCount
+    [string]$aggregated.Duration += $result.Duration
+            }
+
+            if ($aggregated.FailedCount -gt 0) {
+    [string]$aggregated.Result='Failed'
+            }
+
+            return $aggregated
+        }
+
+        [void] ValidateInfrastructure() {
+            if ($this.MockMode) {
+                write-Information 'Skipping infrastructure validation (mock mode)' -InformationAction Continue
+                return
+            }
+
+            write-Information "Validating Azure infrastructure..." -InformationAction Continue
+    [string]$ValidationTests=@(
+                @{
+                    Name='Resource Group Exists'
+                    Test={ Get-AzResourceGroup -Name $this.ResourceGroupName -ErrorAction Stop }
+                }
+                @{
+                    Name='Subscription Active'
+                    Test={
+    [string]$sub=Get-AzSubscription -SubscriptionId $this.AzureContext.SubscriptionId
+                        if ($sub.State -ne 'Enabled') {
+                            throw "Subscription is not enabled: $($sub.State)"
+                        }
+                    }
+                }
+                @{
+                    Name='Required Providers Registered'
+                    Test={
+    [string]$RequiredProviders=@(
+                            'Microsoft.Compute',
+                            'Microsoft.Storage',
+                            'Microsoft.Network',
+                            'Microsoft.KeyVault'
+                        )
+    [string]$RequiredProviders | ForEach-Object {
+    [string]$registration=Get-AzResourceProvider -ProviderNamespace $provider
+                            if ($registration.RegistrationState -ne 'Registered') {
+                                write-Warning "$provider is not registered. Registering..."
+                                Register-AzResourceProvider -ProviderNamespace $provider
+}
+                        }
+                    }
+                }
+            )
+
+            foreach ($test in $ValidationTests) {
+                try {
+                    write-Information "  Validating: $($test.Name)" -InformationAction Continue
+                    & $test.Test
+                    write-Information "    Passed" -InformationAction Continue
+                }
+                catch {
+                    write-Warning "  Validation failed: $($test.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunSecurityTests() {
+            write-Information "Running security validation tests..." -InformationAction Continue
+    [string]$SecurityChecks=@(
+                @{
+                    Name='RBAC Assignments'
+                    Check={
+    [string]$assignments=Get-AzRoleAssignment -ResourceGroupName $this.ResourceGroupName
+                        return @{
+                            Count=$assignments.Count
+                            Assignments=$assignments | select DisplayName, RoleDefinitionName
+                        }
+                    }
+                }
+                @{
+                    Name='Network Security Groups'
+                    Check={
+    [string]$nsgs=Get-AzNetworkSecurityGroup -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+
+                        foreach ($nsg in $nsgs) {
+    [string]$rules=$nsg.SecurityRules + $nsg.DefaultSecurityRules
+    [string]$RiskyRules=$rules | where {
+    [string]$_.Access -eq 'Allow' -and
+    [string]$_.Direction -eq 'Inbound' -and
+    [string]$_.SourceAddressPrefix -eq '*'
+                            }
+
+                            if ($RiskyRules) {
+    [string]$issues += "NSG $($nsg.Name) has risky inbound rules"
+                            }
+                        }
+
+                        return @{
+                            NSGCount=$nsgs.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+                @{
+                    Name='Storage Account Security'
+                    Check={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if ($account.EnableHttpsTrafficOnly -ne $true) {
+    [string]$issues += "$($account.StorageAccountName) does not enforce HTTPS"
+}
+                            if ($account.AllowBlobPublicAccess -eq $true) {
+    [string]$issues += "$($account.StorageAccountName) allows public blob access"
+                            }
+                        }
+
+                        return @{
+                            StorageAccountCount=$StorageAccounts.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+            )
+
+            foreach ($check in $SecurityChecks) {
+                try {
+                    write-Information "  Running: $($check.Name)" -InformationAction Continue
+    [string]$result=& $check.Check
+
+                    if ($result.Issues -and $result.Issues.Count -gt 0) {
+                        write-Warning "    Security issues found:"
+    [string]$result.Issues | foreach {
+                            write-Warning "      $_"
+                        }
+                    }
+                    else {
+                        write-Information "    No security issues found" -InformationAction Continue
+                    }
+                }
+                catch {
+                    write-Warning "  Security check failed: $($check.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunComplianceTests() {
+            write-Information "Running compliance validation..." -InformationAction Continue
+    [string]$ComplianceRules=@(
+                @{
+                    Name='Resource Tagging'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$untagged=$resources | where { -not $_.Tags -or $_.Tags.Count -eq 0 }
+
+                        if ($untagged) {
+                            return @{
+                                Compliant=$false
+                                Message="$($untagged.Count) resources without tags"
+                                Resources=$untagged.Name
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Encryption at Rest'
+                    Rule={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$unencrypted=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if (-not $account.Encryption.Services.Blob.Enabled) {
+    [string]$unencrypted += $account.StorageAccountName
+}
+                        }
+
+                        if ($unencrypted) {
+                            return @{
+                                Compliant=$false
+                                Message="Storage accounts without encryption: $($unencrypted -join ', ')"
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Diagnostic Settings'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$WithoutDiagnostics=@()
+    [string]$resources | ForEach-Object {
+    [string]$diagnostics=Get-AzDiagnosticSetting -ResourceId $resource.Id -ErrorAction SilentlyContinue
+                            if (-not $diagnostics) {
+    [string]$WithoutDiagnostics += $resource.Name
+}
+                        }
+
+                        if ($WithoutDiagnostics.Count -gt ($resources.Count * 0.5)) {
+                            return @{
+                                Compliant=$false
+                                Message='More than 50% of resources lack diagnostic settings'
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+            )
+    [string]$ComplianceScore=0
+    [string]$TotalRules=$ComplianceRules.Count
+
+            foreach ($rule in $ComplianceRules) {
+                try {
+                    write-Information "  Checking: $($rule.Name)" -InformationAction Continue
+    [string]$result=& $rule.Rule
+
+                    if ($result.Compliant) {
+                        write-Information "    Compliant" -InformationAction Continue
+    [string]$ComplianceScore++
+                    }
+                    else {
+                        write-Warning "    Non-compliant: $($result.Message)"
+                    }
+                }
+                catch {
+                    write-Warning "  Compliance check failed: $($rule.Name) - $_"
+                }
+            }
+    [string]$percentage=[Math]::Round(($ComplianceScore / $TotalRules) * 100, 2)
+            write-Information "Overall Compliance Score: $percentage%" -InformationAction Continue
+        }
+
+        [void] Cleanup() {
+            if ($this.MockMode -or -not $this.Configuration.IncludeDestructive) {
+                write-Information "Skipping cleanup" -InformationAction Continue
+                return
+            }
+
+            write-Information "Cleaning up test resources..." -InformationAction Continue
+
+            foreach ($resource in $this.ResourcesCreated) {
+                try {
+                    switch ($resource.Type) {
+                        'ResourceGroup' {
+                            write-Information "  Removing resource group: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResourceGroup -Name $resource.Name -Force -AsJob
+                        }
+                        default {
+                            write-Information "  Removing resource: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResource -ResourceId $resource.Id -Force
+                        }
+                    }
+                }
+                catch {
+                    write-Warning "Failed to cleanup $($resource.Type): $($resource.Name) - $_"
+                }
+            }
+        }
+
+        [void] GenerateReport([PSObject]$results) {
+    [string]$ReportPath=Join-Path $this.Configuration.OutputPath "AzureTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+
+            switch ($this.Configuration.OutputFormat) {
+                'HTML' {
+    [string]$this.GenerateHtmlReport($results, "$ReportPath.html")
+                }
+                'JSON' {
+    [string]$results | ConvertTo-Json -Depth 10 | Out-File "$ReportPath.json" -Encoding UTF8
+                    write-Information "JSON report saved: $ReportPath.json" -InformationAction Continue
+                }
+                'JUnit' {
+    [string]$this.GenerateJUnitReport($results, "$ReportPath.xml")
+                }
+                'AzureDevOps' {
+    [string]$this.GenerateAzureDevOpsReport($results, "$ReportPath.md")
+                }
+            }
+        }
+
+        [void] GenerateHtmlReport([PSObject]$results, [string]$path) {
+    [string]$html=@"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure Infrastructure Test Report</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background:
+        h1 { margin: 0; }
+        .container { max-width: 1200px; margin: auto; background: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+        .metric { text-align: center; padding: 15px; background:
+        .metric-value { font-size: 2em; font-weight: bold; color:
+        .metric-label { color:
+        .passed { color:
+        .failed { color:
+        .skipped { color:
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background:
+        td { padding: 10px; border-bottom: 1px solid
+        .footer { text-align: center; padding: 20px; color:
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Infrastructure Test Report</h1>
+            <p>Environment: $($this.TestEnvironment) | Scope: $($this.TestScope)</p>
+            <p>Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
+        </div>
+        <div class="summary">
+            <div class="metric'>
+                <div class='metric-value">$($results.TotalCount)</div>
+                <div class="metric-label">Total Tests</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value passed">$($results.PassedCount)</div>
+                <div class="metric-label'>Passed</div>
+            </div>
+            <div class='metric'>
+                <div class='metric-value failed">$($results.FailedCount)</div>
+                <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value skipped">$($results.SkippedCount)</div>
+                <div class="metric-label">Skipped</div>
+            </div>
+        </div>
+        <div style="padding: 20px;'>
+            <h2>Test Details</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+'@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$html += @"
+                    <tr>
+                        <td>$($test.Name)</td>
+                        <td>$($test.Duration.TotalMilliseconds) ms</td>
+                        <td class="$($status.ToLower())">$status</td>
+                        <td>$(if ($test.ErrorRecord) { $test.ErrorRecord.Exception.Message } else { '-' })</td>
+                    </tr>
+"@
+            }
+    [string]$html += @'
+                </tbody>
+            </table>
+        </div>
+        <div class='footer">
+            <p>Azure Test Framework v3.0.0 | Duration: $($this.Timer.Elapsed)</p>
+        </div>
+    </div>
+</body>
+</html>
+"@
+    [string]$html | Out-File -FilePath $path -Encoding UTF8
+            write-Information "HTML report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateJUnitReport([PSObject]$results, [string]$path) {
+    [string]$xml=@"
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Azure Infrastructure Tests" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+    <testsuite name="$($this.TestScope)" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+"@
+            foreach ($test in $results.Tests) {
+    [string]$xml += "        <testcase name=`"$($test.Name)`" time=`"$($test.Duration.TotalSeconds)`''
+                if ($test.Passed) {
+    [string]$xml += ' />`n'
+                }
+                elseif ($test.Skipped) {
+    [string]$xml += "><skipped /></testcase>`n"
+                }
+                else {
+    [string]$xml += "><failure>$($test.ErrorRecord.Exception.Message)</failure></testcase>`n"
+                }
+            }
+    [string]$xml += @"
+    </testsuite>
+</testsuites>
+"@
+    [string]$xml | Out-File -FilePath $path -Encoding UTF8
+            write-Information "JUnit report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateAzureDevOpsReport([PSObject]$results, [string]$path) {
+    [string]$markdown=@"
+
+- **Total Tests**: $($results.TotalCount)
+- **Passed**: $($results.PassedCount)
+- **Failed**: $($results.FailedCount)
+- **Skipped**: $($results.SkippedCount)
+- **Duration**: $($results.Duration)
+- **Pass Rate**: $([Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2))%
+
+- **Environment**: $($this.TestEnvironment)
+- **Resource Group**: $($this.ResourceGroupName)
+- **Location**: $($this.Location)
+- **Mock Mode**: $($this.MockMode)
+
+| Test | Duration | Status |
+|------|----------|--------|
+"@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$markdown += "| $($test.Name) | $($test.Duration.TotalMilliseconds)ms | $status |`n"
+            }
+    [string]$markdown | Out-File -FilePath $path -Encoding UTF8
+            write-Information "Azure DevOps report saved: $path" -InformationAction Continue
+        }
+    }
+
+    write-Information "Azure Infrastructure Test Framework v3.0.0" -InformationAction Continue
+    write-Information "==========================================" -InformationAction Continue
+}
+
+process {
+    try {
+    [string]$framework=[AzureTestFramework]::new()
+    [string]$framework.TestScope=$TestScope
+    [string]$framework.ResourceGroupName=$ResourceGroupName
+    [string]$framework.Location=$Location
+    [string]$framework.TestEnvironment=$TestEnvironment
+    [string]$framework.MockMode=$MockEnabled
+    [string]$framework.Configuration=@{
+            SubscriptionId=$SubscriptionId
+            OutputPath=$OutputPath
+            OutputFormat=$OutputFormat
+            IncludeDestructive=$IncludeDestructive
+            Parallel=$Parallel
+            MaxParallelJobs=$MaxParallelJobs
+            Tags=$Tags
+            ExcludeTags=$ExcludeTags
+            RetryCount=$RetryCount
+            TimeoutMinutes=$TimeoutMinutes
+        }
+    [string]$framework.Initialize()
+
+        if (-not $MockEnabled) {
+    [string]$framework.PrepareTestEnvironment()
+    [string]$framework.ValidateInfrastructure()
+        }
+
+        if ($TestScope -in @('Security', 'All')) {
+    [string]$framework.RunSecurityTests()
+        }
+
+        if ($TestScope -in @('Compliance', 'All')) {
+    [string]$framework.RunComplianceTests()
+        }
+    [string]$results=$framework.RunTests()
+
+        if ($OutputFormat -ne 'Console') {
+    [string]$framework.GenerateReport($results)
+        }
+
+        write-Information "`nTest Execution Summary" -InformationAction Continue
+        write-Information "=====================" -InformationAction Continue
+        write-Information "Total: $($results.TotalCount)" -InformationAction Continue
+        write-Information "Passed: $($results.PassedCount)" -InformationAction Continue
+        write-Information "Failed: $($results.FailedCount)" -InformationAction Continue
+        write-Information "Skipped: $($results.SkippedCount)" -InformationAction Continue
+        write-Information "Duration: $($framework.Timer.Elapsed)" -InformationAction Continue
+    [string]$PassRate=if ($results.TotalCount -gt 0) {
+            [Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2)
+        } else { 0 }
+
+        write-Information "Pass Rate: $PassRate%" -InformationAction Continue
+
+        if ($IncludeDestructive -and $PSCmdlet.ShouldProcess($ResourceGroupName, "Cleanup test resources")) {
+    [string]$framework.Cleanup()
+        }
+
+        return $results
+    }
+    catch {
+        write-Error "Test framework failed: $_"
+        throw
+    }
+    finally {
+        if ($framework.Timer.IsRunning) {
+    [string]$framework.Timer.Stop()
+        }
+    }
+}
+
+end {
+    write-Information "`nAzure test execution completed" -InformationAction Continue
+    if (Test-Path $OutputPath) {
+        write-Information "Reports saved to: $OutputPath" -InformationAction Continue
+    }
+}
+
+
+.SourceAddressPrefix -eq '*'
+}
+
+                            if ($RiskyRules) {
+    [string]$issues += "NSG $($nsg.Name) has risky inbound rules"
+                            }
+                        }
+
+                        return @{
+                            NSGCount=$nsgs.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+                @{
+                    Name='Storage Account Security'
+                    Check={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$issues=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if ($account.EnableHttpsTrafficOnly -ne $true) {
+    [string]$issues += "$($account.StorageAccountName) does not enforce HTTPS"
+}
+                            if ($account.AllowBlobPublicAccess -eq $true) {
+    [string]$issues += "$($account.StorageAccountName) allows public blob access"
+                            }
+                        }
+
+                        return @{
+                            StorageAccountCount=$StorageAccounts.Count
+                            Issues=$issues
+                        }
+                    }
+                }
+            )
+
+            foreach ($check in $SecurityChecks) {
+                try {
+                    write-Information "  Running: $($check.Name)" -InformationAction Continue
+    [string]$result=& $check.Check
+
+                    if ($result.Issues -and $result.Issues.Count -gt 0) {
+                        write-Warning "    Security issues found:"
+    [string]$result.Issues | foreach {
+                            write-Warning "      $_"
+                        }
+                    }
+                    else {
+                        write-Information "    No security issues found" -InformationAction Continue
+                    }
+                }
+                catch {
+                    write-Warning "  Security check failed: $($check.Name) - $_"
+                }
+            }
+        }
+
+        [void] RunComplianceTests() {
+            write-Information "Running compliance validation..." -InformationAction Continue
+    [string]$ComplianceRules=@(
+                @{
+                    Name='Resource Tagging'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$untagged=$resources | where { -not $_.Tags -or $_.Tags.Count -eq 0 }
+
+                        if ($untagged) {
+                            return @{
+                                Compliant=$false
+                                Message="$($untagged.Count) resources without tags"
+                                Resources=$untagged.Name
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Encryption at Rest'
+                    Rule={
+    [string]$StorageAccounts=Get-AzStorageAccount -ResourceGroupName $this.ResourceGroupName -ErrorAction SilentlyContinue
+    [string]$unencrypted=@()
+    [string]$StorageAccounts | ForEach-Object {
+    if (-not $account.Encryption.Services.Blob.Enabled) {
+    [string]$unencrypted += $account.StorageAccountName
+}
+                        }
+
+                        if ($unencrypted) {
+                            return @{
+                                Compliant=$false
+                                Message="Storage accounts without encryption: $($unencrypted -join ', ')"
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+                @{
+                    Name='Diagnostic Settings'
+                    Rule={
+    [string]$resources=Get-AzResource -ResourceGroupName $this.ResourceGroupName
+    [string]$WithoutDiagnostics=@()
+    [string]$resources | ForEach-Object {
+    [string]$diagnostics=Get-AzDiagnosticSetting -ResourceId $resource.Id -ErrorAction SilentlyContinue
+                            if (-not $diagnostics) {
+    [string]$WithoutDiagnostics += $resource.Name
+}
+                        }
+
+                        if ($WithoutDiagnostics.Count -gt ($resources.Count * 0.5)) {
+                            return @{
+                                Compliant=$false
+                                Message='More than 50% of resources lack diagnostic settings'
+                            }
+                        }
+
+                        return @{ Compliant=$true }
+                    }
+                }
+            )
+    [string]$ComplianceScore=0
+    [string]$TotalRules=$ComplianceRules.Count
+
+            foreach ($rule in $ComplianceRules) {
+                try {
+                    write-Information "  Checking: $($rule.Name)" -InformationAction Continue
+    [string]$result=& $rule.Rule
+
+                    if ($result.Compliant) {
+                        write-Information "    Compliant" -InformationAction Continue
+    [string]$ComplianceScore++
+                    }
+                    else {
+                        write-Warning "    Non-compliant: $($result.Message)"
+                    }
+                }
+                catch {
+                    write-Warning "  Compliance check failed: $($rule.Name) - $_"
+                }
+            }
+    [string]$percentage=[Math]::Round(($ComplianceScore / $TotalRules) * 100, 2)
+            write-Information "Overall Compliance Score: $percentage%" -InformationAction Continue
+        }
+
+        [void] Cleanup() {
+            if ($this.MockMode -or -not $this.Configuration.IncludeDestructive) {
+                write-Information "Skipping cleanup" -InformationAction Continue
+                return
+            }
+
+            write-Information "Cleaning up test resources..." -InformationAction Continue
+
+            foreach ($resource in $this.ResourcesCreated) {
+                try {
+                    switch ($resource.Type) {
+                        'ResourceGroup' {
+                            write-Information "  Removing resource group: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResourceGroup -Name $resource.Name -Force -AsJob
+                        }
+                        default {
+                            write-Information "  Removing resource: $($resource.Name)" -InformationAction Continue
+                            Remove-AzResource -ResourceId $resource.Id -Force
+                        }
+                    }
+                }
+                catch {
+                    write-Warning "Failed to cleanup $($resource.Type): $($resource.Name) - $_"
+                }
+            }
+        }
+
+        [void] GenerateReport([PSObject]$results) {
+    [string]$ReportPath=Join-Path $this.Configuration.OutputPath "AzureTestReport_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+
+            switch ($this.Configuration.OutputFormat) {
+                'HTML' {
+    [string]$this.GenerateHtmlReport($results, "$ReportPath.html")
+                }
+                'JSON' {
+    [string]$results | ConvertTo-Json -Depth 10 | Out-File "$ReportPath.json" -Encoding UTF8
+                    write-Information "JSON report saved: $ReportPath.json" -InformationAction Continue
+                }
+                'JUnit' {
+    [string]$this.GenerateJUnitReport($results, "$ReportPath.xml")
+                }
+                'AzureDevOps' {
+    [string]$this.GenerateAzureDevOpsReport($results, "$ReportPath.md")
+                }
+            }
+        }
+
+        [void] GenerateHtmlReport([PSObject]$results, [string]$path) {
+    [string]$html=@"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Azure Infrastructure Test Report</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background:
+        h1 { margin: 0; }
+        .container { max-width: 1200px; margin: auto; background: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+        .metric { text-align: center; padding: 15px; background:
+        .metric-value { font-size: 2em; font-weight: bold; color:
+        .metric-label { color:
+        .passed { color:
+        .failed { color:
+        .skipped { color:
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { background:
+        td { padding: 10px; border-bottom: 1px solid
+        .footer { text-align: center; padding: 20px; color:
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Azure Infrastructure Test Report</h1>
+            <p>Environment: $($this.TestEnvironment) | Scope: $($this.TestScope)</p>
+            <p>Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</p>
+        </div>
+        <div class="summary">
+            <div class="metric'>
+                <div class='metric-value">$($results.TotalCount)</div>
+                <div class="metric-label">Total Tests</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value passed">$($results.PassedCount)</div>
+                <div class="metric-label'>Passed</div>
+            </div>
+            <div class='metric'>
+                <div class='metric-value failed">$($results.FailedCount)</div>
+                <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric'>
+                <div class='metric-value skipped">$($results.SkippedCount)</div>
+                <div class="metric-label">Skipped</div>
+            </div>
+        </div>
+        <div style="padding: 20px;'>
+            <h2>Test Details</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+'@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$html += @"
+                    <tr>
+                        <td>$($test.Name)</td>
+                        <td>$($test.Duration.TotalMilliseconds) ms</td>
+                        <td class="$($status.ToLower())">$status</td>
+                        <td>$(if ($test.ErrorRecord) { $test.ErrorRecord.Exception.Message } else { '-' })</td>
+                    </tr>
+"@
+            }
+    [string]$html += @'
+                </tbody>
+            </table>
+        </div>
+        <div class='footer">
+            <p>Azure Test Framework v3.0.0 | Duration: $($this.Timer.Elapsed)</p>
+        </div>
+    </div>
+</body>
+</html>
+"@
+    [string]$html | Out-File -FilePath $path -Encoding UTF8
+            write-Information "HTML report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateJUnitReport([PSObject]$results, [string]$path) {
+    [string]$xml=@"
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Azure Infrastructure Tests" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+    <testsuite name="$($this.TestScope)" tests="$($results.TotalCount)' failures='$($results.FailedCount)" time="$($results.Duration.TotalSeconds)">
+"@
+            foreach ($test in $results.Tests) {
+    [string]$xml += "        <testcase name=`"$($test.Name)`" time=`"$($test.Duration.TotalSeconds)`''
+                if ($test.Passed) {
+    [string]$xml += ' />`n'
+                }
+                elseif ($test.Skipped) {
+    [string]$xml += "><skipped /></testcase>`n"
+                }
+                else {
+    [string]$xml += "><failure>$($test.ErrorRecord.Exception.Message)</failure></testcase>`n"
+                }
+            }
+    [string]$xml += @"
+    </testsuite>
+</testsuites>
+"@
+    [string]$xml | Out-File -FilePath $path -Encoding UTF8
+            write-Information "JUnit report saved: $path" -InformationAction Continue
+        }
+
+        [void] GenerateAzureDevOpsReport([PSObject]$results, [string]$path) {
+    [string]$markdown=@"
+
+- **Total Tests**: $($results.TotalCount)
+- **Passed**: $($results.PassedCount)
+- **Failed**: $($results.FailedCount)
+- **Skipped**: $($results.SkippedCount)
+- **Duration**: $($results.Duration)
+- **Pass Rate**: $([Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2))%
+
+- **Environment**: $($this.TestEnvironment)
+- **Resource Group**: $($this.ResourceGroupName)
+- **Location**: $($this.Location)
+- **Mock Mode**: $($this.MockMode)
+
+| Test | Duration | Status |
+|------|----------|--------|
+"@
+            foreach ($test in $results.Tests) {
+    [string]$status=if ($test.Passed) { 'Passed' } elseif ($test.Skipped) { 'Skipped' } else { 'Failed' }
+    [string]$markdown += "| $($test.Name) | $($test.Duration.TotalMilliseconds)ms | $status |`n"
+            }
+    [string]$markdown | Out-File -FilePath $path -Encoding UTF8
+            write-Information "Azure DevOps report saved: $path" -InformationAction Continue
+        }
+    }
+
+    write-Information "Azure Infrastructure Test Framework v3.0.0" -InformationAction Continue
+    write-Information "==========================================" -InformationAction Continue
+}
+
+process {
+    try {
+    [string]$framework=[AzureTestFramework]::new()
+    [string]$framework.TestScope=$TestScope
+    [string]$framework.ResourceGroupName=$ResourceGroupName
+    [string]$framework.Location=$Location
+    [string]$framework.TestEnvironment=$TestEnvironment
+    [string]$framework.MockMode=$MockEnabled
+    [string]$framework.Configuration=@{
+            SubscriptionId=$SubscriptionId
+            OutputPath=$OutputPath
+            OutputFormat=$OutputFormat
+            IncludeDestructive=$IncludeDestructive
+            Parallel=$Parallel
+            MaxParallelJobs=$MaxParallelJobs
+            Tags=$Tags
+            ExcludeTags=$ExcludeTags
+            RetryCount=$RetryCount
+            TimeoutMinutes=$TimeoutMinutes
+        }
+    [string]$framework.Initialize()
+
+        if (-not $MockEnabled) {
+    [string]$framework.PrepareTestEnvironment()
+    [string]$framework.ValidateInfrastructure()
+        }
+
+        if ($TestScope -in @('Security', 'All')) {
+    [string]$framework.RunSecurityTests()
+        }
+
+        if ($TestScope -in @('Compliance', 'All')) {
+    [string]$framework.RunComplianceTests()
+        }
+    [string]$results=$framework.RunTests()
+
+        if ($OutputFormat -ne 'Console') {
+    [string]$framework.GenerateReport($results)
+        }
+
+        write-Information "`nTest Execution Summary" -InformationAction Continue
+        write-Information "=====================" -InformationAction Continue
+        write-Information "Total: $($results.TotalCount)" -InformationAction Continue
+        write-Information "Passed: $($results.PassedCount)" -InformationAction Continue
+        write-Information "Failed: $($results.FailedCount)" -InformationAction Continue
+        write-Information "Skipped: $($results.SkippedCount)" -InformationAction Continue
+        write-Information "Duration: $($framework.Timer.Elapsed)" -InformationAction Continue
+    [string]$PassRate=if ($results.TotalCount -gt 0) {
+            [Math]::Round(($results.PassedCount / $results.TotalCount) * 100, 2)
+        } else { 0 }
+
+        write-Information "Pass Rate: $PassRate%" -InformationAction Continue
+
+        if ($IncludeDestructive -and $PSCmdlet.ShouldProcess($ResourceGroupName, "Cleanup test resources")) {
+    [string]$framework.Cleanup()
+        }
+
+        return $results
+    }
+    catch {
+        write-Error "Test framework failed: $_"
+        throw
+    }
+    finally {
+        if ($framework.Timer.IsRunning) {
+    [string]$framework.Timer.Stop()
+        }
+    }
+}
+
+end {
+    write-Information "`nAzure test execution completed" -InformationAction Continue
+    if (Test-Path $OutputPath) {
+        write-Information "Reports saved to: $OutputPath" -InformationAction Continue
+    }
+`n}

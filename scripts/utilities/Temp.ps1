@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Compute
 
@@ -10,7 +10,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -57,18 +56,13 @@ $SubnetName = -join (" $VMName" , "-subnet" )
 $SubnetAddressPrefix = " 10.0.0.0/24"
 $VnetAddressPrefix = " 10.0.0.0/16"
 $NSGName = -join (" $VMName" , "-nsg" )
-    # IpTagType = "FirstPartyUsage"
-    # Tag       = " /Sql"
 $SourceAddressPrefix = (Invoke-WebRequest -uri " http://ifconfig.me/ip" ).Content #Gets the public IP of the current machine;
 $SourceAddressPrefixCIDR = -join (" $SourceAddressPrefix" , "/32" )
 $setAzVMAutoShutdownSplat = @{
-    # ResourceGroupName = 'RG-WE-001'
     ResourceGroupName = $ResourceGroupName
-    # Name              = 'MYVM001'
     Name              = $VMName
     Enable            = $true
     Time              = '23:59'
-    # TimeZone = "W. Europe Standard Time"
     TimeZone          = "Central Standard Time"
     Email             = " abdullah@canadacomputing.ca"
 }

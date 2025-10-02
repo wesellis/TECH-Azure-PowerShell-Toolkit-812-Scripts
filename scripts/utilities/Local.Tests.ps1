@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Local.Tests
@@ -16,12 +16,12 @@ Describe "Convert-StringToLines" {
     BeforeAll {
         $newline = [System.Environment]::NewLine
         $ErrorActionPreference = 'Stop'
-        $dataFolder = " $(Split-Path $PSCommandPath -Parent)/data/validate-deploymentfile-tests"
+        $DataFolder = " $(Split-Path $PSCommandPath -Parent)/data/validate-deploymentfile-tests"
         Import-Module " $(Split-Path $PSCommandPath -Parent)/../ci-scripts/Local.psm1" -Force
         function Test-ConvertStringToLinesAndViceVersa(
             [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Original,
+    $Original,
             [string[]]$Expected
         ) {
 $a = Convert-StringToLines $Original
@@ -38,4 +38,4 @@ $b = Convert-LinesToString $a
         Test-ConvertStringToLinesAndViceVersa " abc$($newline)def$($newline)ghi" @(" abc" , "def" , "ghi" )
         Test-ConvertStringToLinesAndViceVersa " abc$($newline)$($newline)def" @(" abc" , "" , "def" )
     }
-}
+`n}

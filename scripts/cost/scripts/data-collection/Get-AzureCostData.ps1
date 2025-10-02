@@ -1,16 +1,25 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+<#
+.SYNOPSIS
+    Get AzureCostData
 
-<#`n.SYNOPSIS
-        Tests if user is connected to Azure
-    #>
+.DESCRIPTION
+    Azure PowerShell automation script
+
+.AUTHOR
+    Wesley Ellis (wes@wesellis.com)
+#>
+
+#Requires -Version 7.4
+#Requires -Modules Az.Resources
+    [string]$ErrorActionPreference = 'Stop'
+
     try {
-        $context = Get-AzContext -ErrorAction Stop
+$context = Get-AzContext -ErrorAction Stop
         if (-not $context) {
             Write-Warning "Not connected to Azure. Please run Connect-AzAccount first."
             return $false
         }
-        
+
         Write-Verbose "Connected to Azure as: $($context.Account.Id)"
         Write-Verbose "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
         return $true
@@ -21,12 +30,7 @@
     }
 }
 
-[OutputType([bool])]
- {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Retrieves cost data from Azure Cost Management API
-    #>
+function Write-Log {
     param(
         [string]$Subscription,
         [string]$ResourceGroup,
@@ -34,36 +38,31 @@
         [datetime]$End,
         [string]$DataGranularity
     )
-    
+
     try {
         Write-Progress -Activity "Retrieving Azure Cost Data" -Status "Connecting to Cost Management API..." -PercentComplete 25
-        
-        # Set scope based on parameters
+
         if ($ResourceGroup) {
-            $scope = "/subscriptions/$Subscription/resourceGroups/$ResourceGroup"
+    [string]$scope = "/subscriptions/$Subscription/resourceGroups/$ResourceGroup"
             Write-Verbose "Analyzing costs for Resource Group: $ResourceGroup"
         }
         else {
-            $scope = "/subscriptions/$Subscription"
+    [string]$scope = "/subscriptions/$Subscription"
             Write-Verbose "Analyzing costs for entire subscription: $Subscription"
         }
-        
-        # Format dates for API
-        $startDateString = $Start.ToString("yyyy-MM-dd")
-        $endDateString = $End.ToString("yyyy-MM-dd")
-        
-        Write-Verbose "Date range: $startDateString to $endDateString"
+    [string]$StartDateString = $Start.ToString("yyyy-MM-dd")
+    [string]$EndDateString = $End.ToString("yyyy-MM-dd")
+
+        Write-Verbose "Date range: $StartDateString to $EndDateString"
         Write-Verbose "Granularity: $DataGranularity"
-        
+
         Write-Progress -Activity "Retrieving Azure Cost Data" -Status "Querying cost data..." -PercentComplete 50
-        
-        # Query cost data using Cost Management API
-        $costData = Invoke-AzRestMethod -Path "/providers/Microsoft.CostManagement/query" -Method POST -Payload @{
+    [string]$CostData = Invoke-AzRestMethod -Path "/providers/Microsoft.CostManagement/query" -Method POST -Payload @{
             type = "ActualCost"
             timeframe = "Custom"
             timePeriod = @{
-                from = $startDateString
-                to = $endDateString
+                from = $StartDateString
+                to = $EndDateString
             }
             dataset = @{
                 granularity = $DataGranularity
@@ -89,24 +88,22 @@
                 )
             }
         } -Scope $scope | ConvertFrom-Json
-        
+
         Write-Progress -Activity "Retrieving Azure Cost Data" -Status "Processing results..." -PercentComplete 75
-        
-        # Process and format the results
-        $results = @()
-        foreach ($row in $costData.properties.rows) {
-            $results += [PSCustomObject]@{
+    [string]$results = @()
+        foreach ($row in $CostData.properties.rows) {
+    [string]$results += [PSCustomObject]@{
                 Date = $row[0]
                 ResourceGroup = $row[1]
                 ServiceName = $row[2]
                 Location = $row[3]
                 Cost = [math]::Round([decimal]$row[4], 2)
-                Currency = $costData.properties.columns[4].name
+                Currency = $CostData.properties.columns[4].name
             }
         }
-        
+
         Write-Progress -Activity "Retrieving Azure Cost Data" -Completed
-        
+
         return $results
     }
     catch {
@@ -116,36 +113,32 @@
 }
 
 function Export-CostData {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Exports cost data to specified format and location
-    #>
     param(
         [object[]]$Data,
         [string]$Path,
         [string]$Format
     )
-    
+
     try {
         Write-Verbose "Exporting $($Data.Count) records to $Format format"
-        
+
         switch ($Format) {
             'CSV' {
-                $Data | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
+    [string]$Data | Export-Csv -Path $Path -NoTypeInformation -Encoding UTF8
                 Write-Host "Cost data exported to: $Path" -ForegroundColor Green
             }
             'JSON' {
-                $Data | ConvertTo-Json -Depth 5 | Out-File -FilePath $Path -Encoding UTF8
+    [string]$Data | ConvertTo-Json -Depth 5 | Out-File -FilePath $Path -Encoding UTF8
                 Write-Host "Cost data exported to: $Path" -ForegroundColor Green
             }
             'Excel' {
-                $Data | Export-Excel -Path $Path -WorksheetName 'Azure Costs' -AutoSize -FreezeTopRow -BoldTopRow
+    [string]$Data | Export-Excel -Path $Path -WorksheetName 'Azure Costs' -AutoSize -FreezeTopRow -BoldTopRow
                 Write-Host "Cost data exported to: $Path" -ForegroundColor Green
             }
             'Console' {
-                $Data | Format-Table -AutoSize
+    [string]$Data | Format-Table -AutoSize
             }
-        
+
 } catch {
         Write-Error "Failed to export data: $($_.Exception.Message)"
         throw
@@ -153,113 +146,98 @@ function Export-CostData {
 }
 
 function Show-CostSummary {
-    [CmdletBinding()]
-    <#`n.SYNOPSIS
-        Displays a summary of cost data
-    #>
     param([object[]]$Data)
-    
+
     if ($Data.Count -eq 0) {
         Write-Warning "No cost data found for the specified criteria."
         return
     }
-    
-    $totalCost = ($Data | Measure-Object -Property Cost -Sum).Sum
-    $avgDailyCost = $totalCost / (($EndDate - $StartDate).Days + 1)
-    $topServices = $Data | Group-Object ServiceName | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
-    $topResourceGroups = $Data | Group-Object ResourceGroup | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
-    
-    Write-Host "`n$('=' * 60)" -ForegroundColor Cyan
-    Write-Host "COST ANALYSIS SUMMARY" -ForegroundColor White
-    Write-Host "$('=' * 60)" -ForegroundColor Cyan
-    Write-Host "Analysis Period: $($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor White
-    Write-Host "Total Cost: $($totalCost.ToString('C'))" -ForegroundColor Green
-    Write-Host "Average Daily Cost: $($avgDailyCost.ToString('C'))" -ForegroundColor Yellow
-    Write-Host "Number of Records: $($Data.Count)" -ForegroundColor White
-    
-    Write-Host "`nTop 5 Services by Cost:" -ForegroundColor White
-    foreach ($service in $topServices) {
-        $serviceCost = ($service.Group | Measure-Object Cost -Sum).Sum
-        Write-Host "  - $($service.Name): $($serviceCost.ToString('C'))" -ForegroundColor Gray
+    [string]$TotalCost = ($Data | Measure-Object -Property Cost -Sum).Sum
+    [string]$AvgDailyCost = $TotalCost / (($EndDate - $StartDate).Days + 1)
+    [string]$TopServices = $Data | Group-Object ServiceName | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
+    [string]$TopResourceGroups = $Data | Group-Object ResourceGroup | Sort-Object { ($_.Group | Measure-Object Cost -Sum).Sum } -Descending | Select-Object -First 5
+
+    Write-Host "`n$('=' * 60)" -ForegroundColor Green
+    Write-Host "COST ANALYSIS SUMMARY" -ForegroundColor Green
+    Write-Host "$('=' * 60)" -ForegroundColor Green
+    Write-Host "Analysis Period: $($StartDate.ToString('yyyy-MM-dd')) to $($EndDate.ToString('yyyy-MM-dd'))" -ForegroundColor Green
+    Write-Host "Total Cost: $($TotalCost.ToString('C'))" -ForegroundColor Green
+    Write-Host "Average Daily Cost: $($AvgDailyCost.ToString('C'))" -ForegroundColor Green
+    Write-Host "Number of Records: $($Data.Count)" -ForegroundColor Green
+
+    Write-Host "`nTop 5 Services by Cost:" -ForegroundColor Green
+    foreach ($service in $TopServices) {
+    [string]$ServiceCost = ($service.Group | Measure-Object Cost -Sum).Sum
+        Write-Host "  - $($service.Name): $($ServiceCost.ToString('C'))" -ForegroundColor Green
     }
-    
-    Write-Host "`nTop 5 Resource Groups by Cost:" -ForegroundColor White
-    foreach ($rg in $topResourceGroups) {
-        $rgCost = ($rg.Group | Measure-Object Cost -Sum).Sum
-        Write-Host "  - $($rg.Name): $($rgCost.ToString('C'))" -ForegroundColor Gray
+
+    Write-Host "`nTop 5 Resource Groups by Cost:" -ForegroundColor Green
+    foreach ($rg in $TopResourceGroups) {
+    [string]$RgCost = ($rg.Group | Measure-Object Cost -Sum).Sum
+        Write-Host "  - $($rg.Name): $($RgCost.ToString('C'))" -ForegroundColor Green
     }
-    
-    Write-Host "$('=' * 60)`n" -ForegroundColor Cyan
+
+    Write-Host "$('=' * 60)`n" -ForegroundColor Green
 }
 
-#region Main-Execution
 try {
-    Write-Host "Azure Cost Management Data Retrieval Tool" -ForegroundColor White
-    Write-Host "==========================================" -ForegroundColor White
+    Write-Host "Azure Cost Management Data Retrieval Tool" -ForegroundColor Green
+    Write-Host "==========================================" -ForegroundColor Green
 
-    # Test Azure connection
     if (-not (Test-AzureConnection)) {
-        Write-Host "Please authenticate to Azure first using Connect-AzAccount" -ForegroundColor Red
+        Write-Host "Please authenticate to Azure first using Connect-AzAccount" -ForegroundColor Green
         throw "Azure authentication required"
     }
-    
-    # Set default subscription if not provided
+
     if (-not $SubscriptionId) {
-        $context = Get-AzContext -ErrorAction Stop
-        $SubscriptionId = $context.Subscription.Id
+$context = Get-AzContext -ErrorAction Stop
+    [string]$SubscriptionId = $context.Subscription.Id
         Write-Verbose "Using default subscription: $SubscriptionId"
     }
-    
-    # Validate subscription access
+
     try {
-        $subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
+$subscription = Get-AzSubscription -SubscriptionId $SubscriptionId
         Write-Verbose "Subscription validated: $($subscription.Name)"
     }
     catch {
         Write-Error "Cannot access subscription $SubscriptionId. Please check your permissions."
         throw
     }
-    
-    # Validate date range
+
     if ($StartDate -gt $EndDate) {
         Write-Error "Start date cannot be after end date."
         throw "Invalid date range"
     }
-    
+
     if ($EndDate -gt (Get-Date)) {
         Write-Warning "End date is in the future. Setting to current date."
-        $EndDate = Get-Date -ErrorAction Stop
+$EndDate = Get-Date -ErrorAction Stop
     }
-    
-    # Retrieve cost data
-    Write-Host "Retrieving cost data..." -ForegroundColor Cyan
-    $costData = Get-CostManagementData -Subscription $SubscriptionId -ResourceGroup $ResourceGroupName -Start $StartDate -End $EndDate -DataGranularity $Granularity
-    
-    # Display summary
-    Show-CostSummary -Data $costData
-    
-    # Export data if path provided
+
+    Write-Host "Retrieving cost data..." -ForegroundColor Green
+$CostData = Get-CostManagementData -Subscription $SubscriptionId -ResourceGroup $ResourceGroupName -Start $StartDate -End $EndDate -DataGranularity $Granularity
+
+    Show-CostSummary -Data $CostData
+
     if ($ExportPath) {
-        # Determine format from file extension if not specified
         if ($OutputFormat -eq 'Console') {
-            $extension = [System.IO.Path]::GetExtension($ExportPath).ToLower()
+    [string]$extension = [System.IO.Path]::GetExtension($ExportPath).ToLower()
             switch ($extension) {
                 '.csv' { $OutputFormat = 'CSV' }
                 '.json' { $OutputFormat = 'JSON' }
                 '.xlsx' { $OutputFormat = 'Excel' }
                 default {
                     Write-Warning "Unknown file extension. Defaulting to CSV format."
-                    $OutputFormat = 'CSV'
-                    $ExportPath = [System.IO.Path]::ChangeExtension($ExportPath, '.csv')
+    [string]$OutputFormat = 'CSV'
+    [string]$ExportPath = [System.IO.Path]::ChangeExtension($ExportPath, '.csv')
                 }
             }
         }
-        
-        Export-CostData -Data $costData -Path $ExportPath -Format $OutputFormat
+
+        Export-CostData -Data $CostData -Path $ExportPath -Format $OutputFormat
     }
-    
-    # Return data for pipeline usage
-    return $costData
+
+    return $CostData
 }
 catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
@@ -267,8 +245,4 @@ catch {
     throw
 }
 finally {
-    Write-Verbose "Script execution completed."
-}
-
-#endregion
-
+    Write-Verbose "Script execution completed."`n}

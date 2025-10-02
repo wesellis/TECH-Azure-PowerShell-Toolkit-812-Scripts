@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -10,33 +10,30 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -53,15 +50,14 @@ param(
     [string]$SubnetName = " default" ,
     [string]$SubnetPrefix
 )
-Write-Host "Provisioning Virtual Network: $VnetName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Address Prefix: $AddressPrefix"
+Write-Output "Provisioning Virtual Network: $VnetName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "Address Prefix: $AddressPrefix"
 if ($SubnetPrefix) {
-    $SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix $SubnetPrefix
-    Write-Host "Subnet: $SubnetName ($SubnetPrefix)"
-    # Create virtual network with subnet
-   $params = @{
+    [string]$SubnetConfig = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix $SubnetPrefix
+    Write-Output "Subnet: $SubnetName ($SubnetPrefix)"
+    $params = @{
        ResourceGroupName = $ResourceGroupName
        Location = $Location
        AddressPrefix = $AddressPrefix
@@ -71,8 +67,7 @@ if ($SubnetPrefix) {
    }
    ; @params
 } else {
-    # Create virtual network without subnet
-   $params = @{
+    $params = @{
        ErrorAction = "Stop"
        AddressPrefix = $AddressPrefix
        ResourceGroupName = $ResourceGroupName
@@ -81,11 +76,8 @@ if ($SubnetPrefix) {
    }
    ; @params
 }
-Write-Host "Virtual Network $VnetName provisioned successfully"
-Write-Host "VNet ID: $($VNet.Id)"
+Write-Output "Virtual Network $VnetName provisioned successfully"
+Write-Output "VNet ID: $($VNet.Id)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

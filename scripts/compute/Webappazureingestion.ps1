@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,7 +9,6 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -17,8 +16,8 @@
 $ErrorActionPreference = "Stop"
 $StartTime = [dateTime]::Now.Subtract([TimeSpan]::FromMinutes(5))
 $Timestampfield = "Timestamp"
-$customerID = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_ID'
-$sharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
+$CustomerID = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_ID'
+$SharedKey = Get-AutomationVariable -Name 'OPSINSIGHTS_WS_KEY'
 "Logging in to Azure..."
 $Conn = Get-AutomationConnection -Name AzureRunAsConnection
  $params = @{
@@ -29,47 +28,38 @@ $Conn = Get-AutomationConnection -Name AzureRunAsConnection
  Add-AzureRMAccount @params
 "Selecting Azure subscription..."
 Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
-$logType  = " webappazure"
-"Logtype Name is $logType"
-$WebApps = Find-AzureRmResource -ResourceType Microsoft.Web/sites #|where -Property Kind -eq Webapp
+$LogType  = " webappazure"
+"Logtype Name is $LogType"
+$WebApps = Find-AzureRmResource -ResourceType Microsoft.Web/sites
 if($WebApps -ne $Null)
 {
 	foreach($WebApp in $WebApps)
 	{
-		# Get resource usage metrics for a webapp for the specified time interval.
-		# This example will run every 10 minutes on a schedule and gather data points for 30+ metrics leveraging the ARM API
         $Metrics = @()
         $Metrics = $Metrics + (Get-AzureRmMetric -ResourceId $WebApp.ResourceId -TimeGrain ([TimeSpan]::FromMinutes(1)) -StartTime $StartTime)
-		# Format metrics into a table.
 $table = @()
         foreach($metric in $Metrics)
         {
 			if($metric.MetricValues.Count -ne 0)
 			{
-				foreach($metricValue in $metric.MetricValues)
+				foreach($MetricValue in $metric.MetricValues)
 				{
 $sx = New-Object -ErrorAction Stop PSObject -Property @{
-						Timestamp = $metricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
+						Timestamp = $MetricValue.Timestamp.ToUniversalTime().ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" )
 						MetricName = $metric.Name;
-						Average = $metricValue.Average;
+						Average = $MetricValue.Average;
 						SubscriptionID = $Conn.SubscriptionID;
 						ResourceGroup = $WebApp.ResourceGroupName;
 						ServerName = $WebApp.Name
 					}
 					$table = $table = $table + $sx
 				}
-				# Convert table to a JSON document for ingestion
-$jsonTable = ConvertTo-Json -InputObject $table
+$JsonTable = ConvertTo-Json -InputObject $table
 			}
 		}
-		# Uncomment below to troubleshoot
-		# $jsonTable
-		if ($jsonTable -ne $Null)
+		if ($JsonTable -ne $Null)
 		{
-			#Post the data to the endpoint - looking for an " accepted" response code
-			Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonTable -logType $logType -TimeStampField $Timestampfield
+			Send-OMSAPIIngestionFile -customerId $CustomerId -sharedKey $SharedKey -body $JsonTable -logType $LogType -TimeStampField $Timestampfield
 		}
     }
-}
-
-
+`n}

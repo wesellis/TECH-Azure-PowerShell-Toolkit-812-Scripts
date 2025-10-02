@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,66 +9,60 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    $ErrorActionPreference = "Stop"
+    $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Message,
+    $Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
-        [string]$Level = "INFO"
+        $Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    $LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$ResourceGroupName,
+    $ResourceGroupName,
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$Location,
+    $Location,
     [Parameter()]
     [hashtable]$Tags = @{}
 )
-Write-Host "Creating Resource Group: $ResourceGroupName"
+Write-Output "Creating Resource Group: $ResourceGroupName"
 if ($Tags.Count -gt 0) {
-$resourcegroupSplat = @{
+    $ResourcegroupSplat = @{
     Name = $ResourceGroupName
     Location = $Location
     Tag = $Tags
 }
 New-AzResourceGroup @resourcegroupSplat
-    Write-Host "Tags applied:"
+    Write-Output "Tags applied:"
     foreach ($Tag in $Tags.GetEnumerator()) {
-        Write-Host "  $($Tag.Key): $($Tag.Value)"
+        Write-Output "  $($Tag.Key): $($Tag.Value)"
     }
 } else {
-$ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
+    $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location $Location
 }
-Write-Host "Resource Group created successfully:"
-Write-Host "Name: $($ResourceGroup.ResourceGroupName)"
-Write-Host "Location: $($ResourceGroup.Location)"
-Write-Host "Provisioning State: $($ResourceGroup.ProvisioningState)"
-Write-Host "Resource ID: $($ResourceGroup.ResourceId)"
+Write-Output "Resource Group created successfully:"
+Write-Output "Name: $($ResourceGroup.ResourceGroupName)"
+Write-Output "Location: $($ResourceGroup.Location)"
+Write-Output "Provisioning State: $($ResourceGroup.ProvisioningState)"
+Write-Output "Resource ID: $($ResourceGroup.ResourceId)"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

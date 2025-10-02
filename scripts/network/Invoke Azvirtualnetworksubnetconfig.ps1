@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Network
 
@@ -20,11 +20,8 @@ function Invoke-AzVirtualNetworkSubnetConfig  {
 $ErrorActionPreference = "Stop"
 $VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Invoke-AzVirtualNetworkSubnetConfig  {
-$newAzVirtualNetworkSubnetConfigSplat = @{
+$NewAzVirtualNetworkSubnetConfigSplat = @{
     Name          = $SubnetName
     AddressPrefix = $SubnetAddressPrefix
 };
-$SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat
-}
-
-
+$SingleSubnet = New-AzVirtualNetworkSubnetConfig -ErrorAction Stop @newAzVirtualNetworkSubnetConfigSplat`n}

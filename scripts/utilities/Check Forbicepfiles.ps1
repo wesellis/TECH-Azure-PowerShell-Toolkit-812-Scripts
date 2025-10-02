@@ -1,61 +1,100 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
-<#`n.SYNOPSIS
-    Check Forbicepfiles
+<#
+.SYNOPSIS
+    Check for Bicep files and compile them
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Detects which Bicep files need to be compiled and compiles them automatically.
+    This should be run upon merge of a sample to auto-create azuredeploy.json
 
-    1.0
+.PARAMETER SampleFolder
+    Path to the sample folder containing Bicep files
+
+.PARAMETER MainTemplateFilenameBicep
+    Name of the main Bicep template file
+
+.PARAMETER PrereqTemplateFilenameBicep
+    Name of the prerequisite Bicep template file
+
+.PARAMETER PrereqTemplateFileName
+    Name of the prerequisite JSON template file
+
+.PARAMETER TtkFolder
+    Path to the TTK (Template Toolkit) folder
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
 #>
-    Detect which bicep files need to be compiled and compile them - this should be run upon merge of a sample to auto-create azuredeploy.json
-[CmdletBinding()
-try {
-    # Main script execution
-]
-$ErrorActionPreference = "Stop"
+
 [CmdletBinding()]
 param(
     [Parameter()]
-    $sampleFolder = $ENV:SAMPLE_FOLDER,
+    [string]$SampleFolder = $ENV:SAMPLE_FOLDER,
+
     [Parameter()]
-    $mainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME,
+    [string]$MainTemplateFilenameBicep = $ENV:MAINTEMPLATE_FILENAME,
+
     [Parameter()]
-    $prereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+    [string]$PrereqTemplateFilenameBicep = $ENV:PREREQ_TEMPLATE_FILENAME_BICEP,
+
     [Parameter()]
-    $prereqTemplateFileName = $ENV:PREREQ_TEMPLATE_FILENAME_JSON,
+    [string]$PrereqTemplateFileName = $ENV:PREREQ_TEMPLATE_FILENAME_JSON,
+
     [Parameter()]
-    $ttkFolder = $ENV:TTK_FOLDER
+    [string]$TtkFolder = $ENV:TTK_FOLDER
 )
-Write-Host "Checking for bicep files in: $sampleFolder"
-$bicepFullPath = " $sampleFolder\$mainTemplateFilenameBicep"
-$isBicepFileFound = Test-Path $bicepFullPath
-$prereqBicepFullPath = " $sampleFolder\prereqs\$prereqTemplateFilenameBicep" ;
-$isBicepPrereqFileFound = Test-Path $prereqBicepFullPath
-Write-Output "Bicep files:"
-Write-Host $bicepFullPath
-Write-Host $prereqBicepFullPath
-Write-Output " ************************"
-if($isBicepFileFound -or $isBicepPrereqFileFound){
-    # Install Bicep
-    & " $ttKFolder\ci-scripts\Install-Bicep.ps1"
-    Get-Command -ErrorAction Stop bicep.exe
-    if($isBicepFileFound){
-        # build main.bicep to azuredeploy.json
-        Write-Output "Building: $sampleFolder\azuredeploy.json"
-        bicep build $bicepFullPath --outfile " $sampleFolder\azuredeploy.json"
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+try {
+    if ([string]::IsNullOrWhiteSpace($SampleFolder)) {
+        throw "SampleFolder parameter is required"
     }
-    if($isBicepPrereqFileFound){
-        # build prereq.main.bicep to prereq.azuredeploy.json
-        Write-Output "Building: $sampleFolder\prereqs\$prereqTemplateFileName"
-        bicep build $prereqBicepFullPath --outfile " $sampleFolder\prereqs\$prereqTemplateFileName"
+
+    Write-Output "Checking for bicep files in: $SampleFolder"
+
+    $BicepFullPath = "$SampleFolder\$MainTemplateFilenameBicep"
+    $IsBicepFileFound = Test-Path $BicepFullPath
+
+    $PrereqBicepFullPath = "$SampleFolder\prereqs\$PrereqTemplateFilenameBicep"
+    $IsBicepPrereqFileFound = Test-Path $PrereqBicepFullPath
+
+    Write-Output "Bicep files:"
+    Write-Output "  Main: $BicepFullPath (Found: $IsBicepFileFound)"
+    Write-Output "  Prereq: $PrereqBicepFullPath (Found: $IsBicepPrereqFileFound)"
+    Write-Output "************************"
+
+    if ($IsBicepFileFound -or $IsBicepPrereqFileFound) {
+        Write-Verbose "Installing Bicep CLI"
+        & "$TtkFolder\ci-scripts\Install-Bicep.ps1"
+
+        Write-Verbose "Verifying Bicep installation"
+        Get-Command -ErrorAction Stop bicep.exe
+
+        if ($IsBicepFileFound) {
+            $outputFile = "$SampleFolder\azuredeploy.json"
+            Write-Output "Building: $outputFile"
+            bicep build $BicepFullPath --outfile $outputFile
+            Write-Verbose "Successfully built main template"
+        }
+
+        if ($IsBicepPrereqFileFound) {
+            $prereqOutputFile = "$SampleFolder\prereqs\$PrereqTemplateFileName"
+            Write-Output "Building: $prereqOutputFile"
+            bicep build $PrereqBicepFullPath --outfile $prereqOutputFile
+            Write-Verbose "Successfully built prerequisite template"
+        }
+
+        Write-Output "Bicep compilation completed successfully"
+    } else {
+        Write-Output "No Bicep files found to compile"
     }
 }
-} catch {
+catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
     throw
 }
-
-

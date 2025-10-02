@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
@@ -10,56 +10,49 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
-    [string]$StorageAccountResourceGroupName = " azure-quickstarts-service-storage" ,
-    [string]$StorageAccountName = " azurequickstartsservice" ,
-    [string]$containerName = " ttk" ,
-    [string]$folderName = " latest" ,
-    [string]$ttkFileName = " arm-template-toolkit.zip" ,
+    $StorageAccountResourceGroupName = " azure-quickstarts-service-storage" ,
+    $StorageAccountName = " azurequickstartsservice" ,
+    $ContainerName = " ttk" ,
+    $FolderName = " latest" ,
+    $TtkFileName = " arm-template-toolkit.zip" ,
     [switch]$Staging,
     [switch]$Publish
 )
 if ($Staging) {
-    # Publish to staging folder instead of default (" latest" ) folder
-    $folderName = 'staging'
+    $FolderName = 'staging'
 }
-$releaseFiles = " ..\..\arm-ttk\arm-ttk" , ".\ci-scripts" , "..\Deploy-AzTemplate.ps1"
-Compress-Archive -DestinationPath $ttkFileName -Path $releaseFiles -Force
+    $ReleaseFiles = " ..\..\arm-ttk\arm-ttk" , ".\ci-scripts" , "..\Deploy-AzTemplate.ps1"
+Compress-Archive -DestinationPath $TtkFileName -Path $ReleaseFiles -Force
 Copy-Item " ..\..\arm-ttk\arm-ttk" -Destination " .\template-tests" -Recurse
-$releaseFiles = $releaseFiles + " .\template-tests"
-$releaseFiles = $releaseFiles -ne " ..\..\arm-ttk/arm-ttk"
-Compress-Archive -DestinationPath "AzTemplateToolkit.zip" -Path $releaseFiles -Force
+    $ReleaseFiles = $ReleaseFiles + " .\template-tests"
+    $ReleaseFiles = $ReleaseFiles -ne " ..\..\arm-ttk/arm-ttk"
+Compress-Archive -DestinationPath "AzTemplateToolkit.zip" -Path $ReleaseFiles -Force
 Remove-Item -ErrorAction Stop " -Force .\template-tests" -Recurse -Force
-$Target = "Target: storage account $StorageAccountName, container $containerName, folder $folderName"
+    $Target = "Target: storage account $StorageAccountName, container $ContainerName, folder $FolderName"
 if ($Publish) {
-    Write-Host "Publishing to $Target"
-$ctx = (Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroupName).Context
+    Write-Output "Publishing to $Target"
+    $ctx = (Get-AzStorageAccount -Name $StorageAccountName -ResourceGroupName $StorageAccountResourceGroupName).Context
     $params = @{
-        Properties = "@{"ContentType" = " application/x-zip-compressed" ; "CacheControl" = " no-cache" } Write-Host "Published"
-        File = $ttkFileName
+        Properties = "@{"ContentType" = " application/x-zip-compressed" ; "CacheControl" = " no-cache" } Write-Output "Published"
+        File = $TtkFileName
         Context = $ctx
-        Blob = " $folderName/$ttkFileName"
-        Container = $containerName
+        Blob = " $FolderName/$TtkFileName"
+        Container = $ContainerName
     }
     Set-AzStorageBlobContent @params
 }
 else {
-    Write-Host "If -Publish flag had been set, this would have published to $Target"
+    Write-Output "If -Publish flag had been set, this would have published to $Target"
 }
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

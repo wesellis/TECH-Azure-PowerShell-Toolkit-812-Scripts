@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Tptest
@@ -8,41 +8,38 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    $ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
   [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$Mode,
+    $Mode,
   [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$DataTransferMode,
+    $DataTransferMode,
   [int]$ThreadNumber,
   [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$BufferSize,
+    $BufferSize,
   [Parameter()]
     [ValidateNotNullOrEmpty()]
-    [string]$ReceiverIP,
+    $ReceiverIP,
   [int]$Duration,
   [int]$OverlappedBuffers
 )
-$AppFolder = " bandwidthmetermt"
-$AppPath = [Environment]::GetFolderPath("CommonApplicationData" )+" \" +$AppFolder
-$NTttcpSourceURL = "https://gallery.technet.microsoft.com/NTttcp-Version-528-Now-f8b12769/file/159655/1/NTttcp-v5.33.zip"
-$NTttcpArchive = $AppPath+" 
+    $AppFolder = " bandwidthmetermt"
+    $AppPath = [Environment]::GetFolderPath("CommonApplicationData" )+" \" +$AppFolder
+    $NTttcpSourceURL = "https://gallery.technet.microsoft.com/NTttcp-Version-528-Now-f8b12769/file/159655/1/NTttcp-v5.33.zip"
+    $NTttcpArchive = $AppPath+"
 Tttcp-v5.33.zip"
-$NTttcpPath = $AppPath+" \x86fre";
-$output = " out.xml"
+    $NTttcpPath = $AppPath+" \x86fre";
+    $output = " out.xml"
 if (!(Test-Path $AppPath)) {
     mkdir $AppPath | Out-Null
     Invoke-WebRequest $NTttcpSourceURL -OutFile $NTttcpArchive
@@ -60,9 +57,8 @@ if ($Mode -eq "Sender" ){$srmode = " -s" }
 else {$srmode = " -r" }
 & " $NTttcpPath
 Tttcp.exe" $srmode $dtmode -l $BufferSize -m " $ThreadNumber,*,$ReceiverIP" -a $OverlappedBuffers -t $Duration -xml $output | Out-Null
-$tp =([xml](Get-Content -ErrorAction Stop $output)).ntttcps.throughput
+    $tp =([xml](Get-Content -ErrorAction Stop $output)).ntttcps.throughput
 Write-Information -NoNewline ($tp | ? { $_.metric -match 'MB/s'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'mbps'} | % {$_.'#text'}) ($tp | ? { $_.metric -match 'buffers/s'} | % {$_.'#text'})
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}

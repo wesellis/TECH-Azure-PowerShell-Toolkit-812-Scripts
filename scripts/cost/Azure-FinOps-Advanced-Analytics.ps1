@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Module Az.Resources, Az.Profile, Az.Billing, Az.CostManagement
 <#`n.SYNOPSIS
@@ -42,7 +42,6 @@
     - Reserved Instance and Savings Plan optimization
     - Cost anomaly detection and alerting
     - Commitment-based discount analysis
-#>
 
 [CmdletBinding()]
 param(
@@ -65,7 +64,7 @@ param(
         if (-not (Test-Path -Path $_ -PathType Container)) {
             throw "Export path does not exist or is not a directory: $_"
         }
-        $true
+    [string]$true
     })]
     [string]$ExportPath,
 
@@ -80,13 +79,12 @@ param(
     [Parameter()]
     [string[]]$ExcludeResourceTypes = @()
 )
-
-# Global variables
-$script:AnalysisTimestamp = Get-Date -Format "yyyyMMdd-HHmm"
-$script:LogFile = "FinOps-Analysis-$script:AnalysisTimestamp.log"
-$script:CostData = @()
-$script:UsageData = @()
-$script:Recommendations = @()
+    [string]$ErrorActionPreference = 'Stop'
+    [string]$script:AnalysisTimestamp = Get-Date -Format "yyyyMMdd-HHmm"
+    [string]$script:LogFile = "FinOps-Analysis-$script:AnalysisTimestamp.log"
+    [string]$script:CostData = @()
+    [string]$script:UsageData = @()
+    [string]$script:Recommendations = @()
 
 class CostRecommendation {
     [string]$ResourceId
@@ -113,51 +111,45 @@ class CostForecast {
     [string]$SeasonalityFactor
 }
 
-[OutputType([PSObject])]
- {
+function Write-Log {
     param(
         [Parameter(Mandatory)]
         [string]$Message,
         [ValidateSet("Info", "Warning", "Error", "Success")]
         [string]$Level = "Info"
     )
-
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
+$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    [string]$LogEntry = "[$timestamp] [$Level] $Message"
 
     switch ($Level) {
-        "Info" { Write-Information $logEntry -InformationAction Continue }
-        "Warning" { Write-Warning $logEntry }
-        "Error" { Write-Error $logEntry }
-        "Success" { Write-Host $logEntry -ForegroundColor Green }
+        "Info" { Write-Information $LogEntry -InformationAction Continue }
+        "Warning" { Write-Warning $LogEntry }
+        "Error" { Write-Error $LogEntry }
+        "Success" { Write-Output $LogEntry -ForegroundColor Green }
     }
 
-    Add-Content -Path $script:LogFile -Value $logEntry
+    Add-Content -Path $script:LogFile -Value $LogEntry
 }
 
 function Test-Prerequisites {
     Write-LogMessage "Validating prerequisites for FinOps analysis..."
 
-    # Check PowerShell version
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         throw "PowerShell 7.0 or higher is required. Current version: $($PSVersionTable.PSVersion)"
     }
-
-    # Check required modules
-    $requiredModules = @("Az.Resources", "Az.Profile", "Az.Billing")
-    foreach ($module in $requiredModules) {
+    [string]$RequiredModules = @("Az.Resources", "Az.Profile", "Az.Billing")
+    foreach ($module in $RequiredModules) {
         if (-not (Get-Module -Name $module -ListAvailable)) {
             throw "Required module '$module' is not installed. Run: Install-Module -Name $module"
         }
     }
 
-    # Test Azure connection
     try {
-        $context = Get-AzContext
+$context = Get-AzContext
         if (-not $context) {
             Write-LogMessage "Connecting to Azure..."
             Connect-AzAccount
-            $context = Get-AzContext
+$context = Get-AzContext
         }
         Write-LogMessage "Connected to Azure tenant: $($context.Tenant.Id)" -Level Success
     }
@@ -165,10 +157,9 @@ function Test-Prerequisites {
         throw "Failed to connect to Azure: $($_.Exception.Message)"
     }
 
-    # Validate cost management access
     try {
         if ($SubscriptionId) {
-            $null = Set-AzContext -SubscriptionId $SubscriptionId
+    [string]$null = Set-AzContext -SubscriptionId $SubscriptionId
         }
         Write-LogMessage "Cost Management access validated" -Level Success
     }
@@ -181,11 +172,9 @@ function Get-CostAnalysisData {
     Write-LogMessage "Collecting cost analysis data for the last $AnalysisPeriod days..."
 
     try {
-        $endDate = Get-Date
-        $startDate = $endDate.AddDays(-$AnalysisPeriod)
-
-        # Get subscriptions to analyze
-        $subscriptions = if ($SubscriptionId) {
+$EndDate = Get-Date
+    [string]$StartDate = $EndDate.AddDays(-$AnalysisPeriod)
+    [string]$subscriptions = if ($SubscriptionId) {
             @(Get-AzSubscription -SubscriptionId $SubscriptionId)
         } else {
             Get-AzSubscription | Where-Object { $_.State -eq "Enabled" }
@@ -195,16 +184,13 @@ function Get-CostAnalysisData {
 
         foreach ($subscription in $subscriptions) {
             Write-LogMessage "Processing subscription: $($subscription.Name)"
-
-            $null = Set-AzContext -SubscriptionId $subscription.Id
-
-            # Get cost data using Resource Graph or Billing APIs
-            $costQuery = @{
+    [string]$null = Set-AzContext -SubscriptionId $subscription.Id
+$CostQuery = @{
                 Type = "ActualCost"
                 Timeframe = "Custom"
                 TimePeriod = @{
-                    From = $startDate.ToString("yyyy-MM-dd")
-                    To = $endDate.ToString("yyyy-MM-dd")
+                    From = $StartDate.ToString("yyyy-MM-dd")
+                    To = $EndDate.ToString("yyyy-MM-dd")
                 }
                 Dataset = @{
                     Granularity = "Daily"
@@ -234,10 +220,8 @@ function Get-CostAnalysisData {
                     )
                 }
             }
-
-            # Simulate cost data collection (replace with actual API calls)
-            $dailyCosts = for ($i = 0; $i -lt $AnalysisPeriod; $i++) {
-                $date = $startDate.AddDays($i)
+    [string]$DailyCosts = for ($i = 0; $i -lt $AnalysisPeriod; $i++) {
+    [string]$date = $StartDate.AddDays($i)
                 [PSCustomObject]@{
                     Date = $date
                     SubscriptionId = $subscription.Id
@@ -246,8 +230,7 @@ function Get-CostAnalysisData {
                     Currency = "USD"
                 }
             }
-
-            $script:CostData += $dailyCosts
+    [string]$script:CostData += $DailyCosts
         }
 
         Write-LogMessage "Collected cost data for $($script:CostData.Count) data points" -Level Success
@@ -262,25 +245,22 @@ function Get-ResourceUtilizationData {
     Write-LogMessage "Analyzing resource utilization patterns..."
 
     try {
-        $subscriptions = if ($SubscriptionId) {
+    [string]$subscriptions = if ($SubscriptionId) {
             @(Get-AzSubscription -SubscriptionId $SubscriptionId)
         } else {
             Get-AzSubscription | Where-Object { $_.State -eq "Enabled" }
         }
 
         foreach ($subscription in $subscriptions) {
-            $null = Set-AzContext -SubscriptionId $subscription.Id
-
-            # Get all resources
-            $resources = Get-AzResource | Where-Object {
-                $_.ResourceType -notin $ExcludeResourceTypes
+    [string]$null = Set-AzContext -SubscriptionId $subscription.Id
+$resources = Get-AzResource | Where-Object {
+    [string]$_.ResourceType -notin $ExcludeResourceTypes
             }
 
             Write-LogMessage "Analyzing utilization for $($resources.Count) resources in subscription: $($subscription.Name)"
 
             foreach ($resource in $resources) {
-                # Simulate utilization data (replace with actual metrics collection)
-                $utilizationData = [PSCustomObject]@{
+$UtilizationData = [PSCustomObject]@{
                     ResourceId = $resource.ResourceId
                     ResourceName = $resource.Name
                     ResourceType = $resource.ResourceType
@@ -293,8 +273,7 @@ function Get-ResourceUtilizationData {
                     NetworkUtilization = Get-Random -Minimum 5 -Maximum 60
                     AnalysisDate = Get-Date
                 }
-
-                $script:UsageData += $utilizationData
+    [string]$script:UsageData += $UtilizationData
             }
         }
 
@@ -310,39 +289,35 @@ function Invoke-CostTrendAnalysis {
     Write-LogMessage "Performing cost trend analysis..."
 
     try {
-        # Group cost data by subscription and calculate trends
-        $subscriptionTrends = $script:CostData | Group-Object SubscriptionId | ForEach-Object {
-            $subData = $_.Group | Sort-Object Date
-            $totalCost = ($subData | Measure-Object TotalCost -Sum).Sum
-            $avgDailyCost = ($subData | Measure-Object TotalCost -Average).Average
+    [string]$SubscriptionTrends = $script:CostData | Group-Object SubscriptionId | ForEach-Object {
+    [string]$SubData = $_.Group | Sort-Object Date
+    [string]$TotalCost = ($SubData | Measure-Object TotalCost -Sum).Sum
+    [string]$AvgDailyCost = ($SubData | Measure-Object TotalCost -Average).Average
 
-            # Calculate trend (simple linear regression)
-            $n = $subData.Count
+            $n = $SubData.Count
             $x = 1..$n
-            $y = $subData.TotalCost
-
-            $sumX = ($x | Measure-Object -Sum).Sum
-            $sumY = ($y | Measure-Object -Sum).Sum
-            $sumXY = ($x | ForEach-Object { $x[$_-1] * $y[$_-1] } | Measure-Object -Sum).Sum
-            $sumX2 = ($x | ForEach-Object { $_ * $_ } | Measure-Object -Sum).Sum
-
-            $slope = ($n * $sumXY - $sumX * $sumY) / ($n * $sumX2 - $sumX * $sumX)
-            $trendDirection = if ($slope -gt 0) { "Increasing" } elseif ($slope -lt 0) { "Decreasing" } else { "Stable" }
+            $y = $SubData.TotalCost
+    [string]$SumX = ($x | Measure-Object -Sum).Sum
+    [string]$SumY = ($y | Measure-Object -Sum).Sum
+    [string]$SumXY = ($x | ForEach-Object { $x[$_-1] * $y[$_-1] } | Measure-Object -Sum).Sum
+    [string]$SumX2 = ($x | ForEach-Object { $_ * $_ } | Measure-Object -Sum).Sum
+    [string]$slope = ($n * $SumXY - $SumX * $SumY) / ($n * $SumX2 - $SumX * $SumX)
+    [string]$TrendDirection = if ($slope -gt 0) { "Increasing" } elseif ($slope -lt 0) { "Decreasing" } else { "Stable" }
 
             [PSCustomObject]@{
                 SubscriptionId = $_.Name
-                SubscriptionName = ($subData | Select-Object -First 1).SubscriptionName
-                TotalCost = [math]::Round($totalCost, 2)
-                AverageDailyCost = [math]::Round($avgDailyCost, 2)
+                SubscriptionName = ($SubData | Select-Object -First 1).SubscriptionName
+                TotalCost = [math]::Round($TotalCost, 2)
+                AverageDailyCost = [math]::Round($AvgDailyCost, 2)
                 TrendSlope = [math]::Round($slope, 4)
-                TrendDirection = $trendDirection
-                ProjectedMonthlyCost = [math]::Round($avgDailyCost * 30, 2)
+                TrendDirection = $TrendDirection
+                ProjectedMonthlyCost = [math]::Round($AvgDailyCost * 30, 2)
                 CostVolatility = [math]::Round(($y | Measure-Object -StandardDeviation).StandardDeviation, 2)
             }
         }
 
-        Write-LogMessage "Analyzed cost trends for $($subscriptionTrends.Count) subscriptions" -Level Success
-        return $subscriptionTrends
+        Write-LogMessage "Analyzed cost trends for $($SubscriptionTrends.Count) subscriptions" -Level Success
+        return $SubscriptionTrends
     }
     catch {
         Write-LogMessage "Failed to perform cost trend analysis: $($_.Exception.Message)" -Level Error
@@ -360,63 +335,58 @@ function New-CostOptimizationRecommendations {
 
     try {
         foreach ($resource in $script:UsageData) {
-            $recommendations = @()
+    [string]$recommendations = @()
 
-            # VM rightsizing recommendations
             if ($resource.ResourceType -like "*VirtualMachines*") {
                 if ($resource.CpuUtilization -lt 20 -and $resource.MemoryUtilization -lt 30) {
-                    $recommendation = [CostRecommendation]::new()
-                    $recommendation.ResourceId = $resource.ResourceId
-                    $recommendation.ResourceName = $resource.ResourceName
-                    $recommendation.ResourceType = $resource.ResourceType
-                    $recommendation.RecommendationType = "VM Rightsizing"
-                    $recommendation.CurrentConfiguration = "Current VM size"
-                    $recommendation.RecommendedConfiguration = "Smaller VM size"
-                    $recommendation.CurrentMonthlyCost = Get-Random -Minimum 200 -Maximum 800
-                    $recommendation.ProjectedMonthlyCost = $recommendation.CurrentMonthlyCost * 0.6
-                    $recommendation.MonthlySavings = $recommendation.CurrentMonthlyCost - $recommendation.ProjectedMonthlyCost
-                    $recommendation.AnnualSavings = $recommendation.MonthlySavings * 12
-                    $recommendation.ConfidenceLevel = "High"
-                    $recommendation.RiskAssessment = "Low"
-                    $recommendation.ImplementationComplexity = "Medium"
-                    $recommendation.AnalysisDate = Get-Date
+    [string]$recommendation = [CostRecommendation]::new()
+    [string]$recommendation.ResourceId = $resource.ResourceId
+    [string]$recommendation.ResourceName = $resource.ResourceName
+    [string]$recommendation.ResourceType = $resource.ResourceType
+    [string]$recommendation.RecommendationType = "VM Rightsizing"
+    [string]$recommendation.CurrentConfiguration = "Current VM size"
+    [string]$recommendation.RecommendedConfiguration = "Smaller VM size"
+    [string]$recommendation.CurrentMonthlyCost = Get-Random -Minimum 200 -Maximum 800
+    [string]$recommendation.ProjectedMonthlyCost = $recommendation.CurrentMonthlyCost * 0.6
+    [string]$recommendation.MonthlySavings = $recommendation.CurrentMonthlyCost - $recommendation.ProjectedMonthlyCost
+    [string]$recommendation.AnnualSavings = $recommendation.MonthlySavings * 12
+    [string]$recommendation.ConfidenceLevel = "High"
+    [string]$recommendation.RiskAssessment = "Low"
+    [string]$recommendation.ImplementationComplexity = "Medium"
+    [string]$recommendation.AnalysisDate = Get-Date
 
                     if ($recommendation.MonthlySavings -ge $MinSavingsThreshold) {
-                        $recommendations += $recommendation
+    [string]$recommendations += $recommendation
                     }
                 }
             }
 
-            # Storage optimization recommendations
             if ($resource.ResourceType -like "*Storage*") {
                 if ($resource.StorageUtilization -lt 40) {
-                    $recommendation = [CostRecommendation]::new()
-                    $recommendation.ResourceId = $resource.ResourceId
-                    $recommendation.ResourceName = $resource.ResourceName
-                    $recommendation.ResourceType = $resource.ResourceType
-                    $recommendation.RecommendationType = "Storage Tier Optimization"
-                    $recommendation.CurrentConfiguration = "Hot tier"
-                    $recommendation.RecommendedConfiguration = "Cool or Archive tier"
-                    $recommendation.CurrentMonthlyCost = Get-Random -Minimum 50 -Maximum 300
-                    $recommendation.ProjectedMonthlyCost = $recommendation.CurrentMonthlyCost * 0.5
-                    $recommendation.MonthlySavings = $recommendation.CurrentMonthlyCost - $recommendation.ProjectedMonthlyCost
-                    $recommendation.AnnualSavings = $recommendation.MonthlySavings * 12
-                    $recommendation.ConfidenceLevel = "Medium"
-                    $recommendation.RiskAssessment = "Low"
-                    $recommendation.ImplementationComplexity = "Low"
-                    $recommendation.AnalysisDate = Get-Date
+    [string]$recommendation = [CostRecommendation]::new()
+    [string]$recommendation.ResourceId = $resource.ResourceId
+    [string]$recommendation.ResourceName = $resource.ResourceName
+    [string]$recommendation.ResourceType = $resource.ResourceType
+    [string]$recommendation.RecommendationType = "Storage Tier Optimization"
+    [string]$recommendation.CurrentConfiguration = "Hot tier"
+    [string]$recommendation.RecommendedConfiguration = "Cool or Archive tier"
+    [string]$recommendation.CurrentMonthlyCost = Get-Random -Minimum 50 -Maximum 300
+    [string]$recommendation.ProjectedMonthlyCost = $recommendation.CurrentMonthlyCost * 0.5
+    [string]$recommendation.MonthlySavings = $recommendation.CurrentMonthlyCost - $recommendation.ProjectedMonthlyCost
+    [string]$recommendation.AnnualSavings = $recommendation.MonthlySavings * 12
+    [string]$recommendation.ConfidenceLevel = "Medium"
+    [string]$recommendation.RiskAssessment = "Low"
+    [string]$recommendation.ImplementationComplexity = "Low"
+    [string]$recommendation.AnalysisDate = Get-Date
 
                     if ($recommendation.MonthlySavings -ge $MinSavingsThreshold) {
-                        $recommendations += $recommendation
+    [string]$recommendations += $recommendation
                     }
                 }
             }
-
-            $script:Recommendations += $recommendations
+    [string]$script:Recommendations += $recommendations
         }
-
-        # Sort recommendations by potential savings
-        $script:Recommendations = $script:Recommendations | Sort-Object AnnualSavings -Descending
+    [string]$script:Recommendations = $script:Recommendations | Sort-Object AnnualSavings -Descending
 
         Write-LogMessage "Generated $($script:Recommendations.Count) optimization recommendations" -Level Success
     }
@@ -435,8 +405,7 @@ function New-CostForecast {
     Write-LogMessage "Generating 12-month cost forecast..."
 
     try {
-        # Calculate monthly averages and trends
-        $monthlyData = $script:CostData | Group-Object { $_.Date.ToString("yyyy-MM") } | ForEach-Object {
+    [string]$MonthlyData = $script:CostData | Group-Object { $_.Date.ToString("yyyy-MM") } | ForEach-Object {
             [PSCustomObject]@{
                 Month = [datetime]::ParseExact($_.Name + "-01", "yyyy-MM-dd", $null)
                 TotalCost = ($_.Group | Measure-Object TotalCost -Sum).Sum
@@ -444,24 +413,21 @@ function New-CostForecast {
             }
         } | Sort-Object Month
 
-        if ($monthlyData.Count -lt 2) {
+        if ($MonthlyData.Count -lt 2) {
             Write-LogMessage "Insufficient data for forecasting (need at least 2 months)" -Level Warning
             return @()
         }
-
-        # Simple trend-based forecasting
-        $lastMonth = $monthlyData | Select-Object -Last 1
-        $baselineCost = $lastMonth.TotalCost
-        $growthRate = 0.02  # Assume 2% monthly growth
-
-        $forecast = for ($i = 1; $i -le 12; $i++) {
-            $forecastMonth = $lastMonth.Month.AddMonths($i)
-            $predictedCost = $baselineCost * [math]::Pow((1 + $growthRate), $i)
+    [string]$LastMonth = $MonthlyData | Select-Object -Last 1
+    [string]$BaselineCost = $LastMonth.TotalCost
+    [string]$GrowthRate = 0.02
+    [string]$forecast = for ($i = 1; $i -le 12; $i++) {
+    [string]$ForecastMonth = $LastMonth.Month.AddMonths($i)
+    [string]$PredictedCost = $BaselineCost * [math]::Pow((1 + $GrowthRate), $i)
 
             [CostForecast]@{
-                Month = $forecastMonth
-                PredictedCost = [math]::Round($predictedCost, 2)
-                ConfidenceInterval = [math]::Round($predictedCost * 0.15, 2)  # ±15% confidence
+                Month = $ForecastMonth
+                PredictedCost = [math]::Round($PredictedCost, 2)
+                ConfidenceInterval = [math]::Round($PredictedCost * 0.15, 2)
                 TrendDirection = "Increasing"
                 SeasonalityFactor = "None"
             }
@@ -485,27 +451,24 @@ function Export-AnalysisResults {
     Write-LogMessage "Exporting analysis results to: $ExportPath"
 
     try {
-        $timestamp = Get-Date -Format "yyyyMMdd-HHmm"
+$timestamp = Get-Date -Format "yyyyMMdd-HHmm"
 
-        # Export cost data
         if ($script:CostData.Count -gt 0) {
-            $costExportPath = Join-Path $ExportPath "FinOps-CostData-$timestamp.csv"
-            $script:CostData | Export-Csv -Path $costExportPath -NoTypeInformation
-            Write-LogMessage "Exported cost data: $costExportPath" -Level Success
+    [string]$CostExportPath = Join-Path $ExportPath "FinOps-CostData-$timestamp.csv"
+    [string]$script:CostData | Export-Csv -Path $CostExportPath -NoTypeInformation
+            Write-LogMessage "Exported cost data: $CostExportPath" -Level Success
         }
 
-        # Export recommendations
         if ($script:Recommendations.Count -gt 0) {
-            $recommendationsExportPath = Join-Path $ExportPath "FinOps-Recommendations-$timestamp.csv"
-            $script:Recommendations | Export-Csv -Path $recommendationsExportPath -NoTypeInformation
-            Write-LogMessage "Exported recommendations: $recommendationsExportPath" -Level Success
+    [string]$RecommendationsExportPath = Join-Path $ExportPath "FinOps-Recommendations-$timestamp.csv"
+    [string]$script:Recommendations | Export-Csv -Path $RecommendationsExportPath -NoTypeInformation
+            Write-LogMessage "Exported recommendations: $RecommendationsExportPath" -Level Success
         }
 
-        # Export utilization data
         if ($script:UsageData.Count -gt 0) {
-            $utilizationExportPath = Join-Path $ExportPath "FinOps-Utilization-$timestamp.csv"
-            $script:UsageData | Export-Csv -Path $utilizationExportPath -NoTypeInformation
-            Write-LogMessage "Exported utilization data: $utilizationExportPath" -Level Success
+    [string]$UtilizationExportPath = Join-Path $ExportPath "FinOps-Utilization-$timestamp.csv"
+    [string]$script:UsageData | Export-Csv -Path $UtilizationExportPath -NoTypeInformation
+            Write-LogMessage "Exported utilization data: $UtilizationExportPath" -Level Success
         }
     }
     catch {
@@ -515,8 +478,8 @@ function Export-AnalysisResults {
 }
 
 function Write-AnalysisSummary {
-    $costTrends = Invoke-CostTrendAnalysis
-    $forecast = New-CostForecast
+    [string]$CostTrends = Invoke-CostTrendAnalysis
+$forecast = New-CostForecast
 
     Write-LogMessage ""
     Write-LogMessage "=== AZURE FINOPS ANALYSIS SUMMARY ===" -Level Success
@@ -524,47 +487,41 @@ function Write-AnalysisSummary {
     Write-LogMessage "Analysis Period: $AnalysisPeriod days"
     Write-LogMessage "Analysis Timestamp: $script:AnalysisTimestamp"
     Write-LogMessage ""
-
-    # Cost summary
-    $totalCost = ($script:CostData | Measure-Object TotalCost -Sum).Sum
-    $avgDailyCost = ($script:CostData | Measure-Object TotalCost -Average).Average
+    [string]$TotalCost = ($script:CostData | Measure-Object TotalCost -Sum).Sum
+    [string]$AvgDailyCost = ($script:CostData | Measure-Object TotalCost -Average).Average
     Write-LogMessage "COST ANALYSIS:"
-    Write-LogMessage "  Total Cost ($AnalysisPeriod days): $([math]::Round($totalCost, 2)) USD"
-    Write-LogMessage "  Average Daily Cost: $([math]::Round($avgDailyCost, 2)) USD"
-    Write-LogMessage "  Projected Monthly Cost: $([math]::Round($avgDailyCost * 30, 2)) USD"
+    Write-LogMessage "  Total Cost ($AnalysisPeriod days): $([math]::Round($TotalCost, 2)) USD"
+    Write-LogMessage "  Average Daily Cost: $([math]::Round($AvgDailyCost, 2)) USD"
+    Write-LogMessage "  Projected Monthly Cost: $([math]::Round($AvgDailyCost * 30, 2)) USD"
     Write-LogMessage ""
 
-    # Recommendations summary
     if ($script:Recommendations.Count -gt 0) {
-        $totalSavings = ($script:Recommendations | Measure-Object AnnualSavings -Sum).Sum
+    [string]$TotalSavings = ($script:Recommendations | Measure-Object AnnualSavings -Sum).Sum
         Write-LogMessage "OPTIMIZATION RECOMMENDATIONS:"
         Write-LogMessage "  Total Recommendations: $($script:Recommendations.Count)"
-        Write-LogMessage "  Potential Annual Savings: $([math]::Round($totalSavings, 2)) USD"
+        Write-LogMessage "  Potential Annual Savings: $([math]::Round($TotalSavings, 2)) USD"
         Write-LogMessage "  Top Recommendation: $($script:Recommendations[0].RecommendationType) - $([math]::Round($script:Recommendations[0].AnnualSavings, 2)) USD/year"
         Write-LogMessage ""
     }
 
-    # Resource utilization summary
     Write-LogMessage "RESOURCE UTILIZATION:"
     Write-LogMessage "  Resources Analyzed: $($script:UsageData.Count)"
-    $underutilizedVMs = $script:UsageData | Where-Object { $_.ResourceType -like "*VirtualMachines*" -and $_.CpuUtilization -lt 20 }
-    Write-LogMessage "  Underutilized VMs: $($underutilizedVMs.Count)"
+    [string]$UnderutilizedVMs = $script:UsageData | Where-Object { $_.ResourceType -like "*VirtualMachines*" -and $_.CpuUtilization -lt 20 }
+    Write-LogMessage "  Underutilized VMs: $($UnderutilizedVMs.Count)"
     Write-LogMessage ""
 
-    # Cost trends
-    if ($costTrends.Count -gt 0) {
+    if ($CostTrends.Count -gt 0) {
         Write-LogMessage "COST TRENDS:"
-        foreach ($trend in $costTrends) {
+        foreach ($trend in $CostTrends) {
             Write-LogMessage "  $($trend.SubscriptionName): $($trend.TrendDirection) trend, $($trend.ProjectedMonthlyCost) USD/month projected"
         }
         Write-LogMessage ""
     }
 
-    # Forecast summary
     if ($forecast.Count -gt 0) {
-        $yearTotal = ($forecast | Measure-Object PredictedCost -Sum).Sum
+    [string]$YearTotal = ($forecast | Measure-Object PredictedCost -Sum).Sum
         Write-LogMessage "12-MONTH FORECAST:"
-        Write-LogMessage "  Predicted Annual Cost: $([math]::Round($yearTotal, 2)) USD"
+        Write-LogMessage "  Predicted Annual Cost: $([math]::Round($YearTotal, 2)) USD"
         Write-LogMessage "  Next Month Prediction: $([math]::Round($forecast[0].PredictedCost, 2)) USD"
         Write-LogMessage ""
     }
@@ -578,30 +535,22 @@ function Write-AnalysisSummary {
     Write-LogMessage ""
 }
 
-# Main execution
 try {
     Write-LogMessage "Starting Azure FinOps Advanced Analytics..." -Level Success
     Write-LogMessage "Analysis ID: FinOps-$script:AnalysisTimestamp"
 
-    # Phase 1: Prerequisites and validation
     Test-Prerequisites
 
-    # Phase 2: Data collection
     Get-CostAnalysisData
     Get-ResourceUtilizationData
 
-    # Phase 3: Analysis and recommendations
     New-CostOptimizationRecommendations
 
-    # Phase 4: Export results
     Export-AnalysisResults
 
-    # Phase 5: Summary and reporting
     Write-AnalysisSummary
 }
 catch {
     Write-LogMessage "ANALYSIS FAILED: $($_.Exception.Message)" -Level Error
     Write-LogMessage "Check log file for details: $script:LogFile" -Level Error
-    throw
-}
-
+    throw`n}

@@ -1,33 +1,44 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.RecoveryServices
 
-<#`n.SYNOPSIS
-    Set Azrecoveryservicesbackupproperty
+<#
+.SYNOPSIS
+    Set Azure Recovery Services backup property
 
 .DESCRIPTION
-    Set Azrecoveryservicesbackupproperty operation
-    Author: Wes Ellis (wes@wesellis.com)
+    Set Azure Recovery Services backup property operation
 
-    1.0
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Version: 1.0
     Requires appropriate permissions and modules
+    Storage Redundancy can be modified only if there are no backup items protected to the vault.
 #>
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-.OUTPUTS
-    Output (if any)
-    General notes
-Storage Redundancy can be modified only if there are no backup items protected to the vault.
-Default value when you create a new RSV
-Recovery Services Vault --> Properties --> Storage Replication Type = Geo-Redundant
-$VMName = 'Outlook1'
-$Vaultname = -join ("$VMName" , "ARSV1" )
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$VaultName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('GeoRedundant', 'LocallyRedundant')]
+    [string]$BackupStorageRedundancy = 'GeoRedundant'
+)
+
+$ErrorActionPreference = "Stop"
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
+
+$vault = Get-AzRecoveryServicesVault -ResourceGroupName $ResourceGroupName -Name $VaultName -ErrorAction Stop
+
 $setAzRecoveryServicesBackupPropertySplat = @{
-    Vault = $Vaultname
-    BackupStorageRedundancy = 'GeoRedundant/LocallyRedundant'
+    Vault = $vault
+    BackupStorageRedundancy = $BackupStorageRedundancy
 }
-Set-AzRecoveryServicesBackupProperty -ErrorAction Stop @setAzRecoveryServicesBackupPropertySplat
+
+Set-AzRecoveryServicesBackupProperty @setAzRecoveryServicesBackupPropertySplat -ErrorAction Stop
+
+
 

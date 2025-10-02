@@ -1,159 +1,223 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Resources, Az.Storage
 
-<#`n.SYNOPSIS
-    Refresh Quickstartstable
+<#
+.SYNOPSIS
+    Refresh Azure Quickstarts Table
 
 .DESCRIPTION
-    Azure automation
+    Azure automation script to refresh the Quickstarts metadata service table.
+    Updates the table with metadata from repository and badge status information.
+
+.PARAMETER BuildSourcesDirectory
+    Absolute path to the repository clone (defaults to BUILD_SOURCESDIRECTORY environment variable)
+
+.PARAMETER StorageAccountName
+    Storage account name (defaults to STORAGE_ACCOUNT_NAME environment variable)
+
+.PARAMETER TableName
+    Azure Table Storage table name (default: "QuickStartsMetadataService")
+
+.PARAMETER StorageAccountKey
+    Storage account access key (mandatory)
+
+.AUTHOR
     Wes Ellis (wes@wesellis.com)
 
-    1.0
-    Requires appropriate permissions and modules
-[CmdletBinding()]
-$ErrorActionPreference = "Stop"
-param(
-    $BuildSourcesDirectory = " $ENV:BUILD_SOURCESDIRECTORY" , # absolute path to the clone
-    [string]$StorageAccountName = $ENV:STORAGE_ACCOUNT_NAME,
-    $TableName = "QuickStartsMetadataService" ,
-    [Parameter(mandatory = $true)]$StorageAccountKey
-)
-#region Functions
+.NOTES
+    Version: 1.0
+    Requires appropriate Azure Storage permissions
+    Updates metadata and test status badges for Quickstart templates
 #>
-Get all metadata files in the repo
-Get all the badges (if found) for the status
-Update the table's LIVE or null records to reflect badge status and metadata contents
-Remove old row and create new table row (i.e. update if exists)
-while($BuildSourcesDirectory.EndsWith(" /" )){
-    $BuildSourcesDirectory = $BuildSourcesDirectory.TrimEnd(" /" )
-}
-while($BuildSourcesDirectory.EndsWith(" \" )){
-$BuildSourcesDirectory = $BuildSourcesDirectory.TrimEnd(" \" )
-}
-$badges = @{
-    PublicLastTestDate  = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicLastTestDate.svg" ;
-    PublicDeployment    = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicDeployment.svg" ;
-    FairfaxLastTestDate = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxLastTestDate.svg" ;
-    FairfaxDeployment   = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxDeployment.svg" ;
-    BestPracticeResult  = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/BestPracticeResult.svg" ;
-    CredScanResult      = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/CredScanResult.svg" ;
-    BicepVersion        = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/BicepVersion.svg"
-}
-$ArtifactFilePaths = Get-ChildItem -ErrorAction Stop $BuildSourcesDirectory\metadata.json -Recurse -File | ForEach-Object -Process { $_.FullName }
-if ($ArtifactFilePaths.Count -eq 0) {
-    Write-Error "No metadata.json files found in $BuildSourcesDirectory"
-    throw
-}
-$ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
-$cloudTable = (Get-AzStorageTable -Name $tableName -Context $ctx).CloudTable
-$t = Get-AzTableRow -table $cloudTable
-Write-Host "Checking table to see if this is a new sample (does the row exist?)"
-foreach ($SourcePath in $ArtifactFilePaths) {
-    if ($SourcePath -like " *\test\*" ) {
-        Write-Host "Skipping..."
-        continue
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$BuildSourcesDirectory = $ENV:BUILD_SOURCESDIRECTORY,
+
+    [Parameter(Mandatory = $false)]
+    [string]$StorageAccountName = $ENV:STORAGE_ACCOUNT_NAME,
+
+    [Parameter(Mandatory = $false)]
+    [string]$TableName = "QuickStartsMetadataService",
+
+    [Parameter(Mandatory = $true)]
+    [string]$StorageAccountKey
+)
+
+$ErrorActionPreference = "Stop"
+
+try {
+    Write-Output "Refreshing Quickstarts table"
+    Write-Output "Build Sources Directory: $BuildSourcesDirectory"
+    Write-Output "Storage Account: $StorageAccountName"
+    Write-Output "Table Name: $TableName"
+
+    # Normalize the directory path
+    while ($BuildSourcesDirectory.EndsWith("/")) {
+        $BuildSourcesDirectory = $BuildSourcesDirectory.TrimEnd("/")
     }
-    Write-Host "Reading: $SourcePath"
-    $MetadataJson = Get-Content -ErrorAction Stop $SourcePath -Raw | ConvertFrom-Json
-    # Get the sample's path off of the root, replace any path chars with " @" since the rowkey for table storage does not allow / or \ (among other things)
-    $RowKey = (Split-Path $SourcePath -Parent).Replace(" $(Resolve-Path $BuildSourcesDirectory)\" , "" ).Replace(" \" , "@" ).Replace(" /" , "@" )
-    Write-Host "RowKey from path: $RowKey"
-    $r = Get-AzTableRow -table $cloudTable -ColumnName "RowKey" -Value $RowKey -Operator Equal
-    $p = @{ }
-    Write-Host "Status: $($r.status)"
-    # if the row isn't found in the table, it could be a new sample, add it with the data found in metadata.json
-    Write-Host "Updating: $Rowkey"
-    $p.Add(" itemDisplayName" , $MetadataJson.itemDisplayName)
-    $p.Add(" description" , $MetadataJson.description)
-    $p.Add(" summary" , $MetadataJson.summary)
-    $p.Add(" githubUsername" , $MetadataJson.githubUsername)
-    $p.Add(" dateUpdated" , $MetadataJson.dateUpdated)
-    $p.Add(" status" , "Live" ) # if it's in master, it's live
-    # $p.Add($($ResultDeploymentParameter + "BuildNumber" ), "0)
-    #update the row if it's live or no status
-    #if ($r.status -eq "Live" -or $r.status -eq $null) {
-        #add status from badges
-        $badges.GetEnumerator() | ForEach-Object {
-            $uri = $($_.Value).replace(" %sample.folder%" , $RowKey.Replace(" @" , "/" ))
-            #Write-Host $uri
-            $svg = $null
-            try { $svg = (Invoke-WebRequest -Uri $uri -ErrorAction SilentlyContinue) } catch {
-    Write-Error "An error occurred: $($_.Exception.Message)"
-    throw
-}
-            if ($svg) {
-                $xml = $svg.content.replace('xmlns=" http://www.w3.org/2000/svg" ', '')
-                #Write-Host $xml
-                $t = Select-XML -Content $xml -XPath " //text"
-                #$t | Out-string
-                #$v = $($t[$t.length - 1])
-                #Write-Host " $($_.Key) = $v"
-                $v = $($t[$t.length - 1]).ToString()
-                # set the value in the table based on the value in the badge
-                switch ($v) {
-                    "PASS" {
-                        $v = "PASS"
+    while ($BuildSourcesDirectory.EndsWith("\")) {
+        $BuildSourcesDirectory = $BuildSourcesDirectory.TrimEnd("\")
+    }
+
+    # Define badge URLs
+    $badges = @{
+        PublicLastTestDate  = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicLastTestDate.svg"
+        PublicDeployment    = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/PublicDeployment.svg"
+        FairfaxLastTestDate = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxLastTestDate.svg"
+        FairfaxDeployment   = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/FairfaxDeployment.svg"
+        BestPracticeResult  = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/BestPracticeResult.svg"
+        CredScanResult      = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/CredScanResult.svg"
+        BicepVersion        = "https://$StorageAccountName.blob.core.windows.net/badges/%sample.folder%/BicepVersion.svg"
+    }
+
+    # Get all metadata files in the repo
+    Write-Output "Searching for metadata.json files..."
+    $ArtifactFilePaths = Get-ChildItem -Path "$BuildSourcesDirectory\metadata.json" -Recurse -File | ForEach-Object { $_.FullName }
+
+    if ($ArtifactFilePaths.Count -eq 0) {
+        throw "No metadata.json files found in $BuildSourcesDirectory"
+    }
+
+    Write-Output "Found $($ArtifactFilePaths.Count) metadata.json files"
+
+    # Create storage context
+    $ctx = New-AzStorageContext -StorageAccountName $StorageAccountName -StorageAccountKey $StorageAccountKey -Environment AzureCloud
+
+    # Get cloud table reference
+    $CloudTable = (Get-AzStorageTable -Name $TableName -Context $ctx).CloudTable
+
+    if (-not $CloudTable) {
+        throw "Unable to get cloud table: $TableName"
+    }
+
+    # Process each metadata file
+    $processedCount = 0
+    foreach ($SourcePath in $ArtifactFilePaths) {
+        # Skip test directories
+        if ($SourcePath -like "*\test\*") {
+            Write-Output "Skipping test directory: $SourcePath"
+            continue
+        }
+
+        Write-Output "Processing: $SourcePath"
+
+        # Read metadata
+        $MetadataJson = Get-Content -Path $SourcePath -Raw | ConvertFrom-Json
+
+        # Generate row key from path
+        $RelativePath = (Split-Path $SourcePath -Parent).Replace("$(Resolve-Path $BuildSourcesDirectory)\", "").Replace("\", "@").Replace("/", "@")
+        $RowKey = $RelativePath
+        Write-Output "RowKey: $RowKey"
+
+        # Get existing row if it exists
+        $existingRow = Get-AzTableRow -Table $CloudTable -ColumnName "RowKey" -Value $RowKey -Operator Equal
+
+        # Prepare properties hashtable
+        $properties = @{
+            itemDisplayName = $MetadataJson.itemDisplayName
+            description     = $MetadataJson.description
+            summary         = $MetadataJson.summary
+            githubUsername  = $MetadataJson.githubUsername
+            dateUpdated     = $MetadataJson.dateUpdated
+            status          = "Live"  # If it's in master, it's live
+        }
+
+        # Process badges
+        foreach ($badge in $badges.GetEnumerator()) {
+            $uri = $badge.Value.Replace("%sample.folder%", $RowKey.Replace("@", "/"))
+
+            try {
+                $svg = Invoke-WebRequest -Uri $uri -ErrorAction SilentlyContinue
+
+                if ($svg) {
+                    $xml = $svg.Content.Replace('xmlns="http://www.w3.org/2000/svg"', '')
+                    $textNodes = Select-XML -Content $xml -XPath "//text"
+                    $value = $textNodes[$textNodes.Length - 1].ToString()
+
+                    # Normalize badge values
+                    switch ($value) {
+                        "PASS" { $value = "PASS" }
+                        "FAIL" { $value = "FAIL" }
+                        "Not Supported" { $value = "Not Supported" }
+                        "Not Tested" { $value = "Not Tested" }
+                        "Bicep Version" { $value = "n/a" }
+                        default { }
                     }
-                    "FAIL" {
-                        $v = "FAIL"
+
+                    # Format date values
+                    if ($badge.Key -like "*Date") {
+                        $value = $value.Replace(".", "-")
                     }
-                    "Not Supported" {
-                        $v = "Not Supported"
-                    }
-                    "Not Tested" {
-                        $v = "Not Tested"
-                    }
-                    "Bicep Version" {
-                        $v = " n/a" # this is a temp hack as bicep badges were created with no value
-                    }
-                    default {
-                        # must be a date or bicep version, fix that below
-                        #$v = $v.Replace(" ." , "-" )
+
+                    if ($null -ne $value) {
+                        $properties.Add($badge.Key, $value)
+                        Write-Output "  $($badge.Key) = $value"
                     }
                 }
-                if ($_.Key -like " *Date" ) {
-                    #;  $v = $MetadataJson.dateUpdated
-$v = $v.Replace(" ." , "-" )
-                }
-                if ($null -ne $v) {
-                    $p.Add($_.Key, $v)
-                }
-                Write-Host " $($_.Key) = $v"
+            }
+            catch {
+                Write-Warning "Failed to get badge $($badge.Key): $_"
             }
         }
-    #}
-    #$p | out-string
-    #Read-Host "Cont?"
-    # if we didn't get the date from the badge, then add it from metadata.json
-    if ([string]::IsNullOrWhiteSpace($p.FairfaxLastTestDate)) {
-        $p.Add("FairfaxLastTestDate" , $MetadataJson.dateUpdated)
-    }
-    if ([string]::IsNullOrWhiteSpace($p.PublicLastTestDate)) {
-        $p.Add("PublicLastTestDate" , $MetadataJson.dateUpdated)
-    }
-    # preserve the build number if possible
-    if ([string]::IsNullOrWhiteSpace($r.FairfaxDeploymentBuildNumber)) {
-        $p.Add("FairfaxDeploymentBuildNumber" , "0" )
-    }
-    else {
-        $p.Add("FairfaxDeploymentBuildNumber" , $r.FairfaxDeploymentBuildNumber)
-    }
-    if ([string]::IsNullOrWhiteSpace($r.PublicDeploymentBuildNumber)) {
-        $p.Add("PublicDeploymentBuildNumber" , "0" )
-    }
-    else {
-        $p.Add("PublicDeploymentBuildNumber" , $r.PublicDeploymentBuildNumber)
-    }
-    Write-Host "Removing... $($r.RowKey)"
-    $r | Remove-AzTableRow -Table $cloudTable
-    Write-Host "Adding... $RowKey"
-    $params = @{
-        table = $cloudTable
-        property = $p
-        partitionKey = $MetadataJson.type
-        rowKey = $RowKey
-    }
-    Add-AzTableRow @params
-} #foreach
 
+        # Set default values if not present
+        if ([string]::IsNullOrWhiteSpace($properties.FairfaxLastTestDate)) {
+            $properties.Add("FairfaxLastTestDate", $MetadataJson.dateUpdated)
+        }
 
+        if ([string]::IsNullOrWhiteSpace($properties.PublicLastTestDate)) {
+            $properties.Add("PublicLastTestDate", $MetadataJson.dateUpdated)
+        }
+
+        # Preserve build numbers
+        if ($existingRow) {
+            if (-not [string]::IsNullOrWhiteSpace($existingRow.FairfaxDeploymentBuildNumber)) {
+                $properties.Add("FairfaxDeploymentBuildNumber", $existingRow.FairfaxDeploymentBuildNumber)
+            }
+            else {
+                $properties.Add("FairfaxDeploymentBuildNumber", "0")
+            }
+
+            if (-not [string]::IsNullOrWhiteSpace($existingRow.PublicDeploymentBuildNumber)) {
+                $properties.Add("PublicDeploymentBuildNumber", $existingRow.PublicDeploymentBuildNumber)
+            }
+            else {
+                $properties.Add("PublicDeploymentBuildNumber", "0")
+            }
+
+            # Remove existing row
+            Write-Output "Removing existing row: $($existingRow.RowKey)"
+            $existingRow | Remove-AzTableRow -Table $CloudTable
+        }
+        else {
+            $properties.Add("FairfaxDeploymentBuildNumber", "0")
+            $properties.Add("PublicDeploymentBuildNumber", "0")
+        }
+
+        # Add new/updated row
+        Write-Output "Adding row: $RowKey"
+        $params = @{
+            Table        = $CloudTable
+            Property     = $properties
+            PartitionKey = $MetadataJson.type
+            RowKey       = $RowKey
+        }
+        Add-AzTableRow @params
+
+        $processedCount++
+    }
+
+    Write-Output "`nSummary:"
+    Write-Output "- Total metadata files found: $($ArtifactFilePaths.Count)"
+    Write-Output "- Processed: $processedCount"
+    Write-Output "Table refresh completed successfully"
+}
+catch {
+    Write-Error "Script execution failed: $($_.Exception.Message)"
+    throw
+}
+
+# Example usage:
+# .\Refresh Quickstartstable.ps1 -BuildSourcesDirectory "C:\repos\azure-quickstart-templates" -StorageAccountName "myaccount" -StorageAccountKey "your-key"

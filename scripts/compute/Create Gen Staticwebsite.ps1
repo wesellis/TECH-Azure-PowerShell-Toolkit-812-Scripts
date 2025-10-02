@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Storage
 #Requires -Modules Az.Resources
 
@@ -10,17 +10,14 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
+    [string]$ErrorActionPreference = "Stop"
 [CmdletBinding()
 try {
-    # Main script execution
 ]
-$ErrorActionPreference = "Stop"
-[CmdletBinding()]
 param(
     [string] $ResourceGroupName = 'ttk-gen-artifacts',
     [string] [Parameter(mandatory = $true)] $Location
@@ -28,15 +25,15 @@ param(
 if ((Get-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -ErrorAction SilentlyContinue) -eq $null) {
     New-AzResourceGroup -Name $ResourceGroupName -Location $Location -Verbose -Force
 }
-$staticWebsiteStorageAccountName = 'stweb' + ((Get-AzContext).Subscription.Id).Replace('-', '').substring(0, 19)
-$indexDocumentPath = 'index.htm'
-$indexDocumentContents = '<h1>Example static website</h1>'
-$errorDocument404Path = 'error.htm'
-$errorDocumentContents = '<h1>Example 404 error page</h1>'
-$staticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
-if ($null -eq $staticWebsiteStorageAccount) {
-    $storageaccountSplat = @{
-    StorageAccountName = $staticWebsiteStorageAccountName
+    [string]$StaticWebsiteStorageAccountName = 'stweb' + ((Get-AzContext).Subscription.Id).Replace('-', '').substring(0, 19)
+    [string]$IndexDocumentPath = 'index.htm'
+    [string]$IndexDocumentContents = '<h1>Example static website</h1>'
+    [string]$ErrorDocument404Path = 'error.htm'
+    [string]$ErrorDocumentContents = '<h1>Example 404 error page</h1>'
+    [string]$StaticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $StaticWebsiteStorageAccountName })
+if ($null -eq $StaticWebsiteStorageAccount) {
+$StorageaccountSplat = @{
+    StorageAccountName = $StaticWebsiteStorageAccountName
     Kind = "StorageV2"
     Type = 'Standard_LRS'
     ResourceGroupName = $ResourceGroupName
@@ -45,25 +42,22 @@ if ($null -eq $staticWebsiteStorageAccount) {
 New-AzStorageAccount @storageaccountSplat
 }
 Do {
-    Write-Host "Looking for storageAccount: $staticWebsiteStorageAccount"
-    $staticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $staticWebsiteStorageAccountName })
-} until ($null -ne $staticWebsiteStorageAccountName)
-$ctx = $staticWebsiteStorageAccount.Context
-Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $indexDocumentPath -ErrorDocument404Path $errorDocument404Path -Verbose
-$tempIndexFile = New-TemporaryFile -ErrorAction Stop
-Set-Content $tempIndexFile $indexDocumentContents -Force
-Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempIndexFile -Blob $indexDocumentPath -Properties @{'ContentType' = 'text/html'} -Force -Verbose
-$tempErrorDocument404File = New-TemporaryFile -ErrorAction Stop
-Set-Content $tempErrorDocument404File $errorDocumentContents -Force
-Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $tempErrorDocument404File -Blob $errorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force -Verbose
-$json = New-Object -ErrorAction Stop System.Collections.Specialized.OrderedDictionary #This keeps things in the order we entered them, instead of: New-Object -TypeName Hashtable;
-$hostName = (($staticWebsiteStorageAccount.PrimaryEndpoints.Web) -Replace 'https://', '')  -Replace '/', ''
-$json.Add("STATIC-WEBSITE-URL" , $staticWebsiteStorageAccount.PrimaryEndpoints.Web)
-$json.Add("STATIC-WEBSITE-HOST-NAME" , $hostName)
+    Write-Output "Looking for storageAccount: $StaticWebsiteStorageAccount"
+    [string]$StaticWebsiteStorageAccount = (Get-AzStorageAccount -ErrorAction Stop | Where-Object { $_.StorageAccountName -eq $StaticWebsiteStorageAccountName })
+} until ($null -ne $StaticWebsiteStorageAccountName)
+    [string]$ctx = $StaticWebsiteStorageAccount.Context
+Enable-AzStorageStaticWebsite -Context $ctx -IndexDocument $IndexDocumentPath -ErrorDocument404Path $ErrorDocument404Path -Verbose
+$TempIndexFile = New-TemporaryFile -ErrorAction Stop
+Set-Content $TempIndexFile $IndexDocumentContents -Force
+Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $TempIndexFile -Blob $IndexDocumentPath -Properties @{'ContentType' = 'text/html'} -Force -Verbose
+$TempErrorDocument404File = New-TemporaryFile -ErrorAction Stop
+Set-Content $TempErrorDocument404File $ErrorDocumentContents -Force
+Set-AzStorageBlobContent -Context $ctx -Container '$web' -File $TempErrorDocument404File -Blob $ErrorDocument404Path -Properties @{'ContentType' = 'text/html'} -Force -Verbose
+$json = New-Object -ErrorAction Stop System.Collections.Specialized.OrderedDictionary
+    [string]$HostName = (($StaticWebsiteStorageAccount.PrimaryEndpoints.Web) -Replace 'https://', '')  -Replace '/', ''
+    [string]$json.Add("STATIC-WEBSITE-URL" , $StaticWebsiteStorageAccount.PrimaryEndpoints.Web)
+    [string]$json.Add("STATIC-WEBSITE-HOST-NAME" , $HostName)
 Write-Output $($json | ConvertTo-json -Depth 30)
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
-
-
+    throw`n}

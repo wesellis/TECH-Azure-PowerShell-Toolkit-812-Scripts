@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,30 +9,28 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
         [ValidateSet("INFO" , "WARN" , "ERROR" , "SUCCESS" )]
         [string]$Level = "INFO"
     )
-$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+    [string]$timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
+    $ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -42,118 +40,117 @@ param(
     [string]$FactoryName,
     [int]$DaysBack = 7
 )
-Write-Host "Monitoring Data Factory: $FactoryName" "INFO"
-Write-Host "Resource Group: $ResourceGroupName" "INFO"
-Write-Host "Analysis Period: Last $DaysBack days" "INFO"
-Write-Host " ============================================" "INFO"
-$DataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $FactoryName
-Write-Host "Data Factory Information:" "INFO"
-Write-Host "Name: $($DataFactory.DataFactoryName)" "INFO"
-Write-Host "Location: $($DataFactory.Location)" "INFO"
-Write-Host "Provisioning State: $($DataFactory.ProvisioningState)" "INFO"
-Write-Host "Created Time: $($DataFactory.CreateTime)" "INFO"
+Write-Output "Monitoring Data Factory: $FactoryName" "INFO"
+Write-Output "Resource Group: $ResourceGroupName" "INFO"
+Write-Output "Analysis Period: Last $DaysBack days" "INFO"
+Write-Output " ============================================" "INFO"
+    [string]$DataFactory = Get-AzDataFactoryV2 -ResourceGroupName $ResourceGroupName -Name $FactoryName
+Write-Output "Data Factory Information:" "INFO"
+Write-Output "Name: $($DataFactory.DataFactoryName)" "INFO"
+Write-Output "Location: $($DataFactory.Location)" "INFO"
+Write-Output "Provisioning State: $($DataFactory.ProvisioningState)" "INFO"
+Write-Output "Created Time: $($DataFactory.CreateTime)" "INFO"
 if ($DataFactory.RepoConfiguration) {
-    Write-Host "Git Integration: $($DataFactory.RepoConfiguration.Type)" "INFO"
-    Write-Host "Repository: $($DataFactory.RepoConfiguration.RepositoryName)" "INFO"
+    Write-Output "Git Integration: $($DataFactory.RepoConfiguration.Type)" "INFO"
+    Write-Output "Repository: $($DataFactory.RepoConfiguration.RepositoryName)" "INFO"
 }
-Write-Host " `nPipelines:" "INFO"
-$Pipelines = Get-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
+Write-Output " `nPipelines:" "INFO"
+    [string]$Pipelines = Get-AzDataFactoryV2Pipeline -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
 if ($Pipelines.Count -eq 0) {
-    Write-Host "No pipelines found" "INFO"
+    Write-Output "No pipelines found" "INFO"
 } else {
     foreach ($Pipeline in $Pipelines) {
-        Write-Host "  - Pipeline: $($Pipeline.Name)" "INFO"
-        Write-Host "    Activities: $($Pipeline.Activities.Count)" "INFO"
-        Write-Host "    Parameters: $($Pipeline.Parameters.Count)" "INFO"
+        Write-Output "  - Pipeline: $($Pipeline.Name)" "INFO"
+        Write-Output "    Activities: $($Pipeline.Activities.Count)" "INFO"
+        Write-Output "    Parameters: $($Pipeline.Parameters.Count)" "INFO"
     }
 }
-$EndTime = Get-Date -ErrorAction Stop
-$StartTime = $EndTime.AddDays(-$DaysBack)
-Write-Host " `nRecent Pipeline Runs (Last $DaysBack days):" "INFO"
+    [string]$EndTime = Get-Date -ErrorAction Stop
+    [string]$StartTime = $EndTime.AddDays(-$DaysBack)
+Write-Output " `nRecent Pipeline Runs (Last $DaysBack days):" "INFO"
 try {
-    $PipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName -LastUpdatedAfter $StartTime -LastUpdatedBefore $EndTime
+    [string]$PipelineRuns = Get-AzDataFactoryV2PipelineRun -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName -LastUpdatedAfter $StartTime -LastUpdatedBefore $EndTime
     if ($PipelineRuns.Count -eq 0) {
-        Write-Host "No pipeline runs found in the specified period" "INFO"
+        Write-Output "No pipeline runs found in the specified period" "INFO"
     } else {
-        # Group by status for summary
-        $RunSummary = $PipelineRuns | Group-Object Status
-        Write-Host " `nPipeline Run Summary:" "INFO"
+    [string]$RunSummary = $PipelineRuns | Group-Object Status
+        Write-Output " `nPipeline Run Summary:" "INFO"
         foreach ($Group in $RunSummary) {
-            Write-Host "  $($Group.Name): $($Group.Count) runs" "INFO"
+            Write-Output "  $($Group.Name): $($Group.Count) runs" "INFO"
         }
-        # Show recent runs
-        Write-Host " `nRecent Pipeline Runs:" "INFO"
-        $RecentRuns = $PipelineRuns | Sort-Object RunStart -Descending | Select-Object -First 10
+        Write-Output " `nRecent Pipeline Runs:" "INFO"
+    [string]$RecentRuns = $PipelineRuns | Sort-Object RunStart -Descending | Select-Object -First 10
         foreach ($Run in $RecentRuns) {
-            Write-Host "  - Pipeline: $($Run.PipelineName)" "INFO"
-            Write-Host "    Run ID: $($Run.RunId)" "INFO"
-            Write-Host "    Status: $($Run.Status)" "INFO"
-            Write-Host "    Start Time: $($Run.RunStart)" "INFO"
-            Write-Host "    End Time: $($Run.RunEnd)" "INFO"
+            Write-Output "  - Pipeline: $($Run.PipelineName)" "INFO"
+            Write-Output "    Run ID: $($Run.RunId)" "INFO"
+            Write-Output "    Status: $($Run.Status)" "INFO"
+            Write-Output "    Start Time: $($Run.RunStart)" "INFO"
+            Write-Output "    End Time: $($Run.RunEnd)" "INFO"
             if ($Run.RunEnd -and $Run.RunStart) {
-                $Duration = $Run.RunEnd - $Run.RunStart
-                Write-Host "    Duration: $($Duration.ToString('hh\:mm\:ss'))" "INFO"
+    [string]$Duration = $Run.RunEnd - $Run.RunStart
+                Write-Output "    Duration: $($Duration.ToString('hh\:mm\:ss'))" "INFO"
             }
             if ($Run.Message) {
-                Write-Host "    Message: $($Run.Message)" "INFO"
+                Write-Output "    Message: $($Run.Message)" "INFO"
             }
-            Write-Host "    ---" "INFO"
+            Write-Output "    ---" "INFO"
         }
     }
 } catch {
-    Write-Host "Unable to retrieve pipeline runs: $($_.Exception.Message)" "INFO"
+    Write-Output "Unable to retrieve pipeline runs: $($_.Exception.Message)" "INFO"
 }
-Write-Host " `nLinked Services:" "INFO"
+Write-Output " `nLinked Services:" "INFO"
 try {
-    $LinkedServices = Get-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
+    [string]$LinkedServices = Get-AzDataFactoryV2LinkedService -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
     if ($LinkedServices.Count -eq 0) {
-        Write-Host "No linked services found" "INFO"
+        Write-Output "No linked services found" "INFO"
     } else {
         foreach ($LinkedService in $LinkedServices) {
-            Write-Host "  - Service: $($LinkedService.Name)" "INFO"
-            Write-Host "    Type: $($LinkedService.Properties.Type)" "INFO"
+            Write-Output "  - Service: $($LinkedService.Name)" "INFO"
+            Write-Output "    Type: $($LinkedService.Properties.Type)" "INFO"
         }
     }
 } catch {
-    Write-Host "Unable to retrieve linked services: $($_.Exception.Message)" "INFO"
+    Write-Output "Unable to retrieve linked services: $($_.Exception.Message)" "INFO"
 }
-Write-Host " `nDatasets:" "INFO"
+Write-Output " `nDatasets:" "INFO"
 try {
-$Datasets = Get-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
+    [string]$Datasets = Get-AzDataFactoryV2Dataset -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
     if ($Datasets.Count -eq 0) {
-        Write-Host "No datasets found" "INFO"
+        Write-Output "No datasets found" "INFO"
     } else {
         foreach ($Dataset in $Datasets) {
-            Write-Host "  - Dataset: $($Dataset.Name)" "INFO"
-            Write-Host "    Type: $($Dataset.Properties.Type)" "INFO"
+            Write-Output "  - Dataset: $($Dataset.Name)" "INFO"
+            Write-Output "    Type: $($Dataset.Properties.Type)" "INFO"
         }
     }
 } catch {
-    Write-Host "Unable to retrieve datasets: $($_.Exception.Message)" "INFO"
+    Write-Output "Unable to retrieve datasets: $($_.Exception.Message)" "INFO"
 }
-Write-Host " `nTriggers:" "INFO"
+Write-Output " `nTriggers:" "INFO"
 try {
-$Triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
+    [string]$Triggers = Get-AzDataFactoryV2Trigger -ResourceGroupName $ResourceGroupName -DataFactoryName $FactoryName
     if ($Triggers.Count -eq 0) {
-        Write-Host "No triggers found" "INFO"
+        Write-Output "No triggers found" "INFO"
     } else {
         foreach ($Trigger in $Triggers) {
-            Write-Host "  - Trigger: $($Trigger.Name)" "INFO"
-            Write-Host "    Type: $($Trigger.Properties.Type)" "INFO"
-            Write-Host "    State: $($Trigger.Properties.RuntimeState)" "INFO"
+            Write-Output "  - Trigger: $($Trigger.Name)" "INFO"
+            Write-Output "    Type: $($Trigger.Properties.Type)" "INFO"
+            Write-Output "    State: $($Trigger.Properties.RuntimeState)" "INFO"
         }
     }
 } catch {
-    Write-Host "Unable to retrieve triggers: $($_.Exception.Message)" "INFO"
+    Write-Output "Unable to retrieve triggers: $($_.Exception.Message)" "INFO"
 }
-Write-Host " `nData Factory Portal Access:" "INFO"
-Write-Host "URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName" "INFO"
-Write-Host " `nMonitoring Recommendations:" "INFO"
-Write-Host " 1. Review failed pipeline runs for error patterns" "INFO"
-Write-Host " 2. Monitor pipeline execution duration trends" "INFO"
-Write-Host " 3. Check data movement and transformation performance" "INFO"
-Write-Host " 4. Validate trigger schedules and dependencies" "INFO"
-Write-Host " 5. Monitor integration runtime utilization" "INFO"
-Write-Host " `nData Factory monitoring completed at $(Get-Date)" "INFO"
+Write-Output " `nData Factory Portal Access:" "INFO"
+Write-Output "URL: https://adf.azure.com/home?factory=/subscriptions/{subscription-id}/resourceGroups/$ResourceGroupName/providers/Microsoft.DataFactory/factories/$FactoryName" "INFO"
+Write-Output " `nMonitoring Recommendations:" "INFO"
+Write-Output " 1. Review failed pipeline runs for error patterns" "INFO"
+Write-Output " 2. Monitor pipeline execution duration trends" "INFO"
+Write-Output " 3. Check data movement and transformation performance" "INFO"
+Write-Output " 4. Validate trigger schedules and dependencies" "INFO"
+Write-Output " 5. Monitor integration runtime utilization" "INFO"
+Write-Output " `nData Factory monitoring completed at $(Get-Date)" "INFO"
+
 
 

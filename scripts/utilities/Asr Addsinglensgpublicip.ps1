@@ -1,76 +1,188 @@
-#Requires -Version 7.0
-#Requires -Modules Az.Resources
+#Requires -Version 7.4
+#Requires -Modules Az.Compute, Az.Network, Az.Automation
 
-<#`n.SYNOPSIS
-    Asr Addsinglensgpublicip
+<#
+.SYNOPSIS
+    ASR Add Single NSG and Public IP
 
 .DESCRIPTION
-    Azure automation
-    Wes Ellis (wes@wesellis.com)
+    Azure Site Recovery automation workflow that creates Public IP addresses
+    and optionally attaches Network Security Groups to failed over VMs during
+    test failover operations
 
-    1.0
+.PARAMETER RecoveryPlanContext
+    The recovery plan context object passed by Azure Site Recovery
+
+.PARAMETER AutomationAccountName
+    Name of the Azure Automation account
+
+.PARAMETER AutomationAccountRg
+    Resource group containing the Automation account
+
+.NOTES
+    Author: Wes Ellis (wes@wesellis.com)
+    Original Author: RuturajD@microsoft.com
+    Version: 1.0
+    Last Modified: January 27, 2017
     Requires appropriate permissions and modules
+    NSG configuration uses automation variables: <RecoveryPlanName>-NSG and <RecoveryPlanName>-NSGRG
 #>
-    .DESCRIPTION
-        This will create a Public IP address for the failed over VM - only in test failover.
-        Pre-requisites
-        1. when you create a new Automation Account, make sure you have chosen to create a run-as account with it.
-        2. If you create a run as account on your own, give the Connection Name in the variable - $connectionName
-        What all you need to change in this script?
-        1. Give the name of the Automation account in the variable - $AutomationAccountName
-        2. Give the Resource Group name of the Automation Account in $AutomationAccountRg
-        Do you want to add a NSG to the failed over VM? If yes, follow the below steps - you can skip this step if you dont want to add an NSG.
-        1. Create the NSG that you want to apply
-        2. Create a new Azure automation string variable <RecoveryPlanName>-NSG (example testrp-NSG). Save it with the value of the NSG you want to use.
-        3. Create a new  string variable <RecoveryPlanName>-NSGRG (example testrp-NSGRG). Save it with the value of the NSG's Resource group you want to use.
-        How to add the script?
-        Add this script as a post action in boot up group for which you need a public IP. All the VMs in the group will get a public IP assigned.
-        If the NSG parameters are specified, all the VM's NICs will get the same NSG attached.
-        Clean up test failover behavior
-        Clean up test failover will not delete the IP address. You will need to delete the IP address manually
-    .NOTES
-        AUTHOR: RuturajD@microsoft.com
-        LASTEDIT: 27 January, 2017
+
 workflow ASR-AddSingleNSGPublicIp {
     [CmdletBinding()]
-$ErrorActionPreference = "Stop"
-param(
-        [parameter()]
-        [Object]$RecoveryPlanContext
+    param(
+        [Parameter()]
+        [Object]$RecoveryPlanContext,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AutomationAccountName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AutomationAccountRg
     )
-    $connectionName = "AzureRunAsConnection"
-    $AutomationAccountName = "" #Fill this up with you Azure Automation Account Name
-    $AutomationAccountRg = ""    #Fill this up with you  Account Resource Group
-    # This is special code only added for this test run to avoid creating public IPs in S2S VPN network
-    if ($RecoveryPlanContext.FailoverType -ne "Test" ) {
-        exit
+
+    $ErrorActionPreference = "Stop"
+    $ConnectionName = "AzureRunAsConnection"
+
+    # Only execute for test failovers
+    if ($RecoveryPlanContext.FailoverType -ne "Test") {
+        Write-Output "This script only runs during test failovers. Exiting."
+        return
     }
-    try
-    {
-        # Get the connection "AzureRunAsConnection "
-        $servicePrincipalConnection=Get-AutomationConnection -Name $connectionName
-        "Logging in to Azure..."
-        $params = @{
-            Or = "($VM.RoleName"
-            AutomationAccountName = $AutomationAccountName
-            ne = $Null)) { ;  $NSG = Get-AzureRmNetworkSecurityGroup
-            ErrorAction = "Stop | Where-Object MemberType"
-            Location = $azurevm.Location
-            NetworkInterface = $VMNetworkInterfaceObject } } }
-            EQ = $Null))) { #this is when some data is anot available and it will fail Write-output "Resource group name " , $VM.ResourceGroupName Write-output "Rolename " = $VM.RoleName  InlineScript {  $azurevm = Get-AzureRMVM
-            ResourceId = $azurevm.NetworkInterfaceIDs[0] write-output "Nic Arm Object Id = " , $NicArmObject.Id $VMNetworkInterfaceObject = Get-AzureRmNetworkInterface
-            ResourceGroupName = $Using:NSGRGname Write-output $NSG.Id $VMNetworkInterfaceObject.NetworkSecurityGroup = $NSG } #Update the properties now Set-AzureRmNetworkInterface
+
+    try {
+        Write-Output "Getting automation connection..."
+        $servicePrincipalConnection = Get-AutomationConnection -Name $ConnectionName -ErrorAction Stop
+
+        Write-Output "Logging in to Azure..."
+        $connectParams = @{
+            ServicePrincipal = $true
             TenantId = $servicePrincipalConnection.TenantId
-            Name = $Using:NSGname
             ApplicationId = $servicePrincipalConnection.ApplicationId
-            ExpandProperty = "Name  Write-output $RecoveryPlanContext.VmMap Write-output $RecoveryPlanContext  # Get the NSG based on the name # if he has not passed this value just create the public IP and go ahead   $NSGValue = $RecoveryPlanContext.RecoveryPlanName + "
-            Message = $_.Exception throw $_.Exception } }  $VMinfo = $RecoveryPlanContext.VmMap | Get-Member
-            AllocationMethod = "Dynamic"
-            Output = $NSGValue Write-Output $NSGRGValue  $NSGnameVar = Get-AzureRMAutomationVariable
-            CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint } catch { if (!$servicePrincipalConnection) { $ErrorMessage = "Connection $connectionName not found." throw $ErrorMessage } else{ Write-Error
-            And = "($Using:NSGRGname"
+            CertificateThumbprint = $servicePrincipalConnection.CertificateThumbprint
         }
-        #Add-AzureRmAccount @params
+
+        Add-AzAccount @connectParams -ErrorAction Stop
+
+        Write-Output "Setting subscription context..."
+        Select-AzSubscription -SubscriptionId $servicePrincipalConnection.SubscriptionID -ErrorAction Stop
+    }
+    catch {
+        if (!$servicePrincipalConnection) {
+            $errorMessage = "Connection '$ConnectionName' not found."
+            Write-Error $errorMessage
+            throw $errorMessage
+        }
+        else {
+            Write-Error "Failed to connect to Azure: $_"
+            throw
+        }
+    }
+
+    Write-Output "Recovery Plan Context:"
+    Write-Output $RecoveryPlanContext
+
+    # Try to get NSG configuration from automation variables
+    $nsgName = $null
+    $nsgRgName = $null
+
+    try {
+        $nsgNameVariable = $RecoveryPlanContext.RecoveryPlanName + "-NSG"
+        $nsgRgVariable = $RecoveryPlanContext.RecoveryPlanName + "-NSGRG"
+
+        $nsgName = Get-AzAutomationVariable -AutomationAccountName $AutomationAccountName `
+            -ResourceGroupName $AutomationAccountRg `
+            -Name $nsgNameVariable `
+            -ErrorAction SilentlyContinue
+
+        $nsgRgName = Get-AzAutomationVariable -AutomationAccountName $AutomationAccountName `
+            -ResourceGroupName $AutomationAccountRg `
+            -Name $nsgRgVariable `
+            -ErrorAction SilentlyContinue
+
+        if ($nsgName -and $nsgRgName) {
+            Write-Output "NSG configuration found: $nsgName in resource group $nsgRgName"
+        }
+        else {
+            Write-Output "No NSG configuration found. Will only create public IPs."
+        }
+    }
+    catch {
+        Write-Warning "Could not retrieve NSG variables: $_"
+    }
+
+    # Get VM information from recovery plan
+    $vmInfo = $RecoveryPlanContext.VmMap | Get-Member |
+        Where-Object MemberType -eq NoteProperty |
+        Select-Object -ExpandProperty Name
+
+    Write-Output "Found VMs:"
+    Write-Output $vmInfo
+
+    $vmMap = $RecoveryPlanContext.VmMap
+
+    foreach ($vmId in $vmInfo) {
+        $vm = $vmMap.$vmId
+
+        if ((-not ($null -eq $vm)) -and
+            (-not ($null -eq $vm.ResourceGroupName)) -and
+            (-not ($null -eq $vm.RoleName))) {
+
+            Write-Output "`nProcessing VM:"
+            Write-Output "  Resource Group: $($vm.ResourceGroupName)"
+            Write-Output "  VM Name: $($vm.RoleName)"
+
+            InlineScript {
+                try {
+                    # Get VM details
+                    $azureVm = Get-AzVM -ResourceGroupName $Using:vm.ResourceGroupName `
+                        -Name $Using:vm.RoleName `
+                        -ErrorAction Stop
+
+                    # Get network interface
+                    $nicResourceId = $azureVm.NetworkProfile.NetworkInterfaces[0].Id
+                    $nicResource = Get-AzResource -ResourceId $nicResourceId -ErrorAction Stop
+                    $nic = Get-AzNetworkInterface -Name $nicResource.Name `
+                        -ResourceGroupName $nicResource.ResourceGroupName `
+                        -ErrorAction Stop
+
+                    # Create and assign public IP
+                    $pipParams = @{
+                        Name = "$($Using:vm.RoleName)-pip"
+                        ResourceGroupName = $Using:vm.ResourceGroupName
+                        Location = $azureVm.Location
+                        AllocationMethod = "Dynamic"
+                        ErrorAction = "Stop"
+                    }
+                    $publicIP = New-AzPublicIpAddress @pipParams
+
+                    $nic.IpConfigurations[0].PublicIpAddress = $publicIP
+                    Write-Output "Assigned public IP to VM: $($Using:vm.RoleName)"
+
+                    # Attach NSG if configured
+                    if ($Using:nsgName -and $Using:nsgRgName) {
+                        $nsg = Get-AzNetworkSecurityGroup -Name $Using:nsgName `
+                            -ResourceGroupName $Using:nsgRgName `
+                            -ErrorAction Stop
+
+                        $nic.NetworkSecurityGroup = $nsg
+                        Write-Output "Attached NSG '$($Using:nsgName)' to VM: $($Using:vm.RoleName)"
+                    }
+
+                    # Apply changes to network interface
+                    Set-AzNetworkInterface -NetworkInterface $nic -ErrorAction Stop
+                    Write-Output "Successfully configured networking for VM: $($Using:vm.RoleName)"
+                }
+                catch {
+                    Write-Error "Failed to configure VM $($Using:vm.RoleName): $_"
+                    throw
+                }
+            }
+        }
+        else {
+            Write-Warning "Skipping VM due to missing information"
+        }
+    }
+
+    Write-Output "`nPublic IP and NSG configuration completed for all VMs"
 }
-
-

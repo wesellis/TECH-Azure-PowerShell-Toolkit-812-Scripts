@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Setupserver
@@ -9,6 +9,8 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Wes Ellis (wes@wesellis.com)
 
     1.0
@@ -22,7 +24,7 @@ if ($LastExitCode -ne 0)
     exit $LastExitCode
 }
 $range = $args[1]
-$bits = $range.Split(" /" )
+$bits = $range.Split("/" )
 $ip = $bits[0]
 $net = $bits[1]
 $ipbits = $ip.Split('.')
@@ -42,5 +44,4 @@ dnscmd.exe /Config $zone /AllowUpdate 1
 if ($LastExitCode -ne 0)
 {
     " exit code configuring reverse zone ($args[1]) was non-zero ($LastExitCode), bailing..."
-    exit $LastExitCode
-}
+    exit $LastExitCode`n}

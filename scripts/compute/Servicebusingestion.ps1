@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -9,21 +9,20 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$ConnectionAssetName = "AzureClassicRunAsConnection"
-$connection = Get-AutomationConnection -Name $connectionAssetName
+    [string]$ErrorActionPreference = "Stop"
+    [string]$ConnectionAssetName = "AzureClassicRunAsConnection"
+$connection = Get-AutomationConnection -Name $ConnectionAssetName
 Write-Verbose "Get connection asset: $ConnectionAssetName" -Verbose
 $Conn = Get-AutomationConnection -Name $ConnectionAssetName
 if ($null -eq $Conn)
     {
         throw "Could not retrieve connection asset: $ConnectionAssetName. Assure that this asset exists in the Automation account."
     }
-$CertificateAssetName = $Conn.CertificateAssetName
+    [string]$CertificateAssetName = $Conn.CertificateAssetName
 Write-Verbose "Getting the certificate: $CertificateAssetName" -Verbose
 $AzureCert = Get-AutomationCertificate -Name $CertificateAssetName
 if ($null -eq $AzureCert)
@@ -33,109 +32,96 @@ if ($null -eq $AzureCert)
 Write-Verbose "Authenticating to Azure with certificate." -Verbose
 Set-AzureSubscription -SubscriptionName $Conn.SubscriptionName -SubscriptionId $Conn.SubscriptionID -Certificate $AzureCert
 Select-AzureSubscription -SubscriptionId $Conn.SubscriptionID
-$StartTime = [dateTime]::Now
-$Timestampfield = "Timestamp"
-$customerID = Get-AutomationVariable -Name 'OMSWorkspaceId'
-$sharedKey = Get-AutomationVariable -Name 'OMSWorkspaceKey'
-$logType  = " servicebus"
+    [string]$StartTime = [dateTime]::Now
+    [string]$Timestampfield = "Timestamp"
+$CustomerID = Get-AutomationVariable -Name 'OMSWorkspaceId'
+$SharedKey = Get-AutomationVariable -Name 'OMSWorkspaceKey'
+    [string]$LogType  = " servicebus"
 "Logging in to Azure..."
 $Conn = Get-AutomationConnection -Name AzureRunAsConnection
- $params = @{
+$params = @{
      ApplicationId = $Conn.ApplicationID
      CertificateThumbprint = $Conn.CertificateThumbprint
      Tenant = $Conn.TenantID
  }
  Add-AzureRMAccount @params
 "Selecting Azure subscription..."
-$SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
- [CmdletBinding()]
-Function CalculateFreeSpacePercentage{
- [CmdletBinding()]
+    [string]$SelectedAzureSub = Select-AzureRmSubscription -SubscriptionId $Conn.SubscriptionID -TenantId $Conn.tenantid
+ Function CalculateFreeSpacePercentage{
+ param(
 param(
 [Parameter(Mandatory)]
 [int]$MaxSizeMB,
 [Parameter(Mandatory)]
 [int]$CurrentSizeMB
 )
-$percentage = (($MaxSizeMB - $CurrentSizeMB)/$MaxSizeMB)*100 #calculate percentage
+)
+    [string]$percentage = (($MaxSizeMB - $CurrentSizeMB)/$MaxSizeMB)*100
 Return ($percentage)
 }
-[CmdletBinding()]
 Function Get-SbNameSpace -ErrorAction Stop
 {
-    $sbNamespace = Get-AzureRmServiceBusNamespace -ErrorAction Stop
-    if($null -ne $sbNamespace)
+$SbNamespace = Get-AzureRmServiceBusNamespace -ErrorAction Stop
+    if($null -ne $SbNamespace)
         {
-            #"Found $($sbNamespace.Count) service bus namespace(s)."
         }
     else
     {
         throw "No Service Bus name spaces were found!"
         break
     }
-return $sbNamespace
+return $SbNamespace
 }
-[OutputType([PSObject])]
-
-{
-    [CmdletBinding()]
-param([parameter(mandatory=$true)]
-    [object]$sbNamespace)
-    $queueTable = @()
-	$jsonQueueTable = @()
-    $sx = @()
+function Write-Log {
+    param([parameter(mandatory=$true)]
+    [object]$SbNamespace)
+    [string]$QueueTable = @()
+    [string]$JsonQueueTable = @()
+    [string]$sx = @()
     " ----------------- Start Queue section -----------------"
-    "Found $($sbNamespace.Count) service bus namespace(s)."
+    "Found $($SbNamespace.Count) service bus namespace(s)."
     "Processing Queues.... `n"
-    foreach($sb in $sbNamespace)
+    foreach($sb in $SbNamespace)
         {
-        $SBqueue = $null
+    [string]$SBqueue = $null
         "Going through service bus instance `" $($sb.Name)`" ..."
-        #Get Resource Group Name for the service bus instance
-        $sbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
+    [string]$SbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
         " *** Attempting to get queues.... ***"
         try
         {
-            $SBqueue = Get-AzureRmServiceBusQueue -ResourceGroup $sbResourceGroup -NamespaceName $sb.name
+$SBqueue = Get-AzureRmServiceBusQueue -ResourceGroup $SbResourceGroup -NamespaceName $sb.name
             " *** Number of queues found: $($SBqueue.name.count) *** `n"
         }
         catch
         {Write-Output ("Error in getting queue information for namespace:  " + $sb.name + " `n" )}
-        if($null -ne $SBqueue) #We have Queues, so we can continue
+        if($null -ne $SBqueue)
         {
-            #clear table
-            $queueTable = @()
+    [string]$QueueTable = @()
             foreach($queue in $SBqueue)
             {
-                    #check if the queue message size (SizeInBytes) exceeds the threshold of MaxSizeInMegabytes
                     if(($queue.SizeInBytes/1MB) -gt $Queue.MaxSizeInMegabytes)
                     {
-                        $queueThresholdAlert = 1 #Queue exceeds Queue threshold, so raise alert
+    [string]$QueueThresholdAlert = 1
                     }
                     else
                     {
-                        $queueThresholdAlert = 0 #Queue size is below threshold
+    [string]$QueueThresholdAlert = 0
                     }
                     if($queue.SizeInBytes -ne 0)
                     {
-                    #("QueueSizeInBytes is: " + $queue.SizeInBytes)
-                    $queueSizeInMB = $null
-                    $queueSizeInMB = ($queue.SizeInBytes/1MB)
-                    $queueFreeSpacePercentage = $null
-                    $queueFreeSpacePercentage = CalculateFreeSpacePercentage -MaxSizeMB $queue.MaxSizeInMegabytes -CurrentSizeMB $queueSizeInMB
-                    #uncomment the next lines for troubleshooting
-                    #"Actual Queue Freespace Percentage: $queueFreeSpacePercentage"
-                    $queueFreeSpacePercentage = " {0:N2}" -f $queueFreeSpacePercentage
-                    #"Recalculation: $queueFreeSpacePercentage"
+    [string]$QueueSizeInMB = $null
+    [string]$QueueSizeInMB = ($queue.SizeInBytes/1MB)
+    [string]$QueueFreeSpacePercentage = $null
+    [string]$QueueFreeSpacePercentage = CalculateFreeSpacePercentage -MaxSizeMB $queue.MaxSizeInMegabytes -CurrentSizeMB $QueueSizeInMB
+    [string]$QueueFreeSpacePercentage = " {0:N2}" -f $QueueFreeSpacePercentage
                     }
                     else
                     {
                         "QueueSizeInBytes is 0, so we are setting the percentage to 100"
-$queueFreeSpacePercentage = 100
+    [string]$QueueFreeSpacePercentage = 100
                     }
 $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
-			            #SubscriptionName = $subscriptionName;
                         ServiceBusName = $sb.Name;
                         QueueName = $queue.Name;
                         QueueLocation = $queue.Location;
@@ -150,41 +136,26 @@ $sx = New-Object -ErrorAction Stop PSObject -Property @{
 			            EnableBatchedOperations = $queue.EnableBatchedOperations;
 			            SizeInBytes = $queue.SizeInBytes;
                         MessageCount = $queue.MessageCount;
-			            #MessageCountDetails = $Queue.CountDetails;
 			            ActiveMessageCount = $queue.CountDetails.ActiveMessageCount;
 			            DeadLetterMessageCount = $queue.CountDetails.DeadLetterMessageCount;
 			            ScheduledMessageCount = $queue.CountDetails.ScheduledMessageCount;
 			            TransferMessageCount = $queue.CountDetails.TransferMessageCount;
 			            TransferDeadLetterMessageCount = $queue.CountDetails.TransferDeadLetterMessageCount;
-			            #Authorization = $Queue.Authorization;
 			            IsAnonymousAccessible = $queue.IsAnonymousAccessible;
 			            SupportOrdering = $queue.SupportOrdering;
 			            Status = $queue.Status;
-			            #AvailabilityStatus = $Queue.AvailabilityStatus;
-			            #ForwardTo = $Queue.ForwardTo;
-			            #ForwardDeadLetteredMessagesTo = $Queue.ForwardDeadLetteredMessagesTo;
-			            #CreatedAt = $Queue.CreatedAt;
-			            #UpdatedAt = $Queue.UpdatedAt;
-			            #AccessedAt = $Queue.AccessedAt;
 			            EnablePartitioning = $queue.EnablePartitioning;
-			            #UserMetadata = $Queue.UserMetadata;
-			            #EnableExpress = $Queue.EnableExpress;
-			            #IsReadOnly = $Queue.IsReadOnly;
-			            #ExtensionData = $Queue.ExtensionData;
-                        QueueThresholdAlert = $queueThresholdAlert;
-                        QueueFreeSpacePercentage = $queueFreeSpacePercentage;
+                        QueueThresholdAlert = $QueueThresholdAlert;
+                        QueueFreeSpacePercentage = $QueueFreeSpacePercentage;
 			        }
-					$sx
-			        $queueTable = $queueTable = $queueTable + $sx
-			        # Convert table to a JSON document for ingestion
-			        $jsonQueueTable = ConvertTo-Json -InputObject $queueTable
+    [string]$sx
+    [string]$QueueTable = $QueueTable = $QueueTable + $sx
+    [string]$JsonQueueTable = ConvertTo-Json -InputObject $QueueTable
 				}
                 try
                 {
                     "Initiating ingestion of Queue data....`n"
-                    Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonQueueTable -logType $logType -TimeStampField $Timestampfield
-		    	    #Uncomment below to troubleshoot
-		    	    #$jsonQueueTable
+                    Send-OMSAPIIngestionFile -customerId $CustomerId -sharedKey $SharedKey -body $JsonQueueTable -logType $LogType -TimeStampField $Timestampfield
                 }
                 catch {Throw "Ingestion of Queue data has failed!" }
         }
@@ -193,61 +164,56 @@ $sx = New-Object -ErrorAction Stop PSObject -Property @{
     " ----------------- End Queue section -----------------`n"
 }
 function Publish-SbTopicMetrics{
-    [CmdletBinding()]
-param([parameter(mandatory=$true)]
-    [object]$sbNamespace)
-    $topicTable = @()
-	$jsonTopicTable = @()
-    $sx = @()
+    param([parameter(mandatory=$true)]
+    [object]$SbNamespace)
+    [string]$TopicTable = @()
+    [string]$JsonTopicTable = @()
+    [string]$sx = @()
     " ----------------- Start Topic section -----------------"
-	if ($null -ne $sbNamespace)
+	if ($null -ne $SbNamespace)
     {
     "Processing Topics... `n"
-		foreach ($sb in $sbNamespace)
+		foreach ($sb in $SbNamespace)
 		{
             "Going through $($sb.Name) for Topics..."
-            #"Attempting to get topics...."
             try
             {
-                $sbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
-                $topicList = Get-AzureRmServiceBusTopic -ResourceGroup $sbResourceGroup -NamespaceName $sb.Name
+    [string]$SbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
+$TopicList = Get-AzureRmServiceBusTopic -ResourceGroup $SbResourceGroup -NamespaceName $sb.Name
             }
             catch
             {
                 "Could not get any topics"
-                $ErrorMessage = $_.Exception.Message
+    [string]$ErrorMessage = $_.Exception.Message
                 Write-Output ("Error Message: " + $ErrorMessage)
             }
-            "Found $($topicList.name.Count) topic(s).`n"
-            foreach ($topic in $topicList)
+            "Found $($TopicList.name.Count) topic(s).`n"
+            foreach ($topic in $TopicList)
 		    {
-				if ($null -ne $topicList)
+				if ($null -ne $TopicList)
 				{
-                    #check if the topic message size (SizeInBytes) exceeds the threshold of MaxSizeInMegabytes
-                    #if so we raise an alert (=1)
                     if(($topic.SizeInBytes/1MB) -gt $topic.MaxSizeInMegabytes)
                     {
-                        $topicThresholdAlert = 1 #exceeds Queue threshold
+    [string]$TopicThresholdAlert = 1
                     }
                     else
                     {
-                        $topicThresholdAlert = 0
+    [string]$TopicThresholdAlert = 0
                     }
                     if($topic.SizeInBytes -ne 0)
                     {
                         ("TopicSizeInBytes is: " + $topic.SizeInBytes)
-                        $topicSizeInMB = $null
-                        $topicSizeInMB = ($topic.SizeInBytes/1MB)
-                        $topicFreeSpacePercentage = $null
-                        $topicFreeSpacePercentage = CalculateFreeSpacePercentage -MaxSizeMB $topic.MaxSizeInMegabytes -CurrentSizeMB $topicSizeInMB
-                        $topicFreeSpacePercentage = " {0:N2}" -f $topicFreeSpacePercentage
+    [string]$TopicSizeInMB = $null
+    [string]$TopicSizeInMB = ($topic.SizeInBytes/1MB)
+    [string]$TopicFreeSpacePercentage = $null
+    [string]$TopicFreeSpacePercentage = CalculateFreeSpacePercentage -MaxSizeMB $topic.MaxSizeInMegabytes -CurrentSizeMB $TopicSizeInMB
+    [string]$TopicFreeSpacePercentage = " {0:N2}" -f $TopicFreeSpacePercentage
                     }
                     else
                     {
                         "TopicSizeInBytes is 0, so we are setting the percentage to 100"
-$topicFreeSpacePercentage = 100
+    [string]$TopicFreeSpacePercentage = 100
                     }
-                        #Construct the ingestion table
 $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                         TopicName = $topic.name;
@@ -256,26 +222,23 @@ $sx = New-Object -ErrorAction Stop PSObject -Property @{
                         SizeInBytes = $topic.SizeInBytes;
                         EnableBatchedOperations = $topic.EnableBatchedOperations;
                         SubscriptionCount = $topic.SubscriptionCount;
-                        TopicThresholdAlert = $topicThresholdAlert;
-                        TopicFreeSpacePercentage = $topicFreeSpacePercentage;
+                        TopicThresholdAlert = $TopicThresholdAlert;
+                        TopicFreeSpacePercentage = $TopicFreeSpacePercentage;
                         ActiveMessageCount = $topic.CountDetails.ActiveMessageCount;
                         DeadLetterMessageCount = $topic.Countdetails.DeadLetterMessageCount;
                         ScheduledMessageCount = $topic.Countdetails.ScheduledMessageCount;
                         TransferMessageCount = $topic.Countdetails.TransferMessageCount;
                         TransferDeadLetterMessageCount = $topic.Countdetails.TransferDeadLetterMessageCount;
 			            }
-					$sx
-			        $topicTable = $topicTable = $topicTable + $sx
-			        # Convert table to a JSON document for ingestion
-			        $jsonTopicTable = ConvertTo-Json -InputObject $topicTable
+    [string]$sx
+    [string]$TopicTable = $TopicTable = $TopicTable + $sx
+    [string]$JsonTopicTable = ConvertTo-Json -InputObject $TopicTable
 				}
                 else{"No topics found." }
                 try
                 {
                     "Initiating ingestion of Topic data....`n"
-                    Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonTopicTable -logType $logType -TimeStampField $Timestampfield
-		    	    #Uncomment below to troubleshoot
-		    	    #$jsonTopicTable
+                    Send-OMSAPIIngestionFile -customerId $CustomerId -sharedKey $SharedKey -body $JsonTopicTable -logType $LogType -TimeStampField $Timestampfield
                 }
                 catch {Throw "Error ingesting Topic data!" }
 			}
@@ -288,71 +251,63 @@ $sx = New-Object -ErrorAction Stop PSObject -Property @{
     " ----------------- End Topic section -----------------`n"
 }
 function Publish-SbTopicSubscriptions{
-    [CmdletBinding()]
-param([parameter(mandatory=$true)]
-    [object]$sbNamespace)
-    $subscriptionTable = @()
-	$jsonSubscriptionTable = @()
-    $sx = @()
+    param([parameter(mandatory=$true)]
+    [object]$SbNamespace)
+    [string]$SubscriptionTable = @()
+    [string]$JsonSubscriptionTable = @()
+    [string]$sx = @()
     " ----------------- Start Topic Subscription section -----------------"
     "Processing Topic Subscriptions... `n"
-    if($null -ne $sbNamespace)
+    if($null -ne $SbNamespace)
     {
-        #"Processing $($sbNamespace.Count) service bus namespace(s) `n"
-        foreach($sb in $sbNamespace)
+        foreach($sb in $SbNamespace)
         {
             "Going through $($sb.Name) for Topic Subscriptions..."
             try
             {
-                $sbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
-                $topicList = Get-AzureRmServiceBusTopic -ResourceGroup $sbResourceGroup -NamespaceName $sb.Name
+    [string]$SbResourceGroup = (Find-AzureRmResource -ResourceNameEquals $sb.Name).ResourceGroupName
+$TopicList = Get-AzureRmServiceBusTopic -ResourceGroup $SbResourceGroup -NamespaceName $sb.Name
             }
             catch
             {
                 "Could not get any topics"
-                $ErrorMessage = $_.Exception.Message
+    [string]$ErrorMessage = $_.Exception.Message
                 Write-Output ("Error Message: " + $ErrorMessage)
             }
-            "Found $($topicList.name.Count) topic(s) to go through....`n"
-            #check if servicebus instance has topics
-            if($topicList.name -ne $null)
+            "Found $($TopicList.name.Count) topic(s) to go through....`n"
+            if($TopicList.name -ne $null)
             {
-                #Getting Subscriptions for each topic
-                foreach($topic in $topicList)
+                foreach($topic in $TopicList)
                 {
-$topicSubscriptions = Get-AzureRmServiceBusSubscription -ResourceGroup $sbResourceGroup -NamespaceName $sb.Name -TopicName $topic.Name
-                    "Found $($topicSubscriptions.name.Count) Subscriptions for Topic `" $($topic.Name)`" - service bus instance `" $($sb.Name)`" ....`n"
-                    if($topicSubscriptions.Name.count -gt 0) #if we don't have subscriptions, we need to skip this step
+$TopicSubscriptions = Get-AzureRmServiceBusSubscription -ResourceGroup $SbResourceGroup -NamespaceName $sb.Name -TopicName $topic.Name
+                    "Found $($TopicSubscriptions.name.Count) Subscriptions for Topic `" $($topic.Name)`" - service bus instance `" $($sb.Name)`" ....`n"
+                    if($TopicSubscriptions.Name.count -gt 0)
                     {
-                        foreach($topicSubscription in $topicSubscriptions)
+                        foreach($TopicSubscription in $TopicSubscriptions)
                         {
-                            "Processing Subscription: `" $($topicSubscription.Name)`" for Topic: `" $($topic.Name)`" `n"
-                             #Construct the ingestion table
+                            "Processing Subscription: `" $($TopicSubscription.Name)`" for Topic: `" $($topic.Name)`" `n"
 $sx = New-Object -ErrorAction Stop PSObject -Property @{
                                 TimeStamp = $([DateTime]::Now.ToString(" yyyy-MM-ddTHH:mm:ss.fffZ" ));
                                 ServiceBusName=$sb.Name;
                                 TopicName = $topic.Name;
-                                SubscriptionName = $topicSubscription.Name
-                                Status = $topicSubscription.Status;
-                                EntityAvailabilityStatus = $topicSubscription.EntityAvailabilityStatus;
-                                MessageCount = $topicSubscription.MessageCount;
-			                    SubscriptionActiveMessageCount = $topicSubscription.CountDetails.ActiveMessageCount;
-			                    SubscriptionDeadLetterMessageCount = $topicSubscription.CountDetails.DeadLetterMessageCount;
-			                    SubscriptionScheduledMessageCount = $topicSubscription.CountDetails.ScheduledMessageCount;
-			                    SubscriptionTransferMessageCount = $topicSubscription.CountDetails.TransferMessageCount;
-			                    SubscriptionTransferDeadLetterMessageCount = $topicSubscription.CountDetails.TransferDeadLetterMessageCount;
+                                SubscriptionName = $TopicSubscription.Name
+                                Status = $TopicSubscription.Status;
+                                EntityAvailabilityStatus = $TopicSubscription.EntityAvailabilityStatus;
+                                MessageCount = $TopicSubscription.MessageCount;
+			                    SubscriptionActiveMessageCount = $TopicSubscription.CountDetails.ActiveMessageCount;
+			                    SubscriptionDeadLetterMessageCount = $TopicSubscription.CountDetails.DeadLetterMessageCount;
+			                    SubscriptionScheduledMessageCount = $TopicSubscription.CountDetails.ScheduledMessageCount;
+			                    SubscriptionTransferMessageCount = $TopicSubscription.CountDetails.TransferMessageCount;
+			                    SubscriptionTransferDeadLetterMessageCount = $TopicSubscription.CountDetails.TransferDeadLetterMessageCount;
 			                   }
-					    $sx
-			            $subscriptionTable = $subscriptionTable = $subscriptionTable + $sx
-			            # Convert table to a JSON document for ingestion
-			            $jsonSubscriptionTable = ConvertTo-Json -InputObject $subscriptionTable
+    [string]$sx
+    [string]$SubscriptionTable = $SubscriptionTable = $SubscriptionTable + $sx
+    [string]$JsonSubscriptionTable = ConvertTo-Json -InputObject $SubscriptionTable
                         }
                         try
                         {
                             "Initiating ingestion of Topic Subscription data....`n"
-                            Send-OMSAPIIngestionFile -customerId $customerId -sharedKey $sharedKey -body $jsonSubscriptionTable -logType $logType -TimeStampField $Timestampfield
-		    	            #Uncomment below to troubleshoot
-		    	            #$jsonSubscriptionTable
+                            Send-OMSAPIIngestionFile -customerId $CustomerId -sharedKey $SharedKey -body $JsonSubscriptionTable -logType $LogType -TimeStampField $Timestampfield
                         }
                         catch {Throw "Error trying to ingest Topic Subscription data!" }
                     }
@@ -363,14 +318,15 @@ $sx = New-Object -ErrorAction Stop PSObject -Property @{
     }
    " ----------------- End Topic Subscription section -----------------`n"
 }
-$sbNameSpace = $null
-$topic = $null;
-$sx = $null
-$sbNameSpace = Get-SbNameSpace -ErrorAction Stop
-Publish-SbQueueMetrics -sbNamespace $sbNameSpace
-Publish-SbTopicMetrics -sbNamespace $sbNameSpace
-Publish-SbTopicSubscriptions -sbNamespace $sbNameSpace
+    [string]$SbNameSpace = $null
+    [string]$topic = $null;
+    [string]$sx = $null
+$SbNameSpace = Get-SbNameSpace -ErrorAction Stop
+Publish-SbQueueMetrics -sbNamespace $SbNameSpace
+Publish-SbTopicMetrics -sbNamespace $SbNameSpace
+Publish-SbTopicSubscriptions -sbNamespace $SbNameSpace
 " `n"
 "We're done!"
+
 
 

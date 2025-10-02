@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Compute
 #Requires -Modules Az.Network
 #Requires -Modules Az.Resources
@@ -11,9 +11,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
-# Enhanced Azure VM Provisioning Tool with enterprise features
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$ResourceGroupName,
     [Parameter(Mandatory)][ValidatePattern('^[a-zA-Z0-9][a-zA-Z0-9\-]{1,62}[a-zA-Z0-9]$')][string]$VmName,
@@ -26,20 +26,19 @@
     [switch]$WhatIf,
     [switch]$Force
 )
-# Import enhanced functions
-$modulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "modules", "AzureAutomationCommon"
-if (Test-Path $modulePath) { riptName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
+$ModulePath = Join-Path -Path $PSScriptRoot -ChildPath ".." -AdditionalChildPath "modules", "AzureAutomationCommon"
+if (Test-Path $ModulePath) { riptName "Azure VM Provisioning Tool" -Description "Enterprise VM deployment with enhanced features"
 try {
     Write-HostNumber 1 -TotalSteps 6 -StepName "Validation" -Status "Checking Azure connection..."
     if (-not ((Get-AzContext))) { throw "Azure connection validation failed" }
     Write-HostNumber 2 -TotalSteps 6 -StepName "Resource Group" -Status "Validating resource group..."
     $rg = Invoke-AzureOperation -Operation { Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop } -OperationName "Get Resource Group"
-    
+
     Write-HostNumber 3 -TotalSteps 6 -StepName "Network Setup" -Status "Configuring network..."
     $vnet = Get-AzVirtualNetwork -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue | Select-Object -First 1
     if (-not $vnet -and -not $WhatIf) {
         $vnet = Invoke-AzureOperation -Operation {
-            $virtualnetworkSplat = @{
+            $VirtualnetworkSplat = @{
     ResourceGroupName = $ResourceGroupName
     Location = $Location
     AddressPrefix = "10.0.0.0/16"
@@ -52,20 +51,17 @@ New-AzVirtualNetwork @virtualnetworkSplat
     $credential = [PSCredential]::new($AdminUsername, $AdminPassword)
     Write-HostNumber 5 -TotalSteps 6 -StepName "VM Creation" -Status "Creating virtual machine..."
     if ($WhatIf) {
-        
+
     } else {
-        $defaultTags = @{ CreatedBy = "Azure-Automation-Scripts"; CreatedOn = (Get-Date).ToString("yyyy-MM-dd"); Script = "Enhanced-VM-Tool" }
-        foreach ($tag in $Tags.GetEnumerator()) { $defaultTags[$tag.Key] = $tag.Value }
+        $DefaultTags = @{ CreatedBy = "Azure-Automation-Scripts"; CreatedOn = (Get-Date).ToString("yyyy-MM-dd"); Script = "Enhanced-VM-Tool" }
+        foreach ($tag in $Tags.GetEnumerator()) { $DefaultTags[$tag.Key] = $tag.Value }
         if (-not $Force) {
             $confirm = Read-Host "Create VM '$VmName'? (y/N)"
-            if ($confirm -notmatch '^[Yy]') { 
+            if ($confirm -notmatch '^[Yy]') {
         }
         $vm = Invoke-AzureOperation -Operation { New-AzVM -ErrorAction Stop @vmParams } -OperationName "Create VM" -MaxRetries 2
-        
+
     }
     Write-HostNumber 6 -TotalSteps 6 -StepName "Complete" -Status "Finalizing..."
     } catch {
-        throw
-}
-
-
+        throw`n}

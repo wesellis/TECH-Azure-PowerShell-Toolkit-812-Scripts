@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Aks
 
@@ -10,8 +10,9 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [string]$ResourceGroupName,
     [string]$AksClusterName,
@@ -23,16 +24,15 @@
     [bool]$EnableRBAC = $true,
     [bool]$EnableManagedIdentity = $true
 )
-Write-Host "Provisioning AKS Cluster: $AksClusterName"
-Write-Host "Resource Group: $ResourceGroupName"
-Write-Host "Location: $Location"
-Write-Host "Node Count: $NodeCount"
-Write-Host "Node VM Size: $NodeVmSize"
-Write-Host "Kubernetes Version: $KubernetesVersion"
-Write-Host "Network Plugin: $NetworkPlugin"
-Write-Host "RBAC Enabled: $EnableRBAC"
-# Create the AKS cluster
-Write-Host "`nCreating AKS cluster (this may take 10-15 minutes)..."
+Write-Output "Provisioning AKS Cluster: $AksClusterName"
+Write-Output "Resource Group: $ResourceGroupName"
+Write-Output "Location: $Location"
+Write-Output "Node Count: $NodeCount"
+Write-Output "Node VM Size: $NodeVmSize"
+Write-Output "Kubernetes Version: $KubernetesVersion"
+Write-Output "Network Plugin: $NetworkPlugin"
+Write-Output "RBAC Enabled: $EnableRBAC"
+Write-Output "`nCreating AKS cluster (this may take 10-15 minutes)..."
 $params = @{
     ResourceGroupName = $ResourceGroupName
     NodeVmSize = $NodeVmSize
@@ -44,24 +44,24 @@ $params = @{
     Name = $AksClusterName
 }
 $AksCluster = New-AzAksCluster @params
-Write-Host "`nAKS Cluster $AksClusterName provisioned successfully!"
-Write-Host "Cluster FQDN: $($AksCluster.Fqdn)"
-Write-Host "Kubernetes Version: $($AksCluster.KubernetesVersion)"
-Write-Host "Provisioning State: $($AksCluster.ProvisioningState)"
-Write-Host "Power State: $($AksCluster.PowerState.Code)"
-# Display node pool information
-Write-Host "`nNode Pool Information:"
+Write-Output "`nAKS Cluster $AksClusterName provisioned successfully!"
+Write-Output "Cluster FQDN: $($AksCluster.Fqdn)"
+Write-Output "Kubernetes Version: $($AksCluster.KubernetesVersion)"
+Write-Output "Provisioning State: $($AksCluster.ProvisioningState)"
+Write-Output "Power State: $($AksCluster.PowerState.Code)"
+Write-Output "`nNode Pool Information:"
 foreach ($NodePool in $AksCluster.AgentPoolProfiles) {
-    Write-Host "Pool Name: $($NodePool.Name)"
-    Write-Host "VM Size: $($NodePool.VmSize)"
-    Write-Host "Node Count: $($NodePool.Count)"
-    Write-Host "OS Type: $($NodePool.OsType)"
-    Write-Host "OS Disk Size: $($NodePool.OsDiskSizeGB) GB"
+    Write-Output "Pool Name: $($NodePool.Name)"
+    Write-Output "VM Size: $($NodePool.VmSize)"
+    Write-Output "Node Count: $($NodePool.Count)"
+    Write-Output "OS Type: $($NodePool.OsType)"
+    Write-Output "OS Disk Size: $($NodePool.OsDiskSizeGB) GB"
 }
-Write-Host "`nNext Steps:"
-Write-Host "1. Install kubectl: az aks install-cli"
-Write-Host "2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
-Write-Host "3. Verify connection: kubectl get nodes"
-Write-Host "`nAKS Cluster provisioning completed at $(Get-Date)"
+Write-Output "`nNext Steps:"
+Write-Output "1. Install kubectl: az aks install-cli"
+Write-Output "2. Get credentials: az aks get-credentials --resource-group $ResourceGroupName --name $AksClusterName"
+Write-Output "3. Verify connection: kubectl get nodes"
+Write-Output "`nAKS Cluster provisioning completed at $(Get-Date)"
+
 
 

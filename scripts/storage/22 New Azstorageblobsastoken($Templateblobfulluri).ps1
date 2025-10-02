@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -10,26 +10,29 @@
 
     Author: Wes Ellis (wes@wesellis.com)
 #>
+$ErrorActionPreference = 'Stop'
+
     Author: Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
 $StorageAccountName = "outlook1restoredsa"
 $StorageAccountResourceGroupName = "CanPrintEquip_Outlook1Restored_RG"
-$setAzCurrentStorageAccountSplat = @{
-    Name              = $storageAccountName
+$SetAzCurrentStorageAccountSplat = @{
+    Name              = $StorageAccountName
     ResourceGroupName = $StorageAccountResourceGroupName
 }
 Set-AzCurrentStorageAccount -ErrorAction Stop @setAzCurrentStorageAccountSplat
 
-$newAzStorageBlobSASTokenSplat = @{
-    Container  = $containerName
+$NewAzStorageBlobSASTokenSplat = @{
+    Container  = $ContainerName
     Permission = 'r'
     FullUri    = $true
     Blob = $Templatename
 }
 
-$templateBlobFullURI = New-AzStorageBlobSASToken -ErrorAction Stop @newAzStorageBlobSASTokenSplat
-$templateBlobFullURI
+$TemplateBlobFullURI = New-AzStorageBlobSASToken -ErrorAction Stop @newAzStorageBlobSASTokenSplat
+$TemplateBlobFullURI
+
 
 

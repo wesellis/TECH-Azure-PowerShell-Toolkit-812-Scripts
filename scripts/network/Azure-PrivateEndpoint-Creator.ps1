@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Network
 
 <#`n.SYNOPSIS
@@ -6,8 +6,10 @@
 
 .DESCRIPTION
     Manage Private Endpoints
-    Author: Wes Ellis (wes@wesellis.com)#>
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -22,8 +24,7 @@
     [Parameter(Mandatory)]
     [string]$Location
 )
-Write-Host "Creating Private Endpoint: $EndpointName"
-# Create private endpoint
+Write-Output "Creating Private Endpoint: $EndpointName"
 $params = @{
     GroupId = $GroupId
     ErrorAction = "Stop"
@@ -40,14 +41,16 @@ $params = @{
     Name = $EndpointName
 }
 $PrivateEndpoint @params
-Write-Host "Private Endpoint created successfully:"
-Write-Host "Name: $($PrivateEndpoint.Name)"
-Write-Host "Location: $($PrivateEndpoint.Location)"
-Write-Host "Target Resource: $($TargetResourceId.Split('/')[-1])"
-Write-Host "Group ID: $GroupId"
-Write-Host "Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
-Write-Host "`nNext Steps:"
-Write-Host "1. Configure DNS records for the private endpoint"
-Write-Host "2. Update network security groups if needed"
-Write-Host "3. Test connectivity from the virtual network"
+Write-Output "Private Endpoint created successfully:"
+Write-Output "Name: $($PrivateEndpoint.Name)"
+Write-Output "Location: $($PrivateEndpoint.Location)"
+Write-Output "Target Resource: $($TargetResourceId.Split('/')[-1])"
+Write-Output "Group ID: $GroupId"
+Write-Output "Private IP: $($PrivateEndpoint.NetworkInterfaces[0].IpConfigurations[0].PrivateIpAddress)"
+Write-Output "`nNext Steps:"
+Write-Output "1. Configure DNS records for the private endpoint"
+Write-Output "2. Update network security groups if needed"
+Write-Output "3. Test connectivity from the virtual network"
+
+
 

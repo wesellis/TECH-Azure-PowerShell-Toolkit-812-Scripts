@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,10 +6,10 @@
 
 .DESCRIPTION
 .DESCRIPTION`n    Automate Azure operations
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Purview Data Governance Manager
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding(SupportsShouldProcess)]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -51,18 +51,15 @@
     [switch]$EnableLineageTracking
 )
 try {
-    # Test Azure connection
         if (-not (Get-AzContext)) { throw "Not connected to Azure" }
-        
+
         Install-Module Az.Purview -Force -AllowClobber -Scope CurrentUser
         Import-Module Az.Purview
     }
-    # Validate resource group
-        $resourceGroup = Invoke-AzureOperation -Operation {
+        $ResourceGroup = Invoke-AzureOperation -Operation {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
-    
-    # Generate managed resource names if not provided
+
     if (-not $ManagedStorageAccountName) {
         $ManagedStorageAccountName = ("scan" + $PurviewAccountName).ToLower() -replace '[^a-z0-9]', ''
         if ($ManagedStorageAccountName.Length -gt 24) {
@@ -74,8 +71,7 @@ try {
     }
     switch ($Action.ToLower()) {
         "create" {
-            # Create Purview account
-                $purviewParams = @{
+                $PurviewParams = @{
                 ResourceGroupName = $ResourceGroupName
                 Name = $PurviewAccountName
                 Location = $Location
@@ -84,34 +80,31 @@ try {
                 ManagedEventHubState = "Enabled"
             }
             if ($EnableManagedVNet) {
-                $purviewParams.ManagedVirtualNetwork = "Enabled"
+                $PurviewParams.ManagedVirtualNetwork = "Enabled"
             }
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 New-AzPurviewAccount -ErrorAction Stop @purviewParams
             } -OperationName "Create Purview Account"
-            
-            # Wait for account to be ready
-            
+
+
             do {
                 Start-Sleep -Seconds 30
-                $accountStatus = Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
-                
-            } while ($accountStatus.ProvisioningState -eq "Provisioning")
-            if ($accountStatus.ProvisioningState -eq "Succeeded") {
-                
+                $AccountStatus = Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
+
+            } while ($AccountStatus.ProvisioningState -eq "Provisioning")
+            if ($AccountStatus.ProvisioningState -eq "Succeeded") {
+
             } else {
-                throw "Purview account provisioning failed with state: $($accountStatus.ProvisioningState)"
+                throw "Purview account provisioning failed with state: $($AccountStatus.ProvisioningState)"
             }
         }
         "registerdatasource" {
             if (-not $DataSourceName -or -not $DataSourceEndpoint) {
                 throw "DataSourceName and DataSourceEndpoint are required for data source registration"
             }
-                # Get Purview account details
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
             } -OperationName "Get Purview Account"
-            # Register data source using REST API
             Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -128,17 +121,15 @@ try {
                         }
                     }
                 } | ConvertTo-Json -Depth 5
-                $uri = "$($purviewAccount.ScanEndpoint)/datasources/$DataSourceName" + "?api-version=2022-02-01-preview"
+                $uri = "$($PurviewAccount.ScanEndpoint)/datasources/$DataSourceName" + "?api-version=2022-02-01-preview"
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Register Data Source"
-            
+
         }
         "createcollection" {
-                # Get Purview account details
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
             } -OperationName "Get Purview Account"
-            # Create collection using REST API
             $collection = Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -153,20 +144,18 @@ try {
                         type = "CollectionReference"
                     }
                 } | ConvertTo-Json -Depth 3
-                $uri = "$($purviewAccount.CatalogEndpoint)/api/collections/$CollectionName" + "?api-version=2022-03-01-preview"
+                $uri = "$($PurviewAccount.CatalogEndpoint)/api/collections/$CollectionName" + "?api-version=2022-03-01-preview"
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Create Collection"
-            
+
         }
         "scandatasource" {
             if (-not $DataSourceName -or -not $ScanName) {
                 throw "DataSourceName and ScanName are required for scanning"
             }
-                # Get Purview account details
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
             } -OperationName "Get Purview Account"
-            # Create scan using REST API
             Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
@@ -184,38 +173,35 @@ try {
                         }
                     }
                 } | ConvertTo-Json -Depth 5
-                $uri = "$($purviewAccount.ScanEndpoint)/datasources/$DataSourceName/scans/$ScanName" + "?api-version=2022-02-01-preview"
+                $uri = "$($PurviewAccount.ScanEndpoint)/datasources/$DataSourceName/scans/$ScanName" + "?api-version=2022-02-01-preview"
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers -Body $body
             } -OperationName "Create Scan"
-            # Trigger scan
             Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
-                $runId = [System.Guid]::NewGuid().ToString()
-                $uri = "$($purviewAccount.ScanEndpoint)/datasources/$DataSourceName/scans/$ScanName/runs/$runId" + "?api-version=2022-02-01-preview"
+                $RunId = [System.Guid]::NewGuid().ToString()
+                $uri = "$($PurviewAccount.ScanEndpoint)/datasources/$DataSourceName/scans/$ScanName/runs/$RunId" + "?api-version=2022-02-01-preview"
                 Invoke-RestMethod -Uri $uri -Method PUT -Headers $headers
             } -OperationName "Trigger Scan"
-            
+
         }
         "manageclassifications" {
-                # Get Purview account details
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
             } -OperationName "Get Purview Account"
-            # Get existing classifications
             Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
-                $uri = "$($purviewAccount.CatalogEndpoint)/api/v2/types/classificationdef" + "?api-version=2022-03-01-preview"
+                $uri = "$($PurviewAccount.CatalogEndpoint)/api/v2/types/classificationdef" + "?api-version=2022-03-01-preview"
                 $response = Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
                 return $response
             } -OperationName "Get Classifications"
-            Write-Host ""
-            $systemClassifications = @(
+            Write-Output ""
+            $SystemClassifications = @(
                 "MICROSOFT.GOVERNMENT.AUSTRALIA.DRIVERS_LICENSE_NUMBER",
                 "MICROSOFT.GOVERNMENT.AUSTRALIA.PASSPORT_NUMBER",
                 "MICROSOFT.GOVERNMENT.AUSTRIA.IDENTITY_CARD_NUMBER",
@@ -228,70 +214,65 @@ try {
                 "MICROSOFT.PERSONAL.PHONENUMBER",
                 "MICROSOFT.PERSONAL.US.SOCIAL_SECURITY_NUMBER"
             )
-            Write-Host "Built-in Classifications:"
-            foreach ($classification in $systemClassifications) {
-                Write-Host " $classification"
+            Write-Output "Built-in Classifications:"
+            foreach ($classification in $SystemClassifications) {
+                Write-Output " $classification"
             }
-            # Create custom classifications if provided
             if ($ClassificationRules.Count -gt 0) {
-                
+
                 foreach ($rule in $ClassificationRules) {
-                    # This would require  implementation based on specific classification requirements
-                    
+
                 }
             }
         }
         "getinfo" {
-                # Get Purview account info
-            $purviewAccount = Invoke-AzureOperation -Operation {
+            $PurviewAccount = Invoke-AzureOperation -Operation {
                 Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
             } -OperationName "Get Purview Account"
-            # Get collections
             $collections = Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
-                $uri = "$($purviewAccount.CatalogEndpoint)/api/collections" + "?api-version=2022-03-01-preview"
+                $uri = "$($PurviewAccount.CatalogEndpoint)/api/collections" + "?api-version=2022-03-01-preview"
                 $response = Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
                 return $response.value
             } -OperationName "Get Collections"
-            # Get data sources
-            $dataSources = Invoke-AzureOperation -Operation {
+            $DataSources = Invoke-AzureOperation -Operation {
                 $headers = @{
                     'Authorization' = "Bearer $((Get-AzAccessToken).Token)"
                     'Content-Type' = 'application/json'
                 }
-                $uri = "$($purviewAccount.ScanEndpoint)/datasources" + "?api-version=2022-02-01-preview"
+                $uri = "$($PurviewAccount.ScanEndpoint)/datasources" + "?api-version=2022-02-01-preview"
                 $response = Invoke-RestMethod -Uri $uri -Method GET -Headers $headers
                 return $response.value
             } -OperationName "Get Data Sources"
-            Write-Host ""
-            Write-Host "Purview Account Information"
-            Write-Host "Account Name: $($purviewAccount.Name)"
-            Write-Host "Location: $($purviewAccount.Location)"
-            Write-Host "Atlas Endpoint: $($purviewAccount.AtlasEndpoint)"
-            Write-Host "Scan Endpoint: $($purviewAccount.ScanEndpoint)"
-            Write-Host "Catalog Endpoint: $($purviewAccount.CatalogEndpoint)"
-            Write-Host "Provisioning State: $($purviewAccount.ProvisioningState)"
-            Write-Host "Public Network Access: $($purviewAccount.PublicNetworkAccess)"
+            Write-Output ""
+            Write-Output "Purview Account Information"
+            Write-Output "Account Name: $($PurviewAccount.Name)"
+            Write-Output "Location: $($PurviewAccount.Location)"
+            Write-Output "Atlas Endpoint: $($PurviewAccount.AtlasEndpoint)"
+            Write-Output "Scan Endpoint: $($PurviewAccount.ScanEndpoint)"
+            Write-Output "Catalog Endpoint: $($PurviewAccount.CatalogEndpoint)"
+            Write-Output "Provisioning State: $($PurviewAccount.ProvisioningState)"
+            Write-Output "Public Network Access: $($PurviewAccount.PublicNetworkAccess)"
             if ($collections.Count -gt 0) {
-                Write-Host ""
-                Write-Host "[FOLDER] Collections ($($collections.Count)):"
+                Write-Output ""
+                Write-Output "[FOLDER] Collections ($($collections.Count)):"
                 foreach ($collection in $collections) {
-                    Write-Host " $($collection.name)"
+                    Write-Output " $($collection.name)"
                     if ($collection.description) {
-                        Write-Host "Description: $($collection.description)"
+                        Write-Output "Description: $($collection.description)"
                     }
                 }
             }
-            if ($dataSources.Count -gt 0) {
-                Write-Host ""
-                Write-Host "Data Sources ($($dataSources.Count)):"
-                foreach ($source in $dataSources) {
-                    Write-Host " $($source.name) ($($source.kind))"
+            if ($DataSources.Count -gt 0) {
+                Write-Output ""
+                Write-Output "Data Sources ($($DataSources.Count)):"
+                foreach ($source in $DataSources) {
+                    Write-Output " $($source.name) ($($source.kind))"
                     if ($source.properties.endpoint) {
-                        Write-Host "Endpoint: $($source.properties.endpoint)"
+                        Write-Output "Endpoint: $($source.properties.endpoint)"
                     }
                 }
             }
@@ -299,42 +280,40 @@ try {
         "delete" {
                 $confirmation = Read-Host "Are you sure you want to delete the Purview account '$PurviewAccountName' and all its data? (yes/no)"
             if ($confirmation.ToLower() -ne "yes") {
-                
+
                 return
             }
             Invoke-AzureOperation -Operation {
                 if ($PSCmdlet.ShouldProcess("target", "operation")) {
-        
+
     }
             } -OperationName "Delete Purview Account"
-            
+
         }
     }
-    # Configure monitoring if enabled and creating account
     if ($EnableMonitoring -and $Action.ToLower() -eq "create") {
-            $diagnosticSettings = Invoke-AzureOperation -Operation {
-            $logAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
-            if ($logAnalyticsWorkspace) {
-                $resourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.Purview/accounts/$PurviewAccountName"
-                $diagnosticParams = @{
-                    ResourceId = $resourceId
+            $DiagnosticSettings = Invoke-AzureOperation -Operation {
+            $LogAnalyticsWorkspace = Get-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroupName | Select-Object -First 1
+            if ($LogAnalyticsWorkspace) {
+                $ResourceId = "/subscriptions/$((Get-AzContext).Subscription.Id)/resourceGroups/$ResourceGroupName/providers/Microsoft.Purview/accounts/$PurviewAccountName"
+                $DiagnosticParams = @{
+                    ResourceId = $ResourceId
                     Name = "$PurviewAccountName-diagnostics"
-                    WorkspaceId = $logAnalyticsWorkspace.ResourceId
+                    WorkspaceId = $LogAnalyticsWorkspace.ResourceId
                     Enabled = $true
                     Category = @("ScanStatusLogEvent", "DataSensitivityLogEvent")
                     MetricCategory = @("AllMetrics")
                 }
                 Set-AzDiagnosticSetting -ErrorAction Stop @diagnosticParams
             } else {
-                
+
                 return $null
             }
         } -OperationName "Configure Monitoring"
-        if ($diagnosticSettings) {
-            
+        if ($DiagnosticSettings) {
+
         }
     }
-    # Apply enterprise tags if creating account
     if ($Action.ToLower() -eq "create") {
             $tags = @{
             'Environment' = 'Production'
@@ -352,8 +331,7 @@ try {
             Set-AzResource -ResourceId $resource.ResourceId -Tag $tags -Force
         } -OperationName "Apply Enterprise Tags"
     }
-    # Data governance best practices
-        $governanceRecommendations = @(
+        $GovernanceRecommendations = @(
         "Establish data stewardship roles and responsibilities",
         "Define data classification and sensitivity policies",
         "Implement automated scanning schedules for data sources",
@@ -363,49 +341,42 @@ try {
         "Create custom classifications for organization-specific data types",
         "Implement access policies based on data sensitivity"
     )
-    # Security assessment
-        $securityScore = 0
-    $maxScore = 5
-    $securityFindings = @()
+        $SecurityScore = 0
+    $MaxScore = 5
+    $SecurityFindings = @()
     if ($Action.ToLower() -eq "create") {
-        # Check managed VNet
         if ($EnableManagedVNet) {
-            $securityScore++
-            $securityFindings += "[OK] Managed virtual network enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Managed virtual network enabled"
         } else {
-            $securityFindings += "[WARN]  Managed VNet not enabled - consider for enhanced security"
+            $SecurityFindings += "[WARN]  Managed VNet not enabled - consider for enhanced security"
         }
-        # Check public network access
         if ($NetworkRules.Count -gt 0) {
-            $securityScore++
-            $securityFindings += "[OK] Network access restrictions configured"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Network access restrictions configured"
         } else {
-            $securityFindings += "[WARN]  Public network access enabled - consider restricting"
+            $SecurityFindings += "[WARN]  Public network access enabled - consider restricting"
         }
-        # Check monitoring
         if ($EnableMonitoring) {
-            $securityScore++
-            $securityFindings += "[OK] Monitoring and logging enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Monitoring and logging enabled"
         } else {
-            $securityFindings += "[WARN]  Monitoring not configured"
+            $SecurityFindings += "[WARN]  Monitoring not configured"
         }
-        # Check data discovery
         if ($EnableDataDiscovery) {
-            $securityScore++
-            $securityFindings += "[OK] Automated data discovery enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Automated data discovery enabled"
         } else {
-            $securityFindings += "[WARN]  Automated data discovery not enabled"
+            $SecurityFindings += "[WARN]  Automated data discovery not enabled"
         }
-        # Check lineage tracking
         if ($EnableLineageTracking) {
-            $securityScore++
-            $securityFindings += "[OK] Data lineage tracking enabled"
+            $SecurityScore++
+            $SecurityFindings += "[OK] Data lineage tracking enabled"
         } else {
-            $securityFindings += "[WARN]  Data lineage tracking not enabled"
+            $SecurityFindings += "[WARN]  Data lineage tracking not enabled"
         }
     }
-    # Compliance frameworks
-        $complianceFrameworks = @(
+        $ComplianceFrameworks = @(
         "GDPR - General Data Protection Regulation",
         "CCPA - California Consumer Privacy Act",
         "SOX - Sarbanes-Oxley Act",
@@ -414,8 +385,7 @@ try {
         "ISO 27001 - Information Security Management",
         "NIST - National Institute of Standards and Technology Framework"
     )
-    # Cost analysis
-        $costComponents = @{
+        $CostComponents = @{
         "Purview Account" = "~$1,212/month base cost"
         "Managed Storage" = "~$25-50/month depending on metadata volume"
         "Managed Event Hub" = "~$100-200/month for event processing"
@@ -423,64 +393,60 @@ try {
         "API Calls" = "First 1M calls/month free, then $0.50/1M calls"
         "Data Map Storage" = "First 10GB free, then $0.05/GB/month"
     }
-    # Final validation
         if ($Action.ToLower() -ne "delete") {
-        $accountStatus = Invoke-AzureOperation -Operation {
+        $AccountStatus = Invoke-AzureOperation -Operation {
             Get-AzPurviewAccount -ResourceGroupName $ResourceGroupName -Name $PurviewAccountName
         } -OperationName "Validate Account Status"
     }
-    # Success summary
-    Write-Host ""
-    Write-Host "                      AZURE PURVIEW DATA GOVERNANCE READY"
-    Write-Host ""
+    Write-Output ""
+    Write-Output "                      AZURE PURVIEW DATA GOVERNANCE READY"
+    Write-Output ""
     if ($Action.ToLower() -eq "create") {
-        Write-Host "Purview Account Details:"
-        Write-Host "    Account Name: $PurviewAccountName"
-        Write-Host "    Resource Group: $ResourceGroupName"
-        Write-Host "    Location: $Location"
-        Write-Host "    Atlas Endpoint: $($accountStatus.AtlasEndpoint)"
-        Write-Host "    Scan Endpoint: $($accountStatus.ScanEndpoint)"
-        Write-Host "    Catalog Endpoint: $($accountStatus.CatalogEndpoint)"
-        Write-Host "    Status: $($accountStatus.ProvisioningState)"
-        Write-Host ""
-        Write-Host "[LOCK] Security Assessment: $securityScore/$maxScore"
-        foreach ($finding in $securityFindings) {
-            Write-Host "   $finding"
+        Write-Output "Purview Account Details:"
+        Write-Output "    Account Name: $PurviewAccountName"
+        Write-Output "    Resource Group: $ResourceGroupName"
+        Write-Output "    Location: $Location"
+        Write-Output "    Atlas Endpoint: $($AccountStatus.AtlasEndpoint)"
+        Write-Output "    Scan Endpoint: $($AccountStatus.ScanEndpoint)"
+        Write-Output "    Catalog Endpoint: $($AccountStatus.CatalogEndpoint)"
+        Write-Output "    Status: $($AccountStatus.ProvisioningState)"
+        Write-Output ""
+        Write-Output "[LOCK] Security Assessment: $SecurityScore/$MaxScore"
+        foreach ($finding in $SecurityFindings) {
+            Write-Output "   $finding"
         }
-        Write-Host ""
-        Write-Host "Cost Components:"
-        foreach ($cost in $costComponents.GetEnumerator()) {
-            Write-Host "    $($cost.Key): $($cost.Value)"
+        Write-Output ""
+        Write-Output "Cost Components:"
+        foreach ($cost in $CostComponents.GetEnumerator()) {
+            Write-Output "    $($cost.Key): $($cost.Value)"
         }
     }
-    Write-Host ""
-    foreach ($recommendation in $governanceRecommendations) {
-        Write-Host "   $recommendation"
+    Write-Output ""
+    foreach ($recommendation in $GovernanceRecommendations) {
+        Write-Output "   $recommendation"
     }
-    Write-Host ""
-    Write-Host "Supported Compliance Frameworks:"
-    foreach ($framework in $complianceFrameworks) {
-        Write-Host "    $framework"
+    Write-Output ""
+    Write-Output "Supported Compliance Frameworks:"
+    foreach ($framework in $ComplianceFrameworks) {
+        Write-Output "    $framework"
     }
-    Write-Host ""
-    Write-Host "    Register your data sources using RegisterDataSource action"
-    Write-Host "    Create collections to organize your data assets"
-    Write-Host "    Set up automated scanning schedules"
-    Write-Host "    Configure data classifications and sensitivity labels"
-    Write-Host "    Establish data lineage for critical data flows"
-    Write-Host "    Train data stewards on Purview Studio usage"
-    Write-Host ""
-    
-} catch {
-    
-    Write-Host ""
-    Write-Host "Troubleshooting Tips:"
-    Write-Host "    Verify Purview service availability in your region"
-    Write-Host "    Check subscription quotas and resource limits"
-    Write-Host "    Ensure proper permissions for data governance operations"
-    Write-Host "    Validate data source connectivity and permissions"
-    Write-Host "    Check network connectivity to Purview endpoints"
-    Write-Host ""
-    throw
-}
+    Write-Output ""
+    Write-Output "    Register your data sources using RegisterDataSource action"
+    Write-Output "    Create collections to organize your data assets"
+    Write-Output "    Set up automated scanning schedules"
+    Write-Output "    Configure data classifications and sensitivity labels"
+    Write-Output "    Establish data lineage for critical data flows"
+    Write-Output "    Train data stewards on Purview Studio usage"
+    Write-Output ""
 
+} catch {
+
+    Write-Output ""
+    Write-Output "Troubleshooting Tips:"
+    Write-Output "    Verify Purview service availability in your region"
+    Write-Output "    Check subscription quotas and resource limits"
+    Write-Output "    Ensure proper permissions for data governance operations"
+    Write-Output "    Validate data source connectivity and permissions"
+    Write-Output "    Check network connectivity to Purview endpoints"
+    Write-Output ""
+    throw`n}

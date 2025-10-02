@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 #Requires -Modules Az.Resources
 
 <#`n.SYNOPSIS
@@ -6,10 +6,10 @@
 
 .DESCRIPTION
     Manage containers
-    Author: Wes Ellis (wes@wesellis.com)#>
-# Azure Container Apps Provisioning Tool
-#
+    Author: Wes Ellis (wes@wesellis.com)
 [CmdletBinding()]
+
+$ErrorActionPreference = 'Stop'
 
     [Parameter(Mandatory)]
     [string]$ResourceGroupName,
@@ -40,56 +40,45 @@
 )
 Write-Host "Script Started" -ForegroundColor Green
 try {
-    # Test Azure connection
-    # Progress stepNumber 1 -TotalSteps 8 -StepName "Azure Connection" -Status "Validating connection and modules"
-    if (-not (Get-AzContext)) { 
+    if (-not (Get-AzContext)) {
         Connect-AzAccount
         if (-not (Get-AzContext)) {
             throw "Azure connection validation failed"
         }
     }
     }
-    # Validate resource group
-    # Progress stepNumber 2 -TotalSteps 8 -StepName "Resource Group Validation" -Status "Checking resource group existence"
-    $resourceGroup = Invoke-AzureOperation -Operation {
+    $ResourceGroup = Invoke-AzureOperation -Operation {
         Get-AzResourceGroup -Name $ResourceGroupName -ErrorAction Stop
     } -OperationName "Get Resource Group"
-    
-    # Create Container Apps Environment
-    # Progress stepNumber 3 -TotalSteps 8 -StepName "Container Environment" -Status "Creating Container Apps Environment"
-    $environmentParams = @{
+
+    $EnvironmentParams = @{
         ResourceGroupName = $ResourceGroupName
         Name = $EnvironmentName
         Location = $Location
     }
     if ($LogAnalyticsWorkspace) {
-        $environmentParams.LogAnalyticsWorkspace = $LogAnalyticsWorkspace
+        $EnvironmentParams.LogAnalyticsWorkspace = $LogAnalyticsWorkspace
     }
     Invoke-AzureOperation -Operation {
-        # Note: Using Azure CLI as Az.ContainerApps module is still in preview
         $params = @{
             Level = "SUCCESS"
             name = $EnvironmentName
             location = $Location
-            ne = "0) { throw "Failed to create Container Apps Environment" }  return ($envJson | ConvertFrom-Json) }"
+            ne = "0) { throw "Failed to create Container Apps Environment" }  return ($EnvJson | ConvertFrom-Json) }"
             output = "json 2>$null  if ($LASTEXITCODE"
             group = $ResourceGroupName
             OperationName = "Create Container Apps Environment" | Out-Null  Write-Log "[OK] Container Apps Environment created: $EnvironmentName"
         }
-        $envJson @params
-    # Prepare environment variables
-    # Progress stepNumber 4 -TotalSteps 8 -StepName "Configuration" -Status "Preparing container configuration"
-    $envVarsString = ""
+        $EnvJson @params
+    $EnvVarsString = ""
     if ($EnvironmentVariables.Count -gt 0) {
-        $envVarArray = @()
+        $EnvVarArray = @()
         foreach ($key in $EnvironmentVariables.Keys) {
-            $envVarArray += "$key=$($EnvironmentVariables[$key])"
+            $EnvVarArray += "$key=$($EnvironmentVariables[$key])"
         }
-        $envVarsString = $envVarArray -join " "
+        $EnvVarsString = $EnvVarArray -join " "
     }
-    # Create Container App
-    # Progress stepNumber 5 -TotalSteps 8 -StepName "Container App Creation" -Status "Deploying container application"
-    $containerAppArgs = @(
+    $ContainerAppArgs = @(
         "containerapp", "create"
         "--name", $ContainerAppName
         "--resource-group", $ResourceGroupName
@@ -103,25 +92,21 @@ try {
         "--output", "json"
     )
     if ($EnableExternalIngress) {
-        $containerAppArgs += @("--ingress", "external")
+        $ContainerAppArgs += @("--ingress", "external")
     }
-    if ($envVarsString) {
-        $containerAppArgs += @("--env-vars", $envVarsString)
+    if ($EnvVarsString) {
+        $ContainerAppArgs += @("--env-vars", $EnvVarsString)
     }
-    $containerApp = Invoke-AzureOperation -Operation {
-        $appJson = & az @containerAppArgs 2>$null
+    $ContainerApp = Invoke-AzureOperation -Operation {
+        $AppJson = & az @containerAppArgs 2>$null
         if ($LASTEXITCODE -ne 0) {
             throw "Failed to create Container App"
         }
-        return ($appJson | ConvertFrom-Json)
+        return ($AppJson | ConvertFrom-Json)
     } -OperationName "Create Container App"
-    # Configure ingress and scaling
-    # Progress stepNumber 6 -TotalSteps 8 -StepName "Configuration" -Status "Configuring ingress and scaling"
     if ($EnableExternalIngress) {
-        
+
     }
-    # Add tags for enterprise governance
-    # Progress stepNumber 7 -TotalSteps 8 -StepName "Tagging" -Status "Applying enterprise tags"
     $tags = @{
         'Environment' = 'Production'
         'ManagedBy' = 'Azure-Automation'
@@ -130,51 +115,45 @@ try {
         'Service' = 'ContainerApps'
         'Application' = $ContainerAppName
     }
-    # Note: Container Apps tagging via CLI
-    $tagString = ($tags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join " "
-    az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --set-env-vars $tagString --output none 2>$null
-    # Final validation and summary
-    # Progress stepNumber 8 -TotalSteps 8 -StepName "Validation" -Status "Verifying deployment"
-    $finalApp = Invoke-AzureOperation -Operation {
-        $appJson = az containerapp show --name $ContainerAppName --resource-group $ResourceGroupName --output json 2>$null
+    $TagString = ($tags.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join " "
+    az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --set-env-vars $TagString --output none 2>$null
+    $FinalApp = Invoke-AzureOperation -Operation {
+        $AppJson = az containerapp show --name $ContainerAppName --resource-group $ResourceGroupName --output json 2>$null
         if ($LASTEXITCODE -ne 0) {
             throw "Failed to retrieve Container App details"
         }
-        return ($appJson | ConvertFrom-Json)
+        return ($AppJson | ConvertFrom-Json)
     } -OperationName "Validate Container App"
-    # Success summary
-    Write-Host ""
-    Write-Host "                              CONTAINER APP DEPLOYMENT SUCCESSFUL"
-    Write-Host ""
-    Write-Host "Container App Details:"
-    Write-Host "    Name: $ContainerAppName"
-    Write-Host "    Resource Group: $ResourceGroupName"
-    Write-Host "    Environment: $EnvironmentName"
-    Write-Host "    Image: $ContainerImage"
-    Write-Host "    CPU: $CpuCores cores"
-    Write-Host "    Memory: $Memory"
-    Write-Host "    Replicas: $MinReplicas - $MaxReplicas"
-    Write-Host "    Status: $($finalApp.properties.provisioningState)"
-    if ($EnableExternalIngress -and $finalApp.properties.configuration.ingress.fqdn) {
-        Write-Host ""
-        Write-Host "    External URL: https://$($finalApp.properties.configuration.ingress.fqdn)"
-        Write-Host "    Port: $Port"
+    Write-Output ""
+    Write-Output "                              CONTAINER APP DEPLOYMENT SUCCESSFUL"
+    Write-Output ""
+    Write-Output "Container App Details:"
+    Write-Output "    Name: $ContainerAppName"
+    Write-Output "    Resource Group: $ResourceGroupName"
+    Write-Output "    Environment: $EnvironmentName"
+    Write-Output "    Image: $ContainerImage"
+    Write-Output "    CPU: $CpuCores cores"
+    Write-Output "    Memory: $Memory"
+    Write-Output "    Replicas: $MinReplicas - $MaxReplicas"
+    Write-Output "    Status: $($FinalApp.properties.provisioningState)"
+    if ($EnableExternalIngress -and $FinalApp.properties.configuration.ingress.fqdn) {
+        Write-Output ""
+        Write-Output "    External URL: https://$($FinalApp.properties.configuration.ingress.fqdn)"
+        Write-Output "    Port: $Port"
     }
-    Write-Host ""
-    Write-Host "    View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName"
-    Write-Host "    Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y"
-    Write-Host "    Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE"
-    Write-Host ""
-    
-} catch {
-    
-    Write-Host ""
-    Write-Host "Troubleshooting Tips:"
-    Write-Host "    Verify Azure CLI is installed: az --version"
-    Write-Host "    Check Container Apps extension: az extension add --name containerapp"
-    Write-Host "    Validate image accessibility: docker pull $ContainerImage"
-    Write-Host "    Check resource group permissions"
-    Write-Host ""
-    throw
-}
+    Write-Output ""
+    Write-Output "    View logs: az containerapp logs show --name $ContainerAppName --resource-group $ResourceGroupName"
+    Write-Output "    Scale app: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --min-replicas X --max-replicas Y"
+    Write-Output "    Update image: az containerapp update --name $ContainerAppName --resource-group $ResourceGroupName --image NEW_IMAGE"
+    Write-Output ""
 
+} catch {
+
+    Write-Output ""
+    Write-Output "Troubleshooting Tips:"
+    Write-Output "    Verify Azure CLI is installed: az --version"
+    Write-Output "    Check Container Apps extension: az extension add --name containerapp"
+    Write-Output "    Validate image accessibility: docker pull $ContainerImage"
+    Write-Output "    Check resource group permissions"
+    Write-Output ""
+    throw`n}

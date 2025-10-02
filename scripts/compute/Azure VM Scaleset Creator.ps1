@@ -1,4 +1,4 @@
-#Requires -Version 7.0
+#Requires -Version 7.4
 
 <#`n.SYNOPSIS
     Azure Vm Scaleset Creator
@@ -8,20 +8,16 @@
 
 
     Author: Wes Ellis (wes@wesellis.com)
-#>
     Wes Ellis (wes@wesellis.com)
 
     1.0
     Requires appropriate permissions and modules
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
+    [string]$ErrorActionPreference = "Stop"
+    [string]$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')
 try {
-    # Main script execution
 ) { "Continue" } else { "SilentlyContinue" }
-[CmdletBinding()]
 function Write-Host {
-    [CmdletBinding()]
-param(
+    param(
         [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string]$Message,
@@ -29,12 +25,13 @@ param(
         [string]$Level = "INFO"
     )
 $timestamp = Get-Date -Format " yyyy-MM-dd HH:mm:ss"
-$colorMap = @{
+$ColorMap = @{
         "INFO" = "Cyan" ; "WARN" = "Yellow" ; "ERROR" = "Red" ; "SUCCESS" = "Green"
     }
-    $logEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Host $logEntry -ForegroundColor $colorMap[$Level]
+    [string]$LogEntry = " $timestamp [WE-Enhanced] [$Level] $Message"
+    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
 }
+[CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -51,7 +48,7 @@ param(
     [Parameter()]
     [int]$InstanceCount = 2
 )
-Write-Host "Creating VM Scale Set: $ScaleSetName"
+Write-Output "Creating VM Scale Set: $ScaleSetName"
 $params = @{
     ErrorAction = "Stop"
     SkuCapacity = $InstanceCount
@@ -59,7 +56,7 @@ $params = @{
     UpgradePolicyMode = "Manual"
     Location = $Location
 }
-$VmssConfig @params
+    [string]$VmssConfig @params
 $params = @{
     CreatePublicIPAddress = $false
     IPConfigurationName = " internal"
@@ -67,14 +64,14 @@ $params = @{
     Name = " network-config"
     VirtualMachineScaleSet = $VmssConfig
 }
-$VmssConfig @params
+    [string]$VmssConfig @params
 $params = @{
     ComputerNamePrefix = " vmss"
     ErrorAction = "Stop"
     AdminUsername = " azureuser"
     VirtualMachineScaleSet = $VmssConfig
 }
-$VmssConfig @params
+    [string]$VmssConfig @params
 $params = @{
     ImageReferenceOffer = "WindowsServer"
     ImageReferenceSku = " 2022-Datacenter"
@@ -84,20 +81,19 @@ $params = @{
     ImageReferenceVersion = " latest"
     ImageReferencePublisher = "MicrosoftWindowsServer"
 }
-$VmssConfig @params
+    [string]$VmssConfig @params
 $params = @{
     ErrorAction = "Stop"
     ResourceGroupName = $ResourceGroupName
     Name = $ScaleSetName
     VirtualMachineScaleSet = $VmssConfig
 }
-$Vmss @params
-Write-Host "VM Scale Set created successfully:"
-Write-Host "Name: $($Vmss.Name)"
-Write-Host "Location: $($Vmss.Location)"
-Write-Host "VM Size: $VmSize"
-Write-Host "Instance Count: $InstanceCount"
+    [string]$Vmss @params
+Write-Output "VM Scale Set created successfully:"
+Write-Output "Name: $($Vmss.Name)"
+Write-Output "Location: $($Vmss.Location)"
+Write-Output "VM Size: $VmSize"
+Write-Output "Instance Count: $InstanceCount"
 } catch {
     Write-Error "Script execution failed: $($_.Exception.Message)"
-    throw
-}
+    throw`n}
