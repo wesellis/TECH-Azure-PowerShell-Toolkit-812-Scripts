@@ -4,7 +4,7 @@
 
 **Azure PowerShell Toolkit** is a comprehensive collection of 772 PowerShell scripts designed for Azure infrastructure management, automation, and DevOps operations.
 
-**Repository:** https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts
+**Repository:** https://github.com/wesellis/Azure-PowerShell-Toolkit
 
 **Status:** ~85% Complete - Quality Improvement Phase
 
@@ -206,7 +206,7 @@ We welcome contributions! See our quality checklist in [QUALITY_REVIEW.md](QUALI
 
 **GitHub:** https://github.com/wesellis
 
-**Issues:** https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/issues
+**Issues:** https://github.com/wesellis/Azure-PowerShell-Toolkit/issues
 
 ---
 

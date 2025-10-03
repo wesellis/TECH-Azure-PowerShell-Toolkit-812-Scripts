@@ -5,8 +5,8 @@ A collection of PowerShell scripts for Azure infrastructure management and autom
 [![PowerShell](https://img.shields.io/badge/PowerShell-7.0+-5391FE?style=flat-square&logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
 [![Azure](https://img.shields.io/badge/Azure-Ready-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts?style=flat-square)](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/stargazers)
-[![Last Commit](https://img.shields.io/github/last-commit/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts?style=flat-square)](https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts/commits)
+[![Stars](https://img.shields.io/github/stars/wesellis/Azure-PowerShell-Toolkit?style=flat-square)](https://github.com/wesellis/Azure-PowerShell-Toolkit/stargazers)
+[![Last Commit](https://img.shields.io/github/last-commit/wesellis/Azure-PowerShell-Toolkit?style=flat-square)](https://github.com/wesellis/Azure-PowerShell-Toolkit/commits)
 
 ## Overview
 
@@ -61,8 +61,8 @@ $PSVersionTable.PSVersion
 
 ```powershell
 # Clone the repository
-git clone https://github.com/wesellis/TECH-Azure-PowerShell-Toolkit-812-Scripts.git
-cd TECH-Azure-PowerShell-Toolkit-812-Scripts
+git clone https://github.com/wesellis/Azure-PowerShell-Toolkit.git
+cd Azure-PowerShell-Toolkit
 
 # Connect to Azure
 Connect-AzAccount
