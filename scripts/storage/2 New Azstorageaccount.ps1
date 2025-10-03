@@ -2,96 +2,173 @@
 #Requires -Modules Az.Resources
 #Requires -Modules Az.Storage
 
-<#`n.SYNOPSIS
-    New Azstorageaccount
+<#
+.SYNOPSIS
+    Create new Azure Storage Account
 
 .DESCRIPTION
-    New Azstorageaccount operation
+    Creates a new Azure Storage Account with configurable settings including
+    SKU, kind, access tier, and minimum TLS version
     Author: Wes Ellis (wes@wesellis.com)
+    Version: 2.0
 
-    1.0
-    Requires appropriate permissions and modules
+.PARAMETER ResourceGroupName
+    Name of the resource group where the storage account will be created
+
+.PARAMETER StorageAccountName
+    Name of the storage account (must be 3-24 characters, lowercase letters and numbers only)
+
+.PARAMETER Location
+    Azure region where the storage account will be created
+
+.PARAMETER SkuName
+    SKU name for the storage account. Valid values:
+    Standard_LRS, Standard_ZRS, Standard_GRS, Standard_RAGRS, Premium_LRS, Premium_ZRS, Standard_GZRS, Standard_RAGZRS
+
+.PARAMETER Kind
+    Kind of storage account. Valid values:
+    Storage, StorageV2, BlobStorage, BlockBlobStorage, FileStorage
+
+.PARAMETER AccessTier
+    Access tier for the storage account (Hot or Cool)
+
+.PARAMETER MinimumTlsVersion
+    Minimum TLS version to be permitted on requests to storage. Default is TLS1_2
+
+.PARAMETER Tags
+    Hashtable of tags to apply to the storage account
+
+.EXAMPLE
+    .\2-New-Azstorageaccount.ps1 -ResourceGroupName "rg-prod" -StorageAccountName "mystorage123" -Location "eastus"
+    Creates a storage account with default settings
+
+.EXAMPLE
+    .\2-New-Azstorageaccount.ps1 -ResourceGroupName "rg-prod" -StorageAccountName "mystorage123" -Location "eastus" -SkuName "Premium_LRS" -Kind "BlockBlobStorage"
+    Creates a premium block blob storage account
+
+.EXAMPLE
+    $tags = @{Environment="Production"; Department="IT"}
+    .\2-New-Azstorageaccount.ps1 -ResourceGroupName "rg-prod" -StorageAccountName "mystorage123" -Location "eastus" -Tags $tags
+    Creates a storage account with custom tags
+
+.NOTES
+    Storage account names must be between 3 and 24 characters and use lowercase letters and numbers only
+    Requires Az.Storage module and appropriate permissions
 #>
-$ErrorActionPreference = "Stop"
-$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { "Continue" } else { "SilentlyContinue" }
-    Short description
-    Long description
-    PS C:\> <example usage>
-    Explanation of what the example does
-.INPUTS
-    Inputs (if any)
-    -Kind
-Specifies the kind of Storage account that this cmdlet creates. The acceptable values for this parameter are:
-    Storage. General purpose Storage account that supports storage of Blobs, Tables, Queues, Files and Disks.
-    StorageV2. General Purpose Version 2 (GPv2) Storage account that supports Blobs, Tables, Queues, Files, and Disks, with  features like data tiering.
-    BlobStorage. Blob Storage account which supports storage of Blobs only.
-    BlockBlobStorage. Block Blob Storage account which supports storage of Block Blobs only.
-    FileStorage. File Storage account which supports storage of Files only. The default value is StorageV2.
-    -MinimumTlsVersion
-The minimum TLS version to be permitted on requests to storage. The default interpretation is TLS 1.0 for this property.
--SkuName
-Specifies the SKU name of the Storage account that this cmdlet creates. The acceptable values for this parameter are:
-    Standard_LRS. Locally-redundant storage.
-    Standard_ZRS. Zone-redundant storage.
-    Standard_GRS. Geo-redundant storage.
-    Standard_RAGRS. Read access geo-redundant storage.
-    Premium_LRS. Premium locally-redundant storage.
-    Premium_ZRS. Premium zone-redundant storage.
-    Standard_GZRS - Geo-redundant zone-redundant storage.
-    Standard_RAGZRS - Read access geo-redundant zone-redundant storage.
-.OUTPUTS
-    Output (if any)
-    General notes
-    New-AzStorageAccount -ErrorAction Stop : FGC_Prod_FileStrage_SA1 is not a valid storage account name. Storage account name must be between 3 and 24 characters in
-length and use numbers and lower-case letters only.
-Parameter name: Name
-At C:\Users\Abdullah.Ollivierre\AzureRepos2\Azure\Storage\Storage Accounts\2-New-AzStorageAccount.ps1:64 char:1
-+ New-AzStorageAccount -ErrorAction Stop @newAzStorageAccountSplat
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : CloseError: (:) [New-AzStorageAccount], ArgumentException
-    + FullyQualifiedErrorId : Microsoft.Azure.Commands.Management.Storage.NewAzureStorageAccountCommand
-$ResourceGroupName = "FGC_Prod_FileStorage_RG"
-$StorageAccountName = 'fgcprodfilestoragesa1'
-$LocationName = 'CanadaCentral'
-$CustomerName = 'FGCHealth'
-$SkuName = 'Standard_LRS'
-$Kind = "Storagev2"
-$AccessTier = "Hot"
-$MinimumTlsVersion = 'TLS1_0'
 
-$datetime = [System.DateTime]::Now.ToString(" yyyy_MM_dd_HH_mm_ss" )
-[hashtable]$Tags = @{
-    "Createdby"         = 'Abdullah Ollivierre'
-    "CustomerName"      = " $CustomerName"
-    "DateTimeCreated"   = " $datetime"
-    "Environment"       = 'Production'
-    "Application"       = 'Storage Account'
-    "Purpose"           = 'EDW Prod'
-    "Location"          = " $LocationName"
-    "Approved By"       = "Hamza Musaphir"
-    "Approved On"       = "Friday Dec 11 2020"
-    "Ticket ID"         = " 1515933"
-    "CSP"               = "Canada Computing Inc."
-    "Subscription Name" = "Microsoft Azure - FGC Production"
-    "Subscription ID"   = " 3532a85c-c00a-4465-9b09-388248166360"
-    "Tenant ID"         = " e09d9473-1a06-4717-98c1-528067eab3a4"
-    "AccessTier"        = $AccessTier
-    "Kind"              = $Kind
-    "SkuName"           = $SkuName
-    "MinimumVersion"    = $MinimumTlsVersion
-    "Storage Services"  = "General Purpose Version 2 (GPv2) Storage account that supports Blobs, Tables, Queues, Files, and Disks, with  features like data tiering."
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ResourceGroupName,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateLength(3, 24)]
+    [ValidatePattern('^[a-z0-9]+$')]
+    [string]$StorageAccountName,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Location,
+
+    [Parameter()]
+    [ValidateSet('Standard_LRS', 'Standard_ZRS', 'Standard_GRS', 'Standard_RAGRS', 'Premium_LRS', 'Premium_ZRS', 'Standard_GZRS', 'Standard_RAGZRS')]
+    [string]$SkuName = 'Standard_LRS',
+
+    [Parameter()]
+    [ValidateSet('Storage', 'StorageV2', 'BlobStorage', 'BlockBlobStorage', 'FileStorage')]
+    [string]$Kind = 'StorageV2',
+
+    [Parameter()]
+    [ValidateSet('Hot', 'Cool')]
+    [string]$AccessTier = 'Hot',
+
+    [Parameter()]
+    [ValidateSet('TLS1_0', 'TLS1_1', 'TLS1_2')]
+    [string]$MinimumTlsVersion = 'TLS1_2',
+
+    [Parameter()]
+    [hashtable]$Tags = @{}
+)
+
+$ErrorActionPreference = 'Stop'
+$VerbosePreference = if ($PSBoundParameters.ContainsKey('Verbose')) { 'Continue' } else { 'SilentlyContinue' }
+
+function Write-LogMessage {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter()]
+        [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
+        [string]$Level = "INFO"
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $colorMap = @{
+        "INFO"    = "Cyan"
+        "WARN"    = "Yellow"
+        "ERROR"   = "Red"
+        "SUCCESS" = "Green"
+    }
+
+    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $colorMap[$Level]
 }
 
-$newAzStorageAccountSplat = @{
-    ResourceGroupName = $ResourceGroupName
-    Name              = $StorageAccountName
-    Location          = $LocationName
-    SkuName           = $SkuName
-    Kind              = $Kind
-    AccessTier        = $AccessTier
-    MinimumTlsVersion = $MinimumTlsVersion
-    Tag               = $Tags
+try {
+    Write-LogMessage "Creating Azure Storage Account" -Level "INFO"
+    Write-LogMessage "Resource Group: $ResourceGroupName" -Level "INFO"
+    Write-LogMessage "Storage Account Name: $StorageAccountName" -Level "INFO"
+    Write-LogMessage "Location: $Location" -Level "INFO"
+    Write-LogMessage "SKU: $SkuName" -Level "INFO"
+    Write-LogMessage "Kind: $Kind" -Level "INFO"
+    Write-LogMessage "Access Tier: $AccessTier" -Level "INFO"
+    Write-LogMessage "Minimum TLS Version: $MinimumTlsVersion" -Level "INFO"
+
+    # Add default tags
+    $datetime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $defaultTags = @{
+        "CreatedDate" = $datetime
+        "ManagedBy"   = "Azure PowerShell Toolkit"
+        "Location"    = $Location
+        "SkuName"     = $SkuName
+        "Kind"        = $Kind
+        "AccessTier"  = $AccessTier
+    }
+
+    # Merge default tags with provided tags (provided tags take precedence)
+    $finalTags = $defaultTags.Clone()
+    foreach ($key in $Tags.Keys) {
+        $finalTags[$key] = $Tags[$key]
+    }
+
+    Write-Verbose "Final tags: $($finalTags | Out-String)"
+
+    # Create the storage account
+    $newAzStorageAccountSplat = @{
+        ResourceGroupName = $ResourceGroupName
+        Name              = $StorageAccountName
+        Location          = $Location
+        SkuName           = $SkuName
+        Kind              = $Kind
+        AccessTier        = $AccessTier
+        MinimumTlsVersion = $MinimumTlsVersion
+        Tag               = $finalTags
+    }
+
+    Write-LogMessage "Creating storage account..." -Level "INFO"
+    $storageAccount = New-AzStorageAccount @newAzStorageAccountSplat -ErrorAction Stop
+
+    Write-LogMessage "Storage account created successfully" -Level "SUCCESS"
+    Write-LogMessage "Storage Account ID: $($storageAccount.Id)" -Level "INFO"
+    Write-LogMessage "Primary Location: $($storageAccount.PrimaryLocation)" -Level "INFO"
+    Write-LogMessage "Status: $($storageAccount.ProvisioningState)" -Level "INFO"
+
+    # Return the storage account object
+    return $storageAccount
+
+} catch {
+    Write-LogMessage "Failed to create storage account: $($_.Exception.Message)" -Level "ERROR"
+    throw
 }
-New-AzStorageAccount -ErrorAction Stop @newAzStorageAccountSplat
-
-
