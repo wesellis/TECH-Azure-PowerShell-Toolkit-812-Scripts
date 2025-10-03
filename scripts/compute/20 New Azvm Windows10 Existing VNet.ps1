@@ -63,8 +63,13 @@
     .\Create-Windows10VM-AAD.ps1 -CustomerName "CanadaComputing" -VMName "Client3" -LocationName "CanadaCentral" -VnetName "DC1_group-vnet" -SubnetName "DC1-subnet" -VMAdminUser "admin" -NotificationEmail "admin@company.com"
 
 .EXAMPLE
-    [string]$SecurePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
+    $SecurePassword = ConvertTo-SecureString "MyP@ssw0rd123!" -AsPlainText -Force
     .\Create-Windows10VM-AAD.ps1 -CustomerName "TestCompany" -VMName "TeamViewer-Client" -LocationName "EastUS" -VnetName "TestVNet" -SubnetName "default" -VMAdminUser "localadmin" -VMAdminPassword $SecurePassword -NotificationEmail "it@testcompany.com" -EnableAzureAD $true
+
+.NOTES
+    Requires Az.Compute, Az.Network, and Az.Resources modules
+    Requires appropriate Azure permissions
+#>
 
 [CmdletBinding()]
 param(
@@ -134,15 +139,14 @@ function Write-LogMessage {
         [ValidateSet("INFO", "WARN", "ERROR", "SUCCESS")]
         [string]$Level = "INFO"
     )
-    [string]$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $ColorMap = @{
         "INFO" = "Cyan"
         "WARN" = "Yellow"
         "ERROR" = "Red"
         "SUCCESS" = "Green"
     }
-    [string]$LogEntry = "$timestamp [WE-Enhanced] [$Level] $Message"
-    Write-Output $LogEntry -ForegroundColor $ColorMap[$Level]
+    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor $ColorMap[$Level]
 }
 
 function Generate-Password {
@@ -164,14 +168,14 @@ try {
     Write-LogMessage "Subnet: $SubnetName" -Level "INFO"
     Write-LogMessage "Windows Version: $WindowsVersion" -Level "INFO"
     Write-LogMessage "Azure AD Authentication: $EnableAzureAD" -Level "INFO"
-    [string]$context = Get-AzContext
+    $context = Get-AzContext
     if (-not $context) {
         throw "No Azure context found. Please run Connect-AzAccount first."
     }
 
     Write-LogMessage "Using Azure subscription: $($context.Subscription.Name)" -Level "INFO"
-    [string]$ResourceGroupName = "${CustomerName}_${VMName}_RG"
-    [string]$datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
+    $ResourceGroupName = "${CustomerName}_${VMName}_RG"
+    $datetime = [System.DateTime]::Now.ToString("yyyy_MM_dd_HH_mm_ss")
 
     [hashtable]$Tags = @{
         "Autoshutdown"    = 'ON'
@@ -458,4 +462,5 @@ try {
 } catch {
     Write-LogMessage "Script execution failed: $($_.Exception.Message)" -Level "ERROR"
     Write-Error $_.Exception.Message
-    throw`n}
+    throw
+}
